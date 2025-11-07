@@ -8268,6 +8268,12 @@ function makePosts(){
         menuBtn.append(categoryLogo, label, arrow);
         triggerWrap.append(menuBtn);
 
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'category-edit-btn';
+        editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 13a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';
+        editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
+        
         const toggle = document.createElement('label');
         toggle.className = 'switch cat-switch';
         const toggleInput = document.createElement('input');
@@ -8278,7 +8284,7 @@ function makePosts(){
         toggleSlider.className = 'slider';
         toggle.append(toggleInput, toggleSlider);
 
-        header.append(triggerWrap, toggle);
+        header.append(triggerWrap, editBtn, toggle);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -8348,8 +8354,47 @@ function makePosts(){
         deleteCategoryBtn.textContent = 'Delete Category';
         deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
 
-        editPanel.append(nameInput, iconPicker, addSubBtn);
+        const hideToggleRow = document.createElement('div');
+        hideToggleRow.className = 'category-hide-toggle-row';
+        const hideToggleLabel = document.createElement('span');
+        hideToggleLabel.textContent = 'Hide Category';
+        const hideToggle = document.createElement('label');
+        hideToggle.className = 'switch';
+        const hideToggleInput = document.createElement('input');
+        hideToggleInput.type = 'checkbox';
+        hideToggleInput.checked = !toggleInput.checked;
+        const hideToggleSlider = document.createElement('span');
+        hideToggleSlider.className = 'slider';
+        hideToggle.append(hideToggleInput, hideToggleSlider);
+        hideToggleRow.append(hideToggleLabel, hideToggle);
+        
+        hideToggleInput.addEventListener('change', ()=>{
+          toggleInput.checked = !hideToggleInput.checked;
+          toggleInput.dispatchEvent(new Event('change', {bubbles: true}));
+        });
+        
+        toggleInput.addEventListener('change', ()=>{
+          hideToggleInput.checked = !toggleInput.checked;
+        });
+        
+        editPanel.append(nameInput, iconPicker, hideToggleRow, addSubBtn);
+        editPanel.hidden = true;
+        editPanel.style.position = 'absolute';
+        editPanel.style.right = '0';
+        editPanel.style.top = '100%';
+        editPanel.style.zIndex = '100';
         editMenu.append(editPanel);
+        
+        editBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          editPanel.hidden = !editPanel.hidden;
+        });
+        
+        document.addEventListener('click', (e)=>{
+          if(!editPanel.hidden && !editPanel.contains(e.target) && !editBtn.contains(e.target)){
+            editPanel.hidden = true;
+          }
+        });
         const categoryDeleteActions = document.createElement('div');
         categoryDeleteActions.className = 'category-delete-actions';
         categoryDeleteActions.appendChild(deleteCategoryBtn);
@@ -8528,6 +8573,12 @@ function makePosts(){
           subBtn.append(subLabelWrap, subArrow);
           subTriggerWrap.append(subBtn);
 
+          const subEditBtn = document.createElement('button');
+          subEditBtn.type = 'button';
+          subEditBtn.className = 'subcategory-edit-btn';
+          subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 13a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';
+          subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
+          
           const subToggle = document.createElement('label');
           subToggle.className = 'subcategory-form-toggle';
           const subInput = document.createElement('input');
@@ -8538,7 +8589,7 @@ function makePosts(){
           subSlider.className = 'slider';
           subToggle.append(subInput, subSlider);
 
-          subHeader.append(subTriggerWrap, subToggle);
+          subHeader.append(subTriggerWrap, subEditBtn, subToggle);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -12692,7 +12743,52 @@ function makePosts(){
             notifyFormbuilderChange();
           });
 
-          subContent.append(subNameInput, subIconPicker, subPlaceholder, fieldsSection, deleteSubBtn);
+          const subEditPanel = document.createElement('div');
+          subEditPanel.className = 'subcategory-edit-panel';
+          subEditPanel.hidden = true;
+          subEditPanel.style.position = 'absolute';
+          subEditPanel.style.right = '0';
+          subEditPanel.style.top = '100%';
+          subEditPanel.style.zIndex = '100';
+          
+          const subHideToggleRow = document.createElement('div');
+          subHideToggleRow.className = 'subcategory-hide-toggle-row';
+          const subHideToggleLabel = document.createElement('span');
+          subHideToggleLabel.textContent = 'Hide Subcategory';
+          const subHideToggle = document.createElement('label');
+          subHideToggle.className = 'switch';
+          const subHideToggleInput = document.createElement('input');
+          subHideToggleInput.type = 'checkbox';
+          subHideToggleInput.checked = !subInput.checked;
+          const subHideToggleSlider = document.createElement('span');
+          subHideToggleSlider.className = 'slider';
+          subHideToggle.append(subHideToggleInput, subHideToggleSlider);
+          subHideToggleRow.append(subHideToggleLabel, subHideToggle);
+          
+          subHideToggleInput.addEventListener('change', ()=>{
+            subInput.checked = !subHideToggleInput.checked;
+            subInput.dispatchEvent(new Event('change', {bubbles: true}));
+          });
+          
+          subInput.addEventListener('change', ()=>{
+            subHideToggleInput.checked = !subInput.checked;
+          });
+          
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow);
+          subHeader.append(subEditPanel);
+          
+          subEditBtn.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            subEditPanel.hidden = !subEditPanel.hidden;
+          });
+          
+          document.addEventListener('click', (e)=>{
+            if(!subEditPanel.hidden && !subEditPanel.contains(e.target) && !subEditBtn.contains(e.target)){
+              subEditPanel.hidden = true;
+            }
+          });
+
+          subContent.append(subPlaceholder, fieldsSection, deleteSubBtn);
 
           subMenu.append(subContent);
 
