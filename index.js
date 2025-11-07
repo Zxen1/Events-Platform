@@ -8381,7 +8381,7 @@ function makePosts(){
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
-        editPanel.style.top = '100%';
+        editPanel.style.top = 'calc(100% + 10px)';
         editPanel.style.zIndex = '100';
         editMenu.append(editPanel);
         
@@ -12748,7 +12748,7 @@ function makePosts(){
           subEditPanel.hidden = true;
           subEditPanel.style.position = 'absolute';
           subEditPanel.style.right = '0';
-          subEditPanel.style.top = '100%';
+          subEditPanel.style.top = 'calc(100% + 10px)';
           subEditPanel.style.zIndex = '100';
           
           const subHideToggleRow = document.createElement('div');

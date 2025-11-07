@@ -5706,7 +5706,7 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-edit-panel{
               min-width:280px;
               max-width:320px;
-              background:rgba(0,0,0,0.95);
+              background:#1a1a1a;
               border:1px solid var(--border);
               border-radius:8px;
               padding:16px;
