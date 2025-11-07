@@ -390,8 +390,8 @@
       --list-background: rgba(0,0,0,0.37);
       --closed-card-bg: rgba(0,0,0,0.37);
       --scrollbar-track: rgba(0,0,0,0);
-      --scrollbar-thumb: rgba(255,255,255,0.4);
-      --scrollbar-thumb-hover: rgba(255,255,255,0.6);
+      --scrollbar-thumb: rgba(0,0,0,0.3);
+      --scrollbar-thumb-hover: rgba(0,0,0,0.5);
       --scrollbar-h: 8px;
       --border: rgba(173,173,173,0.31);
       --border-hover: rgba(255,136,0,0.43);
@@ -1068,12 +1068,13 @@ button[aria-expanded="true"] .results-arrow{
   flex:1 1 auto;
   min-height:0;
   overflow-y:auto;
+  overflow-y:overlay;
   overflow-x:hidden;
   padding:20px 10px;
   --panel-scrollbar-overlay: 0px;
-  --panel-scrollbar-size: 12px;
-  --panel-scrollbar-thumb: rgba(255,255,255,0.5);
-  --panel-scrollbar-thumb-hover: rgba(255,255,255,0.7);
+  --panel-scrollbar-size: 10px;
+  --panel-scrollbar-thumb: rgba(255,255,255,0.35);
+  --panel-scrollbar-thumb-hover: rgba(255,255,255,0.55);
   --panel-base-padding-end: 10px;
   padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
   margin-right:calc(-1 * var(--panel-scrollbar-overlay));
@@ -1089,17 +1090,19 @@ button[aria-expanded="true"] .results-arrow{
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 .panel-body::-webkit-scrollbar{
-  width: 12px;
+  width: var(--panel-scrollbar-size);
 }
 .panel-body::-webkit-scrollbar-track{
   background: transparent;
 }
 .panel-body::-webkit-scrollbar-thumb{
-  background-color: rgba(255,255,255,0.5);
-  border-radius: 6px;
+  background-color: var(--panel-scrollbar-thumb);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 .panel-body::-webkit-scrollbar-thumb:hover{
-  background-color: rgba(255,255,255,0.7);
+  background-color: var(--panel-scrollbar-thumb-hover);
 }
 .panel-body::-webkit-scrollbar-corner{
   background: transparent;
@@ -2541,8 +2544,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 #tab-forms .formbuilder-container{
   position:relative;
-  background:none;
-  padding:0;
 }
 #filterPanel .filter-basics-container{
   position:relative;
