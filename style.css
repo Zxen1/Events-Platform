@@ -5704,9 +5704,15 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-edit-btn:hover{
               background:rgba(255,255,255,0.1);
             }
-            #tab-forms .category-form-menu.cat-off .category-edit-btn,
-            #tab-forms .category-form-menu.cat-off .category-edit-panel,
-            #tab-forms .category-form-menu.cat-off .category-edit-panel *{
+            .category-form-menu.cat-off .category-edit-btn,
+            .category-form-menu.cat-off .subcategory-edit-btn,
+            .category-form-menu.cat-off .category-edit-panel,
+            .category-form-menu.cat-off .subcategory-edit-panel,
+            .category-form-menu.cat-off .category-edit-panel *,
+            .category-form-menu.cat-off .subcategory-edit-panel *,
+            .subcategory-form-menu.cat-off .subcategory-edit-btn,
+            .subcategory-form-menu.cat-off .subcategory-edit-panel,
+            .subcategory-form-menu.cat-off .subcategory-edit-panel *{
               opacity:1;
             }
             #tab-forms .category-edit-panel,
