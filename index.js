@@ -11346,6 +11346,30 @@ function makePosts(){
               labelButton.dataset.previewIndex = String(previewIndex);
               const labelId = `${baseId}-label`;
               labelButton.id = labelId;
+              const previewDeleteBtn = document.createElement('button');
+              previewDeleteBtn.type = 'button';
+              previewDeleteBtn.className = 'delete-field-btn';
+              previewDeleteBtn.textContent = '×';
+              const deleteDisplayName = labelText || 'field';
+              previewDeleteBtn.setAttribute('aria-label', `Delete ${deleteDisplayName} field`);
+              previewDeleteBtn.setAttribute('title', `Delete ${deleteDisplayName} field`);
+              previewDeleteBtn.addEventListener('click', async event=>{
+                event.preventDefault();
+                event.stopPropagation();
+                if(typeof previewField.__handleDeleteField === 'function'){
+                  await previewField.__handleDeleteField();
+                  return;
+                }
+                const previewRow = previewField.__rowEl && previewField.__rowEl.isConnected
+                  ? previewField.__rowEl
+                  : null;
+                if(previewRow){
+                  const rowDeleteBtn = previewRow.querySelector('.delete-field-btn');
+                  if(rowDeleteBtn){
+                    rowDeleteBtn.click();
+                  }
+                }
+              });
               let control = null;
               if(previewField.type === 'text-area' || previewField.type === 'description'){
                 const textarea = document.createElement('textarea');
@@ -12090,7 +12114,10 @@ function makePosts(){
                   asterisk.textContent = '*';
                   labelButton.appendChild(asterisk);
                 }
-                wrapper.append(labelButton, control);
+                const header = document.createElement('div');
+                header.className = 'form-preview-field-header';
+                header.append(labelButton, previewDeleteBtn);
+                wrapper.append(header, control);
                 formPreviewFields.appendChild(wrapper);
               }
             });
@@ -12427,32 +12454,41 @@ function makePosts(){
               renderFormPreview();
             });
 
-          deleteFieldBtn.addEventListener('click', async ()=>{
-            const fieldDisplayName = fieldNameInput.value.trim() || 'field';
-            const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
-            if(!confirmed) return;
-            const idx = fields.indexOf(safeField);
-            if(idx !== -1){
-              fields.splice(idx, 1);
-            }
-            if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function' && subcategoryFieldOverlayContent.contains(row)){
-              closeSubcategoryFieldOverlay();
-            }
-            const overlayPlaceholder = row.__overlayPlaceholder;
-            if(overlayPlaceholder && overlayPlaceholder.parentNode){
-              overlayPlaceholder.remove();
-            }
-            row.remove();
-            if(safeField.__rowEl === row){
-              delete safeField.__rowEl;
-            }
-            delete row.__overlayPlaceholder;
-            delete row.__overlayParent;
-            delete row.__overlayOverlay;
-            notifyFormbuilderChange();
-            syncFieldOrderFromDom(fieldsList, fields);
-            renderFormPreview();
-          });
+            const handleDeleteField = async ()=>{
+              const fieldDisplayName = fieldNameInput.value.trim() || 'field';
+              const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
+              if(!confirmed) return;
+              const idx = fields.indexOf(safeField);
+              if(idx !== -1){
+                fields.splice(idx, 1);
+              }
+              if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function' && subcategoryFieldOverlayContent.contains(row)){
+                closeSubcategoryFieldOverlay();
+              }
+              const overlayPlaceholder = row.__overlayPlaceholder;
+              if(overlayPlaceholder && overlayPlaceholder.parentNode){
+                overlayPlaceholder.remove();
+              }
+              row.remove();
+              if(safeField.__rowEl === row){
+                delete safeField.__rowEl;
+              }
+              delete row.__overlayPlaceholder;
+              delete row.__overlayParent;
+              delete row.__overlayOverlay;
+              delete safeField.__handleDeleteField;
+              notifyFormbuilderChange();
+              syncFieldOrderFromDom(fieldsList, fields);
+              renderFormPreview();
+            };
+
+            safeField.__handleDeleteField = handleDeleteField;
+
+            deleteFieldBtn.addEventListener('click', async event=>{
+              event.preventDefault();
+              event.stopPropagation();
+              await handleDeleteField();
+            });
 
             updateDeleteFieldAria();
 
