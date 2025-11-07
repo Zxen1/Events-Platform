@@ -2779,6 +2779,7 @@ button[aria-expanded="true"] .results-arrow{
   text-align: left;
   color: var(--button-text);
   font: inherit;
+  font-size: 20px;
   margin: 0;
 }
 
@@ -5725,6 +5726,10 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
+            }
+            #tab-forms .formbuilder-container button:not([class*="mapboxgl-"]):active,
+            #tab-forms .formbuilder-container [role="button"]:not([class*="mapboxgl-"]):active{
+              transform:none;
             }
             #tab-forms .category-form-menu.cat-off{
               opacity:1;
