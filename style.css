@@ -7353,10 +7353,6 @@ html, body { cursor: auto !important; }
 
 
 
-/* ============================================
-   CREATE POST - Compact form picker
-   ============================================ */
-
 .member-create-picker {
   width: 100%;
   max-width: 420px;
@@ -7386,6 +7382,80 @@ html, body { cursor: auto !important; }
 .member-create-select:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.member-create-form-preview {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+
+
+/* ============================================
+   CREATE POST - Compact category picker
+   ============================================ */
+
+.member-create-picker {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 16px;
+  background: #444444;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.member-create-picker .cats {
+  width: 100%;
+}
+
+.member-create-picker .category-form-menu {
+  width: 100%;
+}
+
+.member-create-picker .subcategory-form-menus {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.member-create-picker .subcategory-form-menu {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--button-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.member-create-picker .subcategory-form-menu:hover {
+  background: var(--dropdown-selected-bg);
+  border-color: var(--dropdown-selected-bg);
+}
+
+.member-create-picker .subcategory-logo {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-create-picker .subcategory-logo img {
+  width: 20px;
+  height: 20px;
+}
+
+.member-create-picker .subcategory-label {
+  flex: 1;
 }
 
 .member-create-form-preview {

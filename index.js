@@ -20498,63 +20498,124 @@ document.addEventListener('pointerdown', (e) => {
   const adminListingCurrency = document.getElementById('adminListingCurrency');
   const adminListingPrice = document.getElementById('adminListingPrice');
 
-  // CREATE POST TAB - Form picker with mirrored preview
-  const memberCreateCategory = document.getElementById('memberCreateCategory');
-  const memberCreateSubcategory = document.getElementById('memberCreateSubcategory');
+  // CREATE POST TAB - Category menu picker with mirrored preview
+  const memberCreateCats = document.getElementById('memberCreateCats');
   const memberCreateFormPreview = document.getElementById('memberCreateFormPreview');
 
-  if (memberCreateCategory && memberCreateSubcategory && memberCreateFormPreview) {
-    function populateMemberCategories() {
+  if (memberCreateCats && memberCreateFormPreview) {
+    function renderMemberCategories() {
       if (!window.categories) return;
-      memberCreateCategory.innerHTML = '<option value="">Select Category</option>';
+      
+      memberCreateCats.innerHTML = '';
       const sortedCategories = getSortedCategories(window.categories);
-      sortedCategories.forEach(cat => {
-        if (!cat || !cat.name) return;
-        const option = document.createElement('option');
-        option.value = cat.name;
-        option.textContent = cat.name;
-        memberCreateCategory.appendChild(option);
+      
+      sortedCategories.forEach((c) => {
+        if (!c || !c.name) return;
+
+        const menu = document.createElement('div');
+        menu.className = 'category-form-menu filter-category-menu';
+        menu.dataset.category = c.name;
+        menu.setAttribute('role','group');
+        menu.setAttribute('aria-expanded','false');
+
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup','true');
+        menuBtn.setAttribute('aria-expanded','false');
+
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className = 'category-logo';
+        const categoryIconHtml = (window.categoryIcons && window.categoryIcons[c.name]) || '';
+        if (categoryIconHtml) {
+          categoryLogo.innerHTML = categoryIconHtml;
+          categoryLogo.classList.add('has-icon');
+        } else {
+          categoryLogo.textContent = c.name.charAt(0) || '';
+        }
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = c.name;
+
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden','true');
+
+        menuBtn.append(categoryLogo, label, arrow);
+        triggerWrap.append(menuBtn);
+
+        const toggle = document.createElement('label');
+        toggle.className = 'switch cat-switch';
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.checked = true;
+        const toggleSlider = document.createElement('span');
+        toggleSlider.className = 'slider';
+        toggle.append(toggleInput, toggleSlider);
+
+        menu.append(triggerWrap, toggle);
+
+        const content = document.createElement('div');
+        content.className = 'category-form-content';
+        content.hidden = true;
+
+        const subMenusContainer = document.createElement('div');
+        subMenusContainer.className = 'subcategory-form-menus';
+
+        const subs = c.subs || [];
+        subs.forEach((sub) => {
+          const subBtn = document.createElement('button');
+          subBtn.type = 'button';
+          subBtn.className = 'subcategory-form-menu';
+          subBtn.dataset.subcategory = sub;
+
+          const subLogo = document.createElement('span');
+          subLogo.className = 'subcategory-logo';
+          const subIconHtml = (window.subcategoryIcons && window.subcategoryIcons[sub]) || '';
+          if (subIconHtml) {
+            subLogo.innerHTML = subIconHtml;
+            subLogo.classList.add('has-icon');
+          } else {
+            subLogo.textContent = sub.charAt(0) || '';
+          }
+
+          const subLabel = document.createElement('span');
+          subLabel.className = 'subcategory-label';
+          subLabel.textContent = sub;
+
+          subBtn.append(subLogo, subLabel);
+
+          subBtn.addEventListener('click', () => {
+            const formbuilderPreview = document.querySelector(`[data-subcategory="${sub}"] .form-preview-fields`);
+            memberCreateFormPreview.innerHTML = formbuilderPreview ? formbuilderPreview.innerHTML : '';
+          });
+
+          subMenusContainer.appendChild(subBtn);
+        });
+
+        content.appendChild(subMenusContainer);
+        menu.appendChild(content);
+
+        menuBtn.addEventListener('click', () => {
+          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
+          const next = !isExpanded;
+          menu.setAttribute('aria-expanded', next ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+          content.hidden = !next;
+        });
+
+        memberCreateCats.appendChild(menu);
       });
     }
 
-    function populateMemberSubcategories() {
-      const categoryName = memberCreateCategory.value;
-      memberCreateSubcategory.innerHTML = '<option value="">Select Subcategory</option>';
-      memberCreateSubcategory.disabled = !categoryName;
-      memberCreateFormPreview.innerHTML = '';
-      
-      if (!categoryName) return;
-      
-      const category = window.categories.find(c => c && c.name === categoryName);
-      if (!category || !category.subs) return;
-      
-      category.subs.forEach(sub => {
-        const option = document.createElement('option');
-        option.value = sub;
-        option.textContent = sub;
-        memberCreateSubcategory.appendChild(option);
-      });
-    }
-
-    function mirrorFormPreview() {
-      const subcategoryName = memberCreateSubcategory.value;
-      memberCreateFormPreview.innerHTML = '';
-      
-      if (!subcategoryName) return;
-      
-      const formbuilderPreview = document.querySelector(`[data-subcategory="${subcategoryName}"] .form-preview-fields`);
-      if (formbuilderPreview) {
-        memberCreateFormPreview.innerHTML = formbuilderPreview.innerHTML;
-      }
-    }
-
-    memberCreateCategory.addEventListener('change', populateMemberSubcategories);
-    memberCreateSubcategory.addEventListener('change', mirrorFormPreview);
-    
     if (window.categories) {
-      populateMemberCategories();
+      renderMemberCategories();
     } else {
-      setTimeout(() => { if (window.categories) populateMemberCategories(); }, 500);
+      setTimeout(() => { if (window.categories) renderMemberCategories(); }, 500);
     }
   }
 
