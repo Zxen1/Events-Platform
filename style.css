@@ -6470,10 +6470,10 @@ html, body { cursor: auto !important; }
               color:var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
             }
             #tab-forms .subcategory-field-row{
-              border:1px solid var(--border);
-              border-radius:10px;
-              background:rgba(0,0,0,0.2);
-              padding:12px;
+              border:none;
+              border-radius:0;
+              background:transparent;
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:10px;
