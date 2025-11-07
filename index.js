@@ -21512,6 +21512,17 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function buildMemberCreateField(field, index){
+      // Use the formbuilder's rendering logic - just call it with member mode
+      if(typeof window.buildFormPreviewField === 'function'){
+        return window.buildFormPreviewField(field, index, {
+          readOnly: false,
+          interactive: true,
+          idPrefix: 'memberCreateField',
+          counterRef: { value: fieldIdCounter }
+        });
+      }
+      
+      // Fallback if shared function not available yet
       const wrapper = document.createElement('div');
       wrapper.className = 'panel-field form-preview-field';
       const labelText = field.name && field.name.trim() ? field.name.trim() : `Field ${index + 1}`;
@@ -21535,7 +21546,7 @@ document.addEventListener('pointerdown', (e) => {
       const placeholder = field.placeholder || '';
       let control = null;
 
-      if(field.type === 'description' || field.type === 'text-area'){
+      if(field.type === 'description' || field.type === 'text-area' || field.type === 'textarea'){
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
         textarea.rows = field.type === 'description' ? 6 : 4;
@@ -21888,10 +21899,13 @@ document.addEventListener('pointerdown', (e) => {
         renderEmptyState();
         return;
       }
+      
+      // Get the EXACT same fields that formbuilder uses
       const fields = getFieldsForSelection(categoryName, subcategoryName);
       fieldIdCounter = 0;
       formFields.innerHTML = '';
       currentCreateFields = [];
+      
       if(fields.length === 0){
         const placeholder = document.createElement('p');
         placeholder.className = 'member-create-placeholder';
@@ -21899,9 +21913,15 @@ document.addEventListener('pointerdown', (e) => {
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
+        // Clone the formbuilder preview rendering EXACTLY (make it editable)
         fields.forEach((field, index)=>{
           const fieldEl = buildMemberCreateField(field, index);
           if(fieldEl){
+            // Make inputs editable (remove readOnly, tabIndex, disabled)
+            fieldEl.querySelectorAll('[readonly]').forEach(el => el.readOnly = false);
+            fieldEl.querySelectorAll('[tabindex="-1"]').forEach(el => el.removeAttribute('tabindex'));
+            fieldEl.querySelectorAll('[disabled]').forEach(el => el.disabled = false);
+            
             formFields.appendChild(fieldEl);
             currentCreateFields.push({ field, element: fieldEl });
           }
