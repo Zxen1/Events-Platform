@@ -11346,6 +11346,14 @@ function makePosts(){
               labelButton.dataset.previewIndex = String(previewIndex);
               const labelId = `${baseId}-label`;
               labelButton.id = labelId;
+
+              const deleteFieldBtn = document.createElement('button');
+              deleteFieldBtn.type = 'button';
+              deleteFieldBtn.className = 'delete-field-btn';
+              deleteFieldBtn.textContent = '×';
+              deleteFieldBtn.setAttribute('aria-label', `Delete ${labelText}`);
+              deleteFieldBtn.setAttribute('title', `Delete ${labelText}`);
+
               let control = null;
               if(previewField.type === 'text-area' || previewField.type === 'description'){
                 const textarea = document.createElement('textarea');
@@ -12090,7 +12098,14 @@ function makePosts(){
                   asterisk.textContent = '*';
                   labelButton.appendChild(asterisk);
                 }
-                wrapper.append(labelButton, control);
+
+                deleteFieldBtn.addEventListener('click', () => {
+                  fields.splice(previewIndex, 1);
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+
+                wrapper.append(labelButton, deleteFieldBtn, control);
                 formPreviewFields.appendChild(wrapper);
               }
             });

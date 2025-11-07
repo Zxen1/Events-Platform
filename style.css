@@ -7352,3 +7352,33 @@ html, body { cursor: auto !important; }
 
 
 
+
+/* Delete field button in form preview */
+.delete-field-btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.delete-field-btn:hover {
+  background: #c82333;
+}
+
+.form-preview-field {
+  position: relative;
+}
+
