@@ -1107,6 +1107,18 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body::-webkit-scrollbar-corner{
   background: transparent;
 }
+#adminPanel .panel-body::-webkit-scrollbar{
+  width: 12px;
+}
+#adminPanel .panel-body::-webkit-scrollbar-thumb{
+  background-color: rgba(180,180,180,1);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+#adminPanel .panel-body::-webkit-scrollbar-thumb:hover{
+  background-color: rgba(200,200,200,1);
+}
 .panel-body > *{
   width:100%;
   max-width:420px;
