@@ -8382,7 +8382,7 @@ function makePosts(){
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
         editPanel.style.top = 'calc(100% + 10px)';
-        editPanel.style.zIndex = '100';
+        editPanel.style.zIndex = '10000';
         header.append(editPanel);
         
         editBtn.addEventListener('click', (e)=>{
@@ -12753,7 +12753,7 @@ function makePosts(){
           subEditPanel.style.position = 'absolute';
           subEditPanel.style.right = '0';
           subEditPanel.style.top = 'calc(100% + 10px)';
-          subEditPanel.style.zIndex = '100';
+          subEditPanel.style.zIndex = '10000';
           
           const subHideToggleRow = document.createElement('div');
           subHideToggleRow.className = 'subcategory-hide-toggle-row';
