@@ -12132,9 +12132,9 @@ function makePosts(){
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
 
-            const fieldHeader = document.createElement('div');
-            fieldHeader.className = 'field-row-header';
-            row._header = fieldHeader;
+            //const fieldHeader = document.createElement('div');
+            //fieldHeader.className = 'field-row-header';
+            //row._header = fieldHeader;
 
             const fieldNameInput = document.createElement('input');
             fieldNameInput.type = 'text';
@@ -12164,11 +12164,11 @@ function makePosts(){
             fieldTypeArrow.textContent = '▾';
             fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
 
-            const fieldPlaceholderInput = document.createElement('input');
-            fieldPlaceholderInput.type = 'text';
-            fieldPlaceholderInput.className = 'field-placeholder-input';
-            fieldPlaceholderInput.placeholder = 'Field Placeholder';
-            fieldPlaceholderInput.value = safeField.placeholder;
+            //const fieldPlaceholderInput = document.createElement('input');
+            //fieldPlaceholderInput.type = 'text';
+            //fieldPlaceholderInput.className = 'field-placeholder-input';
+            //fieldPlaceholderInput.placeholder = 'Field Placeholder';
+            //fieldPlaceholderInput.value = safeField.placeholder;
 
             const fieldPlaceholderWrapper = document.createElement('div');
             fieldPlaceholderWrapper.className = 'field-placeholder-wrapper';
