@@ -3699,124 +3699,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const snapshotFieldTypeOptions = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
       ? initialFormbuilderSnapshot.fieldTypes
       : [];
-    const FORM_FIELD_TYPE_DETAILS = window.FORM_FIELD_TYPE_DETAILS = snapshotFieldTypeOptions.map(option => ({ ...option }));
-    const FORM_FIELD_TYPE_LOOKUP = (()=>{
-      const map = new Map();
-      const registerKey = (key, detail)=>{
-        if(typeof key === 'string'){
-          const trimmed = key.trim();
-          if(trimmed){
-            map.set(trimmed, detail);
-            map.set(trimmed.toLowerCase(), detail);
-          }
-        }
-      };
-      FORM_FIELD_TYPE_DETAILS.forEach(detail => {
-        if(!detail || typeof detail !== 'object') return;
-        registerKey(detail.value, detail);
-        registerKey(detail.key, detail);
-        registerKey(detail.field_type_key, detail);
-        registerKey(detail.fieldTypeKey, detail);
-        if(typeof detail.id === 'number' && Number.isFinite(detail.id)){
-          registerKey(String(detail.id), detail);
-        } else if(typeof detail.id === 'string'){
-          registerKey(detail.id, detail);
-        }
-      });
-      return map;
-    })();
-    window.__FORM_FIELD_TYPE_LOOKUP__ = FORM_FIELD_TYPE_LOOKUP;
-    const getFormFieldTypeDetail = (value)=>{
-      if(typeof value === 'number' && Number.isFinite(value)){
-        return FORM_FIELD_TYPE_LOOKUP.get(String(value)) || null;
-      }
-      if(typeof value !== 'string'){
-        return null;
-      }
-      const trimmed = value.trim();
-      if(!trimmed){
-        return null;
-      }
-      return FORM_FIELD_TYPE_LOOKUP.get(trimmed) || FORM_FIELD_TYPE_LOOKUP.get(trimmed.toLowerCase()) || null;
-    };
     const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
     initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       return match ? match.label : '';
-    };
-    const getFormFieldTypeDefaults = (value)=>{
-      const detail = getFormFieldTypeDetail(value) || null;
-      const derivedKey = (()=>{
-        if(detail){
-          const candidates = [detail.field_type_key, detail.fieldTypeKey, detail.key, detail.value];
-          for(const candidate of candidates){
-            if(typeof candidate === 'string' && candidate.trim()){
-              return candidate.trim();
-            }
-          }
-        }
-        if(typeof value === 'string' && value.trim()){
-          return value.trim();
-        }
-        if(typeof value === 'number' && Number.isFinite(value)){
-          return String(value);
-        }
-        return '';
-      })();
-      const normalizedKey = derivedKey || '';
-      const resolvedType = detail && typeof detail.type === 'string' && detail.type.trim()
-        ? detail.type.trim()
-        : normalizedKey;
-      const nameCandidates = [
-        detail && typeof detail.field_type_name === 'string' ? detail.field_type_name : '',
-        detail && typeof detail.fieldTypeName === 'string' ? detail.fieldTypeName : '',
-        detail && typeof detail.name === 'string' ? detail.name : '',
-        detail && typeof detail.label === 'string' ? detail.label : '',
-        getFormFieldTypeLabel(normalizedKey),
-        getFormFieldTypeLabel(resolvedType)
-      ];
-      let defaultName = '';
-      for(const candidate of nameCandidates){
-        if(typeof candidate === 'string'){
-          const trimmed = candidate.trim();
-          if(trimmed){
-            defaultName = trimmed;
-            break;
-          }
-        }
-      }
-      if(!defaultName){
-        defaultName = 'Field';
-      }
-      let defaultPlaceholder = '';
-      if(detail){
-        const placeholderCandidates = [
-          detail.placeholder,
-          detail.defaultPlaceholder,
-          detail.fieldPlaceholder
-        ];
-        for(const candidate of placeholderCandidates){
-          if(typeof candidate === 'string'){
-            const trimmed = candidate.trim();
-            if(trimmed){
-              defaultPlaceholder = trimmed;
-              break;
-            }
-          }
-        }
-      }
-      if(!defaultPlaceholder && resolvedType === 'location'){
-        defaultPlaceholder = 'Search for a location';
-      }
-      return {
-        detail,
-        key: normalizedKey,
-        type: resolvedType,
-        name: defaultName,
-        placeholder: defaultPlaceholder
-      };
     };
     const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
     const VENUE_CURRENCY_STATE = new WeakMap();
@@ -7735,10 +7623,7 @@ function makePosts(){
         }
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
-          const dragLabel = (row.__fieldRef && typeof row.__fieldRef.name === 'string' && row.__fieldRef.name.trim())
-            ? row.__fieldRef.name.trim()
-            : ((row.querySelector('.field-name-label')?.textContent || '').trim() || 'Field');
-          try{ event.dataTransfer.setData('text/plain', dragLabel); }catch(err){}
+          try{ event.dataTransfer.setData('text/plain', (row.querySelector('.field-name-input')?.value || 'Field')); }catch(err){}
           try{
             const rect = row.getBoundingClientRect();
             event.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2);
@@ -7924,7 +7809,6 @@ function makePosts(){
       content.style.top = '';
       content.style.left = '';
       content.style.width = '';
-      content.style.transform = '';
       overlay.classList.remove('visible');
       overlay.removeAttribute('data-active-label');
       content.removeAttribute('aria-label');
@@ -7996,22 +7880,6 @@ function makePosts(){
         : null;
       subcategoryFieldOverlayTrigger = triggerButton || (triggerEl instanceof Element ? triggerEl : null);
       overlay.classList.add('visible');
-      const getActivePanelElement = ()=>{
-        if(placeholder && typeof placeholder.closest === 'function'){
-          const viaPlaceholder = placeholder.closest('.category-edit-panel');
-          if(viaPlaceholder) return viaPlaceholder;
-        }
-        if(row.__overlayParent && typeof row.__overlayParent.closest === 'function'){
-          const viaParent = row.__overlayParent.closest('.category-edit-panel');
-          if(viaParent) return viaParent;
-        }
-        if(triggerButton && typeof triggerButton.closest === 'function'){
-          const viaTrigger = triggerButton.closest('.category-edit-panel');
-          if(viaTrigger) return viaTrigger;
-        }
-        const visiblePanel = document.querySelector('.category-edit-panel:not([hidden])');
-        return visiblePanel || null;
-      };
       const alignOverlay = ()=>{
         const buffer = 10;
         const triggerNode = subcategoryFieldOverlayTrigger;
@@ -8047,31 +7915,22 @@ function makePosts(){
             preferredTop = Math.max(minTop, Math.min(preferredTop, maxTop));
           }
           top = preferredTop;
-        }
-        const activePanel = getActivePanelElement();
-        const overlayWidthPx = contentWidth || content.offsetWidth || placeholder.__overlayContainerWidth || placeholder.__overlayWidth || 0;
-        if(activePanel && typeof activePanel.getBoundingClientRect === 'function'){
-          const panelRect = activePanel.getBoundingClientRect();
           const minLeft = scrollX + buffer;
-          let maxLeft = scrollX + viewportWidth - overlayWidthPx - buffer;
+          let maxLeft = scrollX + viewportWidth - contentWidth - buffer;
           if(!Number.isFinite(maxLeft) || maxLeft < minLeft){
             maxLeft = minLeft;
           }
-          const panelMid = scrollX + panelRect.left + (panelRect.width / 2);
-          let preferredLeft = panelMid - (overlayWidthPx / 2);
-          if(!Number.isFinite(preferredLeft)){
-            preferredLeft = minLeft;
+          let preferredLeft = scrollX + triggerRect.left;
+          if(preferredLeft > maxLeft){
+            preferredLeft = maxLeft;
           }
           if(preferredLeft < minLeft){
             preferredLeft = minLeft;
-          } else if(preferredLeft > maxLeft){
-            preferredLeft = maxLeft;
           }
           left = preferredLeft;
         }
         content.style.top = Math.round(top) + 'px';
         content.style.left = Math.round(left) + 'px';
-        content.style.transform = '';
       };
       const scheduleAlign = ()=>{
         if(!overlay.classList.contains('visible')) return;
@@ -8747,55 +8606,45 @@ function makePosts(){
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
-            safeField.name = typeof safeField.name === 'string' ? safeField.name.trim() : '';
-            safeField.type = typeof safeField.type === 'string' ? safeField.type.trim() : '';
-            if(typeof safeField.key === 'string'){
-              safeField.key = safeField.key.trim();
+            if(typeof safeField.name !== 'string'){
+              safeField.name = '';
+            } else if(!safeField.name.trim()){
+              safeField.name = '';
+          }
+          if(typeof safeField.type !== 'string'){
+            safeField.type = '';
+          }
+          // Ensure key and fieldTypeKey sync with each other if one is missing
+          if(!safeField.key && safeField.fieldTypeKey){
+            safeField.key = safeField.fieldTypeKey;
+          }
+          if(!safeField.fieldTypeKey && safeField.key){
+            safeField.fieldTypeKey = safeField.key;
+          }
+          // For brand new fields, default to first field type in list
+          if(!safeField.key && !safeField.fieldTypeKey && FORM_FIELD_TYPES.length > 0){
+            const firstFieldType = FORM_FIELD_TYPES[0];
+            safeField.key = firstFieldType.value;
+            safeField.fieldTypeKey = firstFieldType.value;
+            if(!safeField.type && firstFieldType.type){
+              safeField.type = firstFieldType.type;
             }
-            if(typeof safeField.fieldTypeKey === 'string'){
-              safeField.fieldTypeKey = safeField.fieldTypeKey.trim();
-            }
-            if(!safeField.key && safeField.fieldTypeKey){
-              safeField.key = safeField.fieldTypeKey;
-            }
-            if(!safeField.fieldTypeKey && safeField.key){
-              safeField.fieldTypeKey = safeField.key;
-            }
-            let initialTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
-            if(!initialTypeKey && FORM_FIELD_TYPES.length > 0){
-              const firstFieldType = FORM_FIELD_TYPES[0];
-              if(firstFieldType && firstFieldType.value){
-                initialTypeKey = firstFieldType.value;
+          }
+          // Only auto-name truly new fields
+          if(!safeField.name){
+            safeField.name = '';
+          }
+            if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+            const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+            if(fieldTypeKey === 'location'){
+              if(!safeField.placeholder || !safeField.placeholder.trim()){
+                safeField.placeholder = 'Search for a location';
               }
-            }
-            const defaults = getFormFieldTypeDefaults(initialTypeKey);
-            const resolvedKey = defaults.key || initialTypeKey;
-            if(resolvedKey){
-              safeField.key = resolvedKey;
-              safeField.fieldTypeKey = resolvedKey;
-            }
-            const resolvedType = defaults.type || safeField.type || resolvedKey || '';
-            safeField.type = resolvedType;
-            if(!safeField.name){
-              safeField.name = defaults.name;
-            }
-            if(typeof safeField.placeholder === 'string'){
-              safeField.placeholder = safeField.placeholder.trim();
-            } else {
-              safeField.placeholder = '';
-            }
-            if(!safeField.placeholder){
-              safeField.placeholder = defaults.placeholder;
-            }
-            if(resolvedType === 'location'){
               const loc = safeField.location && typeof safeField.location === 'object' ? safeField.location : {};
               const address = typeof loc.address === 'string' ? loc.address : '';
               const latitude = typeof loc.latitude === 'string' ? loc.latitude : '';
               const longitude = typeof loc.longitude === 'string' ? loc.longitude : '';
               safeField.location = { address, latitude, longitude };
-              if(!safeField.placeholder){
-                safeField.placeholder = 'Search for a location';
-              }
             } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
               delete safeField.location;
             }
@@ -8804,9 +8653,9 @@ function makePosts(){
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
-            if(resolvedType === 'venue-ticketing'){
+            if(fieldTypeKey === 'venue-ticketing'){
               safeField.options = normalizeVenueSessionOptions(safeField.options);
-            } else if(resolvedType === 'variant-pricing'){
+            } else if(fieldTypeKey === 'variant-pricing'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
                   return {
@@ -8829,11 +8678,11 @@ function makePosts(){
                 }
                 return String(opt ?? '');
               });
-              if((resolvedType === 'dropdown' || resolvedType === 'radio-toggle') && safeField.options.length === 0){
+              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
                 safeField.options.push('', '', '');
               }
             }
-            if(resolvedType !== 'venue-ticketing'){
+            if(safeField.type !== 'venue-ticketing'){
               resetVenueAutofillState(safeField);
             }
             return safeField;
@@ -11489,11 +11338,14 @@ function makePosts(){
               wrapper.className = 'panel-field form-preview-field';
               const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
               const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
-              const labelSpan = document.createElement('span');
-              labelSpan.className = 'form-preview-field-label';
-              labelSpan.textContent = labelText;
+              const labelButton = document.createElement('button');
+              labelButton.type = 'button';
+              labelButton.className = 'subcategory-form-button';
+              labelButton.textContent = labelText;
+              labelButton.setAttribute('aria-haspopup', 'dialog');
+              labelButton.dataset.previewIndex = String(previewIndex);
               const labelId = `${baseId}-label`;
-              labelSpan.id = labelId;
+              labelButton.id = labelId;
               const previewDeleteBtn = document.createElement('button');
               previewDeleteBtn.type = 'button';
               previewDeleteBtn.className = 'delete-field-btn';
@@ -12244,12 +12096,7 @@ function makePosts(){
                     control.setAttribute('aria-labelledby', labelId);
                   }
                 }
-                const editButton = document.createElement('button');
-                editButton.type = 'button';
-                editButton.className = 'subcategory-form-button form-preview-edit-btn';
-                editButton.setAttribute('aria-label', `Edit ${labelText} field`);
-                editButton.setAttribute('title', `Edit ${labelText} field`);
-                editButton.addEventListener('click', event=>{
+                labelButton.addEventListener('click', event=>{
                   event.preventDefault();
                   let targetRow = previewField && previewField.__rowEl;
                   if(!targetRow || !targetRow.isConnected){
@@ -12261,15 +12108,15 @@ function makePosts(){
                 });
                 if(previewField.required){
                   wrapper.classList.add('form-preview-field--required');
-                  labelSpan.appendChild(document.createTextNode(' '));
+                  labelButton.appendChild(document.createTextNode(' '));
                   const asterisk = document.createElement('span');
                   asterisk.className = 'required-asterisk';
                   asterisk.textContent = '*';
-                  labelSpan.appendChild(asterisk);
+                  labelButton.appendChild(asterisk);
                 }
                 const header = document.createElement('div');
                 header.className = 'form-preview-field-header';
-                header.append(labelSpan, editButton, previewDeleteBtn);
+                header.append(labelButton, previewDeleteBtn);
                 wrapper.append(header, control);
                 formPreviewFields.appendChild(wrapper);
               }
@@ -12289,28 +12136,11 @@ function makePosts(){
             fieldHeader.className = 'field-row-header';
             row._header = fieldHeader;
 
-            const defaultsForField = getFormFieldTypeDefaults(safeField.fieldTypeKey || safeField.key || safeField.type);
-            if(defaultsForField.key && !safeField.fieldTypeKey){
-              safeField.fieldTypeKey = defaultsForField.key;
-            }
-            if(defaultsForField.key && !safeField.key){
-              safeField.key = defaultsForField.key;
-            }
-            if(!safeField.type){
-              safeField.type = defaultsForField.type;
-            }
-            if(!safeField.name){
-              safeField.name = defaultsForField.name;
-            }
-            if(typeof safeField.placeholder !== 'string' || !safeField.placeholder.trim()){
-              safeField.placeholder = defaultsForField.placeholder;
-            } else {
-              safeField.placeholder = safeField.placeholder.trim();
-            }
-
-            const fieldNameLabel = document.createElement('span');
-            fieldNameLabel.className = 'field-name-label';
-            fieldNameLabel.textContent = safeField.name;
+            const fieldNameInput = document.createElement('input');
+            fieldNameInput.type = 'text';
+            fieldNameInput.className = 'field-name-input';
+            fieldNameInput.placeholder = 'Field Name';
+            fieldNameInput.value = safeField.name;
 
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
@@ -12333,6 +12163,16 @@ function makePosts(){
             fieldTypeArrow.setAttribute('aria-hidden', 'true');
             fieldTypeArrow.textContent = '▾';
             fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
+
+            const fieldPlaceholderInput = document.createElement('input');
+            fieldPlaceholderInput.type = 'text';
+            fieldPlaceholderInput.className = 'field-placeholder-input';
+            fieldPlaceholderInput.placeholder = 'Field Placeholder';
+            fieldPlaceholderInput.value = safeField.placeholder;
+
+            const fieldPlaceholderWrapper = document.createElement('div');
+            fieldPlaceholderWrapper.className = 'field-placeholder-wrapper';
+            fieldPlaceholderWrapper.appendChild(fieldPlaceholderInput);
 
             const fieldRequiredRow = document.createElement('div');
             fieldRequiredRow.className = 'field-required-row';
@@ -12561,36 +12401,61 @@ function makePosts(){
             deleteFieldBtn.textContent = '×';
 
             const updateDeleteFieldAria = ()=>{
-              const displayName = (safeField.name && safeField.name.trim()) || 'field';
+              const displayName = fieldNameInput.value.trim() || 'field';
               deleteFieldBtn.setAttribute('aria-label', `Delete ${displayName} field`);
               deleteFieldBtn.setAttribute('title', `Delete ${displayName} field`);
             };
 
-            fieldTypeSelect.addEventListener('change', ()=>{
-              const nextType = fieldTypeSelect.value;
-              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType)
-                ? nextType
-                : (FORM_FIELD_TYPES[0]?.value || nextType);
-              const nextDefaults = getFormFieldTypeDefaults(nextValidType);
-              if(nextDefaults.key){
-                safeField.fieldTypeKey = nextDefaults.key;
-                safeField.key = nextDefaults.key;
-              } else {
-                safeField.fieldTypeKey = nextValidType;
-                safeField.key = nextValidType;
-              }
-              safeField.type = nextDefaults.type || safeField.type || nextValidType;
-              safeField.name = nextDefaults.name;
-              safeField.placeholder = nextDefaults.placeholder;
-              fieldNameLabel.textContent = safeField.name;
+            fieldNameInput.addEventListener('input', ()=>{
+              safeField.name = fieldNameInput.value;
               updateDeleteFieldAria();
+              notifyFormbuilderChange();
+              renderFormPreview();
+            });
+
+            fieldTypeSelect.addEventListener('change', ()=>{
+              const previousType = safeField.type;
+              const previousLabel = getFormFieldTypeLabel(previousType).trim();
+              const currentName = fieldNameInput.value.trim();
+              const nextType = fieldTypeSelect.value;
+              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+              const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
+              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
+              
+              // Update fieldTypeKey to match dropdown selection
+              safeField.fieldTypeKey = nextValidType;
+              safeField.key = nextValidType;
+              
+              // Find matching field type to get its properties
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
+              if(matchingFieldType){
+                // Update placeholder from field type
+                if(matchingFieldType.placeholder){
+                  safeField.placeholder = matchingFieldType.placeholder;
+                  fieldPlaceholderInput.value = matchingFieldType.placeholder;
+                }
+                // Update type to match the field type (for complex types like images, venue-ticketing, etc.)
+                safeField.type = nextValidType;
+              }
+              
+              if(shouldAutofillName && nextLabel){
+                safeField.name = nextLabel;
+                fieldNameInput.value = nextLabel;
+                updateDeleteFieldAria();
+              }
+              notifyFormbuilderChange();
               updateFieldEditorsByType();
+              renderFormPreview();
+            });
+
+            fieldPlaceholderInput.addEventListener('input', ()=>{
+              safeField.placeholder = fieldPlaceholderInput.value;
               notifyFormbuilderChange();
               renderFormPreview();
             });
 
             const handleDeleteField = async ()=>{
-              const fieldDisplayName = (safeField.name && safeField.name.trim()) || 'field';
+              const fieldDisplayName = fieldNameInput.value.trim() || 'field';
               const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
               if(!confirmed) return;
               const idx = fields.indexOf(safeField);
@@ -12628,22 +12493,23 @@ function makePosts(){
             updateDeleteFieldAria();
 
             const updateFieldEditorsByType = ()=>{
-              const defaults = getFormFieldTypeDefaults(safeField.fieldTypeKey || safeField.key || safeField.type);
-              if(defaults.key){
-                safeField.fieldTypeKey = defaults.key;
-                safeField.key = defaults.key;
-              }
-              const type = defaults.type || safeField.type || safeField.fieldTypeKey || '';
-              safeField.type = type;
-              safeField.name = defaults.name;
-              fieldNameLabel.textContent = safeField.name;
-              safeField.placeholder = defaults.placeholder;
-              updateDeleteFieldAria();
+              const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
               const showVariantPricing = type === 'variant-pricing';
               const showVenueSession = type === 'venue-ticketing';
-              if(type === 'images' || showVariantPricing || showVenueSession){
+              const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
+              fieldPlaceholderWrapper.hidden = hidePlaceholder;
+              if(type === 'images'){
+                if(fieldPlaceholderInput.value){
+                  fieldPlaceholderInput.value = '';
+                }
+                if(safeField.placeholder){
+                  safeField.placeholder = '';
+                  notifyFormbuilderChange();
+                }
+              } else if(showVenueSession && safeField.placeholder){
                 safeField.placeholder = '';
+                notifyFormbuilderChange();
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               if(showVenueSession){
@@ -12651,6 +12517,7 @@ function makePosts(){
               } else if(showVariantPricing){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = [{ version: '', currency: '', price: '' }];
+                  notifyFormbuilderChange();
                 } else {
                   safeField.options = safeField.options.map(opt => {
                     if(opt && typeof opt === 'object'){
@@ -12687,6 +12554,9 @@ function makePosts(){
                 if(!safeField.placeholder || !safeField.placeholder.trim()){
                   const defaultPlaceholder = 'Search for a location';
                   safeField.placeholder = defaultPlaceholder;
+                  if(!fieldPlaceholderInput.value){
+                    fieldPlaceholderInput.value = defaultPlaceholder;
+                  }
                 }
                 if(!safeField.location || typeof safeField.location !== 'object'){
                   safeField.location = { address: '', latitude: '', longitude: '' };
@@ -12695,25 +12565,23 @@ function makePosts(){
                   if(typeof safeField.location.latitude !== 'string') safeField.location.latitude = '';
                   if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
                 }
-              } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
-                delete safeField.location;
               }
             };
 
             updateFieldEditorsByType();
 
-            fieldHeader.append(fieldNameLabel, deleteFieldBtn);
+            fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
-            row.append(fieldHeader, fieldTypeWrapper, fieldRequiredRow, dropdownOptionsContainer);
+            row.append(fieldHeader, fieldTypeWrapper, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer);
             row.__fieldRef = safeField;
             safeField.__rowEl = row;
             return {
               row,
               focus(){
                 try{
-                  fieldTypeSelect.focus({ preventScroll: true });
+                  fieldNameInput.focus({ preventScroll: true });
                 }catch(err){
-                  try{ fieldTypeSelect.focus(); }catch(e){}
+                  try{ fieldNameInput.focus(); }catch(e){}
                 }
               },
               focusTypePicker(){
