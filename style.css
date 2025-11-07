@@ -1073,8 +1073,8 @@ button[aria-expanded="true"] .results-arrow{
   padding:20px 10px;
   --panel-scrollbar-overlay: 0px;
   --panel-scrollbar-size: 10px;
-  --panel-scrollbar-thumb: rgba(255,255,255,0.35);
-  --panel-scrollbar-thumb-hover: rgba(255,255,255,0.55);
+  --panel-scrollbar-thumb: rgba(180,180,180,1);
+  --panel-scrollbar-thumb-hover: rgba(200,200,200,1);
   --panel-base-padding-end: 10px;
   padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
   margin-right:calc(-1 * var(--panel-scrollbar-overlay));
