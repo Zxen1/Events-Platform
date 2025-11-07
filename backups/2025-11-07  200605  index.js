@@ -19108,7 +19108,7 @@ const memberPanelChangeManager = (()=>{
       ...Object.keys(b || {})
     ]);
     for(const key of keys){
-      if(a[key] !== b[key]){
+      if((a && a[key]) !== (b && b[key])){
         return false;
       }
     }

@@ -12132,8 +12132,15 @@ function makePosts(){
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
 
-            const inlineControls = document.createElement('div');
-            inlineControls.className = 'field-inline-controls';
+            const fieldHeader = document.createElement('div');
+            fieldHeader.className = 'field-row-header';
+            row._header = fieldHeader;
+
+            const fieldNameInput = document.createElement('input');
+            fieldNameInput.type = 'text';
+            fieldNameInput.className = 'field-name-input';
+            fieldNameInput.placeholder = 'Field Name';
+            fieldNameInput.value = safeField.name;
 
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
@@ -12157,19 +12164,46 @@ function makePosts(){
             fieldTypeArrow.textContent = '▾';
             fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
 
+            const fieldPlaceholderInput = document.createElement('input');
+            fieldPlaceholderInput.type = 'text';
+            fieldPlaceholderInput.className = 'field-placeholder-input';
+            fieldPlaceholderInput.placeholder = 'Field Placeholder';
+            fieldPlaceholderInput.value = safeField.placeholder;
+
+            const fieldPlaceholderWrapper = document.createElement('div');
+            fieldPlaceholderWrapper.className = 'field-placeholder-wrapper';
+            fieldPlaceholderWrapper.appendChild(fieldPlaceholderInput);
+
+            const fieldRequiredRow = document.createElement('div');
+            fieldRequiredRow.className = 'field-required-row';
             const fieldRequiredLabel = document.createElement('span');
             fieldRequiredLabel.className = 'field-required-label';
-            fieldRequiredLabel.textContent = 'Required:';
+            fieldRequiredLabel.textContent = 'Required Field';
+            const fieldRequiredOptions = document.createElement('div');
+            fieldRequiredOptions.className = 'field-required-options';
+            const requiredGroupName = `field-required-${Math.random().toString(36).slice(2)}`;
 
-            const fieldRequiredToggle = document.createElement('label');
-            fieldRequiredToggle.className = 'switch field-required-switch';
-            const fieldRequiredInput = document.createElement('input');
-            fieldRequiredInput.type = 'checkbox';
-            fieldRequiredInput.checked = !!safeField.required;
-            fieldRequiredInput.setAttribute('aria-label', 'Toggle required field');
-            const fieldRequiredSlider = document.createElement('span');
-            fieldRequiredSlider.className = 'slider';
-            fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredSlider);
+            const requiredYesLabel = document.createElement('label');
+            requiredYesLabel.className = 'field-required-option';
+            const requiredYesInput = document.createElement('input');
+            requiredYesInput.type = 'radio';
+            requiredYesInput.name = requiredGroupName;
+            requiredYesInput.value = 'yes';
+            requiredYesInput.checked = !!safeField.required;
+            const requiredYesText = document.createElement('span');
+            requiredYesText.textContent = 'Yes';
+            requiredYesLabel.append(requiredYesInput, requiredYesText);
+
+            const requiredNoLabel = document.createElement('label');
+            requiredNoLabel.className = 'field-required-option';
+            const requiredNoInput = document.createElement('input');
+            requiredNoInput.type = 'radio';
+            requiredNoInput.name = requiredGroupName;
+            requiredNoInput.value = 'no';
+            requiredNoInput.checked = !safeField.required;
+            const requiredNoText = document.createElement('span');
+            requiredNoText.textContent = 'No';
+            requiredNoLabel.append(requiredNoInput, requiredNoText);
 
             const updateRequiredState = (nextRequired)=>{
               const next = !!nextRequired;
@@ -12179,11 +12213,20 @@ function makePosts(){
               renderFormPreview();
             };
 
-            fieldRequiredInput.addEventListener('change', ()=>{
-              updateRequiredState(fieldRequiredInput.checked);
+            requiredYesInput.addEventListener('change', ()=>{
+              if(requiredYesInput.checked){
+                updateRequiredState(true);
+              }
             });
 
-            inlineControls.append(fieldTypeWrapper, fieldRequiredLabel, fieldRequiredToggle);
+            requiredNoInput.addEventListener('change', ()=>{
+              if(requiredNoInput.checked){
+                updateRequiredState(false);
+              }
+            });
+
+            fieldRequiredOptions.append(requiredYesLabel, requiredNoLabel);
+            fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredOptions);
 
             const dropdownOptionsContainer = document.createElement('div');
             dropdownOptionsContainer.className = 'dropdown-options-editor';
@@ -12352,15 +12395,33 @@ function makePosts(){
               renderFormPreview();
             });
 
+            const deleteFieldBtn = document.createElement('button');
+            deleteFieldBtn.type = 'button';
+            deleteFieldBtn.className = 'delete-field-btn';
+            deleteFieldBtn.textContent = '×';
+
+            const updateDeleteFieldAria = ()=>{
+              const displayName = fieldNameInput.value.trim() || 'field';
+              deleteFieldBtn.setAttribute('aria-label', `Delete ${displayName} field`);
+              deleteFieldBtn.setAttribute('title', `Delete ${displayName} field`);
+            };
+
+            fieldNameInput.addEventListener('input', ()=>{
+              safeField.name = fieldNameInput.value;
+              updateDeleteFieldAria();
+              notifyFormbuilderChange();
+              renderFormPreview();
+            });
+
             fieldTypeSelect.addEventListener('change', ()=>{
               const previousType = safeField.type;
               const previousLabel = getFormFieldTypeLabel(previousType).trim();
-              const currentName = typeof safeField.name === 'string' ? safeField.name.trim() : '';
+              const currentName = fieldNameInput.value.trim();
               const nextType = fieldTypeSelect.value;
               const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
               const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
-
+              
               // Update fieldTypeKey to match dropdown selection
               safeField.fieldTypeKey = nextValidType;
               safeField.key = nextValidType;
@@ -12371,21 +12432,30 @@ function makePosts(){
                 // Update placeholder from field type
                 if(matchingFieldType.placeholder){
                   safeField.placeholder = matchingFieldType.placeholder;
+                  fieldPlaceholderInput.value = matchingFieldType.placeholder;
                 }
                 // Update type to match the field type (for complex types like images, venue-ticketing, etc.)
                 safeField.type = nextValidType;
               }
-
+              
               if(shouldAutofillName && nextLabel){
                 safeField.name = nextLabel;
+                fieldNameInput.value = nextLabel;
+                updateDeleteFieldAria();
               }
               notifyFormbuilderChange();
               updateFieldEditorsByType();
               renderFormPreview();
             });
 
+            fieldPlaceholderInput.addEventListener('input', ()=>{
+              safeField.placeholder = fieldPlaceholderInput.value;
+              notifyFormbuilderChange();
+              renderFormPreview();
+            });
+
             const handleDeleteField = async ()=>{
-              const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';
+              const fieldDisplayName = fieldNameInput.value.trim() || 'field';
               const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
               if(!confirmed) return;
               const idx = fields.indexOf(safeField);
@@ -12414,12 +12484,25 @@ function makePosts(){
 
             safeField.__handleDeleteField = handleDeleteField;
 
+            deleteFieldBtn.addEventListener('click', async event=>{
+              event.preventDefault();
+              event.stopPropagation();
+              await handleDeleteField();
+            });
+
+            updateDeleteFieldAria();
+
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
               const showVariantPricing = type === 'variant-pricing';
               const showVenueSession = type === 'venue-ticketing';
+              const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
+              fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
+                if(fieldPlaceholderInput.value){
+                  fieldPlaceholderInput.value = '';
+                }
                 if(safeField.placeholder){
                   safeField.placeholder = '';
                   notifyFormbuilderChange();
@@ -12471,6 +12554,9 @@ function makePosts(){
                 if(!safeField.placeholder || !safeField.placeholder.trim()){
                   const defaultPlaceholder = 'Search for a location';
                   safeField.placeholder = defaultPlaceholder;
+                  if(!fieldPlaceholderInput.value){
+                    fieldPlaceholderInput.value = defaultPlaceholder;
+                  }
                 }
                 if(!safeField.location || typeof safeField.location !== 'object'){
                   safeField.location = { address: '', latitude: '', longitude: '' };
@@ -12483,16 +12569,19 @@ function makePosts(){
             };
 
             updateFieldEditorsByType();
-            row.append(inlineControls, dropdownOptionsContainer);
+
+            fieldHeader.append(fieldNameInput, deleteFieldBtn);
+
+            row.append(fieldHeader, fieldTypeWrapper, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer);
             row.__fieldRef = safeField;
             safeField.__rowEl = row;
             return {
               row,
               focus(){
                 try{
-                  fieldTypeSelect.focus({ preventScroll: true });
+                  fieldNameInput.focus({ preventScroll: true });
                 }catch(err){
-                  try{ fieldTypeSelect.focus(); }catch(e){}
+                  try{ fieldNameInput.focus(); }catch(e){}
                 }
               },
               focusTypePicker(){
@@ -19108,7 +19197,7 @@ const memberPanelChangeManager = (()=>{
       ...Object.keys(b || {})
     ]);
     for(const key of keys){
-      if(a[key] !== b[key]){
+      if((a && a[key]) !== (b && b[key])){
         return false;
       }
     }

@@ -6478,12 +6478,6 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .subcategory-field-row .field-inline-controls{
-              display:flex;
-              align-items:center;
-              gap:12px;
-              flex-wrap:nowrap;
-            }
             #tab-forms .subcategory-field-row .field-row-header{
               display:flex;
               align-items:center;
@@ -6494,9 +6488,6 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               flex:0 0 auto;
-            }
-            #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
-              flex:1 1 auto;
             }
             #tab-forms .field-type-select{
               padding-right:32px;
@@ -6547,10 +6538,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .field-required-label{
               font-weight:600;
-              white-space:nowrap;
-            }
-            #tab-forms .field-required-switch{
-              margin-left:auto;
             }
             #tab-forms .field-placeholder-wrapper[hidden]{
               display:none !important;
@@ -7315,6 +7302,8 @@ html, body { cursor: auto !important; }
               position:absolute;
               top:0;
               left:0;
+              width:100%;
+              height:100%;
               display:none;
               background:transparent;
               z-index:200000;
@@ -7327,12 +7316,18 @@ html, body { cursor: auto !important; }
               position:absolute;
               outline:none;
               max-height:none;
-              overflow:visible;
+              overflow:auto;
               pointer-events:auto;
-              background:#000;
-              border-radius:8px;
-              padding:10px;
+              background:rgba(0,0,0,0.35);
+              border:1px solid var(--border);
+              border-radius:12px;
+              padding:16px;
               box-sizing:border-box;
+              color:var(--text);
+              font:inherit;
+              box-shadow:0 20px 45px rgba(0,0,0,0.45);
+              max-width:calc(100vw - 48px);
+              max-height:calc(100vh - 48px);
             }
             .subcategory-field-overlay-content > .subcategory-field-row{
               margin:0;

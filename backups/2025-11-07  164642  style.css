@@ -6478,12 +6478,6 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .subcategory-field-row .field-inline-controls{
-              display:flex;
-              align-items:center;
-              gap:12px;
-              flex-wrap:nowrap;
-            }
             #tab-forms .subcategory-field-row .field-row-header{
               display:flex;
               align-items:center;
@@ -6494,9 +6488,6 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               flex:0 0 auto;
-            }
-            #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
-              flex:1 1 auto;
             }
             #tab-forms .field-type-select{
               padding-right:32px;
@@ -6547,10 +6538,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .field-required-label{
               font-weight:600;
-              white-space:nowrap;
-            }
-            #tab-forms .field-required-switch{
-              margin-left:auto;
             }
             #tab-forms .field-placeholder-wrapper[hidden]{
               display:none !important;

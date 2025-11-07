@@ -6478,12 +6478,6 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .subcategory-field-row .field-inline-controls{
-              display:flex;
-              align-items:center;
-              gap:12px;
-              flex-wrap:nowrap;
-            }
             #tab-forms .subcategory-field-row .field-row-header{
               display:flex;
               align-items:center;
@@ -6494,9 +6488,6 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               flex:0 0 auto;
-            }
-            #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
-              flex:1 1 auto;
             }
             #tab-forms .field-type-select{
               padding-right:32px;
@@ -6547,10 +6538,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .field-required-label{
               font-weight:600;
-              white-space:nowrap;
-            }
-            #tab-forms .field-required-switch{
-              margin-left:auto;
             }
             #tab-forms .field-placeholder-wrapper[hidden]{
               display:none !important;
@@ -6811,9 +6798,9 @@ html, body { cursor: auto !important; }
               gap:12px;
             }
             #tab-forms .form-preview-container{
-              border:none;
-              border-radius:0;
-              background:none;
+              border:1px solid var(--border);
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
               padding:0;
               display:flex;
               flex-direction:column;
@@ -6833,9 +6820,9 @@ html, body { cursor: auto !important; }
               color:var(--muted);
             }
             #tab-forms .form-preview-container .panel-field{
-              background:none;
-              padding:0;
-              border-radius:0;
+              background:rgba(0,0,0,0.25);
+              padding:12px;
+              border-radius:10px;
               border:none;
               max-width:none;
             }
@@ -6858,14 +6845,13 @@ html, body { cursor: auto !important; }
               display:inline-flex;
               align-items:center;
               gap:4px;
-              width:100%;
-              justify-content:flex-start;
+              width:fit-content;
               cursor:pointer;
             }
             #tab-forms .form-preview-field-header{
               display:flex;
               align-items:center;
-              justify-content:flex-start;
+              justify-content:space-between;
               gap:12px;
               margin-bottom:8px;
             }
@@ -6875,7 +6861,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .form-preview-field-header .delete-field-btn{
               flex:0 0 auto;
-              margin-left:auto;
             }
             #tab-forms .form-preview-container .panel-field .subcategory-form-button:focus-visible{
               outline:2px solid var(--btn-hover, #2e3a72);
