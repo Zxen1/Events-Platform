@@ -8544,6 +8544,7 @@ function makePosts(){
           const subContent = document.createElement('div');
           subContent.className = 'subcategory-form-content';
           subContent.id = subContentId;
+          subContent.dataset.subcategory = sub;
           subContent.hidden = true;
 
           const subNameInput = document.createElement('input');
@@ -21900,33 +21901,34 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
       
-      // Get the EXACT same fields that formbuilder uses
-      const fields = getFieldsForSelection(categoryName, subcategoryName);
-      fieldIdCounter = 0;
+      // Find the formbuilder's rendered preview for this subcategory and clone it
+      const formbuilderPreview = document.querySelector(`[data-subcategory="${subcategoryName}"] .form-preview-fields`);
+      
       formFields.innerHTML = '';
       currentCreateFields = [];
       
-      if(fields.length === 0){
+      if(!formbuilderPreview || !formbuilderPreview.children.length){
         const placeholder = document.createElement('p');
         placeholder.className = 'member-create-placeholder';
         placeholder.textContent = 'No fields configured for this subcategory yet.';
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
-        // Clone the formbuilder preview rendering EXACTLY (make it editable)
-        fields.forEach((field, index)=>{
-          const fieldEl = buildMemberCreateField(field, index);
-          if(fieldEl){
-            // Make inputs editable (remove readOnly, tabIndex, disabled)
-            fieldEl.querySelectorAll('[readonly]').forEach(el => el.readOnly = false);
-            fieldEl.querySelectorAll('[tabindex="-1"]').forEach(el => el.removeAttribute('tabindex'));
-            fieldEl.querySelectorAll('[disabled]').forEach(el => el.disabled = false);
-            
-            formFields.appendChild(fieldEl);
-            currentCreateFields.push({ field, element: fieldEl });
-          }
+        // Clone each field from formbuilder preview
+        Array.from(formbuilderPreview.children).forEach((fieldEl, index) => {
+          const clonedField = fieldEl.cloneNode(true);
+          
+          // Make inputs editable
+          clonedField.querySelectorAll('[readonly]').forEach(el => el.readOnly = false);
+          clonedField.querySelectorAll('[tabindex="-1"]').forEach(el => el.removeAttribute('tabindex'));
+          clonedField.querySelectorAll('[disabled]').forEach(el => el.disabled = false);
+          clonedField.querySelectorAll('button').forEach(btn => btn.remove()); // Remove formbuilder buttons
+          
+          formFields.appendChild(clonedField);
+          currentCreateFields.push({ field: {}, element: clonedField });
         });
       }
+      
       if(emptyState) emptyState.hidden = true;
       if(formWrapper) formWrapper.hidden = false;
       if(checkoutContainer) checkoutContainer.hidden = false;
