@@ -20505,12 +20505,6 @@ document.addEventListener('pointerdown', (e) => {
     const emptyState = document.getElementById('memberCreateEmpty');
     const formWrapper = document.getElementById('memberCreateFormWrapper');
     const formFields = document.getElementById('memberCreateFormFields');
-    const checkoutContainer = document.getElementById('memberCreateCheckout');
-    const paypalContainer = document.getElementById('memberCreatePaypalContainer');
-    const paypalButton = document.getElementById('memberCreatePaypalButton');
-    const postButton = document.getElementById('memberCreatePostBtn');
-    const listingCurrency = document.getElementById('memberCreateListingCurrency');
-    const listingPrice = document.getElementById('memberCreateListingPrice');
     const memberForm = document.getElementById('memberForm');
 
     let currentCreateFields = [];
@@ -20938,16 +20932,6 @@ document.addEventListener('pointerdown', (e) => {
       return `${integer}.${fraction}`;
     }
 
-    function updatePaypalContainer(triggered){
-      if(!paypalContainer) return;
-      const hasCredentials = !!(adminPaypalClientId && adminPaypalClientSecret && adminPaypalClientId.value.trim() && adminPaypalClientSecret.value.trim());
-      paypalContainer.textContent = hasCredentials
-        ? (triggered ? 'PayPal checkout will open once integration is connected.' : 'PayPal checkout is ready once connected to your credentials.')
-        : 'Connect PayPal in Admin Settings to enable checkout.';
-      if(paypalButton){
-        paypalButton.disabled = !hasCredentials;
-      }
-    }
 
     function sanitizeCreateField(field){
       const safe = {
@@ -21041,9 +21025,6 @@ document.addEventListener('pointerdown', (e) => {
         emptyState.hidden = false;
       }
       if(formWrapper) formWrapper.hidden = true;
-      if(checkoutContainer) checkoutContainer.hidden = true;
-      if(postButton) postButton.disabled = true;
-      updatePaypalContainer(false);
     }
 
     function buildVersionPriceEditor(field, labelId){
@@ -21940,12 +21921,9 @@ document.addEventListener('pointerdown', (e) => {
         });
       }
       
-      // Show form, hide everything else
+      // Show form
       if(emptyState) emptyState.hidden = true;
       if(formWrapper) formWrapper.hidden = false;
-      // Hide checkout/PayPal garbage
-      if(checkoutContainer) checkoutContainer.hidden = true;
-      if(postButton) postButton.disabled = false;
     }
 
     async function handleMemberCreatePost(event){
@@ -22435,11 +22413,6 @@ document.addEventListener('pointerdown', (e) => {
         adminListingPrice.value = formatPriceValue(adminListingPrice.value);
       });
     }
-    if(paypalButton){
-      paypalButton.addEventListener('click', ()=>{
-        updatePaypalContainer(true);
-      });
-    }
     if(memberForm){
       memberForm.addEventListener('submit', event => {
         let submitter = event.submitter || null;
@@ -22449,9 +22422,7 @@ document.addEventListener('pointerdown', (e) => {
             submitter = active;
           }
         }
-        const isCreateSubmit = submitter
-          ? submitter.id === 'memberCreatePostBtn'
-          : (!!memberCreateSection && !memberCreateSection.hidden);
+        const isCreateSubmit = !!memberCreateSection && !memberCreateSection.hidden;
         if(!isCreateSubmit){
           return;
         }
@@ -22485,12 +22456,6 @@ document.addEventListener('pointerdown', (e) => {
         });
       });
     }
-    if(adminPaypalClientId){
-      adminPaypalClientId.addEventListener('input', ()=> updatePaypalContainer(false));
-    }
-    if(adminPaypalClientSecret){
-      adminPaypalClientSecret.addEventListener('input', ()=> updatePaypalContainer(false));
-    }
 
     if(typeof formbuilderCats !== 'undefined' && formbuilderCats){
       formbuilderCats.addEventListener('change', ()=>{
@@ -22499,7 +22464,6 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     initializeMemberFormbuilderSnapshot();
-    updatePaypalContainer(false);
   }
 
   const colorAreas = [
