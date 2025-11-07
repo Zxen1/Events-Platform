@@ -5727,7 +5727,7 @@ html, body { cursor: auto !important; }
               flex:1;
             }
             #tab-forms .category-form-menu.cat-off{
-              opacity:0.5;
+              opacity:1;
             }
             #tab-forms .formbuilder-category-header,
             #tab-forms .formbuilder-subcategory-header,
@@ -5997,7 +5997,7 @@ html, body { cursor: auto !important; }
               position:relative;
             }
             #tab-forms .subcategory-form-menu.subcategory-off{
-              opacity:0.5;
+              opacity:1;
             }
             #tab-forms .category-form-menu.has-floating-overlay,
             #tab-forms .subcategory-form-menu.has-floating-overlay{
