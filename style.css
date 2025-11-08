@@ -2552,9 +2552,11 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .filter-basics-container{
   position:relative;
 }
-#filterPanel .filter-category-container,
-#tab-forms .formbuilder-container{
+#filterPanel .filter-category-container{
   margin-top:10px;
+}
+#tab-forms .formbuilder-container{
+  margin-top:0;
 }
 #filterPanel .keyword-row,
 #filterPanel .price-range-row,
@@ -5687,12 +5689,13 @@ html, body { cursor: auto !important; }
               align-items:center;
               justify-content:space-between;
               gap:12px;
-              padding:0;
+              padding:0 10px;
               position:relative;
             }
             #tab-forms .category-edit-btn,
             #tab-forms .subcategory-edit-btn,
-            #tab-forms .field-edit-btn{
+            #tab-forms .field-edit-btn,
+            #tab-forms .formbuilder-drag-handle{
               background:transparent;
               border:none;
               color:var(--button-text);
@@ -5705,9 +5708,20 @@ html, body { cursor: auto !important; }
               transition:background .2s;
               flex-shrink:0;
             }
+            #tab-forms .formbuilder-drag-handle{
+              cursor:grab;
+            }
+            #tab-forms .formbuilder-drag-handle.is-dragging{
+              cursor:grabbing;
+            }
+            #tab-forms .formbuilder-drag-handle svg{
+              pointer-events:none;
+            }
             #tab-forms .category-edit-btn:hover,
             #tab-forms .subcategory-edit-btn:hover,
-            #tab-forms .field-edit-btn:hover{
+            #tab-forms .field-edit-btn:hover,
+            #tab-forms .formbuilder-drag-handle:hover,
+            #tab-forms .formbuilder-drag-handle:focus-visible{
               background:rgba(255,255,255,0.1);
             }
             #tab-forms .category-edit-panel,
@@ -5744,16 +5758,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .category-form-menu.cat-off{
               opacity:1;
-            }
-            #tab-forms .formbuilder-category-header,
-            #tab-forms .formbuilder-subcategory-header,
-            #tab-forms .field-row-header{
-              cursor:grab;
-            }
-            #tab-forms .formbuilder-category-header.is-dragging,
-            #tab-forms .formbuilder-subcategory-header.is-dragging,
-            #tab-forms .field-row-header.is-dragging{
-              cursor:grabbing;
             }
             #tab-forms .category-form-menu.is-dragging,
             #tab-forms .subcategory-form-menu.is-dragging,
@@ -6527,7 +6531,7 @@ html, body { cursor: auto !important; }
               border:1px solid var(--border);
               border-radius:10px;
               background:rgba(0,0,0,0.2);
-              padding:12px;
+              padding:12px 10px;
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -6785,7 +6789,7 @@ html, body { cursor: auto !important; }
               align-items:center;
               justify-content:space-between;
               gap:12px;
-              padding:10px 12px;
+              padding:10px 10px;
               position:relative;
             }
             #tab-forms .subcategory-trigger-wrap{
@@ -6917,6 +6921,7 @@ html, body { cursor: auto !important; }
             #tab-forms .form-preview-container .form-preview-field{
               padding-top:0;
               padding-bottom:0;
+              margin:0;
             }
             #tab-forms .form-preview-container .panel-field label,
             #tab-forms .form-preview-container .panel-field .subcategory-form-button,
@@ -6948,7 +6953,7 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               gap:8px;
-              margin-bottom:8px;
+              margin:0;
             }
             #tab-forms .form-preview-field-header .subcategory-form-button,
             #tab-forms .form-preview-field-header .subcategory-form-label{
