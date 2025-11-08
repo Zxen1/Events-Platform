@@ -8557,7 +8557,6 @@ function makePosts(){
           editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
 
-<<<<<<< HEAD
         let suppressCategoryEditClick = false;
         const handleCategoryEditPointerDown = event => {
           if(editPanel.hidden){
@@ -8591,33 +8590,6 @@ function makePosts(){
             event.stopImmediatePropagation();
           }
           event.stopPropagation();
-=======
-        const shouldSkipCategoryClose = target => {
-          if(!target) return false;
-          if(editPanel.contains(target)) return true;
-          const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-          if(confirmOverlay && confirmOverlay.contains(target)) return true;
-          const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-          if(clickedEditBtn) return true;
-          return false;
-        };
-        const closeCategoryEditPanel = () => {
-          if(editPanel.hidden) return;
-          editPanel.hidden = true;
-          editBtn.setAttribute('aria-expanded', 'false');
-        };
-        const handleCategoryEditPointerDown = event => {
-          if(editPanel.hidden) return;
-          const target = event.target;
-          if(shouldSkipCategoryClose(target)) return;
-          closeCategoryEditPanel();
-        };
-        const handleCategoryEditClick = event => {
-          if(editPanel.hidden) return;
-          const target = event.target;
-          if(shouldSkipCategoryClose(target)) return;
-          closeCategoryEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
         document.addEventListener('click', handleCategoryEditClick, true);
@@ -8726,22 +8698,7 @@ function makePosts(){
               deleteIconKeys(subcategoryIconPaths, subId, subName);
             });
           }
-          if(Array.isArray(c.subs)){
-            c.subs.length = 0;
-          }
-          if(c.subIds && typeof c.subIds === 'object'){
-            Object.keys(c.subIds).forEach(key => { delete c.subIds[key]; });
-          }
-          if(c.subFields && typeof c.subFields === 'object'){
-            Object.keys(c.subFields).forEach(key => { delete c.subFields[key]; });
-          }
-          if(Array.isArray(categories)){
-            const categoryIndex = categories.indexOf(c);
-            if(categoryIndex !== -1){
-              categories.splice(categoryIndex, 1);
-            }
-          }
-          renderFormbuilderCats();
+          menu.remove();
           notifyFormbuilderChange();
         });
 
@@ -11717,10 +11674,7 @@ function makePosts(){
               }
             };
 
-<<<<<<< HEAD
             let suppressFieldEditClick = false;
-=======
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             const handleFieldEditPointerDown = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
                 document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -11728,31 +11682,16 @@ function makePosts(){
                 return;
               }
               if(editPanel.hidden){
-<<<<<<< HEAD
                 suppressFieldEditClick = false;
                 return;
               }
               const target = event.target;
               if(editPanel.contains(target)){
                 suppressFieldEditClick = false;
-=======
-                return;
-              }
-              const target = event.target;
-              if(!target){
-                return;
-              }
-              if(editPanel.contains(target)){
-                return;
-              }
-              const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-              if(confirmOverlay && confirmOverlay.contains(target)){
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
                 return;
               }
               const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn){
-<<<<<<< HEAD
                 suppressFieldEditClick = false;
                 return;
               }
@@ -11763,18 +11702,12 @@ function makePosts(){
                 event.stopImmediatePropagation();
               }
               event.stopPropagation();
-=======
-                return;
-              }
-              closeEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             };
 
             const handleFieldEditClick = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
                 document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
                 document.removeEventListener('click', handleFieldEditClick, true);
-<<<<<<< HEAD
                 return;
               }
               if(suppressFieldEditClick){
@@ -11784,26 +11717,15 @@ function makePosts(){
                   event.stopImmediatePropagation();
                 }
                 event.stopPropagation();
-=======
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
                 return;
               }
               if(editPanel.hidden) return;
               const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn === editBtn) return;
               if(clickedEditBtn) return;
-<<<<<<< HEAD
               if(!editPanel.contains(event.target)){
                 closeEditPanel();
               }
-=======
-              const target = event.target;
-              if(!target) return;
-              if(editPanel.contains(target)) return;
-              const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-              if(confirmOverlay && confirmOverlay.contains(target)) return;
-              closeEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             };
 
             document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -13306,24 +13228,8 @@ function makePosts(){
             if(c.subIds && typeof c.subIds === 'object' && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
               delete c.subIds[currentSubName];
             }
+            subMenu.remove();
             delete subFieldsMap[currentSubName];
-            if(Array.isArray(c.subs)){
-              const subIdx = c.subs.indexOf(currentSubName);
-              if(subIdx !== -1){
-                c.subs.splice(subIdx, 1);
-              }
-            }
-            if(Array.isArray(categories) && categories[sourceIndex] && Array.isArray(categories[sourceIndex].subs)){
-              const mirrorSubs = categories[sourceIndex].subs;
-              const mirrorIdx = mirrorSubs.indexOf(currentSubName);
-              if(mirrorIdx !== -1){
-                mirrorSubs.splice(mirrorIdx, 1);
-              }
-            }
-            if(c.subFields && typeof c.subFields === 'object' && Object.prototype.hasOwnProperty.call(c.subFields, currentSubName)){
-              delete c.subFields[currentSubName];
-            }
-            renderFormbuilderCats();
             notifyFormbuilderChange();
           });
 
@@ -13382,7 +13288,6 @@ function makePosts(){
             subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
           });
 
-<<<<<<< HEAD
           let suppressSubcategoryEditClick = false;
           const handleSubcategoryEditPointerDown = event => {
             if(subEditPanel.hidden){
@@ -13416,33 +13321,6 @@ function makePosts(){
               event.stopImmediatePropagation();
             }
             event.stopPropagation();
-=======
-          const shouldSkipSubcategoryClose = target => {
-            if(!target) return false;
-            if(subEditPanel.contains(target)) return true;
-            const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-            if(confirmOverlay && confirmOverlay.contains(target)) return true;
-            const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-            if(clickedEditBtn) return true;
-            return false;
-          };
-          const closeSubcategoryEditPanel = () => {
-            if(subEditPanel.hidden) return;
-            subEditPanel.hidden = true;
-            subEditBtn.setAttribute('aria-expanded', 'false');
-          };
-          const handleSubcategoryEditPointerDown = event => {
-            if(subEditPanel.hidden) return;
-            const target = event.target;
-            if(shouldSkipSubcategoryClose(target)) return;
-            closeSubcategoryEditPanel();
-          };
-          const handleSubcategoryEditClick = event => {
-            if(subEditPanel.hidden) return;
-            const target = event.target;
-            if(shouldSkipSubcategoryClose(target)) return;
-            closeSubcategoryEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
           };
           document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
           document.addEventListener('click', handleSubcategoryEditClick, true);
@@ -13541,10 +13419,6 @@ function makePosts(){
           if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
           if(subContent) subContent.hidden = false;
           const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
-<<<<<<< HEAD
-=======
-          const newSubEditBtn = newSubMenu.querySelector('.subcategory-edit-btn');
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
           if(newSubEditPanel){
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel !== newSubEditPanel){
@@ -13553,12 +13427,6 @@ function makePosts(){
             });
             closeFieldEditPanels();
             newSubEditPanel.hidden = false;
-<<<<<<< HEAD
-=======
-            if(newSubEditBtn){
-              newSubEditBtn.setAttribute('aria-expanded','true');
-            }
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
           }
           const subNameField = newSubMenu.querySelector('.subcategory-name-input');
           if(subNameField){
@@ -13567,7 +13435,6 @@ function makePosts(){
               catch(err){
                 try{ subNameField.focus(); }catch(e){}
               }
-              try{ subNameField.select(); }catch(err){}
             });
           }
         });
@@ -13630,7 +13497,6 @@ function makePosts(){
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
         const editPanel = newMenu.querySelector('.category-edit-panel');
-        const editBtn = newMenu.querySelector('.category-edit-btn');
         const nameField = newMenu.querySelector('.category-name-input');
         newMenu.setAttribute('aria-expanded','true');
         if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
@@ -13643,12 +13509,6 @@ function makePosts(){
           });
           closeFieldEditPanels();
           editPanel.hidden = false;
-<<<<<<< HEAD
-=======
-          if(editBtn){
-            editBtn.setAttribute('aria-expanded','true');
-          }
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
         }
         if(nameField){
           requestAnimationFrame(()=>{
@@ -13656,7 +13516,6 @@ function makePosts(){
             catch(err){
               try{ nameField.focus(); }catch(e){}
             }
-            try{ nameField.select(); }catch(err){}
           });
         }
       });
