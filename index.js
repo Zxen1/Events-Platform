@@ -8350,6 +8350,7 @@ function makePosts(){
         editBtn.className = 'category-edit-btn';
         editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
+        editBtn.setAttribute('aria-expanded','false');
 
         const categoryDragHandle = createFormbuilderDragHandle(`Reorder ${c.name || 'Category'} category`, 'category-drag-handle');
 
@@ -8467,18 +8468,56 @@ function makePosts(){
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-            if(panel !== editPanel) panel.hidden = true;
+            if(panel === editPanel) return;
+            panel.hidden = true;
+            const relatedButton = panel.parentElement
+              ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
+              : null;
+            if(relatedButton){
+              relatedButton.setAttribute('aria-expanded','false');
+            }
           });
           closeFieldEditPanels();
           editPanel.hidden = !editPanel.hidden;
+          editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
-        
-        document.addEventListener('click', (e)=>{
-          const clickedEditBtn = e.target.closest('.category-edit-btn, .subcategory-edit-btn');
-          if(!editPanel.hidden && !editPanel.contains(e.target) && !clickedEditBtn){
-            editPanel.hidden = true;
+
+        let suppressCategoryEditClick = false;
+        const handleCategoryEditPointerDown = event => {
+          if(editPanel.hidden){
+            suppressCategoryEditClick = false;
+            return;
           }
-        });
+          const target = event.target;
+          if(editPanel.contains(target)){
+            suppressCategoryEditClick = false;
+            return;
+          }
+          const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
+          if(clickedEditBtn){
+            suppressCategoryEditClick = false;
+            return;
+          }
+          editPanel.hidden = true;
+          editBtn.setAttribute('aria-expanded', 'false');
+          suppressCategoryEditClick = true;
+          event.preventDefault();
+          if(typeof event.stopImmediatePropagation === 'function'){
+            event.stopImmediatePropagation();
+          }
+          event.stopPropagation();
+        };
+        const handleCategoryEditClick = event => {
+          if(!suppressCategoryEditClick) return;
+          suppressCategoryEditClick = false;
+          event.preventDefault();
+          if(typeof event.stopImmediatePropagation === 'function'){
+            event.stopImmediatePropagation();
+          }
+          event.stopPropagation();
+        };
+        document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
+        document.addEventListener('click', handleCategoryEditClick, true);
         editMenu.appendChild(addSubBtn);
 
         const subMenusContainer = document.createElement('div');
@@ -8657,6 +8696,7 @@ function makePosts(){
           subEditBtn.className = 'subcategory-edit-btn';
           subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
+          subEditBtn.setAttribute('aria-expanded','false');
 
           const subDragHandle = createFormbuilderDragHandle(`Reorder ${sub || 'Subcategory'} subcategory`, 'subcategory-drag-handle');
 
@@ -11538,20 +11578,62 @@ function makePosts(){
               }
             };
 
-            const handleDocumentClick = event => {
+            let suppressFieldEditClick = false;
+            const handleFieldEditPointerDown = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
-                document.removeEventListener('click', handleDocumentClick);
+                document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
+                document.removeEventListener('click', handleFieldEditClick, true);
+                return;
+              }
+              if(editPanel.hidden){
+                suppressFieldEditClick = false;
+                return;
+              }
+              const target = event.target;
+              if(editPanel.contains(target)){
+                suppressFieldEditClick = false;
+                return;
+              }
+              const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
+              if(clickedEditBtn){
+                suppressFieldEditClick = false;
+                return;
+              }
+              closeEditPanel();
+              suppressFieldEditClick = true;
+              event.preventDefault();
+              if(typeof event.stopImmediatePropagation === 'function'){
+                event.stopImmediatePropagation();
+              }
+              event.stopPropagation();
+            };
+
+            const handleFieldEditClick = event => {
+              if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
+                document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
+                document.removeEventListener('click', handleFieldEditClick, true);
+                return;
+              }
+              if(suppressFieldEditClick){
+                suppressFieldEditClick = false;
+                event.preventDefault();
+                if(typeof event.stopImmediatePropagation === 'function'){
+                  event.stopImmediatePropagation();
+                }
+                event.stopPropagation();
                 return;
               }
               if(editPanel.hidden) return;
               const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn === editBtn) return;
+              if(clickedEditBtn) return;
               if(!editPanel.contains(event.target)){
                 closeEditPanel();
               }
             };
 
-            document.addEventListener('click', handleDocumentClick);
+            document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
+            document.addEventListener('click', handleFieldEditClick, true);
 
             const updateRequiredState = nextRequired => {
               const next = !!nextRequired;
@@ -13087,18 +13169,56 @@ function makePosts(){
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-              if(panel !== subEditPanel) panel.hidden = true;
+              if(panel === subEditPanel) return;
+              panel.hidden = true;
+              const relatedButton = panel.parentElement
+                ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
+                : null;
+              if(relatedButton){
+                relatedButton.setAttribute('aria-expanded','false');
+              }
             });
             closeFieldEditPanels();
             subEditPanel.hidden = !subEditPanel.hidden;
+            subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
           });
-          
-          document.addEventListener('click', (e)=>{
-            const clickedEditBtn = e.target.closest('.category-edit-btn, .subcategory-edit-btn');
-            if(!subEditPanel.hidden && !subEditPanel.contains(e.target) && !clickedEditBtn){
-              subEditPanel.hidden = true;
+
+          let suppressSubcategoryEditClick = false;
+          const handleSubcategoryEditPointerDown = event => {
+            if(subEditPanel.hidden){
+              suppressSubcategoryEditClick = false;
+              return;
             }
-          });
+            const target = event.target;
+            if(subEditPanel.contains(target)){
+              suppressSubcategoryEditClick = false;
+              return;
+            }
+            const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
+            if(clickedEditBtn){
+              suppressSubcategoryEditClick = false;
+              return;
+            }
+            subEditPanel.hidden = true;
+            subEditBtn.setAttribute('aria-expanded', 'false');
+            suppressSubcategoryEditClick = true;
+            event.preventDefault();
+            if(typeof event.stopImmediatePropagation === 'function'){
+              event.stopImmediatePropagation();
+            }
+            event.stopPropagation();
+          };
+          const handleSubcategoryEditClick = event => {
+            if(!suppressSubcategoryEditClick) return;
+            suppressSubcategoryEditClick = false;
+            event.preventDefault();
+            if(typeof event.stopImmediatePropagation === 'function'){
+              event.stopImmediatePropagation();
+            }
+            event.stopPropagation();
+          };
+          document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
+          document.addEventListener('click', handleSubcategoryEditClick, true);
 
           subContent.append(fieldsSection);
 
@@ -20923,12 +21043,7 @@ document.addEventListener('pointerdown', (e) => {
     const emptyState = document.getElementById('memberCreateEmpty');
     const formWrapper = document.getElementById('memberCreateFormWrapper');
     const formFields = document.getElementById('memberCreateFormFields');
-    const checkoutContainer = document.getElementById('memberCreateCheckout');
-    const paypalContainer = document.getElementById('memberCreatePaypalContainer');
-    const paypalButton = document.getElementById('memberCreatePaypalButton');
     const postButton = document.getElementById('memberCreatePostBtn');
-    const listingCurrency = document.getElementById('memberCreateListingCurrency');
-    const listingPrice = document.getElementById('memberCreateListingPrice');
     const memberForm = document.getElementById('memberForm');
 
     let currentCreateFields = [];
@@ -21294,7 +21409,6 @@ document.addEventListener('pointerdown', (e) => {
       memberSnapshot = normalized;
       memberCategories = memberSnapshot.categories;
       currencyCodes = collectCurrencyCodes(memberSnapshot);
-      ensureCurrencyOptions(listingCurrency);
       ensureCurrencyOptions(adminListingCurrency);
       if(options.populate !== false){
         populateCategoryOptions(options.preserveSelection === true);
@@ -21354,17 +21468,6 @@ document.addEventListener('pointerdown', (e) => {
         fraction = `${fraction}0`;
       }
       return `${integer}.${fraction}`;
-    }
-
-    function updatePaypalContainer(triggered){
-      if(!paypalContainer) return;
-      const hasCredentials = !!(adminPaypalClientId && adminPaypalClientSecret && adminPaypalClientId.value.trim() && adminPaypalClientSecret.value.trim());
-      paypalContainer.textContent = hasCredentials
-        ? (triggered ? 'PayPal checkout will open once integration is connected.' : 'PayPal checkout is ready once connected to your credentials.')
-        : 'Connect PayPal in Admin Settings to enable checkout.';
-      if(paypalButton){
-        paypalButton.disabled = !hasCredentials;
-      }
     }
 
     function sanitizeCreateField(field){
@@ -21459,9 +21562,7 @@ document.addEventListener('pointerdown', (e) => {
         emptyState.hidden = false;
       }
       if(formWrapper) formWrapper.hidden = true;
-      if(checkoutContainer) checkoutContainer.hidden = true;
       if(postButton) postButton.disabled = true;
-      updatePaypalContainer(false);
     }
 
     function buildVersionPriceEditor(field, labelId){
@@ -22328,9 +22429,7 @@ document.addEventListener('pointerdown', (e) => {
       }
       if(emptyState) emptyState.hidden = true;
       if(formWrapper) formWrapper.hidden = false;
-      if(checkoutContainer) checkoutContainer.hidden = false;
       if(postButton) postButton.disabled = false;
-      updatePaypalContainer(false);
     }
 
     async function handleMemberCreatePost(event){
@@ -22381,30 +22480,6 @@ document.addEventListener('pointerdown', (e) => {
       const subcategoryId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subcategoryName)
         ? category.subIds[subcategoryName]
         : null;
-
-      const listingCurrencyValue = listingCurrency ? listingCurrency.value.trim() : '';
-      const listingPriceRaw = listingPrice ? formatPriceValue(listingPrice.value) : '';
-      if(listingPrice){
-        listingPrice.value = listingPriceRaw;
-      }
-      if(listingPriceRaw && !listingCurrencyValue){
-        showCreateStatus('Choose a currency for the listing price.', { error: true });
-        if(listingCurrency){
-          focusElement(listingCurrency);
-        }
-        restoreButtonState();
-        isSubmittingCreatePost = false;
-        return;
-      }
-      if(listingCurrencyValue && !listingPriceRaw){
-        showCreateStatus('Enter a listing price amount.', { error: true });
-        if(listingPrice){
-          focusElement(listingPrice);
-        }
-        restoreButtonState();
-        isSubmittingCreatePost = false;
-        return;
-      }
 
       let postTitle = '';
       const fieldPayload = [];
@@ -22603,10 +22678,6 @@ document.addEventListener('pointerdown', (e) => {
         subcategory_id: subcategoryId,
         subcategory_name: subcategoryName,
         title: postTitle,
-        listing: {
-          currency: listingCurrencyValue,
-          price: listingPriceRaw
-        },
         fields: fieldPayload,
         member: currentMember
       };
@@ -22725,12 +22796,6 @@ document.addEventListener('pointerdown', (e) => {
         subcategorySelect.dataset.lastSelected = '';
       }
       populateSubcategoryOptions(false);
-      if(listingCurrency){
-        listingCurrency.value = '';
-      }
-      if(listingPrice){
-        listingPrice.value = '';
-      }
       currentCreateFields = [];
       renderEmptyState();
 
@@ -22810,19 +22875,9 @@ document.addEventListener('pointerdown', (e) => {
         renderCreateFields();
       });
     }
-    if(listingPrice){
-      listingPrice.addEventListener('blur', ()=>{
-        listingPrice.value = formatPriceValue(listingPrice.value);
-      });
-    }
     if(adminListingPrice){
       adminListingPrice.addEventListener('blur', ()=>{
         adminListingPrice.value = formatPriceValue(adminListingPrice.value);
-      });
-    }
-    if(paypalButton){
-      paypalButton.addEventListener('click', ()=>{
-        updatePaypalContainer(true);
       });
     }
     if(memberForm){
@@ -22870,13 +22925,6 @@ document.addEventListener('pointerdown', (e) => {
         });
       });
     }
-    if(adminPaypalClientId){
-      adminPaypalClientId.addEventListener('input', ()=> updatePaypalContainer(false));
-    }
-    if(adminPaypalClientSecret){
-      adminPaypalClientSecret.addEventListener('input', ()=> updatePaypalContainer(false));
-    }
-
     if(typeof formbuilderCats !== 'undefined' && formbuilderCats){
       formbuilderCats.addEventListener('change', ()=>{
         refreshMemberSnapshotFromManager();
@@ -22884,7 +22932,6 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     initializeMemberFormbuilderSnapshot();
-    updatePaypalContainer(false);
   }
 
   const colorAreas = [
