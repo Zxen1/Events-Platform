@@ -68,8 +68,7 @@ function compareCategoriesForDisplay(a, b) {
   const nameA = typeof a.name === 'string' ? a.name : '';
   const nameB = typeof b.name === 'string' ? b.name : '';
   const nameCompare = nameA.localeCompare(nameB, undefined, { sensitivity: 'accent', numeric: true });
-  const bothSortOrdersMissing = orderA === null && orderB === null;
-  if (!bothSortOrdersMissing && nameCompare !== 0) {
+  if (nameCompare !== 0) {
     return nameCompare;
   }
   return 0;
@@ -7491,15 +7490,12 @@ function makePosts(){
         state.dropIndicatorClass = '';
       }
       state.dropIndicatorBefore = before;
-      const selector = state && state.rowSelector ? state.rowSelector : '.subcategory-field-row';
-      positionDropIndicator(state.container, target, before, selector, draggedFieldRow);
+      positionDropIndicator(state.container, target, before, '.subcategory-field-row', draggedFieldRow);
     }
 
     function syncFieldOrderFromDom(container, fields){
       if(!container || !Array.isArray(fields)) return;
-      const state = fieldContainerState.get(container);
-      const selector = (state && state.rowSelector) || container.dataset.fieldRowSelector || '.subcategory-field-row';
-      const rows = Array.from(container.querySelectorAll(selector));
+      const rows = Array.from(container.querySelectorAll('.subcategory-field-row'));
       const original = fields.slice();
       const reordered = [];
       rows.forEach(row=>{
@@ -7519,6 +7515,7 @@ function makePosts(){
         if(changed){
           fields.splice(0, fields.length, ...reordered);
           notifyFormbuilderChange();
+          const state = fieldContainerState.get(container);
           if(state && typeof state.onFieldsReordered === 'function'){
             try{
               state.onFieldsReordered();
@@ -7534,7 +7531,6 @@ function makePosts(){
 
     function setupFieldContainer(container, fields){
       if(!container) return null;
-      const rowSelector = container.dataset.fieldRowSelector || '.subcategory-field-row';
       let state = fieldContainerState.get(container);
       if(!state){
         state = {
@@ -7543,8 +7539,7 @@ function makePosts(){
           dropIndicatorBefore: null,
           dropCommitted: false,
           fields,
-          container,
-          rowSelector
+          container
         };
         fieldContainerState.set(container, state);
         container.addEventListener('dragover', event=>{
@@ -7554,9 +7549,8 @@ function makePosts(){
           if(event.dataTransfer){
             event.dataTransfer.dropEffect = 'move';
           }
-          const selector = state.rowSelector || '.subcategory-field-row';
-          const target = event.target.closest(selector);
-          const rows = Array.from(container.querySelectorAll(selector)).filter(row => row !== draggedFieldRow);
+          const target = event.target.closest('.subcategory-field-row');
+          const rows = Array.from(container.querySelectorAll('.subcategory-field-row')).filter(row => row !== draggedFieldRow);
           const containerRect = container.getBoundingClientRect();
           if(!target || target === draggedFieldRow){
             if(rows.length === 0){
@@ -7588,12 +7582,11 @@ function makePosts(){
             }
           }
           reference = sanitizeInsertionReference(reference);
-          const selector = state.rowSelector || '.subcategory-field-row';
-          const beforeRects = captureChildPositions(container, selector);
+          const beforeRects = captureChildPositions(container, '.subcategory-field-row');
           const currentNext = draggedFieldRow.nextSibling;
           if(reference !== draggedFieldRow && reference !== currentNext){
             container.insertBefore(draggedFieldRow, reference || null);
-            animateListReorder(container, selector, beforeRects, draggedFieldRow);
+            animateListReorder(container, '.subcategory-field-row', beforeRects, draggedFieldRow);
           }
           clearFieldDropIndicator(state);
           syncFieldOrderFromDom(container, state.fields || fields);
@@ -7607,7 +7600,6 @@ function makePosts(){
       }
       state.fields = fields;
       state.container = container;
-      state.rowSelector = rowSelector;
       return state;
     }
 
@@ -8281,16 +8273,18 @@ function makePosts(){
         editBtn.className = 'category-edit-btn';
         editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
-
+        
+        const toggle = document.createElement('label');
+        toggle.className = 'switch cat-switch';
         const toggleInput = document.createElement('input');
         toggleInput.type = 'checkbox';
-        const isCategoryInitiallyEnabled = !(c && (c.hidden === true || c.enabled === false || c.visible === false || c.off === true));
-        toggleInput.checked = isCategoryInitiallyEnabled;
-        toggleInput.hidden = true;
-        toggleInput.className = 'category-visibility-input';
+        toggleInput.checked = true;
         toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
+        const toggleSlider = document.createElement('span');
+        toggleSlider.className = 'slider';
+        toggle.append(toggleInput, toggleSlider);
 
-        header.append(triggerWrap, editBtn);
+        header.append(triggerWrap, editBtn, toggle);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -8348,17 +8342,17 @@ function makePosts(){
           parentCategoryMenu: menu
         });
 
-        const deleteCategoryBtn = document.createElement('button');
-        deleteCategoryBtn.type = 'button';
-        deleteCategoryBtn.className = 'delete-category-btn';
-        deleteCategoryBtn.textContent = 'Delete Category';
-        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
-
         const addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.type = 'button';
+        deleteCategoryBtn.className = 'delete-category-btn';
+        deleteCategoryBtn.textContent = 'Delete Category';
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
 
         const hideToggleRow = document.createElement('div');
         hideToggleRow.className = 'category-hide-toggle-row';
@@ -8373,13 +8367,17 @@ function makePosts(){
         hideToggleSlider.className = 'slider';
         hideToggle.append(hideToggleInput, hideToggleSlider);
         hideToggleRow.append(hideToggleLabel, hideToggle);
-
+        
         hideToggleInput.addEventListener('change', ()=>{
           toggleInput.checked = !hideToggleInput.checked;
           toggleInput.dispatchEvent(new Event('change', {bubbles: true}));
         });
-
-        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryBtn);
+        
+        toggleInput.addEventListener('change', ()=>{
+          hideToggleInput.checked = !toggleInput.checked;
+        });
+        
+        editPanel.append(nameInput, iconPicker, hideToggleRow, addSubBtn);
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
@@ -8401,6 +8399,10 @@ function makePosts(){
             editPanel.hidden = true;
           }
         });
+        const categoryDeleteActions = document.createElement('div');
+        categoryDeleteActions.className = 'category-delete-actions';
+        categoryDeleteActions.appendChild(deleteCategoryBtn);
+
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
         const addSubAnchor = document.createElement('div');
@@ -8580,22 +8582,18 @@ function makePosts(){
           subEditBtn.className = 'subcategory-edit-btn';
           subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
-
+          
+          const subToggle = document.createElement('label');
+          subToggle.className = 'subcategory-form-toggle';
           const subInput = document.createElement('input');
           subInput.type = 'checkbox';
-          const isSubInitiallyEnabled = !(
-            (c && Array.isArray(c.hiddenSubs) && c.hiddenSubs.includes(sub)) ||
-            (c && Array.isArray(c.disabledSubs) && c.disabledSubs.includes(sub)) ||
-            (c && c.subHidden && c.subHidden[sub] === true) ||
-            (c && c.subEnabled && c.subEnabled[sub] === false) ||
-            (c && c.subVisibility && c.subVisibility[sub] === false)
-          );
-          subInput.checked = isSubInitiallyEnabled;
-          subInput.hidden = true;
-          subInput.className = 'subcategory-visibility-input';
+          subInput.checked = true;
           subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
+          const subSlider = document.createElement('span');
+          subSlider.className = 'slider';
+          subToggle.append(subInput, subSlider);
 
-          subHeader.append(subTriggerWrap, subEditBtn);
+          subHeader.append(subTriggerWrap, subEditBtn, subToggle);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -11345,21 +11343,39 @@ function makePosts(){
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
+          const formPreviewBtn = document.createElement('button');
+          formPreviewBtn.type = 'button';
+          formPreviewBtn.className = 'form-preview-btn';
+          formPreviewBtn.setAttribute('aria-expanded', 'false');
+          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
+          const formPreviewLabel = document.createElement('span');
+          formPreviewLabel.textContent = 'Form Preview';
+          const formPreviewArrow = document.createElement('span');
+          formPreviewArrow.className = 'dropdown-arrow';
+          formPreviewArrow.setAttribute('aria-hidden', 'true');
+          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
+
           const formPreviewContainer = document.createElement('div');
           formPreviewContainer.className = 'form-preview-container';
+          formPreviewContainer.hidden = true;
           const formPreviewFields = document.createElement('div');
           formPreviewFields.className = 'form-preview-fields';
-          formPreviewFields.dataset.fieldRowSelector = '.form-preview-field';
           formPreviewContainer.appendChild(formPreviewFields);
           const formPreviewId = `${subContentId}Preview`;
           formPreviewContainer.id = formPreviewId;
-          formPreviewContainer.setAttribute('role', 'region');
-          formPreviewContainer.setAttribute('aria-label', `${sub} form preview`);
-          fieldsList.hidden = true;
-          fieldsList.setAttribute('aria-hidden', 'true');
-          fieldsSection.append(addFieldBtn, formPreviewContainer, fieldsList);
+          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
-          const previewContainerState = setupFieldContainer(formPreviewFields, fields);
+          fieldsSection.append(formPreviewBtn, formPreviewContainer, addFieldBtn);
+
+          formPreviewBtn.addEventListener('click', ()=>{
+            const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
+            const nextExpanded = !expanded;
+            formPreviewBtn.setAttribute('aria-expanded', String(nextExpanded));
+            formPreviewContainer.hidden = !nextExpanded;
+            if(nextExpanded){
+              renderFormPreview();
+            }
+          });
 
           const createFieldEditUI = (safeField, {
             hostElement = null,
@@ -11795,45 +11811,26 @@ function makePosts(){
               document.removeEventListener('click', handleDocumentClick);
             };
 
-          return {
-            editBtn,
-            editPanel,
-            editMenu,
-            inlineControls,
-            fieldTypeSelect,
-            fieldRequiredInput,
-            dropdownOptionsContainer,
-            dropdownOptionsList,
-            closeEditPanel,
-            openEditPanel,
-            setSummaryUpdater,
-            runSummaryUpdater,
-            updateFieldEditorsByType,
-            destroy
-          };
-        };
-
-          const isTruthy = value => value === true || value === 'true' || value === 1 || value === '1';
-          const isFalsy = value => value === false || value === 'false' || value === 0 || value === '0';
-          const isFormFieldVisible = field => {
-            if(!field || typeof field !== 'object') return true;
-            if(isTruthy(field.hidden)) return false;
-            if(isTruthy(field.off)) return false;
-            if(isFalsy(field.visible)) return false;
-            if(isFalsy(field.enabled)) return false;
-            return true;
+            return {
+              editBtn,
+              editPanel,
+              editMenu,
+              inlineControls,
+              fieldTypeSelect,
+              fieldRequiredInput,
+              dropdownOptionsContainer,
+              dropdownOptionsList,
+              closeEditPanel,
+              openEditPanel,
+              setSummaryUpdater,
+              runSummaryUpdater,
+              updateFieldEditorsByType,
+              destroy
+            };
           };
 
           let formPreviewFieldIdCounter = 0;
           function renderFormPreview(){
-            fields.forEach(fieldItem => {
-              if(fieldItem && fieldItem.__previewEl){
-                if(fieldItem.__previewEl.__fieldRef === fieldItem){
-                  delete fieldItem.__previewEl.__fieldRef;
-                }
-                delete fieldItem.__previewEl;
-              }
-            });
             formPreviewFields.innerHTML = '';
             if(!fields.length){
               const empty = document.createElement('p');
@@ -11853,7 +11850,6 @@ function makePosts(){
               labelEl.textContent = labelText;
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
-              const fieldVisible = isFormFieldVisible(previewField);
               const previewDeleteBtn = document.createElement('button');
               previewDeleteBtn.type = 'button';
               previewDeleteBtn.className = 'delete-field-btn';
@@ -12612,8 +12608,6 @@ function makePosts(){
                 asterisk.textContent = '*';
                 labelEl.appendChild(asterisk);
               }
-              wrapper.classList.toggle('form-preview-field--hidden', !fieldVisible);
-              labelEl.classList.toggle('form-preview-field-label--hidden', !fieldVisible);
               const header = document.createElement('div');
               header.className = 'form-preview-field-header';
               header.style.position = 'relative';
@@ -12634,32 +12628,13 @@ function makePosts(){
 
               header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel, previewDeleteBtn);
               wrapper.append(header, control);
-              wrapper._header = header;
-              wrapper.__fieldRef = previewField;
-              previewField.__previewEl = wrapper;
               formPreviewFields.appendChild(wrapper);
-              enableFieldDrag(wrapper, formPreviewFields, fields);
             }
             });
-            if(fieldsList){
-              const fragment = document.createDocumentFragment();
-              fields.forEach((fieldItem, index)=>{
-                const rowEl = fieldItem && fieldItem.__rowEl;
-                if(!rowEl || rowEl.__overlayOverlay || rowEl.parentNode !== fieldsList) return;
-                rowEl.dataset.fieldIndex = String(index);
-                fragment.appendChild(rowEl);
-              });
-              if(fragment.childNodes.length){
-                fieldsList.appendChild(fragment);
-              }
-            }
           }
 
           if(fieldsContainerState){
             fieldsContainerState.onFieldsReordered = renderFormPreview;
-          }
-          if(previewContainerState){
-            previewContainerState.onFieldsReordered = renderFormPreview;
           }
 
           const createFieldRow = (field)=>{
@@ -12728,16 +12703,6 @@ function makePosts(){
               if(safeField.__rowEl === row){
                 delete safeField.__rowEl;
               }
-              if(safeField.__previewEl){
-                const previewEl = safeField.__previewEl;
-                if(previewEl && previewEl.parentNode){
-                  previewEl.remove();
-                }
-                if(previewEl && previewEl.__fieldRef === safeField){
-                  delete previewEl.__fieldRef;
-                }
-                delete safeField.__previewEl;
-              }
               delete row.__overlayPlaceholder;
               delete row.__overlayParent;
               delete row.__overlayOverlay;
@@ -12803,24 +12768,18 @@ function makePosts(){
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
-            if(fieldRow && fieldRow.row){
-              fieldsList.insertBefore(fieldRow.row, fieldsList.firstChild || null);
-              enableFieldDrag(fieldRow.row, fieldsList, fields);
-            }
-            syncFieldOrderFromDom(fieldsList, fields);
+            fieldsList.appendChild(fieldRow.row);
+            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
             notifyFormbuilderChange();
-            renderFormPreview();
             requestAnimationFrame(()=>{
-              if(newField && newField.__previewEl){
-                const editBtn = newField.__previewEl.querySelector('.field-edit-btn');
-                if(editBtn && typeof editBtn.focus === 'function'){
-                  try{ editBtn.focus({ preventScroll: true }); }
-                  catch(err){
-                    try{ editBtn.focus(); }catch(e){}
-                  }
-                }
+              if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
+                fieldRow.focusTypePicker();
+              } else if(fieldRow && typeof fieldRow.focus === 'function'){
+                fieldRow.focus();
               }
             });
+            renderFormPreview();
           });
 
           renderFormPreview();
@@ -12882,7 +12841,7 @@ function makePosts(){
             const categoryDisplayName = getCategoryDisplayName();
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
-            formPreviewContainer.setAttribute('aria-label', `${displayName} form preview`);
+            formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
             if(!subLogo.querySelector('img')){
               subLogo.textContent = displayName.charAt(0) || '';
               subLogo.classList.remove('has-icon');
@@ -12992,54 +12951,10 @@ function makePosts(){
           });
           
           subInput.addEventListener('change', ()=>{
-            const isOn = subInput.checked;
-            subHideToggleInput.checked = !isOn;
-            subMenu.classList.toggle('subcategory-off', !isOn);
-            if(!isOn){
-              if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
-                const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
-                if(activeRow && subMenu.contains(activeRow)){
-                  closeSubcategoryFieldOverlay();
-                }
-              }
-              if(subMenu.getAttribute('aria-expanded') === 'true'){
-                subMenu.setAttribute('aria-expanded','false');
-                subBtn.setAttribute('aria-expanded','false');
-                subContent.hidden = true;
-              }
-            }
-            if(c && typeof c === 'object'){
-              const subNameKey = currentSubName;
-              if(Array.isArray(c.hiddenSubs)){
-                const hiddenIndex = c.hiddenSubs.indexOf(subNameKey);
-                if(!isOn && hiddenIndex === -1){
-                  c.hiddenSubs.push(subNameKey);
-                } else if(isOn && hiddenIndex !== -1){
-                  c.hiddenSubs.splice(hiddenIndex, 1);
-                }
-              }
-              if(Array.isArray(c.disabledSubs)){
-                const disabledIndex = c.disabledSubs.indexOf(subNameKey);
-                if(isOn && disabledIndex !== -1){
-                  c.disabledSubs.splice(disabledIndex, 1);
-                } else if(!isOn && disabledIndex === -1){
-                  c.disabledSubs.push(subNameKey);
-                }
-              }
-              if(c.subHidden && typeof c.subHidden === 'object'){
-                c.subHidden[subNameKey] = !isOn;
-              }
-              if(c.subEnabled && typeof c.subEnabled === 'object'){
-                c.subEnabled[subNameKey] = isOn;
-              }
-              if(c.subVisibility && typeof c.subVisibility === 'object'){
-                c.subVisibility[subNameKey] = isOn;
-              }
-            }
-            notifyFormbuilderChange();
+            subHideToggleInput.checked = !subInput.checked;
           });
-
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubBtn);
+          
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -13057,7 +12972,7 @@ function makePosts(){
             }
           });
 
-          subContent.append(subPlaceholder, fieldsSection);
+          subContent.append(subPlaceholder, fieldsSection, deleteSubBtn);
 
           subMenu.append(subContent);
 
@@ -13081,9 +12996,24 @@ function makePosts(){
             }
           });
 
-          if(!subInput.checked){
-            subMenu.classList.add('subcategory-off');
-          }
+          subInput.addEventListener('change', ()=>{
+            const isOn = subInput.checked;
+            subMenu.classList.toggle('subcategory-off', !isOn);
+            if(!isOn){
+              if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
+                const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
+                if(activeRow && subMenu.contains(activeRow)){
+                  closeSubcategoryFieldOverlay();
+                }
+              }
+              if(subMenu.getAttribute('aria-expanded') === 'true'){
+                subMenu.setAttribute('aria-expanded','false');
+                subBtn.setAttribute('aria-expanded','false');
+                subContent.hidden = true;
+              }
+            }
+          });
+
           subMenusContainer.insertBefore(subMenu, addSubAnchor);
           enableSubcategoryDrag(subMenu, subMenusContainer, c, subHeader, addSubAnchor);
         });
@@ -13139,7 +13069,7 @@ function makePosts(){
 
         applyCategoryNameChange();
 
-        content.append(editMenu, addSubBtn, subMenusContainer);
+        content.append(editMenu, subMenusContainer, categoryDeleteActions);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
@@ -13152,7 +13082,6 @@ function makePosts(){
 
         toggleInput.addEventListener('change', ()=>{
           const isOn = toggleInput.checked;
-          hideToggleInput.checked = !isOn;
           menu.classList.toggle('cat-off', !isOn);
           if(!isOn){
             if(menu.getAttribute('aria-expanded') === 'true'){
@@ -13161,26 +13090,7 @@ function makePosts(){
               content.hidden = true;
             }
           }
-          if(c && typeof c === 'object'){
-            if(Object.prototype.hasOwnProperty.call(c, 'hidden')){
-              c.hidden = !isOn;
-            }
-            if(Object.prototype.hasOwnProperty.call(c, 'enabled')){
-              c.enabled = isOn;
-            }
-            if(Object.prototype.hasOwnProperty.call(c, 'visible')){
-              c.visible = isOn;
-            }
-            if(Object.prototype.hasOwnProperty.call(c, 'off')){
-              c.off = !isOn;
-            }
-          }
-          notifyFormbuilderChange();
         });
-
-        if(!toggleInput.checked){
-          menu.classList.add('cat-off');
-        }
 
         frag.appendChild(menu);
         enableCategoryDrag(menu, header);
