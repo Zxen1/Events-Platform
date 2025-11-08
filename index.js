@@ -13394,14 +13394,23 @@ function makePosts(){
           if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
           if(subContent) subContent.hidden = false;
           const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
+          const newSubEditBtn = newSubMenu.querySelector('.subcategory-edit-btn');
           if(newSubEditPanel){
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel !== newSubEditPanel){
                 panel.hidden = true;
               }
             });
+            document.querySelectorAll('.category-edit-btn, .subcategory-edit-btn').forEach(btn => {
+              if(btn !== newSubEditBtn){
+                btn.setAttribute('aria-expanded', 'false');
+              }
+            });
             closeFieldEditPanels();
             newSubEditPanel.hidden = false;
+            if(newSubEditBtn){
+              newSubEditBtn.setAttribute('aria-expanded', 'true');
+            }
           }
           const subNameField = newSubMenu.querySelector('.subcategory-name-input');
           if(subNameField){
@@ -13478,6 +13487,7 @@ function makePosts(){
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
         const editPanel = newMenu.querySelector('.category-edit-panel');
+        const editBtn = newMenu.querySelector('.category-edit-btn');
         const nameField = newMenu.querySelector('.category-name-input');
         newMenu.setAttribute('aria-expanded','true');
         if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
@@ -13488,8 +13498,16 @@ function makePosts(){
               panel.hidden = true;
             }
           });
+          document.querySelectorAll('.category-edit-btn, .subcategory-edit-btn').forEach(btn => {
+            if(btn !== editBtn){
+              btn.setAttribute('aria-expanded', 'false');
+            }
+          });
           closeFieldEditPanels();
           editPanel.hidden = false;
+          if(editBtn){
+            editBtn.setAttribute('aria-expanded', 'true');
+          }
         }
         if(nameField){
           requestAnimationFrame(()=>{
