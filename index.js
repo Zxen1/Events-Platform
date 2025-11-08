@@ -11994,6 +11994,8 @@ function makePosts(){
               }
             });
 
+            let deleteHandler = null;
+
             const deleteFieldBtn = document.createElement('button');
             deleteFieldBtn.type = 'button';
             deleteFieldBtn.className = 'delete-category-btn delete-field-btn';
@@ -12002,9 +12004,12 @@ function makePosts(){
             deleteFieldBtn.addEventListener('click', async event=>{
               event.preventDefault();
               event.stopPropagation();
-              if(typeof safeField.__handleDeleteField === 'function'){
+              const handler = deleteHandler || (typeof safeField.__handleDeleteField === 'function'
+                ? safeField.__handleDeleteField
+                : null);
+              if(typeof handler === 'function'){
                 try{
-                  await safeField.__handleDeleteField();
+                  await handler();
                 }catch(err){}
               }
             });
@@ -12016,6 +12021,18 @@ function makePosts(){
 
             const destroy = ()=>{
               document.removeEventListener('click', handleDocumentClick);
+            };
+
+            const setDeleteHandler = handler => {
+              if(typeof handler === 'function'){
+                deleteHandler = handler;
+                safeField.__handleDeleteField = handler;
+              } else {
+                deleteHandler = null;
+                if(Object.prototype.hasOwnProperty.call(safeField, '__handleDeleteField')){
+                  delete safeField.__handleDeleteField;
+                }
+              }
             };
 
             return {
@@ -12033,7 +12050,8 @@ function makePosts(){
               setSummaryUpdater,
               runSummaryUpdater,
               updateFieldEditorsByType,
-              destroy
+              destroy,
+              setDeleteHandler
             };
           };
 
@@ -12802,6 +12820,17 @@ function makePosts(){
                 attachDropdownToPanel: true
               });
 
+              if(previewFieldEditUI && typeof previewFieldEditUI.setDeleteHandler === 'function'){
+                const sourceRow = previewField.__rowEl instanceof Element ? previewField.__rowEl : null;
+                const rowDeleteHandler = sourceRow && typeof sourceRow.__deleteHandler === 'function'
+                  ? sourceRow.__deleteHandler
+                  : null;
+                const deleteHandler = rowDeleteHandler || (typeof previewField.__handleDeleteField === 'function'
+                  ? previewField.__handleDeleteField
+                  : null);
+                previewFieldEditUI.setDeleteHandler(deleteHandler);
+              }
+
               previewFieldEditUI.setSummaryUpdater(()=>{
                 const displayName = (typeof previewField.name === 'string' && previewField.name.trim())
                   ? previewField.name.trim()
@@ -12862,7 +12891,7 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             header.append(fieldDragHandle);
             header.append(fieldEditBtn);
@@ -12941,13 +12970,15 @@ function makePosts(){
               delete row.__overlayPlaceholder;
               delete row.__overlayParent;
               delete row.__overlayOverlay;
-              delete safeField.__handleDeleteField;
+              delete row.__deleteHandler;
+              setDeleteHandler(null);
               notifyFormbuilderChange();
               syncFieldOrderFromDom(fieldsList, fields);
               renderFormPreview();
             };
 
-            safeField.__handleDeleteField = handleDeleteField;
+            setDeleteHandler(handleDeleteField);
+            row.__deleteHandler = handleDeleteField;
 
             fieldEditUI.updateFieldEditorsByType();
             row.__fieldRef = safeField;
