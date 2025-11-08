@@ -7059,6 +7059,7 @@ function makePosts(){
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
     const formbuilderAddCategoryBtn = document.getElementById('formbuilderAddCategory');
+    const FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP = '__formbuilderAddCategoryHandler';
     let formbuilderConfirmOverlay = null;
     let categoryDragContainerInitialized = false;
     let draggedCategoryMenu = null;
@@ -8499,11 +8500,13 @@ function makePosts(){
           parentCategoryMenu: menu
         });
 
-        const addSubBtn = document.createElement('button');
+        let addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+        const cleanAddSubBtn = addSubBtn.cloneNode(true);
+        addSubBtn = cleanAddSubBtn;
 
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
@@ -13433,7 +13436,13 @@ function makePosts(){
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      formbuilderAddCategoryBtn.addEventListener('click', async ()=>{
+      const existingAddCategoryHandler = typeof formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP] === 'function'
+        ? formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP]
+        : null;
+      if(existingAddCategoryHandler){
+        formbuilderAddCategoryBtn.removeEventListener('click', existingAddCategoryHandler);
+      }
+      const handleFormbuilderAddCategoryClick = async ()=>{
         const confirmed = await confirmFormbuilderAction({
           titleText: 'Add Category',
           messageText: 'Add a new category to the formbuilder?',
@@ -13479,7 +13488,9 @@ function makePosts(){
             }
           });
         }
-      });
+      };
+      formbuilderAddCategoryBtn.addEventListener('click', handleFormbuilderAddCategoryClick);
+      formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP] = handleFormbuilderAddCategoryClick;
     }
     function cloneFieldsMap(source){
       const out = {};
