@@ -8274,17 +8274,13 @@ function makePosts(){
         editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
         
-        const toggle = document.createElement('label');
-        toggle.className = 'switch cat-switch';
         const toggleInput = document.createElement('input');
         toggleInput.type = 'checkbox';
         toggleInput.checked = true;
         toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
-        const toggleSlider = document.createElement('span');
-        toggleSlider.className = 'slider';
-        toggle.append(toggleInput, toggleSlider);
+        toggleInput.hidden = true;
 
-        header.append(triggerWrap, editBtn, toggle);
+        header.append(triggerWrap, editBtn, toggleInput);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -8377,7 +8373,7 @@ function makePosts(){
           hideToggleInput.checked = !toggleInput.checked;
         });
         
-        editPanel.append(nameInput, iconPicker, hideToggleRow, addSubBtn);
+        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryBtn);
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
@@ -8399,9 +8395,7 @@ function makePosts(){
             editPanel.hidden = true;
           }
         });
-        const categoryDeleteActions = document.createElement('div');
-        categoryDeleteActions.className = 'category-delete-actions';
-        categoryDeleteActions.appendChild(deleteCategoryBtn);
+        editMenu.appendChild(addSubBtn);
 
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
@@ -8583,17 +8577,13 @@ function makePosts(){
           subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
           
-          const subToggle = document.createElement('label');
-          subToggle.className = 'subcategory-form-toggle';
           const subInput = document.createElement('input');
           subInput.type = 'checkbox';
           subInput.checked = true;
           subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
-          const subSlider = document.createElement('span');
-          subSlider.className = 'slider';
-          subToggle.append(subInput, subSlider);
+          subInput.hidden = true;
 
-          subHeader.append(subTriggerWrap, subEditBtn, subToggle);
+          subHeader.append(subTriggerWrap, subEditBtn, subInput);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -11365,7 +11355,7 @@ function makePosts(){
           formPreviewContainer.id = formPreviewId;
           formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
-          fieldsSection.append(formPreviewBtn, formPreviewContainer, addFieldBtn);
+          fieldsSection.append(addFieldBtn, fieldsList, formPreviewBtn, formPreviewContainer);
 
           formPreviewBtn.addEventListener('click', ()=>{
             const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
@@ -11807,6 +11797,22 @@ function makePosts(){
               }
             });
 
+            const deleteFieldBtn = document.createElement('button');
+            deleteFieldBtn.type = 'button';
+            deleteFieldBtn.className = 'delete-category-btn delete-field-btn';
+            deleteFieldBtn.textContent = 'Delete Field';
+            deleteFieldBtn.setAttribute('aria-label', 'Delete field');
+            deleteFieldBtn.addEventListener('click', async event=>{
+              event.preventDefault();
+              event.stopPropagation();
+              if(typeof safeField.__handleDeleteField === 'function'){
+                try{
+                  await safeField.__handleDeleteField();
+                }catch(err){}
+              }
+            });
+            editMenu.append(deleteFieldBtn);
+
             const destroy = ()=>{
               document.removeEventListener('click', handleDocumentClick);
             };
@@ -11820,6 +11826,7 @@ function makePosts(){
               fieldRequiredInput,
               dropdownOptionsContainer,
               dropdownOptionsList,
+              deleteFieldBtn,
               closeEditPanel,
               openEditPanel,
               setSummaryUpdater,
@@ -11850,30 +11857,6 @@ function makePosts(){
               labelEl.textContent = labelText;
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
-              const previewDeleteBtn = document.createElement('button');
-              previewDeleteBtn.type = 'button';
-              previewDeleteBtn.className = 'delete-field-btn';
-              previewDeleteBtn.textContent = '×';
-              const deleteDisplayName = labelText || 'field';
-              previewDeleteBtn.setAttribute('aria-label', `Delete ${deleteDisplayName} field`);
-              previewDeleteBtn.setAttribute('title', `Delete ${deleteDisplayName} field`);
-              previewDeleteBtn.addEventListener('click', async event=>{
-                event.preventDefault();
-                event.stopPropagation();
-                if(typeof previewField.__handleDeleteField === 'function'){
-                  await previewField.__handleDeleteField();
-                  return;
-                }
-                const previewRow = previewField.__rowEl && previewField.__rowEl.isConnected
-                  ? previewField.__rowEl
-                  : null;
-                if(previewRow){
-                  const rowDeleteBtn = previewRow.querySelector('.delete-field-btn');
-                  if(rowDeleteBtn){
-                    rowDeleteBtn.click();
-                  }
-                }
-              });
               let control = null;
               if(previewField.type === 'text-area' || previewField.type === 'description'){
                 const textarea = document.createElement('textarea');
@@ -12626,7 +12609,7 @@ function makePosts(){
               });
               previewFieldEditUI.runSummaryUpdater();
 
-              header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel, previewDeleteBtn);
+              header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel);
               wrapper.append(header, control);
               formPreviewFields.appendChild(wrapper);
             }
@@ -12659,7 +12642,7 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, closeEditPanel, destroy: destroyEditUI } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, destroy: destroyEditUI } = fieldEditUI;
             header.append(fieldEditBtn);
             header.append(editPanel);
 
@@ -12675,6 +12658,10 @@ function makePosts(){
               summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
               summaryRequired.classList.toggle('is-required', isRequired);
               fieldEditBtn.setAttribute('aria-label', `Edit ${typeLabel || 'field'} settings`);
+              if(deleteFieldBtn){
+                const deleteLabel = typeLabel || 'field';
+                deleteFieldBtn.setAttribute('aria-label', `Delete ${deleteLabel} field`);
+              }
             };
 
             fieldEditUI.setSummaryUpdater(updateFieldSummary);
@@ -12766,11 +12753,13 @@ function makePosts(){
 
           addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
-            fields.push(newField);
+            fields.unshift(newField);
             const fieldRow = createFieldRow(newField);
-            fieldsList.appendChild(fieldRow.row);
-            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+            if(!fieldRow || !fieldRow.row) return;
+            const firstRow = fieldsList.querySelector('.subcategory-field-row');
+            fieldsList.insertBefore(fieldRow.row, firstRow || null);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
+            syncFieldOrderFromDom(fieldsList, fields);
             notifyFormbuilderChange();
             requestAnimationFrame(()=>{
               if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
@@ -12954,7 +12943,7 @@ function makePosts(){
             subHideToggleInput.checked = !subInput.checked;
           });
           
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow);
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubBtn);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -12972,7 +12961,7 @@ function makePosts(){
             }
           });
 
-          subContent.append(subPlaceholder, fieldsSection, deleteSubBtn);
+          subContent.append(subPlaceholder, fieldsSection);
 
           subMenu.append(subContent);
 
@@ -13069,7 +13058,7 @@ function makePosts(){
 
         applyCategoryNameChange();
 
-        content.append(editMenu, subMenusContainer, categoryDeleteActions);
+        content.append(editMenu, subMenusContainer);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
