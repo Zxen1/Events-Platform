@@ -5744,6 +5744,7 @@ html, body { cursor: auto !important; }
               background:transparent;
               border-color:transparent;
               color:var(--button-text);
+              font-size:16px;
             }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
