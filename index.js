@@ -11358,7 +11358,7 @@ function makePosts(){
           formPreviewContainer.id = formPreviewId;
           formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
-          fieldsSection.append(fieldsList, formPreviewBtn, formPreviewContainer, addFieldBtn);
+          fieldsSection.append(fieldsList, addFieldBtn, formPreviewBtn, formPreviewContainer);
 
           formPreviewBtn.addEventListener('click', ()=>{
             const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
