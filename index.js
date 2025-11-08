@@ -4148,6 +4148,20 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ close(); }catch(err){}
       });
     }
+    function closeFieldEditPanels({ exceptPanel = null, exceptButton = null } = {}){
+      document.querySelectorAll('.field-edit-panel').forEach(panel => {
+        if(panel === exceptPanel) return;
+        panel.hidden = true;
+        const host = panel.closest('.subcategory-field-row, .form-preview-field');
+        if(host && host.classList){
+          host.classList.remove('field-edit-open');
+        }
+      });
+      document.querySelectorAll('.field-edit-btn[aria-expanded="true"]').forEach(btn => {
+        if(btn === exceptButton) return;
+        btn.setAttribute('aria-expanded', 'false');
+      });
+    }
     function baseNormalizeIconPath(path){
       if(typeof path !== 'string') return '';
       const trimmed = path.trim();
@@ -8161,20 +8175,6 @@ function makePosts(){
         closeSubcategoryFieldOverlay();
       }
       closeAllIconPickers();
-      const closeFieldEditPanels = ({ exceptPanel = null, exceptButton = null } = {})=>{
-        document.querySelectorAll('.field-edit-panel').forEach(panel => {
-          if(panel === exceptPanel) return;
-          panel.hidden = true;
-          const host = panel.closest('.subcategory-field-row, .form-preview-field');
-          if(host && host.classList){
-            host.classList.remove('field-edit-open');
-          }
-        });
-        document.querySelectorAll('.field-edit-btn[aria-expanded="true"]').forEach(btn => {
-          if(btn === exceptButton) return;
-          btn.setAttribute('aria-expanded', 'false');
-        });
-      };
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
