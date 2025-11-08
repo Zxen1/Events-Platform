@@ -68,7 +68,8 @@ function compareCategoriesForDisplay(a, b) {
   const nameA = typeof a.name === 'string' ? a.name : '';
   const nameB = typeof b.name === 'string' ? b.name : '';
   const nameCompare = nameA.localeCompare(nameB, undefined, { sensitivity: 'accent', numeric: true });
-  if (nameCompare !== 0) {
+  const bothSortOrdersMissing = orderA === null && orderB === null;
+  if (!bothSortOrdersMissing && nameCompare !== 0) {
     return nameCompare;
   }
   return 0;
@@ -8273,18 +8274,16 @@ function makePosts(){
         editBtn.className = 'category-edit-btn';
         editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
-        
-        const toggle = document.createElement('label');
-        toggle.className = 'switch cat-switch';
+
         const toggleInput = document.createElement('input');
         toggleInput.type = 'checkbox';
-        toggleInput.checked = true;
+        const isCategoryInitiallyEnabled = !(c && (c.hidden === true || c.enabled === false || c.visible === false || c.off === true));
+        toggleInput.checked = isCategoryInitiallyEnabled;
+        toggleInput.hidden = true;
+        toggleInput.className = 'category-visibility-input';
         toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
-        const toggleSlider = document.createElement('span');
-        toggleSlider.className = 'slider';
-        toggle.append(toggleInput, toggleSlider);
 
-        header.append(triggerWrap, editBtn, toggle);
+        header.append(triggerWrap, editBtn);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -8342,17 +8341,17 @@ function makePosts(){
           parentCategoryMenu: menu
         });
 
-        const addSubBtn = document.createElement('button');
-        addSubBtn.type = 'button';
-        addSubBtn.className = 'add-subcategory-btn';
-        addSubBtn.textContent = 'Add Subcategory';
-        addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
-
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
         deleteCategoryBtn.className = 'delete-category-btn';
         deleteCategoryBtn.textContent = 'Delete Category';
         deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+
+        const addSubBtn = document.createElement('button');
+        addSubBtn.type = 'button';
+        addSubBtn.className = 'add-subcategory-btn';
+        addSubBtn.textContent = 'Add Subcategory';
+        addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
         const hideToggleRow = document.createElement('div');
         hideToggleRow.className = 'category-hide-toggle-row';
@@ -8367,17 +8366,13 @@ function makePosts(){
         hideToggleSlider.className = 'slider';
         hideToggle.append(hideToggleInput, hideToggleSlider);
         hideToggleRow.append(hideToggleLabel, hideToggle);
-        
+
         hideToggleInput.addEventListener('change', ()=>{
           toggleInput.checked = !hideToggleInput.checked;
           toggleInput.dispatchEvent(new Event('change', {bubbles: true}));
         });
-        
-        toggleInput.addEventListener('change', ()=>{
-          hideToggleInput.checked = !toggleInput.checked;
-        });
-        
-        editPanel.append(nameInput, iconPicker, hideToggleRow, addSubBtn);
+
+        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryBtn);
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
@@ -8399,10 +8394,6 @@ function makePosts(){
             editPanel.hidden = true;
           }
         });
-        const categoryDeleteActions = document.createElement('div');
-        categoryDeleteActions.className = 'category-delete-actions';
-        categoryDeleteActions.appendChild(deleteCategoryBtn);
-
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
         const addSubAnchor = document.createElement('div');
@@ -8582,18 +8573,22 @@ function makePosts(){
           subEditBtn.className = 'subcategory-edit-btn';
           subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
-          
-          const subToggle = document.createElement('label');
-          subToggle.className = 'subcategory-form-toggle';
+
           const subInput = document.createElement('input');
           subInput.type = 'checkbox';
-          subInput.checked = true;
+          const isSubInitiallyEnabled = !(
+            (c && Array.isArray(c.hiddenSubs) && c.hiddenSubs.includes(sub)) ||
+            (c && Array.isArray(c.disabledSubs) && c.disabledSubs.includes(sub)) ||
+            (c && c.subHidden && c.subHidden[sub] === true) ||
+            (c && c.subEnabled && c.subEnabled[sub] === false) ||
+            (c && c.subVisibility && c.subVisibility[sub] === false)
+          );
+          subInput.checked = isSubInitiallyEnabled;
+          subInput.hidden = true;
+          subInput.className = 'subcategory-visibility-input';
           subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
-          const subSlider = document.createElement('span');
-          subSlider.className = 'slider';
-          subToggle.append(subInput, subSlider);
 
-          subHeader.append(subTriggerWrap, subEditBtn, subToggle);
+          subHeader.append(subTriggerWrap, subEditBtn);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -12951,10 +12946,54 @@ function makePosts(){
           });
           
           subInput.addEventListener('change', ()=>{
-            subHideToggleInput.checked = !subInput.checked;
+            const isOn = subInput.checked;
+            subHideToggleInput.checked = !isOn;
+            subMenu.classList.toggle('subcategory-off', !isOn);
+            if(!isOn){
+              if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
+                const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
+                if(activeRow && subMenu.contains(activeRow)){
+                  closeSubcategoryFieldOverlay();
+                }
+              }
+              if(subMenu.getAttribute('aria-expanded') === 'true'){
+                subMenu.setAttribute('aria-expanded','false');
+                subBtn.setAttribute('aria-expanded','false');
+                subContent.hidden = true;
+              }
+            }
+            if(c && typeof c === 'object'){
+              const subNameKey = currentSubName;
+              if(Array.isArray(c.hiddenSubs)){
+                const hiddenIndex = c.hiddenSubs.indexOf(subNameKey);
+                if(!isOn && hiddenIndex === -1){
+                  c.hiddenSubs.push(subNameKey);
+                } else if(isOn && hiddenIndex !== -1){
+                  c.hiddenSubs.splice(hiddenIndex, 1);
+                }
+              }
+              if(Array.isArray(c.disabledSubs)){
+                const disabledIndex = c.disabledSubs.indexOf(subNameKey);
+                if(isOn && disabledIndex !== -1){
+                  c.disabledSubs.splice(disabledIndex, 1);
+                } else if(!isOn && disabledIndex === -1){
+                  c.disabledSubs.push(subNameKey);
+                }
+              }
+              if(c.subHidden && typeof c.subHidden === 'object'){
+                c.subHidden[subNameKey] = !isOn;
+              }
+              if(c.subEnabled && typeof c.subEnabled === 'object'){
+                c.subEnabled[subNameKey] = isOn;
+              }
+              if(c.subVisibility && typeof c.subVisibility === 'object'){
+                c.subVisibility[subNameKey] = isOn;
+              }
+            }
+            notifyFormbuilderChange();
           });
-          
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow);
+
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubBtn);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -12972,7 +13011,7 @@ function makePosts(){
             }
           });
 
-          subContent.append(subPlaceholder, fieldsSection, deleteSubBtn);
+          subContent.append(subPlaceholder, fieldsSection);
 
           subMenu.append(subContent);
 
@@ -12996,24 +13035,9 @@ function makePosts(){
             }
           });
 
-          subInput.addEventListener('change', ()=>{
-            const isOn = subInput.checked;
-            subMenu.classList.toggle('subcategory-off', !isOn);
-            if(!isOn){
-              if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
-                const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
-                if(activeRow && subMenu.contains(activeRow)){
-                  closeSubcategoryFieldOverlay();
-                }
-              }
-              if(subMenu.getAttribute('aria-expanded') === 'true'){
-                subMenu.setAttribute('aria-expanded','false');
-                subBtn.setAttribute('aria-expanded','false');
-                subContent.hidden = true;
-              }
-            }
-          });
-
+          if(!subInput.checked){
+            subMenu.classList.add('subcategory-off');
+          }
           subMenusContainer.insertBefore(subMenu, addSubAnchor);
           enableSubcategoryDrag(subMenu, subMenusContainer, c, subHeader, addSubAnchor);
         });
@@ -13069,7 +13093,7 @@ function makePosts(){
 
         applyCategoryNameChange();
 
-        content.append(editMenu, subMenusContainer, categoryDeleteActions);
+        content.append(editMenu, addSubBtn, subMenusContainer);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
@@ -13082,6 +13106,7 @@ function makePosts(){
 
         toggleInput.addEventListener('change', ()=>{
           const isOn = toggleInput.checked;
+          hideToggleInput.checked = !isOn;
           menu.classList.toggle('cat-off', !isOn);
           if(!isOn){
             if(menu.getAttribute('aria-expanded') === 'true'){
@@ -13090,7 +13115,26 @@ function makePosts(){
               content.hidden = true;
             }
           }
+          if(c && typeof c === 'object'){
+            if(Object.prototype.hasOwnProperty.call(c, 'hidden')){
+              c.hidden = !isOn;
+            }
+            if(Object.prototype.hasOwnProperty.call(c, 'enabled')){
+              c.enabled = isOn;
+            }
+            if(Object.prototype.hasOwnProperty.call(c, 'visible')){
+              c.visible = isOn;
+            }
+            if(Object.prototype.hasOwnProperty.call(c, 'off')){
+              c.off = !isOn;
+            }
+          }
+          notifyFormbuilderChange();
         });
+
+        if(!toggleInput.checked){
+          menu.classList.add('cat-off');
+        }
 
         frag.appendChild(menu);
         enableCategoryDrag(menu, header);

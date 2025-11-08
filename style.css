@@ -5726,6 +5726,20 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .category-form-menu .filter-category-trigger{
               min-width:0;
+              background:transparent;
+              border-color:transparent;
+              color:inherit;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .category-form-menu .filter-category-trigger:hover{
+              background:rgba(255,255,255,0.08);
+              border-color:var(--border, rgba(255,255,255,0.2));
+            }
+            #tab-forms .category-form-menu .filter-category-trigger:focus-visible{
+              outline:2px solid var(--border-active, #ffffff);
+              outline-offset:2px;
+              background:rgba(255,255,255,0.08);
+              border-color:var(--border-active, rgba(255,255,255,0.3));
             }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
@@ -6034,14 +6048,11 @@ html, body { cursor: auto !important; }
               background:#d13c3c;
               border-color:#d13c3c;
             }
-            #tab-forms .subcategory-form-content .delete-subcategory-btn{
+            #tab-forms .category-edit-panel .delete-category-btn{
+              margin-top:8px;
+            }
+            #tab-forms .subcategory-edit-panel .delete-subcategory-btn{
               margin-top:12px;
-            }
-            #tab-forms .category-delete-actions{
-              display:flex;
-            }
-            #tab-forms .category-delete-actions .delete-category-btn{
-              margin-top:0;
             }
             #tab-forms .subcategory-fields-section{
               display:flex;
