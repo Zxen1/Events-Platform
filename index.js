@@ -8557,39 +8557,31 @@ function makePosts(){
           editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
 
-        let suppressCategoryEditClick = false;
-        const handleCategoryEditPointerDown = event => {
-          if(editPanel.hidden){
-            suppressCategoryEditClick = false;
-            return;
-          }
-          const target = event.target;
-          if(editPanel.contains(target)){
-            suppressCategoryEditClick = false;
-            return;
-          }
+        const shouldSkipCategoryClose = target => {
+          if(!target) return false;
+          if(editPanel.contains(target)) return true;
+          const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
+          if(confirmOverlay && confirmOverlay.contains(target)) return true;
           const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-          if(clickedEditBtn){
-            suppressCategoryEditClick = false;
-            return;
-          }
+          if(clickedEditBtn) return true;
+          return false;
+        };
+        const closeCategoryEditPanel = () => {
+          if(editPanel.hidden) return;
           editPanel.hidden = true;
           editBtn.setAttribute('aria-expanded', 'false');
-          suppressCategoryEditClick = true;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
+        };
+        const handleCategoryEditPointerDown = event => {
+          if(editPanel.hidden) return;
+          const target = event.target;
+          if(shouldSkipCategoryClose(target)) return;
+          closeCategoryEditPanel();
         };
         const handleCategoryEditClick = event => {
-          if(!suppressCategoryEditClick) return;
-          suppressCategoryEditClick = false;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
+          if(editPanel.hidden) return;
+          const target = event.target;
+          if(shouldSkipCategoryClose(target)) return;
+          closeCategoryEditPanel();
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
         document.addEventListener('click', handleCategoryEditClick, true);
@@ -11674,7 +11666,6 @@ function makePosts(){
               }
             };
 
-            let suppressFieldEditClick = false;
             const handleFieldEditPointerDown = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
                 document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -11682,26 +11673,24 @@ function makePosts(){
                 return;
               }
               if(editPanel.hidden){
-                suppressFieldEditClick = false;
                 return;
               }
               const target = event.target;
+              if(!target){
+                return;
+              }
               if(editPanel.contains(target)){
-                suppressFieldEditClick = false;
+                return;
+              }
+              const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
+              if(confirmOverlay && confirmOverlay.contains(target)){
                 return;
               }
               const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn){
-                suppressFieldEditClick = false;
                 return;
               }
               closeEditPanel();
-              suppressFieldEditClick = true;
-              event.preventDefault();
-              if(typeof event.stopImmediatePropagation === 'function'){
-                event.stopImmediatePropagation();
-              }
-              event.stopPropagation();
             };
 
             const handleFieldEditClick = event => {
@@ -11710,22 +11699,16 @@ function makePosts(){
                 document.removeEventListener('click', handleFieldEditClick, true);
                 return;
               }
-              if(suppressFieldEditClick){
-                suppressFieldEditClick = false;
-                event.preventDefault();
-                if(typeof event.stopImmediatePropagation === 'function'){
-                  event.stopImmediatePropagation();
-                }
-                event.stopPropagation();
-                return;
-              }
               if(editPanel.hidden) return;
               const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn === editBtn) return;
               if(clickedEditBtn) return;
-              if(!editPanel.contains(event.target)){
-                closeEditPanel();
-              }
+              const target = event.target;
+              if(!target) return;
+              if(editPanel.contains(target)) return;
+              const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
+              if(confirmOverlay && confirmOverlay.contains(target)) return;
+              closeEditPanel();
             };
 
             document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -13279,39 +13262,31 @@ function makePosts(){
             subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
           });
 
-          let suppressSubcategoryEditClick = false;
-          const handleSubcategoryEditPointerDown = event => {
-            if(subEditPanel.hidden){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
-            const target = event.target;
-            if(subEditPanel.contains(target)){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
+          const shouldSkipSubcategoryClose = target => {
+            if(!target) return false;
+            if(subEditPanel.contains(target)) return true;
+            const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
+            if(confirmOverlay && confirmOverlay.contains(target)) return true;
             const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-            if(clickedEditBtn){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
+            if(clickedEditBtn) return true;
+            return false;
+          };
+          const closeSubcategoryEditPanel = () => {
+            if(subEditPanel.hidden) return;
             subEditPanel.hidden = true;
             subEditBtn.setAttribute('aria-expanded', 'false');
-            suppressSubcategoryEditClick = true;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
+          };
+          const handleSubcategoryEditPointerDown = event => {
+            if(subEditPanel.hidden) return;
+            const target = event.target;
+            if(shouldSkipSubcategoryClose(target)) return;
+            closeSubcategoryEditPanel();
           };
           const handleSubcategoryEditClick = event => {
-            if(!suppressSubcategoryEditClick) return;
-            suppressSubcategoryEditClick = false;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
+            if(subEditPanel.hidden) return;
+            const target = event.target;
+            if(shouldSkipSubcategoryClose(target)) return;
+            closeSubcategoryEditPanel();
           };
           document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
           document.addEventListener('click', handleSubcategoryEditClick, true);
