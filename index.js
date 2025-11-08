@@ -8001,8 +8001,6 @@ function makePosts(){
         if(normalizedPath){
           const img = document.createElement('img');
           img.src = normalizedPath;
-          img.width = 20;
-          img.height = 20;
           img.alt = '';
           logoSpan.appendChild(img);
           logoSpan.classList.add('has-icon');
@@ -8021,6 +8019,20 @@ function makePosts(){
         closeSubcategoryFieldOverlay();
       }
       closeAllIconPickers();
+      const closeFieldEditPanels = ({ exceptPanel = null, exceptButton = null } = {})=>{
+        document.querySelectorAll('.field-edit-panel').forEach(panel => {
+          if(panel === exceptPanel) return;
+          panel.hidden = true;
+          const host = panel.closest('.subcategory-field-row, .form-preview-field');
+          if(host && host.classList){
+            host.classList.remove('field-edit-open');
+          }
+        });
+        document.querySelectorAll('.field-edit-btn[aria-expanded="true"]').forEach(btn => {
+          if(btn === exceptButton) return;
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      };
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
@@ -8238,15 +8250,13 @@ function makePosts(){
         if(initialCategoryIconSrc){
           const normalizedInitial = applyNormalizeIconPath(initialCategoryIconSrc);
           if(normalizedInitial){
-            categoryIcons[c.name] = `<img src="${normalizedInitial}" width="20" height="20" alt="">`;
+            categoryIcons[c.name] = `<img src="${normalizedInitial}" alt="">`;
             if(!categoryIconLookup.found){
               writeIconPath(categoryIconPaths, c.id, c.name, normalizedInitial);
             }
           }
           const img = document.createElement('img');
           img.src = applyNormalizeIconPath(initialCategoryIconSrc);
-          img.width = 20;
-          img.height = 20;
           img.alt = '';
           categoryLogo.appendChild(img);
           categoryLogo.classList.add('has-icon');
@@ -8386,6 +8396,7 @@ function makePosts(){
           document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
             if(panel !== editPanel) panel.hidden = true;
           });
+          closeFieldEditPanels();
           editPanel.hidden = !editPanel.hidden;
         });
         
@@ -8416,12 +8427,10 @@ function makePosts(){
           if(normalizedSrc){
             const img = document.createElement('img');
             img.src = normalizedSrc;
-            img.width = 20;
-            img.height = 20;
             img.alt = '';
             categoryLogo.appendChild(img);
             categoryLogo.classList.add('has-icon');
-            categoryIcons[currentCategoryName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
+            categoryIcons[currentCategoryName] = `<img src="${normalizedSrc}" alt="">`;
             writeIconPath(categoryIconPaths, c.id, currentCategoryName, normalizedSrc);
           } else {
             categoryLogo.textContent = displayName.charAt(0) || '';
@@ -8537,14 +8546,12 @@ function makePosts(){
           if(initialSubIconPath){
             const normalizedInitialSub = applyNormalizeIconPath(initialSubIconPath);
             if(normalizedInitialSub){
-              subcategoryIcons[sub] = `<img src="${normalizedInitialSub}" width="20" height="20" alt="">`;
+              subcategoryIcons[sub] = `<img src="${normalizedInitialSub}" alt="">`;
             }
           }
           if(initialSubIconPath){
             const img = document.createElement('img');
             img.src = applyNormalizeIconPath(initialSubIconPath);
-            img.width = 20;
-            img.height = 20;
             img.alt = '';
             subLogo.appendChild(img);
             subLogo.classList.add('has-icon');
@@ -8631,10 +8638,6 @@ function makePosts(){
           deleteSubBtn.className = 'delete-subcategory-btn';
           deleteSubBtn.textContent = 'Delete Subcategory';
           deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
-
-          const subPlaceholder = document.createElement('p');
-          subPlaceholder.className = 'subcategory-form-placeholder';
-          subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
 
           const fieldsSection = document.createElement('div');
           fieldsSection.className = 'subcategory-fields-section';
@@ -11355,7 +11358,7 @@ function makePosts(){
           formPreviewContainer.id = formPreviewId;
           formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
-          fieldsSection.append(addFieldBtn, fieldsList, formPreviewBtn, formPreviewContainer);
+          fieldsSection.append(fieldsList, formPreviewBtn, formPreviewContainer, addFieldBtn);
 
           formPreviewBtn.addEventListener('click', ()=>{
             const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
@@ -11776,20 +11779,12 @@ function makePosts(){
 
             editBtn.addEventListener('click', event=>{
               event.stopPropagation();
-              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel, .field-edit-panel').forEach(panel => {
+              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
                 if(panel !== editPanel){
                   panel.hidden = true;
-                  const panelHost = panel.closest('.subcategory-field-row, .form-preview-field');
-                  if(panelHost && panelHost.classList){
-                    panelHost.classList.remove('field-edit-open');
-                  }
                 }
               });
-              document.querySelectorAll('.field-edit-btn[aria-expanded="true"]').forEach(btn => {
-                if(btn !== editBtn){
-                  btn.setAttribute('aria-expanded', 'false');
-                }
-              });
+              closeFieldEditPanels({ exceptPanel: editPanel, exceptButton: editBtn });
               if(editPanel.hidden){
                 openEditPanel();
               } else {
@@ -12753,11 +12748,11 @@ function makePosts(){
 
           addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
-            fields.unshift(newField);
+            fields.push(newField);
             const fieldRow = createFieldRow(newField);
             if(!fieldRow || !fieldRow.row) return;
-            const firstRow = fieldsList.querySelector('.subcategory-field-row');
-            fieldsList.insertBefore(fieldRow.row, firstRow || null);
+            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+            fieldsList.appendChild(fieldRow.row);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
             syncFieldOrderFromDom(fieldsList, fields);
             notifyFormbuilderChange();
@@ -12786,12 +12781,10 @@ function makePosts(){
               if(normalizedSrc){
                 const img = document.createElement('img');
                 img.src = normalizedSrc;
-                img.width = 20;
-                img.height = 20;
                 img.alt = '';
                 subLogo.appendChild(img);
                 subLogo.classList.add('has-icon');
-                subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
+                subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" alt="">`;
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, normalizedSrc);
               } else {
                 subLogo.textContent = displayName.charAt(0) || '';
@@ -12826,9 +12819,8 @@ function makePosts(){
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
             subIconButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
             subPreviewImg.alt = `${displayName} icon preview`;
-            subPlaceholder.innerHTML = `Customize the <strong>${displayName}</strong> subcategory.`;
-            const categoryDisplayName = getCategoryDisplayName();
-            deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
+          const categoryDisplayName = getCategoryDisplayName();
+          deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
             formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
             if(!subLogo.querySelector('img')){
@@ -12951,6 +12943,7 @@ function makePosts(){
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel !== subEditPanel) panel.hidden = true;
             });
+            closeFieldEditPanels();
             subEditPanel.hidden = !subEditPanel.hidden;
           });
           
@@ -12961,7 +12954,7 @@ function makePosts(){
             }
           });
 
-          subContent.append(subPlaceholder, fieldsSection);
+          subContent.append(fieldsSection);
 
           subMenu.append(subContent);
 
@@ -13023,7 +13016,7 @@ function makePosts(){
           while(existing.has(candidate)){
             candidate = `${baseName} ${counter++}`;
           }
-          c.subs.unshift(candidate);
+          c.subs.push(candidate);
           c.subIds[candidate] = null;
           subFieldsMap[candidate] = [];
           const categoryIndex = categories.indexOf(c);
@@ -13038,7 +13031,7 @@ function makePosts(){
           const content = categoryMenu.querySelector('.category-form-content');
           if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
           if(content) content.hidden = false;
-          const newSubMenu = categoryMenu.querySelector('.subcategory-form-menu');
+          const newSubMenu = categoryMenu.querySelector('.subcategory-form-menu:last-of-type');
           if(!newSubMenu) return;
           newSubMenu.setAttribute('aria-expanded','true');
           const subTrigger = newSubMenu.querySelector('.subcategory-form-trigger');
@@ -13058,7 +13051,7 @@ function makePosts(){
 
         applyCategoryNameChange();
 
-        content.append(editMenu, subMenusContainer);
+        content.append(subMenusContainer, editMenu);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
@@ -13098,10 +13091,10 @@ function makePosts(){
         while(existing.has(candidate)){
           candidate = `${baseName} ${counter++}`;
         }
-        categories.unshift({ name: candidate, subs: [], subFields: {}, sort_order: null });
+        categories.push({ name: candidate, subs: [], subFields: {}, sort_order: null });
         renderFormbuilderCats();
         notifyFormbuilderChange();
-        const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:first-of-type') : null;
+        const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:last-of-type') : null;
         if(!newMenu) return;
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
