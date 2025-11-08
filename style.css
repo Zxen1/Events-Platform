@@ -6933,10 +6933,12 @@ html, body { cursor: auto !important; }
               padding-bottom:0;
             }
             #tab-forms .form-preview-container .panel-field label,
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button,
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
               font-weight:600;
             }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button,
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
               border:none;
               background:none;
               color:inherit;
@@ -6949,28 +6951,36 @@ html, body { cursor: auto !important; }
               gap:4px;
               width:100%;
               justify-content:flex-start;
+            }
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
               cursor:pointer;
+            }
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
+              cursor:default;
             }
             #tab-forms .form-preview-field-header{
               display:flex;
               align-items:center;
-              justify-content:flex-start;
-              gap:12px;
+              gap:8px;
               margin-bottom:8px;
             }
-            #tab-forms .form-preview-field-header .subcategory-form-button{
+            #tab-forms .form-preview-field-header .subcategory-form-button,
+            #tab-forms .form-preview-field-header .subcategory-form-label{
               flex:1 1 auto;
               min-width:0;
             }
+            #tab-forms .form-preview-field-header .field-edit-btn{
+              flex:0 0 auto;
+            }
             #tab-forms .form-preview-field-header .delete-field-btn{
               flex:0 0 auto;
-              margin-left:auto;
             }
             #tab-forms .form-preview-container .panel-field .subcategory-form-button:focus-visible{
               outline:2px solid var(--btn-hover, #2e3a72);
               outline-offset:2px;
             }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button .required-asterisk{
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button .required-asterisk,
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label .required-asterisk{
               font-size:inherit;
             }
             #tab-forms .form-preview-container .panel-field input{
