@@ -8557,42 +8557,22 @@ function makePosts(){
           editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
 
-        let suppressCategoryEditClick = false;
         const handleCategoryEditPointerDown = event => {
           if(editPanel.hidden){
-            suppressCategoryEditClick = false;
             return;
           }
           const target = event.target;
           if(editPanel.contains(target)){
-            suppressCategoryEditClick = false;
             return;
           }
           const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
           if(clickedEditBtn){
-            suppressCategoryEditClick = false;
             return;
           }
           editPanel.hidden = true;
           editBtn.setAttribute('aria-expanded', 'false');
-          suppressCategoryEditClick = true;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
-        };
-        const handleCategoryEditClick = event => {
-          if(!suppressCategoryEditClick) return;
-          suppressCategoryEditClick = false;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
-        document.addEventListener('click', handleCategoryEditClick, true);
         editMenu.appendChild(addSubBtn);
 
         const subMenusContainer = document.createElement('div');
@@ -11674,62 +11654,26 @@ function makePosts(){
               }
             };
 
-            let suppressFieldEditClick = false;
             const handleFieldEditPointerDown = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
                 document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
-                document.removeEventListener('click', handleFieldEditClick, true);
                 return;
               }
               if(editPanel.hidden){
-                suppressFieldEditClick = false;
                 return;
               }
               const target = event.target;
               if(editPanel.contains(target)){
-                suppressFieldEditClick = false;
                 return;
               }
               const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn){
-                suppressFieldEditClick = false;
                 return;
               }
               closeEditPanel();
-              suppressFieldEditClick = true;
-              event.preventDefault();
-              if(typeof event.stopImmediatePropagation === 'function'){
-                event.stopImmediatePropagation();
-              }
-              event.stopPropagation();
-            };
-
-            const handleFieldEditClick = event => {
-              if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
-                document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
-                document.removeEventListener('click', handleFieldEditClick, true);
-                return;
-              }
-              if(suppressFieldEditClick){
-                suppressFieldEditClick = false;
-                event.preventDefault();
-                if(typeof event.stopImmediatePropagation === 'function'){
-                  event.stopImmediatePropagation();
-                }
-                event.stopPropagation();
-                return;
-              }
-              if(editPanel.hidden) return;
-              const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-              if(clickedEditBtn === editBtn) return;
-              if(clickedEditBtn) return;
-              if(!editPanel.contains(event.target)){
-                closeEditPanel();
-              }
             };
 
             document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
-            document.addEventListener('click', handleFieldEditClick, true);
 
             const updateRequiredState = nextRequired => {
               const next = !!nextRequired;
@@ -13288,42 +13232,22 @@ function makePosts(){
             subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
           });
 
-          let suppressSubcategoryEditClick = false;
           const handleSubcategoryEditPointerDown = event => {
             if(subEditPanel.hidden){
-              suppressSubcategoryEditClick = false;
               return;
             }
             const target = event.target;
             if(subEditPanel.contains(target)){
-              suppressSubcategoryEditClick = false;
               return;
             }
             const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
             if(clickedEditBtn){
-              suppressSubcategoryEditClick = false;
               return;
             }
             subEditPanel.hidden = true;
             subEditBtn.setAttribute('aria-expanded', 'false');
-            suppressSubcategoryEditClick = true;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
-          };
-          const handleSubcategoryEditClick = event => {
-            if(!suppressSubcategoryEditClick) return;
-            suppressSubcategoryEditClick = false;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
           };
           document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
-          document.addEventListener('click', handleSubcategoryEditClick, true);
 
           subContent.append(fieldsSection);
 
