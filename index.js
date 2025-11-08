@@ -7832,11 +7832,17 @@ function makePosts(){
       const title = dialog.querySelector('#formbuilderConfirmTitle');
       const message = dialog.querySelector('#formbuilderConfirmMessage');
       const cancelBtn = overlay.querySelector('[data-role="cancel"]');
-      const confirmBtn = overlay.querySelector('[data-role="confirm"]');
+      let confirmBtn = overlay.querySelector('[data-role="confirm"]');
       if(!cancelBtn || !confirmBtn) return Promise.resolve(false);
       const previousClassName = confirmBtn.className;
       const previousLabel = confirmBtn.textContent;
       const previousFocused = document.activeElement;
+
+      if(confirmBtn && confirmBtn.parentNode){
+        const replacement = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(replacement, confirmBtn);
+        confirmBtn = replacement;
+      }
 
       title.textContent = titleText || 'Confirm action';
       message.textContent = messageText || 'Are you sure you want to continue?';
