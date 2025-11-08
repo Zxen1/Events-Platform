@@ -8557,41 +8557,6 @@ function makePosts(){
           editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
 
-<<<<<<< HEAD
-        let suppressCategoryEditClick = false;
-        const handleCategoryEditPointerDown = event => {
-          if(editPanel.hidden){
-            suppressCategoryEditClick = false;
-            return;
-          }
-          const target = event.target;
-          if(editPanel.contains(target)){
-            suppressCategoryEditClick = false;
-            return;
-          }
-          const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-          if(clickedEditBtn){
-            suppressCategoryEditClick = false;
-            return;
-          }
-          editPanel.hidden = true;
-          editBtn.setAttribute('aria-expanded', 'false');
-          suppressCategoryEditClick = true;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
-        };
-        const handleCategoryEditClick = event => {
-          if(!suppressCategoryEditClick) return;
-          suppressCategoryEditClick = false;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
-=======
         const shouldSkipCategoryClose = target => {
           if(!target) return false;
           if(editPanel.contains(target)) return true;
@@ -8617,7 +8582,6 @@ function makePosts(){
           const target = event.target;
           if(shouldSkipCategoryClose(target)) return;
           closeCategoryEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
         document.addEventListener('click', handleCategoryEditClick, true);
@@ -11717,10 +11681,6 @@ function makePosts(){
               }
             };
 
-<<<<<<< HEAD
-            let suppressFieldEditClick = false;
-=======
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             const handleFieldEditPointerDown = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
                 document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -11728,14 +11688,6 @@ function makePosts(){
                 return;
               }
               if(editPanel.hidden){
-<<<<<<< HEAD
-                suppressFieldEditClick = false;
-                return;
-              }
-              const target = event.target;
-              if(editPanel.contains(target)){
-                suppressFieldEditClick = false;
-=======
                 return;
               }
               const target = event.target;
@@ -11747,63 +11699,31 @@ function makePosts(){
               }
               const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
               if(confirmOverlay && confirmOverlay.contains(target)){
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
                 return;
               }
               const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn){
-<<<<<<< HEAD
-                suppressFieldEditClick = false;
                 return;
               }
               closeEditPanel();
-              suppressFieldEditClick = true;
-              event.preventDefault();
-              if(typeof event.stopImmediatePropagation === 'function'){
-                event.stopImmediatePropagation();
-              }
-              event.stopPropagation();
-=======
-                return;
-              }
-              closeEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             };
 
             const handleFieldEditClick = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
                 document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
                 document.removeEventListener('click', handleFieldEditClick, true);
-<<<<<<< HEAD
-                return;
-              }
-              if(suppressFieldEditClick){
-                suppressFieldEditClick = false;
-                event.preventDefault();
-                if(typeof event.stopImmediatePropagation === 'function'){
-                  event.stopImmediatePropagation();
-                }
-                event.stopPropagation();
-=======
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
                 return;
               }
               if(editPanel.hidden) return;
               const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn === editBtn) return;
               if(clickedEditBtn) return;
-<<<<<<< HEAD
-              if(!editPanel.contains(event.target)){
-                closeEditPanel();
-              }
-=======
               const target = event.target;
               if(!target) return;
               if(editPanel.contains(target)) return;
               const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
               if(confirmOverlay && confirmOverlay.contains(target)) return;
               closeEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             };
 
             document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -13137,16 +13057,7 @@ function makePosts(){
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
           });
 
-          addFieldBtn.addEventListener('click', async ()=>{
-            const subDisplayName = getSubDisplayName();
-            const confirmed = await confirmFormbuilderAction({
-              titleText: 'Add Field',
-              messageText: `Add a new field to ${subDisplayName}?`,
-              confirmLabel: 'Add Field',
-              confirmClassName: 'formbuilder-confirm-primary',
-              focusCancel: false
-            });
-            if(!confirmed) return;
+          addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
@@ -13382,41 +13293,6 @@ function makePosts(){
             subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
           });
 
-<<<<<<< HEAD
-          let suppressSubcategoryEditClick = false;
-          const handleSubcategoryEditPointerDown = event => {
-            if(subEditPanel.hidden){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
-            const target = event.target;
-            if(subEditPanel.contains(target)){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
-            const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-            if(clickedEditBtn){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
-            subEditPanel.hidden = true;
-            subEditBtn.setAttribute('aria-expanded', 'false');
-            suppressSubcategoryEditClick = true;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
-          };
-          const handleSubcategoryEditClick = event => {
-            if(!suppressSubcategoryEditClick) return;
-            suppressSubcategoryEditClick = false;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
-=======
           const shouldSkipSubcategoryClose = target => {
             if(!target) return false;
             if(subEditPanel.contains(target)) return true;
@@ -13442,7 +13318,6 @@ function makePosts(){
             const target = event.target;
             if(shouldSkipSubcategoryClose(target)) return;
             closeSubcategoryEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
           };
           document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
           document.addEventListener('click', handleSubcategoryEditClick, true);
@@ -13495,16 +13370,7 @@ function makePosts(){
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
-        addSubBtn.addEventListener('click', async ()=>{
-          const categoryDisplayName = getCategoryDisplayName();
-          const confirmed = await confirmFormbuilderAction({
-            titleText: 'Add Subcategory',
-            messageText: `Add a new subcategory to ${categoryDisplayName}?`,
-            confirmLabel: 'Add Subcategory',
-            confirmClassName: 'formbuilder-confirm-primary',
-            focusCancel: false
-          });
-          if(!confirmed) return;
+        addSubBtn.addEventListener('click', ()=>{
           if(!Array.isArray(c.subs)){
             c.subs = [];
           }
@@ -13541,10 +13407,7 @@ function makePosts(){
           if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
           if(subContent) subContent.hidden = false;
           const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
-<<<<<<< HEAD
-=======
           const newSubEditBtn = newSubMenu.querySelector('.subcategory-edit-btn');
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
           if(newSubEditPanel){
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel !== newSubEditPanel){
@@ -13553,12 +13416,9 @@ function makePosts(){
             });
             closeFieldEditPanels();
             newSubEditPanel.hidden = false;
-<<<<<<< HEAD
-=======
             if(newSubEditBtn){
               newSubEditBtn.setAttribute('aria-expanded','true');
             }
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
           }
           const subNameField = newSubMenu.querySelector('.subcategory-name-input');
           if(subNameField){
@@ -13605,15 +13465,7 @@ function makePosts(){
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      formbuilderAddCategoryBtn.addEventListener('click', async ()=>{
-        const confirmed = await confirmFormbuilderAction({
-          titleText: 'Add Category',
-          messageText: 'Add a new category to the formbuilder?',
-          confirmLabel: 'Add Category',
-          confirmClassName: 'formbuilder-confirm-primary',
-          focusCancel: false
-        });
-        if(!confirmed) return;
+      formbuilderAddCategoryBtn.addEventListener('click', ()=>{
         if(!Array.isArray(categories)) return;
         const baseName = 'New Category';
         const existing = new Set(categories.map(cat => (cat && typeof cat.name === 'string') ? cat.name : ''));
@@ -13643,12 +13495,9 @@ function makePosts(){
           });
           closeFieldEditPanels();
           editPanel.hidden = false;
-<<<<<<< HEAD
-=======
           if(editBtn){
             editBtn.setAttribute('aria-expanded','true');
           }
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
         }
         if(nameField){
           requestAnimationFrame(()=>{

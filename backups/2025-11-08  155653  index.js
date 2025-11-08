@@ -3371,27 +3371,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       fieldTypes: []
     };
 
-    function resolveFieldTypeDisplayName(option){
-      if(!option || typeof option !== 'object'){
-        return '';
-      }
-      const candidates = [
-        option.field_type_name,
-        option.fieldTypeName,
-        option.name,
-        option.label
-      ];
-      for(const candidate of candidates){
-        if(typeof candidate === 'string'){
-          const trimmed = candidate.trim();
-          if(trimmed){
-            return trimmed;
-          }
-        }
-      }
-      return '';
-    }
-
     function normalizeFieldTypeOptions(options){
       const list = Array.isArray(options)
         ? options
@@ -3400,7 +3379,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           : [];
       const normalized = [];
       const seen = new Set();
-      const pushOption = (value, label, source=null)=>{
+      const pushOption = (value, label)=>{
         const trimmedValue = typeof value === 'string' ? value.trim() : '';
         if(!trimmedValue){
           return;
@@ -3410,26 +3389,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         const trimmedLabel = typeof label === 'string' ? label.trim() : '';
-        const sourceName = resolveFieldTypeDisplayName(source);
-        const displayName = sourceName || trimmedLabel || trimmedValue;
-        const option = {
-          value: trimmedValue,
-          label: displayName,
-          name: displayName,
-          fieldTypeName: displayName,
-          field_type_name: displayName,
-          fieldTypeKey: trimmedValue,
-          field_type_key: trimmedValue
-        };
-        if(source && typeof source === 'object'){
-          if(typeof source.placeholder === 'string' && source.placeholder){
-            option.placeholder = source.placeholder;
-          }
-          if(typeof source.type === 'string' && source.type){
-            option.type = source.type;
-          }
-        }
-        normalized.push(option);
+        normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
         seen.add(dedupeKey);
       };
       list.forEach(item => {
@@ -3457,7 +3417,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
               : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
                 ? item.fieldTypeName.trim()
                 : '';
-          pushOption(value, label, item);
+          pushOption(value, label);
           return;
         }
         if(typeof item === 'string'){
@@ -3709,50 +3669,22 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const sanitized = [];
       const seenValues = new Set();
       list.forEach(option => {
-        if(option && typeof option === 'object'){
-          const rawValue = typeof option.value === 'string' ? option.value.trim() : '';
-          if(!rawValue){
-            return;
-          }
-          const dedupeKey = rawValue.toLowerCase();
-          if(seenValues.has(dedupeKey)){
-            return;
-          }
-          seenValues.add(dedupeKey);
-          const displayName = resolveFieldTypeDisplayName(option) || rawValue;
-          const sanitizedOption = {
-            ...option,
-            value: rawValue,
-            label: displayName,
-            name: displayName,
-            fieldTypeName: displayName,
-            field_type_name: displayName,
-            fieldTypeKey: rawValue,
-            field_type_key: rawValue
-          };
-          sanitized.push(sanitizedOption);
+        if(!option || typeof option !== 'object'){
           return;
         }
-        if(typeof option === 'string'){
-          const trimmed = option.trim();
-          if(!trimmed){
-            return;
-          }
-          const dedupeKey = trimmed.toLowerCase();
-          if(seenValues.has(dedupeKey)){
-            return;
-          }
-          seenValues.add(dedupeKey);
-          sanitized.push({
-            value: trimmed,
-            label: trimmed,
-            name: trimmed,
-            fieldTypeName: trimmed,
-            field_type_name: trimmed,
-            fieldTypeKey: trimmed,
-            field_type_key: trimmed
-          });
+        let value = typeof option.value === 'string' ? option.value.trim() : '';
+        let label = typeof option.label === 'string' ? option.label.trim() : '';
+        if(!value){
+          return;
         }
+        if(!label){
+          label = value;
+        }
+        if(seenValues.has(value)){
+          return;
+        }
+        seenValues.add(value);
+        sanitized.push({ value, label });
       });
       return sanitized;
     }
@@ -3772,14 +3704,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
-      if(!match){
-        return '';
-      }
-      const label = resolveFieldTypeDisplayName(match);
-      if(label){
-        return label;
-      }
-      return typeof value === 'string' ? value : '';
+      return match ? match.label : '';
     };
     const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
     const VENUE_CURRENCY_STATE = new WeakMap();
@@ -7179,29 +7104,6 @@ function makePosts(){
       });
     }
 
-    function createFormbuilderDragHandle(label, extraClass){
-      const handle = document.createElement('button');
-      handle.type = 'button';
-      handle.className = extraClass ? `formbuilder-drag-handle ${extraClass}` : 'formbuilder-drag-handle';
-      handle.setAttribute('aria-label', label);
-      handle.title = label;
-      handle.draggable = true;
-      handle.setAttribute('draggable', 'true');
-      handle.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.25a.75.75 0 0 1 .53.22l2.5 2.5a.75.75 0 1 1-1.06 1.06L8.75 3.38v3.12a.75.75 0 0 1-1.5 0V3.38L6.03 5.03a.75.75 0 0 1-1.06-1.06l2.5-2.5A.75.75 0 0 1 8 1.25zm0 13.5a.75.75 0 0 0 .53-.22l2.5-2.5a.75.75 0 0 0-1.06-1.06L8.75 12.62V9.5a.75.75 0 0 0-1.5 0v3.12l-1.72-1.66a.75.75 0 1 0-1.06 1.06l2.5 2.5c.14.14.33.22.53.22z"/></svg>';
-      handle.addEventListener('keydown', event=>{
-        if(event.key === ' ' || event.key === 'Spacebar'){
-          event.preventDefault();
-        }
-      });
-      return handle;
-    }
-
-    function updateDragHandleLabel(handle, label){
-      if(!handle) return;
-      handle.setAttribute('aria-label', label);
-      handle.title = label;
-    }
-
     function notifyFormbuilderChange(){
       if(!formbuilderCats) return;
       try{
@@ -7475,16 +7377,14 @@ function makePosts(){
       return state;
     }
 
-    function enableCategoryDrag(menu, header, handle){
-      if(!menu || !header || !handle) return;
+    function enableCategoryDrag(menu, header){
+      if(!menu || !header) return;
       ensureCategoryDragContainer();
       menu.draggable = false;
-      header.draggable = false;
-      handle.draggable = true;
-      handle.setAttribute('draggable', 'true');
-      handle.addEventListener('dragstart', event=>{
+      header.draggable = true;
+      header.addEventListener('dragstart', event=>{
         const origin = event.target;
-        if(origin !== handle){
+        if(!origin || origin.closest('.formbuilder-category-header') !== header){
           event.preventDefault();
           return;
         }
@@ -7493,7 +7393,6 @@ function makePosts(){
         categoryDropCommitted = false;
         menu.classList.add('is-dragging');
         header.classList.add('is-dragging');
-        handle.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
           try{ event.dataTransfer.setData('text/plain', menu.dataset.category || ''); }catch(err){}
@@ -7503,12 +7402,11 @@ function makePosts(){
           }catch(err){}
         }
       });
-      handle.addEventListener('dragend', event=>{
+      header.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedCategoryMenu === menu){
           menu.classList.remove('is-dragging');
           header.classList.remove('is-dragging');
-          handle.classList.remove('is-dragging');
           draggedCategoryMenu = null;
         }
         clearCategoryDropIndicator();
@@ -7519,16 +7417,14 @@ function makePosts(){
       });
     }
 
-    function enableSubcategoryDrag(subMenu, container, categoryObj, header, addButton, handle){
-      if(!subMenu || !container || !header || !handle) return;
+    function enableSubcategoryDrag(subMenu, container, categoryObj, header, addButton){
+      if(!subMenu || !container || !header) return;
       const state = setupSubcategoryContainer(container, categoryObj, addButton);
       subMenu.draggable = false;
-      header.draggable = false;
-      handle.draggable = true;
-      handle.setAttribute('draggable', 'true');
-      handle.addEventListener('dragstart', event=>{
+      header.draggable = true;
+      header.addEventListener('dragstart', event=>{
         const origin = event.target;
-        if(origin !== handle){
+        if(!origin || origin.closest('.formbuilder-subcategory-header') !== header){
           event.preventDefault();
           return;
         }
@@ -7538,7 +7434,6 @@ function makePosts(){
         if(state) state.dropCommitted = false;
         subMenu.classList.add('is-dragging');
         header.classList.add('is-dragging');
-        handle.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
           try{ event.dataTransfer.setData('text/plain', subMenu.dataset.subcategory || ''); }catch(err){}
@@ -7548,12 +7443,11 @@ function makePosts(){
           }catch(err){}
         }
       });
-      handle.addEventListener('dragend', event=>{
+      header.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedSubcategoryMenu === subMenu){
           subMenu.classList.remove('is-dragging');
           header.classList.remove('is-dragging');
-          handle.classList.remove('is-dragging');
           draggedSubcategoryMenu = null;
           draggedSubcategoryContainer = null;
         }
@@ -7709,15 +7603,13 @@ function makePosts(){
       return state;
     }
 
-    function enableFieldDrag(row, container, fields, handle){
-      if(!row || !container || !handle) return;
+    function enableFieldDrag(row, container, fields){
+      if(!row || !container) return;
       const state = setupFieldContainer(container, fields);
-      row.draggable = false;
-      handle.draggable = true;
-      handle.setAttribute('draggable', 'true');
-      handle.addEventListener('dragstart', event=>{
+      row.draggable = true;
+      row.addEventListener('dragstart', event=>{
         const origin = event.target;
-        if(origin !== handle){
+        if(origin !== row){
           event.preventDefault();
           return;
         }
@@ -7729,7 +7621,6 @@ function makePosts(){
         if(row._header){
           row._header.classList.add('is-dragging');
         }
-        handle.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
           try{ event.dataTransfer.setData('text/plain', (row.querySelector('.field-name-input')?.value || 'Field')); }catch(err){}
@@ -7739,14 +7630,13 @@ function makePosts(){
           }catch(err){}
         }
       });
-      handle.addEventListener('dragend', event=>{
+      row.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedFieldRow === row){
           row.classList.remove('is-dragging');
           if(row._header){
             row._header.classList.remove('is-dragging');
           }
-          handle.classList.remove('is-dragging');
           draggedFieldRow = null;
           draggedFieldContainer = null;
         }
@@ -7789,13 +7679,11 @@ function makePosts(){
       const cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
       cancelBtn.className = 'formbuilder-confirm-cancel';
-      cancelBtn.dataset.role = 'cancel';
       cancelBtn.textContent = 'Cancel';
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
-      deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete';
-      deleteBtn.dataset.role = 'confirm';
+      deleteBtn.className = 'formbuilder-confirm-delete';
       deleteBtn.textContent = 'Delete';
 
       actions.append(cancelBtn, deleteBtn);
@@ -7806,63 +7694,44 @@ function makePosts(){
       return overlay;
     }
 
-    function confirmFormbuilderAction({
-      messageText = 'Are you sure you want to continue?',
-      titleText = 'Confirm action',
-      confirmLabel = 'Confirm',
-      confirmClassName = 'formbuilder-confirm-delete',
-      focusCancel = true
-    } = {}){
+    function confirmFormbuilderDeletion(messageText, titleText){
       const overlay = ensureFormbuilderConfirmOverlay();
       const dialog = overlay.querySelector('.formbuilder-confirm-dialog');
       const title = dialog.querySelector('#formbuilderConfirmTitle');
       const message = dialog.querySelector('#formbuilderConfirmMessage');
-      const cancelBtn = overlay.querySelector('[data-role="cancel"]');
-      const confirmBtn = overlay.querySelector('[data-role="confirm"]');
-      if(!cancelBtn || !confirmBtn) return Promise.resolve(false);
-      const previousClassName = confirmBtn.className;
-      const previousLabel = confirmBtn.textContent;
-      const previousFocused = document.activeElement;
-
-      title.textContent = titleText || 'Confirm action';
-      message.textContent = messageText || 'Are you sure you want to continue?';
-
-      const normalizedConfirmClass = typeof confirmClassName === 'string' && confirmClassName.trim()
-        ? `formbuilder-confirm-button ${confirmClassName.trim()}`
-        : previousClassName || 'formbuilder-confirm-button';
-      confirmBtn.className = normalizedConfirmClass;
-      confirmBtn.textContent = confirmLabel || previousLabel || 'Confirm';
-
+      const cancelBtn = overlay.querySelector('.formbuilder-confirm-cancel');
+      const deleteBtn = overlay.querySelector('.formbuilder-confirm-delete');
+      title.textContent = titleText || 'Delete item?';
+      message.textContent = messageText || 'Are you sure you want to delete this item?';
       overlay.setAttribute('aria-hidden', 'false');
       overlay.classList.add('visible');
+      const previouslyFocused = document.activeElement;
 
-      return new Promise(resolve => {
+      return new Promise(resolve=>{
         const cleanup = (result)=>{
           overlay.classList.remove('visible');
           overlay.setAttribute('aria-hidden', 'true');
           cancelBtn.removeEventListener('click', onCancel);
-          confirmBtn.removeEventListener('click', onConfirm);
+          deleteBtn.removeEventListener('click', onConfirm);
           window.removeEventListener('keydown', onKeyDown, true);
           overlay.removeEventListener('click', onOverlayClick);
-          confirmBtn.className = previousClassName || 'formbuilder-confirm-button formbuilder-confirm-delete';
-          confirmBtn.textContent = previousLabel || 'Delete';
-          if(previousFocused && typeof previousFocused.focus === 'function'){
+          if(previouslyFocused && typeof previouslyFocused.focus === 'function'){
             try{
-              previousFocused.focus({ preventScroll: true });
+              previouslyFocused.focus({ preventScroll: true });
             }catch(err){
-              try{ previousFocused.focus(); }catch(e){}
+              try{ previouslyFocused.focus(); }catch(e){}
             }
           }
           resolve(result);
         };
         const onCancel = ()=> cleanup(false);
         const onConfirm = ()=> cleanup(true);
-        const onOverlayClick = event => {
+        const onOverlayClick = (event)=>{
           if(event.target === overlay){
             cleanup(false);
           }
         };
-        const onKeyDown = event => {
+        const onKeyDown = (event)=>{
           if(event.key === 'Escape'){
             event.preventDefault();
             cleanup(false);
@@ -7870,28 +7739,17 @@ function makePosts(){
         };
 
         cancelBtn.addEventListener('click', onCancel, { once: true });
-        confirmBtn.addEventListener('click', onConfirm, { once: true });
+        deleteBtn.addEventListener('click', onConfirm, { once: true });
         overlay.addEventListener('click', onOverlayClick);
         window.addEventListener('keydown', onKeyDown, true);
 
         requestAnimationFrame(()=>{
-          const targetBtn = focusCancel ? cancelBtn : confirmBtn;
           try{
-            targetBtn.focus({ preventScroll: true });
+            cancelBtn.focus({ preventScroll: true });
           }catch(err){
-            try{ targetBtn.focus(); }catch(e){}
+            cancelBtn.focus();
           }
         });
-      });
-    }
-
-    function confirmFormbuilderDeletion(messageText, titleText){
-      return confirmFormbuilderAction({
-        messageText: messageText || 'Are you sure you want to delete this item?',
-        titleText: titleText || 'Delete item?',
-        confirmLabel: 'Delete',
-        confirmClassName: 'formbuilder-confirm-delete',
-        focusCancel: true
       });
     }
     let subcategoryFieldOverlayEl = null;
@@ -8425,17 +8283,14 @@ function makePosts(){
         editBtn.className = 'category-edit-btn';
         editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
-        editBtn.setAttribute('aria-expanded','false');
-
-        const categoryDragHandle = createFormbuilderDragHandle(`Reorder ${c.name || 'Category'} category`, 'category-drag-handle');
-
+        
         const toggleInput = document.createElement('input');
         toggleInput.type = 'checkbox';
         toggleInput.checked = true;
         toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
         toggleInput.hidden = true;
 
-        header.append(triggerWrap, categoryDragHandle, editBtn, toggleInput);
+        header.append(triggerWrap, editBtn, toggleInput);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -8528,11 +8383,7 @@ function makePosts(){
           hideToggleInput.checked = !toggleInput.checked;
         });
         
-        const deleteCategoryRow = document.createElement('div');
-        deleteCategoryRow.className = 'formbuilder-delete-row';
-        deleteCategoryRow.append(deleteCategoryBtn);
-
-        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryRow);
+        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryBtn);
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
@@ -8543,84 +8394,18 @@ function makePosts(){
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-            if(panel === editPanel) return;
-            panel.hidden = true;
-            const relatedButton = panel.parentElement
-              ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
-              : null;
-            if(relatedButton){
-              relatedButton.setAttribute('aria-expanded','false');
-            }
+            if(panel !== editPanel) panel.hidden = true;
           });
           closeFieldEditPanels();
           editPanel.hidden = !editPanel.hidden;
-          editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
-
-<<<<<<< HEAD
-        let suppressCategoryEditClick = false;
-        const handleCategoryEditPointerDown = event => {
-          if(editPanel.hidden){
-            suppressCategoryEditClick = false;
-            return;
+        
+        document.addEventListener('click', (e)=>{
+          const clickedEditBtn = e.target.closest('.category-edit-btn, .subcategory-edit-btn');
+          if(!editPanel.hidden && !editPanel.contains(e.target) && !clickedEditBtn){
+            editPanel.hidden = true;
           }
-          const target = event.target;
-          if(editPanel.contains(target)){
-            suppressCategoryEditClick = false;
-            return;
-          }
-          const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-          if(clickedEditBtn){
-            suppressCategoryEditClick = false;
-            return;
-          }
-          editPanel.hidden = true;
-          editBtn.setAttribute('aria-expanded', 'false');
-          suppressCategoryEditClick = true;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
-        };
-        const handleCategoryEditClick = event => {
-          if(!suppressCategoryEditClick) return;
-          suppressCategoryEditClick = false;
-          event.preventDefault();
-          if(typeof event.stopImmediatePropagation === 'function'){
-            event.stopImmediatePropagation();
-          }
-          event.stopPropagation();
-=======
-        const shouldSkipCategoryClose = target => {
-          if(!target) return false;
-          if(editPanel.contains(target)) return true;
-          const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-          if(confirmOverlay && confirmOverlay.contains(target)) return true;
-          const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-          if(clickedEditBtn) return true;
-          return false;
-        };
-        const closeCategoryEditPanel = () => {
-          if(editPanel.hidden) return;
-          editPanel.hidden = true;
-          editBtn.setAttribute('aria-expanded', 'false');
-        };
-        const handleCategoryEditPointerDown = event => {
-          if(editPanel.hidden) return;
-          const target = event.target;
-          if(shouldSkipCategoryClose(target)) return;
-          closeCategoryEditPanel();
-        };
-        const handleCategoryEditClick = event => {
-          if(editPanel.hidden) return;
-          const target = event.target;
-          if(shouldSkipCategoryClose(target)) return;
-          closeCategoryEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-        };
-        document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
-        document.addEventListener('click', handleCategoryEditClick, true);
+        });
         editMenu.appendChild(addSubBtn);
 
         const subMenusContainer = document.createElement('div');
@@ -8690,7 +8475,6 @@ function makePosts(){
           menu.dataset.category = datasetValue;
           label.textContent = displayName;
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
-          updateDragHandleLabel(categoryDragHandle, `Reorder ${displayName} category`);
           iconPickerButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
           previewImg.alt = `${displayName} icon preview`;
           deleteCategoryBtn.setAttribute('aria-label', `Delete ${displayName} category`);
@@ -8726,22 +8510,7 @@ function makePosts(){
               deleteIconKeys(subcategoryIconPaths, subId, subName);
             });
           }
-          if(Array.isArray(c.subs)){
-            c.subs.length = 0;
-          }
-          if(c.subIds && typeof c.subIds === 'object'){
-            Object.keys(c.subIds).forEach(key => { delete c.subIds[key]; });
-          }
-          if(c.subFields && typeof c.subFields === 'object'){
-            Object.keys(c.subFields).forEach(key => { delete c.subFields[key]; });
-          }
-          if(Array.isArray(categories)){
-            const categoryIndex = categories.indexOf(c);
-            if(categoryIndex !== -1){
-              categories.splice(categoryIndex, 1);
-            }
-          }
-          renderFormbuilderCats();
+          menu.remove();
           notifyFormbuilderChange();
         });
 
@@ -8814,17 +8583,14 @@ function makePosts(){
           subEditBtn.className = 'subcategory-edit-btn';
           subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
-          subEditBtn.setAttribute('aria-expanded','false');
-
-          const subDragHandle = createFormbuilderDragHandle(`Reorder ${sub || 'Subcategory'} subcategory`, 'subcategory-drag-handle');
-
+          
           const subInput = document.createElement('input');
           subInput.type = 'checkbox';
           subInput.checked = true;
           subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
           subInput.hidden = true;
 
-          subHeader.append(subTriggerWrap, subDragHandle, subEditBtn, subInput);
+          subHeader.append(subTriggerWrap, subEditBtn, subInput);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -8913,23 +8679,11 @@ function makePosts(){
             }
           }
           // Only auto-name truly new fields
-            if(!safeField.name){
-              safeField.name = '';
-            }
+          if(!safeField.name){
+            safeField.name = '';
+          }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
             const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
-            const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
-            const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-            let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
-            if(!resolvedFieldTypeName && fieldTypeKey){
-              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-              if(matchingFieldType){
-                resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
-              }
-            }
-            resolvedFieldTypeName = resolvedFieldTypeName || '';
-            safeField.field_type_name = resolvedFieldTypeName;
-            safeField.fieldTypeName = resolvedFieldTypeName;
             if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
                 safeField.placeholder = 'Search for a location';
@@ -11604,7 +11358,7 @@ function makePosts(){
           formPreviewContainer.id = formPreviewId;
           formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
-          fieldsSection.append(fieldsList, addFieldBtn, formPreviewBtn, formPreviewContainer);
+          fieldsSection.append(fieldsList, formPreviewBtn, formPreviewContainer, addFieldBtn);
 
           formPreviewBtn.addEventListener('click', ()=>{
             const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
@@ -11650,16 +11404,7 @@ function makePosts(){
             FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
-              const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
-              option.textContent = optionLabel || optionDef.value;
-              if(optionDef.value){
-                option.dataset.fieldTypeKey = optionDef.value;
-              }
-              if(optionLabel){
-                option.dataset.fieldTypeName = optionLabel;
-              } else if(optionDef.value){
-                option.dataset.fieldTypeName = optionDef.value;
-              }
+              option.textContent = optionDef.label;
               if(optionDef.value === matchKey){
                 option.selected = true;
               }
@@ -11692,7 +11437,7 @@ function makePosts(){
             fieldRequiredRow.className = 'field-required-row';
             fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredToggle);
 
-            inlineControls.append(fieldRequiredRow, fieldTypeWrapper);
+            inlineControls.append(fieldTypeWrapper, fieldRequiredRow);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -11717,97 +11462,20 @@ function makePosts(){
               }
             };
 
-<<<<<<< HEAD
-            let suppressFieldEditClick = false;
-=======
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-            const handleFieldEditPointerDown = event => {
+            const handleDocumentClick = event => {
               if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
-                document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
-                document.removeEventListener('click', handleFieldEditClick, true);
-                return;
-              }
-              if(editPanel.hidden){
-<<<<<<< HEAD
-                suppressFieldEditClick = false;
-                return;
-              }
-              const target = event.target;
-              if(editPanel.contains(target)){
-                suppressFieldEditClick = false;
-=======
-                return;
-              }
-              const target = event.target;
-              if(!target){
-                return;
-              }
-              if(editPanel.contains(target)){
-                return;
-              }
-              const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-              if(confirmOverlay && confirmOverlay.contains(target)){
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-                return;
-              }
-              const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-              if(clickedEditBtn){
-<<<<<<< HEAD
-                suppressFieldEditClick = false;
-                return;
-              }
-              closeEditPanel();
-              suppressFieldEditClick = true;
-              event.preventDefault();
-              if(typeof event.stopImmediatePropagation === 'function'){
-                event.stopImmediatePropagation();
-              }
-              event.stopPropagation();
-=======
-                return;
-              }
-              closeEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-            };
-
-            const handleFieldEditClick = event => {
-              if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
-                document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
-                document.removeEventListener('click', handleFieldEditClick, true);
-<<<<<<< HEAD
-                return;
-              }
-              if(suppressFieldEditClick){
-                suppressFieldEditClick = false;
-                event.preventDefault();
-                if(typeof event.stopImmediatePropagation === 'function'){
-                  event.stopImmediatePropagation();
-                }
-                event.stopPropagation();
-=======
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
+                document.removeEventListener('click', handleDocumentClick);
                 return;
               }
               if(editPanel.hidden) return;
               const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
               if(clickedEditBtn === editBtn) return;
-              if(clickedEditBtn) return;
-<<<<<<< HEAD
               if(!editPanel.contains(event.target)){
                 closeEditPanel();
               }
-=======
-              const target = event.target;
-              if(!target) return;
-              if(editPanel.contains(target)) return;
-              const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-              if(confirmOverlay && confirmOverlay.contains(target)) return;
-              closeEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             };
 
-            document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
-            document.addEventListener('click', handleFieldEditClick, true);
+            document.addEventListener('click', handleDocumentClick);
 
             const updateRequiredState = nextRequired => {
               const next = !!nextRequired;
@@ -12075,10 +11743,6 @@ function makePosts(){
               safeField.key = nextValidType;
 
               const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
-              const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
-              const updatedFieldTypeName = (matchingDisplayName || nextLabel || nextValidType || '').trim();
-              safeField.field_type_name = updatedFieldTypeName;
-              safeField.fieldTypeName = updatedFieldTypeName;
               if(matchingFieldType){
                 if(matchingFieldType.placeholder){
                   safeField.placeholder = matchingFieldType.placeholder;
@@ -12142,11 +11806,7 @@ function makePosts(){
                 }catch(err){}
               }
             });
-            const deleteFieldRow = document.createElement('div');
-            deleteFieldRow.className = 'formbuilder-delete-row';
-            deleteFieldRow.append(deleteFieldBtn);
-
-            editMenu.append(deleteFieldRow);
+            editMenu.append(deleteFieldBtn);
 
             const destroy = ()=>{
               document.removeEventListener('click', handleDocumentClick);
@@ -12945,25 +12605,6 @@ function makePosts(){
               previewFieldEditUI.runSummaryUpdater();
 
               header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel);
-
-              const handlePreviewHeaderClick = event => {
-                if(event.defaultPrevented) return;
-                const origin = event.target;
-                if(!origin) return;
-                if(origin.closest('.formbuilder-drag-handle')) return;
-                if(origin.closest('.field-edit-btn')) return;
-                if(origin.closest('.field-edit-panel')) return;
-                event.stopPropagation();
-                document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-                  if(panel !== previewFieldEditUI.editPanel){
-                    panel.hidden = true;
-                  }
-                });
-                closeFieldEditPanels({ exceptPanel: previewFieldEditUI.editPanel, exceptButton: previewFieldEditUI.editBtn });
-                previewFieldEditUI.openEditPanel();
-              };
-
-              header.addEventListener('click', handlePreviewHeaderClick);
               wrapper.append(header, control);
               formPreviewFields.appendChild(wrapper);
             }
@@ -12996,50 +12637,22 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI } = fieldEditUI;
-            const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
-            header.append(fieldDragHandle);
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, destroy: destroyEditUI } = fieldEditUI;
             header.append(fieldEditBtn);
             header.append(editPanel);
 
             row.append(header);
             row._header = header;
 
-            const activateFieldEditPanel = event => {
-              if(event.defaultPrevented) return;
-              const origin = event.target;
-              if(!origin) return;
-              if(origin.closest('.formbuilder-drag-handle')) return;
-              if(origin.closest('.field-edit-panel')) return;
-              if(origin.closest('.field-edit-btn')) return;
-              event.stopPropagation();
-              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-                if(panel !== editPanel){
-                  panel.hidden = true;
-                }
-              });
-              closeFieldEditPanels({ exceptPanel: editPanel, exceptButton: fieldEditBtn });
-              openEditPanel();
-            };
-
-            header.addEventListener('click', activateFieldEditPanel);
-            row.addEventListener('click', activateFieldEditPanel);
-
             const updateFieldSummary = ()=>{
               const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
-              const storedTypeName = (typeof safeField.field_type_name === 'string' && safeField.field_type_name.trim())
-                ? safeField.field_type_name.trim()
-                : (typeof safeField.fieldTypeName === 'string' && safeField.fieldTypeName.trim())
-                  ? safeField.fieldTypeName.trim()
-                  : '';
-              const typeLabelRaw = (storedTypeName || getFormFieldTypeLabel(typeKey)).trim();
+              const typeLabelRaw = getFormFieldTypeLabel(typeKey).trim();
               const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
               summaryLabel.textContent = typeLabel || 'Field';
               const isRequired = !!safeField.required;
               summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
               summaryRequired.classList.toggle('is-required', isRequired);
               fieldEditBtn.setAttribute('aria-label', `Edit ${typeLabel || 'field'} settings`);
-              updateDragHandleLabel(fieldDragHandle, `Reorder ${typeLabel || 'field'} field`);
               if(deleteFieldBtn){
                 const deleteLabel = typeLabel || 'field';
                 deleteFieldBtn.setAttribute('aria-label', `Delete ${deleteLabel} field`);
@@ -13088,10 +12701,6 @@ function makePosts(){
             safeField.__rowEl = row;
             return {
               row,
-              dragHandle: fieldDragHandle,
-              editBtn: fieldEditBtn,
-              editPanel,
-              openEditPanel,
               focus(){
                 try{
                   fieldTypeSelect.focus({ preventScroll: true });
@@ -13134,34 +12743,19 @@ function makePosts(){
             if(!fieldRow || !fieldRow.row) return;
             fieldRow.row.dataset.fieldIndex = String(fieldIndex);
             fieldsList.appendChild(fieldRow.row);
-            enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
           });
 
-          addFieldBtn.addEventListener('click', async ()=>{
-            const subDisplayName = getSubDisplayName();
-            const confirmed = await confirmFormbuilderAction({
-              titleText: 'Add Field',
-              messageText: `Add a new field to ${subDisplayName}?`,
-              confirmLabel: 'Add Field',
-              confirmClassName: 'formbuilder-confirm-primary',
-              focusCancel: false
-            });
-            if(!confirmed) return;
+          addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
             if(!fieldRow || !fieldRow.row) return;
             fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
             fieldsList.appendChild(fieldRow.row);
-            enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
             syncFieldOrderFromDom(fieldsList, fields);
             notifyFormbuilderChange();
-            if(fieldRow && fieldRow.editPanel){
-              closeFieldEditPanels({ exceptPanel: fieldRow.editPanel, exceptButton: fieldRow.editBtn });
-              if(typeof fieldRow.openEditPanel === 'function'){
-                fieldRow.openEditPanel();
-              }
-            }
             requestAnimationFrame(()=>{
               if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
                 fieldRow.focusTypePicker();
@@ -13223,7 +12817,6 @@ function makePosts(){
             subMenu.dataset.subcategory = datasetValue;
             subBtn.dataset.subcategory = datasetValue;
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
-            updateDragHandleLabel(subDragHandle, `Reorder ${displayName} subcategory`);
             subIconButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
             subPreviewImg.alt = `${displayName} icon preview`;
           const categoryDisplayName = getCategoryDisplayName();
@@ -13306,24 +12899,8 @@ function makePosts(){
             if(c.subIds && typeof c.subIds === 'object' && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
               delete c.subIds[currentSubName];
             }
+            subMenu.remove();
             delete subFieldsMap[currentSubName];
-            if(Array.isArray(c.subs)){
-              const subIdx = c.subs.indexOf(currentSubName);
-              if(subIdx !== -1){
-                c.subs.splice(subIdx, 1);
-              }
-            }
-            if(Array.isArray(categories) && categories[sourceIndex] && Array.isArray(categories[sourceIndex].subs)){
-              const mirrorSubs = categories[sourceIndex].subs;
-              const mirrorIdx = mirrorSubs.indexOf(currentSubName);
-              if(mirrorIdx !== -1){
-                mirrorSubs.splice(mirrorIdx, 1);
-              }
-            }
-            if(c.subFields && typeof c.subFields === 'object' && Object.prototype.hasOwnProperty.call(c.subFields, currentSubName)){
-              delete c.subFields[currentSubName];
-            }
-            renderFormbuilderCats();
             notifyFormbuilderChange();
           });
 
@@ -13358,94 +12935,24 @@ function makePosts(){
             subHideToggleInput.checked = !subInput.checked;
           });
           
-          const deleteSubcategoryRow = document.createElement('div');
-          deleteSubcategoryRow.className = 'formbuilder-delete-row';
-          deleteSubcategoryRow.append(deleteSubBtn);
-
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubcategoryRow);
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubBtn);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-              if(panel === subEditPanel) return;
-              panel.hidden = true;
-              const relatedButton = panel.parentElement
-                ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
-                : null;
-              if(relatedButton){
-                relatedButton.setAttribute('aria-expanded','false');
-              }
+              if(panel !== subEditPanel) panel.hidden = true;
             });
             closeFieldEditPanels();
             subEditPanel.hidden = !subEditPanel.hidden;
-            subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
           });
-
-<<<<<<< HEAD
-          let suppressSubcategoryEditClick = false;
-          const handleSubcategoryEditPointerDown = event => {
-            if(subEditPanel.hidden){
-              suppressSubcategoryEditClick = false;
-              return;
+          
+          document.addEventListener('click', (e)=>{
+            const clickedEditBtn = e.target.closest('.category-edit-btn, .subcategory-edit-btn');
+            if(!subEditPanel.hidden && !subEditPanel.contains(e.target) && !clickedEditBtn){
+              subEditPanel.hidden = true;
             }
-            const target = event.target;
-            if(subEditPanel.contains(target)){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
-            const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-            if(clickedEditBtn){
-              suppressSubcategoryEditClick = false;
-              return;
-            }
-            subEditPanel.hidden = true;
-            subEditBtn.setAttribute('aria-expanded', 'false');
-            suppressSubcategoryEditClick = true;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
-          };
-          const handleSubcategoryEditClick = event => {
-            if(!suppressSubcategoryEditClick) return;
-            suppressSubcategoryEditClick = false;
-            event.preventDefault();
-            if(typeof event.stopImmediatePropagation === 'function'){
-              event.stopImmediatePropagation();
-            }
-            event.stopPropagation();
-=======
-          const shouldSkipSubcategoryClose = target => {
-            if(!target) return false;
-            if(subEditPanel.contains(target)) return true;
-            const confirmOverlay = document.getElementById('formbuilderConfirmOverlay');
-            if(confirmOverlay && confirmOverlay.contains(target)) return true;
-            const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
-            if(clickedEditBtn) return true;
-            return false;
-          };
-          const closeSubcategoryEditPanel = () => {
-            if(subEditPanel.hidden) return;
-            subEditPanel.hidden = true;
-            subEditBtn.setAttribute('aria-expanded', 'false');
-          };
-          const handleSubcategoryEditPointerDown = event => {
-            if(subEditPanel.hidden) return;
-            const target = event.target;
-            if(shouldSkipSubcategoryClose(target)) return;
-            closeSubcategoryEditPanel();
-          };
-          const handleSubcategoryEditClick = event => {
-            if(subEditPanel.hidden) return;
-            const target = event.target;
-            if(shouldSkipSubcategoryClose(target)) return;
-            closeSubcategoryEditPanel();
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-          };
-          document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
-          document.addEventListener('click', handleSubcategoryEditClick, true);
+          });
 
           subContent.append(fieldsSection);
 
@@ -13490,21 +12997,12 @@ function makePosts(){
           });
 
           subMenusContainer.insertBefore(subMenu, addSubAnchor);
-          enableSubcategoryDrag(subMenu, subMenusContainer, c, subHeader, addSubAnchor, subDragHandle);
+          enableSubcategoryDrag(subMenu, subMenusContainer, c, subHeader, addSubAnchor);
         });
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
-        addSubBtn.addEventListener('click', async ()=>{
-          const categoryDisplayName = getCategoryDisplayName();
-          const confirmed = await confirmFormbuilderAction({
-            titleText: 'Add Subcategory',
-            messageText: `Add a new subcategory to ${categoryDisplayName}?`,
-            confirmLabel: 'Add Subcategory',
-            confirmClassName: 'formbuilder-confirm-primary',
-            focusCancel: false
-          });
-          if(!confirmed) return;
+        addSubBtn.addEventListener('click', ()=>{
           if(!Array.isArray(c.subs)){
             c.subs = [];
           }
@@ -13540,26 +13038,6 @@ function makePosts(){
           const subContent = newSubMenu.querySelector('.subcategory-form-content');
           if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
           if(subContent) subContent.hidden = false;
-          const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
-<<<<<<< HEAD
-=======
-          const newSubEditBtn = newSubMenu.querySelector('.subcategory-edit-btn');
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-          if(newSubEditPanel){
-            document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-              if(panel !== newSubEditPanel){
-                panel.hidden = true;
-              }
-            });
-            closeFieldEditPanels();
-            newSubEditPanel.hidden = false;
-<<<<<<< HEAD
-=======
-            if(newSubEditBtn){
-              newSubEditBtn.setAttribute('aria-expanded','true');
-            }
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-          }
           const subNameField = newSubMenu.querySelector('.subcategory-name-input');
           if(subNameField){
             requestAnimationFrame(()=>{
@@ -13567,7 +13045,6 @@ function makePosts(){
               catch(err){
                 try{ subNameField.focus(); }catch(e){}
               }
-              try{ subNameField.select(); }catch(err){}
             });
           }
         });
@@ -13598,22 +13075,14 @@ function makePosts(){
         });
 
         frag.appendChild(menu);
-        enableCategoryDrag(menu, header, categoryDragHandle);
+        enableCategoryDrag(menu, header);
       });
       formbuilderCats.innerHTML = '';
       formbuilderCats.appendChild(frag);
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      formbuilderAddCategoryBtn.addEventListener('click', async ()=>{
-        const confirmed = await confirmFormbuilderAction({
-          titleText: 'Add Category',
-          messageText: 'Add a new category to the formbuilder?',
-          confirmLabel: 'Add Category',
-          confirmClassName: 'formbuilder-confirm-primary',
-          focusCancel: false
-        });
-        if(!confirmed) return;
+      formbuilderAddCategoryBtn.addEventListener('click', ()=>{
         if(!Array.isArray(categories)) return;
         const baseName = 'New Category';
         const existing = new Set(categories.map(cat => (cat && typeof cat.name === 'string') ? cat.name : ''));
@@ -13630,33 +13099,17 @@ function makePosts(){
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
         const editPanel = newMenu.querySelector('.category-edit-panel');
-        const editBtn = newMenu.querySelector('.category-edit-btn');
         const nameField = newMenu.querySelector('.category-name-input');
         newMenu.setAttribute('aria-expanded','true');
         if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
         if(content) content.hidden = false;
-        if(editPanel){
-          document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-            if(panel !== editPanel){
-              panel.hidden = true;
-            }
-          });
-          closeFieldEditPanels();
-          editPanel.hidden = false;
-<<<<<<< HEAD
-=======
-          if(editBtn){
-            editBtn.setAttribute('aria-expanded','true');
-          }
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
-        }
+        if(editPanel) editPanel.hidden = false;
         if(nameField){
           requestAnimationFrame(()=>{
             try{ nameField.focus({ preventScroll: true }); }
             catch(err){
               try{ nameField.focus(); }catch(e){}
             }
-            try{ nameField.select(); }catch(err){}
           });
         }
       });
@@ -21289,7 +20742,12 @@ document.addEventListener('pointerdown', (e) => {
     const emptyState = document.getElementById('memberCreateEmpty');
     const formWrapper = document.getElementById('memberCreateFormWrapper');
     const formFields = document.getElementById('memberCreateFormFields');
+    const checkoutContainer = document.getElementById('memberCreateCheckout');
+    const paypalContainer = document.getElementById('memberCreatePaypalContainer');
+    const paypalButton = document.getElementById('memberCreatePaypalButton');
     const postButton = document.getElementById('memberCreatePostBtn');
+    const listingCurrency = document.getElementById('memberCreateListingCurrency');
+    const listingPrice = document.getElementById('memberCreateListingPrice');
     const memberForm = document.getElementById('memberForm');
 
     let currentCreateFields = [];
@@ -21655,6 +21113,7 @@ document.addEventListener('pointerdown', (e) => {
       memberSnapshot = normalized;
       memberCategories = memberSnapshot.categories;
       currencyCodes = collectCurrencyCodes(memberSnapshot);
+      ensureCurrencyOptions(listingCurrency);
       ensureCurrencyOptions(adminListingCurrency);
       if(options.populate !== false){
         populateCategoryOptions(options.preserveSelection === true);
@@ -21714,6 +21173,17 @@ document.addEventListener('pointerdown', (e) => {
         fraction = `${fraction}0`;
       }
       return `${integer}.${fraction}`;
+    }
+
+    function updatePaypalContainer(triggered){
+      if(!paypalContainer) return;
+      const hasCredentials = !!(adminPaypalClientId && adminPaypalClientSecret && adminPaypalClientId.value.trim() && adminPaypalClientSecret.value.trim());
+      paypalContainer.textContent = hasCredentials
+        ? (triggered ? 'PayPal checkout will open once integration is connected.' : 'PayPal checkout is ready once connected to your credentials.')
+        : 'Connect PayPal in Admin Settings to enable checkout.';
+      if(paypalButton){
+        paypalButton.disabled = !hasCredentials;
+      }
     }
 
     function sanitizeCreateField(field){
@@ -21808,7 +21278,9 @@ document.addEventListener('pointerdown', (e) => {
         emptyState.hidden = false;
       }
       if(formWrapper) formWrapper.hidden = true;
+      if(checkoutContainer) checkoutContainer.hidden = true;
       if(postButton) postButton.disabled = true;
+      updatePaypalContainer(false);
     }
 
     function buildVersionPriceEditor(field, labelId){
@@ -22675,7 +22147,9 @@ document.addEventListener('pointerdown', (e) => {
       }
       if(emptyState) emptyState.hidden = true;
       if(formWrapper) formWrapper.hidden = false;
+      if(checkoutContainer) checkoutContainer.hidden = false;
       if(postButton) postButton.disabled = false;
+      updatePaypalContainer(false);
     }
 
     async function handleMemberCreatePost(event){
@@ -22726,6 +22200,30 @@ document.addEventListener('pointerdown', (e) => {
       const subcategoryId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subcategoryName)
         ? category.subIds[subcategoryName]
         : null;
+
+      const listingCurrencyValue = listingCurrency ? listingCurrency.value.trim() : '';
+      const listingPriceRaw = listingPrice ? formatPriceValue(listingPrice.value) : '';
+      if(listingPrice){
+        listingPrice.value = listingPriceRaw;
+      }
+      if(listingPriceRaw && !listingCurrencyValue){
+        showCreateStatus('Choose a currency for the listing price.', { error: true });
+        if(listingCurrency){
+          focusElement(listingCurrency);
+        }
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+      if(listingCurrencyValue && !listingPriceRaw){
+        showCreateStatus('Enter a listing price amount.', { error: true });
+        if(listingPrice){
+          focusElement(listingPrice);
+        }
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
 
       let postTitle = '';
       const fieldPayload = [];
@@ -22924,6 +22422,10 @@ document.addEventListener('pointerdown', (e) => {
         subcategory_id: subcategoryId,
         subcategory_name: subcategoryName,
         title: postTitle,
+        listing: {
+          currency: listingCurrencyValue,
+          price: listingPriceRaw
+        },
         fields: fieldPayload,
         member: currentMember
       };
@@ -23042,6 +22544,12 @@ document.addEventListener('pointerdown', (e) => {
         subcategorySelect.dataset.lastSelected = '';
       }
       populateSubcategoryOptions(false);
+      if(listingCurrency){
+        listingCurrency.value = '';
+      }
+      if(listingPrice){
+        listingPrice.value = '';
+      }
       currentCreateFields = [];
       renderEmptyState();
 
@@ -23121,9 +22629,19 @@ document.addEventListener('pointerdown', (e) => {
         renderCreateFields();
       });
     }
+    if(listingPrice){
+      listingPrice.addEventListener('blur', ()=>{
+        listingPrice.value = formatPriceValue(listingPrice.value);
+      });
+    }
     if(adminListingPrice){
       adminListingPrice.addEventListener('blur', ()=>{
         adminListingPrice.value = formatPriceValue(adminListingPrice.value);
+      });
+    }
+    if(paypalButton){
+      paypalButton.addEventListener('click', ()=>{
+        updatePaypalContainer(true);
       });
     }
     if(memberForm){
@@ -23171,6 +22689,13 @@ document.addEventListener('pointerdown', (e) => {
         });
       });
     }
+    if(adminPaypalClientId){
+      adminPaypalClientId.addEventListener('input', ()=> updatePaypalContainer(false));
+    }
+    if(adminPaypalClientSecret){
+      adminPaypalClientSecret.addEventListener('input', ()=> updatePaypalContainer(false));
+    }
+
     if(typeof formbuilderCats !== 'undefined' && formbuilderCats){
       formbuilderCats.addEventListener('change', ()=>{
         refreshMemberSnapshotFromManager();
@@ -23178,6 +22703,7 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     initializeMemberFormbuilderSnapshot();
+    updatePaypalContainer(false);
   }
 
   const colorAreas = [

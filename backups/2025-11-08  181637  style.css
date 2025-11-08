@@ -1084,12 +1084,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #adminForm.panel-body,
 #memberForm.panel-body{
-<<<<<<< HEAD
   padding:10px;
-=======
-  padding:0;
-  padding-left:10px;
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
   padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
 }
 #adminForm.panel-body{
@@ -2520,11 +2515,7 @@ button[aria-expanded="true"] .results-arrow{
 #tab-forms .formbuilder-container{
   position:relative;
   background:none;
-<<<<<<< HEAD
   padding:0 10px 10px;
-=======
-  padding:0 0 10px;
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -5752,10 +5743,6 @@ html, body { cursor: auto !important; }
               background:transparent;
               border-color:transparent;
               color:var(--button-text);
-<<<<<<< HEAD
-=======
-              font-size:16px;
->>>>>>> f9f7dc31bbc9b04152252397a1fd30319c07a199
             }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
@@ -5822,7 +5809,7 @@ html, body { cursor: auto !important; }
               padding:0;
               display:flex;
               flex-direction:column;
-              gap:10px;
+              gap:16px;
               background:transparent;
             }
             #tab-forms .category-form-content[hidden]{
