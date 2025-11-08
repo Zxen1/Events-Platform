@@ -16187,7 +16187,9 @@ if (!map.__pillHooksInstalled) {
           initialZoomStarted = false;
         }
         updateZoomState(zoomValue);
-        scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
+        if(!spinning){
+          scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
+        }
       });
       map.on('zoomend', ()=>{
         if(markersLoaded) return;
@@ -16203,7 +16205,9 @@ if (!map.__pillHooksInstalled) {
       });
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
-        scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+        if(!spinning){
+          scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+        }
       });
       addControls();
       try{
