@@ -154,6 +154,8 @@ try {
     $iconLibrary = array_values(array_keys($iconLibrary));
 
     $updated = [];
+    $newCategoryIds = [];
+    $newSubcategoryIds = [];
     $pdo->beginTransaction();
 
     $categorySortSupported = in_array('sort_order', $categoryColumns, true);
@@ -196,8 +198,47 @@ try {
         }
 
         if (!$categoryRow || !isset($categoryId)) {
-            $label = $categoryName !== '' ? $categoryName : ($categoryId !== null ? (string) $categoryId : '');
-            throw new RuntimeException(sprintf('Unknown category "%s".', $label));
+            if ($categoryName === '') {
+                continue;
+            }
+            $insertParts = [];
+            $insertValues = [];
+            $insertParams = [];
+            $categoryNameColumn = null;
+            if (in_array('name', $categoryColumns, true)) {
+                $categoryNameColumn = 'name';
+            } elseif (in_array('category_name', $categoryColumns, true)) {
+                $categoryNameColumn = 'category_name';
+            }
+            if ($categoryNameColumn !== null) {
+                $insertParts[] = $categoryNameColumn;
+                $insertValues[] = ':category_name';
+                $insertParams[':category_name'] = $categoryName;
+            }
+            if ($categoryKey !== '' && in_array('category_key', $categoryColumns, true)) {
+                $insertParts[] = 'category_key';
+                $insertValues[] = ':category_key';
+                $insertParams[':category_key'] = $categoryKey;
+            }
+            if (in_array('sort_order', $categoryColumns, true)) {
+                $insertParts[] = 'sort_order';
+                $insertValues[] = ':sort_order';
+                $insertParams[':sort_order'] = $categoryOrder + 1;
+            }
+            if ($insertParts) {
+                $sql = 'INSERT INTO categories (' . implode(', ', $insertParts) . ') VALUES (' . implode(', ', $insertValues) . ')';
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($insertParams);
+                $categoryId = (int) $pdo->lastInsertId();
+                $newCategoryIds[] = $categoryId;
+                $categoriesById[$categoryId] = [
+                    'id' => $categoryId,
+                    'name' => $categoryName,
+                    'category_key' => $categoryKey
+                ];
+            } else {
+                continue;
+            }
         }
 
         if ($categoryName === '') {
@@ -382,9 +423,47 @@ try {
                     }
                 }
                 if (!$subcategoryRow) {
-                    $label = $subName !== '' ? $subName : ($subKey !== '' ? $subKey : ($subId !== null ? (string) $subId : ''));
-                    $categoryLabel = $lookupCategoryName !== '' ? $lookupCategoryName : ($lookupCategoryKey !== '' ? $lookupCategoryKey : $categoryName);
-                    throw new RuntimeException(sprintf('Unknown subcategory "%s" within "%s".', $label, $categoryLabel));
+                    if ($subName === '') {
+                        continue;
+                    }
+                    $insertParts = [];
+                    $insertValues = [];
+                    $insertParams = [];
+                    $subNameColumn = null;
+                    if (in_array('subcategory_name', $subcategoryColumns, true)) {
+                        $subNameColumn = 'subcategory_name';
+                    } elseif (in_array('name', $subcategoryColumns, true)) {
+                        $subNameColumn = 'name';
+                    }
+                    if ($subNameColumn !== null) {
+                        $insertParts[] = $subNameColumn;
+                        $insertValues[] = ':subcategory_name';
+                        $insertParams[':subcategory_name'] = $subName;
+                    }
+                    if (in_array('category_name', $subcategoryColumns, true)) {
+                        $insertParts[] = 'category_name';
+                        $insertValues[] = ':category_name';
+                        $insertParams[':category_name'] = $categoryName;
+                    }
+                    if ($subKey !== '' && in_array('subcategory_key', $subcategoryColumns, true)) {
+                        $insertParts[] = 'subcategory_key';
+                        $insertValues[] = ':subcategory_key';
+                        $insertParams[':subcategory_key'] = $subKey;
+                    }
+                    if (in_array('sort_order', $subcategoryColumns, true)) {
+                        $insertParts[] = 'sort_order';
+                        $insertValues[] = ':sort_order';
+                        $insertParams[':sort_order'] = $index + 1;
+                    }
+                    if ($insertParts) {
+                        $sql = 'INSERT INTO subcategories (' . implode(', ', $insertParts) . ') VALUES (' . implode(', ', $insertValues) . ')';
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute($insertParams);
+                        $subId = (int) $pdo->lastInsertId();
+                        $newSubcategoryIds[] = $subId;
+                    } else {
+                        continue;
+                    }
                 }
             }
 
@@ -686,6 +765,8 @@ try {
         'success' => true,
         'updated' => count($updated),
         'subcategory_ids' => $updated,
+        'new_category_ids' => $newCategoryIds,
+        'new_subcategory_ids' => $newSubcategoryIds,
         'iconLibrary' => array_values($iconLibrary),
     ]);
 } catch (Throwable $e) {
