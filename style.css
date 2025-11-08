@@ -1089,6 +1089,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #adminForm.panel-body{
   --panel-base-padding-end: 10px;
+  padding-right:10px;
 }
 .panel-body{
   scrollbar-width: thin;
@@ -2515,7 +2516,7 @@ button[aria-expanded="true"] .results-arrow{
 #tab-forms .formbuilder-container{
   position:relative;
   background:none;
-  padding:0 10px 10px;
+  padding:0;
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -2771,7 +2772,7 @@ button[aria-expanded="true"] .results-arrow{
   text-align: left;
   color: var(--button-text);
   font: inherit;
-  font-size: 20px;
+  font-size: 16px;
   margin: 0;
 }
 
