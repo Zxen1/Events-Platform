@@ -7062,7 +7062,6 @@ function makePosts(){
     const FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP = '__formbuilderAddCategoryHandler';
     let formbuilderConfirmOverlay = null;
     let categoryDragContainerInitialized = false;
-    let formbuilderEditPanelListeners = [];
     let draggedCategoryMenu = null;
     let categoryDropIndicatorTarget = null;
     let categoryDropIndicatorClass = '';
@@ -8183,10 +8182,6 @@ function makePosts(){
         closeSubcategoryFieldOverlay();
       }
       closeAllIconPickers();
-      formbuilderEditPanelListeners.forEach(({handler, options}) => {
-        document.removeEventListener('pointerdown', handler, options);
-      });
-      formbuilderEditPanelListeners = [];
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
@@ -8585,7 +8580,6 @@ function makePosts(){
           editBtn.setAttribute('aria-expanded', 'false');
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
-        formbuilderEditPanelListeners.push({handler: handleCategoryEditPointerDown, options: true});
         editMenu.appendChild(addSubBtn);
         const cleanAddSubBtn = addSubBtn.cloneNode(true);
         editMenu.replaceChild(cleanAddSubBtn, addSubBtn);
@@ -11694,7 +11688,6 @@ function makePosts(){
             };
 
             document.addEventListener('pointerdown', handleFieldEditPointerDown, true);
-            formbuilderEditPanelListeners.push({handler: handleFieldEditPointerDown, options: true});
 
             const updateRequiredState = nextRequired => {
               const next = !!nextRequired;
@@ -13306,7 +13299,6 @@ function makePosts(){
             subEditBtn.setAttribute('aria-expanded', 'false');
           };
           document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
-          formbuilderEditPanelListeners.push({handler: handleSubcategoryEditPointerDown, options: true});
 
           subContent.append(fieldsSection);
 
