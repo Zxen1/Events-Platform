@@ -13338,7 +13338,7 @@ function makePosts(){
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
-        addSubBtn.addEventListener('click', async ()=>{
+        const handleAddSubClick = async ()=>{
           const categoryDisplayName = getCategoryDisplayName();
           const confirmed = await confirmFormbuilderAction({
             titleText: 'Add Subcategory',
@@ -13402,7 +13402,13 @@ function makePosts(){
               }
             });
           }
-        });
+        };
+        const oldSubHandler = addSubBtn.__addSubcategoryHandler;
+        if(oldSubHandler){
+          addSubBtn.removeEventListener('click', oldSubHandler);
+        }
+        addSubBtn.addEventListener('click', handleAddSubClick);
+        addSubBtn.__addSubcategoryHandler = handleAddSubClick;
 
         applyCategoryNameChange();
 
@@ -13484,7 +13490,10 @@ function makePosts(){
           });
         }
       }
-      formbuilderAddCategoryBtn.removeEventListener('click', handleFormbuilderAddCategoryClick);
+      const oldCategoryHandler = formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP];
+      if(oldCategoryHandler){
+        formbuilderAddCategoryBtn.removeEventListener('click', oldCategoryHandler);
+      }
       formbuilderAddCategoryBtn.addEventListener('click', handleFormbuilderAddCategoryClick);
       formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP] = handleFormbuilderAddCategoryClick;
     }
