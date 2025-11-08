@@ -8688,6 +8688,10 @@ function makePosts(){
               deleteIconKeys(subcategoryIconPaths, subId, subName);
             });
           }
+          const categoryIndex = categories.indexOf(c);
+          if(categoryIndex !== -1){
+            categories.splice(categoryIndex, 1);
+          }
           menu.remove();
           notifyFormbuilderChange();
         });
@@ -13212,6 +13216,12 @@ function makePosts(){
             deleteIconKeys(subcategoryIconPaths, currentSubId, currentSubName);
             if(c.subIds && typeof c.subIds === 'object' && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
               delete c.subIds[currentSubName];
+            }
+            if(Array.isArray(c.subs)){
+              const subIndex = c.subs.indexOf(currentSubName);
+              if(subIndex !== -1){
+                c.subs.splice(subIndex, 1);
+              }
             }
             subMenu.remove();
             delete subFieldsMap[currentSubName];
