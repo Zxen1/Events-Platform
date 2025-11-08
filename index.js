@@ -13377,41 +13377,51 @@ function makePosts(){
           const categoryIndex = categories.indexOf(c);
           renderFormbuilderCats();
           notifyFormbuilderChange();
-          if(!formbuilderCats) return;
-          const categorySelector = categoryIndex >= 0 ? `.category-form-menu[data-category-index="${categoryIndex}"]` : null;
-          const categoryMenu = categorySelector ? formbuilderCats.querySelector(categorySelector) : null;
-          if(!categoryMenu) return;
-          categoryMenu.setAttribute('aria-expanded','true');
-          const menuTrigger = categoryMenu.querySelector('.filter-category-trigger');
-          const content = categoryMenu.querySelector('.category-form-content');
-          if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
-          if(content) content.hidden = false;
-          const newSubMenu = categoryMenu.querySelector('.subcategory-form-menu:last-of-type');
-          if(!newSubMenu) return;
-          newSubMenu.setAttribute('aria-expanded','true');
-          const subTrigger = newSubMenu.querySelector('.subcategory-form-trigger');
-          const subContent = newSubMenu.querySelector('.subcategory-form-content');
-          if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
-          if(subContent) subContent.hidden = false;
-          const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
-          if(newSubEditPanel){
-            document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-              if(panel !== newSubEditPanel){
-                panel.hidden = true;
+          requestAnimationFrame(()=> requestAnimationFrame(()=>{
+            if(!formbuilderCats) return;
+            const categorySelector = categoryIndex >= 0 ? `.category-form-menu[data-category-index="${categoryIndex}"]` : null;
+            const categoryMenu = categorySelector ? formbuilderCats.querySelector(categorySelector) : null;
+            if(!categoryMenu) return;
+            categoryMenu.setAttribute('aria-expanded','true');
+            const menuTrigger = categoryMenu.querySelector('.filter-category-trigger');
+            const content = categoryMenu.querySelector('.category-form-content');
+            if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
+            if(content) content.hidden = false;
+            const subMenus = categoryMenu ? categoryMenu.querySelectorAll('.subcategory-form-menu') : null;
+            const newSubMenu = subMenus && subMenus.length ? subMenus[subMenus.length - 1] : null;
+            if(!newSubMenu) return;
+            newSubMenu.setAttribute('aria-expanded','true');
+            const subTrigger = newSubMenu.querySelector('.subcategory-form-trigger');
+            const subContent = newSubMenu.querySelector('.subcategory-form-content');
+            if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
+            if(subContent) subContent.hidden = false;
+            const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
+            const newSubEditBtn = newSubMenu.querySelector('.subcategory-edit-btn');
+            if(newSubEditPanel){
+              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+                if(panel !== newSubEditPanel){
+                  panel.hidden = true;
+                }
+              });
+              document.querySelectorAll('.category-edit-btn, .subcategory-edit-btn').forEach(btn => {
+                if(btn !== newSubEditBtn){
+                  btn.setAttribute('aria-expanded', 'false');
+                }
+              });
+              closeFieldEditPanels();
+              newSubEditPanel.hidden = false;
+              if(newSubEditBtn){
+                newSubEditBtn.setAttribute('aria-expanded', 'true');
               }
-            });
-            closeFieldEditPanels();
-            newSubEditPanel.hidden = false;
-          }
-          const subNameField = newSubMenu.querySelector('.subcategory-name-input');
-          if(subNameField){
-            requestAnimationFrame(()=>{
+            }
+            const subNameField = newSubMenu.querySelector('.subcategory-name-input');
+            if(subNameField){
               try{ subNameField.focus({ preventScroll: true }); }
               catch(err){
                 try{ subNameField.focus(); }catch(e){}
               }
-            });
-          }
+            }
+          }));
         };
         const oldSubHandler = addSubBtn.__addSubcategoryHandler;
         if(oldSubHandler){
