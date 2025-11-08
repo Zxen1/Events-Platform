@@ -8420,7 +8420,11 @@ function makePosts(){
           hideToggleInput.checked = !toggleInput.checked;
         });
         
-        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryBtn);
+        const deleteCategoryRow = document.createElement('div');
+        deleteCategoryRow.className = 'formbuilder-delete-row';
+        deleteCategoryRow.append(deleteCategoryBtn);
+
+        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryRow);
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
@@ -11477,7 +11481,7 @@ function makePosts(){
             fieldRequiredRow.className = 'field-required-row';
             fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredToggle);
 
-            inlineControls.append(fieldTypeWrapper, fieldRequiredRow);
+            inlineControls.append(fieldRequiredRow, fieldTypeWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -11846,7 +11850,11 @@ function makePosts(){
                 }catch(err){}
               }
             });
-            editMenu.append(deleteFieldBtn);
+            const deleteFieldRow = document.createElement('div');
+            deleteFieldRow.className = 'formbuilder-delete-row';
+            deleteFieldRow.append(deleteFieldBtn);
+
+            editMenu.append(deleteFieldRow);
 
             const destroy = ()=>{
               document.removeEventListener('click', handleDocumentClick);
@@ -12645,6 +12653,25 @@ function makePosts(){
               previewFieldEditUI.runSummaryUpdater();
 
               header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel);
+
+              const handlePreviewHeaderClick = event => {
+                if(event.defaultPrevented) return;
+                const origin = event.target;
+                if(!origin) return;
+                if(origin.closest('.formbuilder-drag-handle')) return;
+                if(origin.closest('.field-edit-btn')) return;
+                if(origin.closest('.field-edit-panel')) return;
+                event.stopPropagation();
+                document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+                  if(panel !== previewFieldEditUI.editPanel){
+                    panel.hidden = true;
+                  }
+                });
+                closeFieldEditPanels({ exceptPanel: previewFieldEditUI.editPanel, exceptButton: previewFieldEditUI.editBtn });
+                previewFieldEditUI.openEditPanel();
+              };
+
+              header.addEventListener('click', handlePreviewHeaderClick);
               wrapper.append(header, control);
               formPreviewFields.appendChild(wrapper);
             }
@@ -12677,7 +12704,7 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, destroy: destroyEditUI } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI } = fieldEditUI;
             header.append(fieldEditBtn);
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             header.append(fieldDragHandle);
@@ -12685,6 +12712,26 @@ function makePosts(){
 
             row.append(header);
             row._header = header;
+
+            const activateFieldEditPanel = event => {
+              if(event.defaultPrevented) return;
+              const origin = event.target;
+              if(!origin) return;
+              if(origin.closest('.formbuilder-drag-handle')) return;
+              if(origin.closest('.field-edit-panel')) return;
+              if(origin.closest('.field-edit-btn')) return;
+              event.stopPropagation();
+              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+                if(panel !== editPanel){
+                  panel.hidden = true;
+                }
+              });
+              closeFieldEditPanels({ exceptPanel: editPanel, exceptButton: fieldEditBtn });
+              openEditPanel();
+            };
+
+            header.addEventListener('click', activateFieldEditPanel);
+            row.addEventListener('click', activateFieldEditPanel);
 
             const updateFieldSummary = ()=>{
               const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
@@ -12980,7 +13027,11 @@ function makePosts(){
             subHideToggleInput.checked = !subInput.checked;
           });
           
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubBtn);
+          const deleteSubcategoryRow = document.createElement('div');
+          deleteSubcategoryRow.className = 'formbuilder-delete-row';
+          deleteSubcategoryRow.append(deleteSubBtn);
+
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubcategoryRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
