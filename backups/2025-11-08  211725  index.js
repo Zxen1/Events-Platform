@@ -7059,7 +7059,6 @@ function makePosts(){
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
     const formbuilderAddCategoryBtn = document.getElementById('formbuilderAddCategory');
-    const FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP = '__formbuilderAddCategoryHandler';
     let formbuilderConfirmOverlay = null;
     let categoryDragContainerInitialized = false;
     let draggedCategoryMenu = null;
@@ -8500,7 +8499,7 @@ function makePosts(){
           parentCategoryMenu: menu
         });
 
-        let addSubBtn = document.createElement('button');
+        const addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
@@ -8581,9 +8580,6 @@ function makePosts(){
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
         editMenu.appendChild(addSubBtn);
-        const cleanAddSubBtn = addSubBtn.cloneNode(true);
-        editMenu.replaceChild(cleanAddSubBtn, addSubBtn);
-        addSubBtn = cleanAddSubBtn;
 
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
@@ -12030,7 +12026,7 @@ function makePosts(){
             editMenu.append(deleteFieldRow);
 
             const destroy = ()=>{
-              document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
+              document.removeEventListener('click', handleDocumentClick);
             };
 
             const setDeleteHandler = handler => {
@@ -13437,7 +13433,7 @@ function makePosts(){
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      async function handleFormbuilderAddCategoryClick(){
+      formbuilderAddCategoryBtn.addEventListener('click', async ()=>{
         const confirmed = await confirmFormbuilderAction({
           titleText: 'Add Category',
           messageText: 'Add a new category to the formbuilder?',
@@ -13483,10 +13479,7 @@ function makePosts(){
             }
           });
         }
-      }
-      formbuilderAddCategoryBtn.removeEventListener('click', handleFormbuilderAddCategoryClick);
-      formbuilderAddCategoryBtn.addEventListener('click', handleFormbuilderAddCategoryClick);
-      formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP] = handleFormbuilderAddCategoryClick;
+      });
     }
     function cloneFieldsMap(source){
       const out = {};

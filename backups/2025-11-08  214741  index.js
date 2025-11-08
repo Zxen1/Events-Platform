@@ -8505,6 +8505,8 @@ function makePosts(){
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+        const cleanAddSubBtn = addSubBtn.cloneNode(true);
+        addSubBtn = cleanAddSubBtn;
 
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
@@ -8581,9 +8583,6 @@ function makePosts(){
         };
         document.addEventListener('pointerdown', handleCategoryEditPointerDown, true);
         editMenu.appendChild(addSubBtn);
-        const cleanAddSubBtn = addSubBtn.cloneNode(true);
-        editMenu.replaceChild(cleanAddSubBtn, addSubBtn);
-        addSubBtn = cleanAddSubBtn;
 
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
@@ -13437,7 +13436,13 @@ function makePosts(){
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      async function handleFormbuilderAddCategoryClick(){
+      const existingAddCategoryHandler = typeof formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP] === 'function'
+        ? formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP]
+        : null;
+      if(existingAddCategoryHandler){
+        formbuilderAddCategoryBtn.removeEventListener('click', existingAddCategoryHandler);
+      }
+      const handleFormbuilderAddCategoryClick = async ()=>{
         const confirmed = await confirmFormbuilderAction({
           titleText: 'Add Category',
           messageText: 'Add a new category to the formbuilder?',
@@ -13483,8 +13488,7 @@ function makePosts(){
             }
           });
         }
-      }
-      formbuilderAddCategoryBtn.removeEventListener('click', handleFormbuilderAddCategoryClick);
+      };
       formbuilderAddCategoryBtn.addEventListener('click', handleFormbuilderAddCategoryClick);
       formbuilderAddCategoryBtn[FORM_BUILDER_ADD_CATEGORY_HANDLER_PROP] = handleFormbuilderAddCategoryClick;
     }
