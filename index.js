@@ -8021,6 +8021,8 @@ function makePosts(){
         closeSubcategoryFieldOverlay();
       }
       closeAllIconPickers();
+      const OPEN_EYE_ICON_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+      const CLOSED_EYE_ICON_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.88"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19"></path><path d="M1 1l22 22"></path><path d="M14.12 14.12a3 3 0 0 1-4.24-4.24"></path></svg>';
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
@@ -8357,7 +8359,13 @@ function makePosts(){
         const hideToggleRow = document.createElement('div');
         hideToggleRow.className = 'category-hide-toggle-row';
         const hideToggleLabel = document.createElement('span');
-        hideToggleLabel.textContent = 'Hide Category';
+        hideToggleLabel.className = 'visibility-toggle-label';
+        const hideToggleStatus = document.createElement('span');
+        hideToggleStatus.className = 'visibility-toggle-text';
+        const hideToggleIcon = document.createElement('span');
+        hideToggleIcon.className = 'visibility-toggle-icon';
+        hideToggleIcon.setAttribute('aria-hidden', 'true');
+        hideToggleLabel.append(hideToggleStatus, hideToggleIcon);
         const hideToggle = document.createElement('label');
         hideToggle.className = 'switch';
         const hideToggleInput = document.createElement('input');
@@ -8368,14 +8376,23 @@ function makePosts(){
         hideToggle.append(hideToggleInput, hideToggleSlider);
         hideToggleRow.append(hideToggleLabel, hideToggle);
         
+        const updateCategoryVisibilityLabel = ()=>{
+          const isVisible = !!toggleInput.checked;
+          hideToggleStatus.textContent = isVisible ? 'Visible' : 'Hidden';
+          hideToggleIcon.innerHTML = isVisible ? OPEN_EYE_ICON_SVG : CLOSED_EYE_ICON_SVG;
+        };
+
         hideToggleInput.addEventListener('change', ()=>{
           toggleInput.checked = !hideToggleInput.checked;
           toggleInput.dispatchEvent(new Event('change', {bubbles: true}));
+          updateCategoryVisibilityLabel();
         });
-        
+
         toggleInput.addEventListener('change', ()=>{
           hideToggleInput.checked = !toggleInput.checked;
+          updateCategoryVisibilityLabel();
         });
+        updateCategoryVisibilityLabel();
         
         editPanel.append(nameInput, iconPicker, hideToggleRow, addSubBtn);
         editPanel.hidden = true;
@@ -8651,7 +8668,8 @@ function makePosts(){
 
           const fieldsList = document.createElement('div');
           fieldsList.className = 'subcategory-fields-list';
-          fieldsSection.appendChild(fieldsList);
+          fieldsList.hidden = true;
+          fieldsList.setAttribute('aria-hidden', 'true');
 
           const addFieldBtn = document.createElement('button');
           addFieldBtn.type = 'button';
@@ -11343,39 +11361,16 @@ function makePosts(){
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
-          const formPreviewBtn = document.createElement('button');
-          formPreviewBtn.type = 'button';
-          formPreviewBtn.className = 'form-preview-btn';
-          formPreviewBtn.setAttribute('aria-expanded', 'false');
-          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
-          const formPreviewLabel = document.createElement('span');
-          formPreviewLabel.textContent = 'Form Preview';
-          const formPreviewArrow = document.createElement('span');
-          formPreviewArrow.className = 'dropdown-arrow';
-          formPreviewArrow.setAttribute('aria-hidden', 'true');
-          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
-
           const formPreviewContainer = document.createElement('div');
           formPreviewContainer.className = 'form-preview-container';
-          formPreviewContainer.hidden = true;
+          formPreviewContainer.hidden = false;
           const formPreviewFields = document.createElement('div');
           formPreviewFields.className = 'form-preview-fields';
           formPreviewContainer.appendChild(formPreviewFields);
           const formPreviewId = `${subContentId}Preview`;
           formPreviewContainer.id = formPreviewId;
-          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
-
-          fieldsSection.append(formPreviewBtn, formPreviewContainer, addFieldBtn);
-
-          formPreviewBtn.addEventListener('click', ()=>{
-            const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
-            const nextExpanded = !expanded;
-            formPreviewBtn.setAttribute('aria-expanded', String(nextExpanded));
-            formPreviewContainer.hidden = !nextExpanded;
-            if(nextExpanded){
-              renderFormPreview();
-            }
-          });
+          fieldsSection.append(addFieldBtn, formPreviewContainer);
+          fieldsSection.appendChild(fieldsList);
 
           const createFieldEditUI = (safeField, {
             hostElement = null,
@@ -11847,7 +11842,13 @@ function makePosts(){
               const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
               const labelEl = document.createElement('span');
               labelEl.className = 'subcategory-form-label';
-              labelEl.textContent = labelText;
+              const labelTextSpan = document.createElement('span');
+              labelTextSpan.className = 'subcategory-form-label-text';
+              labelTextSpan.textContent = labelText;
+              const labelVisibilityIcon = document.createElement('span');
+              labelVisibilityIcon.className = 'form-visibility-indicator';
+              labelVisibilityIcon.setAttribute('aria-hidden', 'true');
+              labelEl.append(labelTextSpan, labelVisibilityIcon);
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
               const previewDeleteBtn = document.createElement('button');
@@ -12602,12 +12603,23 @@ function makePosts(){
                 }
               if(previewField.required){
                 wrapper.classList.add('form-preview-field--required');
-                labelEl.appendChild(document.createTextNode(' '));
+                labelTextSpan.appendChild(document.createTextNode(' '));
                 const asterisk = document.createElement('span');
                 asterisk.className = 'required-asterisk';
                 asterisk.textContent = '*';
-                labelEl.appendChild(asterisk);
+                labelTextSpan.appendChild(asterisk);
               }
+              const isFieldHidden = !!(previewField && (
+                previewField.hidden === true ||
+                previewField.hidden === 'true' ||
+                previewField.visible === false ||
+                previewField.visible === 'false' ||
+                previewField.enabled === false ||
+                previewField.enabled === 'false' ||
+                previewField.visibility === 'hidden'
+              ));
+              wrapper.classList.toggle('form-preview-field--hidden', isFieldHidden);
+              labelVisibilityIcon.innerHTML = isFieldHidden ? CLOSED_EYE_ICON_SVG : OPEN_EYE_ICON_SVG;
               const header = document.createElement('div');
               header.className = 'form-preview-field-header';
               header.style.position = 'relative';
@@ -12755,31 +12767,49 @@ function makePosts(){
             };
           };
 
-          fields.forEach((existingField, fieldIndex) => {
+          const updateFieldRowIndices = ()=>{
+            if(!fieldsList) return;
+            const rows = Array.from(fieldsList.querySelectorAll('.subcategory-field-row'));
+            rows.forEach((row, index)=>{
+              row.dataset.fieldIndex = String(index);
+            });
+          };
+
+          fields.forEach(existingField => {
             if(!existingField) return;
             const fieldRow = createFieldRow(existingField);
             if(!fieldRow || !fieldRow.row) return;
-            fieldRow.row.dataset.fieldIndex = String(fieldIndex);
             fieldsList.appendChild(fieldRow.row);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
           });
+          updateFieldRowIndices();
 
           addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
-            fields.push(newField);
+            fields.unshift(newField);
             const fieldRow = createFieldRow(newField);
-            fieldsList.appendChild(fieldRow.row);
-            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+            const reference = fieldsList.firstChild instanceof Element ? fieldsList.firstChild : null;
+            fieldsList.insertBefore(fieldRow.row, reference);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
+            updateFieldRowIndices();
+            renderFormPreview();
             notifyFormbuilderChange();
             requestAnimationFrame(()=>{
-              if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
-                fieldRow.focusTypePicker();
-              } else if(fieldRow && typeof fieldRow.focus === 'function'){
-                fieldRow.focus();
+              const firstPreviewField = formPreviewFields.querySelector('.form-preview-field');
+              if(!firstPreviewField) return;
+              const editBtn = firstPreviewField.querySelector('.field-edit-btn');
+              if(editBtn){
+                editBtn.click();
+                const typeSelect = firstPreviewField.querySelector('.field-type-select');
+                if(typeSelect && typeof typeSelect.focus === 'function'){
+                  try{
+                    typeSelect.focus({ preventScroll: true });
+                  }catch(err){
+                    try{ typeSelect.focus(); }catch(e){}
+                  }
+                }
               }
             });
-            renderFormPreview();
           });
 
           renderFormPreview();
@@ -12841,7 +12871,6 @@ function makePosts(){
             const categoryDisplayName = getCategoryDisplayName();
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
-            formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
             if(!subLogo.querySelector('img')){
               subLogo.textContent = displayName.charAt(0) || '';
               subLogo.classList.remove('has-icon');
@@ -12934,7 +12963,13 @@ function makePosts(){
           const subHideToggleRow = document.createElement('div');
           subHideToggleRow.className = 'subcategory-hide-toggle-row';
           const subHideToggleLabel = document.createElement('span');
-          subHideToggleLabel.textContent = 'Hide Subcategory';
+          subHideToggleLabel.className = 'visibility-toggle-label';
+          const subHideToggleStatus = document.createElement('span');
+          subHideToggleStatus.className = 'visibility-toggle-text';
+          const subHideToggleIcon = document.createElement('span');
+          subHideToggleIcon.className = 'visibility-toggle-icon';
+          subHideToggleIcon.setAttribute('aria-hidden', 'true');
+          subHideToggleLabel.append(subHideToggleStatus, subHideToggleIcon);
           const subHideToggle = document.createElement('label');
           subHideToggle.className = 'switch';
           const subHideToggleInput = document.createElement('input');
@@ -12945,14 +12980,23 @@ function makePosts(){
           subHideToggle.append(subHideToggleInput, subHideToggleSlider);
           subHideToggleRow.append(subHideToggleLabel, subHideToggle);
           
+          const updateSubVisibilityLabel = ()=>{
+            const isVisible = !!subInput.checked;
+            subHideToggleStatus.textContent = isVisible ? 'Visible' : 'Hidden';
+            subHideToggleIcon.innerHTML = isVisible ? OPEN_EYE_ICON_SVG : CLOSED_EYE_ICON_SVG;
+          };
+
           subHideToggleInput.addEventListener('change', ()=>{
             subInput.checked = !subHideToggleInput.checked;
             subInput.dispatchEvent(new Event('change', {bubbles: true}));
+            updateSubVisibilityLabel();
           });
-          
+
           subInput.addEventListener('change', ()=>{
             subHideToggleInput.checked = !subInput.checked;
+            updateSubVisibilityLabel();
           });
+          updateSubVisibilityLabel();
           
           subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow);
           subHeader.append(subEditPanel);
