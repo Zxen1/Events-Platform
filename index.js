@@ -13387,7 +13387,8 @@ function makePosts(){
             const content = categoryMenu.querySelector('.category-form-content');
             if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
             if(content) content.hidden = false;
-            const newSubMenu = categoryMenu.querySelector('.subcategory-form-menu:last-of-type');
+            const subMenus = categoryMenu ? categoryMenu.querySelectorAll('.subcategory-form-menu') : null;
+            const newSubMenu = subMenus && subMenus.length ? subMenus[subMenus.length - 1] : null;
             if(!newSubMenu) return;
             newSubMenu.setAttribute('aria-expanded','true');
             const subTrigger = newSubMenu.querySelector('.subcategory-form-trigger');
