@@ -1069,7 +1069,7 @@ button[aria-expanded="true"] .results-arrow{
   min-height:0;
   overflow-y:auto;
   overflow-x:hidden;
-  padding:20px 10px;
+  padding:0 10px;
   --panel-scrollbar-overlay: 0px;
   --panel-scrollbar-size: 12px;
   --panel-scrollbar-thumb: rgba(255,255,255,0.5);
@@ -2545,6 +2545,9 @@ button[aria-expanded="true"] .results-arrow{
   position:relative;
   background:none;
   padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 #filterPanel .filter-basics-container{
   position:relative;
@@ -5800,7 +5803,7 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .category-form-content{
               border-top:none;
-              padding:16px 0;
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:16px;
@@ -5810,13 +5813,13 @@ html, body { cursor: auto !important; }
               display:none;
             }
             #tab-forms .formbuilder-actions{
-              margin-bottom:12px;
+              margin-top:12px;
             }
             #tab-forms .category-edit-menu,
             #tab-forms .field-edit-menu{
               display:flex;
               flex-direction:column;
-              gap:12px;
+              gap:10px;
             }
             #tab-forms .category-edit-trigger-wrap{
               width:100%;
@@ -5847,11 +5850,12 @@ html, body { cursor: auto !important; }
               border-color:var(--btn-hover, #2e3a72);
             }
             #tab-forms .category-edit-panel,
+            #tab-forms .subcategory-edit-panel,
             #tab-forms .field-edit-panel{
               background:#1a1a1a;
               display:flex;
               flex-direction:column;
-              gap:12px;
+              gap:10px;
             }
             #tab-forms .category-edit-panel[hidden],
             #tab-forms .field-edit-panel[hidden]{
@@ -5913,20 +5917,17 @@ html, body { cursor: auto !important; }
               border-color:var(--btn-hover, #2e3a72);
             }
             #tab-forms .iconpicker-preview{
-              width:64px;
-              height:64px;
-              border:1px dashed var(--border);
-              border-radius:8px;
               display:flex;
               align-items:center;
               justify-content:center;
-              background:rgba(0,0,0,0.35);
               color:var(--muted);
               font-size:12px;
               text-align:center;
-              padding:6px;
+              padding:0;
               box-sizing:border-box;
               overflow:hidden;
+              background:none;
+              border:none;
             }
             #tab-forms .iconpicker-preview img{
               max-width:100%;
@@ -6806,28 +6807,27 @@ html, body { cursor: auto !important; }
               align-items:center;
               gap:8px;
             }
+            #tab-forms .category-logo,
             #tab-forms .subcategory-logo{
-              width:28px;
-              height:28px;
-              border-radius:50%;
-              background:rgba(255,255,255,0.08);
-              display:flex;
+              display:inline-flex;
               align-items:center;
               justify-content:center;
-              font-weight:700;
               text-transform:uppercase;
+              font-weight:700;
               font-size:12px;
+              line-height:1;
+              padding:0;
+              background:none;
+              border:none;
             }
+            #tab-forms .category-logo img,
+            #tab-forms .category-logo svg,
+            #tab-forms .subcategory-logo img,
             #tab-forms .subcategory-logo svg{
-              width:20px;
-              height:20px;
-            }
-            #tab-forms .subcategory-logo.has-icon{
-              background:transparent;
-            }
-            #tab-forms .subcategory-logo.has-icon svg{
-              width:24px;
-              height:24px;
+              width:auto;
+              height:auto;
+              max-width:none;
+              max-height:none;
             }
             #tab-forms .subcategory-form-toggle{
               position:relative;
@@ -6878,7 +6878,7 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .subcategory-form-content{
               border-top:1px solid var(--border);
-              padding:0;
+              padding:0 10px 10px;
               background:rgba(0,0,0,0.25);
               display:flex;
               flex-direction:column;
@@ -7440,11 +7440,6 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.35);
               color:var(--button-text);
               padding:0 12px;
-            }
-            #tab-forms .subcategory-form-placeholder{
-              margin:0;
-              font-size:14px;
-              color:var(--muted);
             }
             #tab-forms .add-subcategory-btn{
               padding:0 16px;
