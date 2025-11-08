@@ -13059,16 +13059,7 @@ function makePosts(){
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
           });
 
-          addFieldBtn.addEventListener('click', async ()=>{
-            const subDisplayName = getSubDisplayName();
-            const confirmed = await confirmFormbuilderAction({
-              titleText: 'Add Field',
-              messageText: `Add a new field to ${subDisplayName}?`,
-              confirmLabel: 'Add Field',
-              confirmClassName: 'formbuilder-confirm-primary',
-              focusCancel: false
-            });
-            if(!confirmed) return;
+          addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
@@ -13373,16 +13364,7 @@ function makePosts(){
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
-        addSubBtn.addEventListener('click', async ()=>{
-          const categoryDisplayName = getCategoryDisplayName();
-          const confirmed = await confirmFormbuilderAction({
-            titleText: 'Add Subcategory',
-            messageText: `Add a new subcategory to ${categoryDisplayName}?`,
-            confirmLabel: 'Add Subcategory',
-            confirmClassName: 'formbuilder-confirm-primary',
-            focusCancel: false
-          });
-          if(!confirmed) return;
+        addSubBtn.addEventListener('click', ()=>{
           if(!Array.isArray(c.subs)){
             c.subs = [];
           }
@@ -13477,15 +13459,7 @@ function makePosts(){
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      formbuilderAddCategoryBtn.addEventListener('click', async ()=>{
-        const confirmed = await confirmFormbuilderAction({
-          titleText: 'Add Category',
-          messageText: 'Add a new category to the formbuilder?',
-          confirmLabel: 'Add Category',
-          confirmClassName: 'formbuilder-confirm-primary',
-          focusCancel: false
-        });
-        if(!confirmed) return;
+      formbuilderAddCategoryBtn.addEventListener('click', ()=>{
         if(!Array.isArray(categories)) return;
         const baseName = 'New Category';
         const existing = new Set(categories.map(cat => (cat && typeof cat.name === 'string') ? cat.name : ''));
