@@ -6526,7 +6526,7 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-field-row .field-inline-controls{
               display:flex;
               align-items:center;
-              gap:12px;
+              gap:10px;
               flex-wrap:nowrap;
             }
             #tab-forms .subcategory-field-row .field-row-header{
@@ -6566,7 +6566,7 @@ html, body { cursor: auto !important; }
             #tab-forms .field-edit-menu .field-inline-controls{
               flex-direction:column;
               align-items:stretch;
-              gap:12px;
+              gap:10px;
             }
             #tab-forms .field-edit-menu .field-inline-controls .field-type-select-wrapper{
               width:100%;
