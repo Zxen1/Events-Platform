@@ -1085,6 +1085,7 @@ button[aria-expanded="true"] .results-arrow{
 #adminForm.panel-body,
 #memberForm.panel-body{
   padding:0;
+  padding-left:10px;
   padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
 }
 #adminForm.panel-body{
