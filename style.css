@@ -5724,6 +5724,22 @@ html, body { cursor: auto !important; }
               gap:12px;
               margin-top:12px;
             }
+            #tab-forms .visibility-toggle-label{
+              display:inline-flex;
+              align-items:center;
+              gap:6px;
+              font-weight:600;
+            }
+            #tab-forms .visibility-toggle-text{
+              display:inline-flex;
+              align-items:center;
+              gap:4px;
+            }
+            #tab-forms .visibility-toggle-icon svg{
+              display:block;
+              width:16px;
+              height:16px;
+            }
             #tab-forms .category-form-menu .filter-category-trigger{
               min-width:0;
             }
@@ -5908,24 +5924,26 @@ html, body { cursor: auto !important; }
               border-color:var(--btn-hover, #2e3a72);
             }
             #tab-forms .iconpicker-preview{
-              width:64px;
-              height:64px;
-              border:1px dashed var(--border);
+              width:auto;
+              height:auto;
+              min-width:0;
+              min-height:0;
+              border:none;
               border-radius:8px;
               display:flex;
               align-items:center;
               justify-content:center;
-              background:rgba(0,0,0,0.35);
+              background:transparent;
               color:var(--muted);
               font-size:12px;
               text-align:center;
-              padding:6px;
+              padding:0;
               box-sizing:border-box;
               overflow:hidden;
             }
             #tab-forms .iconpicker-preview img{
-              max-width:100%;
-              max-height:100%;
+              max-width:40px;
+              max-height:40px;
               display:none;
             }
             #tab-forms .iconpicker-preview.has-image{
@@ -6009,6 +6027,17 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .subcategory-form-menu.subcategory-off{
               opacity:1;
+            }
+            #tab-forms .subcategory-form-menu.subcategory-off > .formbuilder-subcategory-header{
+              opacity:0.5;
+              filter:grayscale(1);
+            }
+            #tab-forms .category-form-menu.cat-off{
+              opacity:1;
+            }
+            #tab-forms .category-form-menu.cat-off > .formbuilder-category-header{
+              opacity:0.5;
+              filter:grayscale(1);
             }
             #tab-forms .category-form-menu.has-floating-overlay,
             #tab-forms .subcategory-form-menu.has-floating-overlay{
@@ -6949,7 +6978,7 @@ html, body { cursor: auto !important; }
               text-align:left;
               display:inline-flex;
               align-items:center;
-              gap:4px;
+              gap:6px;
               width:100%;
               justify-content:flex-start;
             }
@@ -6958,6 +6987,17 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .form-preview-container .panel-field .subcategory-form-label{
               cursor:default;
+              gap:6px;
+            }
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label-text{
+              display:inline-flex;
+              align-items:center;
+              gap:4px;
+            }
+            #tab-forms .form-preview-container .panel-field .form-visibility-indicator svg{
+              display:block;
+              width:16px;
+              height:16px;
             }
             #tab-forms .form-preview-field-header{
               display:flex;
@@ -6969,6 +7009,10 @@ html, body { cursor: auto !important; }
             #tab-forms .form-preview-field-header .subcategory-form-label{
               flex:1 1 auto;
               min-width:0;
+            }
+            #tab-forms .form-preview-field--hidden .form-preview-field-header .subcategory-form-label{
+              opacity:0.5;
+              filter:grayscale(1);
             }
             #tab-forms .form-preview-field-header .field-edit-btn{
               flex:0 0 auto;
