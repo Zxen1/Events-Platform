@@ -13419,6 +13419,7 @@ function makePosts(){
           if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
           if(subContent) subContent.hidden = false;
           const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
+          const newSubEditBtn = newSubMenu.querySelector('.subcategory-edit-btn');
           if(newSubEditPanel){
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel !== newSubEditPanel){
@@ -13427,6 +13428,9 @@ function makePosts(){
             });
             closeFieldEditPanels();
             newSubEditPanel.hidden = false;
+            if(newSubEditBtn){
+              newSubEditBtn.setAttribute('aria-expanded','true');
+            }
           }
           const subNameField = newSubMenu.querySelector('.subcategory-name-input');
           if(subNameField){
@@ -13435,6 +13439,7 @@ function makePosts(){
               catch(err){
                 try{ subNameField.focus(); }catch(e){}
               }
+              try{ subNameField.select(); }catch(err){}
             });
           }
         });
@@ -13497,6 +13502,7 @@ function makePosts(){
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
         const editPanel = newMenu.querySelector('.category-edit-panel');
+        const editBtn = newMenu.querySelector('.category-edit-btn');
         const nameField = newMenu.querySelector('.category-name-input');
         newMenu.setAttribute('aria-expanded','true');
         if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
@@ -13509,6 +13515,9 @@ function makePosts(){
           });
           closeFieldEditPanels();
           editPanel.hidden = false;
+          if(editBtn){
+            editBtn.setAttribute('aria-expanded','true');
+          }
         }
         if(nameField){
           requestAnimationFrame(()=>{
@@ -13516,6 +13525,7 @@ function makePosts(){
             catch(err){
               try{ nameField.focus(); }catch(e){}
             }
+            try{ nameField.select(); }catch(err){}
           });
         }
       });
