@@ -1082,9 +1082,13 @@ button[aria-expanded="true"] .results-arrow{
   align-items:stretch;
   gap:20px;
 }
+#adminForm.panel-body,
+#memberForm.panel-body{
+  padding:10px;
+  padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
+}
 #adminForm.panel-body{
   --panel-base-padding-end: 10px;
-  padding-right:10px;
 }
 .panel-body{
   scrollbar-width: thin;
@@ -1749,26 +1753,24 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
   padding:6px 10px;
   border-radius:10px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.45));
-  border:1px solid rgba(255,255,255,0.16);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04), 0 2px 5px rgba(0,0,0,0.45);
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
   color:var(--button-text);
   cursor:pointer;
-  transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 #adminPanel .tab-bar button:hover{
-  background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35));
-  border-color:rgba(255,255,255,0.24);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.07), 0 3px 6px rgba(0,0,0,0.45);
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
 }
 #adminPanel .tab-bar button:active{
-  transform:translateY(1px);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.07), 0 1px 3px rgba(0,0,0,0.5);
+  transform:none;
 }
 #adminPanel .tab-bar button[aria-selected="true"]{
-  background:linear-gradient(180deg, var(--btn-selected-hover), var(--btn-selected));
-  border-color:rgba(62,83,147,0.85);
-  box-shadow:0 0 0 1px rgba(62,83,147,0.75), 0 8px 16px rgba(0,0,0,0.45);
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
   color:var(--button-active-text);
 }
 #adminPanel .tab-bar button:focus-visible{
@@ -1780,26 +1782,24 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
   padding:6px 10px;
   border-radius:10px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.45));
-  border:1px solid rgba(255,255,255,0.16);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04), 0 2px 5px rgba(0,0,0,0.45);
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
   color:var(--button-text);
   cursor:pointer;
-  transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 #memberPanel .tab-bar .tab-btn:hover{
-  background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35));
-  border-color:rgba(255,255,255,0.24);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.07), 0 3px 6px rgba(0,0,0,0.45);
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
 }
 #memberPanel .tab-bar .tab-btn:active{
-  transform:translateY(1px);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.07), 0 1px 3px rgba(0,0,0,0.5);
+  transform:none;
 }
 #memberPanel .tab-bar .tab-btn[aria-selected="true"]{
-  background:linear-gradient(180deg, var(--btn-selected-hover), var(--btn-selected));
-  border-color:rgba(62,83,147,0.85);
-  box-shadow:0 0 0 1px rgba(62,83,147,0.75), 0 8px 16px rgba(0,0,0,0.45);
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
   color:var(--button-active-text);
 }
 #memberPanel .tab-bar .tab-btn:focus-visible{
@@ -1807,22 +1807,22 @@ button[aria-expanded="true"] .results-arrow{
   outline-offset:2px;
 }
 .member-auth-tab{
-  background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.45));
-  border:1px solid rgba(255,255,255,0.16);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04), 0 2px 5px rgba(0,0,0,0.45);
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 .member-auth-tab:hover{
-  background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0.35));
-  border-color:rgba(255,255,255,0.24);
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
 }
 .member-auth-tab:active{
-  transform:translateY(1px);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.07), 0 1px 3px rgba(0,0,0,0.5);
+  transform:none;
 }
 .member-auth-tab[aria-selected="true"]{
-  background:linear-gradient(180deg, var(--btn-selected-hover), var(--btn-selected));
-  border-color:rgba(62,83,147,0.85);
-  box-shadow:0 0 0 1px rgba(62,83,147,0.75), 0 8px 16px rgba(0,0,0,0.45);
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
   color:var(--button-active-text);
 }
 .member-auth-tab:focus-visible{
@@ -1897,35 +1897,6 @@ button[aria-expanded="true"] .results-arrow{
 #memberPanel .member-create-price-row input{
   flex:1 1 120px;
   min-width:120px;
-}
-#memberPanel .member-paypal-container{
-  min-height:48px;
-  border:1px dashed var(--border, rgba(255,255,255,0.2));
-  border-radius:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:12px;
-  color:var(--button-text);
-  font-size:14px;
-  text-align:center;
-}
-#memberPanel .member-create-paypal-btn{
-  background:var(--btn);
-  border:1px solid var(--btn);
-  color:var(--button-text);
-  padding:10px 16px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:600;
-}
-#memberPanel .member-create-paypal-btn:hover{
-  background:var(--btn-hover, #2e3a72);
-  border-color:var(--btn-hover, #2e3a72);
-}
-#memberPanel .member-create-paypal-btn[disabled]{
-  opacity:0.6;
-  cursor:not-allowed;
 }
 #memberPanel .member-create-actions{
   display:flex;
@@ -5688,18 +5659,21 @@ html, body { cursor: auto !important; }
               padding-top:0;
               padding-bottom:0;
             }
-            #tab-forms .category-form-menu{
-              position: relative;
-              margin-bottom:12px;
-              border:none;
-              border-radius:0;
-              background:transparent;
-              overflow:visible;
-              transition:border-color .2s,background .2s,opacity .2s;
-            }
-            #tab-forms .category-form-menu:last-child{
-              margin-bottom:0;
-            }
+#tab-forms .category-form-menu{
+  position: relative;
+  margin-bottom:12px;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+  transition:border-color .2s,background .2s,opacity .2s;
+}
+#tab-forms .category-form-menu.filter-category-menu{
+  margin:0;
+}
+#tab-forms .category-form-menu:last-child{
+  margin-bottom:0;
+}
             #tab-forms .category-form-menu .formbuilder-category-header{
               display:flex;
               align-items:center;
