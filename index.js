@@ -7714,11 +7714,13 @@ function makePosts(){
       const cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
       cancelBtn.className = 'formbuilder-confirm-cancel';
+      cancelBtn.dataset.role = 'cancel';
       cancelBtn.textContent = 'Cancel';
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
-      deleteBtn.className = 'formbuilder-confirm-delete';
+      deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete';
+      deleteBtn.dataset.role = 'confirm';
       deleteBtn.textContent = 'Delete';
 
       actions.append(cancelBtn, deleteBtn);
@@ -7729,44 +7731,63 @@ function makePosts(){
       return overlay;
     }
 
-    function confirmFormbuilderDeletion(messageText, titleText){
+    function confirmFormbuilderAction({
+      messageText = 'Are you sure you want to continue?',
+      titleText = 'Confirm action',
+      confirmLabel = 'Confirm',
+      confirmClassName = 'formbuilder-confirm-delete',
+      focusCancel = true
+    } = {}){
       const overlay = ensureFormbuilderConfirmOverlay();
       const dialog = overlay.querySelector('.formbuilder-confirm-dialog');
       const title = dialog.querySelector('#formbuilderConfirmTitle');
       const message = dialog.querySelector('#formbuilderConfirmMessage');
-      const cancelBtn = overlay.querySelector('.formbuilder-confirm-cancel');
-      const deleteBtn = overlay.querySelector('.formbuilder-confirm-delete');
-      title.textContent = titleText || 'Delete item?';
-      message.textContent = messageText || 'Are you sure you want to delete this item?';
+      const cancelBtn = overlay.querySelector('[data-role="cancel"]');
+      const confirmBtn = overlay.querySelector('[data-role="confirm"]');
+      if(!cancelBtn || !confirmBtn) return Promise.resolve(false);
+      const previousClassName = confirmBtn.className;
+      const previousLabel = confirmBtn.textContent;
+      const previousFocused = document.activeElement;
+
+      title.textContent = titleText || 'Confirm action';
+      message.textContent = messageText || 'Are you sure you want to continue?';
+
+      const normalizedConfirmClass = typeof confirmClassName === 'string' && confirmClassName.trim()
+        ? `formbuilder-confirm-button ${confirmClassName.trim()}`
+        : previousClassName || 'formbuilder-confirm-button';
+      confirmBtn.className = normalizedConfirmClass;
+      confirmBtn.textContent = confirmLabel || previousLabel || 'Confirm';
+
       overlay.setAttribute('aria-hidden', 'false');
       overlay.classList.add('visible');
-      const previouslyFocused = document.activeElement;
 
-      return new Promise(resolve=>{
+      return new Promise(resolve => {
         const cleanup = (result)=>{
           overlay.classList.remove('visible');
           overlay.setAttribute('aria-hidden', 'true');
           cancelBtn.removeEventListener('click', onCancel);
-          deleteBtn.removeEventListener('click', onConfirm);
+          confirmBtn.removeEventListener('click', onConfirm);
           window.removeEventListener('keydown', onKeyDown, true);
           overlay.removeEventListener('click', onOverlayClick);
-          if(previouslyFocused && typeof previouslyFocused.focus === 'function'){
+          confirmBtn.className = previousClassName || 'formbuilder-confirm-button formbuilder-confirm-delete';
+          confirmBtn.textContent = previousLabel || 'Delete';
+          if(previousFocused && typeof previousFocused.focus === 'function'){
             try{
-              previouslyFocused.focus({ preventScroll: true });
+              previousFocused.focus({ preventScroll: true });
             }catch(err){
-              try{ previouslyFocused.focus(); }catch(e){}
+              try{ previousFocused.focus(); }catch(e){}
             }
           }
           resolve(result);
         };
         const onCancel = ()=> cleanup(false);
         const onConfirm = ()=> cleanup(true);
-        const onOverlayClick = (event)=>{
+        const onOverlayClick = event => {
           if(event.target === overlay){
             cleanup(false);
           }
         };
-        const onKeyDown = (event)=>{
+        const onKeyDown = event => {
           if(event.key === 'Escape'){
             event.preventDefault();
             cleanup(false);
@@ -7774,17 +7795,28 @@ function makePosts(){
         };
 
         cancelBtn.addEventListener('click', onCancel, { once: true });
-        deleteBtn.addEventListener('click', onConfirm, { once: true });
+        confirmBtn.addEventListener('click', onConfirm, { once: true });
         overlay.addEventListener('click', onOverlayClick);
         window.addEventListener('keydown', onKeyDown, true);
 
         requestAnimationFrame(()=>{
+          const targetBtn = focusCancel ? cancelBtn : confirmBtn;
           try{
-            cancelBtn.focus({ preventScroll: true });
+            targetBtn.focus({ preventScroll: true });
           }catch(err){
-            cancelBtn.focus();
+            try{ targetBtn.focus(); }catch(e){}
           }
         });
+      });
+    }
+
+    function confirmFormbuilderDeletion(messageText, titleText){
+      return confirmFormbuilderAction({
+        messageText: messageText || 'Are you sure you want to delete this item?',
+        titleText: titleText || 'Delete item?',
+        confirmLabel: 'Delete',
+        confirmClassName: 'formbuilder-confirm-delete',
+        focusCancel: true
       });
     }
     let subcategoryFieldOverlayEl = null;
@@ -8327,7 +8359,7 @@ function makePosts(){
         toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
         toggleInput.hidden = true;
 
-        header.append(triggerWrap, editBtn, categoryDragHandle, toggleInput);
+        header.append(triggerWrap, categoryDragHandle, editBtn, toggleInput);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -8634,7 +8666,7 @@ function makePosts(){
           subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
           subInput.hidden = true;
 
-          subHeader.append(subTriggerWrap, subEditBtn, subDragHandle, subInput);
+          subHeader.append(subTriggerWrap, subDragHandle, subEditBtn, subInput);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -12705,9 +12737,9 @@ function makePosts(){
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
             const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI } = fieldEditUI;
-            header.append(fieldEditBtn);
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             header.append(fieldDragHandle);
+            header.append(fieldEditBtn);
             header.append(editPanel);
 
             row.append(header);
@@ -12792,6 +12824,9 @@ function makePosts(){
             return {
               row,
               dragHandle: fieldDragHandle,
+              editBtn: fieldEditBtn,
+              editPanel,
+              openEditPanel,
               focus(){
                 try{
                   fieldTypeSelect.focus({ preventScroll: true });
@@ -12837,7 +12872,16 @@ function makePosts(){
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
           });
 
-          addFieldBtn.addEventListener('click', ()=>{
+          addFieldBtn.addEventListener('click', async ()=>{
+            const subDisplayName = getSubDisplayName();
+            const confirmed = await confirmFormbuilderAction({
+              titleText: 'Add Field',
+              messageText: `Add a new field to ${subDisplayName}?`,
+              confirmLabel: 'Add Field',
+              confirmClassName: 'formbuilder-confirm-primary',
+              focusCancel: false
+            });
+            if(!confirmed) return;
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
@@ -12847,6 +12891,12 @@ function makePosts(){
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
             syncFieldOrderFromDom(fieldsList, fields);
             notifyFormbuilderChange();
+            if(fieldRow && fieldRow.editPanel){
+              closeFieldEditPanels({ exceptPanel: fieldRow.editPanel, exceptButton: fieldRow.editBtn });
+              if(typeof fieldRow.openEditPanel === 'function'){
+                fieldRow.openEditPanel();
+              }
+            }
             requestAnimationFrame(()=>{
               if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
                 fieldRow.focusTypePicker();
@@ -13098,7 +13148,16 @@ function makePosts(){
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
-        addSubBtn.addEventListener('click', ()=>{
+        addSubBtn.addEventListener('click', async ()=>{
+          const categoryDisplayName = getCategoryDisplayName();
+          const confirmed = await confirmFormbuilderAction({
+            titleText: 'Add Subcategory',
+            messageText: `Add a new subcategory to ${categoryDisplayName}?`,
+            confirmLabel: 'Add Subcategory',
+            confirmClassName: 'formbuilder-confirm-primary',
+            focusCancel: false
+          });
+          if(!confirmed) return;
           if(!Array.isArray(c.subs)){
             c.subs = [];
           }
@@ -13134,6 +13193,16 @@ function makePosts(){
           const subContent = newSubMenu.querySelector('.subcategory-form-content');
           if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
           if(subContent) subContent.hidden = false;
+          const newSubEditPanel = newSubMenu.querySelector('.subcategory-edit-panel');
+          if(newSubEditPanel){
+            document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+              if(panel !== newSubEditPanel){
+                panel.hidden = true;
+              }
+            });
+            closeFieldEditPanels();
+            newSubEditPanel.hidden = false;
+          }
           const subNameField = newSubMenu.querySelector('.subcategory-name-input');
           if(subNameField){
             requestAnimationFrame(()=>{
@@ -13178,7 +13247,15 @@ function makePosts(){
       refreshFormbuilderSubcategoryLogos();
     };
     if(formbuilderAddCategoryBtn){
-      formbuilderAddCategoryBtn.addEventListener('click', ()=>{
+      formbuilderAddCategoryBtn.addEventListener('click', async ()=>{
+        const confirmed = await confirmFormbuilderAction({
+          titleText: 'Add Category',
+          messageText: 'Add a new category to the formbuilder?',
+          confirmLabel: 'Add Category',
+          confirmClassName: 'formbuilder-confirm-primary',
+          focusCancel: false
+        });
+        if(!confirmed) return;
         if(!Array.isArray(categories)) return;
         const baseName = 'New Category';
         const existing = new Set(categories.map(cat => (cat && typeof cat.name === 'string') ? cat.name : ''));
@@ -13199,7 +13276,15 @@ function makePosts(){
         newMenu.setAttribute('aria-expanded','true');
         if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
         if(content) content.hidden = false;
-        if(editPanel) editPanel.hidden = false;
+        if(editPanel){
+          document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+            if(panel !== editPanel){
+              panel.hidden = true;
+            }
+          });
+          closeFieldEditPanels();
+          editPanel.hidden = false;
+        }
         if(nameField){
           requestAnimationFrame(()=>{
             try{ nameField.focus({ preventScroll: true }); }
