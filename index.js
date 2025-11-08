@@ -12026,7 +12026,7 @@ function makePosts(){
             editMenu.append(deleteFieldRow);
 
             const destroy = ()=>{
-              document.removeEventListener('click', handleDocumentClick);
+              document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
             };
 
             const setDeleteHandler = handler => {
