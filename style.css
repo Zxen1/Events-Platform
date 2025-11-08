@@ -5754,6 +5754,10 @@ html, body { cursor: auto !important; }
             #tab-forms .category-form-menu.cat-off{
               opacity:1;
             }
+            #tab-forms .category-form-menu.cat-off .filter-category-trigger .label,
+            #tab-forms .subcategory-form-menu.subcategory-off .subcategory-label{
+              text-decoration:line-through;
+            }
             #tab-forms .category-form-menu.is-dragging,
             #tab-forms .subcategory-form-menu.is-dragging,
             #tab-forms .subcategory-field-row.is-dragging{
@@ -6850,6 +6854,21 @@ html, body { cursor: auto !important; }
               max-width:none;
               max-height:none;
             }
+            #tab-forms .subcategory-logo{
+              width:20px;
+              height:20px;
+              min-width:20px;
+              min-height:20px;
+              flex:0 0 20px;
+            }
+            #tab-forms .subcategory-logo img,
+            #tab-forms .subcategory-logo svg{
+              width:100%;
+              height:100%;
+              max-width:100%;
+              max-height:100%;
+              object-fit:contain;
+            }
             #tab-forms .subcategory-form-toggle{
               position:relative;
               display:flex;
@@ -6970,6 +6989,7 @@ html, body { cursor: auto !important; }
               align-items:center;
               gap:8px;
               margin:0;
+              padding-top:10px;
             }
             #tab-forms .form-preview-field-header .subcategory-form-button,
             #tab-forms .form-preview-field-header .subcategory-form-label{

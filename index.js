@@ -3371,6 +3371,27 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       fieldTypes: []
     };
 
+    function resolveFieldTypeDisplayName(option){
+      if(!option || typeof option !== 'object'){
+        return '';
+      }
+      const candidates = [
+        option.field_type_name,
+        option.fieldTypeName,
+        option.name,
+        option.label
+      ];
+      for(const candidate of candidates){
+        if(typeof candidate === 'string'){
+          const trimmed = candidate.trim();
+          if(trimmed){
+            return trimmed;
+          }
+        }
+      }
+      return '';
+    }
+
     function normalizeFieldTypeOptions(options){
       const list = Array.isArray(options)
         ? options
@@ -3379,7 +3400,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           : [];
       const normalized = [];
       const seen = new Set();
-      const pushOption = (value, label)=>{
+      const pushOption = (value, label, source=null)=>{
         const trimmedValue = typeof value === 'string' ? value.trim() : '';
         if(!trimmedValue){
           return;
@@ -3389,7 +3410,26 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         const trimmedLabel = typeof label === 'string' ? label.trim() : '';
-        normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
+        const sourceName = resolveFieldTypeDisplayName(source);
+        const displayName = sourceName || trimmedLabel || trimmedValue;
+        const option = {
+          value: trimmedValue,
+          label: displayName,
+          name: displayName,
+          fieldTypeName: displayName,
+          field_type_name: displayName,
+          fieldTypeKey: trimmedValue,
+          field_type_key: trimmedValue
+        };
+        if(source && typeof source === 'object'){
+          if(typeof source.placeholder === 'string' && source.placeholder){
+            option.placeholder = source.placeholder;
+          }
+          if(typeof source.type === 'string' && source.type){
+            option.type = source.type;
+          }
+        }
+        normalized.push(option);
         seen.add(dedupeKey);
       };
       list.forEach(item => {
@@ -3417,7 +3457,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
               : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
                 ? item.fieldTypeName.trim()
                 : '';
-          pushOption(value, label);
+          pushOption(value, label, item);
           return;
         }
         if(typeof item === 'string'){
@@ -3669,22 +3709,50 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const sanitized = [];
       const seenValues = new Set();
       list.forEach(option => {
-        if(!option || typeof option !== 'object'){
+        if(option && typeof option === 'object'){
+          const rawValue = typeof option.value === 'string' ? option.value.trim() : '';
+          if(!rawValue){
+            return;
+          }
+          const dedupeKey = rawValue.toLowerCase();
+          if(seenValues.has(dedupeKey)){
+            return;
+          }
+          seenValues.add(dedupeKey);
+          const displayName = resolveFieldTypeDisplayName(option) || rawValue;
+          const sanitizedOption = {
+            ...option,
+            value: rawValue,
+            label: displayName,
+            name: displayName,
+            fieldTypeName: displayName,
+            field_type_name: displayName,
+            fieldTypeKey: rawValue,
+            field_type_key: rawValue
+          };
+          sanitized.push(sanitizedOption);
           return;
         }
-        let value = typeof option.value === 'string' ? option.value.trim() : '';
-        let label = typeof option.label === 'string' ? option.label.trim() : '';
-        if(!value){
-          return;
+        if(typeof option === 'string'){
+          const trimmed = option.trim();
+          if(!trimmed){
+            return;
+          }
+          const dedupeKey = trimmed.toLowerCase();
+          if(seenValues.has(dedupeKey)){
+            return;
+          }
+          seenValues.add(dedupeKey);
+          sanitized.push({
+            value: trimmed,
+            label: trimmed,
+            name: trimmed,
+            fieldTypeName: trimmed,
+            field_type_name: trimmed,
+            fieldTypeKey: trimmed,
+            field_type_key: trimmed
+          });
         }
-        if(!label){
-          label = value;
-        }
-        if(seenValues.has(value)){
-          return;
-        }
-        seenValues.add(value);
-        sanitized.push({ value, label });
       });
       return sanitized;
     }
@@ -3704,7 +3772,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
-      return match ? match.label : '';
+      if(!match){
+        return '';
+      }
+      const label = resolveFieldTypeDisplayName(match);
+      if(label){
+        return label;
+      }
+      return typeof value === 'string' ? value : '';
     };
     const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
     const VENUE_CURRENCY_STATE = new WeakMap();
@@ -8795,11 +8870,23 @@ function makePosts(){
             }
           }
           // Only auto-name truly new fields
-          if(!safeField.name){
-            safeField.name = '';
-          }
+            if(!safeField.name){
+              safeField.name = '';
+            }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
             const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+            const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
+            const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
+            let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
+            if(!resolvedFieldTypeName && fieldTypeKey){
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+              if(matchingFieldType){
+                resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
+              }
+            }
+            resolvedFieldTypeName = resolvedFieldTypeName || '';
+            safeField.field_type_name = resolvedFieldTypeName;
+            safeField.fieldTypeName = resolvedFieldTypeName;
             if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
                 safeField.placeholder = 'Search for a location';
@@ -11520,7 +11607,16 @@ function makePosts(){
             FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
-              option.textContent = optionDef.label;
+              const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
+              option.textContent = optionLabel || optionDef.value;
+              if(optionDef.value){
+                option.dataset.fieldTypeKey = optionDef.value;
+              }
+              if(optionLabel){
+                option.dataset.fieldTypeName = optionLabel;
+              } else if(optionDef.value){
+                option.dataset.fieldTypeName = optionDef.value;
+              }
               if(optionDef.value === matchKey){
                 option.selected = true;
               }
@@ -11901,6 +11997,10 @@ function makePosts(){
               safeField.key = nextValidType;
 
               const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
+              const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
+              const updatedFieldTypeName = (matchingDisplayName || nextLabel || nextValidType || '').trim();
+              safeField.field_type_name = updatedFieldTypeName;
+              safeField.fieldTypeName = updatedFieldTypeName;
               if(matchingFieldType){
                 if(matchingFieldType.placeholder){
                   safeField.placeholder = matchingFieldType.placeholder;
@@ -12849,7 +12949,12 @@ function makePosts(){
 
             const updateFieldSummary = ()=>{
               const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
-              const typeLabelRaw = getFormFieldTypeLabel(typeKey).trim();
+              const storedTypeName = (typeof safeField.field_type_name === 'string' && safeField.field_type_name.trim())
+                ? safeField.field_type_name.trim()
+                : (typeof safeField.fieldTypeName === 'string' && safeField.fieldTypeName.trim())
+                  ? safeField.fieldTypeName.trim()
+                  : '';
+              const typeLabelRaw = (storedTypeName || getFormFieldTypeLabel(typeKey)).trim();
               const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
               summaryLabel.textContent = typeLabel || 'Field';
               const isRequired = !!safeField.required;
