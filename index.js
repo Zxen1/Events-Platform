@@ -13379,7 +13379,7 @@ function makePosts(){
           const categoryIndex = categories.indexOf(c);
           renderFormbuilderCats();
           notifyFormbuilderChange();
-          requestAnimationFrame(()=>{
+          setTimeout(()=>{
             if(!formbuilderCats) return;
             const categorySelector = categoryIndex >= 0 ? `.category-form-menu[data-category-index="${categoryIndex}"]` : null;
             const categoryMenu = categorySelector ? formbuilderCats.querySelector(categorySelector) : null;
