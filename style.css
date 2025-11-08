@@ -6564,6 +6564,7 @@ html, body { cursor: auto !important; }
               color:rgba(255,214,214,0.95);
             }
             #tab-forms .field-edit-menu .field-inline-controls{
+              display:flex;
               flex-direction:column;
               align-items:stretch;
               gap:10px;
