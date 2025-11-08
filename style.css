@@ -2779,6 +2779,7 @@ button[aria-expanded="true"] .results-arrow{
   text-align: left;
   color: var(--button-text);
   font: inherit;
+  font-size: 20px;
   margin: 0;
 }
 
@@ -2797,7 +2798,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .filter-category-menu .filter-category-trigger .label{
-  font-weight:700;
+  font-weight:400;
   letter-spacing:.2px;
   flex:1;
 }
@@ -5685,7 +5686,8 @@ html, body { cursor: auto !important; }
               position:relative;
             }
             #tab-forms .category-edit-btn,
-            #tab-forms .subcategory-edit-btn{
+            #tab-forms .subcategory-edit-btn,
+            #tab-forms .field-edit-btn{
               background:transparent;
               border:none;
               color:var(--button-text);
@@ -5699,11 +5701,13 @@ html, body { cursor: auto !important; }
               flex-shrink:0;
             }
             #tab-forms .category-edit-btn:hover,
-            #tab-forms .subcategory-edit-btn:hover{
+            #tab-forms .subcategory-edit-btn:hover,
+            #tab-forms .field-edit-btn:hover{
               background:rgba(255,255,255,0.1);
             }
             #tab-forms .category-edit-panel,
-            #tab-forms .subcategory-edit-panel{
+            #tab-forms .subcategory-edit-panel,
+            #tab-forms .field-edit-panel{
               min-width:280px;
               max-width:320px;
               background:#1a1a1a;
@@ -5726,8 +5730,12 @@ html, body { cursor: auto !important; }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
             }
+            #tab-forms .formbuilder-container button:not([class*="mapboxgl-"]):active,
+            #tab-forms .formbuilder-container [role="button"]:not([class*="mapboxgl-"]):active{
+              transform:none;
+            }
             #tab-forms .category-form-menu.cat-off{
-              opacity:0.5;
+              opacity:1;
             }
             #tab-forms .formbuilder-category-header,
             #tab-forms .formbuilder-subcategory-header,
@@ -5799,7 +5807,8 @@ html, body { cursor: auto !important; }
             #tab-forms .formbuilder-actions{
               margin-bottom:12px;
             }
-            #tab-forms .category-edit-menu{
+            #tab-forms .category-edit-menu,
+            #tab-forms .field-edit-menu{
               display:flex;
               flex-direction:column;
               gap:12px;
@@ -5832,13 +5841,15 @@ html, body { cursor: auto !important; }
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
             }
-            #tab-forms .category-edit-panel{
+            #tab-forms .category-edit-panel,
+            #tab-forms .field-edit-panel{
               background:#1a1a1a;
               display:flex;
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .category-edit-panel[hidden]{
+            #tab-forms .category-edit-panel[hidden],
+            #tab-forms .field-edit-panel[hidden]{
               display:none;
             }
             #tab-forms .category-name-input{
@@ -5997,7 +6008,7 @@ html, body { cursor: auto !important; }
               position:relative;
             }
             #tab-forms .subcategory-form-menu.subcategory-off{
-              opacity:0.5;
+              opacity:1;
             }
             #tab-forms .category-form-menu.has-floating-overlay,
             #tab-forms .subcategory-form-menu.has-floating-overlay{
@@ -6515,13 +6526,57 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-field-row .field-inline-controls{
               display:flex;
               align-items:center;
-              gap:12px;
+              gap:10px;
               flex-wrap:nowrap;
             }
             #tab-forms .subcategory-field-row .field-row-header{
               display:flex;
               align-items:center;
+              justify-content:space-between;
               gap:8px;
+              position:relative;
+            }
+            #tab-forms .field-row-summary{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              flex:1 1 auto;
+              min-width:0;
+            }
+            #tab-forms .field-summary-label{
+              font-weight:600;
+              color:var(--button-text);
+              overflow:hidden;
+              text-overflow:ellipsis;
+              white-space:nowrap;
+            }
+            #tab-forms .field-summary-required{
+              font-size:12px;
+              text-transform:uppercase;
+              letter-spacing:0.5px;
+              padding:2px 8px;
+              border-radius:999px;
+              background:rgba(255,255,255,0.12);
+              color:var(--muted, rgba(255,255,255,0.75));
+            }
+            #tab-forms .field-summary-required.is-required{
+              background:rgba(255,77,77,0.2);
+              color:rgba(255,214,214,0.95);
+            }
+            #tab-forms .field-edit-menu .field-inline-controls{
+              display:flex;
+              flex-direction:column;
+              align-items:stretch;
+              gap:10px;
+            }
+            #tab-forms .field-edit-menu .field-inline-controls .field-type-select-wrapper{
+              width:100%;
+            }
+            #tab-forms .field-edit-menu .field-required-row{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
             }
             #tab-forms .field-type-select-wrapper{
               position:relative;
@@ -6879,10 +6934,12 @@ html, body { cursor: auto !important; }
               padding-bottom:0;
             }
             #tab-forms .form-preview-container .panel-field label,
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button,
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
               font-weight:600;
             }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button,
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
               border:none;
               background:none;
               color:inherit;
@@ -6895,28 +6952,36 @@ html, body { cursor: auto !important; }
               gap:4px;
               width:100%;
               justify-content:flex-start;
+            }
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
               cursor:pointer;
+            }
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
+              cursor:default;
             }
             #tab-forms .form-preview-field-header{
               display:flex;
               align-items:center;
-              justify-content:flex-start;
-              gap:12px;
+              gap:8px;
               margin-bottom:8px;
             }
-            #tab-forms .form-preview-field-header .subcategory-form-button{
+            #tab-forms .form-preview-field-header .subcategory-form-button,
+            #tab-forms .form-preview-field-header .subcategory-form-label{
               flex:1 1 auto;
               min-width:0;
             }
+            #tab-forms .form-preview-field-header .field-edit-btn{
+              flex:0 0 auto;
+            }
             #tab-forms .form-preview-field-header .delete-field-btn{
               flex:0 0 auto;
-              margin-left:auto;
             }
             #tab-forms .form-preview-container .panel-field .subcategory-form-button:focus-visible{
               outline:2px solid var(--btn-hover, #2e3a72);
               outline-offset:2px;
             }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button .required-asterisk{
+            #tab-forms .form-preview-container .panel-field .subcategory-form-button .required-asterisk,
+            #tab-forms .form-preview-container .panel-field .subcategory-form-label .required-asterisk{
               font-size:inherit;
             }
             #tab-forms .form-preview-container .panel-field input{

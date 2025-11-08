@@ -8271,7 +8271,7 @@ function makePosts(){
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'category-edit-btn';
-        editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 13a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';
+        editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
         
         const toggle = document.createElement('label');
@@ -8580,7 +8580,7 @@ function makePosts(){
           const subEditBtn = document.createElement('button');
           subEditBtn.type = 'button';
           subEditBtn.className = 'subcategory-edit-btn';
-          subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 13a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';
+          subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
           
           const subToggle = document.createElement('label');
@@ -11377,6 +11377,458 @@ function makePosts(){
             }
           });
 
+          const createFieldEditUI = (safeField, {
+            hostElement = null,
+            attachDropdownToPanel = false,
+            summaryUpdater: initialSummaryUpdater = ()=>{}
+          } = {}) => {
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'field-edit-btn';
+            editBtn.setAttribute('aria-haspopup', 'true');
+            editBtn.setAttribute('aria-expanded', 'false');
+            editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
+
+            const editPanel = document.createElement('div');
+            editPanel.className = 'field-edit-panel';
+            editPanel.hidden = true;
+            editPanel.style.position = 'absolute';
+            editPanel.style.right = '0';
+            editPanel.style.top = 'calc(100% + 10px)';
+            editPanel.style.zIndex = '100';
+
+            const editMenu = document.createElement('div');
+            editMenu.className = 'field-edit-menu';
+            editPanel.append(editMenu);
+
+            const inlineControls = document.createElement('div');
+            inlineControls.className = 'field-inline-controls';
+            editMenu.append(inlineControls);
+
+            const fieldTypeSelect = document.createElement('select');
+            fieldTypeSelect.className = 'field-type-select';
+            const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
+            FORM_FIELD_TYPES.forEach(optionDef => {
+              const option = document.createElement('option');
+              option.value = optionDef.value;
+              option.textContent = optionDef.label;
+              if(optionDef.value === matchKey){
+                option.selected = true;
+              }
+              fieldTypeSelect.appendChild(option);
+            });
+
+            const fieldTypeWrapper = document.createElement('div');
+            fieldTypeWrapper.className = 'field-type-select-wrapper';
+            const fieldTypeArrow = document.createElement('span');
+            fieldTypeArrow.className = 'field-type-select-arrow';
+            fieldTypeArrow.setAttribute('aria-hidden', 'true');
+            fieldTypeArrow.textContent = '▾';
+            fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
+
+            const fieldRequiredLabel = document.createElement('span');
+            fieldRequiredLabel.className = 'field-required-label';
+            fieldRequiredLabel.textContent = 'Required';
+
+            const fieldRequiredToggle = document.createElement('label');
+            fieldRequiredToggle.className = 'switch field-required-switch';
+            const fieldRequiredInput = document.createElement('input');
+            fieldRequiredInput.type = 'checkbox';
+            fieldRequiredInput.checked = !!safeField.required;
+            fieldRequiredInput.setAttribute('aria-label', 'Toggle required field');
+            const fieldRequiredSlider = document.createElement('span');
+            fieldRequiredSlider.className = 'slider';
+            fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredSlider);
+
+            const fieldRequiredRow = document.createElement('div');
+            fieldRequiredRow.className = 'field-required-row';
+            fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredToggle);
+
+            inlineControls.append(fieldTypeWrapper, fieldRequiredRow);
+
+            let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
+            const runSummaryUpdater = ()=>{
+              try{
+                summaryUpdater();
+              }catch(err){}
+            };
+            const setSummaryUpdater = fn => {
+              if(typeof fn === 'function'){
+                summaryUpdater = fn;
+              } else {
+                summaryUpdater = ()=>{};
+              }
+            };
+
+            const closeEditPanel = ()=>{
+              if(editPanel.hidden) return;
+              editPanel.hidden = true;
+              editBtn.setAttribute('aria-expanded', 'false');
+              if(hostElement && hostElement.classList){
+                hostElement.classList.remove('field-edit-open');
+              }
+            };
+
+            const handleDocumentClick = event => {
+              if(hostElement && !hostElement.isConnected && !editPanel.isConnected){
+                document.removeEventListener('click', handleDocumentClick);
+                return;
+              }
+              if(editPanel.hidden) return;
+              const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
+              if(clickedEditBtn === editBtn) return;
+              if(!editPanel.contains(event.target)){
+                closeEditPanel();
+              }
+            };
+
+            document.addEventListener('click', handleDocumentClick);
+
+            const updateRequiredState = nextRequired => {
+              const next = !!nextRequired;
+              if(next === !!safeField.required) return;
+              safeField.required = next;
+              notifyFormbuilderChange();
+              renderFormPreview();
+              runSummaryUpdater();
+            };
+
+            fieldRequiredInput.addEventListener('change', ()=>{
+              updateRequiredState(fieldRequiredInput.checked);
+            });
+
+            const dropdownOptionsContainer = document.createElement('div');
+            dropdownOptionsContainer.className = 'dropdown-options-editor';
+            const dropdownOptionsLabel = document.createElement('div');
+            dropdownOptionsLabel.className = 'dropdown-options-label';
+            dropdownOptionsLabel.textContent = 'Field Options';
+            const dropdownOptionsList = document.createElement('div');
+            dropdownOptionsList.className = 'dropdown-options-list';
+            dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
+
+            if(attachDropdownToPanel === true){
+              editMenu.append(dropdownOptionsContainer);
+            }
+
+            let draggedOptionRow = null;
+
+            const ensureDropdownSeeds = ()=>{
+              if(!Array.isArray(safeField.options)){
+                safeField.options = [];
+              }
+              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
+                safeField.options.push('', '', '');
+                notifyFormbuilderChange();
+              }
+            };
+
+            const renderDropdownOptions = (focusIndex = null)=>{
+              const isOptionsType = safeField.type === 'dropdown' || safeField.type === 'radio-toggle';
+              if(!isOptionsType){
+                dropdownOptionsList.innerHTML = '';
+                return;
+              }
+              ensureDropdownSeeds();
+              dropdownOptionsList.innerHTML = '';
+              safeField.options.forEach((optionValue, optionIndex)=>{
+                const optionText = typeof optionValue === 'string'
+                  ? optionValue
+                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.version === 'string'
+                    ? optionValue.version
+                    : '');
+                const optionRow = document.createElement('div');
+                optionRow.className = 'dropdown-option-row';
+                optionRow.draggable = true;
+                optionRow._optionValue = safeField.options[optionIndex];
+
+                const optionInput = document.createElement('input');
+                optionInput.type = 'text';
+                optionInput.className = 'dropdown-option-input';
+                optionInput.placeholder = `Option ${optionIndex + 1}`;
+                optionInput.value = optionText;
+                optionInput.addEventListener('input', ()=>{
+                  safeField.options[optionIndex] = optionInput.value;
+                  optionRow._optionValue = optionInput.value;
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+
+                const actions = document.createElement('div');
+                actions.className = 'dropdown-option-actions';
+
+                const addOptionBtn = document.createElement('button');
+                addOptionBtn.type = 'button';
+                addOptionBtn.className = 'dropdown-option-add';
+                addOptionBtn.textContent = '+';
+                addOptionBtn.setAttribute('aria-label', `Add option after Option ${optionIndex + 1}`);
+                addOptionBtn.addEventListener('click', ()=>{
+                  safeField.options.splice(optionIndex + 1, 0, '');
+                  notifyFormbuilderChange();
+                  renderDropdownOptions(optionIndex + 1);
+                  renderFormPreview();
+                });
+
+                const removeOptionBtn = document.createElement('button');
+                removeOptionBtn.type = 'button';
+                removeOptionBtn.className = 'dropdown-option-remove';
+                removeOptionBtn.textContent = '-';
+                removeOptionBtn.setAttribute('aria-label', `Remove Option ${optionIndex + 1}`);
+                removeOptionBtn.addEventListener('click', ()=>{
+                  if(safeField.options.length <= 1){
+                    safeField.options[0] = '';
+                  } else {
+                    safeField.options.splice(optionIndex, 1);
+                  }
+                  notifyFormbuilderChange();
+                  const nextFocus = Math.min(optionIndex, Math.max(safeField.options.length - 1, 0));
+                  renderDropdownOptions(nextFocus);
+                  renderFormPreview();
+                });
+
+                actions.append(addOptionBtn, removeOptionBtn);
+                optionRow.append(optionInput, actions);
+
+                optionRow.addEventListener('dragstart', event=>{
+                  const origin = event.target;
+                  const tagName = origin && origin.tagName ? origin.tagName.toLowerCase() : '';
+                  if(tagName === 'input' || tagName === 'button'){
+                    event.preventDefault();
+                    return;
+                  }
+                  draggedOptionRow = optionRow;
+                  optionRow.classList.add('is-dragging');
+                  if(event.dataTransfer){
+                    event.dataTransfer.effectAllowed = 'move';
+                    try{ event.dataTransfer.setData('text/plain', optionInput.value || 'Option'); }catch(err){}
+                    try{
+                      const rect = optionRow.getBoundingClientRect();
+                      event.dataTransfer.setDragImage(optionRow, rect.width / 2, rect.height / 2);
+                    }catch(err){}
+                  }
+                });
+
+                optionRow.addEventListener('dragend', ()=>{
+                  optionRow.classList.remove('is-dragging');
+                  draggedOptionRow = null;
+                });
+
+                dropdownOptionsList.appendChild(optionRow);
+
+                if(focusIndex === optionIndex){
+                  requestAnimationFrame(()=>{
+                    try{ optionInput.focus({ preventScroll: true }); }
+                    catch(err){
+                      try{ optionInput.focus(); }catch(e){}
+                    }
+                  });
+                }
+              });
+            };
+
+            const getDragAfterOption = mouseY => {
+              const rows = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).filter(row => row !== draggedOptionRow);
+              let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+              rows.forEach(row => {
+                const rect = row.getBoundingClientRect();
+                const offset = mouseY - (rect.top + rect.height / 2);
+                if(offset < 0 && offset > closest.offset){
+                  closest = { offset, element: row };
+                }
+              });
+              return closest.element;
+            };
+
+            dropdownOptionsList.addEventListener('dragover', event=>{
+              if(!draggedOptionRow) return;
+              event.preventDefault();
+              if(event.dataTransfer){
+                event.dataTransfer.dropEffect = 'move';
+              }
+              const afterElement = getDragAfterOption(event.clientY);
+              if(!afterElement){
+                dropdownOptionsList.appendChild(draggedOptionRow);
+              } else if(afterElement !== draggedOptionRow){
+                dropdownOptionsList.insertBefore(draggedOptionRow, afterElement);
+              }
+            });
+
+            dropdownOptionsList.addEventListener('drop', event=>{
+              if(!draggedOptionRow) return;
+              event.preventDefault();
+              const orderedValues = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).map(row => (
+                row && Object.prototype.hasOwnProperty.call(row, '_optionValue') ? row._optionValue : ''
+              ));
+              safeField.options.splice(0, safeField.options.length, ...orderedValues);
+              if(draggedOptionRow){
+                draggedOptionRow.classList.remove('is-dragging');
+                draggedOptionRow = null;
+              }
+              notifyFormbuilderChange();
+              renderDropdownOptions();
+              renderFormPreview();
+            });
+
+            const updateFieldEditorsByType = ()=>{
+              const type = safeField.type;
+              const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
+              const showVariantPricing = type === 'variant-pricing';
+              const showVenueSession = type === 'venue-ticketing';
+              if(type === 'images'){
+                if(safeField.placeholder){
+                  safeField.placeholder = '';
+                  notifyFormbuilderChange();
+                }
+              } else if(showVenueSession && safeField.placeholder){
+                safeField.placeholder = '';
+                notifyFormbuilderChange();
+              }
+              dropdownOptionsContainer.hidden = !isOptionsType;
+              if(showVenueSession){
+                safeField.options = normalizeVenueSessionOptions(safeField.options);
+              } else if(showVariantPricing){
+                if(!Array.isArray(safeField.options) || safeField.options.length === 0){
+                  safeField.options = [{ version: '', currency: '', price: '' }];
+                  notifyFormbuilderChange();
+                } else {
+                  safeField.options = safeField.options.map(opt => {
+                    if(opt && typeof opt === 'object'){
+                      return {
+                        version: typeof opt.version === 'string' ? opt.version : '',
+                        currency: typeof opt.currency === 'string' ? opt.currency : '',
+                        price: typeof opt.price === 'string' ? opt.price : ''
+                      };
+                    }
+                    const str = typeof opt === 'string' ? opt : String(opt ?? '');
+                    return { version: str, currency: '', price: '' };
+                  });
+                }
+              }
+              if(type === 'dropdown'){
+                dropdownOptionsLabel.textContent = 'Dropdown Options';
+              } else if(type === 'radio-toggle'){
+                dropdownOptionsLabel.textContent = 'Radio Options';
+              } else {
+                dropdownOptionsLabel.textContent = 'Field Options';
+              }
+              if(isOptionsType){
+                if(!Array.isArray(safeField.options) || safeField.options.length === 0){
+                  safeField.options = ['', '', ''];
+                  notifyFormbuilderChange();
+                }
+                renderDropdownOptions();
+              } else if(!showVariantPricing && !showVenueSession){
+                dropdownOptionsList.innerHTML = '';
+              } else if(showVenueSession){
+                dropdownOptionsList.innerHTML = '';
+              }
+              if(type === 'location'){
+                if(!safeField.placeholder || !safeField.placeholder.trim()){
+                  const defaultPlaceholder = 'Search for a location';
+                  safeField.placeholder = defaultPlaceholder;
+                }
+                if(!safeField.location || typeof safeField.location !== 'object'){
+                  safeField.location = { address: '', latitude: '', longitude: '' };
+                } else {
+                  if(typeof safeField.location.address !== 'string') safeField.location.address = '';
+                  if(typeof safeField.location.latitude !== 'string') safeField.location.latitude = '';
+                  if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
+                }
+              }
+              runSummaryUpdater();
+            };
+
+            fieldTypeSelect.addEventListener('change', ()=>{
+              const previousType = safeField.type;
+              const previousLabel = getFormFieldTypeLabel(previousType).trim();
+              const currentName = typeof safeField.name === 'string' ? safeField.name.trim() : '';
+              const nextType = fieldTypeSelect.value;
+              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+              const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
+              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
+
+              safeField.fieldTypeKey = nextValidType;
+              safeField.key = nextValidType;
+
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
+              if(matchingFieldType){
+                if(matchingFieldType.placeholder){
+                  safeField.placeholder = matchingFieldType.placeholder;
+                }
+                safeField.type = nextValidType;
+              }
+
+              if(shouldAutofillName && nextLabel){
+                safeField.name = nextLabel;
+              }
+              notifyFormbuilderChange();
+              updateFieldEditorsByType();
+              renderFormPreview();
+              runSummaryUpdater();
+            });
+
+            updateFieldEditorsByType();
+
+            const openEditPanel = ()=>{
+              if(!editPanel.hidden) return;
+              editPanel.hidden = false;
+              editBtn.setAttribute('aria-expanded', 'true');
+              if(hostElement && hostElement.classList){
+                hostElement.classList.add('field-edit-open');
+              }
+              requestAnimationFrame(()=>{
+                try{
+                  fieldTypeSelect.focus({ preventScroll: true });
+                }catch(err){
+                  try{ fieldTypeSelect.focus(); }catch(e){}
+                }
+              });
+            };
+
+            editBtn.addEventListener('click', event=>{
+              event.stopPropagation();
+              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel, .field-edit-panel').forEach(panel => {
+                if(panel !== editPanel){
+                  panel.hidden = true;
+                  const panelHost = panel.closest('.subcategory-field-row, .form-preview-field');
+                  if(panelHost && panelHost.classList){
+                    panelHost.classList.remove('field-edit-open');
+                  }
+                }
+              });
+              document.querySelectorAll('.field-edit-btn[aria-expanded="true"]').forEach(btn => {
+                if(btn !== editBtn){
+                  btn.setAttribute('aria-expanded', 'false');
+                }
+              });
+              if(editPanel.hidden){
+                openEditPanel();
+              } else {
+                closeEditPanel();
+              }
+            });
+
+            const destroy = ()=>{
+              document.removeEventListener('click', handleDocumentClick);
+            };
+
+            return {
+              editBtn,
+              editPanel,
+              editMenu,
+              inlineControls,
+              fieldTypeSelect,
+              fieldRequiredInput,
+              dropdownOptionsContainer,
+              dropdownOptionsList,
+              closeEditPanel,
+              openEditPanel,
+              setSummaryUpdater,
+              runSummaryUpdater,
+              updateFieldEditorsByType,
+              destroy
+            };
+          };
+
           let formPreviewFieldIdCounter = 0;
           function renderFormPreview(){
             formPreviewFields.innerHTML = '';
@@ -11393,14 +11845,11 @@ function makePosts(){
               wrapper.className = 'panel-field form-preview-field';
               const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
               const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
-              const labelButton = document.createElement('button');
-              labelButton.type = 'button';
-              labelButton.className = 'subcategory-form-button';
-              labelButton.textContent = labelText;
-              labelButton.setAttribute('aria-haspopup', 'dialog');
-              labelButton.dataset.previewIndex = String(previewIndex);
+              const labelEl = document.createElement('span');
+              labelEl.className = 'subcategory-form-label';
+              labelEl.textContent = labelText;
               const labelId = `${baseId}-label`;
-              labelButton.id = labelId;
+              labelEl.id = labelId;
               const previewDeleteBtn = document.createElement('button');
               previewDeleteBtn.type = 'button';
               previewDeleteBtn.className = 'delete-field-btn';
@@ -12151,30 +12600,36 @@ function makePosts(){
                     control.setAttribute('aria-labelledby', labelId);
                   }
                 }
-                labelButton.addEventListener('click', event=>{
-                  event.preventDefault();
-                  let targetRow = previewField && previewField.__rowEl;
-                  if(!targetRow || !targetRow.isConnected){
-                    targetRow = Array.from(fieldsList.querySelectorAll('.subcategory-field-row')).find(row => row.__fieldRef === previewField) || targetRow;
-                  }
-                  if(targetRow && typeof openSubcategoryFieldOverlay === 'function'){
-                    openSubcategoryFieldOverlay(targetRow, labelText, event.currentTarget || event.target);
-                  }
-                });
-                if(previewField.required){
-                  wrapper.classList.add('form-preview-field--required');
-                  labelButton.appendChild(document.createTextNode(' '));
-                  const asterisk = document.createElement('span');
-                  asterisk.className = 'required-asterisk';
-                  asterisk.textContent = '*';
-                  labelButton.appendChild(asterisk);
-                }
-                const header = document.createElement('div');
-                header.className = 'form-preview-field-header';
-                header.append(labelButton, previewDeleteBtn);
-                wrapper.append(header, control);
-                formPreviewFields.appendChild(wrapper);
+              if(previewField.required){
+                wrapper.classList.add('form-preview-field--required');
+                labelEl.appendChild(document.createTextNode(' '));
+                const asterisk = document.createElement('span');
+                asterisk.className = 'required-asterisk';
+                asterisk.textContent = '*';
+                labelEl.appendChild(asterisk);
               }
+              const header = document.createElement('div');
+              header.className = 'form-preview-field-header';
+              header.style.position = 'relative';
+              header.appendChild(labelEl);
+
+              const previewFieldEditUI = createFieldEditUI(previewField, {
+                hostElement: wrapper,
+                attachDropdownToPanel: true
+              });
+
+              previewFieldEditUI.setSummaryUpdater(()=>{
+                const displayName = (typeof previewField.name === 'string' && previewField.name.trim())
+                  ? previewField.name.trim()
+                  : labelText;
+                previewFieldEditUI.editBtn.setAttribute('aria-label', `Edit ${displayName || 'field'} settings`);
+              });
+              previewFieldEditUI.runSummaryUpdater();
+
+              header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel, previewDeleteBtn);
+              wrapper.append(header, control);
+              formPreviewFields.appendChild(wrapper);
+            }
             });
           }
 
@@ -12187,262 +12642,52 @@ function makePosts(){
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
 
-            const inlineControls = document.createElement('div');
-            inlineControls.className = 'field-inline-controls';
+            const header = document.createElement('div');
+            header.className = 'field-row-header';
+            header.style.position = 'relative';
 
-            const fieldTypeSelect = document.createElement('select');
-            fieldTypeSelect.className = 'field-type-select';
-            // Match based on fieldTypeKey, key, or type as fallback
-            const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
-            FORM_FIELD_TYPES.forEach(optionDef => {
-              const option = document.createElement('option');
-              option.value = optionDef.value;
-              option.textContent = optionDef.label;
-              if(optionDef.value === matchKey){
-                option.selected = true;
-              }
-              fieldTypeSelect.appendChild(option);
-            });
+            const summary = document.createElement('div');
+            summary.className = 'field-row-summary';
 
-            const fieldTypeWrapper = document.createElement('div');
-            fieldTypeWrapper.className = 'field-type-select-wrapper';
-            const fieldTypeArrow = document.createElement('span');
-            fieldTypeArrow.className = 'field-type-select-arrow';
-            fieldTypeArrow.setAttribute('aria-hidden', 'true');
-            fieldTypeArrow.textContent = '▾';
-            fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
+            const summaryLabel = document.createElement('span');
+            summaryLabel.className = 'field-summary-label';
 
-            const fieldRequiredLabel = document.createElement('span');
-            fieldRequiredLabel.className = 'field-required-label';
-            fieldRequiredLabel.textContent = 'Required:';
+            const summaryRequired = document.createElement('span');
+            summaryRequired.className = 'field-summary-required';
 
-            const fieldRequiredToggle = document.createElement('label');
-            fieldRequiredToggle.className = 'switch field-required-switch';
-            const fieldRequiredInput = document.createElement('input');
-            fieldRequiredInput.type = 'checkbox';
-            fieldRequiredInput.checked = !!safeField.required;
-            fieldRequiredInput.setAttribute('aria-label', 'Toggle required field');
-            const fieldRequiredSlider = document.createElement('span');
-            fieldRequiredSlider.className = 'slider';
-            fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredSlider);
+            summary.append(summaryLabel, summaryRequired);
+            header.append(summary);
 
-            const updateRequiredState = (nextRequired)=>{
-              const next = !!nextRequired;
-              if(next === safeField.required) return;
-              safeField.required = next;
-              notifyFormbuilderChange();
-              renderFormPreview();
+            const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, closeEditPanel, destroy: destroyEditUI } = fieldEditUI;
+            header.append(fieldEditBtn);
+            header.append(editPanel);
+
+            row.append(header);
+            row._header = header;
+
+            const updateFieldSummary = ()=>{
+              const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+              const typeLabelRaw = getFormFieldTypeLabel(typeKey).trim();
+              const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
+              summaryLabel.textContent = typeLabel || 'Field';
+              const isRequired = !!safeField.required;
+              summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
+              summaryRequired.classList.toggle('is-required', isRequired);
+              fieldEditBtn.setAttribute('aria-label', `Edit ${typeLabel || 'field'} settings`);
             };
 
-            fieldRequiredInput.addEventListener('change', ()=>{
-              updateRequiredState(fieldRequiredInput.checked);
-            });
+            fieldEditUI.setSummaryUpdater(updateFieldSummary);
+            fieldEditUI.runSummaryUpdater();
 
-            inlineControls.append(fieldTypeWrapper, fieldRequiredLabel, fieldRequiredToggle);
-
-            const dropdownOptionsContainer = document.createElement('div');
-            dropdownOptionsContainer.className = 'dropdown-options-editor';
-            const dropdownOptionsLabel = document.createElement('div');
-            dropdownOptionsLabel.className = 'dropdown-options-label';
-            dropdownOptionsLabel.textContent = 'Field Options';
-            const dropdownOptionsList = document.createElement('div');
-            dropdownOptionsList.className = 'dropdown-options-list';
-            dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
-
-            let draggedOptionRow = null;
-
-            const ensureDropdownSeeds = ()=>{
-              if(!Array.isArray(safeField.options)){
-                safeField.options = [];
-              }
-              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
-                safeField.options.push('', '', '');
-                notifyFormbuilderChange();
-              }
-            };
-
-            const renderDropdownOptions = (focusIndex = null)=>{
-              const isOptionsType = safeField.type === 'dropdown' || safeField.type === 'radio-toggle';
-              if(!isOptionsType){
-                dropdownOptionsList.innerHTML = '';
-                return;
-              }
-              ensureDropdownSeeds();
-              dropdownOptionsList.innerHTML = '';
-              safeField.options.forEach((optionValue, optionIndex)=>{
-                const optionText = typeof optionValue === 'string'
-                  ? optionValue
-                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.version === 'string'
-                    ? optionValue.version
-                    : '');
-                const optionRow = document.createElement('div');
-                optionRow.className = 'dropdown-option-row';
-                optionRow.draggable = true;
-                optionRow._optionValue = safeField.options[optionIndex];
-
-                const optionInput = document.createElement('input');
-                optionInput.type = 'text';
-                optionInput.className = 'dropdown-option-input';
-                optionInput.placeholder = `Option ${optionIndex + 1}`;
-                optionInput.value = optionText;
-                optionInput.addEventListener('input', ()=>{
-                  safeField.options[optionIndex] = optionInput.value;
-                  optionRow._optionValue = optionInput.value;
-                  notifyFormbuilderChange();
-                  renderFormPreview();
-                });
-
-                const actions = document.createElement('div');
-                actions.className = 'dropdown-option-actions';
-
-                const addOptionBtn = document.createElement('button');
-                addOptionBtn.type = 'button';
-                addOptionBtn.className = 'dropdown-option-add';
-                addOptionBtn.textContent = '+';
-                addOptionBtn.setAttribute('aria-label', `Add option after Option ${optionIndex + 1}`);
-                addOptionBtn.addEventListener('click', ()=>{
-                  safeField.options.splice(optionIndex + 1, 0, '');
-                  notifyFormbuilderChange();
-                  renderDropdownOptions(optionIndex + 1);
-                  renderFormPreview();
-                });
-
-                const removeOptionBtn = document.createElement('button');
-                removeOptionBtn.type = 'button';
-                removeOptionBtn.className = 'dropdown-option-remove';
-                removeOptionBtn.textContent = '-';
-                removeOptionBtn.setAttribute('aria-label', `Remove Option ${optionIndex + 1}`);
-                removeOptionBtn.addEventListener('click', ()=>{
-                  if(safeField.options.length <= 1){
-                    safeField.options[0] = '';
-                  } else {
-                    safeField.options.splice(optionIndex, 1);
-                  }
-                  notifyFormbuilderChange();
-                  const nextFocus = Math.min(optionIndex, Math.max(safeField.options.length - 1, 0));
-                  renderDropdownOptions(nextFocus);
-                  renderFormPreview();
-                });
-
-                actions.append(addOptionBtn, removeOptionBtn);
-                optionRow.append(optionInput, actions);
-
-                optionRow.addEventListener('dragstart', event=>{
-                  const origin = event.target;
-                  const tagName = origin && origin.tagName ? origin.tagName.toLowerCase() : '';
-                  if(tagName === 'input' || tagName === 'button'){
-                    event.preventDefault();
-                    return;
-                  }
-                  draggedOptionRow = optionRow;
-                  optionRow.classList.add('is-dragging');
-                  if(event.dataTransfer){
-                    event.dataTransfer.effectAllowed = 'move';
-                    try{ event.dataTransfer.setData('text/plain', optionInput.value || 'Option'); }catch(err){}
-                    try{
-                      const rect = optionRow.getBoundingClientRect();
-                      event.dataTransfer.setDragImage(optionRow, rect.width / 2, rect.height / 2);
-                    }catch(err){}
-                  }
-                });
-
-                optionRow.addEventListener('dragend', ()=>{
-                  optionRow.classList.remove('is-dragging');
-                  draggedOptionRow = null;
-                });
-
-                dropdownOptionsList.appendChild(optionRow);
-
-                if(focusIndex === optionIndex){
-                  requestAnimationFrame(()=>{
-                    try{ optionInput.focus({ preventScroll: true }); }
-                    catch(err){
-                      try{ optionInput.focus(); }catch(e){}
-                    }
-                  });
-                }
-              });
-            };
-
-            const getDragAfterOption = (mouseY)=>{
-              const rows = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).filter(row => row !== draggedOptionRow);
-              let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
-              rows.forEach(row => {
-                const rect = row.getBoundingClientRect();
-                const offset = mouseY - (rect.top + rect.height / 2);
-                if(offset < 0 && offset > closest.offset){
-                  closest = { offset, element: row };
-                }
-              });
-              return closest.element;
-            };
-
-            dropdownOptionsList.addEventListener('dragover', event=>{
-              if(!draggedOptionRow) return;
-              event.preventDefault();
-              if(event.dataTransfer){
-                event.dataTransfer.dropEffect = 'move';
-              }
-              const afterElement = getDragAfterOption(event.clientY);
-              if(!afterElement){
-                dropdownOptionsList.appendChild(draggedOptionRow);
-              } else if(afterElement !== draggedOptionRow){
-                dropdownOptionsList.insertBefore(draggedOptionRow, afterElement);
-              }
-            });
-
-            dropdownOptionsList.addEventListener('drop', event=>{
-              if(!draggedOptionRow) return;
-              event.preventDefault();
-              const orderedValues = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).map(row => (
-                row && Object.prototype.hasOwnProperty.call(row, '_optionValue') ? row._optionValue : ''
-              ));
-              safeField.options.splice(0, safeField.options.length, ...orderedValues);
-              if(draggedOptionRow){
-                draggedOptionRow.classList.remove('is-dragging');
-                draggedOptionRow = null;
-              }
-              notifyFormbuilderChange();
-              renderDropdownOptions();
-              renderFormPreview();
-            });
-
-            fieldTypeSelect.addEventListener('change', ()=>{
-              const previousType = safeField.type;
-              const previousLabel = getFormFieldTypeLabel(previousType).trim();
-              const currentName = typeof safeField.name === 'string' ? safeField.name.trim() : '';
-              const nextType = fieldTypeSelect.value;
-              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
-              const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
-              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
-
-              // Update fieldTypeKey to match dropdown selection
-              safeField.fieldTypeKey = nextValidType;
-              safeField.key = nextValidType;
-              
-              // Find matching field type to get its properties
-              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
-              if(matchingFieldType){
-                // Update placeholder from field type
-                if(matchingFieldType.placeholder){
-                  safeField.placeholder = matchingFieldType.placeholder;
-                }
-                // Update type to match the field type (for complex types like images, venue-ticketing, etc.)
-                safeField.type = nextValidType;
-              }
-
-              if(shouldAutofillName && nextLabel){
-                safeField.name = nextLabel;
-              }
-              notifyFormbuilderChange();
-              updateFieldEditorsByType();
-              renderFormPreview();
-            });
+            row.append(dropdownOptionsContainer);
 
             const handleDeleteField = async ()=>{
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';
               const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
               if(!confirmed) return;
+              closeEditPanel();
+              destroyEditUI();
               const idx = fields.indexOf(safeField);
               if(idx !== -1){
                 fields.splice(idx, 1);
@@ -12469,76 +12714,7 @@ function makePosts(){
 
             safeField.__handleDeleteField = handleDeleteField;
 
-            const updateFieldEditorsByType = ()=>{
-              const type = safeField.type;
-              const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              const showVariantPricing = type === 'variant-pricing';
-              const showVenueSession = type === 'venue-ticketing';
-              if(type === 'images'){
-                if(safeField.placeholder){
-                  safeField.placeholder = '';
-                  notifyFormbuilderChange();
-                }
-              } else if(showVenueSession && safeField.placeholder){
-                safeField.placeholder = '';
-                notifyFormbuilderChange();
-              }
-              dropdownOptionsContainer.hidden = !isOptionsType;
-              if(showVenueSession){
-                safeField.options = normalizeVenueSessionOptions(safeField.options);
-              } else if(showVariantPricing){
-                if(!Array.isArray(safeField.options) || safeField.options.length === 0){
-                  safeField.options = [{ version: '', currency: '', price: '' }];
-                  notifyFormbuilderChange();
-                } else {
-                  safeField.options = safeField.options.map(opt => {
-                    if(opt && typeof opt === 'object'){
-                      return {
-                        version: typeof opt.version === 'string' ? opt.version : '',
-                        currency: typeof opt.currency === 'string' ? opt.currency : '',
-                        price: typeof opt.price === 'string' ? opt.price : ''
-                      };
-                    }
-                    const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                    return { version: str, currency: '', price: '' };
-                  });
-                }
-              }
-              if(type === 'dropdown'){
-                dropdownOptionsLabel.textContent = 'Dropdown Options';
-              } else if(type === 'radio-toggle'){
-                dropdownOptionsLabel.textContent = 'Radio Options';
-              } else {
-                dropdownOptionsLabel.textContent = 'Field Options';
-              }
-              if(isOptionsType){
-                if(!Array.isArray(safeField.options) || safeField.options.length === 0){
-                  safeField.options = ['', '', ''];
-                  notifyFormbuilderChange();
-                }
-                renderDropdownOptions();
-              } else if(!showVariantPricing && !showVenueSession){
-                dropdownOptionsList.innerHTML = '';
-              } else if(showVenueSession){
-                dropdownOptionsList.innerHTML = '';
-              }
-              if(type === 'location'){
-                if(!safeField.placeholder || !safeField.placeholder.trim()){
-                  const defaultPlaceholder = 'Search for a location';
-                  safeField.placeholder = defaultPlaceholder;
-                }
-                if(!safeField.location || typeof safeField.location !== 'object'){
-                  safeField.location = { address: '', latitude: '', longitude: '' };
-                } else {
-                  if(typeof safeField.location.address !== 'string') safeField.location.address = '';
-                  if(typeof safeField.location.latitude !== 'string') safeField.location.latitude = '';
-                  if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
-                }
-              }
-            };
-
-            updateFieldEditorsByType();
-            row.append(inlineControls, dropdownOptionsContainer);
+            fieldEditUI.updateFieldEditorsByType();
             row.__fieldRef = safeField;
             safeField.__rowEl = row;
             return {
