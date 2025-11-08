@@ -7491,12 +7491,15 @@ function makePosts(){
         state.dropIndicatorClass = '';
       }
       state.dropIndicatorBefore = before;
-      positionDropIndicator(state.container, target, before, '.subcategory-field-row', draggedFieldRow);
+      const selector = state && state.rowSelector ? state.rowSelector : '.subcategory-field-row';
+      positionDropIndicator(state.container, target, before, selector, draggedFieldRow);
     }
 
     function syncFieldOrderFromDom(container, fields){
       if(!container || !Array.isArray(fields)) return;
-      const rows = Array.from(container.querySelectorAll('.subcategory-field-row'));
+      const state = fieldContainerState.get(container);
+      const selector = (state && state.rowSelector) || container.dataset.fieldRowSelector || '.subcategory-field-row';
+      const rows = Array.from(container.querySelectorAll(selector));
       const original = fields.slice();
       const reordered = [];
       rows.forEach(row=>{
@@ -7516,7 +7519,6 @@ function makePosts(){
         if(changed){
           fields.splice(0, fields.length, ...reordered);
           notifyFormbuilderChange();
-          const state = fieldContainerState.get(container);
           if(state && typeof state.onFieldsReordered === 'function'){
             try{
               state.onFieldsReordered();
@@ -7532,6 +7534,7 @@ function makePosts(){
 
     function setupFieldContainer(container, fields){
       if(!container) return null;
+      const rowSelector = container.dataset.fieldRowSelector || '.subcategory-field-row';
       let state = fieldContainerState.get(container);
       if(!state){
         state = {
@@ -7540,7 +7543,8 @@ function makePosts(){
           dropIndicatorBefore: null,
           dropCommitted: false,
           fields,
-          container
+          container,
+          rowSelector
         };
         fieldContainerState.set(container, state);
         container.addEventListener('dragover', event=>{
@@ -7550,8 +7554,9 @@ function makePosts(){
           if(event.dataTransfer){
             event.dataTransfer.dropEffect = 'move';
           }
-          const target = event.target.closest('.subcategory-field-row');
-          const rows = Array.from(container.querySelectorAll('.subcategory-field-row')).filter(row => row !== draggedFieldRow);
+          const selector = state.rowSelector || '.subcategory-field-row';
+          const target = event.target.closest(selector);
+          const rows = Array.from(container.querySelectorAll(selector)).filter(row => row !== draggedFieldRow);
           const containerRect = container.getBoundingClientRect();
           if(!target || target === draggedFieldRow){
             if(rows.length === 0){
@@ -7583,11 +7588,12 @@ function makePosts(){
             }
           }
           reference = sanitizeInsertionReference(reference);
-          const beforeRects = captureChildPositions(container, '.subcategory-field-row');
+          const selector = state.rowSelector || '.subcategory-field-row';
+          const beforeRects = captureChildPositions(container, selector);
           const currentNext = draggedFieldRow.nextSibling;
           if(reference !== draggedFieldRow && reference !== currentNext){
             container.insertBefore(draggedFieldRow, reference || null);
-            animateListReorder(container, '.subcategory-field-row', beforeRects, draggedFieldRow);
+            animateListReorder(container, selector, beforeRects, draggedFieldRow);
           }
           clearFieldDropIndicator(state);
           syncFieldOrderFromDom(container, state.fields || fields);
@@ -7601,6 +7607,7 @@ function makePosts(){
       }
       state.fields = fields;
       state.container = container;
+      state.rowSelector = rowSelector;
       return state;
     }
 
@@ -11338,39 +11345,21 @@ function makePosts(){
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
-          const formPreviewBtn = document.createElement('button');
-          formPreviewBtn.type = 'button';
-          formPreviewBtn.className = 'form-preview-btn';
-          formPreviewBtn.setAttribute('aria-expanded', 'false');
-          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
-          const formPreviewLabel = document.createElement('span');
-          formPreviewLabel.textContent = 'Form Preview';
-          const formPreviewArrow = document.createElement('span');
-          formPreviewArrow.className = 'dropdown-arrow';
-          formPreviewArrow.setAttribute('aria-hidden', 'true');
-          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
-
           const formPreviewContainer = document.createElement('div');
           formPreviewContainer.className = 'form-preview-container';
-          formPreviewContainer.hidden = true;
           const formPreviewFields = document.createElement('div');
           formPreviewFields.className = 'form-preview-fields';
+          formPreviewFields.dataset.fieldRowSelector = '.form-preview-field';
           formPreviewContainer.appendChild(formPreviewFields);
           const formPreviewId = `${subContentId}Preview`;
           formPreviewContainer.id = formPreviewId;
-          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
+          formPreviewContainer.setAttribute('role', 'region');
+          formPreviewContainer.setAttribute('aria-label', `${sub} form preview`);
+          fieldsList.hidden = true;
+          fieldsList.setAttribute('aria-hidden', 'true');
+          fieldsSection.append(addFieldBtn, formPreviewContainer, fieldsList);
 
-          fieldsSection.append(formPreviewBtn, formPreviewContainer, addFieldBtn);
-
-          formPreviewBtn.addEventListener('click', ()=>{
-            const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
-            const nextExpanded = !expanded;
-            formPreviewBtn.setAttribute('aria-expanded', String(nextExpanded));
-            formPreviewContainer.hidden = !nextExpanded;
-            if(nextExpanded){
-              renderFormPreview();
-            }
-          });
+          const previewContainerState = setupFieldContainer(formPreviewFields, fields);
 
           const createFieldEditUI = (safeField, {
             hostElement = null,
@@ -11806,26 +11795,45 @@ function makePosts(){
               document.removeEventListener('click', handleDocumentClick);
             };
 
-            return {
-              editBtn,
-              editPanel,
-              editMenu,
-              inlineControls,
-              fieldTypeSelect,
-              fieldRequiredInput,
-              dropdownOptionsContainer,
-              dropdownOptionsList,
-              closeEditPanel,
-              openEditPanel,
-              setSummaryUpdater,
-              runSummaryUpdater,
-              updateFieldEditorsByType,
-              destroy
-            };
+          return {
+            editBtn,
+            editPanel,
+            editMenu,
+            inlineControls,
+            fieldTypeSelect,
+            fieldRequiredInput,
+            dropdownOptionsContainer,
+            dropdownOptionsList,
+            closeEditPanel,
+            openEditPanel,
+            setSummaryUpdater,
+            runSummaryUpdater,
+            updateFieldEditorsByType,
+            destroy
+          };
+        };
+
+          const isTruthy = value => value === true || value === 'true' || value === 1 || value === '1';
+          const isFalsy = value => value === false || value === 'false' || value === 0 || value === '0';
+          const isFormFieldVisible = field => {
+            if(!field || typeof field !== 'object') return true;
+            if(isTruthy(field.hidden)) return false;
+            if(isTruthy(field.off)) return false;
+            if(isFalsy(field.visible)) return false;
+            if(isFalsy(field.enabled)) return false;
+            return true;
           };
 
           let formPreviewFieldIdCounter = 0;
           function renderFormPreview(){
+            fields.forEach(fieldItem => {
+              if(fieldItem && fieldItem.__previewEl){
+                if(fieldItem.__previewEl.__fieldRef === fieldItem){
+                  delete fieldItem.__previewEl.__fieldRef;
+                }
+                delete fieldItem.__previewEl;
+              }
+            });
             formPreviewFields.innerHTML = '';
             if(!fields.length){
               const empty = document.createElement('p');
@@ -11845,6 +11853,7 @@ function makePosts(){
               labelEl.textContent = labelText;
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
+              const fieldVisible = isFormFieldVisible(previewField);
               const previewDeleteBtn = document.createElement('button');
               previewDeleteBtn.type = 'button';
               previewDeleteBtn.className = 'delete-field-btn';
@@ -12603,6 +12612,8 @@ function makePosts(){
                 asterisk.textContent = '*';
                 labelEl.appendChild(asterisk);
               }
+              wrapper.classList.toggle('form-preview-field--hidden', !fieldVisible);
+              labelEl.classList.toggle('form-preview-field-label--hidden', !fieldVisible);
               const header = document.createElement('div');
               header.className = 'form-preview-field-header';
               header.style.position = 'relative';
@@ -12623,13 +12634,32 @@ function makePosts(){
 
               header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel, previewDeleteBtn);
               wrapper.append(header, control);
+              wrapper._header = header;
+              wrapper.__fieldRef = previewField;
+              previewField.__previewEl = wrapper;
               formPreviewFields.appendChild(wrapper);
+              enableFieldDrag(wrapper, formPreviewFields, fields);
             }
             });
+            if(fieldsList){
+              const fragment = document.createDocumentFragment();
+              fields.forEach((fieldItem, index)=>{
+                const rowEl = fieldItem && fieldItem.__rowEl;
+                if(!rowEl || rowEl.__overlayOverlay || rowEl.parentNode !== fieldsList) return;
+                rowEl.dataset.fieldIndex = String(index);
+                fragment.appendChild(rowEl);
+              });
+              if(fragment.childNodes.length){
+                fieldsList.appendChild(fragment);
+              }
+            }
           }
 
           if(fieldsContainerState){
             fieldsContainerState.onFieldsReordered = renderFormPreview;
+          }
+          if(previewContainerState){
+            previewContainerState.onFieldsReordered = renderFormPreview;
           }
 
           const createFieldRow = (field)=>{
@@ -12698,6 +12728,16 @@ function makePosts(){
               if(safeField.__rowEl === row){
                 delete safeField.__rowEl;
               }
+              if(safeField.__previewEl){
+                const previewEl = safeField.__previewEl;
+                if(previewEl && previewEl.parentNode){
+                  previewEl.remove();
+                }
+                if(previewEl && previewEl.__fieldRef === safeField){
+                  delete previewEl.__fieldRef;
+                }
+                delete safeField.__previewEl;
+              }
               delete row.__overlayPlaceholder;
               delete row.__overlayParent;
               delete row.__overlayOverlay;
@@ -12763,18 +12803,24 @@ function makePosts(){
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
-            fieldsList.appendChild(fieldRow.row);
-            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
-            enableFieldDrag(fieldRow.row, fieldsList, fields);
+            if(fieldRow && fieldRow.row){
+              fieldsList.insertBefore(fieldRow.row, fieldsList.firstChild || null);
+              enableFieldDrag(fieldRow.row, fieldsList, fields);
+            }
+            syncFieldOrderFromDom(fieldsList, fields);
             notifyFormbuilderChange();
+            renderFormPreview();
             requestAnimationFrame(()=>{
-              if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
-                fieldRow.focusTypePicker();
-              } else if(fieldRow && typeof fieldRow.focus === 'function'){
-                fieldRow.focus();
+              if(newField && newField.__previewEl){
+                const editBtn = newField.__previewEl.querySelector('.field-edit-btn');
+                if(editBtn && typeof editBtn.focus === 'function'){
+                  try{ editBtn.focus({ preventScroll: true }); }
+                  catch(err){
+                    try{ editBtn.focus(); }catch(e){}
+                  }
+                }
               }
             });
-            renderFormPreview();
           });
 
           renderFormPreview();
@@ -12836,7 +12882,7 @@ function makePosts(){
             const categoryDisplayName = getCategoryDisplayName();
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
-            formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
+            formPreviewContainer.setAttribute('aria-label', `${displayName} form preview`);
             if(!subLogo.querySelector('img')){
               subLogo.textContent = displayName.charAt(0) || '';
               subLogo.classList.remove('has-icon');
