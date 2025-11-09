@@ -13680,7 +13680,8 @@ function makePosts(){
         Object.keys(source).forEach(key => {
           const value = source[key];
           if(Array.isArray(value)){
-            out[key] = value.map(field => {
+            // Always include the key, even if the array is empty
+            out[key] = value.length === 0 ? [] : value.map(field => {
               const cloned = {
                 id: field && field.id,
                 key: field && typeof field.key === 'string' ? field.key : undefined,

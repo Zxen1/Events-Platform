@@ -765,18 +765,23 @@ try {
             }
             // Always update field_type_id and field_type_name when field types are provided in payload (even if empty)
             if ($fieldTypesAreInPayload) {
+                error_log("DEBUG: Updating field types for '$subName' - fieldTypeIdCsv: '$fieldTypeIdCsv', fieldTypeNameCsv: '$fieldTypeNameCsv'");
                 if (in_array('field_type_id', $subcategoryColumns, true)) {
                     $updateParts[] = 'field_type_id = :field_type_id';
                     $params[':field_type_id'] = $fieldTypeIdCsv !== null && $fieldTypeIdCsv !== '' ? $fieldTypeIdCsv : null;
+                    error_log("DEBUG: Setting field_type_id to: " . ($params[':field_type_id'] === null ? 'NULL' : $params[':field_type_id']));
                 }
                 if (in_array('field_type_name', $subcategoryColumns, true)) {
                     $updateParts[] = 'field_type_name = :field_type_name';
                     $params[':field_type_name'] = $fieldTypeNameCsv !== null && $fieldTypeNameCsv !== '' ? $fieldTypeNameCsv : null;
+                    error_log("DEBUG: Setting field_type_name to: " . ($params[':field_type_name'] === null ? 'NULL' : $params[':field_type_name']));
                 }
                 if (in_array('required', $subcategoryColumns, true)) {
                     $updateParts[] = 'required = :required';
                     $params[':required'] = $requiredCsv !== null && $requiredCsv !== '' ? $requiredCsv : null;
                 }
+            } else {
+                error_log("DEBUG: NOT updating field types for '$subName' - fieldTypesAreInPayload is false");
             }
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
