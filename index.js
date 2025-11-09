@@ -21051,18 +21051,15 @@ const adminPanelChangeManager = (()=>{
         const settings = {};
         if(spinLoadStartCheckbox){
           settings.spin_on_load = spinLoadStartCheckbox.checked;
-          if(window.spinGlobals) window.spinGlobals.spinLoadStart = spinLoadStartCheckbox.checked;
         }
         if(spinTypeRadios.length){
           const checked = Array.from(spinTypeRadios).find(r => r.checked);
           if(checked){
             settings.spin_load_type = checked.value;
-            if(window.spinGlobals) window.spinGlobals.spinLoadType = checked.value;
           }
         }
         if(spinLogoClickCheckbox){
           settings.spin_on_logo = spinLogoClickCheckbox.checked;
-          if(window.spinGlobals) window.spinGlobals.spinLogoClick = spinLogoClickCheckbox.checked;
         }
         
         if(Object.keys(settings).length > 0){
@@ -21078,7 +21075,7 @@ const adminPanelChangeManager = (()=>{
             if(!response.ok){
               console.warn('Failed to save admin settings to database');
             }
-            // Spin state is already updated via spinGlobals setters
+            // Settings saved - spin behavior will apply on next page load
           } catch(err){
             console.warn('Failed to save admin settings:', err);
           }
