@@ -760,15 +760,15 @@ try {
             if ($fieldTypesAreInPayload) {
                 if (in_array('field_type_id', $subcategoryColumns, true)) {
                     $updateParts[] = 'field_type_id = :field_type_id';
-                    $params[':field_type_id'] = $fieldTypeIdCsv;
+                    $params[':field_type_id'] = $fieldTypeIdCsv !== null && $fieldTypeIdCsv !== '' ? $fieldTypeIdCsv : null;
                 }
                 if (in_array('field_type_name', $subcategoryColumns, true)) {
                     $updateParts[] = 'field_type_name = :field_type_name';
-                    $params[':field_type_name'] = $fieldTypeNameCsv;
+                    $params[':field_type_name'] = $fieldTypeNameCsv !== null && $fieldTypeNameCsv !== '' ? $fieldTypeNameCsv : null;
                 }
                 if (in_array('required', $subcategoryColumns, true)) {
                     $updateParts[] = 'required = :required';
-                    $params[':required'] = $requiredCsv;
+                    $params[':required'] = $requiredCsv !== null && $requiredCsv !== '' ? $requiredCsv : null;
                 }
             }
             if (in_array('sort_order', $subcategoryColumns, true)) {
