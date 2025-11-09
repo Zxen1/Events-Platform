@@ -5870,6 +5870,48 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
+            #tab-forms .subcategory-fee-row,
+            #tab-forms .subcategory-type-row,
+            #tab-forms .subcategory-days-row{
+              display:flex;
+              align-items:center;
+              gap:12px;
+              padding:8px 0;
+            }
+            #tab-forms .subcategory-fee-row span:first-child,
+            #tab-forms .subcategory-type-row span:first-child,
+            #tab-forms .subcategory-days-row span:first-child{
+              min-width:140px;
+              font-size:14px;
+            }
+            #tab-forms .fee-currency{
+              font-weight:600;
+              font-size:14px;
+              min-width:auto;
+            }
+            #tab-forms .fee-input,
+            #tab-forms .days-input{
+              width:120px;
+              padding:8px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+              font-size:14px;
+            }
+            #tab-forms .subcategory-type-option{
+              display:flex;
+              align-items:center;
+              gap:6px;
+              cursor:pointer;
+            }
+            #tab-forms .subcategory-type-option input[type="radio"]{
+              cursor:pointer;
+            }
+            #tab-forms .subcategory-type-option span{
+              font-size:14px;
+              cursor:pointer;
+            }
             #tab-forms .formbuilder-save-row{
               display:flex;
               margin-top:30px;

@@ -13397,6 +13397,126 @@ function makePosts(){
             notifyFormbuilderChange();
           });
           
+          // Get site currency from admin settings (default to USD)
+          const siteCurrency = 'USD'; // TODO: Load from admin_settings
+          
+          // Listing Fee Row
+          const listingFeeRow = document.createElement('div');
+          listingFeeRow.className = 'subcategory-fee-row';
+          const listingFeeLabel = document.createElement('span');
+          listingFeeLabel.textContent = 'Listing Fee';
+          const listingFeeCurrency = document.createElement('span');
+          listingFeeCurrency.className = 'fee-currency';
+          listingFeeCurrency.textContent = siteCurrency;
+          const listingFeeInput = document.createElement('input');
+          listingFeeInput.type = 'number';
+          listingFeeInput.step = '0.01';
+          listingFeeInput.min = '0';
+          listingFeeInput.className = 'fee-input';
+          listingFeeInput.placeholder = '0.00';
+          listingFeeRow.append(listingFeeLabel, listingFeeCurrency, listingFeeInput);
+          
+          // Renew Listing Fee Row
+          const renewFeeRow = document.createElement('div');
+          renewFeeRow.className = 'subcategory-fee-row';
+          const renewFeeLabel = document.createElement('span');
+          renewFeeLabel.textContent = 'Renew Listing Fee';
+          const renewFeeCurrency = document.createElement('span');
+          renewFeeCurrency.className = 'fee-currency';
+          renewFeeCurrency.textContent = siteCurrency;
+          const renewFeeInput = document.createElement('input');
+          renewFeeInput.type = 'number';
+          renewFeeInput.step = '0.01';
+          renewFeeInput.min = '0';
+          renewFeeInput.className = 'fee-input';
+          renewFeeInput.placeholder = '0.00';
+          renewFeeRow.append(renewFeeLabel, renewFeeCurrency, renewFeeInput);
+          
+          // Featured Fee Row
+          const featuredFeeRow = document.createElement('div');
+          featuredFeeRow.className = 'subcategory-fee-row';
+          const featuredFeeLabel = document.createElement('span');
+          featuredFeeLabel.textContent = 'Featured Fee';
+          const featuredFeeCurrency = document.createElement('span');
+          featuredFeeCurrency.className = 'fee-currency';
+          featuredFeeCurrency.textContent = siteCurrency;
+          const featuredFeeInput = document.createElement('input');
+          featuredFeeInput.type = 'number';
+          featuredFeeInput.step = '0.01';
+          featuredFeeInput.min = '0';
+          featuredFeeInput.className = 'fee-input';
+          featuredFeeInput.placeholder = '0.00';
+          featuredFeeRow.append(featuredFeeLabel, featuredFeeCurrency, featuredFeeInput);
+          
+          // Renew Featured Fee Row
+          const renewFeaturedFeeRow = document.createElement('div');
+          renewFeaturedFeeRow.className = 'subcategory-fee-row';
+          const renewFeaturedFeeLabel = document.createElement('span');
+          renewFeaturedFeeLabel.textContent = 'Renew Featured Fee';
+          const renewFeaturedFeeCurrency = document.createElement('span');
+          renewFeaturedFeeCurrency.className = 'fee-currency';
+          renewFeaturedFeeCurrency.textContent = siteCurrency;
+          const renewFeaturedFeeInput = document.createElement('input');
+          renewFeaturedFeeInput.type = 'number';
+          renewFeaturedFeeInput.step = '0.01';
+          renewFeaturedFeeInput.min = '0';
+          renewFeaturedFeeInput.className = 'fee-input';
+          renewFeaturedFeeInput.placeholder = '0.00';
+          renewFeaturedFeeRow.append(renewFeaturedFeeLabel, renewFeaturedFeeCurrency, renewFeaturedFeeInput);
+          
+          // Subcategory Type Row
+          const subTypeRow = document.createElement('div');
+          subTypeRow.className = 'subcategory-type-row';
+          const subTypeLabel = document.createElement('span');
+          subTypeLabel.textContent = 'Subcategory Type';
+          const subTypeEventsLabel = document.createElement('label');
+          subTypeEventsLabel.className = 'subcategory-type-option';
+          const subTypeEventsInput = document.createElement('input');
+          subTypeEventsInput.type = 'radio';
+          subTypeEventsInput.name = `subType-${sub}`;
+          subTypeEventsInput.value = 'Events';
+          const subTypeEventsText = document.createElement('span');
+          subTypeEventsText.textContent = 'Events';
+          subTypeEventsLabel.append(subTypeEventsInput, subTypeEventsText);
+          
+          const subTypeStandardLabel = document.createElement('label');
+          subTypeStandardLabel.className = 'subcategory-type-option';
+          const subTypeStandardInput = document.createElement('input');
+          subTypeStandardInput.type = 'radio';
+          subTypeStandardInput.name = `subType-${sub}`;
+          subTypeStandardInput.value = 'Standard';
+          const subTypeStandardText = document.createElement('span');
+          subTypeStandardText.textContent = 'Standard';
+          subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
+          
+          subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);
+          
+          // Listing Days Row (conditional based on type)
+          const listingDaysRow = document.createElement('div');
+          listingDaysRow.className = 'subcategory-days-row';
+          const listingDaysLabel = document.createElement('span');
+          listingDaysLabel.textContent = 'Listing Days';
+          const listingDaysInput = document.createElement('input');
+          listingDaysInput.type = 'number';
+          listingDaysInput.min = '1';
+          listingDaysInput.className = 'days-input';
+          listingDaysInput.placeholder = '30';
+          const listingDaysText = document.createElement('span');
+          listingDaysText.textContent = 'days';
+          listingDaysRow.append(listingDaysLabel, listingDaysInput, listingDaysText);
+          
+          // Show/hide listing days based on type
+          const updateDaysVisibility = () => {
+            if(subTypeEventsInput.checked){
+              listingDaysRow.style.display = 'none';
+            } else {
+              listingDaysRow.style.display = 'flex';
+            }
+          };
+          subTypeEventsInput.addEventListener('change', updateDaysVisibility);
+          subTypeStandardInput.addEventListener('change', updateDaysVisibility);
+          updateDaysVisibility();
+          
           const saveSubcategoryBtn = document.createElement('button');
           saveSubcategoryBtn.type = 'button';
           saveSubcategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
@@ -13420,7 +13540,7 @@ function makePosts(){
           deleteSubcategoryRow.className = 'formbuilder-delete-row';
           deleteSubcategoryRow.append(deleteSubBtn);
 
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, saveSubcategoryRow, deleteSubcategoryRow);
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
