@@ -634,8 +634,8 @@ try {
                 }
             }
             
-            // If still no field types, preserve existing from database columns
-            if (!$hasFieldTypesForThisSub && isset($subcategoryRow['field_type_id']) && is_string($subcategoryRow['field_type_id']) && $subcategoryRow['field_type_id'] !== '') {
+            // If still no field types AND fields are NOT in payload, preserve existing from database columns
+            if (!$hasFieldTypesForThisSub && !$fieldsAreInPayload && isset($subcategoryRow['field_type_id']) && is_string($subcategoryRow['field_type_id']) && $subcategoryRow['field_type_id'] !== '') {
                 $trimmed = trim($subcategoryRow['field_type_id']);
                 if ($trimmed !== '') {
                     $parts = preg_split('/\s*,\s*/', $trimmed);
