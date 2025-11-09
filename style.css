@@ -2047,21 +2047,24 @@ button[aria-expanded="true"] .results-arrow{
 }
 .spin-type-toggles{
   display:flex;
-  gap:12px;
-  margin-left:auto;
+  gap:16px;
+  margin-left:20px;
 }
 .spin-type-option{
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:8px;
   cursor:pointer;
 }
 .spin-type-option input[type="radio"]{
   cursor:pointer;
+  width:16px;
+  height:16px;
 }
 .spin-type-label{
   font-size:14px;
   cursor:pointer;
+  white-space:nowrap;
 }
 .option-label > *,
 .option-group > *{
