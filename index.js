@@ -13085,6 +13085,17 @@ function makePosts(){
               notifyFormbuilderChange();
               syncFieldOrderFromDom(fieldsList, fields);
               renderFormPreview();
+              
+              // Update formbuilder state manager snapshot after field deletion
+              console.log('[Formbuilder] Field deleted. Fields remaining:', fields.length);
+              if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+                try {
+                  window.formbuilderStateManager.save();
+                  console.log('[Formbuilder] Formbuilder state manager updated after field deletion');
+                } catch(err) {
+                  console.error('[Formbuilder] Failed to update state manager:', err);
+                }
+              }
             };
 
             setDeleteHandler(handleDeleteField);
@@ -20289,6 +20300,12 @@ form.addEventListener('input', formChanged, true);
         payload = window.formbuilderStateManager.capture();
         console.log('[SaveAdminChanges] Captured payload:', payload);
         console.log('[SaveAdminChanges] Categories count:', payload?.categories?.length);
+        console.log('[SaveAdminChanges] SubFields map:', payload?.categories?.map(c => ({
+          name: c.name,
+          subs: c.subs,
+          subFieldsKeys: c.subFields ? Object.keys(c.subFields) : [],
+          subFieldsValues: c.subFields
+        })));
       } catch (err) {
         console.error('formbuilderStateManager.capture failed', err);
       }
