@@ -2172,18 +2172,26 @@ async function ensureMapboxCssFor(container) {
             const data = await response.json();
             if(data.success && data.settings){
               console.log('Admin settings loaded from database:', data.settings);
-              // Set values - this will trigger updateSpinState() and updateLogoClickState() via setters
-              if(window.spinGlobals){
-                window.spinGlobals.spinLoadStart = data.settings.spin_on_load || false;
-                window.spinGlobals.spinLoadType = data.settings.spin_load_type || 'everyone';
-                window.spinGlobals.spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
+              // Update the local variables directly first
+              spinLoadStart = data.settings.spin_on_load || false;
+              spinLoadType = data.settings.spin_load_type || 'everyone';
+              spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
+              
+              // Calculate if spin should be enabled
+              const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
+              spinEnabled = shouldSpin;
+              
+              // Apply the state immediately
+              if(shouldSpin){
+                if(typeof startSpin === 'function') startSpin();
               } else {
-                // Fallback if spinGlobals not ready yet
-                spinLoadStart = data.settings.spin_on_load || false;
-                spinLoadType = data.settings.spin_load_type || 'everyone';
-                spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
-                spinEnabled = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
+                if(typeof stopSpin === 'function') stopSpin();
               }
+              
+              // Update logo click state
+              if(typeof updateLogoClickState === 'function') updateLogoClickState();
+              
+              console.log('Spin state applied - spinLoadStart:', spinLoadStart, 'spinLoadType:', spinLoadType, 'shouldSpin:', shouldSpin);
             }
           }
         } catch(err){
