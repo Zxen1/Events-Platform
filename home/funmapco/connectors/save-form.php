@@ -161,6 +161,8 @@ try {
     $categorySortSupported = in_array('sort_order', $categoryColumns, true);
     $categorySortUpdates = [];
     $categoryOrder = 0;
+    $processedCategoryIds = [];
+    $processedSubcategoryIds = [];
     foreach ($decoded['categories'] as $categoryPayload) {
         if (!is_array($categoryPayload)) {
             continue;
@@ -236,6 +238,7 @@ try {
                     'name' => $categoryName,
                     'category_key' => $categoryKey
                 ];
+                $processedCategoryIds[] = $categoryId;
             } else {
                 continue;
             }
@@ -297,6 +300,11 @@ try {
             $sql = 'UPDATE categories SET ' . implode(', ', $categoryUpdateParts) . ' WHERE id = :id';
             $stmt = $pdo->prepare($sql);
             $stmt->execute($categoryParams);
+        }
+        
+        // Track this category as processed (whether inserted or updated)
+        if ($categoryId !== null && !in_array($categoryId, $processedCategoryIds, true)) {
+            $processedCategoryIds[] = $categoryId;
         }
 
         $categoriesById[$categoryId]['name'] = $categoryName;
@@ -461,6 +469,7 @@ try {
                         $stmt->execute($insertParams);
                         $subId = (int) $pdo->lastInsertId();
                         $newSubcategoryIds[] = $subId;
+                        $processedSubcategoryIds[] = $subId;
                     } else {
                         continue;
                     }
@@ -713,6 +722,11 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $updated[] = $subId;
+            
+            // Track this subcategory as processed
+            if ($subId !== null && !in_array($subId, $processedSubcategoryIds, true)) {
+                $processedSubcategoryIds[] = $subId;
+            }
 
             $subcategoriesById[$subId]['name'] = $subName;
             $subcategoriesById[$subId]['subcategory_name'] = $subName;
@@ -760,42 +774,10 @@ try {
     }
 
     // === DELETE ORPHANED CATEGORIES & SUBCATEGORIES ===
-    // Collect all category IDs from the payload
-    $payloadCategoryIds = [];
-    foreach ($decoded['categories'] as $categoryPayload) {
-        if (!is_array($categoryPayload)) {
-            continue;
-        }
-        $catId = filterPositiveInt($categoryPayload['id'] ?? null);
-        if ($catId !== null) {
-            $payloadCategoryIds[] = $catId;
-        }
-    }
-    
-    // Collect all subcategory IDs from the payload
-    $payloadSubcategoryIds = [];
-    foreach ($decoded['categories'] as $categoryPayload) {
-        if (!is_array($categoryPayload) || !isset($categoryPayload['subs']) || !is_array($categoryPayload['subs'])) {
-            continue;
-        }
-        foreach ($categoryPayload['subs'] as $subName) {
-            if (!is_string($subName)) {
-                continue;
-            }
-            // Find subcategory ID
-            if (isset($categoryPayload['subIds'][$subName])) {
-                $subId = filterPositiveInt($categoryPayload['subIds'][$subName]);
-                if ($subId !== null) {
-                    $payloadSubcategoryIds[] = $subId;
-                }
-            }
-        }
-    }
-    
-    // Delete categories not in payload
+    // Delete categories that exist in DB but were not processed (i.e., not in payload)
     if (!empty($categoriesById)) {
         $allDbCategoryIds = array_keys($categoriesById);
-        $categoriesToDelete = array_diff($allDbCategoryIds, $payloadCategoryIds);
+        $categoriesToDelete = array_diff($allDbCategoryIds, $processedCategoryIds);
         if (!empty($categoriesToDelete)) {
             $placeholders = implode(',', array_fill(0, count($categoriesToDelete), '?'));
             $deleteStmt = $pdo->prepare("DELETE FROM categories WHERE id IN ($placeholders)");
@@ -803,10 +785,10 @@ try {
         }
     }
     
-    // Delete subcategories not in payload
+    // Delete subcategories that exist in DB but were not processed (i.e., not in payload)
     if (!empty($subcategoriesById)) {
         $allDbSubcategoryIds = array_keys($subcategoriesById);
-        $subcategoriesToDelete = array_diff($allDbSubcategoryIds, $payloadSubcategoryIds);
+        $subcategoriesToDelete = array_diff($allDbSubcategoryIds, $processedSubcategoryIds);
         if (!empty($subcategoriesToDelete)) {
             $placeholders = implode(',', array_fill(0, count($subcategoriesToDelete), '?'));
             $deleteStmt = $pdo->prepare("DELETE FROM subcategories WHERE id IN ($placeholders)");
