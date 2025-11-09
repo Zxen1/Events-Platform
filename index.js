@@ -2171,12 +2171,19 @@ async function ensureMapboxCssFor(container) {
           if(response.ok){
             const data = await response.json();
             if(data.success && data.settings){
-              spinLoadStart = data.settings.spin_on_load || false;
-              spinLoadType = data.settings.spin_load_type || 'everyone';
-              spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
-              spinEnabled = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
-              updateSpinState();
-              updateLogoClickState();
+              console.log('Admin settings loaded from database:', data.settings);
+              // Set values - this will trigger updateSpinState() and updateLogoClickState() via setters
+              if(window.spinGlobals){
+                window.spinGlobals.spinLoadStart = data.settings.spin_on_load || false;
+                window.spinGlobals.spinLoadType = data.settings.spin_load_type || 'everyone';
+                window.spinGlobals.spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
+              } else {
+                // Fallback if spinGlobals not ready yet
+                spinLoadStart = data.settings.spin_on_load || false;
+                spinLoadType = data.settings.spin_load_type || 'everyone';
+                spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
+                spinEnabled = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
+              }
             }
           }
         } catch(err){
@@ -16749,9 +16756,9 @@ if (!map.__pillHooksInstalled) {
       get spinEnabled(){ return spinEnabled; },
       set spinEnabled(v){ spinEnabled = v; },
       get spinLoadStart(){ return spinLoadStart; },
-      set spinLoadStart(v){ spinLoadStart = v; },
+      set spinLoadStart(v){ spinLoadStart = v; updateSpinState(); },
       get spinLoadType(){ return spinLoadType; },
-      set spinLoadType(v){ spinLoadType = v; },
+      set spinLoadType(v){ spinLoadType = v; updateSpinState(); },
       get spinLogoClick(){ return spinLogoClick; },
       set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
       startSpin,
@@ -21046,12 +21053,17 @@ const adminPanelChangeManager = (()=>{
               },
               body: JSON.stringify(settings)
             });
-            if(!response.ok){
+            if(response.ok){
+              const saveResult = await response.json();
+              if(saveResult.success){
+                console.log('Admin settings saved to database:', settings);
+              } else {
+                console.warn('Failed to save admin settings:', saveResult.message);
+              }
+            } else {
               console.warn('Failed to save admin settings to database');
             }
-            // Update spin state
-            updateSpinState();
-            updateLogoClickState();
+            // Spin state is already updated via spinGlobals setters
           } catch(err){
             console.warn('Failed to save admin settings:', err);
           }
