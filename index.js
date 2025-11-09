@@ -2158,7 +2158,7 @@ async function ensureMapboxCssFor(container) {
           spinLoadType = 'everyone',
           spinLogoClick = true,
           spinZoomMax = 4,
-          spinSpeed = DEFAULT_SPIN_SPEED,
+          spinSpeed = 0.3,
           spinEnabled = false,
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
@@ -2177,6 +2177,7 @@ async function ensureMapboxCssFor(container) {
               spinLoadType = data.settings.spin_load_type || 'everyone';
               spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
               spinZoomMax = data.settings.spin_zoom_max || 4;
+              spinSpeed = data.settings.spin_speed || 0.3;
               
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
@@ -2209,9 +2210,17 @@ async function ensureMapboxCssFor(container) {
               if(spinLogoClickCheckbox){
                 spinLogoClickCheckbox.checked = spinLogoClick;
               }
+              const spinZoomMaxSlider = document.getElementById('spinZoomMax');
               const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
-              if(spinZoomMaxDisplay){
+              if(spinZoomMaxSlider && spinZoomMaxDisplay){
+                spinZoomMaxSlider.value = spinZoomMax;
                 spinZoomMaxDisplay.textContent = spinZoomMax;
+              }
+              const spinSpeedSlider = document.getElementById('spinSpeed');
+              const spinSpeedDisplay = document.getElementById('spinSpeedDisplay');
+              if(spinSpeedSlider && spinSpeedDisplay){
+                spinSpeedSlider.value = spinSpeed;
+                spinSpeedDisplay.textContent = spinSpeed.toFixed(1);
               }
             }
           }
@@ -16792,6 +16801,8 @@ if (!map.__pillHooksInstalled) {
       set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
       get spinZoomMax(){ return spinZoomMax; },
       set spinZoomMax(v){ spinZoomMax = v; },
+      get spinSpeed(){ return spinSpeed; },
+      set spinSpeed(v){ spinSpeed = v; },
       startSpin,
       stopSpin,
       updateSpinState,
@@ -20055,9 +20066,10 @@ function openPanel(m){
     const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
     const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
     const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+    const spinZoomMaxSlider = document.getElementById('spinZoomMax');
     const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
-    const zoomUpBtn = document.querySelector('.zoom-up');
-    const zoomDownBtn = document.querySelector('.zoom-down');
+    const spinSpeedSlider = document.getElementById('spinSpeed');
+    const spinSpeedDisplay = document.getElementById('spinSpeedDisplay');
     
     if(window.spinGlobals){
       if(spinLoadStartCheckbox){
@@ -20071,30 +20083,158 @@ function openPanel(m){
       if(spinLogoClickCheckbox){
         spinLogoClickCheckbox.checked = window.spinGlobals.spinLogoClick !== undefined ? window.spinGlobals.spinLogoClick : true;
       }
-      if(spinZoomMaxDisplay){
-        spinZoomMaxDisplay.textContent = window.spinGlobals.spinZoomMax || 4;
+      if(spinZoomMaxSlider && spinZoomMaxDisplay){
+        const zoomValue = window.spinGlobals.spinZoomMax || 4;
+        spinZoomMaxSlider.value = zoomValue;
+        spinZoomMaxDisplay.textContent = zoomValue;
+      }
+      if(spinSpeedSlider && spinSpeedDisplay){
+        const speedValue = window.spinGlobals.spinSpeed || 0.3;
+        spinSpeedSlider.value = speedValue;
+        spinSpeedDisplay.textContent = speedValue.toFixed(1);
       }
     }
     
-    // Add event listeners for zoom buttons (only once)
-    if(zoomUpBtn && !zoomUpBtn.dataset.listenerAdded){
-      zoomUpBtn.dataset.listenerAdded = 'true';
-      zoomUpBtn.addEventListener('click', ()=>{
-        const current = parseInt(spinZoomMaxDisplay.textContent, 10) || 4;
-        if(current < 10){
-          spinZoomMaxDisplay.textContent = current + 1;
-        }
+    // Auto-save function for map settings
+    async function autoSaveMapSettings(){
+      const settings = {};
+      if(spinLoadStartCheckbox) settings.spin_on_load = spinLoadStartCheckbox.checked;
+      if(spinLogoClickCheckbox) settings.spin_on_logo = spinLogoClickCheckbox.checked;
+      const checkedRadio = Array.from(spinTypeRadios).find(r => r.checked);
+      if(checkedRadio) settings.spin_load_type = checkedRadio.value;
+      if(spinZoomMaxSlider){
+        const zoomValue = parseInt(spinZoomMaxSlider.value, 10);
+        if(!isNaN(zoomValue)) settings.spin_zoom_max = zoomValue;
+      }
+      if(spinSpeedSlider){
+        const speedValue = parseFloat(spinSpeedSlider.value);
+        if(!isNaN(speedValue)) settings.spin_speed = speedValue;
+      }
+      
+      try {
+        await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+      } catch(err){
+        console.warn('Auto-save failed:', err);
+      }
+    }
+    
+    // Make value displays editable on click
+    function makeValueEditable(display, slider, min, max, decimals){
+      if(!display || display.dataset.editableAdded) return;
+      display.dataset.editableAdded = 'true';
+      display.style.cursor = 'pointer';
+      
+      display.addEventListener('click', ()=>{
+        const currentValue = display.textContent;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentValue;
+        input.min = min;
+        input.max = max;
+        input.step = decimals ? '0.1' : '1';
+        input.className = 'slider-value-input';
+        input.style.width = '60px';
+        input.style.textAlign = 'center';
+        input.style.fontSize = '16px';
+        input.style.fontWeight = 'bold';
+        input.style.background = 'rgba(0,0,0,0.5)';
+        input.style.color = '#fff';
+        input.style.border = '1px solid #2e3a72';
+        input.style.borderRadius = '4px';
+        input.style.padding = '2px';
+        
+        const commitValue = ()=>{
+          let newValue = decimals ? parseFloat(input.value) : parseInt(input.value, 10);
+          if(isNaN(newValue)) newValue = decimals ? parseFloat(currentValue) : parseInt(currentValue, 10);
+          newValue = Math.max(min, Math.min(max, newValue));
+          const formattedValue = decimals ? newValue.toFixed(1) : newValue.toString();
+          display.textContent = formattedValue;
+          display.style.display = '';
+          input.remove();
+          if(slider) slider.value = newValue;
+          if(slider === spinZoomMaxSlider && window.spinGlobals) window.spinGlobals.spinZoomMax = newValue;
+          if(slider === spinSpeedSlider && window.spinGlobals) window.spinGlobals.spinSpeed = newValue;
+          autoSaveMapSettings();
+        };
+        
+        input.addEventListener('blur', commitValue);
+        input.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            commitValue();
+          } else if(e.key === 'Escape'){
+            display.style.display = '';
+            input.remove();
+          }
+        });
+        
+        display.style.display = 'none';
+        display.parentNode.insertBefore(input, display);
+        input.focus();
+        input.select();
       });
     }
-    if(zoomDownBtn && !zoomDownBtn.dataset.listenerAdded){
-      zoomDownBtn.dataset.listenerAdded = 'true';
-      zoomDownBtn.addEventListener('click', ()=>{
-        const current = parseInt(spinZoomMaxDisplay.textContent, 10) || 4;
-        if(current > 1){
-          spinZoomMaxDisplay.textContent = current - 1;
+    
+    makeValueEditable(spinZoomMaxDisplay, spinZoomMaxSlider, 1, 10, false);
+    makeValueEditable(spinSpeedDisplay, spinSpeedSlider, 0.1, 2.0, true);
+    
+    // Zoom slider - update display on input, save on change
+    if(spinZoomMaxSlider && !spinZoomMaxSlider.dataset.listenerAdded){
+      spinZoomMaxSlider.dataset.listenerAdded = 'true';
+      spinZoomMaxSlider.addEventListener('input', ()=>{
+        spinZoomMaxDisplay.textContent = spinZoomMaxSlider.value;
+      });
+      spinZoomMaxSlider.addEventListener('change', ()=>{
+        const zoomValue = parseInt(spinZoomMaxSlider.value, 10);
+        if(!isNaN(zoomValue) && window.spinGlobals){
+          window.spinGlobals.spinZoomMax = zoomValue;
         }
+        autoSaveMapSettings();
       });
     }
+    
+    // Speed slider - update display on input, save on change
+    if(spinSpeedSlider && !spinSpeedSlider.dataset.listenerAdded){
+      spinSpeedSlider.dataset.listenerAdded = 'true';
+      spinSpeedSlider.addEventListener('input', ()=>{
+        spinSpeedDisplay.textContent = parseFloat(spinSpeedSlider.value).toFixed(1);
+      });
+      spinSpeedSlider.addEventListener('change', ()=>{
+        const speedValue = parseFloat(spinSpeedSlider.value);
+        if(!isNaN(speedValue) && window.spinGlobals){
+          window.spinGlobals.spinSpeed = speedValue;
+        }
+        autoSaveMapSettings();
+      });
+    }
+    
+    // Auto-save when toggles/radios change
+    if(spinLoadStartCheckbox && !spinLoadStartCheckbox.dataset.autoSaveAdded){
+      spinLoadStartCheckbox.dataset.autoSaveAdded = 'true';
+      spinLoadStartCheckbox.addEventListener('change', ()=>{
+        if(window.spinGlobals) window.spinGlobals.spinLoadStart = spinLoadStartCheckbox.checked;
+        autoSaveMapSettings();
+      });
+    }
+    if(spinLogoClickCheckbox && !spinLogoClickCheckbox.dataset.autoSaveAdded){
+      spinLogoClickCheckbox.dataset.autoSaveAdded = 'true';
+      spinLogoClickCheckbox.addEventListener('change', ()=>{
+        if(window.spinGlobals) window.spinGlobals.spinLogoClick = spinLogoClickCheckbox.checked;
+        autoSaveMapSettings();
+      });
+    }
+    spinTypeRadios.forEach(radio => {
+      if(radio.dataset.autoSaveAdded) return;
+      radio.dataset.autoSaveAdded = 'true';
+      radio.addEventListener('change', ()=>{
+        if(radio.checked && window.spinGlobals) window.spinGlobals.spinLoadType = radio.value;
+        autoSaveMapSettings();
+      });
+    });
   }
   
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
@@ -21078,53 +21218,7 @@ const adminPanelChangeManager = (()=>{
       if(typeof window.saveAdminChanges === 'function'){
         result = window.saveAdminChanges();
       }
-      
-      // Save admin settings (spin controls)
-      const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
-      const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
-      const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
-      const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
-      
-      if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox || spinZoomMaxDisplay){
-        const settings = {};
-        if(spinLoadStartCheckbox){
-          settings.spin_on_load = spinLoadStartCheckbox.checked;
-        }
-        if(spinTypeRadios.length){
-          const checked = Array.from(spinTypeRadios).find(r => r.checked);
-          if(checked){
-            settings.spin_load_type = checked.value;
-          }
-        }
-        if(spinLogoClickCheckbox){
-          settings.spin_on_logo = spinLogoClickCheckbox.checked;
-        }
-        if(spinZoomMaxDisplay){
-          const zoomValue = parseInt(spinZoomMaxDisplay.textContent, 10);
-          if(!isNaN(zoomValue) && zoomValue >= 1 && zoomValue <= 10){
-            settings.spin_zoom_max = zoomValue;
-          }
-        }
-        
-        if(Object.keys(settings).length > 0){
-          try {
-            const response = await fetch('/gateway.php?action=save-admin-settings', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify(settings)
-            });
-            if(!response.ok){
-              console.warn('Failed to save admin settings to database');
-            }
-            // Settings saved - spin behavior will apply on next page load
-          } catch(err){
-            console.warn('Failed to save admin settings:', err);
-          }
-        }
-      }
+      // Map settings (spin controls) auto-save on change, no need to save here
     }catch(err){
       const message = err && typeof err.message === 'string' ? err.message : '';
       if(message && message.toLowerCase().includes('database connection not configured')){
