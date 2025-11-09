@@ -20013,21 +20013,21 @@ function openPanel(m){
   }
   
   // Initialize admin panel spin controls with current values
-  if(m.id === 'adminPanel'){
+  if(m.id === 'adminPanel' && window.spinGlobals){
     const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
     const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
     const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
     
     if(spinLoadStartCheckbox){
-      spinLoadStartCheckbox.checked = spinLoadStart;
+      spinLoadStartCheckbox.checked = window.spinGlobals.spinLoadStart || false;
     }
     if(spinTypeRadios.length){
       spinTypeRadios.forEach(radio => {
-        radio.checked = (radio.value === spinLoadType);
+        radio.checked = (radio.value === (window.spinGlobals.spinLoadType || 'everyone'));
       });
     }
     if(spinLogoClickCheckbox){
-      spinLogoClickCheckbox.checked = spinLogoClick;
+      spinLogoClickCheckbox.checked = window.spinGlobals.spinLogoClick !== undefined ? window.spinGlobals.spinLogoClick : true;
     }
   }
   
@@ -21022,18 +21022,18 @@ const adminPanelChangeManager = (()=>{
         const settings = {};
         if(spinLoadStartCheckbox){
           settings.spin_on_load = spinLoadStartCheckbox.checked;
-          spinLoadStart = spinLoadStartCheckbox.checked;
+          if(window.spinGlobals) window.spinGlobals.spinLoadStart = spinLoadStartCheckbox.checked;
         }
         if(spinTypeRadios.length){
           const checked = Array.from(spinTypeRadios).find(r => r.checked);
           if(checked){
             settings.spin_load_type = checked.value;
-            spinLoadType = checked.value;
+            if(window.spinGlobals) window.spinGlobals.spinLoadType = checked.value;
           }
         }
         if(spinLogoClickCheckbox){
           settings.spin_on_logo = spinLogoClickCheckbox.checked;
-          spinLogoClick = spinLogoClickCheckbox.checked;
+          if(window.spinGlobals) window.spinGlobals.spinLogoClick = spinLogoClickCheckbox.checked;
         }
         
         if(Object.keys(settings).length > 0){
