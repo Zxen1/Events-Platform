@@ -1196,12 +1196,15 @@ button[aria-expanded="true"] .results-arrow{
   width:35px;
   height:35px;
 }
-#filterPanel input[type="text"]{
-  background: var(--panel-bg);
-  color: var(--panel-text);
+#filterPanel input[type="text"],
+#filterPanel input[type="date"]{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
 }
 #filterPanel .calendar-container{
-  background: var(--dropdown-bg);
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
   position:absolute;
   top:0;
   left:0;
@@ -1214,7 +1217,6 @@ button[aria-expanded="true"] .results-arrow{
   width:340px;
   height:var(--calendar-height);
   max-width:100%;
-  border:1px solid var(--border);
   border-radius:8px;
   box-shadow:0 12px 32px rgba(0,0,0,0.4);
   overscroll-behavior:contain;
@@ -2493,6 +2495,12 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .sort-field .options-menu{
   width:100%;
   max-width:420px;
+  background:#222222;
+  border:1px solid rgba(255,255,255,0.1);
+}
+#filterPanel .sort-field .options-menu .sort-option{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
 }
 .sort-options .sort-option[aria-pressed="true"]{
   background:#2e3a72;
@@ -2525,6 +2533,7 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   margin:0 auto;
   background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
   border-radius:8px;
   padding:10px;
 }
@@ -2643,8 +2652,9 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
 }
 #filterPanel .price-range-row input{
-  background:#ffffff;
-  color:var(--dropdown-text);
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
 }
 #filterPanel .price-range-row .price-separator{
   color:#ffffff;
@@ -2947,12 +2957,19 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
 }
 
+.filter-category-menu .options-dropdown > button{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
 .filter-category-menu .options-menu{
   width:100%;
   box-sizing:border-box;
   position:static;
   margin-top:6px;
-  background:transparent;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
   border:none;
   padding:0;
   border-radius:0;
