@@ -2519,7 +2519,7 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
   margin:0 auto;
-  background:#444444;
+  background:#222222;
   border-radius:8px;
   padding:0 10px 10px;
 }
