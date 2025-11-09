@@ -8732,6 +8732,13 @@ function makePosts(){
           }
           menu.remove();
           notifyFormbuilderChange();
+          console.log('[Formbuilder] Category deleted, triggering save...');
+          // Trigger auto-save after deletion
+          if(typeof window.adminPanelModule?.runSave === 'function'){
+            setTimeout(() => {
+              window.adminPanelModule.runSave({ closeAfter: false });
+            }, 100);
+          }
         });
 
         c.subs.forEach((sub, subIndex)=>{
@@ -13301,6 +13308,13 @@ function makePosts(){
             subMenu.remove();
             delete subFieldsMap[currentSubName];
             notifyFormbuilderChange();
+            console.log('[Formbuilder] Subcategory deleted, triggering save...');
+            // Trigger auto-save after deletion
+            if(typeof window.adminPanelModule?.runSave === 'function'){
+              setTimeout(() => {
+                window.adminPanelModule.runSave({ closeAfter: false });
+              }, 100);
+            }
           });
 
           const subEditPanel = document.createElement('div');
