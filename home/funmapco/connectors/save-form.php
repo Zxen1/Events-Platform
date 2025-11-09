@@ -539,7 +539,7 @@ try {
             $hasFieldsForThisSub = false;
             $fieldsAreInPayload = false;
             
-            // Check if fields are in payload for this subcategory (even if empty array)
+            // Check if fields are in payload for THIS SPECIFIC subcategory (even if empty array)
             if ($subKey !== '' && array_key_exists($subKey, $subFieldsMap)) {
                 $fieldsPayload = is_array($subFieldsMap[$subKey]) ? $subFieldsMap[$subKey] : [];
                 $hasFieldsForThisSub = !empty($fieldsPayload);
@@ -547,9 +547,6 @@ try {
             } elseif ($subName !== '' && array_key_exists($subName, $subFieldsMap)) {
                 $fieldsPayload = is_array($subFieldsMap[$subName]) ? $subFieldsMap[$subName] : [];
                 $hasFieldsForThisSub = !empty($fieldsPayload);
-                $fieldsAreInPayload = true;
-            } elseif ($hasSubFieldsInPayload) {
-                // If subFields exists in payload but this sub isn't in it, it means fields were cleared
                 $fieldsAreInPayload = true;
             }
             if (!is_array($fieldsPayload)) {
