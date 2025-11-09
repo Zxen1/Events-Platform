@@ -5708,6 +5708,15 @@ html, body { cursor: auto !important; }
               background:rgba(255,255,255,0.1);
             }
             #tab-forms .category-edit-panel,
+            #tab-forms .subcategory-edit-panel,
+            #tab-forms .field-edit-panel{
+              background:#1a1a1a;
+              border:1px solid var(--border);
+              border-radius:8px;
+              padding:16px;
+              box-shadow:0 8px 24px rgba(0,0,0,0.4);
+            }
+            #tab-forms .category-edit-panel,
             #tab-forms .field-edit-panel{
               min-width:280px;
               max-width:320px;
@@ -5715,11 +5724,6 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-edit-panel{
               min-width:340px;
               max-width:360px;
-              background:#1a1a1a;
-              border:1px solid var(--border);
-              border-radius:8px;
-              padding:16px;
-              box-shadow:0 8px 24px rgba(0,0,0,0.4);
             }
             #tab-forms .category-hide-toggle-row,
             #tab-forms .subcategory-hide-toggle-row{
