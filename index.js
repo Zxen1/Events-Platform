@@ -8506,6 +8506,19 @@ function makePosts(){
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
+        const saveCategoryBtn = document.createElement('button');
+        saveCategoryBtn.type = 'button';
+        saveCategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
+        saveCategoryBtn.textContent = 'Save';
+        saveCategoryBtn.setAttribute('aria-label', 'Save changes');
+        saveCategoryBtn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          if(typeof window.adminPanelModule?.runSave === 'function'){
+            window.adminPanelModule.runSave({ closeAfter:false });
+          }
+        });
+
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
         deleteCategoryBtn.className = 'delete-category-btn';
@@ -8535,11 +8548,15 @@ function makePosts(){
           hideToggleInput.checked = !toggleInput.checked;
         });
         
+        const saveCategoryRow = document.createElement('div');
+        saveCategoryRow.className = 'formbuilder-save-row';
+        saveCategoryRow.append(saveCategoryBtn);
+        
         const deleteCategoryRow = document.createElement('div');
         deleteCategoryRow.className = 'formbuilder-delete-row';
         deleteCategoryRow.append(deleteCategoryBtn);
 
-        editPanel.append(nameInput, iconPicker, hideToggleRow, deleteCategoryRow);
+        editPanel.append(nameInput, iconPicker, hideToggleRow, saveCategoryRow, deleteCategoryRow);
         editPanel.hidden = true;
         editPanel.style.position = 'absolute';
         editPanel.style.right = '0';
@@ -12010,6 +12027,23 @@ function makePosts(){
 
             let deleteHandler = null;
 
+            const saveFieldBtn = document.createElement('button');
+            saveFieldBtn.type = 'button';
+            saveFieldBtn.className = 'save-changes primary-action formbuilder-inline-save';
+            saveFieldBtn.textContent = 'Save';
+            saveFieldBtn.setAttribute('aria-label', 'Save changes');
+            saveFieldBtn.addEventListener('click', (e)=>{
+              e.preventDefault();
+              e.stopPropagation();
+              if(typeof window.adminPanelModule?.runSave === 'function'){
+                window.adminPanelModule.runSave({ closeAfter:false });
+              }
+            });
+            
+            const saveFieldRow = document.createElement('div');
+            saveFieldRow.className = 'formbuilder-save-row';
+            saveFieldRow.append(saveFieldBtn);
+
             const deleteFieldBtn = document.createElement('button');
             deleteFieldBtn.type = 'button';
             deleteFieldBtn.className = 'delete-category-btn delete-field-btn';
@@ -12031,7 +12065,7 @@ function makePosts(){
             deleteFieldRow.className = 'formbuilder-delete-row';
             deleteFieldRow.append(deleteFieldBtn);
 
-            editMenu.append(deleteFieldRow);
+            editMenu.append(saveFieldRow, deleteFieldRow);
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -13259,11 +13293,28 @@ function makePosts(){
             subHideToggleInput.checked = !subInput.checked;
           });
           
+          const saveSubcategoryBtn = document.createElement('button');
+          saveSubcategoryBtn.type = 'button';
+          saveSubcategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
+          saveSubcategoryBtn.textContent = 'Save';
+          saveSubcategoryBtn.setAttribute('aria-label', 'Save changes');
+          saveSubcategoryBtn.addEventListener('click', (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            if(typeof window.adminPanelModule?.runSave === 'function'){
+              window.adminPanelModule.runSave({ closeAfter:false });
+            }
+          });
+          
+          const saveSubcategoryRow = document.createElement('div');
+          saveSubcategoryRow.className = 'formbuilder-save-row';
+          saveSubcategoryRow.append(saveSubcategoryBtn);
+          
           const deleteSubcategoryRow = document.createElement('div');
           deleteSubcategoryRow.className = 'formbuilder-delete-row';
           deleteSubcategoryRow.append(deleteSubBtn);
 
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, deleteSubcategoryRow);
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, saveSubcategoryRow, deleteSubcategoryRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -20751,9 +20802,11 @@ const adminPanelChangeManager = (()=>{
     markDirty(){
       ensureElements();
       setDirty(true);
-    }
+    },
+    runSave
   };
 })();
+window.adminPanelModule = adminPanelChangeManager;
 
 function closePanel(m){
   const btnId = panelButtons[m && m.id];

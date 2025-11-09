@@ -5878,6 +5878,10 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
+            #tab-forms .formbuilder-save-row{
+              display:flex;
+              margin-bottom:10px;
+            }
             #tab-forms .formbuilder-delete-row{
               padding-top:30px;
               display:flex;
@@ -6045,6 +6049,26 @@ html, body { cursor: auto !important; }
             #tab-forms .category-form-menu.has-floating-overlay,
             #tab-forms .subcategory-form-menu.has-floating-overlay{
               z-index:var(--forms-layer-popover);
+            }
+            #tab-forms .formbuilder-inline-save{
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              padding:10px 16px;
+              border-radius:8px;
+              background:var(--button-selected-bg, var(--btn-selected));
+              border:1px solid var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+              color:var(--button-selected-text, var(--button-active-text));
+              font-size:14px;
+              font-weight:600;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+              width:100%;
+            }
+            #tab-forms .formbuilder-inline-save:hover{
+              background:var(--button-selected-hover, var(--btn-selected-hover));
+              border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+              color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
             }
             #tab-forms .delete-category-btn,
             #tab-forms .delete-subcategory-btn,
