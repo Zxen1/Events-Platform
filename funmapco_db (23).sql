@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 10, 2025 at 05:55 AM
+-- Generation Time: Nov 10, 2025 at 07:40 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -96,9 +96,10 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (13, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
 (14, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
 (15, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(16, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(17, 'spin_load_type', 'new_users', 'string', 'Spin for: everyone or new_users', '2025-11-09 15:36:38', '2025-11-09 18:55:45'),
-(18, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-09 16:18:33');
+(16, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-09 15:36:38', '2025-11-09 20:14:54'),
+(17, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-09 15:36:38', '2025-11-09 20:03:52'),
+(18, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-09 20:04:14'),
+(73, 'spin_zoom_max', '4', 'integer', 'Maximum zoom level for spin trigger', '2025-11-09 20:39:10', '2025-11-09 20:40:01');
 
 -- --------------------------------------------------------
 
@@ -142,7 +143,8 @@ INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `
 (2, 'Opportunities', 'opportunities', 4, 0, 'assets/icons-20/opportunities-category-icon-20.webp', 'assets/icons-30/opportunities-category-icon-30.webp', '#F1C40F', '2025-10-29 23:32:47', '2025-11-05 10:45:46'),
 (3, 'Learning', 'learning', 3, 0, 'assets/icons-20/learning-category-icon-20.webp', 'assets/icons-30/learning-category-icon-30.webp', '#3498DB', '2025-10-29 23:32:47', '2025-11-07 07:14:24'),
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/icons-20/Buy-and-sell-category-icon-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-30.webp', '#2ECC71', '2025-10-29 23:32:47', '2025-11-06 12:59:45'),
-(5, 'For Hire', 'for-hire', 2, 0, 'assets/icons-20/For-hire-category-icon-20.webp', 'assets/icons-30/For-hire-category-icon-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-11-07 07:14:24');
+(5, 'For Hire', 'for-hire', 2, 0, 'assets/icons-20/For-hire-category-icon-20.webp', 'assets/icons-30/For-hire-category-icon-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-11-07 07:14:24'),
+(44, 'New Category', 'new-category', 6, 0, '', '', NULL, '2025-11-10 07:09:09', '2025-11-10 07:09:09');
 
 -- --------------------------------------------------------
 
@@ -686,7 +688,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -698,7 +700,7 @@ ALTER TABLE `banned_words`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `commissions`

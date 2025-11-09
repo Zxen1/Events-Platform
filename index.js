@@ -2157,6 +2157,7 @@ async function ensureMapboxCssFor(container) {
           spinLoadStart = false,
           spinLoadType = 'everyone',
           spinLogoClick = true,
+          spinZoomMax = 4,
           spinSpeed = DEFAULT_SPIN_SPEED,
           spinEnabled = false,
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
@@ -2175,6 +2176,7 @@ async function ensureMapboxCssFor(container) {
               spinLoadStart = data.settings.spin_on_load || false;
               spinLoadType = data.settings.spin_load_type || 'everyone';
               spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
+              spinZoomMax = data.settings.spin_zoom_max || 4;
               
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
@@ -2194,6 +2196,7 @@ async function ensureMapboxCssFor(container) {
               const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
               const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
               const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+              const spinZoomMaxInput = document.getElementById('spinZoomMax');
               
               if(spinLoadStartCheckbox){
                 spinLoadStartCheckbox.checked = spinLoadStart;
@@ -2205,6 +2208,9 @@ async function ensureMapboxCssFor(container) {
               }
               if(spinLogoClickCheckbox){
                 spinLogoClickCheckbox.checked = spinLogoClick;
+              }
+              if(spinZoomMaxInput){
+                spinZoomMaxInput.value = spinZoomMax;
               }
             }
           }
@@ -2633,7 +2639,7 @@ async function ensureMapboxCssFor(container) {
             toggleWelcome();
             return;
           }
-          if(spinLogoClick && map && map.getZoom() <= 4){
+          if(spinLogoClick && map && map.getZoom() <= spinZoomMax){
             spinEnabled = true;
             localStorage.setItem('spinGlobe', 'true');
             startSpin(true);
@@ -16704,7 +16710,7 @@ if (!map.__pillHooksInstalled) {
     function startSpin(fromCurrent=false){
       if(mode!=='map') setModeFromUser('map');
       if(!spinEnabled || spinning || !map) return;
-      if(map.getZoom() >= 3) return;
+      if(map.getZoom() >= spinZoomMax) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
       hideResultIndicators();
@@ -16783,6 +16789,8 @@ if (!map.__pillHooksInstalled) {
       set spinLoadType(v){ spinLoadType = v; updateSpinState(); },
       get spinLogoClick(){ return spinLogoClick; },
       set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
+      get spinZoomMax(){ return spinZoomMax; },
+      set spinZoomMax(v){ spinZoomMax = v; },
       startSpin,
       stopSpin,
       updateSpinState,
@@ -20046,6 +20054,7 @@ function openPanel(m){
     const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
     const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
     const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+    const spinZoomMaxInput = document.getElementById('spinZoomMax');
     
     if(spinLoadStartCheckbox){
       spinLoadStartCheckbox.checked = window.spinGlobals.spinLoadStart || false;
@@ -20057,6 +20066,9 @@ function openPanel(m){
     }
     if(spinLogoClickCheckbox){
       spinLogoClickCheckbox.checked = window.spinGlobals.spinLogoClick !== undefined ? window.spinGlobals.spinLogoClick : true;
+    }
+    if(spinZoomMaxInput){
+      spinZoomMaxInput.value = window.spinGlobals.spinZoomMax || 4;
     }
   }
   
@@ -21046,8 +21058,9 @@ const adminPanelChangeManager = (()=>{
       const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
       const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
       const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+      const spinZoomMaxInput = document.getElementById('spinZoomMax');
       
-      if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox){
+      if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox || spinZoomMaxInput){
         const settings = {};
         if(spinLoadStartCheckbox){
           settings.spin_on_load = spinLoadStartCheckbox.checked;
@@ -21060,6 +21073,12 @@ const adminPanelChangeManager = (()=>{
         }
         if(spinLogoClickCheckbox){
           settings.spin_on_logo = spinLogoClickCheckbox.checked;
+        }
+        if(spinZoomMaxInput){
+          const zoomValue = parseFloat(spinZoomMaxInput.value);
+          if(!isNaN(zoomValue) && zoomValue >= 1 && zoomValue <= 10){
+            settings.spin_zoom_max = zoomValue;
+          }
         }
         
         if(Object.keys(settings).length > 0){
