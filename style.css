@@ -2073,6 +2073,42 @@ button[aria-expanded="true"] .results-arrow{
   gap:10px;
   flex-wrap:wrap;
 }
+.spin-type-toggles{
+  display:flex;
+  gap:8px;
+  margin-left:auto;
+}
+.spin-type-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  padding:6px 12px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  transition:background 0.2s ease, border-color 0.2s ease;
+}
+.spin-type-option:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+.spin-type-option input[type="radio"]{
+  margin:0;
+  cursor:pointer;
+}
+.spin-type-option input[type="radio"]:checked + .spin-type-label{
+  font-weight:600;
+}
+.spin-type-option:has(input[type="radio"]:checked){
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+}
+.spin-type-label{
+  font-size:14px;
+  color:var(--button-text);
+  cursor:pointer;
+}
 .option-label > *,
 .option-group > *{
   min-width:0;
