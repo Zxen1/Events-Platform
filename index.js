@@ -8732,8 +8732,20 @@ function makePosts(){
           }
           menu.remove();
           notifyFormbuilderChange();
-          console.log('[Formbuilder] Category deleted, triggering save...');
+          console.log('[Formbuilder] Category deleted from array. Categories count:', categories.length);
+          
+          // Update formbuilder state manager snapshot first
+          if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+            try {
+              window.formbuilderStateManager.save();
+              console.log('[Formbuilder] Formbuilder state manager updated');
+            } catch(err) {
+              console.error('[Formbuilder] Failed to update state manager:', err);
+            }
+          }
+          
           // Trigger auto-save after deletion
+          console.log('[Formbuilder] Triggering save...');
           if(typeof window.adminPanelModule?.runSave === 'function'){
             setTimeout(() => {
               window.adminPanelModule.runSave({ closeAfter: false });
@@ -13308,8 +13320,20 @@ function makePosts(){
             subMenu.remove();
             delete subFieldsMap[currentSubName];
             notifyFormbuilderChange();
-            console.log('[Formbuilder] Subcategory deleted, triggering save...');
+            console.log('[Formbuilder] Subcategory deleted. Subs in category:', c.subs.length);
+            
+            // Update formbuilder state manager snapshot first
+            if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+              try {
+                window.formbuilderStateManager.save();
+                console.log('[Formbuilder] Formbuilder state manager updated');
+              } catch(err) {
+                console.error('[Formbuilder] Failed to update state manager:', err);
+              }
+            }
+            
             // Trigger auto-save after deletion
+            console.log('[Formbuilder] Triggering save...');
             if(typeof window.adminPanelModule?.runSave === 'function'){
               setTimeout(() => {
                 window.adminPanelModule.runSave({ closeAfter: false });
@@ -20250,6 +20274,8 @@ form.addEventListener('input', formChanged, true);
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
         payload = window.formbuilderStateManager.capture();
+        console.log('[SaveAdminChanges] Captured payload:', payload);
+        console.log('[SaveAdminChanges] Categories count:', payload?.categories?.length);
       } catch (err) {
         console.error('formbuilderStateManager.capture failed', err);
       }
@@ -20276,7 +20302,9 @@ form.addEventListener('input', formChanged, true);
     if(responseText){
       try {
         data = JSON.parse(responseText);
+        console.log('[SaveAdminChanges] Server response:', data);
       } catch (parseError) {
+        console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
         showErrorBanner('Unexpected response while saving changes.');
         const error = new Error('Invalid JSON response');
         error.responseText = responseText;
@@ -20285,6 +20313,7 @@ form.addEventListener('input', formChanged, true);
     }
 
     if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
+      console.error('[SaveAdminChanges] Save failed:', { responseOk: response.ok, data });
       const message = data && typeof data.message === 'string' && data.message.trim()
         ? data.message.trim()
         : `Failed to save changes${response.ok ? '' : ` (HTTP ${response.status})`}.`;
