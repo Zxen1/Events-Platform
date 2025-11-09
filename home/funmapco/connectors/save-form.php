@@ -540,14 +540,19 @@ try {
             $fieldsAreInPayload = false;
             
             // Check if fields are in payload for THIS SPECIFIC subcategory (even if empty array)
+            // Try both subKey and subName to find the fields
             if ($subKey !== '' && array_key_exists($subKey, $subFieldsMap)) {
                 $fieldsPayload = is_array($subFieldsMap[$subKey]) ? $subFieldsMap[$subKey] : [];
                 $hasFieldsForThisSub = !empty($fieldsPayload);
                 $fieldsAreInPayload = true;
+                error_log("DEBUG: Found fields for subKey '$subKey': " . json_encode($fieldsPayload));
             } elseif ($subName !== '' && array_key_exists($subName, $subFieldsMap)) {
                 $fieldsPayload = is_array($subFieldsMap[$subName]) ? $subFieldsMap[$subName] : [];
                 $hasFieldsForThisSub = !empty($fieldsPayload);
                 $fieldsAreInPayload = true;
+                error_log("DEBUG: Found fields for subName '$subName': " . json_encode($fieldsPayload));
+            } else {
+                error_log("DEBUG: No fields found for sub (key='$subKey', name='$subName'). subFieldsMap keys: " . json_encode(array_keys($subFieldsMap)));
             }
             if (!is_array($fieldsPayload)) {
                 $fieldsPayload = [];
@@ -739,6 +744,7 @@ try {
             }
             // Only update field_names and field_ids if fields were provided in payload (even if empty)
             if ($fieldsAreInPayload) {
+                error_log("DEBUG: Updating fields for sub '$subName' - fieldNames: " . json_encode($fieldNames) . ", fieldIds: " . json_encode($fieldIds));
                 if (in_array('field_names', $subcategoryColumns, true)) {
                     $updateParts[] = 'field_names = :field_names';
                     $params[':field_names'] = json_encode($fieldNames, JSON_UNESCAPED_UNICODE);
@@ -747,6 +753,8 @@ try {
                     $updateParts[] = 'field_ids = :field_ids';
                     $params[':field_ids'] = json_encode($fieldIds, JSON_UNESCAPED_UNICODE);
                 }
+            } else {
+                error_log("DEBUG: NOT updating fields for sub '$subName' - fieldsAreInPayload is false");
             }
             // Always update field_type_id and field_type_name when field types are provided in payload (even if empty)
             if ($fieldTypesAreInPayload) {
