@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 10, 2025 at 02:27 AM
+-- Generation Time: Nov 10, 2025 at 03:03 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -61,6 +61,46 @@ CREATE TABLE `admins` (
 
 INSERT INTO `admins` (`id`, `email`, `password_hash`, `display_name`, `created_at`, `settings_json`, `updated_at`) VALUES
 (2, 'admin', '$2a$12$EED5zmTO8Eyhj0N/6F1W5.dyHyMlYbOABsWf6oTk0.j/Tv8rhOIU.', 'Administrator', '2025-10-22 01:00:41', NULL, '2025-10-29 23:32:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_settings`
+--
+
+CREATE TABLE `admin_settings` (
+  `id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `setting_type` enum('string','boolean','integer','decimal','json') DEFAULT 'string',
+  `description` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin_settings`
+--
+
+INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(2, 'spin_load_type', 'new', 'string', 'Spin for: all or new users', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(3, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(4, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(5, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(6, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(7, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(8, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(9, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(10, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(11, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(12, 'site_tagline', NULL, 'string', 'Site tagline/slogan', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(13, 'contact_email', NULL, 'string', 'Admin contact email', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(14, 'support_email', NULL, 'string', 'Support contact email', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(15, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(16, 'default_list_currency', 'AUD', 'string', 'Default currency for listings', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(17, 'default_list_duration', '30', 'integer', 'Default listing duration in days', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
+(18, 'default_renewal_fee', '0.00', 'decimal', 'Default renewal fee', '2025-11-09 15:36:38', '2025-11-09 15:36:38');
 
 -- --------------------------------------------------------
 
@@ -516,6 +556,14 @@ ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `admin_settings`
+--
+ALTER TABLE `admin_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `setting_key` (`setting_key`),
+  ADD KEY `idx_setting_key` (`setting_key`);
+
+--
 -- Indexes for table `banned_words`
 --
 ALTER TABLE `banned_words`
@@ -643,6 +691,12 @@ ALTER TABLE `addons`
 --
 ALTER TABLE `admins`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `admin_settings`
+--
+ALTER TABLE `admin_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
