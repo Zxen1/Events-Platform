@@ -2386,11 +2386,14 @@ button[aria-expanded="true"] .results-arrow{
   border-radius: var(--dropdown-radius);
 }
 #filterPanel #keyword-textbox{
-  background: var(--keyword-bg);
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
 }
 #filterPanel #daterange-textbox{
-  background: #333333;
-  color: var(--date-range-text);
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
 }
 
 .input .down{
@@ -2414,13 +2417,13 @@ button[aria-expanded="true"] .results-arrow{
   width: 35px;
   height: 35px;
   border-radius: 8px;
-  background: var(--dropdown-bg);
+  background:rgba(0,0,0,0.2);
   cursor: pointer;
-  border: 0;
+  border:1px solid rgba(255,255,255,0.1);
   margin-left: 6px;
   line-height: 35px;
   text-align: center;
-  color: var(--dropdown-text);
+  color:#fff;
   opacity:1;
 }
 #filterPanel .keyword-clear-button.active,
