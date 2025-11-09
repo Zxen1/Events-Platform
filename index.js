@@ -8552,19 +8552,23 @@ function makePosts(){
         hideToggle.className = 'switch';
         const hideToggleInput = document.createElement('input');
         hideToggleInput.type = 'checkbox';
-        hideToggleInput.checked = !toggleInput.checked;
+        hideToggleInput.checked = typeof c.hidden === 'boolean' ? c.hidden : !toggleInput.checked;
         const hideToggleSlider = document.createElement('span');
         hideToggleSlider.className = 'slider';
         hideToggle.append(hideToggleInput, hideToggleSlider);
         hideToggleRow.append(hideToggleLabel, hideToggle);
         
         hideToggleInput.addEventListener('change', ()=>{
+          c.hidden = hideToggleInput.checked;
           toggleInput.checked = !hideToggleInput.checked;
           toggleInput.dispatchEvent(new Event('change', {bubbles: true}));
+          notifyFormbuilderChange();
         });
         
         toggleInput.addEventListener('change', ()=>{
           hideToggleInput.checked = !toggleInput.checked;
+          c.hidden = hideToggleInput.checked;
+          notifyFormbuilderChange();
         });
         
         const saveCategoryRow = document.createElement('div');
@@ -13357,19 +13361,26 @@ function makePosts(){
           subHideToggle.className = 'switch';
           const subHideToggleInput = document.createElement('input');
           subHideToggleInput.type = 'checkbox';
-          subHideToggleInput.checked = !subInput.checked;
+          if(!c.subHidden) c.subHidden = {};
+          subHideToggleInput.checked = typeof c.subHidden[sub] === 'boolean' ? c.subHidden[sub] : !subInput.checked;
           const subHideToggleSlider = document.createElement('span');
           subHideToggleSlider.className = 'slider';
           subHideToggle.append(subHideToggleInput, subHideToggleSlider);
           subHideToggleRow.append(subHideToggleLabel, subHideToggle);
           
           subHideToggleInput.addEventListener('change', ()=>{
+            if(!c.subHidden) c.subHidden = {};
+            c.subHidden[sub] = subHideToggleInput.checked;
             subInput.checked = !subHideToggleInput.checked;
             subInput.dispatchEvent(new Event('change', {bubbles: true}));
+            notifyFormbuilderChange();
           });
           
           subInput.addEventListener('change', ()=>{
             subHideToggleInput.checked = !subInput.checked;
+            if(!c.subHidden) c.subHidden = {};
+            c.subHidden[sub] = subHideToggleInput.checked;
+            notifyFormbuilderChange();
           });
           
           const saveSubcategoryBtn = document.createElement('button');
@@ -13710,7 +13721,9 @@ function makePosts(){
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
           subIds: cloneMapLike(item && item.subIds),
-          sort_order: sortOrder
+          subHidden: cloneMapLike(item && item.subHidden),
+          sort_order: sortOrder,
+          hidden: item && typeof item.hidden === 'boolean' ? item.hidden : false
         };
       }) : [];
     }

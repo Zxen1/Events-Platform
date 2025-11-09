@@ -171,6 +171,7 @@ try {
         $categoryId = filterPositiveInt($categoryPayload['id'] ?? null);
         $categoryName = sanitizeString($categoryPayload['name'] ?? '');
         $categoryKey = sanitizeKey($categoryPayload['key'] ?? '');
+        $categoryHidden = isset($categoryPayload['hidden']) && $categoryPayload['hidden'] === true ? 1 : 0;
 
         $categoryRow = null;
         $originalCategoryName = $categoryName;
@@ -226,6 +227,11 @@ try {
                 $insertParts[] = 'sort_order';
                 $insertValues[] = ':sort_order';
                 $insertParams[':sort_order'] = $categoryOrder + 1;
+            }
+            if (in_array('hidden', $categoryColumns, true)) {
+                $insertParts[] = 'hidden';
+                $insertValues[] = ':hidden';
+                $insertParams[':hidden'] = $categoryHidden;
             }
             if ($insertParts) {
                 $sql = 'INSERT INTO categories (' . implode(', ', $insertParts) . ') VALUES (' . implode(', ', $insertValues) . ')';
@@ -295,6 +301,10 @@ try {
             $categoryUpdateParts[] = 'category_key = :category_key';
             $categoryParams[':category_key'] = $categoryKey;
         }
+        if (in_array('hidden', $categoryColumns, true)) {
+            $categoryUpdateParts[] = 'hidden = :hidden';
+            $categoryParams[':hidden'] = $categoryHidden;
+        }
 
         if ($categoryUpdateParts) {
             $sql = 'UPDATE categories SET ' . implode(', ', $categoryUpdateParts) . ' WHERE id = :id';
@@ -347,6 +357,25 @@ try {
                 $normalizedKey = sanitizeKey($stringKey);
                 if ($normalizedKey !== '') {
                     $subIdMap[$normalizedKey] = $idValue;
+                }
+            }
+        }
+        
+        $subHiddenMap = [];
+        if (isset($categoryPayload['subHidden']) && is_array($categoryPayload['subHidden'])) {
+            foreach ($categoryPayload['subHidden'] as $key => $value) {
+                $stringKey = is_string($key) || is_int($key) ? (string) $key : '';
+                if ($stringKey === '') {
+                    continue;
+                }
+                $hiddenValue = isset($value) && $value === true ? 1 : 0;
+                $nameKey = sanitizeString($stringKey);
+                if ($nameKey !== '') {
+                    $subHiddenMap[$nameKey] = $hiddenValue;
+                }
+                $normalizedKey = sanitizeKey($stringKey);
+                if ($normalizedKey !== '') {
+                    $subHiddenMap[$normalizedKey] = $hiddenValue;
                 }
             }
         }
@@ -434,6 +463,12 @@ try {
                     if ($subName === '') {
                         continue;
                     }
+                    $subHidden = 0;
+                    if (isset($subHiddenMap[$subName])) {
+                        $subHidden = $subHiddenMap[$subName];
+                    } elseif (isset($subHiddenMap[$subKey]) && $subKey !== '') {
+                        $subHidden = $subHiddenMap[$subKey];
+                    }
                     $insertParts = [];
                     $insertValues = [];
                     $insertParams = [];
@@ -468,6 +503,11 @@ try {
                         $insertValues[] = ':sort_order';
                         $insertParams[':sort_order'] = $index + 1;
                     }
+                    if (in_array('hidden', $subcategoryColumns, true)) {
+                        $insertParts[] = 'hidden';
+                        $insertValues[] = ':hidden';
+                        $insertParams[':hidden'] = $subHidden;
+                    }
                     if ($insertParts) {
                         $sql = 'INSERT INTO subcategories (' . implode(', ', $insertParts) . ') VALUES (' . implode(', ', $insertValues) . ')';
                         $stmt = $pdo->prepare($sql);
@@ -486,6 +526,13 @@ try {
             }
             if ($subKey === '') {
                 $subKey = sanitizeKey($subcategoryRow['subcategory_key'] ?? $subName);
+            }
+            
+            $subHidden = 0;
+            if (isset($subHiddenMap[$subName])) {
+                $subHidden = $subHiddenMap[$subName];
+            } elseif (isset($subHiddenMap[$subKey]) && $subKey !== '') {
+                $subHidden = $subHiddenMap[$subKey];
             }
 
             $fieldsPayload = [];
@@ -709,6 +756,10 @@ try {
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
                 $params[':sort_order'] = $index + 1;
+            }
+            if (in_array('hidden', $subcategoryColumns, true)) {
+                $updateParts[] = 'hidden = :hidden';
+                $params[':hidden'] = $subHidden;
             }
             // Only update icon_path and mapmarker_path if icon data was provided in payload
             $hasIconInPayload = !empty($subcategoryIconPaths) || !empty($subcategoryIcons);
