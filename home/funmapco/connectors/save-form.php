@@ -759,6 +759,62 @@ try {
         }
     }
 
+    // === DELETE ORPHANED CATEGORIES & SUBCATEGORIES ===
+    // Collect all category IDs from the payload
+    $payloadCategoryIds = [];
+    foreach ($decoded['categories'] as $categoryPayload) {
+        if (!is_array($categoryPayload)) {
+            continue;
+        }
+        $catId = filterPositiveInt($categoryPayload['id'] ?? null);
+        if ($catId !== null) {
+            $payloadCategoryIds[] = $catId;
+        }
+    }
+    
+    // Collect all subcategory IDs from the payload
+    $payloadSubcategoryIds = [];
+    foreach ($decoded['categories'] as $categoryPayload) {
+        if (!is_array($categoryPayload) || !isset($categoryPayload['subs']) || !is_array($categoryPayload['subs'])) {
+            continue;
+        }
+        foreach ($categoryPayload['subs'] as $subName) {
+            if (!is_string($subName)) {
+                continue;
+            }
+            // Find subcategory ID
+            if (isset($categoryPayload['subIds'][$subName])) {
+                $subId = filterPositiveInt($categoryPayload['subIds'][$subName]);
+                if ($subId !== null) {
+                    $payloadSubcategoryIds[] = $subId;
+                }
+            }
+        }
+    }
+    
+    // Delete categories not in payload
+    if (!empty($categoriesById)) {
+        $allDbCategoryIds = array_keys($categoriesById);
+        $categoriesToDelete = array_diff($allDbCategoryIds, $payloadCategoryIds);
+        if (!empty($categoriesToDelete)) {
+            $placeholders = implode(',', array_fill(0, count($categoriesToDelete), '?'));
+            $deleteStmt = $pdo->prepare("DELETE FROM categories WHERE id IN ($placeholders)");
+            $deleteStmt->execute(array_values($categoriesToDelete));
+        }
+    }
+    
+    // Delete subcategories not in payload
+    if (!empty($subcategoriesById)) {
+        $allDbSubcategoryIds = array_keys($subcategoriesById);
+        $subcategoriesToDelete = array_diff($allDbSubcategoryIds, $payloadSubcategoryIds);
+        if (!empty($subcategoriesToDelete)) {
+            $placeholders = implode(',', array_fill(0, count($subcategoriesToDelete), '?'));
+            $deleteStmt = $pdo->prepare("DELETE FROM subcategories WHERE id IN ($placeholders)");
+            $deleteStmt->execute(array_values($subcategoriesToDelete));
+        }
+    }
+    // === END DELETE ORPHANED ITEMS ===
+
     $pdo->commit();
 
     echo json_encode([
