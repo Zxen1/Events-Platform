@@ -943,34 +943,6 @@ button[aria-expanded="true"] .results-arrow{
   width:40px;
   text-align:right;
 }
-  #spinType{
-    display:flex;
-    gap:6px;
-    margin-top:6px;
-  }
-  #spinType label{
-    flex:1;
-    border-radius:8px;
-    overflow:hidden;
-  }
-  #spinType input{
-    display:none;
-  }
-  #spinType span{
-    display:block;
-    padding:0 10px;
-    height:35px;
-    line-height:35px;
-    background:var(--btn);
-    color:var(--button-text);
-    font-weight:600;
-    cursor:pointer;
-    text-align:center;
-    transition:background .2s,border-color .2s,color .2s;
-    border:1px solid var(--btn);
-    border-radius:8px;
-  }
-
 .gear{
   width: 36px;
   height: 36px;
