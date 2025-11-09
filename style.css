@@ -5713,8 +5713,8 @@ html, body { cursor: auto !important; }
               max-width:320px;
             }
             #tab-forms .subcategory-edit-panel{
-              min-width:380px;
-              max-width:420px;
+              min-width:360px;
+              max-width:380px;
               background:#1a1a1a;
               border:1px solid var(--border);
               border-radius:8px;
@@ -5873,6 +5873,13 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
+            #tab-forms .subcategory-hide-toggle-row{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+              padding:8px 0;
+            }
             #tab-forms .subcategory-fee-row,
             #tab-forms .subcategory-type-row,
             #tab-forms .subcategory-days-row{
@@ -5901,6 +5908,14 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.35);
               color:var(--button-text);
               font-size:14px;
+            }
+            #tab-forms .fee-input::-webkit-inner-spin-button,
+            #tab-forms .fee-input::-webkit-outer-spin-button{
+              -webkit-appearance:none;
+              margin:0;
+            }
+            #tab-forms .fee-input{
+              -moz-appearance:textfield;
             }
             #tab-forms .subcategory-type-option{
               display:flex;

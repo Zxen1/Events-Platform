@@ -13427,10 +13427,18 @@ function makePosts(){
           listingFeeInput.min = '0';
           listingFeeInput.className = 'fee-input';
           listingFeeInput.placeholder = '0.00';
-          listingFeeInput.value = c.subFees[sub].listing_fee || '';
+          listingFeeInput.value = c.subFees[sub].listing_fee !== null && c.subFees[sub].listing_fee !== undefined 
+            ? c.subFees[sub].listing_fee.toFixed(2) 
+            : '';
           listingFeeInput.addEventListener('input', ()=>{
             c.subFees[sub].listing_fee = listingFeeInput.value ? parseFloat(listingFeeInput.value) : null;
             notifyFormbuilderChange();
+          });
+          listingFeeInput.addEventListener('blur', ()=>{
+            if(listingFeeInput.value && !listingFeeInput.value.includes('.')){
+              listingFeeInput.value = parseFloat(listingFeeInput.value).toFixed(2);
+              c.subFees[sub].listing_fee = parseFloat(listingFeeInput.value);
+            }
           });
           listingFeeRow.append(listingFeeLabel, listingFeeCurrency, listingFeeInput);
           
@@ -13448,10 +13456,18 @@ function makePosts(){
           renewFeeInput.min = '0';
           renewFeeInput.className = 'fee-input';
           renewFeeInput.placeholder = '0.00';
-          renewFeeInput.value = c.subFees[sub].renew_fee || '';
+          renewFeeInput.value = c.subFees[sub].renew_fee !== null && c.subFees[sub].renew_fee !== undefined 
+            ? c.subFees[sub].renew_fee.toFixed(2) 
+            : '';
           renewFeeInput.addEventListener('input', ()=>{
             c.subFees[sub].renew_fee = renewFeeInput.value ? parseFloat(renewFeeInput.value) : null;
             notifyFormbuilderChange();
+          });
+          renewFeeInput.addEventListener('blur', ()=>{
+            if(renewFeeInput.value && !renewFeeInput.value.includes('.')){
+              renewFeeInput.value = parseFloat(renewFeeInput.value).toFixed(2);
+              c.subFees[sub].renew_fee = parseFloat(renewFeeInput.value);
+            }
           });
           renewFeeRow.append(renewFeeLabel, renewFeeCurrency, renewFeeInput);
           
@@ -13469,10 +13485,18 @@ function makePosts(){
           featuredFeeInput.min = '0';
           featuredFeeInput.className = 'fee-input';
           featuredFeeInput.placeholder = '0.00';
-          featuredFeeInput.value = c.subFees[sub].featured_fee || '';
+          featuredFeeInput.value = c.subFees[sub].featured_fee !== null && c.subFees[sub].featured_fee !== undefined 
+            ? c.subFees[sub].featured_fee.toFixed(2) 
+            : '';
           featuredFeeInput.addEventListener('input', ()=>{
             c.subFees[sub].featured_fee = featuredFeeInput.value ? parseFloat(featuredFeeInput.value) : null;
             notifyFormbuilderChange();
+          });
+          featuredFeeInput.addEventListener('blur', ()=>{
+            if(featuredFeeInput.value && !featuredFeeInput.value.includes('.')){
+              featuredFeeInput.value = parseFloat(featuredFeeInput.value).toFixed(2);
+              c.subFees[sub].featured_fee = parseFloat(featuredFeeInput.value);
+            }
           });
           featuredFeeRow.append(featuredFeeLabel, featuredFeeCurrency, featuredFeeInput);
           
@@ -13490,10 +13514,18 @@ function makePosts(){
           renewFeaturedFeeInput.min = '0';
           renewFeaturedFeeInput.className = 'fee-input';
           renewFeaturedFeeInput.placeholder = '0.00';
-          renewFeaturedFeeInput.value = c.subFees[sub].renew_featured_fee || '';
+          renewFeaturedFeeInput.value = c.subFees[sub].renew_featured_fee !== null && c.subFees[sub].renew_featured_fee !== undefined 
+            ? c.subFees[sub].renew_featured_fee.toFixed(2) 
+            : '';
           renewFeaturedFeeInput.addEventListener('input', ()=>{
             c.subFees[sub].renew_featured_fee = renewFeaturedFeeInput.value ? parseFloat(renewFeaturedFeeInput.value) : null;
             notifyFormbuilderChange();
+          });
+          renewFeaturedFeeInput.addEventListener('blur', ()=>{
+            if(renewFeaturedFeeInput.value && !renewFeaturedFeeInput.value.includes('.')){
+              renewFeaturedFeeInput.value = parseFloat(renewFeaturedFeeInput.value).toFixed(2);
+              c.subFees[sub].renew_featured_fee = parseFloat(renewFeaturedFeeInput.value);
+            }
           });
           renewFeaturedFeeRow.append(renewFeaturedFeeLabel, renewFeaturedFeeCurrency, renewFeaturedFeeInput);
           
