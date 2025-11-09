@@ -13405,6 +13405,10 @@ function makePosts(){
           if(!c.subFees[sub]) {
             c.subFees[sub] = {};
           }
+          // DEBUG: Log what we received from backend
+          if(sub === 'Live Gigs') {
+            console.log('[DEBUG] Live Gigs c.subFees from backend:', JSON.parse(JSON.stringify(c.subFees[sub])));
+          }
           // Set defaults only for missing values
           if(c.subFees[sub].listing_fee === undefined) c.subFees[sub].listing_fee = null;
           if(c.subFees[sub].featured_fee === undefined) c.subFees[sub].featured_fee = null;
@@ -13427,6 +13431,10 @@ function makePosts(){
           listingFeeInput.min = '0';
           listingFeeInput.className = 'fee-input';
           listingFeeInput.placeholder = '0.00';
+          // DEBUG: Check value before setting
+          if(sub === 'Live Gigs') {
+            console.log('[DEBUG] Setting listing_fee input. Value:', c.subFees[sub].listing_fee, 'Type:', typeof c.subFees[sub].listing_fee);
+          }
           listingFeeInput.value = c.subFees[sub].listing_fee !== null && c.subFees[sub].listing_fee !== undefined 
             ? c.subFees[sub].listing_fee.toFixed(2) 
             : '';
