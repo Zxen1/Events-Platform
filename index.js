@@ -2209,8 +2209,9 @@ async function ensureMapboxCssFor(container) {
               if(spinLogoClickCheckbox){
                 spinLogoClickCheckbox.checked = spinLogoClick;
               }
-              if(spinZoomMaxInput){
-                spinZoomMaxInput.value = spinZoomMax;
+              const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
+              if(spinZoomMaxDisplay){
+                spinZoomMaxDisplay.textContent = spinZoomMax;
               }
             }
           }
@@ -20050,25 +20051,49 @@ function openPanel(m){
   }
   
   // Initialize admin panel spin controls with current values
-  if(m.id === 'adminPanel' && window.spinGlobals){
+  if(m.id === 'adminPanel'){
     const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
     const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
     const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
-    const spinZoomMaxInput = document.getElementById('spinZoomMax');
+    const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
+    const zoomUpBtn = document.querySelector('.zoom-up');
+    const zoomDownBtn = document.querySelector('.zoom-down');
     
-    if(spinLoadStartCheckbox){
-      spinLoadStartCheckbox.checked = window.spinGlobals.spinLoadStart || false;
+    if(window.spinGlobals){
+      if(spinLoadStartCheckbox){
+        spinLoadStartCheckbox.checked = window.spinGlobals.spinLoadStart || false;
+      }
+      if(spinTypeRadios.length){
+        spinTypeRadios.forEach(radio => {
+          radio.checked = (radio.value === (window.spinGlobals.spinLoadType || 'everyone'));
+        });
+      }
+      if(spinLogoClickCheckbox){
+        spinLogoClickCheckbox.checked = window.spinGlobals.spinLogoClick !== undefined ? window.spinGlobals.spinLogoClick : true;
+      }
+      if(spinZoomMaxDisplay){
+        spinZoomMaxDisplay.textContent = window.spinGlobals.spinZoomMax || 4;
+      }
     }
-    if(spinTypeRadios.length){
-      spinTypeRadios.forEach(radio => {
-        radio.checked = (radio.value === (window.spinGlobals.spinLoadType || 'everyone'));
+    
+    // Add event listeners for zoom buttons (only once)
+    if(zoomUpBtn && !zoomUpBtn.dataset.listenerAdded){
+      zoomUpBtn.dataset.listenerAdded = 'true';
+      zoomUpBtn.addEventListener('click', ()=>{
+        const current = parseInt(spinZoomMaxDisplay.textContent, 10) || 4;
+        if(current < 10){
+          spinZoomMaxDisplay.textContent = current + 1;
+        }
       });
     }
-    if(spinLogoClickCheckbox){
-      spinLogoClickCheckbox.checked = window.spinGlobals.spinLogoClick !== undefined ? window.spinGlobals.spinLogoClick : true;
-    }
-    if(spinZoomMaxInput){
-      spinZoomMaxInput.value = window.spinGlobals.spinZoomMax || 4;
+    if(zoomDownBtn && !zoomDownBtn.dataset.listenerAdded){
+      zoomDownBtn.dataset.listenerAdded = 'true';
+      zoomDownBtn.addEventListener('click', ()=>{
+        const current = parseInt(spinZoomMaxDisplay.textContent, 10) || 4;
+        if(current > 1){
+          spinZoomMaxDisplay.textContent = current - 1;
+        }
+      });
     }
   }
   
@@ -21058,9 +21083,9 @@ const adminPanelChangeManager = (()=>{
       const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
       const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
       const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
-      const spinZoomMaxInput = document.getElementById('spinZoomMax');
+      const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
       
-      if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox || spinZoomMaxInput){
+      if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox || spinZoomMaxDisplay){
         const settings = {};
         if(spinLoadStartCheckbox){
           settings.spin_on_load = spinLoadStartCheckbox.checked;
@@ -21074,8 +21099,8 @@ const adminPanelChangeManager = (()=>{
         if(spinLogoClickCheckbox){
           settings.spin_on_logo = spinLogoClickCheckbox.checked;
         }
-        if(spinZoomMaxInput){
-          const zoomValue = parseFloat(spinZoomMaxInput.value);
+        if(spinZoomMaxDisplay){
+          const zoomValue = parseInt(spinZoomMaxDisplay.textContent, 10);
           if(!isNaN(zoomValue) && zoomValue >= 1 && zoomValue <= 10){
             settings.spin_zoom_max = zoomValue;
           }

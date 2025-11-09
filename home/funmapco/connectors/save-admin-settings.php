@@ -110,8 +110,11 @@ try {
         if (is_bool($value)) {
             $type = 'boolean';
             $stringValue = $value ? 'true' : 'false';
+        } elseif (is_int($value)) {
+            $type = 'integer';
+            $stringValue = (string)$value;
         } elseif (is_numeric($value)) {
-            $type = 'number';
+            $type = 'decimal';
             $stringValue = (string)$value;
         } elseif (is_array($value) || is_object($value)) {
             $type = 'json';

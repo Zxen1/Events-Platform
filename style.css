@@ -2496,11 +2496,15 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container,
-#tab-forms .formbuilder-container{
+#tab-forms .formbuilder-container,
+#tab-map .map-spin-container,
+#tab-settings .settings-welcome-container,
+#tab-settings #post-mode-background-field,
+#memberPanel .member-form-container{
   width:100%;
   max-width:420px;
   margin:0 auto;
-  background:#444444;
+  background:rgba(0,0,0,0.4);
   border-radius:8px;
   padding:0 10px 10px;
 }
@@ -2511,6 +2515,40 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:10px;
+}
+.zoom-control{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.zoom-btn{
+  width:35px;
+  height:35px;
+  font-size:24px;
+  font-weight:bold;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.3);
+  color:#fff;
+  border-radius:6px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background 0.2s;
+  user-select:none;
+}
+.zoom-btn:hover{
+  background:rgba(0,0,0,0.5);
+}
+.zoom-btn:active{
+  background:rgba(0,0,0,0.6);
+}
+.zoom-value{
+  min-width:40px;
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+  color:#fff;
 }
 #tab-forms .cats{
   margin:0;

@@ -100,6 +100,10 @@ try {
             case 'boolean':
                 $settings[$key] = ($value === 'true' || $value === '1' || $value === 1);
                 break;
+            case 'integer':
+                $settings[$key] = is_numeric($value) ? (int)$value : 0;
+                break;
+            case 'decimal':
             case 'number':
                 $settings[$key] = is_numeric($value) ? (float)$value : 0;
                 break;
