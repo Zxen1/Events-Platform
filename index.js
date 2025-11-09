@@ -13400,6 +13400,19 @@ function makePosts(){
           // Get site currency from admin settings (default to USD)
           const siteCurrency = 'USD'; // TODO: Load from admin_settings
           
+          // Initialize subFees if not exists
+          if(!c.subFees) c.subFees = {};
+          if(!c.subFees[sub]) {
+            c.subFees[sub] = {
+              listing_fee: null,
+              featured_fee: null,
+              renew_fee: null,
+              renew_featured_fee: null,
+              subcategory_type: 'Standard',
+              listing_days: 30
+            };
+          }
+          
           // Listing Fee Row
           const listingFeeRow = document.createElement('div');
           listingFeeRow.className = 'subcategory-fee-row';
@@ -13414,6 +13427,11 @@ function makePosts(){
           listingFeeInput.min = '0';
           listingFeeInput.className = 'fee-input';
           listingFeeInput.placeholder = '0.00';
+          listingFeeInput.value = c.subFees[sub].listing_fee || '';
+          listingFeeInput.addEventListener('input', ()=>{
+            c.subFees[sub].listing_fee = listingFeeInput.value ? parseFloat(listingFeeInput.value) : null;
+            notifyFormbuilderChange();
+          });
           listingFeeRow.append(listingFeeLabel, listingFeeCurrency, listingFeeInput);
           
           // Renew Listing Fee Row
@@ -13430,6 +13448,11 @@ function makePosts(){
           renewFeeInput.min = '0';
           renewFeeInput.className = 'fee-input';
           renewFeeInput.placeholder = '0.00';
+          renewFeeInput.value = c.subFees[sub].renew_fee || '';
+          renewFeeInput.addEventListener('input', ()=>{
+            c.subFees[sub].renew_fee = renewFeeInput.value ? parseFloat(renewFeeInput.value) : null;
+            notifyFormbuilderChange();
+          });
           renewFeeRow.append(renewFeeLabel, renewFeeCurrency, renewFeeInput);
           
           // Featured Fee Row
@@ -13446,6 +13469,11 @@ function makePosts(){
           featuredFeeInput.min = '0';
           featuredFeeInput.className = 'fee-input';
           featuredFeeInput.placeholder = '0.00';
+          featuredFeeInput.value = c.subFees[sub].featured_fee || '';
+          featuredFeeInput.addEventListener('input', ()=>{
+            c.subFees[sub].featured_fee = featuredFeeInput.value ? parseFloat(featuredFeeInput.value) : null;
+            notifyFormbuilderChange();
+          });
           featuredFeeRow.append(featuredFeeLabel, featuredFeeCurrency, featuredFeeInput);
           
           // Renew Featured Fee Row
@@ -13462,6 +13490,11 @@ function makePosts(){
           renewFeaturedFeeInput.min = '0';
           renewFeaturedFeeInput.className = 'fee-input';
           renewFeaturedFeeInput.placeholder = '0.00';
+          renewFeaturedFeeInput.value = c.subFees[sub].renew_featured_fee || '';
+          renewFeaturedFeeInput.addEventListener('input', ()=>{
+            c.subFees[sub].renew_featured_fee = renewFeaturedFeeInput.value ? parseFloat(renewFeaturedFeeInput.value) : null;
+            notifyFormbuilderChange();
+          });
           renewFeaturedFeeRow.append(renewFeaturedFeeLabel, renewFeaturedFeeCurrency, renewFeaturedFeeInput);
           
           // Subcategory Type Row
@@ -13475,6 +13508,13 @@ function makePosts(){
           subTypeEventsInput.type = 'radio';
           subTypeEventsInput.name = `subType-${sub}`;
           subTypeEventsInput.value = 'Events';
+          subTypeEventsInput.checked = c.subFees[sub].subcategory_type === 'Events';
+          subTypeEventsInput.addEventListener('change', ()=>{
+            if(subTypeEventsInput.checked){
+              c.subFees[sub].subcategory_type = 'Events';
+              notifyFormbuilderChange();
+            }
+          });
           const subTypeEventsText = document.createElement('span');
           subTypeEventsText.textContent = 'Events';
           subTypeEventsLabel.append(subTypeEventsInput, subTypeEventsText);
@@ -13485,6 +13525,13 @@ function makePosts(){
           subTypeStandardInput.type = 'radio';
           subTypeStandardInput.name = `subType-${sub}`;
           subTypeStandardInput.value = 'Standard';
+          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'Standard';
+          subTypeStandardInput.addEventListener('change', ()=>{
+            if(subTypeStandardInput.checked){
+              c.subFees[sub].subcategory_type = 'Standard';
+              notifyFormbuilderChange();
+            }
+          });
           const subTypeStandardText = document.createElement('span');
           subTypeStandardText.textContent = 'Standard';
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
@@ -13501,6 +13548,11 @@ function makePosts(){
           listingDaysInput.min = '1';
           listingDaysInput.className = 'days-input';
           listingDaysInput.placeholder = '30';
+          listingDaysInput.value = c.subFees[sub].listing_days || '';
+          listingDaysInput.addEventListener('input', ()=>{
+            c.subFees[sub].listing_days = listingDaysInput.value ? parseInt(listingDaysInput.value) : null;
+            notifyFormbuilderChange();
+          });
           const listingDaysText = document.createElement('span');
           listingDaysText.textContent = 'days';
           listingDaysRow.append(listingDaysLabel, listingDaysInput, listingDaysText);
@@ -13857,6 +13909,7 @@ function makePosts(){
           subFields: cloneFieldsMap(item && item.subFields),
           subIds: cloneMapLike(item && item.subIds),
           subHidden: cloneMapLike(item && item.subHidden),
+          subFees: cloneMapLike(item && item.subFees),
           sort_order: sortOrder,
           hidden: item && typeof item.hidden === 'boolean' ? item.hidden : false
         };

@@ -655,6 +655,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             'subFieldTypes' => [],
             'sort_order' => $category['sort_order'] ?? null,
             'subIds' => [],
+            'subFees' => [],
         ];
 
         $iconHtml = '';
@@ -701,6 +702,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 'subFields' => [],
                 'sort_order' => null,
                 'subIds' => [],
+                'subFees' => [],
             ];
         }
 
@@ -709,6 +711,19 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             'sort_order' => $sub['sort_order'],
         ];
         $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
+        
+        // Add fee and type information
+        if (!isset($categoriesMap[$categoryName]['subFees'])) {
+            $categoriesMap[$categoryName]['subFees'] = [];
+        }
+        $categoriesMap[$categoryName]['subFees'][$sub['name']] = [
+            'listing_fee' => isset($sub['listing_fee']) ? (float)$sub['listing_fee'] : null,
+            'featured_fee' => isset($sub['featured_fee']) ? (float)$sub['featured_fee'] : null,
+            'renew_fee' => isset($sub['renew_fee']) ? (float)$sub['renew_fee'] : null,
+            'renew_featured_fee' => isset($sub['renew_featured_fee']) ? (float)$sub['renew_featured_fee'] : null,
+            'subcategory_type' => $sub['subcategory_type'] ?? 'Standard',
+            'listing_days' => isset($sub['listing_days']) ? (int)$sub['listing_days'] : null,
+        ];
 
         // Get field_type_ids and required flags from CSV columns
         $fieldTypeIds = [];
