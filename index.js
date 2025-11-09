@@ -21052,6 +21052,8 @@ const adminPanelChangeManager = (()=>{
         }
         
         if(Object.keys(settings).length > 0){
+          console.log('[DEBUG] About to save admin settings:', settings);
+          console.trace('[DEBUG] Save triggered from:');
           try {
             const response = await fetch('/gateway.php?action=save-admin-settings', {
               method: 'POST',
