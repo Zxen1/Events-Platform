@@ -71,6 +71,9 @@ try {
 
     $categoryColumns = fetchTableColumns($pdo, 'categories');
     $subcategoryColumns = fetchTableColumns($pdo, 'subcategories');
+    
+    // Debug: Log detected subcategory columns
+    error_log('[get-form.php] Detected subcategory columns: ' . implode(', ', $subcategoryColumns));
 
     if (!$categoryColumns || !$subcategoryColumns) {
         http_response_code(500);
