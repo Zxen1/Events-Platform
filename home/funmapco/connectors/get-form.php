@@ -385,6 +385,11 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $required = trim($row['required']);
         }
 
+        // Debug log raw $row for Live Gigs
+        if (isset($row['name']) && $row['name'] === 'Live Gigs') {
+            error_log('[get-form.php] Live Gigs RAW $row from DB: ' . json_encode($row));
+        }
+        
         $result = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
@@ -424,7 +429,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         
         // Debug log for Live Gigs
         if ($result['name'] === 'Live Gigs') {
-            error_log('[get-form.php] Live Gigs result: ' . json_encode($result));
+            error_log('[get-form.php] Live Gigs result after processing: ' . json_encode($result));
         }
         
         $results[] = $result;
