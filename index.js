@@ -2191,6 +2191,23 @@ async function ensureMapboxCssFor(container) {
               // Update logo click state
               if(typeof updateLogoClickState === 'function') updateLogoClickState();
               
+              // Initialize UI controls with database values
+              const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
+              const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
+              const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+              
+              if(spinLoadStartCheckbox){
+                spinLoadStartCheckbox.checked = spinLoadStart;
+              }
+              if(spinTypeRadios.length){
+                spinTypeRadios.forEach(radio => {
+                  radio.checked = (radio.value === spinLoadType);
+                });
+              }
+              if(spinLogoClickCheckbox){
+                spinLogoClickCheckbox.checked = spinLogoClick;
+              }
+              
               console.log('Spin state applied - spinLoadStart:', spinLoadStart, 'spinLoadType:', spinLoadType, 'shouldSpin:', shouldSpin);
             }
           }
@@ -21033,6 +21050,14 @@ const adminPanelChangeManager = (()=>{
       const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
       const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
       
+      console.log('[DEBUG] Found spin controls:', {
+        spinLoadStartCheckbox: !!spinLoadStartCheckbox,
+        spinLoadStartValue: spinLoadStartCheckbox?.checked,
+        spinTypeRadios: spinTypeRadios.length,
+        spinLogoClickCheckbox: !!spinLogoClickCheckbox,
+        spinLogoClickValue: spinLogoClickCheckbox?.checked
+      });
+      
       if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox){
         const settings = {};
         if(spinLoadStartCheckbox){
@@ -21053,7 +21078,6 @@ const adminPanelChangeManager = (()=>{
         
         if(Object.keys(settings).length > 0){
           console.log('[DEBUG] About to save admin settings:', settings);
-          console.trace('[DEBUG] Save triggered from:');
           try {
             const response = await fetch('/gateway.php?action=save-admin-settings', {
               method: 'POST',
