@@ -2491,6 +2491,11 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .reset-box #resetBtn{
   width:100%;
 }
+#filterPanel .reset-box .btn{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  color:#fff;
+}
 #filterPanel .sort-field{
   display:flex;
   justify-content:center;
