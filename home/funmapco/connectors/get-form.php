@@ -71,9 +71,6 @@ try {
 
     $categoryColumns = fetchTableColumns($pdo, 'categories');
     $subcategoryColumns = fetchTableColumns($pdo, 'subcategories');
-    
-    // Debug: Log detected subcategory columns
-    error_log('[get-form.php] Detected subcategory columns: ' . implode(', ', $subcategoryColumns));
 
     if (!$categoryColumns || !$subcategoryColumns) {
         http_response_code(500);
@@ -340,9 +337,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($order) {
         $sql .= ' ORDER BY ' . implode(', ', $order);
     }
-    
-    // Debug: Log the actual SQL query
-    error_log('[get-form.php] SQL Query: ' . $sql);
 
     $stmt = $pdo->query($sql);
 
@@ -385,11 +379,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $required = trim($row['required']);
         }
 
-        // Debug log raw $row for Live Gigs
-        if (isset($row['name']) && $row['name'] === 'Live Gigs') {
-            error_log('[get-form.php] Live Gigs RAW $row from DB: ' . json_encode($row));
-        }
-        
         $result = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
@@ -425,11 +414,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         }
         if (isset($row['listing_days'])) {
             $result['listing_days'] = $row['listing_days'];
-        }
-        
-        // Debug log for Live Gigs
-        if ($result['name'] === 'Live Gigs') {
-            error_log('[get-form.php] Live Gigs result after processing: ' . json_encode($result));
         }
         
         $results[] = $result;
@@ -775,11 +759,6 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             $categoriesMap[$categoryName]['subFees'] = [];
         }
         
-        // Debug log for Live Gigs
-        if ($sub['name'] === 'Live Gigs') {
-            error_log('[get-form.php] Live Gigs $sub array: ' . json_encode($sub));
-        }
-        
         $categoriesMap[$categoryName]['subFees'][$sub['name']] = [
             'listing_fee' => isset($sub['listing_fee']) ? (float)$sub['listing_fee'] : null,
             'featured_fee' => isset($sub['featured_fee']) ? (float)$sub['featured_fee'] : null,
@@ -788,11 +767,6 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             'subcategory_type' => $sub['subcategory_type'] ?? 'Standard',
             'listing_days' => isset($sub['listing_days']) ? (int)$sub['listing_days'] : null,
         ];
-        
-        // Debug log for Live Gigs fees
-        if ($sub['name'] === 'Live Gigs') {
-            error_log('[get-form.php] Live Gigs subFees: ' . json_encode($categoriesMap[$categoryName]['subFees'][$sub['name']]));
-        }
 
         // Get field_type_ids and required flags from CSV columns
         $fieldTypeIds = [];

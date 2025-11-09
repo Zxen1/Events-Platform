@@ -13405,7 +13405,6 @@ function makePosts(){
           if(!c.subFees[sub]) {
             c.subFees[sub] = {};
           }
-          console.log(`[Formbuilder] Loading fees for ${sub}:`, c.subFees[sub]);
           // Set defaults only for missing values
           if(c.subFees[sub].listing_fee === undefined) c.subFees[sub].listing_fee = null;
           if(c.subFees[sub].featured_fee === undefined) c.subFees[sub].featured_fee = null;
@@ -13413,7 +13412,6 @@ function makePosts(){
           if(c.subFees[sub].renew_featured_fee === undefined) c.subFees[sub].renew_featured_fee = null;
           if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
           if(c.subFees[sub].listing_days === undefined) c.subFees[sub].listing_days = 30;
-          console.log(`[Formbuilder] After defaults for ${sub}:`, c.subFees[sub]);
           
           // Listing Fee Row
           const listingFeeRow = document.createElement('div');
