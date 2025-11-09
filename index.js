@@ -20416,6 +20416,9 @@ const memberPanelChangeManager = (()=>{
       panel.classList.toggle('has-unsaved', dirty);
       panel.setAttribute('data-unsaved', dirty ? 'true' : 'false');
     }
+    if(saveButton){
+      saveButton.disabled = !dirty;
+    }
     if(discardButton){
       discardButton.disabled = !dirty;
     }
@@ -21006,6 +21009,9 @@ const adminPanelChangeManager = (()=>{
     if(panel){
       panel.classList.toggle('has-unsaved', dirty);
       panel.setAttribute('data-unsaved', dirty ? 'true' : 'false');
+    }
+    if(saveButton){
+      saveButton.disabled = !dirty;
     }
     if(discardButton){
       discardButton.disabled = !dirty;

@@ -2494,9 +2494,16 @@ button[aria-expanded="true"] .results-arrow{
   color:var(--button-active-text);
   border-color:#2e3a72;
 }
+#tab-forms .formbuilder-container{
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  background:#444444;
+  border-radius:8px;
+  padding:0 10px 10px;
+}
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container,
-#tab-forms .formbuilder-container,
 #tab-map .map-spin-container,
 #tab-settings .settings-welcome-container,
 #tab-settings #post-mode-background-field,
@@ -2504,7 +2511,8 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
   margin:0 auto;
-  background:rgba(0,0,0,0.4);
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
   border-radius:8px;
   padding:0 10px 10px;
 }
@@ -2516,24 +2524,28 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   gap:10px;
 }
+#tab-map .panel-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#tab-map .panel-field label{
+  text-align:left;
+  margin:0;
+}
 .spin-control-row{
-  display:flex !important;
+  display:flex;
   align-items:center;
   gap:12px;
 }
-.spin-control-row label{
-  margin:0;
-  flex-shrink:0;
-  min-width:120px;
-}
 .spin-slider{
   flex:1;
-  height:35px;
+  height:8px;
   -webkit-appearance:none;
   appearance:none;
   background:rgba(0,0,0,0.3);
   outline:none;
-  border-radius:8px;
+  border-radius:4px;
   cursor:pointer;
 }
 .spin-slider::-webkit-slider-thumb{
@@ -2543,16 +2555,22 @@ button[aria-expanded="true"] .results-arrow{
   height:35px;
   border-radius:50%;
   background:#2e3a72;
-  cursor:pointer;
+  cursor:grab;
   border:2px solid #fff;
+}
+.spin-slider:active::-webkit-slider-thumb{
+  cursor:grabbing;
 }
 .spin-slider::-moz-range-thumb{
   width:35px;
   height:35px;
   border-radius:50%;
   background:#2e3a72;
-  cursor:pointer;
+  cursor:grab;
   border:2px solid #fff;
+}
+.spin-slider:active::-moz-range-thumb{
+  cursor:grabbing;
 }
 .spin-slider:hover::-webkit-slider-thumb{
   background:#3a4a8a;
@@ -2567,6 +2585,40 @@ button[aria-expanded="true"] .results-arrow{
   font-weight:bold;
   color:#fff;
   flex-shrink:0;
+  cursor:pointer;
+  user-select:none;
+}
+.slider-value-input::-webkit-inner-spin-button,
+.slider-value-input::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.slider-value-input{
+  -moz-appearance:textfield;
+}
+.save-changes:disabled,
+.discard-changes{
+  background:rgba(0,0,0,0.3);
+  color:rgba(255,255,255,0.5);
+  cursor:not-allowed;
+}
+.save-changes:not(:disabled){
+  background:#2e3a72;
+  color:#fff;
+  cursor:pointer;
+}
+.close-panel{
+  width:32px !important;
+  height:32px !important;
+  min-width:32px !important;
+  padding:0 !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  font-weight:300;
+  line-height:1;
+  border-radius:4px;
 }
 #tab-forms .cats{
   margin:0;
