@@ -2154,12 +2154,35 @@ async function ensureMapboxCssFor(container) {
     startBearing = window.startBearing = 0;
 
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
-          spinLoadStart = localStorage.getItem('spinLoadStart') !== null ? JSON.parse(localStorage.getItem('spinLoadStart')) : false,
-          spinLoadType = localStorage.getItem('spinLoadType') || null,
-          spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
+          spinLoadStart = false,
+          spinLoadType = 'everyone',
+          spinLogoClick = true,
           spinSpeed = DEFAULT_SPIN_SPEED,
-          spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
+          spinEnabled = false,
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
+      
+      // Load admin settings from database
+      (async function loadAdminSettings(){
+        try {
+          const response = await fetch('/gateway.php?action=get-admin-settings', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+          });
+          if(response.ok){
+            const data = await response.json();
+            if(data.success && data.settings){
+              spinLoadStart = data.settings.spin_on_load || false;
+              spinLoadType = data.settings.spin_load_type || 'everyone';
+              spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
+              spinEnabled = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
+              updateSpinState();
+              updateLogoClickState();
+            }
+          }
+        } catch(err){
+          console.warn('Failed to load admin settings from database, using defaults:', err);
+        }
+      })();
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
@@ -16714,7 +16737,7 @@ if (!map.__pillHooksInstalled) {
     );
 
     function updateSpinState(){
-      const shouldSpin = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
+      const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
       if(shouldSpin !== spinEnabled){
         spinEnabled = shouldSpin;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
@@ -19988,6 +20011,26 @@ function openPanel(m){
     window.adminAuthManager.ensureAuthenticated();
     return;
   }
+  
+  // Initialize admin panel spin controls with current values
+  if(m.id === 'adminPanel'){
+    const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
+    const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
+    const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+    
+    if(spinLoadStartCheckbox){
+      spinLoadStartCheckbox.checked = spinLoadStart;
+    }
+    if(spinTypeRadios.length){
+      spinTypeRadios.forEach(radio => {
+        radio.checked = (radio.value === spinLoadType);
+      });
+    }
+    if(spinLogoClickCheckbox){
+      spinLogoClickCheckbox.checked = spinLogoClick;
+    }
+  }
+  
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
   if(content && m.id !== 'welcome-modal'){
     content.style.width = '';
@@ -20962,12 +21005,57 @@ const adminPanelChangeManager = (()=>{
     }
   }
 
-  function runSave({ closeAfter } = {}){
+  async function runSave({ closeAfter } = {}){
     ensureElements();
     let result = null;
     try{
       if(typeof window.saveAdminChanges === 'function'){
         result = window.saveAdminChanges();
+      }
+      
+      // Save admin settings (spin controls)
+      const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
+      const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
+      const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+      
+      if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox){
+        const settings = {};
+        if(spinLoadStartCheckbox){
+          settings.spin_on_load = spinLoadStartCheckbox.checked;
+          spinLoadStart = spinLoadStartCheckbox.checked;
+        }
+        if(spinTypeRadios.length){
+          const checked = Array.from(spinTypeRadios).find(r => r.checked);
+          if(checked){
+            settings.spin_load_type = checked.value;
+            spinLoadType = checked.value;
+          }
+        }
+        if(spinLogoClickCheckbox){
+          settings.spin_on_logo = spinLogoClickCheckbox.checked;
+          spinLogoClick = spinLogoClickCheckbox.checked;
+        }
+        
+        if(Object.keys(settings).length > 0){
+          try {
+            const response = await fetch('/gateway.php?action=save-admin-settings', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify(settings)
+            });
+            if(!response.ok){
+              console.warn('Failed to save admin settings to database');
+            }
+            // Update spin state
+            updateSpinState();
+            updateLogoClickState();
+          } catch(err){
+            console.warn('Failed to save admin settings:', err);
+          }
+        }
       }
     }catch(err){
       const message = err && typeof err.message === 'string' ? err.message : '';
