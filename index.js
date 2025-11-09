@@ -13400,18 +13400,20 @@ function makePosts(){
           // Get site currency from admin settings (default to USD)
           const siteCurrency = 'USD'; // TODO: Load from admin_settings
           
-          // Initialize subFees if not exists
+          // Initialize subFees if not exists, but don't overwrite existing database values
           if(!c.subFees) c.subFees = {};
           if(!c.subFees[sub]) {
-            c.subFees[sub] = {
-              listing_fee: null,
-              featured_fee: null,
-              renew_fee: null,
-              renew_featured_fee: null,
-              subcategory_type: 'Standard',
-              listing_days: 30
-            };
+            c.subFees[sub] = {};
           }
+          console.log(`[Formbuilder] Loading fees for ${sub}:`, c.subFees[sub]);
+          // Set defaults only for missing values
+          if(c.subFees[sub].listing_fee === undefined) c.subFees[sub].listing_fee = null;
+          if(c.subFees[sub].featured_fee === undefined) c.subFees[sub].featured_fee = null;
+          if(c.subFees[sub].renew_fee === undefined) c.subFees[sub].renew_fee = null;
+          if(c.subFees[sub].renew_featured_fee === undefined) c.subFees[sub].renew_featured_fee = null;
+          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
+          if(c.subFees[sub].listing_days === undefined) c.subFees[sub].listing_days = 30;
+          console.log(`[Formbuilder] After defaults for ${sub}:`, c.subFees[sub]);
           
           // Listing Fee Row
           const listingFeeRow = document.createElement('div');
@@ -13580,7 +13582,9 @@ function makePosts(){
           listingDaysInput.min = '1';
           listingDaysInput.className = 'days-input';
           listingDaysInput.placeholder = '30';
-          listingDaysInput.value = c.subFees[sub].listing_days || '';
+          listingDaysInput.value = c.subFees[sub].listing_days !== null && c.subFees[sub].listing_days !== undefined 
+            ? c.subFees[sub].listing_days 
+            : '';
           listingDaysInput.addEventListener('input', ()=>{
             c.subFees[sub].listing_days = listingDaysInput.value ? parseInt(listingDaysInput.value) : null;
             notifyFormbuilderChange();
