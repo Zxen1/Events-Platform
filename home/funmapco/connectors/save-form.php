@@ -537,12 +537,15 @@ try {
 
             $fieldsPayload = [];
             $hasFieldsForThisSub = false;
+            $fieldsAreInPayload = false;
             if ($subKey !== '' && isset($subFieldsMap[$subKey])) {
                 $fieldsPayload = $subFieldsMap[$subKey];
                 $hasFieldsForThisSub = true;
+                $fieldsAreInPayload = true;
             } elseif ($subName !== '' && isset($subFieldsMap[$subName])) {
                 $fieldsPayload = $subFieldsMap[$subName];
                 $hasFieldsForThisSub = true;
+                $fieldsAreInPayload = true;
             }
             if (!is_array($fieldsPayload)) {
                 $fieldsPayload = [];
@@ -560,6 +563,7 @@ try {
 
             // Extract field types, order, and required from fieldsPayload
             $hasFieldTypesForThisSub = false;
+            $fieldTypesAreInPayload = $fieldsAreInPayload; // If fields are in payload, field types are too
             $fieldTypeIdsFromPayload = [];
             $requiredFieldTypeIdsFromPayload = [];
             
@@ -599,9 +603,11 @@ try {
                 if ($subKey !== '' && isset($subFieldTypesMap[$subKey])) {
                     $fieldTypeSource = $subFieldTypesMap[$subKey];
                     $hasFieldTypesForThisSub = true;
+                    $fieldTypesAreInPayload = true;
                 } elseif ($subName !== '' && isset($subFieldTypesMap[$subName])) {
                     $fieldTypeSource = $subFieldTypesMap[$subName];
                     $hasFieldTypesForThisSub = true;
+                    $fieldTypesAreInPayload = true;
                 }
                 if (is_array($fieldTypeSource)) {
                     foreach ($fieldTypeSource as $typeId) {
@@ -729,8 +735,8 @@ try {
                 $updateParts[] = 'subcategory_key = :subcategory_key';
                 $params[':subcategory_key'] = $subKey;
             }
-            // Only update field_names and field_ids if fields were provided in payload
-            if ($hasFieldsForThisSub) {
+            // Only update field_names and field_ids if fields were provided in payload (even if empty)
+            if ($fieldsAreInPayload) {
                 if (in_array('field_names', $subcategoryColumns, true)) {
                     $updateParts[] = 'field_names = :field_names';
                     $params[':field_names'] = json_encode($fieldNames, JSON_UNESCAPED_UNICODE);
@@ -740,18 +746,20 @@ try {
                     $params[':field_ids'] = json_encode($fieldIds, JSON_UNESCAPED_UNICODE);
                 }
             }
-            // Always update field_type_id and field_type_name when field types are provided or exist
-            if (in_array('field_type_id', $subcategoryColumns, true) && ($hasFieldTypesForThisSub || !empty($fieldTypeIds))) {
-                $updateParts[] = 'field_type_id = :field_type_id';
-                $params[':field_type_id'] = $fieldTypeIdCsv;
-            }
-            if (in_array('field_type_name', $subcategoryColumns, true) && ($hasFieldTypesForThisSub || !empty($fieldTypeNameCsv))) {
-                $updateParts[] = 'field_type_name = :field_type_name';
-                $params[':field_type_name'] = $fieldTypeNameCsv;
-            }
-            if (in_array('required', $subcategoryColumns, true)) {
-                $updateParts[] = 'required = :required';
-                $params[':required'] = $requiredCsv;
+            // Always update field_type_id and field_type_name when field types are provided in payload (even if empty)
+            if ($fieldTypesAreInPayload) {
+                if (in_array('field_type_id', $subcategoryColumns, true)) {
+                    $updateParts[] = 'field_type_id = :field_type_id';
+                    $params[':field_type_id'] = $fieldTypeIdCsv;
+                }
+                if (in_array('field_type_name', $subcategoryColumns, true)) {
+                    $updateParts[] = 'field_type_name = :field_type_name';
+                    $params[':field_type_name'] = $fieldTypeNameCsv;
+                }
+                if (in_array('required', $subcategoryColumns, true)) {
+                    $updateParts[] = 'required = :required';
+                    $params[':required'] = $requiredCsv;
+                }
             }
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
