@@ -333,7 +333,7 @@ try {
         if (!is_array($subFieldsMap)) {
             $subFieldsMap = [];
         }
-        $hasSubFieldsInPayload = !empty($subFieldsMap);
+        $hasSubFieldsInPayload = isset($categoryPayload['subFields']) && is_array($categoryPayload['subFields']);
         $subFieldTypesMap = $categoryPayload['subFieldTypes'] ?? [];
         if (!is_array($subFieldTypesMap)) {
             $subFieldTypesMap = [];
@@ -538,13 +538,18 @@ try {
             $fieldsPayload = [];
             $hasFieldsForThisSub = false;
             $fieldsAreInPayload = false;
-            if ($subKey !== '' && isset($subFieldsMap[$subKey])) {
-                $fieldsPayload = $subFieldsMap[$subKey];
-                $hasFieldsForThisSub = true;
+            
+            // Check if fields are in payload for this subcategory (even if empty array)
+            if ($subKey !== '' && array_key_exists($subKey, $subFieldsMap)) {
+                $fieldsPayload = is_array($subFieldsMap[$subKey]) ? $subFieldsMap[$subKey] : [];
+                $hasFieldsForThisSub = !empty($fieldsPayload);
                 $fieldsAreInPayload = true;
-            } elseif ($subName !== '' && isset($subFieldsMap[$subName])) {
-                $fieldsPayload = $subFieldsMap[$subName];
-                $hasFieldsForThisSub = true;
+            } elseif ($subName !== '' && array_key_exists($subName, $subFieldsMap)) {
+                $fieldsPayload = is_array($subFieldsMap[$subName]) ? $subFieldsMap[$subName] : [];
+                $hasFieldsForThisSub = !empty($fieldsPayload);
+                $fieldsAreInPayload = true;
+            } elseif ($hasSubFieldsInPayload) {
+                // If subFields exists in payload but this sub isn't in it, it means fields were cleared
                 $fieldsAreInPayload = true;
             }
             if (!is_array($fieldsPayload)) {
