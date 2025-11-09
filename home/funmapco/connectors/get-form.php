@@ -340,6 +340,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($order) {
         $sql .= ' ORDER BY ' . implode(', ', $order);
     }
+    
+    // Debug: Log the actual SQL query
+    error_log('[get-form.php] SQL Query: ' . $sql);
 
     $stmt = $pdo->query($sql);
 
