@@ -13088,10 +13088,13 @@ function makePosts(){
               
               // Update formbuilder state manager snapshot after field deletion
               console.log('[Formbuilder] Field deleted. Fields remaining:', fields.length);
+              console.log('[Formbuilder] Fields array after deletion:', JSON.parse(JSON.stringify(fields)));
               if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
                 try {
                   window.formbuilderStateManager.save();
+                  const snapshot = window.formbuilderStateManager.getSaved();
                   console.log('[Formbuilder] Formbuilder state manager updated after field deletion');
+                  console.log('[Formbuilder] Snapshot after save:', snapshot);
                 } catch(err) {
                   console.error('[Formbuilder] Failed to update state manager:', err);
                 }
