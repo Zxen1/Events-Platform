@@ -379,7 +379,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $required = trim($row['required']);
         }
 
-        $results[] = [
+        $result = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
             'category' => $categoryName,
@@ -395,6 +395,28 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             'field_type_ids' => $fieldTypeIds,
             'field_type_names' => $fieldTypeNames,
         ];
+        
+        // Add fee columns if they exist in the row
+        if (isset($row['listing_fee'])) {
+            $result['listing_fee'] = $row['listing_fee'];
+        }
+        if (isset($row['featured_fee'])) {
+            $result['featured_fee'] = $row['featured_fee'];
+        }
+        if (isset($row['renew_fee'])) {
+            $result['renew_fee'] = $row['renew_fee'];
+        }
+        if (isset($row['renew_featured_fee'])) {
+            $result['renew_featured_fee'] = $row['renew_featured_fee'];
+        }
+        if (isset($row['subcategory_type'])) {
+            $result['subcategory_type'] = $row['subcategory_type'];
+        }
+        if (isset($row['listing_days'])) {
+            $result['listing_days'] = $row['listing_days'];
+        }
+        
+        $results[] = $result;
     }
 
     return $results;
