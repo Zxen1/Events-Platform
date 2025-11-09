@@ -7832,13 +7832,19 @@ function makePosts(){
       const dialog = overlay.querySelector('.formbuilder-confirm-dialog');
       const title = dialog.querySelector('#formbuilderConfirmTitle');
       const message = dialog.querySelector('#formbuilderConfirmMessage');
-      const cancelBtn = overlay.querySelector('[data-role="cancel"]');
+      let cancelBtn = overlay.querySelector('[data-role="cancel"]');
       let confirmBtn = overlay.querySelector('[data-role="confirm"]');
       if(!cancelBtn || !confirmBtn) return Promise.resolve(false);
       const previousClassName = confirmBtn.className;
       const previousLabel = confirmBtn.textContent;
       const previousFocused = document.activeElement;
 
+      // Clone both buttons to ensure clean event listeners
+      if(cancelBtn && cancelBtn.parentNode){
+        const replacement = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(replacement, cancelBtn);
+        cancelBtn = replacement;
+      }
       if(confirmBtn && confirmBtn.parentNode){
         const replacement = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(replacement, confirmBtn);
@@ -7861,8 +7867,6 @@ function makePosts(){
         const cleanup = (result)=>{
           overlay.classList.remove('visible');
           overlay.setAttribute('aria-hidden', 'true');
-          cancelBtn.removeEventListener('click', onCancel);
-          confirmBtn.removeEventListener('click', onConfirm);
           window.removeEventListener('keydown', onKeyDown, true);
           overlay.removeEventListener('click', onOverlayClick);
           confirmBtn.className = previousClassName || 'formbuilder-confirm-button formbuilder-confirm-delete';
@@ -7876,8 +7880,16 @@ function makePosts(){
           }
           resolve(result);
         };
-        const onCancel = ()=> cleanup(false);
-        const onConfirm = ()=> cleanup(true);
+        const onCancel = (event)=> {
+          event.preventDefault();
+          event.stopPropagation();
+          cleanup(false);
+        };
+        const onConfirm = (event)=> {
+          event.preventDefault();
+          event.stopPropagation();
+          cleanup(true);
+        };
         const onOverlayClick = event => {
           if(event.target === overlay){
             cleanup(false);
@@ -7890,8 +7902,8 @@ function makePosts(){
           }
         };
 
-        cancelBtn.addEventListener('click', onCancel, { once: true });
-        confirmBtn.addEventListener('click', onConfirm, { once: true });
+        cancelBtn.addEventListener('click', onCancel);
+        confirmBtn.addEventListener('click', onConfirm);
         overlay.addEventListener('click', onOverlayClick);
         window.addEventListener('keydown', onKeyDown, true);
 
