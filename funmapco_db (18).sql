@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 10, 2025 at 03:03 AM
+-- Generation Time: Nov 10, 2025 at 03:26 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -83,24 +83,22 @@ CREATE TABLE `admin_settings` (
 --
 
 INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(2, 'spin_load_type', 'new', 'string', 'Spin for: all or new users', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(3, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(4, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(5, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(6, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(7, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(8, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(9, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(10, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(11, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(12, 'site_tagline', NULL, 'string', 'Site tagline/slogan', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(13, 'contact_email', NULL, 'string', 'Admin contact email', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(14, 'support_email', NULL, 'string', 'Support contact email', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(15, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(16, 'default_list_currency', 'AUD', 'string', 'Default currency for listings', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(17, 'default_list_duration', '30', 'integer', 'Default listing duration in days', '2025-11-09 15:36:38', '2025-11-09 15:36:38'),
-(18, 'default_renewal_fee', '0.00', 'decimal', 'Default renewal fee', '2025-11-09 15:36:38', '2025-11-09 15:36:38');
+(1, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(2, 'site_tagline', NULL, 'string', 'Site tagline/slogan', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(3, 'contact_email', NULL, 'string', 'Admin contact email', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(4, 'support_email', NULL, 'string', 'Support contact email', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(5, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(6, 'list_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-09 16:13:48', '2025-11-09 16:18:33'),
+(9, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(10, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(11, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(12, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(13, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(14, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(15, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(16, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(17, 'spin_load_type', 'new', 'string', 'Spin for: all or new users', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
+(18, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-09 16:18:33');
 
 -- --------------------------------------------------------
 
@@ -474,7 +472,6 @@ CREATE TABLE `subcategories` (
   `icon_path` varchar(255) DEFAULT NULL,
   `mapmarker_path` varchar(255) DEFAULT NULL,
   `color_hex` varchar(7) DEFAULT NULL,
-  `list_currency` varchar(3) DEFAULT 'AUD',
   `list_price` decimal(10,2) DEFAULT NULL,
   `list_price_featured` decimal(10,2) DEFAULT NULL,
   `list_duration_days` int(11) DEFAULT 30,
@@ -489,31 +486,31 @@ CREATE TABLE `subcategories` (
 -- Dumping data for table `subcategories`
 --
 
-INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `sort_order`, `hidden`, `icon_path`, `mapmarker_path`, `color_hex`, `list_currency`, `list_price`, `list_price_featured`, `list_duration_days`, `allow_renewal`, `renewal_fee`, `auto_expire`, `created_at`, `updated_at`) VALUES
-(27, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15,3', 'Title, Description, Images, Venue Ticketing, Checkout, Text Box', '1,1,1,1,1,0', '1', 0, 'assets/icons-20/whats-on-category-icon-blue-20.webp', 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-09 12:10:36'),
-(28, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/whats-on-category-icon-dark-yellow-20.webp', 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:10'),
-(29, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/whats-on-category-icon-green-20.webp', 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:14'),
-(30, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-20/whats-on-category-icon-indigo-20.webp', 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:17'),
-(31, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-20/whats-on-category-icon-orange-20.webp', 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:20'),
-(32, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '7', 0, 'assets/icons-20/whats-on-category-icon-violet-20.webp', 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:24'),
-(33, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-20/whats-on-category-icon-red-20.webp', 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:27'),
-(34, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-20/opportunities-category-icon-blue-20.webp', 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:33'),
-(35, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-20/opportunities-category-icon-dark-yellow-20.webp', 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:35'),
-(36, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/opportunities-category-icon-green-20.webp', 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:43'),
-(37, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/opportunities-category-icon-indigo-20.webp', 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:47'),
-(38, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '7', 0, 'assets/icons-20/opportunities-category-icon-orange-20.webp', 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:50'),
-(39, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/opportunities-category-icon-red-20.webp', 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:54'),
-(40, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-20/opportunities-category-icon-violet-20.webp', 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:59'),
-(41, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-20/learning-category-icon-blue-20.webp', 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:01'),
-(42, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/learning-category-icon-dark-yellow-20.webp', 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:04'),
-(43, 3, 'Learning', 'Courses', 'courses', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/learning-category-icon-green-20.webp', 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:08'),
-(44, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/learning-category-icon-red-20.webp', 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:13'),
-(45, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/Buy-and-sell-category-icon-orange-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:17'),
-(46, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9,15,13', 'Title, Description, Variant Pricing, Images, Location, Checkout, Coupon', '1,1,1,1,1,1,0', '3', 0, 'assets/icons-20/Buy-and-sell-category-icon-red-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 09:31:31'),
-(47, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/Buy-and-sell-category-icon-violet-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:32'),
-(49, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/For-hire-category-icon-blue-20.webp', 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:34'),
-(50, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/For-hire-category-icon-dark-yellow-20.webp', 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:38'),
-(51, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/For-hire-category-icon-green-20.webp', 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'AUD', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:40');
+INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `sort_order`, `hidden`, `icon_path`, `mapmarker_path`, `color_hex`, `list_price`, `list_price_featured`, `list_duration_days`, `allow_renewal`, `renewal_fee`, `auto_expire`, `created_at`, `updated_at`) VALUES
+(27, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15,3', 'Title, Description, Images, Venue Ticketing, Checkout, Text Box', '1,1,1,1,1,0', '1', 0, 'assets/icons-20/whats-on-category-icon-blue-20.webp', 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-09 12:10:36'),
+(28, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/whats-on-category-icon-dark-yellow-20.webp', 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:10'),
+(29, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/whats-on-category-icon-green-20.webp', 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:14'),
+(30, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-20/whats-on-category-icon-indigo-20.webp', 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:17'),
+(31, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-20/whats-on-category-icon-orange-20.webp', 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:20'),
+(32, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '7', 0, 'assets/icons-20/whats-on-category-icon-violet-20.webp', 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:24'),
+(33, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-20/whats-on-category-icon-red-20.webp', 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:27'),
+(34, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-20/opportunities-category-icon-blue-20.webp', 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:33'),
+(35, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-20/opportunities-category-icon-dark-yellow-20.webp', 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:35'),
+(36, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/opportunities-category-icon-green-20.webp', 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:43'),
+(37, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/opportunities-category-icon-indigo-20.webp', 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:47'),
+(38, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '7', 0, 'assets/icons-20/opportunities-category-icon-orange-20.webp', 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:50'),
+(39, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/opportunities-category-icon-red-20.webp', 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:54'),
+(40, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-20/opportunities-category-icon-violet-20.webp', 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:18:59'),
+(41, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-20/learning-category-icon-blue-20.webp', 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:01'),
+(42, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/learning-category-icon-dark-yellow-20.webp', 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:04'),
+(43, 3, 'Learning', 'Courses', 'courses', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/learning-category-icon-green-20.webp', 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:08'),
+(44, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/learning-category-icon-red-20.webp', 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:13'),
+(45, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/Buy-and-sell-category-icon-orange-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:17'),
+(46, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9,15,13', 'Title, Description, Variant Pricing, Images, Location, Checkout, Coupon', '1,1,1,1,1,1,0', '3', 0, 'assets/icons-20/Buy-and-sell-category-icon-red-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 09:31:31'),
+(47, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/Buy-and-sell-category-icon-violet-20.webp', 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:32'),
+(49, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-20/For-hire-category-icon-blue-20.webp', 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:34'),
+(50, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-20/For-hire-category-icon-dark-yellow-20.webp', 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:38'),
+(51, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-20/For-hire-category-icon-green-20.webp', 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', NULL, NULL, 30, 1, 0.00, 1, '2025-10-29 12:32:47', '2025-11-08 06:19:40');
 
 -- --------------------------------------------------------
 
