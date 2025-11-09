@@ -2062,6 +2062,7 @@ button[aria-expanded="true"] .results-arrow{
 .spin-type-option span{
   font-size:14px;
   cursor:pointer;
+  white-space:nowrap;
 }
 .option-label > *,
 .option-group > *{
