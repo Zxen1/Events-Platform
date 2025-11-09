@@ -5880,10 +5880,10 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .formbuilder-save-row{
               display:flex;
+              margin-top:30px;
               margin-bottom:10px;
             }
             #tab-forms .formbuilder-delete-row{
-              padding-top:30px;
               display:flex;
             }
             #tab-forms .category-edit-panel[hidden],

@@ -8517,6 +8517,8 @@ function makePosts(){
           if(typeof window.adminPanelModule?.runSave === 'function'){
             window.adminPanelModule.runSave({ closeAfter:false });
           }
+          editPanel.hidden = true;
+          editBtn.setAttribute('aria-expanded', 'false');
         });
 
         const deleteCategoryBtn = document.createElement('button');
@@ -12038,6 +12040,8 @@ function makePosts(){
               if(typeof window.adminPanelModule?.runSave === 'function'){
                 window.adminPanelModule.runSave({ closeAfter:false });
               }
+              editPanel.hidden = true;
+              editBtn.setAttribute('aria-expanded', 'false');
             });
             
             const saveFieldRow = document.createElement('div');
@@ -13304,6 +13308,8 @@ function makePosts(){
             if(typeof window.adminPanelModule?.runSave === 'function'){
               window.adminPanelModule.runSave({ closeAfter:false });
             }
+            subEditPanel.hidden = true;
+            subEditBtn.setAttribute('aria-expanded', 'false');
           });
           
           const saveSubcategoryRow = document.createElement('div');
