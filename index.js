@@ -7919,13 +7919,18 @@ function makePosts(){
     }
 
     function confirmFormbuilderDeletion(messageText, titleText){
-      return confirmFormbuilderAction({
+      console.log('[Formbuilder] Showing deletion confirmation:', messageText);
+      const result = confirmFormbuilderAction({
         messageText: messageText || 'Are you sure you want to delete this item?',
         titleText: titleText || 'Delete item?',
         confirmLabel: 'Delete',
         confirmClassName: 'formbuilder-confirm-delete',
         focusCancel: true
       });
+      result.then(confirmed => {
+        console.log('[Formbuilder] Deletion confirmed:', confirmed);
+      });
+      return result;
     }
     let subcategoryFieldOverlayEl = null;
     let subcategoryFieldOverlayContent = null;
@@ -8702,8 +8707,10 @@ function makePosts(){
         };
         nameInput.addEventListener('input', applyCategoryNameChange);
         deleteCategoryBtn.addEventListener('click', async ()=>{
+          console.log('[Formbuilder] Delete category button clicked');
           const displayName = getCategoryDisplayName();
           const confirmed = await confirmFormbuilderDeletion(`Delete the "${displayName}" category?`, 'Delete Category');
+          console.log('[Formbuilder] Category deletion confirmed:', confirmed);
           if(!confirmed) return;
           if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
             const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
@@ -13268,9 +13275,11 @@ function makePosts(){
           subNameInput.addEventListener('input', ()=> applySubNameChange());
 
           deleteSubBtn.addEventListener('click', async ()=>{
+            console.log('[Formbuilder] Delete subcategory button clicked');
             const categoryDisplayName = getCategoryDisplayName();
             const subDisplayName = getSubDisplayName();
             const confirmed = await confirmFormbuilderDeletion(`Delete the "${subDisplayName}" subcategory from ${categoryDisplayName}?`, 'Delete Subcategory');
+            console.log('[Formbuilder] Subcategory deletion confirmed:', confirmed);
             if(!confirmed) return;
             if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
               const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
