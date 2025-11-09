@@ -3526,7 +3526,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           subFields[sub] = fields;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
+        const subHidden = (item.subHidden && typeof item.subHidden === 'object' && !Array.isArray(item.subHidden)) ? item.subHidden : {};
+        const subFees = (item.subFees && typeof item.subFees === 'object' && !Array.isArray(item.subFees)) ? item.subFees : {};
+        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, subHidden, subFees, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3540,6 +3542,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
+        subHidden: {},
+        subFees: {},
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
@@ -3548,6 +3552,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
+        }
+        if(!cat.subHidden || typeof cat.subHidden !== 'object' || Array.isArray(cat.subHidden)){
+          cat.subHidden = {};
+        }
+        if(!cat.subFees || typeof cat.subFees !== 'object' || Array.isArray(cat.subFees)){
+          cat.subFees = {};
         }
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
@@ -13405,10 +13415,6 @@ function makePosts(){
           if(!c.subFees[sub]) {
             c.subFees[sub] = {};
           }
-          // DEBUG: Log what we received from backend
-          if(sub === 'Live Gigs') {
-            console.log('[DEBUG] Live Gigs c.subFees from backend:', JSON.parse(JSON.stringify(c.subFees[sub])));
-          }
           // Set defaults only for missing values
           if(c.subFees[sub].listing_fee === undefined) c.subFees[sub].listing_fee = null;
           if(c.subFees[sub].featured_fee === undefined) c.subFees[sub].featured_fee = null;
@@ -13431,10 +13437,6 @@ function makePosts(){
           listingFeeInput.min = '0';
           listingFeeInput.className = 'fee-input';
           listingFeeInput.placeholder = '0.00';
-          // DEBUG: Check value before setting
-          if(sub === 'Live Gigs') {
-            console.log('[DEBUG] Setting listing_fee input. Value:', c.subFees[sub].listing_fee, 'Type:', typeof c.subFees[sub].listing_fee);
-          }
           listingFeeInput.value = c.subFees[sub].listing_fee !== null && c.subFees[sub].listing_fee !== undefined 
             ? c.subFees[sub].listing_fee.toFixed(2) 
             : '';
