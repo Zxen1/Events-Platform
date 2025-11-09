@@ -453,6 +453,11 @@ try {
                         $insertValues[] = ':category_name';
                         $insertParams[':category_name'] = $categoryName;
                     }
+                    if (in_array('category_id', $subcategoryColumns, true)) {
+                        $insertParts[] = 'category_id';
+                        $insertValues[] = ':category_id';
+                        $insertParams[':category_id'] = $categoryId;
+                    }
                     if ($subKey !== '' && in_array('subcategory_key', $subcategoryColumns, true)) {
                         $insertParts[] = 'subcategory_key';
                         $insertValues[] = ':subcategory_key';
@@ -668,6 +673,10 @@ try {
             if (in_array('category_name', $subcategoryColumns, true)) {
                 $updateParts[] = 'category_name = :category_name';
                 $params[':category_name'] = $categoryName;
+            }
+            if (in_array('category_id', $subcategoryColumns, true)) {
+                $updateParts[] = 'category_id = :category_id';
+                $params[':category_id'] = $categoryId;
             }
             if (in_array('subcategory_key', $subcategoryColumns, true)) {
                 $updateParts[] = 'subcategory_key = :subcategory_key';
