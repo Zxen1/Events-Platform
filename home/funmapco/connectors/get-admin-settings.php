@@ -104,7 +104,12 @@ try {
                 $settings[$key] = is_numeric($value) ? (float)$value : 0;
                 break;
             case 'json':
-                $settings[$key] = json_decode($value, true) ?? [];
+                if ($value === null || $value === '') {
+                    $settings[$key] = [];
+                } else {
+                    $decoded = json_decode($value, true);
+                    $settings[$key] = $decoded ?? [];
+                }
                 break;
             default:
                 $settings[$key] = $value;
