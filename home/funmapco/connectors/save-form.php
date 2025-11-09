@@ -570,9 +570,14 @@ try {
 
             // Extract field types, order, and required from fieldsPayload
             $hasFieldTypesForThisSub = false;
-            $fieldTypesAreInPayload = $fieldsAreInPayload; // If fields are in payload, field types are too
+            $fieldTypesAreInPayload = false;
             $fieldTypeIdsFromPayload = [];
             $requiredFieldTypeIdsFromPayload = [];
+            
+            // If fields array exists in payload (even if empty), field types should be updated
+            if ($fieldsAreInPayload) {
+                $fieldTypesAreInPayload = true;
+            }
             
             if ($hasFieldsForThisSub && !empty($fieldsPayload)) {
                 error_log("DEBUG: Processing " . count($fieldsPayload) . " fields for subcategory $subKey");
@@ -605,7 +610,9 @@ try {
                 }
             }
             
-            if (!$hasFieldTypesForThisSub) {
+            // Only check subFieldTypesMap if fields are NOT in payload
+            // If fields are in payload (even empty), we already have the field types from there
+            if (!$hasFieldTypesForThisSub && !$fieldsAreInPayload) {
                 $fieldTypeSource = null;
                 if ($subKey !== '' && isset($subFieldTypesMap[$subKey])) {
                     $fieldTypeSource = $subFieldTypesMap[$subKey];
