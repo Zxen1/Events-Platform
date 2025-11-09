@@ -298,6 +298,26 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($hasFieldTypeName) {
         $select[] = 's.`field_type_name`';
     }
+    
+    // Add fee columns
+    if (in_array('listing_fee', $columns, true)) {
+        $select[] = 's.`listing_fee`';
+    }
+    if (in_array('featured_fee', $columns, true)) {
+        $select[] = 's.`featured_fee`';
+    }
+    if (in_array('renew_fee', $columns, true)) {
+        $select[] = 's.`renew_fee`';
+    }
+    if (in_array('renew_featured_fee', $columns, true)) {
+        $select[] = 's.`renew_featured_fee`';
+    }
+    if (in_array('subcategory_type', $columns, true)) {
+        $select[] = 's.`subcategory_type`';
+    }
+    if (in_array('listing_days', $columns, true)) {
+        $select[] = 's.`listing_days`';
+    }
 
     $order = [];
     if ($hasCategoryId) {
