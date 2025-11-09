@@ -2154,8 +2154,8 @@ async function ensureMapboxCssFor(container) {
     startBearing = window.startBearing = 0;
 
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
-          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
-          spinLoadType = localStorage.getItem('spinLoadType') || 'all',
+          spinLoadStart = localStorage.getItem('spinLoadStart') !== null ? JSON.parse(localStorage.getItem('spinLoadStart')) : false,
+          spinLoadType = localStorage.getItem('spinLoadType') || null,
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = DEFAULT_SPIN_SPEED,
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
