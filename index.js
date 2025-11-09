@@ -2171,7 +2171,6 @@ async function ensureMapboxCssFor(container) {
           if(response.ok){
             const data = await response.json();
             if(data.success && data.settings){
-              console.log('Admin settings loaded from database:', data.settings);
               // Update the local variables directly first
               spinLoadStart = data.settings.spin_on_load || false;
               spinLoadType = data.settings.spin_load_type || 'everyone';
@@ -2207,8 +2206,6 @@ async function ensureMapboxCssFor(container) {
               if(spinLogoClickCheckbox){
                 spinLogoClickCheckbox.checked = spinLogoClick;
               }
-              
-              console.log('Spin state applied - spinLoadStart:', spinLoadStart, 'spinLoadType:', spinLoadType, 'shouldSpin:', shouldSpin);
             }
           }
         } catch(err){
@@ -21050,14 +21047,6 @@ const adminPanelChangeManager = (()=>{
       const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
       const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
       
-      console.log('[DEBUG] Found spin controls:', {
-        spinLoadStartCheckbox: !!spinLoadStartCheckbox,
-        spinLoadStartValue: spinLoadStartCheckbox?.checked,
-        spinTypeRadios: spinTypeRadios.length,
-        spinLogoClickCheckbox: !!spinLogoClickCheckbox,
-        spinLogoClickValue: spinLogoClickCheckbox?.checked
-      });
-      
       if(spinLoadStartCheckbox || spinTypeRadios.length || spinLogoClickCheckbox){
         const settings = {};
         if(spinLoadStartCheckbox){
@@ -21077,7 +21066,6 @@ const adminPanelChangeManager = (()=>{
         }
         
         if(Object.keys(settings).length > 0){
-          console.log('[DEBUG] About to save admin settings:', settings);
           try {
             const response = await fetch('/gateway.php?action=save-admin-settings', {
               method: 'POST',
@@ -21087,14 +21075,7 @@ const adminPanelChangeManager = (()=>{
               },
               body: JSON.stringify(settings)
             });
-            if(response.ok){
-              const saveResult = await response.json();
-              if(saveResult.success){
-                console.log('Admin settings saved to database:', settings);
-              } else {
-                console.warn('Failed to save admin settings:', saveResult.message);
-              }
-            } else {
+            if(!response.ok){
               console.warn('Failed to save admin settings to database');
             }
             // Spin state is already updated via spinGlobals setters
