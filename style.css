@@ -2608,26 +2608,32 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
 }
 .close-panel{
-  width:32px !important;
-  height:32px !important;
-  min-width:32px !important;
+  min-width:44px !important;
+  height:44px !important;
   padding:0 !important;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:28px;
-  font-weight:300;
-  line-height:1;
-  border-radius:4px;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:32px !important;
+  font-weight:300 !important;
+  line-height:1 !important;
+  border-radius:4px !important;
+  background:rgba(0,0,0,0.3) !important;
+  color:#fff !important;
+  border:none !important;
 }
 #tab-forms .cats{
   margin:0;
 }
 #filterPanel .filter-basics-container{
   position:relative;
+  background:rgba(0,0,0,0.2) !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
 }
 #filterPanel .filter-category-container{
   margin-top:10px;
+  background:rgba(0,0,0,0.2) !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
 }
 #tab-forms .formbuilder-container{
   margin-top:0;
