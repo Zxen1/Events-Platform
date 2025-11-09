@@ -1157,7 +1157,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
-  background:#555555;
+  background:#222222;
   color:#fff;
   display:flex;
   flex-direction:column;
@@ -1169,12 +1169,17 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-body{
   gap:var(--gap);
   padding:0 10px calc(var(--gap) + env(safe-area-inset-bottom, 0px));
+  background:#222222;
+}
+
+#filterPanel .panel-header{
+  background:#222222;
 }
 
 #filterPanel button:not([class*="mapboxgl-"]),
 #filterPanel .sq,
 #filterPanel .tiny{
-  background:#333333;
+  background:rgba(0,0,0,0.2);
   border: none;
 }
 #adminPanel button,
@@ -2519,9 +2524,9 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
   margin:0 auto;
-  background:#222222;
+  background:rgba(0,0,0,0.2);
   border-radius:8px;
-  padding:0 10px 10px;
+  padding:10px;
 }
 #tab-forms .formbuilder-container{
   position:relative;
