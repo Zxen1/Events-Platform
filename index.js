@@ -11617,6 +11617,15 @@ function makePosts(){
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
             const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
+            
+            // Get existing field types in this subcategory (excluding current field)
+            const existingFieldTypes = new Set();
+            fields.forEach(f => {
+              if(f !== safeField && (f.fieldTypeKey || f.key)){
+                existingFieldTypes.add(f.fieldTypeKey || f.key);
+              }
+            });
+            
             FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
@@ -11633,6 +11642,13 @@ function makePosts(){
               if(optionDef.value === matchKey){
                 option.selected = true;
               }
+              
+              // Disable if this field type already exists in the subcategory
+              if(existingFieldTypes.has(optionDef.value) && optionDef.value !== matchKey){
+                option.disabled = true;
+                option.classList.add('field-type-disabled');
+              }
+              
               fieldTypeSelect.appendChild(option);
             });
 

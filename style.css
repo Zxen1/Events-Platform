@@ -6656,6 +6656,12 @@ html, body { cursor: auto !important; }
               font-size:12px;
               line-height:1;
             }
+            #tab-forms .field-type-select option:disabled,
+            #tab-forms .field-type-select option.field-type-disabled{
+              color:#666;
+              opacity:0.5;
+              font-style:italic;
+            }
             #tab-forms .subcategory-field-row .field-row-header .field-name-input{
               flex:1;
             }
