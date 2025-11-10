@@ -4894,7 +4894,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .calendar-container .calendar-scroll,
 .post-body .calendar-container .calendar-scroll{
-  width:100%;
+  width:auto;
   min-height:var(--calendar-height);
   height:auto;
   max-height:none;
@@ -4906,8 +4906,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:content-box;
   background:#222222;
   border:none;
-  display:flex;
-  align-items:stretch;
   flex:1 1 auto;
   max-width:100%;
   margin-bottom:0;
