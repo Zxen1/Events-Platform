@@ -18977,13 +18977,22 @@ function openPostModal(id){
           if(lastClickedCell){
             const rect = lastClickedCell.getBoundingClientRect();
             const containerRect = calContainer.getBoundingClientRect();
-            popup.style.left = (rect.right - containerRect.left + 4) + 'px';
+            const dateCenterX = rect.left + rect.width / 2 - containerRect.left;
+            const containerCenterX = calContainer.clientWidth / 2;
             popup.style.top = (rect.top - containerRect.top) + 'px';
+            if (dateCenterX < containerCenterX) {
+              popup.style.left = (rect.right - containerRect.left + 4) + 'px';
+            } else {
+              popup.style.left = (rect.left - containerRect.left) + 'px';
+            }
             requestAnimationFrame(() => {
               const popupRect = popup.getBoundingClientRect();
               const minMargin = 10;
               let left = parseFloat(popup.style.left);
               let top = parseFloat(popup.style.top);
+              if (dateCenterX >= containerCenterX) {
+                left = left - popupRect.width - 4;
+              }
               if (left < minMargin) left = minMargin;
               if (top < minMargin) top = minMargin;
               if (left + popupRect.width + minMargin > calContainer.clientWidth) {
