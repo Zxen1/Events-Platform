@@ -1319,7 +1319,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .weekday{font-weight:bold;}
 .calendar .day{cursor:pointer;}
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
-.calendar .day.past{background:var(--calendar-past-bg);color:#ffffff;}
+.calendar .day.past{background:var(--calendar-past-bg);color:#808080;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
 .calendar .day.in-range{background:var(--session-selected);}
