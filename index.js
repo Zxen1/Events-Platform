@@ -18622,31 +18622,24 @@ function openPostModal(id){
         if(calPreview && calendarEl && calendarEl.children.length > 0){
           calPreview.innerHTML = '';
           const calClone = calendarEl.cloneNode(true);
-          calClone.id = `cal-preview-clone-${p.id}`;
+          calClone.id = '';
           calPreview.appendChild(calClone);
         }
+        
         if(mapPreview && map){
           try{
             const canvas = map.getCanvas();
             if(canvas){
+              const img = document.createElement('img');
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.objectFit = 'cover';
+              img.src = canvas.toDataURL('image/png');
               mapPreview.innerHTML = '';
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => {
-                mapPreview.innerHTML = '';
-                mapPreview.appendChild(img);
-              };
-              img.onerror = () => {
-                console.warn('Map preview image failed to load');
-              };
-              try{
-                img.src = canvas.toDataURL('image/png');
-              }catch(e){
-                console.warn('Could not capture map canvas:', e);
-              }
+              mapPreview.appendChild(img);
             }
           }catch(e){
-            console.warn('Error updating map preview:', e);
+            console.warn('Could not capture map:', e);
           }
         }
       }
