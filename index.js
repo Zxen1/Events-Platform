@@ -14472,6 +14472,42 @@ function makePosts(){
       const reset = $('#resetBtn');
       reset && reset.classList.toggle('active', active);
     }
+    
+    // Prevent clear buttons from opening calendar/triggering parent events
+    const keywordClear = document.querySelector('.keyword-clear-button');
+    const daterangeClear = document.querySelector('.daterange-clear-button');
+    const priceClear = document.querySelector('.price-clear-button');
+    
+    if(keywordClear){
+      keywordClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const input = document.getElementById('keyword-textbox');
+        if(input) input.value = '';
+        applyFilters();
+      });
+    }
+    
+    if(daterangeClear){
+      daterangeClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const input = document.getElementById('daterange-textbox');
+        if(input) input.value = '';
+        dateStart = null;
+        dateEnd = null;
+        applyFilters();
+      });
+    }
+    
+    if(priceClear){
+      priceClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const minInput = document.getElementById('min-price-input');
+        const maxInput = document.getElementById('max-price-input');
+        if(minInput) minInput.value = '';
+        if(maxInput) maxInput.value = '';
+        applyFilters();
+      });
+    }
 
     function fmtShort(iso){
       return parseISODate(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
@@ -23949,8 +23985,8 @@ document.addEventListener('DOMContentLoaded', () => {
           opacityInput.value = newValue;
           apply();
           settings.postModeBgOpacity = newValue;
-          localStorage.setItem('admin-settings-current', JSON.stringify(settings));
-        };
+      localStorage.setItem('admin-settings-current', JSON.stringify(settings));
+    };
         
         input.addEventListener('blur', commitValue);
         input.addEventListener('keydown', (e)=>{
