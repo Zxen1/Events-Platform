@@ -15449,15 +15449,6 @@ function makePosts(){
         }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
-        // Calculate target position BEFORE replacing the existing open post
-        let targetScrollOffset = null;
-        if(target && container && container.contains(target)){
-          const containerRect = container.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          // Calculate how much to scroll to align target's top with container's top
-          targetScrollOffset = targetRect.top - containerRect.top;
-        }
-
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
@@ -15583,23 +15574,27 @@ function makePosts(){
           }
         }
 
-        const header = detail.querySelector('.post-header');
+        // DISABLED - Testing
+        /*const header = detail.querySelector('.post-header');
         if(header){
           const h = header.offsetHeight;
           header.style.scrollMarginTop = h + 'px';
-        }
+        }*/
 
-        if(shouldScrollToCard && container && container.contains(detail) && typeof targetScrollOffset === 'number'){
+        // DISABLED SCROLL - Testing to find where bottom-alignment comes from
+        /*if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
-            // Use the pre-calculated offset from before replacement
-            const topTarget = container.scrollTop + targetScrollOffset;
+            const containerRect = container.getBoundingClientRect();
+            const detailRect = detail.getBoundingClientRect();
+            if(!containerRect || !detailRect) return;
+            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
             if(typeof container.scrollTo === 'function'){
               container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
             } else {
               container.scrollTop = Math.max(0, topTarget);
             }
           });
-        }
+        }*/
 
         // Update history on open (keep newest-first)
         viewHistory = viewHistory.filter(x=>x.id!==id);
