@@ -15326,13 +15326,11 @@ function makePosts(){
               <img src="assets/Calendar Screenshot.png" alt="Calendar view">
             </button>
           </div>
+          <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
+          <div id="sess-${p.id}" class="session-dropdown options-dropdown"><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
           <div class="post-details">
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
-            <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
-              <div id="sess-${p.id}" class="session-dropdown options-dropdown"><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
-            </div>
             <div class="post-details-info-container">
               <div id="venue-info-${p.id}" class="venue-info"></div>
               <div id="session-info-${p.id}" class="session-info">

@@ -4680,6 +4680,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:none;
 }
 
+.open-post > .post-body > .venue-dropdown,
+.open-post > .post-body > .session-dropdown{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+  padding:0;
+}
+
 .open-post .venue-dropdown,
 .open-post .session-dropdown,
 .post-body .venue-dropdown,
