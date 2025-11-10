@@ -4880,6 +4880,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   border:1px solid #ffffff;
   min-height:200px;
   flex:0 0 auto;
+  overflow:hidden;
 }
 
 .open-post .calendar-container .calendar-scroll,
