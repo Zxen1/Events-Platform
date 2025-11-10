@@ -15551,7 +15551,13 @@ function makePosts(){
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
         const detail = buildDetail(p);
+        
+        // Prevent browser auto-scroll by capturing scroll position before and after
+        const scrollBefore = container.scrollTop;
         target.replaceWith(detail);
+        // Restore scroll immediately to prevent browser adjustment
+        container.scrollTop = scrollBefore;
+        
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
