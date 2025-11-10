@@ -17870,16 +17870,14 @@ if (!map.__pillHooksInstalled) {
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       const thumbSrc = thumbUrl(p);
       const thumb = `<img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />`;
-      const locationIcon = '<svg class="icon-location" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>';
-      const calendarIcon = '<svg class="icon-calendar" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>';
         el.innerHTML = `
           ${thumb}
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="loc-line"><span class="badge" title="Venue">${locationIcon}</span><span>${p.city}</span></div>
-            <div class="date-line"><span class="badge" title="Dates">${calendarIcon}</span><span>${formatDates(p.dates)}</span></div>
+            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+            <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
         <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
@@ -19822,15 +19820,11 @@ function openPostModal(id){
         slide.appendChild(img);
         const info = document.createElement('div');
         info.className = 'info';
-        const locationIcon = '<svg class="icon-location" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>';
-        const calendarIcon = '<svg class="icon-calendar" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>';
         info.innerHTML = `
-          <div class="ad-title">${p.title}</div>
-          <div class="ad-info-details">
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="loc-line"><span class="badge" title="Venue">${locationIcon}</span><span>${p.city}</span></div>
-            <div class="date-line"><span class="badge" title="Dates">${calendarIcon}</span><span>${formatDates(p.dates)}</span></div>
-          </div>
+          <div class="title">${p.title}</div>
+          <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+          <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+          <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
         `;
         slide.appendChild(info);
         adPanel.appendChild(slide);
