@@ -4797,6 +4797,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .session-menu button,
 .post-body .session-menu button{
   height:35px;
+  min-height:35px;
+  max-height:35px;
+  flex:0 0 35px;
   background:rgba(0,0,0,0.2);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
@@ -4806,6 +4809,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:flex;
   align-items:center;
   justify-content:flex-start;
+  box-sizing:border-box;
+  width:100%;
 }
 
 .open-post .post-venue-menu,
@@ -4872,13 +4877,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex-direction:column;
   gap:var(--gap);
   position:relative;
-  width:max-content;
-  max-width:100%;
+  width:100%;
   min-width:0;
   height:auto;
+  box-sizing:border-box;
   background:#222222;
   border:1px solid #ffffff;
   border-radius:8px;
+  -webkit-border-radius:8px;
+  -moz-border-radius:8px;
   overflow:hidden;
   min-height:200px;
   flex:0 0 auto;
@@ -5089,8 +5096,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   color:#ffffff;
   border-radius:8px;
   height:35px;
+  min-height:35px;
+  max-height:35px;
+  flex:0 0 35px;
   padding:0 10px;
   cursor:pointer;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .open-post .venue-info,
