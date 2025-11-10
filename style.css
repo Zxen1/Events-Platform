@@ -7779,6 +7779,15 @@ html, body { cursor: auto !important; }
  
 
 /* Preview Buttons */
+.location-section{
+  position:relative;
+}
+
+.location-section > .venue-dropdown,
+.location-section > .session-dropdown{
+  position:static;
+}
+
 .preview-buttons-row{
   display:flex;
   gap:10px;
@@ -7806,7 +7815,7 @@ html, body { cursor: auto !important; }
 .preview-btn img{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   display:block;
   object-position:top;
 }
