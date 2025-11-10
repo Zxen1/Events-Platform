@@ -19591,6 +19591,18 @@ function openPostModal(id){
                   }
                 });
                 document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
+                const mapNavBtn = el.querySelector('[data-nav="map"]');
+                if(mapNavBtn){
+                  mapNavBtn.addEventListener('click', ()=>{
+                    venueBtn.click();
+                  });
+                }
+                const calendarNavBtn = el.querySelector('[data-nav="calendar"]');
+                if(calendarNavBtn){
+                  calendarNavBtn.addEventListener('click', ()=>{
+                    sessBtn.click();
+                  });
+                }
               }
               if(sessBtn && sessMenu){
                 if(!sessDropdown._sessionOutsideHandler){
