@@ -15322,16 +15322,16 @@ function makePosts(){
             <div class="post-session-selection-container"></div>
             <div class="location-section">
               <div class="post-preview-container">
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown">
-                  <button class="venue-btn" aria-haspopup="true" aria-expanded="false" style="display:none;"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button>
-                  <div class="venue-preview"><img src="assets/Map Screenshot.png" alt="Map"></div>
-                  <div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div>
-                </div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown">
-                  <button class="sess-btn" aria-haspopup="true" aria-expanded="false" style="display:none;">Select Session</button>
-                  <div class="session-preview"><img src="assets/Calendar Screenshot.png" alt="Calendar"></div>
-                  <div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div>
-                </div>
+                <div class="venue-preview" data-menu-id="venue-${p.id}"><img src="assets/Map Screenshot.png" alt="Map"></div>
+                <div class="session-preview" data-menu-id="sess-${p.id}"><img src="assets/Calendar Screenshot.png" alt="Calendar"></div>
+              </div>
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown" style="display:none;">
+                <button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button>
+                <div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div>
+              </div>
+              <div id="sess-${p.id}" class="session-dropdown options-dropdown" style="display:none;">
+                <button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button>
+                <div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div>
               </div>
             </div>
             <div class="post-details-info-container">
@@ -18591,8 +18591,8 @@ function openPostModal(id){
       const hideMenu = menu => { if(menu) menu.setAttribute('hidden',''); };
       const isMenuOpen = menu => !!(menu && !menu.hasAttribute('hidden'));
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
-      const venuePreview = venueDropdown ? venueDropdown.querySelector('.venue-preview') : null;
-      const sessPreview = sessDropdown ? sessDropdown.querySelector('.session-preview') : null;
+      const venuePreview = el.querySelector(`.venue-preview[data-menu-id="venue-${p.id}"]`);
+      const sessPreview = el.querySelector(`.session-preview[data-menu-id="sess-${p.id}"]`);
       if(venuePreview){
         venuePreview.addEventListener('click', () => {
           if(isMenuOpen(venueMenu)){
