@@ -23824,40 +23824,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const colorInput = document.getElementById('postModeBgColor');
   const opacityInput = document.getElementById('postModeBgOpacity');
   const opacityVal = document.getElementById('postModeBgOpacityVal');
   const root = document.documentElement;
   const settings = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
-  function hexToRgb(hex){
-    const r = parseInt(hex.slice(1,3),16);
-    const g = parseInt(hex.slice(3,5),16);
-    const b = parseInt(hex.slice(5,7),16);
-    return `${r},${g},${b}`;
-  }
 
   function apply(){
-    const color = colorInput.value || '#000000';
     const opacity = opacityInput.value;
-    root.style.setProperty('--post-mode-bg-color', hexToRgb(color));
+    root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
     root.style.setProperty('--post-mode-bg-opacity', opacity);
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
 
-  if(colorInput && opacityInput && opacityVal){
-    colorInput.value = settings.postModeBgColor || '#000000';
+  if(opacityInput && opacityVal){
     opacityInput.value = settings.postModeBgOpacity ?? 0;
     apply();
-    const save = () => {
-      settings.postModeBgColor = colorInput.value;
+    
+    // Update display on slider input
+    opacityInput.addEventListener('input', () => {
+      opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
+    });
+    
+    // Save on slider change
+    opacityInput.addEventListener('change', () => {
+      apply();
       settings.postModeBgOpacity = opacityInput.value;
       localStorage.setItem('admin-settings-current', JSON.stringify(settings));
-    };
-    colorInput.addEventListener('input', () => { apply(); save(); });
-    opacityInput.addEventListener('input', () => { apply(); save(); });
+    });
+    
+    // Make value display editable on click
+    if(!opacityVal.dataset.editableAdded){
+      opacityVal.dataset.editableAdded = 'true';
+      opacityVal.style.cursor = 'pointer';
+      
+      opacityVal.addEventListener('click', ()=>{
+        const currentValue = opacityVal.textContent;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentValue;
+        input.min = 0;
+        input.max = 1;
+        input.step = 0.01;
+        input.className = 'slider-value-input';
+        input.style.width = '60px';
+        input.style.textAlign = 'center';
+        input.style.fontSize = '16px';
+        input.style.fontWeight = 'bold';
+        input.style.background = 'rgba(0,0,0,0.5)';
+        input.style.color = '#fff';
+        input.style.border = '1px solid #2e3a72';
+        input.style.borderRadius = '4px';
+        input.style.padding = '2px';
+        
+        const commitValue = ()=>{
+          let newValue = parseFloat(input.value);
+          if(isNaN(newValue)) newValue = parseFloat(currentValue);
+          newValue = Math.max(0, Math.min(1, newValue));
+          const formattedValue = newValue.toFixed(2);
+          opacityVal.textContent = formattedValue;
+          opacityVal.style.display = '';
+          input.remove();
+          opacityInput.value = newValue;
+          apply();
+          settings.postModeBgOpacity = newValue;
+          localStorage.setItem('admin-settings-current', JSON.stringify(settings));
+        };
+        
+        input.addEventListener('blur', commitValue);
+        input.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            commitValue();
+          } else if(e.key === 'Escape'){
+            opacityVal.style.display = '';
+            input.remove();
+          }
+        });
+        
+        opacityVal.style.display = 'none';
+        opacityVal.parentNode.insertBefore(input, opacityVal);
+        input.focus();
+        input.select();
+      });
+    }
+    
     const prev = window.saveAdminChanges;
     window.saveAdminChanges = () => {
-      save();
+      settings.postModeBgOpacity = opacityInput.value;
+      localStorage.setItem('admin-settings-current', JSON.stringify(settings));
       if(typeof prev === 'function'){
         return prev();
       }

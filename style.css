@@ -1196,6 +1196,12 @@ button[aria-expanded="true"] .results-arrow{
   width:35px;
   height:35px;
 }
+#adminPanel #adminPaypalClientId,
+#adminPanel #adminPaypalClientSecret{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
 #filterPanel input[type="text"],
 #filterPanel input[type="date"]{
   background:rgba(0,0,0,0.2);
@@ -1508,36 +1514,6 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:420px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;-webkit-user-select:none;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
-#post-mode-background-field{
-  width:100%;
-  max-width:420px;
-  margin:0 auto;
-}
-#post-mode-background-row{
-  display:flex;
-  align-items:center;
-  width:100%;
-  gap:8px;
-  row-gap:8px;
-  flex-wrap:wrap;
-}
-#post-mode-background-row input[type="color"]{
-  width:40px;
-  height:40px;
-  padding:0;
-  border-radius:8px;
-  flex:0 0 40px;
-}
-#post-mode-background-row input[type="range"]{
-  flex:1 1 160px;
-  width:100%;
-  max-width:none;
-}
-#post-mode-background-row span{
-  flex:0 0 auto;
-  min-width:40px;
-  text-align:right;
-}
 
 .map-theme-container,
 .map-spin-container{
@@ -1555,7 +1531,6 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
 }
 
-.settings-style-container,
 .settings-welcome-container{
   background:#444444;
   width:100%;
@@ -2028,16 +2003,6 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
   width:100%;
 }
-#adminPanel .admin-listing-price-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-#adminPanel .admin-listing-price-row select,
-#adminPanel .admin-listing-price-row input{
-  flex:1 1 140px;
-  min-width:140px;
-}
 #tab-forms .panel-field{max-width:none;}
 .history-group,
 .color-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -2287,12 +2252,6 @@ button[aria-expanded="true"] .results-arrow{
   .panel-header .panel-actions .move-left,
   .panel-header .panel-actions .move-right{
     display:none;
-  }
-  #post-mode-background-row input[type="range"]{
-    flex-basis:100%;
-  }
-  #post-mode-background-row span{
-    text-align:left;
   }
 }
 #filterPanel .panel-header{
