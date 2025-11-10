@@ -5119,6 +5119,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .session-info,
 .post-body .session-info{margin-top:8px;}
 
+.open-post:not(.desc-expanded) .post-nav-buttons{
+  display: none;
+}
+
 .open-post .post-nav-buttons{
   display: flex;
   gap: 0;
@@ -5126,7 +5130,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   height: 100px;
   overflow: hidden;
   margin-top: 10px;
-  padding: 10px;
+  margin-bottom: 10px;
   box-sizing: border-box;
 }
 
@@ -5141,9 +5145,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   overflow: hidden;
   cursor: pointer;
   border: none;
-  padding: 0;
+  padding: 10px;
   background: none;
   transition: opacity 0.2s ease;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .open-post .post-nav-btn:hover{
@@ -5152,15 +5158,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .post-nav-btn img{
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 100px;
-  width: auto;
-  min-width: 100%;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
   object-fit: cover;
   object-position: center top;
   display: block;
+  border-radius: 8px;
 }
 
 .pill{
