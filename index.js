@@ -14472,48 +14472,6 @@ function makePosts(){
       const reset = $('#resetBtn');
       reset && reset.classList.toggle('active', active);
     }
-    
-    // Prevent clear buttons from opening calendar/triggering parent events
-    const keywordClear = document.querySelector('.keyword-clear-button');
-    const daterangeClear = document.querySelector('.daterange-clear-button');
-    const priceClear = document.querySelector('.price-clear-button');
-    
-    if(keywordClear){
-      keywordClear.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const input = document.getElementById('keyword-textbox');
-        if(input) input.value = '';
-        applyFilters();
-      });
-    }
-    
-    if(daterangeClear){
-      daterangeClear.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        const input = document.getElementById('daterange-textbox');
-        if(input){
-          input.value = '';
-          input.blur(); // Prevent focus from opening calendar
-        }
-        dateStart = null;
-        dateEnd = null;
-        applyFilters();
-        updateClearButtons();
-      }, true); // Use capture phase
-    }
-    
-    if(priceClear){
-      priceClear.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const minInput = document.getElementById('min-price-input');
-        const maxInput = document.getElementById('max-price-input');
-        if(minInput) minInput.value = '';
-        if(maxInput) maxInput.value = '';
-        applyFilters();
-      });
-    }
 
     function fmtShort(iso){
       return parseISODate(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
