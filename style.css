@@ -4504,12 +4504,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:block;
 }
 
-.post-preview-container .venue-menu,
-.post-preview-container .session-menu{
-  left:0;
-  right:0;
-  width:auto;
-}
 
 @media (max-width:768px){
   .open-post .post-body{
