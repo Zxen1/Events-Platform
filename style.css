@@ -4796,12 +4796,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .session-menu button,
 .post-body .session-menu button{
-  height:50px;
+  height:35px;
   background:rgba(0,0,0,0.2);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
-  padding:4px 8px;
+  padding:0 8px;
   color:var(--button-text);
   display:flex;
   align-items:center;
@@ -4872,7 +4872,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex-direction:column;
   gap:var(--gap);
   position:relative;
-  width:100%;
+  width:max-content;
+  max-width:100%;
   min-width:0;
   height:auto;
   background:#222222;
@@ -5067,13 +5068,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .time-popup,
 .post-body .calendar-container .time-popup{
   position:absolute;
-  z-index:250;
+  z-index:5001;
 }
 
 .open-post .calendar-container .time-popup .time-list,
 .post-body .calendar-container .time-popup .time-list{
-  background:var(--dropdown-bg);
-  color:var(--dropdown-text);
+  background:#222222;
+  color:#ffffff;
   padding:8px;
   border-radius:8px;
   display:flex;
@@ -5083,11 +5084,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .calendar-container .time-popup .time-list button,
 .post-body .calendar-container .time-popup .time-list button{
-  background:var(--btn);
+  background:rgba(0,0,0,0.2);
   border:1px solid var(--btn);
-  color:var(--button-text);
+  color:#ffffff;
   border-radius:8px;
-  padding:6px 10px;
+  height:35px;
+  padding:0 10px;
   cursor:pointer;
 }
 
