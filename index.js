@@ -15550,15 +15550,6 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-        // Calculate target scroll position BEFORE DOM changes
-        let targetScrollPosition = null;
-        if(shouldScrollToCard && container && target && container.contains(target)){
-          const containerRect = container.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          // Calculate what scrollTop should be to align target's top with container's top
-          targetScrollPosition = container.scrollTop + (targetRect.top - containerRect.top);
-        }
-
         const detail = buildDetail(p);
         target.replaceWith(detail);
         hookDetailActions(detail, p);
@@ -15589,14 +15580,16 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        if(shouldScrollToCard && container && container.contains(detail) && typeof targetScrollPosition === 'number'){
-          // Use pre-calculated scroll position to ensure top alignment
-          // This prevents bottom-alignment that occurs when clicking cards below an open post
+        if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
+            const containerRect = container.getBoundingClientRect();
+            const detailRect = detail.getBoundingClientRect();
+            if(!containerRect || !detailRect) return;
+            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
             if(typeof container.scrollTo === 'function'){
-              container.scrollTo({ top: Math.max(0, targetScrollPosition), behavior: 'smooth' });
+              container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
             } else {
-              container.scrollTop = Math.max(0, targetScrollPosition);
+              container.scrollTop = Math.max(0, topTarget);
             }
           });
         }
