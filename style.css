@@ -4630,7 +4630,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .venue-dropdown,
 .post-body .session-dropdown{
   position:relative;
-  width:100%;
   max-width:100%;
   min-width:0;
   display:flex;
