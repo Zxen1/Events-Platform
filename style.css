@@ -5203,7 +5203,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display: none;
 }
 
-.open-post .post-nav-btn{
+.open-post .venue-menu-button,
+.open-post .session-menu-button{
   flex: 1 1 50%;
   height: 120px;
   position: relative;
@@ -5219,19 +5220,23 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   outline: none;
 }
 
-.open-post .post-nav-btn:hover,
-.open-post .post-nav-btn:focus{
+.open-post .venue-menu-button:hover,
+.open-post .venue-menu-button:focus,
+.open-post .session-menu-button:hover,
+.open-post .session-menu-button:focus{
   opacity: 0.85;
   outline: none;
   background: transparent;
 }
 
-.open-post .post-nav-btn:focus-visible{
+.open-post .venue-menu-button:focus-visible,
+.open-post .session-menu-button:focus-visible{
   outline: 2px solid rgba(255,255,255,0.5);
   outline-offset: 2px;
 }
 
-.open-post .post-nav-btn img{
+.open-post .venue-menu-button img,
+.open-post .session-menu-button img{
   position: absolute;
   top: 10px;
   left: 0;

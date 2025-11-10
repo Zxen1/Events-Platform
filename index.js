@@ -15318,10 +15318,10 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="post-nav-buttons">
-            <button class="post-nav-btn" type="button" aria-label="View Map" data-nav="map">
+            <button class="venue-menu-button" type="button" aria-label="View Map" data-nav="map">
               <img src="assets/Map Screenshot.png" alt="Map view">
             </button>
-            <button class="post-nav-btn" type="button" aria-label="View Calendar" data-nav="calendar">
+            <button class="session-menu-button" type="button" aria-label="View Calendar" data-nav="calendar">
               <img src="assets/Calendar Screenshot.png" alt="Calendar view">
             </button>
           </div>
