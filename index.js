@@ -21822,8 +21822,6 @@ document.addEventListener('pointerdown', (e) => {
 
   const adminPaypalClientId = document.getElementById('adminPaypalClientId');
   const adminPaypalClientSecret = document.getElementById('adminPaypalClientSecret');
-  const adminListingCurrency = document.getElementById('adminListingCurrency');
-  const adminListingPrice = document.getElementById('adminListingPrice');
 
   const memberCreateSection = document.getElementById('memberTab-create');
   if(memberCreateSection){
@@ -22198,7 +22196,6 @@ document.addEventListener('pointerdown', (e) => {
       memberSnapshot = normalized;
       memberCategories = memberSnapshot.categories;
       currencyCodes = collectCurrencyCodes(memberSnapshot);
-      ensureCurrencyOptions(adminListingCurrency);
       if(options.populate !== false){
         populateCategoryOptions(options.preserveSelection === true);
       }
@@ -23662,11 +23659,6 @@ document.addEventListener('pointerdown', (e) => {
       subcategorySelect.addEventListener('change', ()=>{
         subcategorySelect.dataset.lastSelected = subcategorySelect.value;
         renderCreateFields();
-      });
-    }
-    if(adminListingPrice){
-      adminListingPrice.addEventListener('blur', ()=>{
-        adminListingPrice.value = formatPriceValue(adminListingPrice.value);
       });
     }
     if(memberForm){
