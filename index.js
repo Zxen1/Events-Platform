@@ -18977,8 +18977,24 @@ function openPostModal(id){
           if(lastClickedCell){
             const rect = lastClickedCell.getBoundingClientRect();
             const containerRect = calContainer.getBoundingClientRect();
-            popup.style.left = (rect.left - containerRect.left) + 'px';
-            popup.style.top = (rect.bottom - containerRect.top + 4) + 'px';
+            popup.style.left = (rect.right - containerRect.left + 4) + 'px';
+            popup.style.top = (rect.top - containerRect.top) + 'px';
+            requestAnimationFrame(() => {
+              const popupRect = popup.getBoundingClientRect();
+              const minMargin = 10;
+              let left = parseFloat(popup.style.left);
+              let top = parseFloat(popup.style.top);
+              if (left < minMargin) left = minMargin;
+              if (top < minMargin) top = minMargin;
+              if (left + popupRect.width + minMargin > calContainer.clientWidth) {
+                left = calContainer.clientWidth - popupRect.width - minMargin;
+              }
+              if (top + popupRect.height + minMargin > calContainer.clientHeight) {
+                top = calContainer.clientHeight - popupRect.height - minMargin;
+              }
+              popup.style.left = left + 'px';
+              popup.style.top = top + 'px';
+            });
           }
           popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
           setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
