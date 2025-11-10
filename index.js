@@ -18621,32 +18621,32 @@ function openPostModal(id){
       function updatePreviews(){
         if(calPreview && calendarEl && calendarEl.children.length > 0){
           calPreview.innerHTML = '';
-          const calContainer = calendarEl.closest('.calendar-container');
-          if(calContainer){
-            const containerClone = calContainer.cloneNode(true);
-            calPreview.appendChild(containerClone);
-          } else {
-            const calClone = calendarEl.cloneNode(true);
-            calClone.id = '';
-            calPreview.appendChild(calClone);
-          }
+          const calClone = calendarEl.cloneNode(true);
+          calClone.id = `cal-preview-clone-${p.id}`;
+          calPreview.appendChild(calClone);
         }
-        if(mapPreview && mapEl){
-          mapPreview.innerHTML = '';
-          if(map && typeof map.getCanvas === 'function'){
-            try{
-              const canvas = map.getCanvas();
-              if(canvas && typeof canvas.toDataURL === 'function'){
-                const img = document.createElement('img');
-                img.src = canvas.toDataURL();
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
+        if(mapPreview && map){
+          try{
+            const canvas = map.getCanvas();
+            if(canvas){
+              mapPreview.innerHTML = '';
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => {
+                mapPreview.innerHTML = '';
                 mapPreview.appendChild(img);
+              };
+              img.onerror = () => {
+                console.warn('Map preview image failed to load');
+              };
+              try{
+                img.src = canvas.toDataURL('image/png');
+              }catch(e){
+                console.warn('Could not capture map canvas:', e);
               }
-            }catch(e){
-              console.warn('Could not capture map preview:', e);
             }
+          }catch(e){
+            console.warn('Error updating map preview:', e);
           }
         }
       }
