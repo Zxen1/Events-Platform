@@ -4876,7 +4876,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   min-width:0;
   height:auto;
   border-radius:8px;
-  overflow:hidden;
   background:#222222;
   border:1px solid #ffffff;
   min-height:200px;
@@ -4897,7 +4896,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:content-box;
   background:#222222;
   border:none;
-  border-radius:8px;
   display:flex;
   align-items:stretch;
   flex:1 1 auto;
@@ -4998,7 +4996,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   cursor:default;
   background:var(--calendar-future-bg);
   color:#ffffff;
-  opacity:0.6;
 }
 .open-post .post-calendar .day.past,
 .post-body .post-calendar .day.past,
