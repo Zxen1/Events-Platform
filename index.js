@@ -14489,13 +14489,19 @@ function makePosts(){
     
     if(daterangeClear){
       daterangeClear.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         const input = document.getElementById('daterange-textbox');
-        if(input) input.value = '';
+        if(input){
+          input.value = '';
+          input.blur(); // Prevent focus from opening calendar
+        }
         dateStart = null;
         dateEnd = null;
         applyFilters();
-      });
+        updateClearButtons();
+      }, true); // Use capture phase
     }
     
     if(priceClear){
