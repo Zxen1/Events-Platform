@@ -14533,6 +14533,7 @@ function makePosts(){
     const filterBasics = $('#filterPanel .filter-basics-container');
     const filterPanelBody = $('#filterPanel .panel-body');
     let calendarPopupOpen = false;
+    let calendarFirstOpen = true;
 
     function positionCalendarPopup(){
       if(!calendarScroll || !dateRangeInput || !filterBasics) return;
@@ -14556,6 +14557,12 @@ function makePosts(){
 
     function openCalendarPopup(focusCalendar = false){
       if(!calendarScroll) return;
+      
+      // Rebuild calendar based on expired toggle state
+      const expiredChecked = expiredToggle && expiredToggle.checked;
+      const minDate = expiredChecked ? minPickerDate : today;
+      buildFilterCalendar(minDate, maxPickerDate);
+      
       if(!calendarPopupOpen){
         calendarPopupOpen = true;
         calendarScroll.classList.add('is-visible');
@@ -14565,6 +14572,12 @@ function makePosts(){
         document.addEventListener('click', handleCalendarOutsideClick, true);
         window.addEventListener('resize', positionCalendarPopup);
         filterPanelBody?.addEventListener('scroll', positionCalendarPopup, { passive:true });
+        
+        // Scroll to today on first open
+        if(calendarFirstOpen){
+          calendarFirstOpen = false;
+          scrollCalendarToToday('auto');
+        }
       }
       positionCalendarPopup();
       if(focusCalendar){
@@ -14606,6 +14619,19 @@ function makePosts(){
           e.preventDefault();
         }
       }, {passive:false});
+    }
+    
+    function setupCalendarScrollRestriction(){
+      if(!calendarScroll) return;
+      calendarScroll.addEventListener('scroll', ()=>{
+        const expiredChecked = expiredToggle && expiredToggle.checked;
+        if(!expiredChecked && calendarScroll.dataset.todayScroll){
+          const todayScrollPos = parseFloat(calendarScroll.dataset.todayScroll) || 0;
+          if(calendarScroll.scrollLeft < todayScrollPos){
+            calendarScroll.scrollLeft = todayScrollPos;
+          }
+        }
+      }, {passive:true});
     }
 
     function smoothScroll(el, to, duration=600){
@@ -14816,7 +14842,8 @@ function makePosts(){
       }
     }
 
-    buildFilterCalendar(today, maxPickerDate);
+    buildFilterCalendar(minPickerDate, maxPickerDate);
+    setupCalendarScrollRestriction();
     closeCalendarPopup();
 
     $$('#filterPanel .keyword-clear-button, #filterPanel .daterange-clear-button, #filterPanel .price-clear-button').forEach(btn=> btn.addEventListener('click',()=>{
