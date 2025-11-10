@@ -14965,7 +14965,6 @@ function makePosts(){
         }
         const postsEnabled = Number.isFinite(zoomValue) ? zoomValue >= threshold : false;
         if(postsButton){
-          postsButton.disabled = !postsEnabled;
           postsButton.setAttribute('aria-disabled', postsEnabled ? 'false' : 'true');
           postsButton.classList.toggle('is-disabled', !postsEnabled);
         }
@@ -14985,12 +14984,13 @@ function makePosts(){
       // Add click handler for disabled posts button
       if(postsButton){
         postsButton.addEventListener('click', (e) => {
-          if(postsButton.disabled || postsButton.classList.contains('is-disabled')){
+          if(postsButton.classList.contains('is-disabled')){
             e.preventDefault();
             e.stopPropagation();
             showZoomToast();
+            return false;
           }
-        });
+        }, true);
       }
 
       function showZoomToast(){
