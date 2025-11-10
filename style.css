@@ -4754,7 +4754,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:border-box;
   max-width:100%;
   max-height:min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
-  overflow:auto;
+  overflow:visible;
   background:#222222;
   border:1px solid var(--border);
   border-radius:var(--dropdown-radius);
@@ -4872,15 +4872,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex-direction:column;
   gap:var(--gap);
   position:relative;
-  width:max-content;
+  width:100%;
   min-width:0;
   height:auto;
-  border-radius:8px;
   background:#222222;
   border:1px solid #ffffff;
+  border-radius:8px;
+  overflow:hidden;
   min-height:200px;
   flex:0 0 auto;
-  overflow:hidden;
 }
 
 .open-post .calendar-container .calendar-scroll,
