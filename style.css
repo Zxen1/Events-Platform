@@ -7778,47 +7778,9 @@ html, body { cursor: auto !important; }
  
  
 
-/* Preview Buttons */
-.location-section{
-  position:relative;
-}
 
-.location-section > .venue-dropdown,
-.location-section > .session-dropdown{
-  position:static;
-}
 
-.preview-buttons-row{
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-  width:100%;
-}
 
-.preview-btn{
-  flex:1;
-  min-height:100px;
-  height:100px;
-  min-width:0;
-  padding:0;
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:#222222;
-  cursor:pointer;
-  overflow:hidden;
-}
-
-.preview-btn:hover{
-  opacity:0.9;
-}
-
-.preview-btn img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  object-position:top;
-}
 
 
 
