@@ -4867,6 +4867,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   min-width:0;
 }
 
+.post-preview-container .venue-menu,
+.post-preview-container .session-menu{
+  left:0;
+  right:0;
+  width:auto;
+}
+
 
 .venue-preview,
 .session-preview{
