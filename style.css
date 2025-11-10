@@ -2390,9 +2390,9 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .keyword-clear-button.active,
 #filterPanel .daterange-clear-button.active,
 #filterPanel .price-clear-button.active{
-  background:#1a1f3f;
+  background:#7c4dff;
   color:#fff;
-  border-color:#1a1f3f;
+  border-color:#7c4dff;
   opacity:1;
 }
 
@@ -2478,9 +2478,9 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 .sort-options .sort-option[aria-pressed="true"]{
-  background:#1a1f3f;
+  background:#7c4dff;
   color:var(--button-active-text);
-  border-color:#1a1f3f;
+  border-color:#7c4dff;
 }
 #tab-forms .formbuilder-container{
   width:100%;
@@ -2784,7 +2784,7 @@ button[aria-expanded="true"] .results-arrow{
   background:var(--session-selected);
 }
 #expiredToggle:checked + .slider{
-  background:#1a1f3f;
+  background:#7c4dff;
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
@@ -3100,8 +3100,8 @@ button[aria-expanded="true"] .results-arrow{
   cursor: pointer;
 }
 .reset-box .btn.active{
-  background:#1a1f3f;
-  border-color:#1a1f3f;
+  background:#7c4dff;
+  border-color:#7c4dff;
   color:#fff;
 }
 
