@@ -1322,7 +1322,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .day.past{background:var(--calendar-past-bg);color:#ffffff;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
-.calendar .day.in-range{background:#add8e6;}
+.calendar .day.in-range{background:var(--session-selected);}
 .calendar .day.selected{background:var(--session-selected);color:#fff;}
 .calendar .day.selected.today{color:var(--today) !important;}
 .calendar .day.range-start{border-radius:8px 0 0 8px;}
