@@ -15574,15 +15574,13 @@ function makePosts(){
           }
         }
 
-        // DISABLED - Testing
-        /*const header = detail.querySelector('.post-header');
+        const header = detail.querySelector('.post-header');
         if(header){
           const h = header.offsetHeight;
           header.style.scrollMarginTop = h + 'px';
-        }*/
+        }
 
-        // DISABLED SCROLL - Testing to find where bottom-alignment comes from
-        /*if(shouldScrollToCard && container && container.contains(detail)){
+        if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
             const containerRect = container.getBoundingClientRect();
             const detailRect = detail.getBoundingClientRect();
@@ -15594,7 +15592,7 @@ function makePosts(){
               container.scrollTop = Math.max(0, topTarget);
             }
           });
-        }*/
+        }
 
         // Update history on open (keep newest-first)
         viewHistory = viewHistory.filter(x=>x.id!==id);

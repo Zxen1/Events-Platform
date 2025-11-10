@@ -3212,7 +3212,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow:auto;
   overflow:overlay;
   overflow-x:hidden;
-  overflow-anchor:none;
   background:rgba(0,0,0,0.7);
   transition:margin var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
   will-change:margin, transform;
@@ -3319,7 +3318,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow-y:auto;
   overflow-y:overlay;
   overflow-x:hidden;
-  overflow-anchor:none;
   display:flex;
   flex-direction:column;
   gap:0;
