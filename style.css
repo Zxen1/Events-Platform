@@ -5005,13 +5005,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .post-calendar .day.available-day,
 .post-body .post-calendar .day.available-day,
 .post-body .post-calendar .day.available-day{
-  background:var(--session-available);
+  background:rgba(0,0,0,0.2);
   color:#ffffff;
 }
 .open-post .post-calendar .day.available-day:hover,
 .post-body .post-calendar .day.available-day:hover,
 .post-body .post-calendar .day.available-day:hover{
-  background:var(--session-available);
+  background:rgba(0,0,0,0.2);
   color:#ffffff;
 }
 .open-post .post-calendar .day.selected,
