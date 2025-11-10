@@ -4996,6 +4996,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   cursor:default;
   background:var(--calendar-future-bg);
   color:#ffffff;
+  opacity:0.4;
 }
 .open-post .post-calendar .day.past,
 .post-body .post-calendar .day.past,
