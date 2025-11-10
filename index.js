@@ -15322,8 +15322,8 @@ function makePosts(){
             <div class="post-session-selection-container"></div>
             <div class="location-section">
               <div class="preview-buttons-row">
-                <button class="preview-btn venue-preview-btn" data-target="venue-${p.id}"><img src="assets/Map Screenshot.png" alt="Map"></button>
-                <button class="preview-btn session-preview-btn" data-target="sess-${p.id}"><img src="assets/Calendar Screenshot.png" alt="Calendar"></button>
+                <button type="button" class="preview-btn venue-preview-btn" data-target="venue-${p.id}"><img src="assets/Map Screenshot.png" alt="Map"></button>
+                <button type="button" class="preview-btn session-preview-btn" data-target="sess-${p.id}"><img src="assets/Calendar Screenshot.png" alt="Calendar"></button>
               </div>
               <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false" style="display:none;"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
               <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false" style="display:none;">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
@@ -18592,10 +18592,11 @@ function openPostModal(id){
       if(venuePreviewBtn && venueMenu){
         venuePreviewBtn.addEventListener('click', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           if(isMenuOpen(venueMenu)){
             hideMenu(venueMenu);
           } else {
-            hideMenu(sessMenu);
+            if(sessMenu) hideMenu(sessMenu);
             showMenu(venueMenu);
           }
         });
@@ -18604,10 +18605,11 @@ function openPostModal(id){
       if(sessionPreviewBtn && sessMenu){
         sessionPreviewBtn.addEventListener('click', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           if(isMenuOpen(sessMenu)){
             hideMenu(sessMenu);
           } else {
-            hideMenu(venueMenu);
+            if(venueMenu) hideMenu(venueMenu);
             showMenu(sessMenu);
           }
         });
