@@ -19608,25 +19608,6 @@ function openPostModal(id){
             }).catch(err => console.error(err));
           },0);
         }
-        
-        // Wire up nav buttons
-        setTimeout(()=>{
-          const mapNavBtn = el.querySelector('[data-nav="map"]');
-          const calendarNavBtn = el.querySelector('[data-nav="calendar"]');
-          const venueBtn = el.querySelector('.venue-btn');
-          const sessBtn = el.querySelector('.sess-btn');
-          
-          if(mapNavBtn && venueBtn){
-            mapNavBtn.addEventListener('click', ()=>{
-              venueBtn.click();
-            });
-          }
-          if(calendarNavBtn && sessBtn){
-            calendarNavBtn.addEventListener('click', ()=>{
-              sessBtn.click();
-            });
-          }
-        }, 0);
     }
 
     function inBounds(p){
@@ -19839,7 +19820,14 @@ function openPostModal(id){
         slide.appendChild(img);
         const info = document.createElement('div');
         info.className = 'info';
-        info.textContent = p.title;
+        info.innerHTML = `
+          <div class="title">${p.title}</div>
+          <div class="ad-info-details">
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+            <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+          </div>
+        `;
         slide.appendChild(info);
         adPanel.appendChild(slide);
         requestAnimationFrame(()=> slide.classList.add('active'));
