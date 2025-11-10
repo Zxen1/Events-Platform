@@ -414,8 +414,8 @@
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-header-h: 20px;
         --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h)) / 7);
-        --calendar-past-bg: #f0f0f0;
-        --calendar-future-bg: #ffffff;
+        --calendar-past-bg: #222222;
+        --calendar-future-bg: #222222;
         --session-available: #888888;
         --session-selected: #2e3a72;
         --today: #ff0000;
@@ -1211,7 +1211,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid rgba(255,255,255,0.1);
 }
 #filterPanel .calendar-container{
-  background:rgba(0,0,0,0.2);
+  background:#222222;
   border:1px solid rgba(255,255,255,0.1);
   position:absolute;
   top:0;
@@ -1261,8 +1261,8 @@ button[aria-expanded="true"] .results-arrow{
   width:max-content;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
-  background:var(--dropdown-bg);
-  color:var(--dropdown-text);
+  background:#222222;
+  color:#ffffff;
 }
 .calendar .month{
   flex:0 0 auto;
@@ -1319,7 +1319,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .weekday{font-weight:bold;}
 .calendar .day{cursor:pointer;}
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
-.calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
+.calendar .day.past{background:var(--calendar-past-bg);color:#ffffff;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
 .calendar .day.in-range{background:#add8e6;}
