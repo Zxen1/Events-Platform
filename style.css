@@ -4373,7 +4373,7 @@ body.mode-map .post-board{
   padding:0 0 10px;
   display:flex;
   flex-direction:column;
-  gap:var(--gap);
+  gap:0;
   align-items:stretch;
   align-content:flex-start;
   flex:1 1 100%;
@@ -4387,7 +4387,7 @@ body.mode-map .post-board{
 }
 
 .open-post .post-details{
-  margin-top:0;
+  margin-top:10px;
   width:calc(100% - 20px);
   max-width:calc(100% - 20px);
   min-width:0;
