@@ -3494,6 +3494,27 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   font-size:14px;
 }
 
+/* ============================================================================
+   AD PANEL STYLES - DEDICATED BLOCK
+   ============================================================================
+   
+   CRITICAL SPECIFICATIONS - DO NOT MODIFY:
+   
+   1. .ad-board MUST have padding: 0 (no margins/padding)
+   2. .ad-panel MUST have border-radius: 0px (no rounded corners)
+   3. Height MUST span from header base to viewport bottom
+   4. .ad-panel .ad-slide .info displays FOUR lines from post cards:
+      - Title line (.title)
+      - Category line (.cat-line) with subcategory icon
+      - Location line (.loc-line) with 📍 badge
+      - Date line (.date-line) with 📅 badge
+   
+   These specifications ensure the ad panel displays edge-to-edge with
+   complete event information matching the post card structure.
+   
+   ========================================================================== */
+
+/* Ad Board Container - Zero padding, full height from header to viewport bottom */
 .ad-board{
   position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
@@ -3526,6 +3547,7 @@ body.hide-ads .ad-board{
   }
 }
 
+/* Ad Panel - Zero border radius for edge-to-edge display */
 .ad-panel{
   width:100%;
   height:100%;
@@ -3534,6 +3556,7 @@ body.hide-ads .ad-board{
   border-radius:0px;
 }
 
+/* Ad Slide - Individual ad container */
 .ad-panel .ad-slide{
   position:absolute;
   inset:0;
@@ -3544,6 +3567,7 @@ body.hide-ads .ad-board{
 
 .ad-panel .ad-slide.active{opacity:1;}
 
+/* Ad Slide Image - Full coverage with zoom animation */
 .ad-panel .ad-slide img{
   width:100%;
   height:100%;
@@ -3551,6 +3575,7 @@ body.hide-ads .ad-board{
   animation:adZoom 20s linear forwards;
 }
 
+/* Ad Info Container - Four-line structure matching post cards */
 .ad-panel .ad-slide .info{
   position:absolute;
   left:0;
@@ -3567,12 +3592,14 @@ body.hide-ads .ad-board{
   font-size:13px;
 }
 
+/* Info Lines - Title, Category, Location, Date */
 .ad-panel .info > div{
   display:flex;
   align-items:center;
   gap:0;
 }
 
+/* Subcategory Icon Styling */
 .ad-panel .sub-icon{
   display:inline-flex;
   align-items:center;
@@ -3592,10 +3619,15 @@ body.hide-ads .ad-board{
   height:18px;
 }
 
+/* Ad Zoom Animation */
 @keyframes adZoom{
   from{transform:scale(1);}
   to{transform:scale(1.1);}
 }
+
+/* ============================================================================
+   END AD PANEL STYLES
+   ========================================================================== */
 
 #filterBtn,
 #memberBtn,
