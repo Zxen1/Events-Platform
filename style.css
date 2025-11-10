@@ -2458,6 +2458,11 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid rgba(255,255,255,0.1);
   color:#fff;
 }
+#filterPanel .reset-box .btn.active{
+  background:#7c4dff;
+  border-color:#7c4dff;
+  color:#fff;
+}
 #filterPanel .sort-field{
   display:flex;
   justify-content:center;
