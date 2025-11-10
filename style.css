@@ -4873,11 +4873,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .session-menu .calendar-container,
 .post-body .session-menu .calendar-container{
-  display:flex;
+  display:inline-flex;
   flex-direction:column;
   gap:var(--gap);
   position:relative;
-  width:100%;
+  width:auto;
+  max-width:100%;
   min-width:0;
   height:auto;
   box-sizing:border-box;
