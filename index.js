@@ -14839,8 +14839,8 @@ function makePosts(){
           updateInput();
         } else {
           input.value='';
+          input.focus();
         }
-        input.focus();
         applyFilters();
         updateClearButtons();
       }
