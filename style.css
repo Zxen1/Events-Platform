@@ -3108,9 +3108,9 @@ button[aria-expanded="true"] .results-arrow{
   cursor: pointer;
 }
 .reset-box .btn.active{
-  background:#7c4dff;
-  border-color:#7c4dff;
-  color:#fff;
+  background:#00d9ff;
+  border-color:#00d9ff;
+  color:#000;
 }
 
 .reset-box .btn svg{
