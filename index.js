@@ -15322,11 +15322,17 @@ function makePosts(){
             <div class="post-session-selection-container"></div>
             <div class="location-section">
               <div class="post-preview-container">
-                <div id="venue-${p.id}" class="venue-preview"><div id="map-preview-${p.id}" class="map-preview"></div></div>
-                <div id="sess-${p.id}" class="session-preview"><div id="cal-preview-${p.id}" class="calendar-preview"></div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown">
+                  <button class="venue-btn" aria-haspopup="true" aria-expanded="false" style="display:none;"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button>
+                  <div class="venue-preview"><div id="map-preview-${p.id}" class="map-preview"></div></div>
+                  <div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div>
+                </div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown">
+                  <button class="sess-btn" aria-haspopup="true" aria-expanded="false" style="display:none;">Select Session</button>
+                  <div class="session-preview"><div id="cal-preview-${p.id}" class="calendar-preview"></div></div>
+                  <div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div>
+                </div>
               </div>
-              <div class="venue-menu post-venue-menu" data-post-id="${p.id}" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div>
-              <div class="session-menu options-menu" data-post-id="${p.id}" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div>
             </div>
             <div class="post-details-info-container">
               <div id="venue-info-${p.id}" class="venue-info"></div>
@@ -18571,15 +18577,19 @@ function openPostModal(id){
           resetDragState();
         });
       }
-      const venuePreview = el.querySelector(`#venue-${p.id}`);
+      const venueDropdown = el.querySelector(`#venue-${p.id}`);
+      const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
+      const venuePreview = venueDropdown ? venueDropdown.querySelector('.venue-preview') : null;
       const mapPreview = venuePreview ? venuePreview.querySelector('.map-preview') : null;
-      const venueMenu = el.querySelector(`.post-venue-menu[data-post-id="${p.id}"]`);
+      const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
       const venueOptions = venueMenu ? venueMenu.querySelector('.venue-options') : null;
       let venueCloseTimer = null;
       const venueInfo = el.querySelector(`#venue-info-${p.id}`);
-      const sessPreview = el.querySelector(`#sess-${p.id}`);
+      const sessDropdown = el.querySelector(`#sess-${p.id}`);
+      const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
+      const sessPreview = sessDropdown ? sessDropdown.querySelector('.session-preview') : null;
       const calPreview = sessPreview ? sessPreview.querySelector('.calendar-preview') : null;
-      const sessMenu = el.querySelector(`.session-menu[data-post-id="${p.id}"]`);
+      const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
       const sessionOptions = sessMenu ? sessMenu.querySelector('.session-options') : null;
       const showMenu = menu => { if(menu) menu.removeAttribute('hidden'); };
       const hideMenu = menu => { if(menu) menu.setAttribute('hidden',''); };
