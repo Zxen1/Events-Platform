@@ -4749,7 +4749,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  width:max-content;
+  width:100%;
   min-width:0;
   box-sizing:border-box;
   max-width:100%;
