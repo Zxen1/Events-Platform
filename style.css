@@ -4981,14 +4981,14 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .post-calendar .weekday,
 .post-body .post-calendar .weekday{
   font-weight:bold;
-  color:var(--dropdown-text);
+  color:#ffffff;
 }
 .open-post .post-calendar .day,
 .post-body .post-calendar .day,
 .post-body .post-calendar .day{
   cursor:pointer;
   background:var(--calendar-future-bg);
-  color:var(--dropdown-text);
+  color:#ffffff;
   transition:background .2s,color .2s;
 }
 .open-post .post-calendar .day.empty,
@@ -4996,8 +4996,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .post-calendar .day.empty{
   cursor:default;
   background:var(--calendar-future-bg);
-  color:var(--dropdown-text);
+  color:#ffffff;
   opacity:0.6;
+}
+.open-post .post-calendar .day.past,
+.post-body .post-calendar .day.past,
+.post-body .post-calendar .day.past{
+  color:#808080;
 }
 .open-post .post-calendar .day.available-day,
 .post-body .post-calendar .day.available-day,
