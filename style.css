@@ -4462,51 +4462,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .open-post .post-header{
     padding:10px;
   }
-}
-
-.location-section{
-  position:relative;
-}
-
-.post-preview-container{
-  display:flex;
-  gap:10px;
-  height:100px;
-  margin-bottom:10px;
-}
-
-.venue-preview,
-.session-preview{
-  flex:1;
-  height:100%;
-  cursor:pointer;
-  overflow:hidden;
-  border-radius:8px;
-  background:#222222;
-  border:1px solid var(--border);
-}
-
-.venue-preview:hover,
-.session-preview:hover{
-  opacity:0.9;
-}
-
-.venue-preview img,
-.session-preview img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-
-
-@media (max-width:768px){
-  .open-post .post-body{
-    padding:0;
-  }
-  .open-post .post-header{
-    padding:10px;
-  }
   .open-post .post-images,
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
