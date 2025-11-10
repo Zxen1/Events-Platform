@@ -15318,10 +15318,11 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="post-nav-buttons">
-            <button class="venue-menu-button" type="button" aria-label="View Map" data-nav="map">
+            <button class="venue-menu-button" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">
               <img src="assets/Map Screenshot.png" alt="Map view">
+              <span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}
             </button>
-            <button class="session-menu-button" type="button" aria-label="View Calendar" data-nav="calendar">
+            <button class="session-menu-button" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">
               <img src="assets/Calendar Screenshot.png" alt="Calendar view">
             </button>
           </div>
@@ -15329,8 +15330,8 @@ function makePosts(){
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
             <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
-              <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
+              <div id="sess-${p.id}" class="session-dropdown options-dropdown"><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
             </div>
             <div class="post-details-info-container">
               <div id="venue-info-${p.id}" class="venue-info"></div>
@@ -18576,13 +18577,13 @@ function openPostModal(id){
         });
       }
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
-      const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
+      const venueBtn = el.querySelector('.venue-menu-button');
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
       const venueOptions = venueMenu ? venueMenu.querySelector('.venue-options') : null;
       let venueCloseTimer = null;
       const venueInfo = el.querySelector(`#venue-info-${p.id}`);
       const sessDropdown = el.querySelector(`#sess-${p.id}`);
-      const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
+      const sessBtn = el.querySelector('.session-menu-button');
       const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
       const sessionOptions = sessMenu ? sessMenu.querySelector('.session-options') : null;
       const showMenu = menu => { if(menu) menu.removeAttribute('hidden'); };
@@ -18766,9 +18767,9 @@ function openPostModal(id){
 
         if(venueBtn){
           if(loc){
-            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            venueBtn.innerHTML = `<img src="assets/Map Screenshot.png" alt="Map view"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
           } else {
-            venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="address_line">${p.city || ''}</span>`;
+            venueBtn.innerHTML = `<img src="assets/Map Screenshot.png" alt="Map view"><span class="venue-name">${p.city || ''}</span><span class="address_line">${p.city || ''}</span>`;
           }
         }
 
@@ -18811,7 +18812,7 @@ function openPostModal(id){
           venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         }
         if(venueBtn){
-          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+          venueBtn.innerHTML = `<img src="assets/Map Screenshot.png" alt="Map view"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         }
 
         let cal = null;
@@ -18949,7 +18950,7 @@ function openPostModal(id){
               sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
             }
             if(sessBtn){
-              sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+              sessBtn.innerHTML = `<img src="assets/Calendar Screenshot.png" alt="Calendar view"><span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             }
             markSelected();
             const scrollResult = scrollCalendarToMonth(dt, {smooth: true});
@@ -18962,7 +18963,7 @@ function openPostModal(id){
               sessionInfo.innerHTML = defaultInfoHTML;
             }
             if(sessBtn){
-              sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
+              sessBtn.innerHTML = sessionHasMultiple ? '<img src="assets/Calendar Screenshot.png" alt="Calendar view">Select Session<span class="results-arrow" aria-hidden="true"></span>' : '<img src="assets/Calendar Screenshot.png" alt="Calendar view">Select Session';
               sessBtn.setAttribute('aria-expanded','false');
             }
             markSelected();
@@ -19097,7 +19098,7 @@ function openPostModal(id){
               sessionOptions.innerHTML = '';
             }
             if(sessBtn){
-              sessBtn.textContent = 'Select Session';
+              sessBtn.innerHTML = '<img src="assets/Calendar Screenshot.png" alt="Calendar view">Select Session';
               sessBtn.setAttribute('aria-expanded','false');
             }
             if(sessionInfo){
@@ -19154,7 +19155,7 @@ function openPostModal(id){
             markSelected();
             if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
             if(sessBtn){
-              sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
+              sessBtn.innerHTML = '<img src="assets/Calendar Screenshot.png" alt="Calendar view">Select Session<span class="results-arrow" aria-hidden="true"></span>';
               sessBtn.setAttribute('aria-expanded','false');
             }
           } else if(hasVisible){
@@ -19164,7 +19165,7 @@ function openPostModal(id){
             markSelected();
             if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
             if(sessBtn){
-              sessBtn.textContent = 'Select Session';
+              sessBtn.innerHTML = '<img src="assets/Calendar Screenshot.png" alt="Calendar view">Select Session';
               sessBtn.setAttribute('aria-expanded','false');
             }
           }
@@ -19590,12 +19591,12 @@ function openPostModal(id){
                     }
                   }
                 });
-                document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
+                document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target) && venueBtn && !venueBtn.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
               }
               if(sessBtn && sessMenu){
                 if(!sessDropdown._sessionOutsideHandler){
                   const outsideHandler = e=>{
-                    if(sessDropdown && !sessDropdown.contains(e.target)){
+                    if(sessDropdown && !sessDropdown.contains(e.target) && sessBtn && !sessBtn.contains(e.target)){
                       hideMenu(sessMenu);
                       sessBtn.setAttribute('aria-expanded','false');
                     }
