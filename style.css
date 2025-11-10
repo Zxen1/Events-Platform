@@ -2500,6 +2500,11 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   justify-content:center;
 }
+#filterPanel .sort-field .options-dropdown > button{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
 #filterPanel .sort-field .options-menu{
   width:100%;
   max-width:420px;
@@ -2511,9 +2516,9 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 .sort-options .sort-option[aria-pressed="true"]{
-  background:#2e3a72;
+  background:#1a1f3f;
   color:var(--button-active-text);
-  border-color:#2e3a72;
+  border-color:#1a1f3f;
 }
 #tab-forms .formbuilder-container{
   width:100%;
