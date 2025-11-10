@@ -4856,7 +4856,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .post-venue-menu .venue-options button,
 .post-body .post-venue-menu .venue-options button{
   height:50px;
-  background:var(--btn);
+  background:rgba(0,0,0,0.2);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
@@ -5233,9 +5233,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   outline: none;
 }
 
-.open-post .venue-menu-button{
-  background: rgba(0,0,0,0.2);
-}
 
 .open-post .venue-menu-button:hover,
 .open-post .venue-menu-button:focus,
