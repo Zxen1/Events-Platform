@@ -4884,27 +4884,25 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   align-items:center;
   justify-content:center;
   overflow:hidden;
+  position:relative;
+}
+
+.map-preview:empty::before,
+.calendar-preview:empty::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,0.05);
 }
 
 .map-preview > *,
 .calendar-preview > *{
   transform:scale(0.5);
   transform-origin:center center;
+  width:200%;
+  height:200%;
 }
 
-.open-post .location-section .post-venue-menu,
-.post-body .location-section .post-venue-menu{
-  width:100%;
-  box-sizing:border-box;
-  position:relative;
-  top:10px;
-}
-
-.open-post .location-section .session-menu,
-.post-body .location-section .session-menu{
-  position:relative;
-  top:10px;
-}
 
 .hide-map-calendar .open-post .map-container,
 .hide-map-calendar .open-post .calendar-container,

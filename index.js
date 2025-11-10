@@ -18607,15 +18607,20 @@ function openPostModal(id){
       }
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
-      if(calPreview && calendarEl){
-        const calClone = calendarEl.cloneNode(true);
-        calClone.id = '';
-        calPreview.appendChild(calClone);
-      }
-      if(mapPreview && mapEl){
-        const mapClone = mapEl.cloneNode(true);
-        mapClone.id = `map-preview-${p.id}`;
-        mapPreview.appendChild(mapClone);
+      
+      function updatePreviews(){
+        if(calPreview && calendarEl && calendarEl.children.length > 0){
+          calPreview.innerHTML = '';
+          const calClone = calendarEl.cloneNode(true);
+          calClone.id = '';
+          calPreview.appendChild(calClone);
+        }
+        if(mapPreview && mapEl && mapEl.children.length > 0){
+          mapPreview.innerHTML = '';
+          const mapClone = mapEl.cloneNode(true);
+          mapClone.id = `map-preview-${p.id}`;
+          mapPreview.appendChild(mapClone);
+        }
       }
       const calContainer = el.querySelector('.calendar-container');
       const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
@@ -19114,6 +19119,7 @@ function openPostModal(id){
           buildCalendarShell();
           months.forEach(monthDate => renderMonth(monthDate));
           finalizeCalendar();
+          updatePreviews();
         }
 
         function updateSessionOptionsList(){
@@ -19206,6 +19212,8 @@ function openPostModal(id){
               ensureMapForVenue();
             }
           }catch(err){}
+          
+          setTimeout(()=> updatePreviews(), 100);
 
           setTimeout(()=>{
             if(map && typeof map.resize === 'function') map.resize();
@@ -19469,6 +19477,7 @@ function openPostModal(id){
               const ready = () => {
                 refreshMarkers();
                 fitToLocations();
+                updatePreviews();
               };
               if(map.loaded()){
                 ready();
