@@ -18586,11 +18586,12 @@ function openPostModal(id){
       const isMenuOpen = menu => !!(menu && !menu.hasAttribute('hidden'));
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       
-      const venuePreviewBtn = el.querySelector('.venue-preview-btn');
-      const sessionPreviewBtn = el.querySelector('.session-preview-btn');
+      const venuePreviewBtn = el.querySelector(`.venue-preview-btn[data-target="venue-${p.id}"]`);
+      const sessionPreviewBtn = el.querySelector(`.session-preview-btn[data-target="sess-${p.id}"]`);
       
-      if(venuePreviewBtn){
-        venuePreviewBtn.addEventListener('click', () => {
+      if(venuePreviewBtn && venueMenu){
+        venuePreviewBtn.addEventListener('click', (e) => {
+          e.preventDefault();
           if(isMenuOpen(venueMenu)){
             hideMenu(venueMenu);
           } else {
@@ -18600,8 +18601,9 @@ function openPostModal(id){
         });
       }
       
-      if(sessionPreviewBtn){
-        sessionPreviewBtn.addEventListener('click', () => {
+      if(sessionPreviewBtn && sessMenu){
+        sessionPreviewBtn.addEventListener('click', (e) => {
+          e.preventDefault();
           if(isMenuOpen(sessMenu)){
             hideMenu(sessMenu);
           } else {
