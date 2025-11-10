@@ -3610,22 +3610,24 @@ body.hide-ads .ad-board{
 
 .zoom-toast{
   position:fixed;
-  top:calc(var(--header-h) + var(--safe-top) + 20px);
+  top:calc(var(--safe-top, 0px) + 20px);
   left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,0.9);
+  transform:translate(-50%, -10px);
+  background:rgba(0,0,0,0.85);
   color:#fff;
-  padding:12px 24px;
-  border-radius:8px;
+  padding:8px 18px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
   font-size:14px;
   font-weight:normal;
-  z-index:10000;
+  z-index:13000;
   pointer-events:none;
   opacity:0;
-  transition:opacity 0.2s ease;
+  transition:opacity 0.2s ease, transform 0.2s ease;
 }
 .zoom-toast.show{
   opacity:1;
+  transform:translate(-50%, 0);
 }
 .mode-toggle .mode-icon{
   display:flex;
