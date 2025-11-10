@@ -15449,6 +15449,15 @@ function makePosts(){
         }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
+        // Calculate target position BEFORE replacing the existing open post
+        let targetScrollOffset = null;
+        if(target && container && container.contains(target)){
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          // Calculate how much to scroll to align target's top with container's top
+          targetScrollOffset = targetRect.top - containerRect.top;
+        }
+
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
@@ -15551,13 +15560,7 @@ function makePosts(){
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
         const detail = buildDetail(p);
-        
-        // Prevent browser auto-scroll by capturing scroll position before and after
-        const scrollBefore = container.scrollTop;
         target.replaceWith(detail);
-        // Restore scroll immediately to prevent browser adjustment
-        container.scrollTop = scrollBefore;
-        
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
@@ -15586,12 +15589,10 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        if(shouldScrollToCard && container && container.contains(detail)){
+        if(shouldScrollToCard && container && container.contains(detail) && typeof targetScrollOffset === 'number'){
           requestAnimationFrame(() => {
-            const containerRect = container.getBoundingClientRect();
-            const detailRect = detail.getBoundingClientRect();
-            if(!containerRect || !detailRect) return;
-            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+            // Use the pre-calculated offset from before replacement
+            const topTarget = container.scrollTop + targetScrollOffset;
             if(typeof container.scrollTo === 'function'){
               container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
             } else {
