@@ -4754,7 +4754,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:border-box;
   max-width:100%;
   max-height:min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
-  overflow:visible;
+  overflow:auto;
   background:#222222;
   border:1px solid var(--border);
   border-radius:var(--dropdown-radius);
@@ -4762,7 +4762,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index:30;
+  z-index:5000;
 }
 .open-post .post-venue-menu,
 .open-post .session-menu{
@@ -4903,12 +4903,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   overflow-x:auto;
   overflow-y:hidden;
   padding-bottom:var(--scrollbar-h);
-  box-sizing:content-box;
+  box-sizing:border-box;
   background:#222222;
   border:none;
   flex:1 1 auto;
   max-width:100%;
   margin-bottom:0;
+  border-radius:8px;
 }
 
 @supports (scrollbar-gutter: stable){
@@ -5074,6 +5075,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .time-popup,
 .post-body .calendar-container .time-popup{
   position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
   z-index:10500;
 }
 
