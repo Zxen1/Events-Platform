@@ -5075,7 +5075,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .time-popup,
 .post-body .calendar-container .time-popup{
   position:absolute;
-  z-index:5001;
+  z-index:10500;
 }
 
 .open-post .calendar-container .time-popup .time-list,
