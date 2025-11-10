@@ -19591,18 +19591,6 @@ function openPostModal(id){
                   }
                 });
                 document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
-                const mapNavBtn = el.querySelector('[data-nav="map"]');
-                if(mapNavBtn && venueBtn){
-                  mapNavBtn.addEventListener('click', ()=>{
-                    venueBtn.click();
-                  });
-                }
-                const calendarNavBtn = el.querySelector('[data-nav="calendar"]');
-                if(calendarNavBtn && sessBtn){
-                  calendarNavBtn.addEventListener('click', ()=>{
-                    sessBtn.click();
-                  });
-                }
               }
               if(sessBtn && sessMenu){
                 if(!sessDropdown._sessionOutsideHandler){
@@ -19620,6 +19608,25 @@ function openPostModal(id){
             }).catch(err => console.error(err));
           },0);
         }
+        
+        // Wire up nav buttons
+        setTimeout(()=>{
+          const mapNavBtn = el.querySelector('[data-nav="map"]');
+          const calendarNavBtn = el.querySelector('[data-nav="calendar"]');
+          const venueBtn = el.querySelector('.venue-btn');
+          const sessBtn = el.querySelector('.sess-btn');
+          
+          if(mapNavBtn && venueBtn){
+            mapNavBtn.addEventListener('click', ()=>{
+              venueBtn.click();
+            });
+          }
+          if(calendarNavBtn && sessBtn){
+            calendarNavBtn.addEventListener('click', ()=>{
+              sessBtn.click();
+            });
+          }
+        }, 0);
     }
 
     function inBounds(p){
