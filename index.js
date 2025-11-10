@@ -15550,6 +15550,18 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
+        // Capture the original card position BEFORE replacement
+        let savedCardRect = null;
+        let savedScrollTop = null;
+        if(shouldScrollToCard && container && container.contains(target)){
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          if(containerRect && targetRect){
+            savedCardRect = targetRect;
+            savedScrollTop = container.scrollTop;
+          }
+        }
+
         const detail = buildDetail(p);
         target.replaceWith(detail);
         hookDetailActions(detail, p);
@@ -15580,12 +15592,13 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        if(shouldScrollToCard && container && container.contains(detail)){
+        if(shouldScrollToCard && container && container.contains(detail) && savedCardRect && typeof savedScrollTop === 'number'){
           requestAnimationFrame(() => {
             const containerRect = container.getBoundingClientRect();
-            const detailRect = detail.getBoundingClientRect();
-            if(!containerRect || !detailRect) return;
-            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+            if(!containerRect) return;
+            // Use the saved card position relative to container to calculate target scroll
+            const cardTopRelativeToContainer = savedCardRect.top - containerRect.top;
+            const topTarget = savedScrollTop + cardTopRelativeToContainer;
             if(typeof container.scrollTo === 'function'){
               container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
             } else {
