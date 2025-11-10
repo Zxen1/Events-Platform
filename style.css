@@ -1392,9 +1392,20 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:border-box;
 }
 
+.member-auth-panel input:-webkit-autofill,
+.member-auth-panel input:-webkit-autofill:hover,
+.member-auth-panel input:-webkit-autofill:focus,
+.member-auth-panel input:-webkit-autofill:active{
+  -webkit-box-shadow:0 0 0 30px rgba(0,0,0,0.2) inset !important;
+  -webkit-text-fill-color:#fff !important;
+  background:rgba(0,0,0,0.2) !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
+}
+
 .member-auth-panel input:focus{
   outline:2px solid var(--btn-selected);
   outline-offset:2px;
+  background:rgba(0,0,0,0.2);
 }
 
 .member-auth-panel .member-auth-submit{
