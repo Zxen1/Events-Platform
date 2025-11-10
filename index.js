@@ -18621,15 +18621,33 @@ function openPostModal(id){
       function updatePreviews(){
         if(calPreview && calendarEl && calendarEl.children.length > 0){
           calPreview.innerHTML = '';
-          const calClone = calendarEl.cloneNode(true);
-          calClone.id = '';
-          calPreview.appendChild(calClone);
+          const calContainer = calendarEl.closest('.calendar-container');
+          if(calContainer){
+            const containerClone = calContainer.cloneNode(true);
+            calPreview.appendChild(containerClone);
+          } else {
+            const calClone = calendarEl.cloneNode(true);
+            calClone.id = '';
+            calPreview.appendChild(calClone);
+          }
         }
-        if(mapPreview && mapEl && mapEl.children.length > 0){
+        if(mapPreview && mapEl){
           mapPreview.innerHTML = '';
-          const mapClone = mapEl.cloneNode(true);
-          mapClone.id = `map-preview-${p.id}`;
-          mapPreview.appendChild(mapClone);
+          if(map && typeof map.getCanvas === 'function'){
+            try{
+              const canvas = map.getCanvas();
+              if(canvas && typeof canvas.toDataURL === 'function'){
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL();
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                mapPreview.appendChild(img);
+              }
+            }catch(e){
+              console.warn('Could not capture map preview:', e);
+            }
+          }
         }
       }
       const calContainer = el.querySelector('.calendar-container');

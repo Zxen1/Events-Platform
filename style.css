@@ -4849,13 +4849,32 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   padding-right:20px;
 }
 
+.location-section{
+  position:relative;
+}
+
 .post-preview-container{
   display:flex;
   gap:10px;
   padding:0;
   height:100px;
   box-sizing:border-box;
-  width:100%;
+}
+
+.post-preview-container .venue-dropdown,
+.post-preview-container .session-dropdown{
+  flex:1;
+  min-width:0;
+  position:static;
+}
+
+.post-preview-container .venue-menu,
+.post-preview-container .session-menu{
+  position:absolute;
+  left:0;
+  right:0;
+  width:auto;
+  max-width:none;
 }
 
 .venue-preview,
@@ -4882,7 +4901,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   pointer-events:none;
   display:flex;
   align-items:center;
-  justify-content:center;
+  justify-content:flex-start;
   overflow:hidden;
   position:relative;
 }
@@ -4895,12 +4914,40 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   background:rgba(255,255,255,0.05);
 }
 
-.map-preview > *,
-.calendar-preview > *{
+.map-preview > *{
   transform:scale(0.5);
   transform-origin:center center;
   width:200%;
   height:200%;
+  flex-shrink:0;
+}
+
+.calendar-preview > *{
+  transform:scale(0.5);
+  transform-origin:top left;
+  flex-shrink:0;
+  min-width:200%;
+}
+
+.calendar-preview .calendar-container{
+  width:auto;
+  max-width:none;
+}
+
+.calendar-preview .calendar-scroll{
+  display:flex;
+  overflow-x:visible;
+  white-space:nowrap;
+}
+
+.calendar-preview .post-calendar{
+  display:flex;
+  flex-direction:row;
+}
+
+.calendar-preview .post-calendar .calendar{
+  display:flex;
+  flex-direction:row;
 }
 
 
