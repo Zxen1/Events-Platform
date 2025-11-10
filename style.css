@@ -4749,7 +4749,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  width:100%;
+  width:max-content;
   min-width:0;
   box-sizing:border-box;
   max-width:100%;
@@ -5075,9 +5075,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .time-popup,
 .post-body .calendar-container .time-popup{
   position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
   z-index:10500;
 }
 

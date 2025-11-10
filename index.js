@@ -18977,8 +18977,34 @@ function openPostModal(id){
           if(lastClickedCell){
             const rect = lastClickedCell.getBoundingClientRect();
             const containerRect = calContainer.getBoundingClientRect();
+            const gap = 8;
+            const edgeMargin = 10;
             popup.style.left = (rect.left - containerRect.left) + 'px';
-            popup.style.top = (rect.bottom - containerRect.top + 4) + 'px';
+            popup.style.top = (rect.bottom - containerRect.top + gap) + 'px';
+            requestAnimationFrame(() => {
+              const popupRect = popup.getBoundingClientRect();
+              const spaceBelow = containerRect.bottom - rect.bottom;
+              const spaceAbove = rect.top - containerRect.top;
+              const spaceRight = containerRect.right - rect.left;
+              const spaceLeft = rect.right - containerRect.left;
+              if (popupRect.height + gap + edgeMargin > spaceBelow) {
+                if (popupRect.height + gap + edgeMargin <= spaceAbove) {
+                  popup.style.top = (rect.top - containerRect.top - popupRect.height - gap) + 'px';
+                }
+              }
+              if (popupRect.width + edgeMargin > spaceRight) {
+                if (popupRect.width + edgeMargin <= spaceLeft) {
+                  popup.style.left = (rect.right - containerRect.left - popupRect.width) + 'px';
+                } else {
+                  popup.style.left = edgeMargin + 'px';
+                }
+              }
+              const finalLeft = parseFloat(popup.style.left);
+              const finalRight = finalLeft + popupRect.width;
+              if (finalRight + edgeMargin > containerRect.width) {
+                popup.style.left = (containerRect.width - popupRect.width - edgeMargin) + 'px';
+              }
+            });
           }
           popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
           setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
