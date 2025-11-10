@@ -15449,6 +15449,41 @@ function makePosts(){
         }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
+        // Determine scroll behavior before any DOM changes
+        const pointerEvt = window.__lastPointerDown;
+        let pointerTarget = null;
+        if(pointerEvt && pointerEvt.target instanceof Element){
+          let consider = true;
+          if(typeof pointerEvt.timeStamp === 'number'){
+            const nowTs = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+            const evtTs = pointerEvt.timeStamp;
+            if(typeof evtTs === 'number'){
+              const diff = nowTs - evtTs;
+              if(Number.isFinite(diff) && (diff > 2000 || diff < -2000)){
+                consider = false;
+              }
+            }
+          }
+          if(consider){
+            pointerTarget = pointerEvt.target;
+          }
+        }
+        const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
+        const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
+        const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
+        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
+
+        // Capture target card position BEFORE any DOM manipulation
+        let savedCardRect = null;
+        let savedScrollTop = null;
+        let savedContainerRect = null;
+        if(shouldScrollToCard && container && target && container.contains(target)){
+          savedContainerRect = container.getBoundingClientRect();
+          savedCardRect = target.getBoundingClientRect();
+          savedScrollTop = container.scrollTop;
+        }
+
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
@@ -15490,30 +15525,6 @@ function makePosts(){
         }
         target = originEl || container.querySelector(`[data-id="${id}"]`);
 
-        const pointerEvt = window.__lastPointerDown;
-        let pointerTarget = null;
-        if(pointerEvt && pointerEvt.target instanceof Element){
-          let consider = true;
-          if(typeof pointerEvt.timeStamp === 'number'){
-            const nowTs = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
-            const evtTs = pointerEvt.timeStamp;
-            if(typeof evtTs === 'number'){
-              const diff = nowTs - evtTs;
-              if(Number.isFinite(diff) && (diff > 2000 || diff < -2000)){
-                consider = false;
-              }
-            }
-          }
-          if(consider){
-            pointerTarget = pointerEvt.target;
-          }
-        }
-        const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
-        const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
-        const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
-        const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
-
         if(!target && !fromHistory){
           target = ensurePostCardForId(id);
         }
@@ -15550,18 +15561,6 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-        // Capture the original card position BEFORE replacement
-        let savedCardRect = null;
-        let savedScrollTop = null;
-        if(shouldScrollToCard && container && container.contains(target)){
-          const containerRect = container.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          if(containerRect && targetRect){
-            savedCardRect = targetRect;
-            savedScrollTop = container.scrollTop;
-          }
-        }
-
         const detail = buildDetail(p);
         target.replaceWith(detail);
         hookDetailActions(detail, p);
@@ -15592,12 +15591,10 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        if(shouldScrollToCard && container && container.contains(detail) && savedCardRect && typeof savedScrollTop === 'number'){
+        if(shouldScrollToCard && container && container.contains(detail) && savedCardRect && savedContainerRect && typeof savedScrollTop === 'number'){
           requestAnimationFrame(() => {
-            const containerRect = container.getBoundingClientRect();
-            if(!containerRect) return;
-            // Use the saved card position relative to container to calculate target scroll
-            const cardTopRelativeToContainer = savedCardRect.top - containerRect.top;
+            // Use the saved card position (captured before DOM changes) to calculate target scroll
+            const cardTopRelativeToContainer = savedCardRect.top - savedContainerRect.top;
             const topTarget = savedScrollTop + cardTopRelativeToContainer;
             if(typeof container.scrollTo === 'function'){
               container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
