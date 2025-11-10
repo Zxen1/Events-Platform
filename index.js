@@ -15321,8 +15321,18 @@ function makePosts(){
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
             <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
-              <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
+              <div class="post-preview-container">
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown">
+                  <button class="venue-btn" aria-haspopup="true" aria-expanded="false" style="display:none;"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button>
+                  <div class="venue-preview"><img src="map screenshot.png" alt="Map"></div>
+                  <div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div>
+                </div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown">
+                  <button class="sess-btn" aria-haspopup="true" aria-expanded="false" style="display:none;">Select Session</button>
+                  <div class="session-preview"><img src="calendar screenshot.png" alt="Calendar"></div>
+                  <div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div>
+                </div>
+              </div>
             </div>
             <div class="post-details-info-container">
               <div id="venue-info-${p.id}" class="venue-info"></div>
@@ -18581,6 +18591,28 @@ function openPostModal(id){
       const hideMenu = menu => { if(menu) menu.setAttribute('hidden',''); };
       const isMenuOpen = menu => !!(menu && !menu.hasAttribute('hidden'));
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
+      const venuePreview = venueDropdown ? venueDropdown.querySelector('.venue-preview') : null;
+      const sessPreview = sessDropdown ? sessDropdown.querySelector('.session-preview') : null;
+      if(venuePreview){
+        venuePreview.addEventListener('click', () => {
+          if(isMenuOpen(venueMenu)){
+            hideMenu(venueMenu);
+          } else {
+            hideMenu(sessMenu);
+            showMenu(venueMenu);
+          }
+        });
+      }
+      if(sessPreview){
+        sessPreview.addEventListener('click', () => {
+          if(isMenuOpen(sessMenu)){
+            hideMenu(sessMenu);
+          } else {
+            hideMenu(venueMenu);
+            showMenu(sessMenu);
+          }
+        });
+      }
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
       const calContainer = el.querySelector('.calendar-container');
