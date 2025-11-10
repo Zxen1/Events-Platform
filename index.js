@@ -14982,6 +14982,33 @@ function makePosts(){
 
       updatePostsButtonState(startZoom);
 
+      // Add click handler for disabled posts button
+      if(postsButton){
+        postsButton.addEventListener('click', (e) => {
+          if(postsButton.disabled || postsButton.classList.contains('is-disabled')){
+            e.preventDefault();
+            e.stopPropagation();
+            showZoomToast();
+          }
+        });
+      }
+
+      function showZoomToast(){
+        let toast = document.getElementById('zoom-toast');
+        if(!toast){
+          toast = document.createElement('div');
+          toast.id = 'zoom-toast';
+          toast.className = 'zoom-toast';
+          toast.textContent = 'Zoom the map to see posts';
+          document.body.appendChild(toast);
+        }
+        
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2000);
+      }
+
       function getDefaultBoardDisplay(board){
         if(!board) return 'block';
         if(boardDisplayCache.has(board)) return boardDisplayCache.get(board);
