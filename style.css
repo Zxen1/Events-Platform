@@ -3500,7 +3500,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   bottom:auto;
   right:0;
   width:440px;
-  padding:10px;
+  padding:0;
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
   z-index:2;
@@ -3531,7 +3531,7 @@ body.hide-ads .ad-board{
   height:100%;
   position:relative;
   overflow:hidden;
-  border-radius:8px;
+  border-radius:0px;
 }
 
 .ad-panel .ad-slide{
