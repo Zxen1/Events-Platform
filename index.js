@@ -18571,22 +18571,52 @@ function openPostModal(id){
           resetDragState();
         });
       }
-      const venueDropdown = el.querySelector(`#venue-${p.id}`);
-      const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
-      const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
+      const venuePreview = el.querySelector(`#venue-${p.id}`);
+      const mapPreview = venuePreview ? venuePreview.querySelector('.map-preview') : null;
+      const venueMenu = el.querySelector(`.post-venue-menu[data-post-id="${p.id}"]`);
       const venueOptions = venueMenu ? venueMenu.querySelector('.venue-options') : null;
       let venueCloseTimer = null;
       const venueInfo = el.querySelector(`#venue-info-${p.id}`);
-      const sessDropdown = el.querySelector(`#sess-${p.id}`);
-      const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
-      const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
+      const sessPreview = el.querySelector(`#sess-${p.id}`);
+      const calPreview = sessPreview ? sessPreview.querySelector('.calendar-preview') : null;
+      const sessMenu = el.querySelector(`.session-menu[data-post-id="${p.id}"]`);
       const sessionOptions = sessMenu ? sessMenu.querySelector('.session-options') : null;
       const showMenu = menu => { if(menu) menu.removeAttribute('hidden'); };
       const hideMenu = menu => { if(menu) menu.setAttribute('hidden',''); };
       const isMenuOpen = menu => !!(menu && !menu.hasAttribute('hidden'));
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
+      if(venuePreview){
+        venuePreview.addEventListener('click', () => {
+          if(isMenuOpen(venueMenu)){
+            hideMenu(venueMenu);
+          } else {
+            hideMenu(sessMenu);
+            showMenu(venueMenu);
+          }
+        });
+      }
+      if(sessPreview){
+        sessPreview.addEventListener('click', () => {
+          if(isMenuOpen(sessMenu)){
+            hideMenu(sessMenu);
+          } else {
+            hideMenu(venueMenu);
+            showMenu(sessMenu);
+          }
+        });
+      }
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
+      if(calPreview && calendarEl){
+        const calClone = calendarEl.cloneNode(true);
+        calClone.id = '';
+        calPreview.appendChild(calClone);
+      }
+      if(mapPreview && mapEl){
+        const mapClone = mapEl.cloneNode(true);
+        mapClone.id = `map-preview-${p.id}`;
+        mapPreview.appendChild(mapClone);
+      }
       const calContainer = el.querySelector('.calendar-container');
       const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
       if(calScroll){
@@ -18987,7 +19017,7 @@ function openPostModal(id){
             if (dateCenterX < containerCenterX) {
               popup.style.left = (rect.right - containerRect.left + 4) + 'px';
             } else {
-              popup.style.left = (rect.left - containerRect.left) + 'px';
+            popup.style.left = (rect.left - containerRect.left) + 'px';
             }
             requestAnimationFrame(() => {
               const popupRect = popup.getBoundingClientRect();
