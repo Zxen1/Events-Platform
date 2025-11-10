@@ -2649,6 +2649,9 @@ button[aria-expanded="true"] .results-arrow{
 #tab-forms .formbuilder-container .filter-category-menu{
   width:100%;
 }
+#tab-forms .filter-category-menu .filter-category-trigger{
+  border:none;
+}
 
 .formbuilder-confirm-overlay{
   position:fixed;
