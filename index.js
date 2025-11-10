@@ -14431,7 +14431,8 @@ function makePosts(){
       }
       dateStart = null;
       dateEnd = null;
-      buildFilterCalendar(today, maxPickerDate);
+      dateRangeWasCleared = true;
+      buildFilterCalendar(minPickerDate, maxPickerDate);
       updateRangeClasses();
       updateInput();
       closeCalendarPopup();
@@ -14534,6 +14535,8 @@ function makePosts(){
     const filterPanelBody = $('#filterPanel .panel-body');
     let calendarPopupOpen = false;
     let calendarFirstOpen = true;
+    let lastExpiredState = null;
+    let dateRangeWasCleared = false;
 
     function positionCalendarPopup(){
       if(!calendarScroll || !dateRangeInput || !filterBasics) return;
@@ -14558,10 +14561,15 @@ function makePosts(){
     function openCalendarPopup(focusCalendar = false){
       if(!calendarScroll) return;
       
-      // Rebuild calendar based on expired toggle state
+      // Rebuild calendar only if expired state changed
       const expiredChecked = expiredToggle && expiredToggle.checked;
-      const minDate = expiredChecked ? minPickerDate : today;
-      buildFilterCalendar(minDate, maxPickerDate);
+      if(lastExpiredState !== expiredChecked){
+        lastExpiredState = expiredChecked;
+        const minDate = expiredChecked ? minPickerDate : today;
+        buildFilterCalendar(minDate, maxPickerDate);
+        // Scroll to today after rebuild
+        setTimeout(() => scrollCalendarToToday('auto'), 0);
+      }
       
       if(!calendarPopupOpen){
         calendarPopupOpen = true;
@@ -14573,12 +14581,14 @@ function makePosts(){
         window.addEventListener('resize', positionCalendarPopup);
         filterPanelBody?.addEventListener('scroll', positionCalendarPopup, { passive:true });
         
-        // Scroll to today on first open
-        if(calendarFirstOpen){
+        // Scroll to today on first open, after clear, or expired state change
+        if(calendarFirstOpen || dateRangeWasCleared){
           calendarFirstOpen = false;
-          scrollCalendarToToday('auto');
+          dateRangeWasCleared = false;
+          setTimeout(() => scrollCalendarToToday('auto'), 0);
         }
       }
+      
       positionCalendarPopup();
       if(focusCalendar){
         calendarScroll.focus({ preventScroll:true });
@@ -14866,6 +14876,7 @@ function makePosts(){
           updateInput();
           const expiredToggle = $('#expiredToggle');
           if(expiredToggle) expiredToggle.checked = false;
+          dateRangeWasCleared = true;
         } else {
           input.value='';
           input.focus();
