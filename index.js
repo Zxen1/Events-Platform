@@ -20673,8 +20673,25 @@ const memberPanelChangeManager = (()=>{
 })();
 // === End Added Confirm Password Field ===
 
-form.addEventListener('input', formChanged, true);
-    form.addEventListener('change', formChanged, true);
+// Filter out auth inputs from triggering dirty state
+function formChangedWrapper(event){
+  if(event && event.target){
+    const target = event.target;
+    const isAuthInput = target.closest('.member-auth-panel') || 
+                       target.id === 'memberLoginEmail' || 
+                       target.id === 'memberLoginPassword' ||
+                       target.id === 'memberRegisterName' ||
+                       target.id === 'memberRegisterEmail' ||
+                       target.id === 'memberRegisterPassword' ||
+                       target.id === 'memberRegisterPasswordConfirm' ||
+                       target.id === 'memberRegisterAvatar';
+    if(isAuthInput) return;
+  }
+  formChanged();
+}
+
+form.addEventListener('input', formChangedWrapper, true);
+    form.addEventListener('change', formChangedWrapper, true);
     if(saveButton){
       saveButton.addEventListener('click', e=>{
         e.preventDefault();
@@ -21318,8 +21335,8 @@ const adminPanelChangeManager = (()=>{
     if(initialized) return;
     ensureElements();
     if(!panel || !form) return;
-    form.addEventListener('input', formChanged, true);
-    form.addEventListener('change', formChanged, true);
+    form.addEventListener('input', formChangedWrapper, true);
+    form.addEventListener('change', formChangedWrapper, true);
     if(saveButton){
       saveButton.addEventListener('click', e=>{
         e.preventDefault();
