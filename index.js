@@ -19820,7 +19820,12 @@ function openPostModal(id){
         slide.appendChild(img);
         const info = document.createElement('div');
         info.className = 'info';
-        info.textContent = p.title;
+        info.innerHTML = `
+          <div class="title">${p.title}</div>
+          <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+          <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+          <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+        `;
         slide.appendChild(info);
         adPanel.appendChild(slide);
         requestAnimationFrame(()=> slide.classList.add('active'));
