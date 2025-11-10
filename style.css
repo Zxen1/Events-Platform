@@ -420,7 +420,7 @@
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
-      --filter-active-color: #7c4dff;
+      --filter-active-color: #00d9ff;
       --category-switch-active: #00b050;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
@@ -2390,9 +2390,9 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .keyword-clear-button.active,
 #filterPanel .daterange-clear-button.active,
 #filterPanel .price-clear-button.active{
-  background:#7c4dff;
-  color:#fff;
-  border-color:#7c4dff;
+  background:#00d9ff;
+  color:#000;
+  border-color:#00d9ff;
   opacity:1;
 }
 
@@ -2459,9 +2459,9 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 #filterPanel .reset-box .btn.active{
-  background:#7c4dff;
-  border-color:#7c4dff;
-  color:#fff;
+  background:#00d9ff;
+  border-color:#00d9ff;
+  color:#000;
 }
 #filterPanel .sort-field{
   display:flex;
@@ -2483,9 +2483,9 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 .sort-options .sort-option[aria-pressed="true"]{
-  background:#7c4dff;
-  color:var(--button-active-text);
-  border-color:#7c4dff;
+  background:#00d9ff;
+  color:#000;
+  border-color:#00d9ff;
 }
 #tab-forms .formbuilder-container{
   width:100%;
@@ -2792,7 +2792,7 @@ button[aria-expanded="true"] .results-arrow{
   background:var(--session-selected);
 }
 #expiredToggle:checked + .slider{
-  background:#7c4dff;
+  background:#00d9ff;
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
