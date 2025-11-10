@@ -14837,6 +14837,8 @@ function makePosts(){
           dateEnd = null;
           updateRangeClasses();
           updateInput();
+          const expiredToggle = $('#expiredToggle');
+          if(expiredToggle) expiredToggle.checked = false;
         } else {
           input.value='';
           input.focus();
