@@ -4380,10 +4380,10 @@ body.mode-map .post-board{
 
 .open-post .post-header{
   display:grid;
-  grid-template-columns:80px 1fr auto;
+  grid-template-columns:90px 1fr 36px;
   gap:12px;
   align-items:flex-start;
-  padding:10px;
+  padding:10px 12px 12px 12px;
   opacity:1;
   border-top-left-radius:inherit;
   border-top-right-radius:inherit;
@@ -4392,11 +4392,10 @@ body.mode-map .post-board{
   z-index:3;
   background:transparent;
   cursor:pointer;
-  min-height:100px;
 }
 .open-post .post-header .thumb{
-  width:80px;
-  height:80px;
+  width:90px;
+  height:70px;
   border-radius:8px;
   object-fit:cover;
   display:block;
