@@ -15520,8 +15520,8 @@ function makePosts(){
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        // Always scroll when opening from post/recents board (not just from map/ads)
-        const shouldScrollToCard = !fromHistory || fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        // Only scroll when opening from map or ads (NOT from post board - those should expand in place)
+        const shouldScrollToCard = fromHistory || fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer);
         const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
         
         console.log('=== POINTER CHECK ===', {
