@@ -15231,11 +15231,11 @@ function makePosts(){
             </div>
           </div>
           <div class="header-actions">
-            <button class="share" aria-label="Share post">
-              <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
-            </button>
             <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
               <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+            </button>
+            <button class="share" aria-label="Share post">
+              <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
             </button>
           </div>
         </div>
@@ -16199,6 +16199,82 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
+        const mapLoading = (() => {
+          const loader = window.__logoLoading;
+          if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
+            return null;
+          }
+          const overlay = document.getElementById('headerLoadingOverlay');
+          const motionTokens = new Set();
+          let tilesPending = false;
+          let active = false;
+
+          const isMapMovingNow = () => {
+            if(!map) return false;
+            try{
+              if(typeof map.isMoving === 'function' && map.isMoving()) return true;
+              if(typeof map.isZooming === 'function' && map.isZooming()) return true;
+              if(typeof map.isRotating === 'function' && map.isRotating()) return true;
+              if(typeof map.isEasing === 'function' && map.isEasing()) return true;
+            }catch(err){}
+            return false;
+          };
+
+          const apply = (forceStop = false) => {
+            const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
+            if(busy){
+              if(overlay){
+                overlay.classList.remove('is-hidden');
+                overlay.setAttribute('aria-hidden', 'false');
+              }
+              if(!active){
+                active = true;
+                try{ loader.begin('map'); }catch(err){}
+              }
+            } else {
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
+            }
+          };
+
+          return {
+            apply,
+            setTiles(pending){
+              if(tilesPending === pending) return;
+              tilesPending = pending;
+              apply();
+            },
+            addMotion(token){
+              if(motionTokens.has(token)) return;
+              motionTokens.add(token);
+              apply();
+            },
+            removeMotion(token){
+              if(!motionTokens.has(token)) return;
+              motionTokens.delete(token);
+              apply();
+            },
+            clearAll(){
+              motionTokens.clear();
+              tilesPending = false;
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
+            }
+          };
+        })();
+
         const geolocateToken = `geolocate:${idx}`;
         let geolocateButton = null;
         let geolocateFallbackTimeout = null;
@@ -16521,81 +16597,6 @@ if (!map.__pillHooksInstalled) {
         };
         try{ map.on('styleimagemissing', handleStyleImageMissing); }
         catch(err){ console.error(err); }
-        const mapLoading = (() => {
-          const loader = window.__logoLoading;
-          if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
-            return null;
-          }
-          const overlay = document.getElementById('headerLoadingOverlay');
-          const motionTokens = new Set();
-          let tilesPending = false;
-          let active = false;
-
-          const isMapMovingNow = () => {
-            if(!map) return false;
-            try{
-              if(typeof map.isMoving === 'function' && map.isMoving()) return true;
-              if(typeof map.isZooming === 'function' && map.isZooming()) return true;
-              if(typeof map.isRotating === 'function' && map.isRotating()) return true;
-              if(typeof map.isEasing === 'function' && map.isEasing()) return true;
-            }catch(err){}
-            return false;
-          };
-
-          const apply = (forceStop = false) => {
-            const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
-            if(busy){
-              if(overlay){
-                overlay.classList.remove('is-hidden');
-                overlay.setAttribute('aria-hidden', 'false');
-              }
-              if(!active){
-                active = true;
-                try{ loader.begin('map'); }catch(err){}
-              }
-            } else {
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
-              if(active){
-                active = false;
-                try{ loader.end('map'); }catch(err){}
-              }
-            }
-          };
-
-          return {
-            apply,
-            setTiles(pending){
-              if(tilesPending === pending) return;
-              tilesPending = pending;
-              apply();
-            },
-            addMotion(token){
-              if(motionTokens.has(token)) return;
-              motionTokens.add(token);
-              apply();
-            },
-            removeMotion(token){
-              if(!motionTokens.has(token)) return;
-              motionTokens.delete(token);
-              apply();
-            },
-            clearAll(){
-              motionTokens.clear();
-              tilesPending = false;
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
-              if(active){
-                active = false;
-                try{ loader.end('map'); }catch(err){}
-              }
-            }
-          };
-        })();
 
         if(mapLoading){
           const updateRenderState = () => {

@@ -1607,6 +1607,11 @@ button[aria-expanded="true"] .results-arrow{
   width:18px;
   height:18px;
 }
+.open-post .post-header .sub-icon img,
+.open-post .post-header .sub-icon svg{
+  width:20px;
+  height:20px;
+}
 #adminPanel .color-group{
   flex:0 0 200px;
   width:100%;
@@ -4387,6 +4392,7 @@ body.mode-map .post-board{
   z-index:3;
   background:transparent;
   cursor:pointer;
+  min-height:100px;
 }
 .open-post .post-header .thumb{
   width:80px;
@@ -4430,6 +4436,7 @@ body.mode-map .post-board{
   transition:transform 0.3s ease, opacity 0.3s ease, max-height 0.3s ease;
   max-height:none;
   overflow:hidden;
+  position:relative;
 }
 
 .open-post.post-collapsed .post-body{
