@@ -5452,6 +5452,7 @@ function makePosts(){
     });
   }
 
+  /* TEMPORARY DISABLE FOR PERFORMANCE TEST
   // ---- 100 posts in Tasmania ----
   const tasLng = 147.3272, tasLat = -42.8821;
   const tasCity = "Hobart, Tasmania";
@@ -6313,6 +6314,7 @@ function makePosts(){
       post.dates = [];
     }
   });
+  END TEMPORARY DISABLE */
 
   return out;
 }
