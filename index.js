@@ -2179,6 +2179,10 @@ async function ensureMapboxCssFor(container) {
               spinZoomMax = data.settings.spin_zoom_max || 4;
               spinSpeed = data.settings.spin_speed || 0.3;
               
+              // Store icon and mapmarker folder paths globally
+              window.iconFolder = data.settings.icon_folder || 'assets/icons_20';
+              window.mapmarkerFolder = data.settings.mapmarker_folder || 'assets/icons_30';
+              
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
               spinEnabled = shouldSpin;
@@ -2221,6 +2225,16 @@ async function ensureMapboxCssFor(container) {
               if(spinSpeedSlider && spinSpeedDisplay){
                 spinSpeedSlider.value = spinSpeed;
                 spinSpeedDisplay.textContent = spinSpeed.toFixed(1);
+              }
+              
+              // Initialize icon folder inputs
+              const iconFolderInput = document.getElementById('adminIconFolder');
+              const mapmarkerFolderInput = document.getElementById('adminMapmarkerFolder');
+              if(iconFolderInput){
+                iconFolderInput.value = window.iconFolder;
+              }
+              if(mapmarkerFolderInput){
+                mapmarkerFolderInput.value = window.mapmarkerFolder;
               }
             }
           }
@@ -8277,6 +8291,23 @@ function makePosts(){
         closeSubcategoryFieldOverlay();
       }
       closeAllIconPickers();
+      
+      // Function to load available icons from a folder
+      const loadIconsFromFolder = async (folderPath) => {
+        if(!folderPath) return [];
+        try {
+          const response = await fetch(`/gateway.php?action=list-icons&folder=${encodeURIComponent(folderPath)}`);
+          if(!response.ok) return [];
+          const data = await response.json();
+          if(data.success && Array.isArray(data.icons)){
+            return data.icons.map(icon => `${folderPath}/${icon}`);
+          }
+        } catch(err){
+          console.warn('Failed to load icons from folder:', err);
+        }
+        return [];
+      };
+      
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
@@ -8284,6 +8315,7 @@ function makePosts(){
         const label = typeof opts.label === 'string' && opts.label.trim() ? opts.label.trim() : 'Choose Icon';
         const parentMenu = opts.parentMenu || null;
         const parentCategoryMenu = opts.parentCategoryMenu || null;
+        const useIconFolder = opts.useIconFolder !== false;
         let popup = null;
         let alignFrame = 0;
         let resizeObserver = null;
@@ -8376,9 +8408,20 @@ function makePosts(){
         const handleScroll = ()=> scheduleAlign();
         const handleResize = ()=> scheduleAlign();
 
-        const openPicker = ()=>{
-          if(popup || !ICON_LIBRARY.length) return;
+        const openPicker = async ()=>{
+          if(popup) return;
           closeAllIconPickers();
+          
+          // Load icons from folder if configured
+          let iconsToShow = [];
+          if(useIconFolder && window.iconFolder){
+            iconsToShow = await loadIconsFromFolder(window.iconFolder);
+          }
+          if(!iconsToShow.length){
+            iconsToShow = ICON_LIBRARY.slice();
+          }
+          if(!iconsToShow.length) return;
+          
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup';
           popup.setAttribute('role', 'dialog');
@@ -8389,7 +8432,7 @@ function makePosts(){
           grid.className = 'icon-picker-grid';
           const currentPath = applyNormalizeIconPath(getCurrentPath());
           const optionsList = [{ value: '', label: 'No Icon' }];
-          ICON_LIBRARY.forEach(path => {
+          iconsToShow.forEach(path => {
             if(typeof path === 'string' && path.trim()){
               optionsList.push({ value: applyNormalizeIconPath(path) });
             }
@@ -8448,7 +8491,200 @@ function makePosts(){
             openPicker();
           }
         });
-        if(!ICON_LIBRARY.length){
+        // Enable picker if we have icon folder or ICON_LIBRARY
+        if(!ICON_LIBRARY.length && !window.iconFolder){
+          trigger.disabled = true;
+          trigger.setAttribute('aria-disabled','true');
+        } else {
+          trigger.disabled = false;
+          trigger.removeAttribute('aria-disabled');
+        }
+        return { open: openPicker, close: closePicker };
+      };
+      
+      // Function to attach mapmarker picker
+      const attachMapmarkerPicker = (trigger, container, options = {})=>{
+        const opts = options || {};
+        const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
+        const onSelect = typeof opts.onSelect === 'function' ? opts.onSelect : (()=>{});
+        const label = typeof opts.label === 'string' && opts.label.trim() ? opts.label.trim() : 'Choose Mapmarker';
+        const parentMenu = opts.parentMenu || null;
+        const parentCategoryMenu = opts.parentCategoryMenu || null;
+        let popup = null;
+        let alignFrame = 0;
+        let resizeObserver = null;
+        
+        const alignPopup = ()=>{
+          if(!popup) return;
+          let triggerRect;
+          let containerRect;
+          try {
+            triggerRect = trigger.getBoundingClientRect();
+            containerRect = container.getBoundingClientRect();
+          } catch(err){
+            return;
+          }
+          const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+          const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+          let left = triggerRect.left - containerRect.left;
+          let top = triggerRect.bottom - containerRect.top + 8;
+          popup.style.left = '0px';
+          popup.style.top = '0px';
+          const popupRect = popup.getBoundingClientRect();
+          const overflowRight = triggerRect.left + popupRect.width - viewportWidth + 12;
+          if(overflowRight > 0){
+            left -= overflowRight;
+          }
+          const overflowLeft = containerRect.left + left;
+          if(overflowLeft < 8){
+            left += 8 - overflowLeft;
+          }
+          const desiredBottom = triggerRect.bottom + 8 + popupRect.height;
+          if(desiredBottom > viewportHeight - 12){
+            const altTop = triggerRect.top - containerRect.top - popupRect.height - 8;
+            if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
+              top = Math.max(0, altTop);
+            }
+          }
+          if(containerRect.left + left < 0){
+            left = -containerRect.left;
+          }
+          popup.style.left = `${Math.round(left)}px`;
+          popup.style.top = `${Math.round(Math.max(0, top))}px`;
+        };
+        
+        const scheduleAlign = ()=>{
+          if(!popup) return;
+          if(alignFrame){
+            cancelAnimationFrame(alignFrame);
+          }
+          alignFrame = requestAnimationFrame(()=>{
+            alignFrame = 0;
+            alignPopup();
+          });
+        };
+        
+        const closePicker = ()=>{
+          if(!popup) return;
+          popup.remove();
+          popup = null;
+          if(alignFrame){
+            cancelAnimationFrame(alignFrame);
+            alignFrame = 0;
+          }
+          container.classList.remove('mapmarker-picker-open');
+          if(parentMenu) parentMenu.classList.remove('has-floating-overlay');
+          if(parentCategoryMenu) parentCategoryMenu.classList.remove('has-floating-overlay');
+          document.removeEventListener('pointerdown', handlePointerDown, true);
+          document.removeEventListener('keydown', handleKeyDown, true);
+          window.removeEventListener('scroll', handleScroll, true);
+          window.removeEventListener('resize', handleResize);
+          if(resizeObserver){
+            try{ resizeObserver.disconnect(); }catch(err){}
+            resizeObserver = null;
+          }
+          OPEN_ICON_PICKERS.delete(closePicker);
+        };
+        
+        const handlePointerDown = event => {
+          if(!popup) return;
+          const target = event.target;
+          if(!target) return;
+          if(target === trigger || (typeof trigger.contains === 'function' && trigger.contains(target))) return;
+          if(popup.contains(target)) return;
+          closePicker();
+        };
+        const handleKeyDown = event => {
+          if(event.key === 'Escape'){
+            closePicker();
+          }
+        };
+        const handleScroll = ()=> scheduleAlign();
+        const handleResize = ()=> scheduleAlign();
+        
+        const openPicker = async ()=>{
+          if(popup) return;
+          closeAllIconPickers();
+          
+          // Load mapmarkers from folder
+          let markersToShow = [];
+          if(window.mapmarkerFolder){
+            markersToShow = await loadIconsFromFolder(window.mapmarkerFolder);
+          }
+          if(!markersToShow.length) return;
+          
+          popup = document.createElement('div');
+          popup.className = 'icon-picker-popup mapmarker-picker-popup';
+          popup.setAttribute('role', 'dialog');
+          popup.setAttribute('aria-label', label);
+          popup.tabIndex = -1;
+          popup.style.position = 'absolute';
+          const grid = document.createElement('div');
+          grid.className = 'icon-picker-grid';
+          const currentPath = applyNormalizeIconPath(getCurrentPath());
+          const optionsList = [{ value: '', label: 'No Mapmarker' }];
+          markersToShow.forEach(path => {
+            if(typeof path === 'string' && path.trim()){
+              optionsList.push({ value: applyNormalizeIconPath(path) });
+            }
+          });
+          optionsList.forEach(entry => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'icon-picker-option';
+            const value = entry.value || '';
+            if(!value){
+              btn.classList.add('icon-picker-option--clear');
+              btn.textContent = entry.label || 'No Mapmarker';
+            } else {
+              const img = document.createElement('img');
+              img.src = value;
+              img.alt = '';
+              btn.appendChild(img);
+            }
+            if(value === currentPath){
+              btn.classList.add('selected');
+            }
+            btn.addEventListener('click', ()=>{
+              onSelect(value);
+              closePicker();
+            });
+            grid.appendChild(btn);
+          });
+          popup.appendChild(grid);
+          container.appendChild(popup);
+          container.classList.add('mapmarker-picker-open');
+          if(parentMenu) parentMenu.classList.add('has-floating-overlay');
+          if(parentCategoryMenu) parentCategoryMenu.classList.add('has-floating-overlay');
+          scheduleAlign();
+          document.addEventListener('pointerdown', handlePointerDown, true);
+          document.addEventListener('keydown', handleKeyDown, true);
+          window.addEventListener('scroll', handleScroll, true);
+          window.addEventListener('resize', handleResize);
+          if(typeof ResizeObserver === 'function'){
+            resizeObserver = new ResizeObserver(()=> scheduleAlign());
+            try{ resizeObserver.observe(container); }catch(err){ resizeObserver = null; }
+          }
+          OPEN_ICON_PICKERS.add(closePicker);
+          requestAnimationFrame(()=>{
+            try{ popup.focus({ preventScroll: true }); }
+            catch(err){ try{ popup.focus(); }catch(e){} }
+          });
+        };
+        
+        trigger.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          openPicker();
+        });
+        trigger.addEventListener('keydown', event => {
+          if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar'){
+            event.preventDefault();
+            openPicker();
+          }
+        });
+        // Enable picker if we have mapmarker folder
+        if(!window.mapmarkerFolder){
           trigger.disabled = true;
           trigger.setAttribute('aria-disabled','true');
         } else {
@@ -13704,7 +13940,65 @@ function makePosts(){
           deleteSubcategoryRow.className = 'formbuilder-delete-row';
           deleteSubcategoryRow.append(deleteSubBtn);
 
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
+          // Mapmarker Picker Row
+          const subMapmarkerPicker = document.createElement('div');
+          subMapmarkerPicker.className = 'mapmarker-picker-container';
+          
+          const subMapmarkerButton = document.createElement('button');
+          subMapmarkerButton.type = 'button';
+          subMapmarkerButton.className = 'mapmarker-picker-button';
+          const currentMapmarker = subcategoryMarkers && subcategoryMarkers[slugify(sub)];
+          subMapmarkerButton.textContent = currentMapmarker ? 'Change Mapmarker' : 'Choose Mapmarker';
+          
+          const subMapmarkerPreview = document.createElement('div');
+          subMapmarkerPreview.className = 'mapmarker-picker-preview';
+          const subMapmarkerPreviewLabel = document.createElement('span');
+          subMapmarkerPreviewLabel.textContent = 'No Mapmarker';
+          const subMapmarkerPreviewImg = document.createElement('img');
+          subMapmarkerPreviewImg.alt = `${sub} mapmarker preview`;
+          subMapmarkerPreview.append(subMapmarkerPreviewLabel, subMapmarkerPreviewImg);
+          
+          if(currentMapmarker){
+            subMapmarkerPreviewImg.src = currentMapmarker;
+            subMapmarkerPreview.classList.add('has-image');
+            subMapmarkerPreviewLabel.textContent = '';
+          }
+          
+          subMapmarkerPicker.append(subMapmarkerButton, subMapmarkerPreview);
+          
+          const updateSubMapmarkerDisplay = (src)=>{
+            const normalized = applyNormalizeIconPath(src);
+            if(normalized){
+              subMapmarkerPreviewImg.src = normalized;
+              subMapmarkerPreview.classList.add('has-image');
+              subMapmarkerPreviewLabel.textContent = '';
+              subMapmarkerButton.textContent = 'Change Mapmarker';
+              subcategoryMarkers[slugify(currentSubName)] = normalized;
+              if(currentSubName !== slugify(currentSubName)){
+                subcategoryMarkers[currentSubName] = normalized;
+              }
+            } else {
+              subMapmarkerPreviewImg.removeAttribute('src');
+              subMapmarkerPreview.classList.remove('has-image');
+              subMapmarkerPreviewLabel.textContent = 'No Mapmarker';
+              subMapmarkerButton.textContent = 'Choose Mapmarker';
+              delete subcategoryMarkers[slugify(currentSubName)];
+              delete subcategoryMarkers[currentSubName];
+            }
+            notifyFormbuilderChange();
+          };
+          
+          attachMapmarkerPicker(subMapmarkerButton, subMapmarkerPicker, {
+            getCurrentPath: ()=> subcategoryMarkers[slugify(currentSubName)] || subcategoryMarkers[currentSubName] || '',
+            onSelect: value => {
+              updateSubMapmarkerDisplay(value);
+            },
+            label: `Choose mapmarker for ${sub}`,
+            parentMenu: subContent,
+            parentCategoryMenu: menu
+          });
+
+          subEditPanel.append(subNameInput, subIconPicker, subMapmarkerPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -20231,6 +20525,24 @@ function openPanel(m){
         if(!isNaN(speedValue)) settings.spin_speed = speedValue;
       }
       
+      // Include icon folder settings
+      const iconFolderInput = document.getElementById('adminIconFolder');
+      const mapmarkerFolderInput = document.getElementById('adminMapmarkerFolder');
+      if(iconFolderInput){
+        const iconFolderValue = iconFolderInput.value.trim();
+        if(iconFolderValue){
+          settings.icon_folder = iconFolderValue;
+          window.iconFolder = iconFolderValue;
+        }
+      }
+      if(mapmarkerFolderInput){
+        const mapmarkerFolderValue = mapmarkerFolderInput.value.trim();
+        if(mapmarkerFolderValue){
+          settings.mapmarker_folder = mapmarkerFolderValue;
+          window.mapmarkerFolder = mapmarkerFolderValue;
+        }
+      }
+      
       try {
         await fetch('/gateway.php?action=save-admin-settings', {
           method: 'POST',
@@ -20355,6 +20667,28 @@ function openPanel(m){
         autoSaveMapSettings();
       });
     });
+    
+    // Auto-save icon folder settings on blur
+    const iconFolderInput = document.getElementById('adminIconFolder');
+    const mapmarkerFolderInput = document.getElementById('adminMapmarkerFolder');
+    if(iconFolderInput && !iconFolderInput.dataset.autoSaveAdded){
+      iconFolderInput.dataset.autoSaveAdded = 'true';
+      iconFolderInput.addEventListener('blur', ()=>{
+        autoSaveMapSettings();
+      });
+      iconFolderInput.addEventListener('change', ()=>{
+        autoSaveMapSettings();
+      });
+    }
+    if(mapmarkerFolderInput && !mapmarkerFolderInput.dataset.autoSaveAdded){
+      mapmarkerFolderInput.dataset.autoSaveAdded = 'true';
+      mapmarkerFolderInput.addEventListener('blur', ()=>{
+        autoSaveMapSettings();
+      });
+      mapmarkerFolderInput.addEventListener('change', ()=>{
+        autoSaveMapSettings();
+      });
+    }
   }
   
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');

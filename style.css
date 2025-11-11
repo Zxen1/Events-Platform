@@ -1552,6 +1552,17 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 
+.settings-paypal-container,
+.settings-icon-folders-container{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  width:100%;
+  max-width:420px;
+  margin:12px auto;
+  padding:10px;
+  border-radius:8px;
+}
+
 .sub-icon svg{
   width:18px;
   height:18px;
@@ -6434,7 +6445,8 @@ html, body { cursor: auto !important; }
               gap:16px;
               flex-wrap:wrap;
             }
-            #tab-forms .iconpicker-button{
+            #tab-forms .iconpicker-button,
+            #tab-forms .mapmarker-picker-button{
               position:relative;
               display:inline-flex;
               align-items:center;
@@ -6450,17 +6462,22 @@ html, body { cursor: auto !important; }
               transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
             }
             #tab-forms .iconpicker-button:hover,
-            #tab-forms .iconpicker-button:focus-visible{
+            #tab-forms .iconpicker-button:focus-visible,
+            #tab-forms .mapmarker-picker-button:hover,
+            #tab-forms .mapmarker-picker-button:focus-visible{
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
               color:var(--button-text);
               outline:none;
             }
-            #tab-forms .iconpicker-button:focus-visible{
+            #tab-forms .iconpicker-button:focus-visible,
+            #tab-forms .mapmarker-picker-button:focus-visible{
               box-shadow:0 0 0 3px rgba(46,58,114,0.45);
             }
             #tab-forms .iconpicker-button[disabled],
-            #tab-forms .iconpicker-button[aria-disabled='true']{
+            #tab-forms .iconpicker-button[aria-disabled='true'],
+            #tab-forms .mapmarker-picker-button[disabled],
+            #tab-forms .mapmarker-picker-button[aria-disabled='true']{
               cursor:not-allowed;
               opacity:0.65;
               background:rgba(255,255,255,0.08);
@@ -6468,11 +6485,13 @@ html, body { cursor: auto !important; }
               color:var(--muted);
               box-shadow:none;
             }
-            #tab-forms .iconpicker-container.iconpicker-open .iconpicker-button{
+            #tab-forms .iconpicker-container.iconpicker-open .iconpicker-button,
+            #tab-forms .mapmarker-picker-container.mapmarker-picker-open .mapmarker-picker-button{
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
             }
-            #tab-forms .iconpicker-preview{
+            #tab-forms .iconpicker-preview,
+            #tab-forms .mapmarker-picker-preview{
               display:flex;
               align-items:center;
               justify-content:center;
@@ -6485,16 +6504,27 @@ html, body { cursor: auto !important; }
               background:none;
               border:none;
             }
-            #tab-forms .iconpicker-preview img{
+            #tab-forms .iconpicker-preview img,
+            #tab-forms .mapmarker-picker-preview img{
               max-width:100%;
               max-height:100%;
               display:none;
             }
-            #tab-forms .iconpicker-preview.has-image{
+            #tab-forms .iconpicker-preview.has-image,
+            #tab-forms .mapmarker-picker-preview.has-image{
               color:transparent;
             }
-            #tab-forms .iconpicker-preview.has-image img{
+            #tab-forms .iconpicker-preview.has-image img,
+            #tab-forms .mapmarker-picker-preview.has-image img{
               display:block;
+            }
+            #tab-forms .iconpicker-preview img{
+              width:20px;
+              height:20px;
+            }
+            #tab-forms .mapmarker-picker-preview img{
+              width:30px;
+              height:30px;
             }
             #tab-forms .icon-picker-popup{
               position:absolute;
