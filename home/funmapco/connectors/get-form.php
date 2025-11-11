@@ -181,7 +181,6 @@ function fetchCategories(PDO $pdo, array $columns): array
 
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
-    $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
     $hasFieldTypeId = in_array('field_type_id', $columns, true);
     $hasFieldTypeName = in_array('field_type_name', $columns, true);
 
@@ -197,9 +196,6 @@ function fetchCategories(PDO $pdo, array $columns): array
     }
     if ($hasIconPath) {
         $selectColumns[] = '`icon_path`';
-    }
-    if ($hasMapmarkerPath) {
-        $selectColumns[] = '`mapmarker_path`';
     }
     if ($hasFieldTypeId) {
         $selectColumns[] = '`field_type_id`';
@@ -238,9 +234,6 @@ function fetchCategories(PDO $pdo, array $columns): array
             'icon_path' => $hasIconPath && isset($row['icon_path']) && is_string($row['icon_path'])
                 ? trim($row['icon_path'])
                 : null,
-            'mapmarker_path' => $hasMapmarkerPath && isset($row['mapmarker_path']) && is_string($row['mapmarker_path'])
-                ? trim($row['mapmarker_path'])
-                : null,
             'field_type_ids' => $fieldTypeIds,
             'field_type_names' => $fieldTypeNames,
         ];
@@ -276,7 +269,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $hasCategoryId = in_array('category_id', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
-    $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
     $hasSubcategoryKey = in_array('subcategory_key', $columns, true);
     $hasRequired = in_array('required', $columns, true);
 
@@ -294,9 +286,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
     if ($hasIconPath) {
         $select[] = 's.`icon_path`';
-    }
-    if ($hasMapmarkerPath) {
-        $select[] = 's.`mapmarker_path`';
     }
     if ($hasSubcategoryKey) {
         $select[] = 's.`subcategory_key`';
@@ -399,9 +388,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             'sort_order' => $hasSortOrder && isset($row['sort_order']) ? (int) $row['sort_order'] : null,
             'icon_path' => $hasIconPath && isset($row['icon_path']) && is_string($row['icon_path'])
                 ? trim($row['icon_path'])
-                : null,
-            'mapmarker_path' => $hasMapmarkerPath && isset($row['mapmarker_path']) && is_string($row['mapmarker_path'])
-                ? trim($row['mapmarker_path'])
                 : null,
             'subcategory_key' => $subcategoryKey,
             'required' => $required,
@@ -730,8 +716,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
 
         $markerPath = '';
-        if (isset($category['mapmarker_path']) && is_string($category['mapmarker_path'])) {
-            $candidate = trim($category['mapmarker_path']);
+        if (isset($category['icon_path']) && is_string($category['icon_path'])) {
+            $candidate = trim($category['icon_path']);
             if ($candidate !== '') {
                 $markerPath = $candidate;
             }
@@ -937,8 +923,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
 
         $markerPath = '';
-        if (isset($sub['mapmarker_path']) && is_string($sub['mapmarker_path'])) {
-            $candidate = trim($sub['mapmarker_path']);
+        if (isset($sub['icon_path']) && is_string($sub['icon_path'])) {
+            $candidate = trim($sub['icon_path']);
             if ($candidate !== '') {
                 $markerPath = $candidate;
             }

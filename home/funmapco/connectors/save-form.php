@@ -293,10 +293,6 @@ try {
             $categoryUpdateParts[] = 'icon_path = :category_icon_path';
             $categoryParams[':category_icon_path'] = $categoryIconVariants['icon'];
         }
-        if (in_array('mapmarker_path', $categoryColumns, true)) {
-            $categoryUpdateParts[] = 'mapmarker_path = :category_marker_path';
-            $categoryParams[':category_marker_path'] = $categoryIconVariants['marker'];
-        }
         if ($categoryKey !== '' && in_array('category_key', $categoryColumns, true)) {
             $categoryUpdateParts[] = 'category_key = :category_key';
             $categoryParams[':category_key'] = $categoryKey;
@@ -887,16 +883,12 @@ try {
                 $updateParts[] = 'listing_days = :listing_days';
                 $params[':listing_days'] = $listingDays;
             }
-            // Only update icon_path and mapmarker_path if icon data was provided in payload
+            // Only update icon_path if icon data was provided in payload
             $hasIconInPayload = !empty($subcategoryIconPaths) || !empty($subcategoryIcons);
             if ($hasIconInPayload) {
                 if (in_array('icon_path', $subcategoryColumns, true)) {
                     $updateParts[] = 'icon_path = :icon_path';
                     $params[':icon_path'] = $subIconVariants['icon'];
-                }
-                if (in_array('mapmarker_path', $subcategoryColumns, true)) {
-                    $updateParts[] = 'mapmarker_path = :mapmarker_path';
-                    $params[':mapmarker_path'] = $subIconVariants['marker'];
                 }
             }
 
