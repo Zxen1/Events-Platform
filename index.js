@@ -15517,7 +15517,8 @@ function makePosts(){
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        // Always scroll when opening from post/recents board (not just from map/ads)
+        const shouldScrollToCard = !fromHistory || fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
         const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
         
         console.log('=== POINTER CHECK ===', {
@@ -15526,6 +15527,7 @@ function makePosts(){
           pointerInsideCardContainer,
           pointerInAdBoard: !!pointerInAdBoard,
           fromMap,
+          fromHistory,
           shouldScrollToCard
         });
 
