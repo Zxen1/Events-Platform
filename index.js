@@ -15284,7 +15284,7 @@ function makePosts(){
 
     function buildDetail(p){
       const wrap = document.createElement('div');
-      wrap.className = 'open-post';
+      wrap.className = 'open-post post-expanding';
       wrap.dataset.id = p.id;
       const locationList = Array.isArray(p.locations) ? p.locations : [];
       const loc0 = locationList[0] || {};
@@ -15350,9 +15350,19 @@ function makePosts(){
       wrap.querySelectorAll('.post-header').forEach(head => {
         head.dataset.surfaceBg = CARD_SURFACE;
         head.style.background = CARD_SURFACE;
+        // Add click handler to toggle post body
+        head.addEventListener('click', (e) => {
+          // Don't trigger if clicking on buttons
+          if(e.target.closest('button, [role="button"], a')) return;
+          wrap.classList.toggle('post-collapsed');
+        });
       });
       wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
+      // Remove expanding class after animation
+      setTimeout(() => {
+        wrap.classList.remove('post-expanding');
+      }, 300);
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');

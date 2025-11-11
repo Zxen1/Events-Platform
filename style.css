@@ -4358,6 +4358,7 @@ body.mode-map .post-board{
   z-index:3;
   background:transparent;
   pointer-events:none;
+  cursor:pointer;
 }
 .open-post .post-header button,
 .open-post .post-header [role="button"],
@@ -4379,6 +4380,34 @@ body.mode-map .post-board{
   flex:1 1 100%;
   max-width:100%;
   width:100%;
+  transform-origin:top;
+  transition:transform 0.3s ease, opacity 0.3s ease, max-height 0.3s ease;
+  max-height:none;
+  overflow:hidden;
+}
+
+.open-post.post-collapsed .post-body{
+  transform:translateY(-100%);
+  opacity:0;
+  max-height:0;
+  pointer-events:none;
+}
+
+.open-post.post-expanding .post-body{
+  animation:slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown{
+  from{
+    transform:translateY(-20px);
+    opacity:0;
+    max-height:0;
+  }
+  to{
+    transform:translateY(0);
+    opacity:1;
+    max-height:10000px;
+  }
 }
 .open-post .post-body > .main-post-column{
   flex:1 1 100%;
