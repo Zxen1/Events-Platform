@@ -3444,7 +3444,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       versionPriceCurrencies: [],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
-      iconLibrary: [],
       fieldTypes: []
     };
 
@@ -3546,8 +3545,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return normalized;
     }
-
-    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
 
     function normalizeCategoriesSnapshot(sourceCategories){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
@@ -3660,40 +3657,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       );
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
-      const normalizedIconPathsFromMaps = [
-        ...Object.values(normalizedCategoryIconPaths || {}),
-        ...Object.values(normalizedSubcategoryIconPaths || {})
-      ].map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
-        .filter(path => path && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(path));
-      const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
-        ? snapshot.iconLibrary
-        : [];
-      const mergedIconSet = new Set();
-      const mergedIconLibrary = [];
-      const addIconToLibrary = (icon)=>{
-        if(typeof icon !== 'string'){
-          return;
-        }
-        const normalized = normalizeIconAssetPath(icon);
-        if(!normalized || !ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalized)){
-          return;
-        }
-        const key = normalized.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(normalized);
-      };
-      iconLibrarySource.forEach(addIconToLibrary);
-      normalizedIconPathsFromMaps.forEach(addIconToLibrary);
-      const iconLibrary = mergedIconLibrary;
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        iconLibrary,
         fieldTypes: normalizedFieldTypes
       };
     }
@@ -3743,54 +3711,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return promise;
     })();
 
-    const ICON_LIBRARY = Array.isArray(window.iconLibrary)
-      ? window.iconLibrary
-      : (window.iconLibrary = []);
-
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
-    const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
-      ? initialFormbuilderSnapshot.iconLibrary
-      : [];
-    const existingWindowIcons = Array.isArray(window.iconLibrary)
-      ? window.iconLibrary.slice()
-      : [];
-    const mapIconValues = [
-      ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
-      ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
-    ].map(value => (typeof value === 'string' ? normalizeIconAssetPath(value) : ''))
-      .filter(value => value && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(value));
-    const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
-    const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
-    const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
-    const mergedIconSet = new Set();
-    const mergedIconLibrary = [];
-    const mergeIcons = icons => {
-      if(!Array.isArray(icons)){
-        return;
-      }
-      icons.forEach(icon => {
-        if(typeof icon !== 'string' || !icon){
-          return;
-        }
-        const key = icon.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(icon);
-      });
-    };
-    mergeIcons(sanitizedSnapshotIcons);
-    mergeIcons(sanitizedMapIcons);
-    mergeIcons(sanitizedWindowIcons);
-    ICON_LIBRARY.length = 0;
-    if(mergedIconLibrary.length){
-      ICON_LIBRARY.push(...mergedIconLibrary);
-    }
-    window.iconLibrary = ICON_LIBRARY;
-    initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
     function sanitizeFieldTypeOptions(options){
       const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
       const sanitized = [];
@@ -4093,32 +4016,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return typeof name === 'string' && name ? `name:${name.toLowerCase()}` : '';
     }
 
-    function normalizeIconLibraryEntries(entries){
-      const seen = new Set();
-      const normalized = [];
-      if(!Array.isArray(entries)){
-        return normalized;
-      }
-      entries.forEach(item => {
-        if(typeof item !== 'string'){
-          return;
-        }
-        const normalizedPath = normalizeIconAssetPath(item);
-        if(!normalizedPath){
-          return;
-        }
-        if(!ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalizedPath)){
-          return;
-        }
-        const key = normalizedPath.toLowerCase();
-        if(seen.has(key)){
-          return;
-        }
-        seen.add(key);
-        normalized.push(normalizedPath);
-      });
-      return normalized;
-    }
     function normalizeIconAssetPath(path){
       const normalized = baseNormalizeIconPath(path);
       if(!normalized){
@@ -4127,18 +4024,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       if(/^(?:https?:)?\/\//i.test(normalized) || normalized.startsWith('data:')){
         return normalized;
       }
-      const dividerIndex = normalized.search(/[?#]/);
-      const basePath = dividerIndex >= 0 ? normalized.slice(0, dividerIndex) : normalized;
-      const suffix = dividerIndex >= 0 ? normalized.slice(dividerIndex) : '';
-      let next = basePath.replace(/(^|\/)icons-20\//gi, '$1icons-30/');
-      next = next.replace(/^icons-30\//i, 'assets/icons-30/');
-      next = next.replace(/^assets\/icons-20\//i, 'assets/icons-30/');
-      const sourcePath = next;
-      next = sourcePath.replace(/-20(\.[^./]+)$/i, (match, ext, offset) => {
-        const prevChar = sourcePath.charAt(Math.max(0, offset - 1));
-        return /\d/.test(prevChar) ? match : `-30${ext}`;
-      });
-      return next + suffix;
+      return normalized;
     }
 
     const existingNormalizeIconPath = (typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function')
@@ -8413,16 +8299,8 @@ function makePosts(){
             try {
               iconsToShow = await loadIconsFromFolder(window.iconFolder);
             } catch(err){
-              console.warn('Failed to load from icon folder, using ICON_LIBRARY', err);
+              console.warn('Failed to load from icon folder', err);
             }
-          }
-          if(!iconsToShow.length){
-            iconsToShow = ICON_LIBRARY.slice();
-          }
-          if(!iconsToShow.length){
-            console.warn('No icons available to display in picker');
-            alert('Icon picker requires backend configuration. Please add the list-icons endpoint to gateway.php');
-            return;
           }
           
           popup = document.createElement('div');
@@ -8433,36 +8311,46 @@ function makePosts(){
           popup.style.position = 'absolute';
           const grid = document.createElement('div');
           grid.className = 'icon-picker-grid';
-          const currentPath = applyNormalizeIconPath(getCurrentPath());
-          const optionsList = [{ value: '', label: 'No Icon' }];
-          iconsToShow.forEach(path => {
-            if(typeof path === 'string' && path.trim()){
-              optionsList.push({ value: applyNormalizeIconPath(path) });
-            }
-          });
-          optionsList.forEach(entry => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'icon-picker-option';
-            const value = entry.value || '';
-            if(!value){
-              btn.classList.add('icon-picker-option--clear');
-              btn.textContent = entry.label || 'No Icon';
-            } else {
-              const img = document.createElement('img');
-              img.src = value;
-              img.alt = '';
-              btn.appendChild(img);
-            }
-            if(value === currentPath){
-              btn.classList.add('selected');
-            }
-            btn.addEventListener('click', ()=>{
-              onSelect(value);
-              closePicker();
+          
+          if(!iconsToShow.length){
+            console.warn('No icons available to display in picker');
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'icon-picker-error';
+            errorMsg.innerHTML = 'No icons found. Please select the icon folder in the Admin Settings Tab.<br>eg. assets/icons';
+            errorMsg.style.cssText = 'padding: 20px; text-align: center; color: #fff; line-height: 1.6;';
+            grid.appendChild(errorMsg);
+          } else {
+            const currentPath = applyNormalizeIconPath(getCurrentPath());
+            const optionsList = [{ value: '', label: 'No Icon' }];
+            iconsToShow.forEach(path => {
+              if(typeof path === 'string' && path.trim()){
+                optionsList.push({ value: applyNormalizeIconPath(path) });
+              }
             });
-            grid.appendChild(btn);
-          });
+            optionsList.forEach(entry => {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'icon-picker-option';
+              const value = entry.value || '';
+              if(!value){
+                btn.classList.add('icon-picker-option--clear');
+                btn.textContent = entry.label || 'No Icon';
+              } else {
+                const img = document.createElement('img');
+                img.src = value;
+                img.alt = '';
+                btn.appendChild(img);
+              }
+              if(value === currentPath){
+                btn.classList.add('selected');
+              }
+              btn.addEventListener('click', ()=>{
+                onSelect(value);
+                closePicker();
+              });
+              grid.appendChild(btn);
+            });
+          }
           popup.appendChild(grid);
           container.appendChild(popup);
           container.classList.add('iconpicker-open');
@@ -8483,206 +8371,6 @@ function makePosts(){
             catch(err){ try{ popup.focus(); }catch(e){} }
           });
         };
-        trigger.addEventListener('click', event => {
-          event.preventDefault();
-          event.stopPropagation();
-          openPicker();
-        });
-        trigger.addEventListener('keydown', event => {
-          if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar'){
-            event.preventDefault();
-            openPicker();
-          }
-        });
-        // Enable picker if we have icon folder or ICON_LIBRARY
-        if(!ICON_LIBRARY.length && !window.iconFolder){
-          trigger.disabled = true;
-          trigger.setAttribute('aria-disabled','true');
-        } else {
-          trigger.disabled = false;
-          trigger.removeAttribute('aria-disabled');
-        }
-        return { open: openPicker, close: closePicker };
-      };
-      
-      // Function to attach mapmarker picker
-      const attachMapmarkerPicker = (trigger, container, options = {})=>{
-        const opts = options || {};
-        const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
-        const onSelect = typeof opts.onSelect === 'function' ? opts.onSelect : (()=>{});
-        const label = typeof opts.label === 'string' && opts.label.trim() ? opts.label.trim() : 'Choose Mapmarker';
-        const parentMenu = opts.parentMenu || null;
-        const parentCategoryMenu = opts.parentCategoryMenu || null;
-        let popup = null;
-        let alignFrame = 0;
-        let resizeObserver = null;
-        
-        const alignPopup = ()=>{
-          if(!popup) return;
-          let triggerRect;
-          let containerRect;
-          try {
-            triggerRect = trigger.getBoundingClientRect();
-            containerRect = container.getBoundingClientRect();
-          } catch(err){
-            return;
-          }
-          const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-          const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-          let left = triggerRect.left - containerRect.left;
-          let top = triggerRect.bottom - containerRect.top + 8;
-          popup.style.left = '0px';
-          popup.style.top = '0px';
-          const popupRect = popup.getBoundingClientRect();
-          const overflowRight = triggerRect.left + popupRect.width - viewportWidth + 12;
-          if(overflowRight > 0){
-            left -= overflowRight;
-          }
-          const overflowLeft = containerRect.left + left;
-          if(overflowLeft < 8){
-            left += 8 - overflowLeft;
-          }
-          const desiredBottom = triggerRect.bottom + 8 + popupRect.height;
-          if(desiredBottom > viewportHeight - 12){
-            const altTop = triggerRect.top - containerRect.top - popupRect.height - 8;
-            if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
-              top = Math.max(0, altTop);
-            }
-          }
-          if(containerRect.left + left < 0){
-            left = -containerRect.left;
-          }
-          popup.style.left = `${Math.round(left)}px`;
-          popup.style.top = `${Math.round(Math.max(0, top))}px`;
-        };
-        
-        const scheduleAlign = ()=>{
-          if(!popup) return;
-          if(alignFrame){
-            cancelAnimationFrame(alignFrame);
-          }
-          alignFrame = requestAnimationFrame(()=>{
-            alignFrame = 0;
-            alignPopup();
-          });
-        };
-        
-        const closePicker = ()=>{
-          if(!popup) return;
-          popup.remove();
-          popup = null;
-          if(alignFrame){
-            cancelAnimationFrame(alignFrame);
-            alignFrame = 0;
-          }
-          container.classList.remove('mapmarker-picker-open');
-          if(parentMenu) parentMenu.classList.remove('has-floating-overlay');
-          if(parentCategoryMenu) parentCategoryMenu.classList.remove('has-floating-overlay');
-          document.removeEventListener('pointerdown', handlePointerDown, true);
-          document.removeEventListener('keydown', handleKeyDown, true);
-          window.removeEventListener('scroll', handleScroll, true);
-          window.removeEventListener('resize', handleResize);
-          if(resizeObserver){
-            try{ resizeObserver.disconnect(); }catch(err){}
-            resizeObserver = null;
-          }
-          OPEN_ICON_PICKERS.delete(closePicker);
-        };
-        
-        const handlePointerDown = event => {
-          if(!popup) return;
-          const target = event.target;
-          if(!target) return;
-          if(target === trigger || (typeof trigger.contains === 'function' && trigger.contains(target))) return;
-          if(popup.contains(target)) return;
-          closePicker();
-        };
-        const handleKeyDown = event => {
-          if(event.key === 'Escape'){
-            closePicker();
-          }
-        };
-        const handleScroll = ()=> scheduleAlign();
-        const handleResize = ()=> scheduleAlign();
-        
-        const openPicker = async ()=>{
-          if(popup) return;
-          closeAllIconPickers();
-          
-          // Load icons from folder (used as mapmarkers)
-          let markersToShow = [];
-          if(window.iconFolder){
-            try {
-              markersToShow = await loadIconsFromFolder(window.iconFolder);
-            } catch(err){
-              console.warn('Failed to load from icon folder', err);
-            }
-          }
-          if(!markersToShow.length){
-            console.warn('No icons available - backend endpoint may not be configured');
-            alert('Icon picker requires backend configuration. Please add the list-icons endpoint to gateway.php');
-            return;
-          }
-          
-          popup = document.createElement('div');
-          popup.className = 'icon-picker-popup mapmarker-picker-popup';
-          popup.setAttribute('role', 'dialog');
-          popup.setAttribute('aria-label', label);
-          popup.tabIndex = -1;
-          popup.style.position = 'absolute';
-          const grid = document.createElement('div');
-          grid.className = 'icon-picker-grid';
-          const currentPath = applyNormalizeIconPath(getCurrentPath());
-          const optionsList = [{ value: '', label: 'No Mapmarker' }];
-          markersToShow.forEach(path => {
-            if(typeof path === 'string' && path.trim()){
-              optionsList.push({ value: applyNormalizeIconPath(path) });
-            }
-          });
-          optionsList.forEach(entry => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'icon-picker-option';
-            const value = entry.value || '';
-            if(!value){
-              btn.classList.add('icon-picker-option--clear');
-              btn.textContent = entry.label || 'No Mapmarker';
-            } else {
-              const img = document.createElement('img');
-              img.src = value;
-              img.alt = '';
-              btn.appendChild(img);
-            }
-            if(value === currentPath){
-              btn.classList.add('selected');
-            }
-            btn.addEventListener('click', ()=>{
-              onSelect(value);
-              closePicker();
-            });
-            grid.appendChild(btn);
-          });
-          popup.appendChild(grid);
-          container.appendChild(popup);
-          container.classList.add('mapmarker-picker-open');
-          if(parentMenu) parentMenu.classList.add('has-floating-overlay');
-          if(parentCategoryMenu) parentCategoryMenu.classList.add('has-floating-overlay');
-          scheduleAlign();
-          document.addEventListener('pointerdown', handlePointerDown, true);
-          document.addEventListener('keydown', handleKeyDown, true);
-          window.addEventListener('scroll', handleScroll, true);
-          window.addEventListener('resize', handleResize);
-          if(typeof ResizeObserver === 'function'){
-            resizeObserver = new ResizeObserver(()=> scheduleAlign());
-            try{ resizeObserver.observe(container); }catch(err){ resizeObserver = null; }
-          }
-          OPEN_ICON_PICKERS.add(closePicker);
-          requestAnimationFrame(()=>{
-            try{ popup.focus({ preventScroll: true }); }
-            catch(err){ try{ popup.focus(); }catch(e){} }
-          });
-        };
-        
         trigger.addEventListener('click', event => {
           event.preventDefault();
           event.stopPropagation();
@@ -13555,12 +13243,6 @@ function makePosts(){
                 subPreviewLabel.textContent = 'No Icon';
                 subIconButton.textContent = 'Choose Icon';
               }
-              // Update mapmarker display after a brief delay to allow auto-sync code to run
-              setTimeout(()=>{
-                if(typeof updateSubMapmarkerDisplay === 'function'){
-                  updateSubMapmarkerDisplay();
-                }
-              }, 100);
             };
           const applySubNameChange = ()=>{
             const rawValue = getSubNameValue();
@@ -13638,12 +13320,6 @@ function makePosts(){
             } else if(previousSubName === currentSubName){
               currentSubId = previousSubId;
             }
-            // Update mapmarker display when name changes
-            setTimeout(()=>{
-              if(typeof updateSubMapmarkerDisplay === 'function'){
-                updateSubMapmarkerDisplay();
-              }
-            }, 100);
           };
           subNameUpdaters.push(applySubNameChange);
           subNameInput.addEventListener('input', ()=> applySubNameChange());
@@ -13963,46 +13639,7 @@ function makePosts(){
           deleteSubcategoryRow.className = 'formbuilder-delete-row';
           deleteSubcategoryRow.append(deleteSubBtn);
 
-          // Mapmarker Display Row (auto-synced from icon)
-          const subMapmarkerDisplay = document.createElement('div');
-          subMapmarkerDisplay.className = 'mapmarker-display-container';
-          
-          const subMapmarkerLabel = document.createElement('span');
-          subMapmarkerLabel.className = 'mapmarker-display-label';
-          subMapmarkerLabel.textContent = 'Mapmarker:';
-          
-          const subMapmarkerPreview = document.createElement('div');
-          subMapmarkerPreview.className = 'mapmarker-display-preview';
-          const subMapmarkerPreviewLabel = document.createElement('span');
-          subMapmarkerPreviewLabel.textContent = 'No Mapmarker';
-          const subMapmarkerPreviewImg = document.createElement('img');
-          subMapmarkerPreviewImg.alt = `${sub} mapmarker preview`;
-          subMapmarkerPreview.append(subMapmarkerPreviewLabel, subMapmarkerPreviewImg);
-          
-          const currentMapmarker = subcategoryMarkers && subcategoryMarkers[slugify(sub)];
-          if(currentMapmarker){
-            subMapmarkerPreviewImg.src = currentMapmarker;
-            subMapmarkerPreview.classList.add('has-image');
-            subMapmarkerPreviewLabel.textContent = '';
-          }
-          
-          subMapmarkerDisplay.append(subMapmarkerLabel, subMapmarkerPreview);
-          
-          const updateSubMapmarkerDisplay = ()=>{
-            // Mapmarker is auto-synced by external code, just update the preview
-            const currentMarker = subcategoryMarkers[slugify(currentSubName)] || subcategoryMarkers[currentSubName] || '';
-            if(currentMarker){
-              subMapmarkerPreviewImg.src = currentMarker;
-              subMapmarkerPreview.classList.add('has-image');
-              subMapmarkerPreviewLabel.textContent = '';
-            } else {
-              subMapmarkerPreviewImg.removeAttribute('src');
-              subMapmarkerPreview.classList.remove('has-image');
-              subMapmarkerPreviewLabel.textContent = 'No Mapmarker';
-            }
-          };
-
-          subEditPanel.append(subNameInput, subIconPicker, subMapmarkerDisplay, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
+          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -14048,8 +13685,6 @@ function makePosts(){
           if(initialIconSource){
             updateSubIconDisplay(initialIconSource);
           }
-          // Initialize mapmarker display
-          updateSubMapmarkerDisplay();
 
           subBtn.addEventListener('click', ()=>{
             const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
@@ -17641,12 +17276,9 @@ if (!map.__pillHooksInstalled) {
                 markerIdCandidates.push(slugifyFn(post.subcategory));
               }
               const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-              const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
-              markerIcon.onerror = ()=>{
-                markerIcon.onerror = null;
-                markerIcon.src = markerFallback;
-              };
-              markerIcon.src = markerIconUrl || markerFallback;
+              if(markerIconUrl){
+                markerIcon.src = markerIconUrl;
+              }
             }
             requestAnimationFrame(() => {
               if(typeof markerIcon.decode === 'function'){
