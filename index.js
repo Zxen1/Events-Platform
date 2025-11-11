@@ -3730,6 +3730,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return promise;
     })();
 
+    // Wait for snapshot to load, then initialize
+    persistedFormbuilderSnapshotPromise.then(snapshot => {
+      window.__persistedFormbuilderSnapshot = snapshot;
+    }).catch(err => {
+      console.error('Failed to load formbuilder snapshot', err);
+    });
+    
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
@@ -16352,6 +16359,15 @@ function makePosts(){
     }
 
     async function initMap(){
+      // Wait for formbuilder snapshot to load before initializing map
+      if (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) {
+        try {
+          await window.persistedFormbuilderSnapshotPromise;
+        } catch (err) {
+          console.warn('Failed to wait for formbuilder snapshot:', err);
+        }
+      }
+      
       if(typeof mapboxgl === 'undefined'){
         console.error('Mapbox GL failed to load');
         return;
