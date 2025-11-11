@@ -35,7 +35,11 @@ if ($id <= 0) exit(json_encode(['error'=>'Invalid ID']));
 
 $result = $mysqli->query("SELECT file_name FROM media WHERE id=$id");
 if ($row = $result->fetch_assoc()) {
-  $file = $UPLOAD_DIR . $row['file_name'];
+  $fileName = basename($row['file_name']); // Security: strip any path components
+  if (strpos($fileName, '..') !== false || strpos($fileName, '\\') !== false) {
+    exit(json_encode(['error'=>'Invalid filename']));
+  }
+  $file = $UPLOAD_DIR . $fileName;
   if (file_exists($file)) unlink($file);
 }
 $mysqli->query("DELETE FROM media WHERE id=$id");
