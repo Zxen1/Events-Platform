@@ -15395,6 +15395,7 @@ function makePosts(){
       }
 
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
+        console.log('=== openPost CALLED ===', { id, fromHistory, fromMap });
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
