@@ -8415,12 +8415,19 @@ function makePosts(){
           // Load icons from folder if configured
           let iconsToShow = [];
           if(useIconFolder && window.iconFolder){
-            iconsToShow = await loadIconsFromFolder(window.iconFolder);
+            try {
+              iconsToShow = await loadIconsFromFolder(window.iconFolder);
+            } catch(err){
+              console.warn('Failed to load from icon folder, using ICON_LIBRARY', err);
+            }
           }
           if(!iconsToShow.length){
             iconsToShow = ICON_LIBRARY.slice();
           }
-          if(!iconsToShow.length) return;
+          if(!iconsToShow.length){
+            console.warn('No icons available to display in picker');
+            return;
+          }
           
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup';
@@ -8609,9 +8616,17 @@ function makePosts(){
           // Load mapmarkers from folder
           let markersToShow = [];
           if(window.mapmarkerFolder){
-            markersToShow = await loadIconsFromFolder(window.mapmarkerFolder);
+            try {
+              markersToShow = await loadIconsFromFolder(window.mapmarkerFolder);
+            } catch(err){
+              console.warn('Failed to load from mapmarker folder', err);
+            }
           }
-          if(!markersToShow.length) return;
+          if(!markersToShow.length){
+            console.warn('No mapmarkers available - backend endpoint may not be configured');
+            alert('Mapmarker picker requires backend configuration. Please add the list-icons endpoint to gateway.php');
+            return;
+          }
           
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup mapmarker-picker-popup';

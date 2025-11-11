@@ -6458,6 +6458,13 @@ html, body { cursor: auto !important; }
               gap:16px;
               flex-wrap:wrap;
             }
+            #tab-forms .mapmarker-picker-container{
+              position:relative;
+              display:flex;
+              align-items:center;
+              gap:16px;
+              flex-wrap:wrap;
+            }
             #tab-forms .iconpicker-button,
             #tab-forms .mapmarker-picker-button{
               position:relative;
