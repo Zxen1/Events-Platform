@@ -8426,6 +8426,7 @@ function makePosts(){
           }
           if(!iconsToShow.length){
             console.warn('No icons available to display in picker');
+            alert('Icon picker requires backend configuration. Please add the list-icons endpoint to gateway.php');
             return;
           }
           
