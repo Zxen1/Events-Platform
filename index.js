@@ -15297,24 +15297,29 @@ function makePosts(){
         ? `💲 ${basePrice} | 📅 ${loc0Dates[0].date} - ${loc0Dates[loc0Dates.length-1].date}${selectSuffix}`
         : `💲 ${basePrice}${selectSuffix}`;
       const thumbSrc = thumbUrl(p);
-      const headerInner = `
-          <div class="title-block">
-            <div class="title">${p.title}</div>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-          </div>
-          <button class="share" aria-label="Share post">
-            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
-          </button>
-          <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
-            <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
-          </button>
-        `;
       const posterName = p.member ? p.member.username : 'Anonymous';
       const postedTime = formatPostTimestamp(p.created);
       const postedMeta = postedTime ? `Posted by ${posterName} · ${postedTime}` : `Posted by ${posterName}`;
+      // Create card-style header that matches the compressed card look
       wrap.innerHTML = `
         <div class="post-header">
-          ${headerInner}
+          <img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />
+          <div class="meta">
+            <div class="title">${p.title}</div>
+            <div class="info">
+              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+              <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+              <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="share" aria-label="Share post">
+              <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+            </button>
+            <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
+              <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+            </button>
+          </div>
         </div>
         <div class="post-body">
           <div class="post-nav-buttons">
@@ -15347,16 +15352,17 @@ function makePosts(){
             <div class="thumbnail-row"></div>
           </div>
         </div>`;
-      wrap.querySelectorAll('.post-header').forEach(head => {
-        head.dataset.surfaceBg = CARD_SURFACE;
-        head.style.background = CARD_SURFACE;
+      const header = wrap.querySelector('.post-header');
+      if(header){
+        header.dataset.surfaceBg = CARD_SURFACE;
+        header.style.background = CARD_SURFACE;
         // Add click handler to toggle post body
-        head.addEventListener('click', (e) => {
+        header.addEventListener('click', (e) => {
           // Don't trigger if clicking on buttons
           if(e.target.closest('button, [role="button"], a')) return;
           wrap.classList.toggle('post-collapsed');
         });
-      });
+      }
       wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
       // Remove expanding class after animation

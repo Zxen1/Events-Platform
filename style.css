@@ -4346,9 +4346,10 @@ body.mode-map .post-board{
 }
 
 .open-post .post-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  display:grid;
+  grid-template-columns:80px 1fr auto;
+  gap:12px;
+  align-items:flex-start;
   padding:10px;
   opacity:1;
   border-top-left-radius:inherit;
@@ -4357,8 +4358,26 @@ body.mode-map .post-board{
   top:0;
   z-index:3;
   background:transparent;
-  pointer-events:none;
   cursor:pointer;
+}
+.open-post .post-header .thumb{
+  width:80px;
+  height:80px;
+  border-radius:8px;
+  object-fit:cover;
+  display:block;
+}
+.open-post .post-header .meta{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+}
+.open-post .post-header .header-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:center;
 }
 .open-post .post-header button,
 .open-post .post-header [role="button"],
@@ -4368,7 +4387,6 @@ body.mode-map .post-board{
 .post-card .post-header{
   background-color:transparent;
 }
-.open-post .post-header .share{margin-left:auto;margin-right:var(--gap);}
 
 .open-post .post-body{
   padding:0 0 10px;
