@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 11, 2025 at 09:45 PM
+-- Generation Time: Nov 11, 2025 at 09:52 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -101,8 +101,8 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (18, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-10 04:10:24'),
 (73, 'spin_zoom_max', '5', 'integer', 'Maximum zoom spin threshold', '2025-11-09 20:39:10', '2025-11-10 09:35:08'),
 (150, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-09 21:56:42', '2025-11-10 09:35:28'),
-(529, 'icon_folder', 'assets/icons_20', 'string', NULL, '2025-11-11 10:44:57', '2025-11-11 10:44:57'),
-(530, 'mapmarker_folder', 'assets/icons_30', 'string', NULL, '2025-11-11 10:44:57', '2025-11-11 10:44:57');
+(529, 'icon_folder', 'assets/icons_20', 'string', 'Folder path for category/subcategory icons', '2025-11-11 10:44:57', '2025-11-11 10:52:07'),
+(530, 'mapmarker_folder', 'assets/icons_30', 'string', 'Folder path for map marker icons', '2025-11-11 10:44:57', '2025-11-11 10:52:07');
 
 -- --------------------------------------------------------
 
@@ -690,7 +690,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=531;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=537;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
