@@ -15454,6 +15454,9 @@ function makePosts(){
         const existingOpenPost = container.querySelector('.open-post');
         const targetIsBelow = existingOpenPost && target && 
           (existingOpenPost.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
+        
+        // Capture target's offsetTop BEFORE any DOM changes
+        const targetOffsetBeforeChanges = target ? target.offsetTop : null;
 
         (function(){
           const ex = container.querySelector('.open-post');
@@ -15630,15 +15633,11 @@ function makePosts(){
 
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
-            const containerRect = container.getBoundingClientRect();
-            const detailRect = detail.getBoundingClientRect();
-            if(!containerRect || !detailRect) return;
-            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+            // Use the saved offsetTop from BEFORE DOM changes, not current position
+            const topTarget = typeof targetOffsetBeforeChanges === 'number' ? targetOffsetBeforeChanges : detail.offsetTop;
             console.log('=== POST SCROLL ===', {
-              'detailRect.top': detailRect.top,
-              'containerRect.top': containerRect.top,
-              'offset (detailRect.top - containerRect.top)': (detailRect.top - containerRect.top),
-              'container.scrollTop': container.scrollTop,
+              'targetOffsetBeforeChanges': targetOffsetBeforeChanges,
+              'detail.offsetTop (current)': detail.offsetTop,
               'topTarget (where we scroll to)': topTarget
             });
             if(typeof container.scrollTo === 'function'){
