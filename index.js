@@ -3736,7 +3736,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }).catch(err => {
       console.error('Failed to load formbuilder snapshot', err);
     });
-    
+
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
@@ -5452,7 +5452,6 @@ function makePosts(){
     });
   }
 
-  /* TEMPORARY DISABLE FOR PERFORMANCE TEST
   // ---- 100 posts in Tasmania ----
   const tasLng = 147.3272, tasLat = -42.8821;
   const tasCity = "Hobart, Tasmania";
@@ -6314,7 +6313,6 @@ function makePosts(){
       post.dates = [];
     }
   });
-  END TEMPORARY DISABLE */
 
   return out;
 }
@@ -8345,36 +8343,36 @@ function makePosts(){
             errorMsg.innerHTML = 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>';
             grid.appendChild(errorMsg);
           } else {
-            const currentPath = applyNormalizeIconPath(getCurrentPath());
-            const optionsList = [{ value: '', label: 'No Icon' }];
+          const currentPath = applyNormalizeIconPath(getCurrentPath());
+          const optionsList = [{ value: '', label: 'No Icon' }];
             iconsToShow.forEach(path => {
-              if(typeof path === 'string' && path.trim()){
-                optionsList.push({ value: applyNormalizeIconPath(path) });
-              }
+            if(typeof path === 'string' && path.trim()){
+              optionsList.push({ value: applyNormalizeIconPath(path) });
+            }
+          });
+          optionsList.forEach(entry => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'icon-picker-option';
+            const value = entry.value || '';
+            if(!value){
+              btn.classList.add('icon-picker-option--clear');
+              btn.textContent = entry.label || 'No Icon';
+            } else {
+              const img = document.createElement('img');
+              img.src = value;
+              img.alt = '';
+              btn.appendChild(img);
+            }
+            if(value === currentPath){
+              btn.classList.add('selected');
+            }
+            btn.addEventListener('click', ()=>{
+              onSelect(value);
+              closePicker();
             });
-            optionsList.forEach(entry => {
-              const btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'icon-picker-option';
-              const value = entry.value || '';
-              if(!value){
-                btn.classList.add('icon-picker-option--clear');
-                btn.textContent = entry.label || 'No Icon';
-              } else {
-                const img = document.createElement('img');
-                img.src = value;
-                img.alt = '';
-                btn.appendChild(img);
-              }
-              if(value === currentPath){
-                btn.classList.add('selected');
-              }
-              btn.addEventListener('click', ()=>{
-                onSelect(value);
-                closePicker();
-              });
-              grid.appendChild(btn);
-            });
+            grid.appendChild(btn);
+          });
           }
           popup.appendChild(grid);
           container.appendChild(popup);
@@ -15253,15 +15251,15 @@ function makePosts(){
           <div class="meta">
             <div class="title">${p.title}</div>
             <div class="info">
-              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
               <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
               <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
-            </div>
+          </div>
           </div>
           <div class="header-actions">
-            <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
-              <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
-            </button>
+          <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
+            <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+          </button>
             <button class="share" aria-label="Share post">
               <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
             </button>
@@ -15307,7 +15305,7 @@ function makePosts(){
           // Don't trigger if clicking on buttons
           if(e.target.closest('button, [role="button"], a')) return;
           wrap.classList.toggle('post-collapsed');
-        });
+      });
       }
       wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
