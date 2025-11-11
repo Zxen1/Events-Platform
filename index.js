@@ -2231,6 +2231,24 @@ async function ensureMapboxCssFor(container) {
               if(iconFolderInput){
                 iconFolderInput.value = window.iconFolder;
               }
+              
+              // Initialize console filter checkbox
+              const consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
+              if(consoleFilterCheckbox){
+                consoleFilterCheckbox.checked = localStorage.getItem('enableConsoleFilter') === 'true';
+                consoleFilterCheckbox.addEventListener('change', () => {
+                  const enabled = consoleFilterCheckbox.checked;
+                  localStorage.setItem('enableConsoleFilter', enabled ? 'true' : 'false');
+                  
+                  // Show reload prompt
+                  const message = enabled 
+                    ? 'Console filter will be enabled on next page load. Reload now?' 
+                    : 'Console filter will be disabled on next page load. Reload now?';
+                  if(confirm(message)){
+                    location.reload();
+                  }
+                });
+              }
             }
           }
         } catch(err){
@@ -3360,7 +3378,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             return snapshot;
           }
         }catch(err){
-          console.warn('Failed to read saved formbuilder snapshot', err);
+          console.error('Failed to read saved formbuilder snapshot', err);
+          return null;
         }
       }
       return null;

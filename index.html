@@ -367,6 +367,12 @@
             <input type="text" id="adminIconFolder" autocomplete="off" placeholder="assets/icons-30" />
           </div>
         </div>
+        <div class="panel-field">
+          <label>
+            <input type="checkbox" id="adminEnableConsoleFilter" />
+            <span>Enable Console Filter</span>
+          </label>
+        </div>
         </div>
         <div id="tab-forms" class="tab-panel active">
           <div class="formbuilder-container">
@@ -436,6 +442,14 @@
   <div class="post-modal"></div>
 </div>
 
+  <script>
+    // Conditionally load console filter based on admin settings
+    if(localStorage.getItem('enableConsoleFilter') === 'true'){
+      const script = document.createElement('script');
+      script.src = 'console-filter.js';
+      document.head.appendChild(script);
+    }
+  </script>
   <script src="index.js" defer></script>
 
 </body>
