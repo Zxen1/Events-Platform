@@ -1565,8 +1565,8 @@ button[aria-expanded="true"] .results-arrow{
 
 .settings-paypal-container input,
 .settings-icon-folders-container input{
-  background:rgba(0,0,0,0.3);
-  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(0,0,0,0.2);
+  border:1px solid #fff;
   color:#fff;
 }
 
