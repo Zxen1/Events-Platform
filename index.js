@@ -15395,7 +15395,6 @@ function makePosts(){
       }
 
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
-        console.log('=== openPost CALLED ===', { id, fromHistory, fromMap });
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
@@ -15449,14 +15448,6 @@ function makePosts(){
           originEl = null;
         }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
-
-        // Check if there's an existing open post BEFORE we close it
-        const existingOpenPost = container.querySelector('.open-post');
-        const targetIsBelow = existingOpenPost && target && 
-          (existingOpenPost.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
-        
-        // Capture target's offsetTop BEFORE any DOM changes
-        const targetOffsetBeforeChanges = target ? target.offsetTop : null;
 
         (function(){
           const ex = container.querySelector('.open-post');
@@ -15520,19 +15511,8 @@ function makePosts(){
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        // Only scroll when opening from map or ads (NOT from post board - those should expand in place)
-        const shouldScrollToCard = fromHistory || fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer);
+        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
         const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
-        
-        console.log('=== POINTER CHECK ===', {
-          hasPointerTarget: !!pointerTarget,
-          pointerCard: pointerCard ? pointerCard.className : null,
-          pointerInsideCardContainer,
-          pointerInAdBoard: !!pointerInAdBoard,
-          fromMap,
-          fromHistory,
-          shouldScrollToCard
-        });
 
         if(!target && !fromHistory){
           target = ensurePostCardForId(id);
@@ -15569,33 +15549,9 @@ function makePosts(){
         }
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
-        
-        console.log('=== BEFORE REPLACE ===', {
-          hasExistingOpenPost: !!existingOpenPost,
-          targetIsBelow: targetIsBelow,
-          'container.scrollTop': container.scrollTop,
-          'target.offsetTop': target ? target.offsetTop : 'N/A'
-        });
 
         const detail = buildDetail(p);
-        
-        // Save scroll position before replaceWith to prevent browser auto-adjustment
-        const scrollBeforeReplace = container.scrollTop;
-        
         target.replaceWith(detail);
-        
-        console.log('=== AFTER REPLACE (before restore) ===', {
-          'container.scrollTop': container.scrollTop,
-          'scroll changed by': (container.scrollTop - scrollBeforeReplace)
-        });
-        
-        // Immediately restore scroll to prevent browser from moving it
-        container.scrollTop = scrollBeforeReplace;
-        
-        console.log('=== AFTER RESTORE ===', {
-          'container.scrollTop': container.scrollTop
-        });
-        
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
@@ -15624,22 +15580,12 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        console.log('=== SCROLL CHECK ===', {
-          shouldScrollToCard,
-          hasContainer: !!container,
-          hasDetail: !!detail,
-          detailInContainer: container && detail ? container.contains(detail) : false
-        });
-
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
-            // Use the saved offsetTop from BEFORE DOM changes, not current position
-            const topTarget = typeof targetOffsetBeforeChanges === 'number' ? targetOffsetBeforeChanges : detail.offsetTop;
-            console.log('=== POST SCROLL ===', {
-              'targetOffsetBeforeChanges': targetOffsetBeforeChanges,
-              'detail.offsetTop (current)': detail.offsetTop,
-              'topTarget (where we scroll to)': topTarget
-            });
+            const containerRect = container.getBoundingClientRect();
+            const detailRect = detail.getBoundingClientRect();
+            if(!containerRect || !detailRect) return;
+            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
             if(typeof container.scrollTo === 'function'){
               container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
             } else {
