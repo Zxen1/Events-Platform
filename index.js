@@ -8316,8 +8316,7 @@ function makePosts(){
             console.warn('No icons available to display in picker');
             const errorMsg = document.createElement('div');
             errorMsg.className = 'icon-picker-error';
-            errorMsg.innerHTML = 'No icons found. Please select the icon folder in the Admin Settings Tab.<br>eg. assets/icons';
-            errorMsg.style.cssText = 'padding: 20px; text-align: center; color: #fff; line-height: 1.6;';
+            errorMsg.innerHTML = 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>';
             grid.appendChild(errorMsg);
           } else {
             const currentPath = applyNormalizeIconPath(getCurrentPath());

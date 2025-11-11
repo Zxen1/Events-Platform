@@ -6549,6 +6549,23 @@ html, body { cursor: auto !important; }
               grid-template-columns:repeat(auto-fill,minmax(52px,1fr));
               gap:10px;
             }
+            #tab-forms .icon-picker-error{
+              grid-column: 1 / -1;
+              padding:24px;
+              text-align:center;
+              color:#fff;
+              line-height:1.8;
+              font-size:14px;
+            }
+            #tab-forms .icon-picker-error code{
+              display:inline-block;
+              background:rgba(255,255,255,0.1);
+              padding:4px 8px;
+              border-radius:4px;
+              font-family:monospace;
+              color:#0ea5e9;
+              font-size:13px;
+            }
             #tab-forms .icon-picker-option{
               display:inline-flex;
               align-items:center;
