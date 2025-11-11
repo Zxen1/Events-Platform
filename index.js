@@ -15551,8 +15551,37 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
+        // Check if there's an existing open post and where target is relative to it
+        const existingOpenPost = container.querySelector('.open-post');
+        const targetIsBelow = existingOpenPost && target && 
+          (existingOpenPost.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
+        
+        console.log('=== BEFORE REPLACE ===', {
+          hasExistingOpenPost: !!existingOpenPost,
+          targetIsBelow: targetIsBelow,
+          'container.scrollTop': container.scrollTop,
+          'target.offsetTop': target ? target.offsetTop : 'N/A'
+        });
+
         const detail = buildDetail(p);
+        
+        // Save scroll position before replaceWith to prevent browser auto-adjustment
+        const scrollBeforeReplace = container.scrollTop;
+        
         target.replaceWith(detail);
+        
+        console.log('=== AFTER REPLACE (before restore) ===', {
+          'container.scrollTop': container.scrollTop,
+          'scroll changed by': (container.scrollTop - scrollBeforeReplace)
+        });
+        
+        // Immediately restore scroll to prevent browser from moving it
+        container.scrollTop = scrollBeforeReplace;
+        
+        console.log('=== AFTER RESTORE ===', {
+          'container.scrollTop': container.scrollTop
+        });
+        
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
