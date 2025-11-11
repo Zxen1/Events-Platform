@@ -2179,9 +2179,8 @@ async function ensureMapboxCssFor(container) {
               spinZoomMax = data.settings.spin_zoom_max || 4;
               spinSpeed = data.settings.spin_speed || 0.3;
               
-              // Store icon and mapmarker folder paths globally
-              window.iconFolder = data.settings.icon_folder || 'assets/icons_20';
-              window.mapmarkerFolder = data.settings.mapmarker_folder || 'assets/icons_30';
+              // Store icon folder path globally
+              window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
@@ -2227,14 +2226,10 @@ async function ensureMapboxCssFor(container) {
                 spinSpeedDisplay.textContent = spinSpeed.toFixed(1);
               }
               
-              // Initialize icon folder inputs
+              // Initialize icon folder input
               const iconFolderInput = document.getElementById('adminIconFolder');
-              const mapmarkerFolderInput = document.getElementById('adminMapmarkerFolder');
               if(iconFolderInput){
                 iconFolderInput.value = window.iconFolder;
-              }
-              if(mapmarkerFolderInput){
-                mapmarkerFolderInput.value = window.mapmarkerFolder;
               }
             }
           }
@@ -8614,18 +8609,18 @@ function makePosts(){
           if(popup) return;
           closeAllIconPickers();
           
-          // Load mapmarkers from folder
+          // Load icons from folder (used as mapmarkers)
           let markersToShow = [];
-          if(window.mapmarkerFolder){
+          if(window.iconFolder){
             try {
-              markersToShow = await loadIconsFromFolder(window.mapmarkerFolder);
+              markersToShow = await loadIconsFromFolder(window.iconFolder);
             } catch(err){
-              console.warn('Failed to load from mapmarker folder', err);
+              console.warn('Failed to load from icon folder', err);
             }
           }
           if(!markersToShow.length){
-            console.warn('No mapmarkers available - backend endpoint may not be configured');
-            alert('Mapmarker picker requires backend configuration. Please add the list-icons endpoint to gateway.php');
+            console.warn('No icons available - backend endpoint may not be configured');
+            alert('Icon picker requires backend configuration. Please add the list-icons endpoint to gateway.php');
             return;
           }
           
@@ -8699,8 +8694,8 @@ function makePosts(){
             openPicker();
           }
         });
-        // Enable picker if we have mapmarker folder
-        if(!window.mapmarkerFolder){
+        // Enable picker if we have icon folder
+        if(!window.iconFolder){
           trigger.disabled = true;
           trigger.setAttribute('aria-disabled','true');
         } else {
@@ -13560,6 +13555,12 @@ function makePosts(){
                 subPreviewLabel.textContent = 'No Icon';
                 subIconButton.textContent = 'Choose Icon';
               }
+              // Update mapmarker display after a brief delay to allow auto-sync code to run
+              setTimeout(()=>{
+                if(typeof updateSubMapmarkerDisplay === 'function'){
+                  updateSubMapmarkerDisplay();
+                }
+              }, 100);
             };
           const applySubNameChange = ()=>{
             const rawValue = getSubNameValue();
@@ -13637,6 +13638,12 @@ function makePosts(){
             } else if(previousSubName === currentSubName){
               currentSubId = previousSubId;
             }
+            // Update mapmarker display when name changes
+            setTimeout(()=>{
+              if(typeof updateSubMapmarkerDisplay === 'function'){
+                updateSubMapmarkerDisplay();
+              }
+            }, 100);
           };
           subNameUpdaters.push(applySubNameChange);
           subNameInput.addEventListener('input', ()=> applySubNameChange());
@@ -13956,65 +13963,46 @@ function makePosts(){
           deleteSubcategoryRow.className = 'formbuilder-delete-row';
           deleteSubcategoryRow.append(deleteSubBtn);
 
-          // Mapmarker Picker Row
-          const subMapmarkerPicker = document.createElement('div');
-          subMapmarkerPicker.className = 'mapmarker-picker-container';
+          // Mapmarker Display Row (auto-synced from icon)
+          const subMapmarkerDisplay = document.createElement('div');
+          subMapmarkerDisplay.className = 'mapmarker-display-container';
           
-          const subMapmarkerButton = document.createElement('button');
-          subMapmarkerButton.type = 'button';
-          subMapmarkerButton.className = 'mapmarker-picker-button';
-          const currentMapmarker = subcategoryMarkers && subcategoryMarkers[slugify(sub)];
-          subMapmarkerButton.textContent = currentMapmarker ? 'Change Mapmarker' : 'Choose Mapmarker';
+          const subMapmarkerLabel = document.createElement('span');
+          subMapmarkerLabel.className = 'mapmarker-display-label';
+          subMapmarkerLabel.textContent = 'Mapmarker:';
           
           const subMapmarkerPreview = document.createElement('div');
-          subMapmarkerPreview.className = 'mapmarker-picker-preview';
+          subMapmarkerPreview.className = 'mapmarker-display-preview';
           const subMapmarkerPreviewLabel = document.createElement('span');
           subMapmarkerPreviewLabel.textContent = 'No Mapmarker';
           const subMapmarkerPreviewImg = document.createElement('img');
           subMapmarkerPreviewImg.alt = `${sub} mapmarker preview`;
           subMapmarkerPreview.append(subMapmarkerPreviewLabel, subMapmarkerPreviewImg);
           
+          const currentMapmarker = subcategoryMarkers && subcategoryMarkers[slugify(sub)];
           if(currentMapmarker){
             subMapmarkerPreviewImg.src = currentMapmarker;
             subMapmarkerPreview.classList.add('has-image');
             subMapmarkerPreviewLabel.textContent = '';
           }
           
-          subMapmarkerPicker.append(subMapmarkerButton, subMapmarkerPreview);
+          subMapmarkerDisplay.append(subMapmarkerLabel, subMapmarkerPreview);
           
-          const updateSubMapmarkerDisplay = (src)=>{
-            const normalized = applyNormalizeIconPath(src);
-            if(normalized){
-              subMapmarkerPreviewImg.src = normalized;
+          const updateSubMapmarkerDisplay = ()=>{
+            // Mapmarker is auto-synced by external code, just update the preview
+            const currentMarker = subcategoryMarkers[slugify(currentSubName)] || subcategoryMarkers[currentSubName] || '';
+            if(currentMarker){
+              subMapmarkerPreviewImg.src = currentMarker;
               subMapmarkerPreview.classList.add('has-image');
               subMapmarkerPreviewLabel.textContent = '';
-              subMapmarkerButton.textContent = 'Change Mapmarker';
-              subcategoryMarkers[slugify(currentSubName)] = normalized;
-              if(currentSubName !== slugify(currentSubName)){
-                subcategoryMarkers[currentSubName] = normalized;
-              }
             } else {
               subMapmarkerPreviewImg.removeAttribute('src');
               subMapmarkerPreview.classList.remove('has-image');
               subMapmarkerPreviewLabel.textContent = 'No Mapmarker';
-              subMapmarkerButton.textContent = 'Choose Mapmarker';
-              delete subcategoryMarkers[slugify(currentSubName)];
-              delete subcategoryMarkers[currentSubName];
             }
-            notifyFormbuilderChange();
           };
-          
-          attachMapmarkerPicker(subMapmarkerButton, subMapmarkerPicker, {
-            getCurrentPath: ()=> subcategoryMarkers[slugify(currentSubName)] || subcategoryMarkers[currentSubName] || '',
-            onSelect: value => {
-              updateSubMapmarkerDisplay(value);
-            },
-            label: `Choose mapmarker for ${sub}`,
-            parentMenu: subContent,
-            parentCategoryMenu: menu
-          });
 
-          subEditPanel.append(subNameInput, subIconPicker, subMapmarkerPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
+          subEditPanel.append(subNameInput, subIconPicker, subMapmarkerDisplay, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
           subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
@@ -14060,6 +14048,8 @@ function makePosts(){
           if(initialIconSource){
             updateSubIconDisplay(initialIconSource);
           }
+          // Initialize mapmarker display
+          updateSubMapmarkerDisplay();
 
           subBtn.addEventListener('click', ()=>{
             const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
@@ -20541,21 +20531,13 @@ function openPanel(m){
         if(!isNaN(speedValue)) settings.spin_speed = speedValue;
       }
       
-      // Include icon folder settings
+      // Include icon folder setting
       const iconFolderInput = document.getElementById('adminIconFolder');
-      const mapmarkerFolderInput = document.getElementById('adminMapmarkerFolder');
       if(iconFolderInput){
         const iconFolderValue = iconFolderInput.value.trim();
         if(iconFolderValue){
           settings.icon_folder = iconFolderValue;
           window.iconFolder = iconFolderValue;
-        }
-      }
-      if(mapmarkerFolderInput){
-        const mapmarkerFolderValue = mapmarkerFolderInput.value.trim();
-        if(mapmarkerFolderValue){
-          settings.mapmarker_folder = mapmarkerFolderValue;
-          window.mapmarkerFolder = mapmarkerFolderValue;
         }
       }
       
@@ -20684,24 +20666,14 @@ function openPanel(m){
       });
     });
     
-    // Auto-save icon folder settings on blur
+    // Auto-save icon folder setting on blur
     const iconFolderInput = document.getElementById('adminIconFolder');
-    const mapmarkerFolderInput = document.getElementById('adminMapmarkerFolder');
     if(iconFolderInput && !iconFolderInput.dataset.autoSaveAdded){
       iconFolderInput.dataset.autoSaveAdded = 'true';
       iconFolderInput.addEventListener('blur', ()=>{
         autoSaveMapSettings();
       });
       iconFolderInput.addEventListener('change', ()=>{
-        autoSaveMapSettings();
-      });
-    }
-    if(mapmarkerFolderInput && !mapmarkerFolderInput.dataset.autoSaveAdded){
-      mapmarkerFolderInput.dataset.autoSaveAdded = 'true';
-      mapmarkerFolderInput.addEventListener('blur', ()=>{
-        autoSaveMapSettings();
-      });
-      mapmarkerFolderInput.addEventListener('change', ()=>{
         autoSaveMapSettings();
       });
     }

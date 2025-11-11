@@ -32,8 +32,8 @@ if ($action === 'list-icons') {
   
   $folder = isset($_GET['folder']) ? $_GET['folder'] : '';
   
-  // Security: prevent directory traversal
-  if (strpos($folder, '..') !== false || strpos($folder, '\\') !== false) {
+  // Security: prevent directory traversal and limit to assets folder
+  if (strpos($folder, '..') !== false || strpos($folder, '\\') !== false || stripos($folder, 'assets/') !== 0) {
     echo json_encode(['success' => false, 'icons' => []]);
     exit;
   }

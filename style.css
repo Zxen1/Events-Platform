@@ -1569,7 +1569,12 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 
-.settings-paypal-container input,
+.settings-paypal-container input{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  color:#fff;
+}
+
 .settings-icon-folders-container input{
   background:rgba(0,0,0,0.2);
   border:1px solid #fff;
@@ -6458,12 +6463,37 @@ html, body { cursor: auto !important; }
               gap:16px;
               flex-wrap:wrap;
             }
-            #tab-forms .mapmarker-picker-container{
+            #tab-forms .mapmarker-display-container{
               position:relative;
               display:flex;
               align-items:center;
               gap:16px;
               flex-wrap:wrap;
+              margin:8px 0;
+            }
+            #tab-forms .mapmarker-display-label{
+              font-weight:600;
+              color:var(--button-text);
+            }
+            #tab-forms .mapmarker-display-preview{
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              width:30px;
+              height:30px;
+              color:var(--muted);
+              font-size:12px;
+            }
+            #tab-forms .mapmarker-display-preview img{
+              width:30px;
+              height:30px;
+              display:none;
+            }
+            #tab-forms .mapmarker-display-preview.has-image{
+              color:transparent;
+            }
+            #tab-forms .mapmarker-display-preview.has-image img{
+              display:block;
             }
             #tab-forms .iconpicker-button,
             #tab-forms .mapmarker-picker-button{

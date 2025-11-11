@@ -129,7 +129,20 @@ try {
         // Continue without fieldsets
     }
 
-    $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes);
+    // Load icon_folder from admin_settings
+    $iconFolder = 'assets/icons-30'; // Default fallback
+    try {
+        $settingStmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'icon_folder' LIMIT 1");
+        if ($settingRow = $settingStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (isset($settingRow['setting_value']) && is_string($settingRow['setting_value']) && trim($settingRow['setting_value']) !== '') {
+                $iconFolder = trim($settingRow['setting_value']);
+            }
+        }
+    } catch (PDOException $e) {
+        // Use default if query fails
+    }
+
+    $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes, $iconFolder);
     $snapshot['fieldTypes'] = $fieldTypes;
     $snapshot['field_types'] = $fieldTypes;
 
@@ -665,7 +678,7 @@ function fetchAllFieldsets(PDO $pdo, array $columns): array
     return $fieldsets;
 }
 
-function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = []): array
+function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = [], string $iconFolder = 'assets/icons-30'): array
 {
     // Index fields and fieldsets by ID for quick lookup
     $fieldsById = [];
@@ -1015,7 +1028,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         array_values($sanitizedSubcategoryMarkers)
     );
 
-    $filesystemIcons = collectFilesystemIconLibrary('assets/icons-30');
+    $filesystemIcons = collectFilesystemIconLibrary($iconFolder);
     if ($filesystemIcons) {
         $iconLibrary = mergeIconLibraries($iconLibrary, $filesystemIcons);
     }
