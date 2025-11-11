@@ -1100,15 +1100,14 @@ function upgradeIconBasePath(string $sanitizedPath): string
         return '';
     }
 
+    // Convert old icons-20 paths to icons folder structure, preserving the filename
     $upgraded = $sanitizedPath;
 
     if (stripos($upgraded, 'assets/icons-20/') === 0) {
-        $upgraded = 'assets/icons-30/' . substr($upgraded, strlen('assets/icons-20/'));
-
-        $sizeAdjusted = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $upgraded, 1);
-        if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
-            $upgraded = $sizeAdjusted;
-        }
+        // Extract filename and convert -20 suffix to -30
+        $filename = basename($upgraded);
+        $filename = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $filename);
+        $upgraded = 'assets/icons-30/' . $filename;
     }
 
     return sanitizeString($upgraded, 255);
@@ -1122,11 +1121,13 @@ function normalizeMarkerIconPath(string $sanitizedPath): string
 
     $markerPath = $sanitizedPath;
 
+    // Normalize any icons-\d+ folder to standard icons folder
     $directoryNormalized = preg_replace('#^assets/icons-\d+/#i', 'assets/icons-30/', $markerPath, 1);
     if (is_string($directoryNormalized) && $directoryNormalized !== '') {
         $markerPath = $directoryNormalized;
     }
 
+    // Normalize size suffix to -30
     $sizeAdjusted = preg_replace('/-(\d{2,3})(\.[a-z0-9]+)$/i', '-30$2', $markerPath, 1);
     if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
         $markerPath = $sizeAdjusted;
@@ -1242,19 +1243,9 @@ function deriveIconVariants(string $path): array
         return ['icon' => '', 'marker' => ''];
     }
     $base = upgradeIconBasePath($clean);
-    $marker = normalizeMarkerIconPath($base);
-    $icon = $base;
-    if ($marker !== '' && stripos($marker, 'icons-30/') !== false) {
-        $candidate = preg_replace('#icons-30/#i', 'icons-20/', $marker, 1);
-        if (is_string($candidate) && $candidate !== '') {
-            $candidate = preg_replace('/-30(\.[a-z0-9]+)$/i', '-20$1', $candidate, 1) ?: $candidate;
-            $candidate = sanitizeString($candidate, 255);
-            if ($candidate !== '' && iconFileExists($candidate)) {
-                $icon = $candidate;
-            }
-        }
-    }
-    return ['icon' => $icon, 'marker' => $marker];
+    $normalized = normalizeMarkerIconPath($base);
+    // Use same path for both icon and marker - resize in CSS where needed
+    return ['icon' => $normalized, 'marker' => $normalized];
 }
 
 function filterPositiveInt($value): ?int

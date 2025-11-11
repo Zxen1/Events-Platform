@@ -1266,11 +1266,13 @@ function normalizeSnapshotMarkerIconPath(string $sanitizedPath): string
 
     $markerPath = $sanitizedPath;
 
+    // Normalize any icons-\d+ folder to standard icons folder
     $directoryNormalized = preg_replace('#^assets/icons-\d+/#i', 'assets/icons-30/', $markerPath, 1);
     if (is_string($directoryNormalized) && $directoryNormalized !== '') {
         $markerPath = $directoryNormalized;
     }
 
+    // Normalize size suffix to -30
     $sizeAdjusted = preg_replace('/-(\d{2,3})(\.[a-z0-9]+)$/i', '-30$2', $markerPath, 1);
     if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
         $markerPath = $sizeAdjusted;
