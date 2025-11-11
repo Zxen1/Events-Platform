@@ -7892,7 +7892,6 @@ function makePosts(){
     }
 
     function confirmFormbuilderDeletion(messageText, titleText){
-      console.log('[Formbuilder] Showing deletion confirmation:', messageText);
       const result = confirmFormbuilderAction({
         messageText: messageText || 'Are you sure you want to delete this item?',
         titleText: titleText || 'Delete item?',
@@ -7901,7 +7900,6 @@ function makePosts(){
         focusCancel: true
       });
       result.then(confirmed => {
-        console.log('[Formbuilder] Deletion confirmed:', confirmed);
       });
       return result;
     }
@@ -8723,10 +8721,8 @@ function makePosts(){
         };
         nameInput.addEventListener('input', applyCategoryNameChange);
         deleteCategoryBtn.addEventListener('click', async ()=>{
-          console.log('[Formbuilder] Delete category button clicked');
           const displayName = getCategoryDisplayName();
           const confirmed = await confirmFormbuilderDeletion(`Delete the "${displayName}" category?`, 'Delete Category');
-          console.log('[Formbuilder] Category deletion confirmed:', confirmed);
           if(!confirmed) return;
           if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
             const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
@@ -8748,20 +8744,17 @@ function makePosts(){
           }
           menu.remove();
           notifyFormbuilderChange();
-          console.log('[Formbuilder] Category deleted from array. Categories count:', categories.length);
           
           // Update formbuilder state manager snapshot first
           if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
             try {
               window.formbuilderStateManager.save();
-              console.log('[Formbuilder] Formbuilder state manager updated');
             } catch(err) {
               console.error('[Formbuilder] Failed to update state manager:', err);
             }
           }
           
           // Trigger auto-save after deletion
-          console.log('[Formbuilder] Triggering save...');
           if(typeof window.adminPanelModule?.runSave === 'function'){
             setTimeout(() => {
               window.adminPanelModule.runSave({ closeAfter: false });
@@ -13099,14 +13092,10 @@ function makePosts(){
               renderFormPreview();
               
               // Update formbuilder state manager snapshot after field deletion
-              console.log('[Formbuilder] Field deleted. Fields remaining:', fields.length);
-              console.log('[Formbuilder] Fields array after deletion:', JSON.parse(JSON.stringify(fields)));
               if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
                 try {
                   window.formbuilderStateManager.save();
-                  const snapshot = window.formbuilderStateManager.getSaved();
-                  console.log('[Formbuilder] Formbuilder state manager updated after field deletion');
-                  console.log('[Formbuilder] Snapshot after save:', snapshot);
+                  window.formbuilderStateManager.getSaved();
                 } catch(err) {
                   console.error('[Formbuilder] Failed to update state manager:', err);
                 }
@@ -13324,11 +13313,9 @@ function makePosts(){
           subNameInput.addEventListener('input', ()=> applySubNameChange());
 
           deleteSubBtn.addEventListener('click', async ()=>{
-            console.log('[Formbuilder] Delete subcategory button clicked');
             const categoryDisplayName = getCategoryDisplayName();
             const subDisplayName = getSubDisplayName();
             const confirmed = await confirmFormbuilderDeletion(`Delete the "${subDisplayName}" subcategory from ${categoryDisplayName}?`, 'Delete Subcategory');
-            console.log('[Formbuilder] Subcategory deletion confirmed:', confirmed);
             if(!confirmed) return;
             if(subcategoryFieldOverlayContent && typeof closeSubcategoryFieldOverlay === 'function'){
               const activeRow = subcategoryFieldOverlayContent.querySelector('.subcategory-field-row');
@@ -13350,20 +13337,17 @@ function makePosts(){
             subMenu.remove();
             delete subFieldsMap[currentSubName];
             notifyFormbuilderChange();
-            console.log('[Formbuilder] Subcategory deleted. Subs in category:', c.subs.length);
             
             // Update formbuilder state manager snapshot first
             if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
               try {
                 window.formbuilderStateManager.save();
-                console.log('[Formbuilder] Formbuilder state manager updated');
               } catch(err) {
                 console.error('[Formbuilder] Failed to update state manager:', err);
               }
             }
             
             // Trigger auto-save after deletion
-            console.log('[Formbuilder] Triggering save...');
             if(typeof window.adminPanelModule?.runSave === 'function'){
               setTimeout(() => {
                 window.adminPanelModule.runSave({ closeAfter: false });
@@ -20861,14 +20845,6 @@ form.addEventListener('input', formChangedWrapper, true);
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
         payload = window.formbuilderStateManager.capture();
-        console.log('[SaveAdminChanges] Captured payload:', payload);
-        console.log('[SaveAdminChanges] Categories count:', payload?.categories?.length);
-        console.log('[SaveAdminChanges] SubFields map:', payload?.categories?.map(c => ({
-          name: c.name,
-          subs: c.subs,
-          subFieldsKeys: c.subFields ? Object.keys(c.subFields) : [],
-          subFieldsValues: c.subFields
-        })));
       } catch (err) {
         console.error('formbuilderStateManager.capture failed', err);
       }
@@ -20895,7 +20871,6 @@ form.addEventListener('input', formChangedWrapper, true);
     if(responseText){
       try {
         data = JSON.parse(responseText);
-        console.log('[SaveAdminChanges] Server response:', data);
       } catch (parseError) {
         console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
         showErrorBanner('Unexpected response while saving changes.');
@@ -22924,6 +22899,8 @@ document.addEventListener('pointerdown', (e) => {
         populateCategoryOptions(false);
       }
     }
+
+    const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
 
     function buildMemberCreateField(field, index){
       const wrapper = document.createElement('div');
