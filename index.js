@@ -15586,6 +15586,13 @@ function makePosts(){
             const detailRect = detail.getBoundingClientRect();
             if(!containerRect || !detailRect) return;
             const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+            console.log('=== POST SCROLL ===', {
+              'detailRect.top': detailRect.top,
+              'containerRect.top': containerRect.top,
+              'offset (detailRect.top - containerRect.top)': (detailRect.top - containerRect.top),
+              'container.scrollTop': container.scrollTop,
+              'topTarget (where we scroll to)': topTarget
+            });
             if(typeof container.scrollTo === 'function'){
               container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
             } else {
