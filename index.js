@@ -15450,6 +15450,11 @@ function makePosts(){
         }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
+        // Check if there's an existing open post BEFORE we close it
+        const existingOpenPost = container.querySelector('.open-post');
+        const targetIsBelow = existingOpenPost && target && 
+          (existingOpenPost.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
+
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
@@ -15514,6 +15519,15 @@ function makePosts(){
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
         const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
         const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
+        
+        console.log('=== POINTER CHECK ===', {
+          hasPointerTarget: !!pointerTarget,
+          pointerCard: pointerCard ? pointerCard.className : null,
+          pointerInsideCardContainer,
+          pointerInAdBoard: !!pointerInAdBoard,
+          fromMap,
+          shouldScrollToCard
+        });
 
         if(!target && !fromHistory){
           target = ensurePostCardForId(id);
@@ -15550,11 +15564,6 @@ function makePosts(){
         }
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
-
-        // Check if there's an existing open post and where target is relative to it
-        const existingOpenPost = container.querySelector('.open-post');
-        const targetIsBelow = existingOpenPost && target && 
-          (existingOpenPost.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
         
         console.log('=== BEFORE REPLACE ===', {
           hasExistingOpenPost: !!existingOpenPost,
