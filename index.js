@@ -15581,6 +15581,13 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
+        console.log('=== SCROLL CHECK ===', {
+          shouldScrollToCard,
+          hasContainer: !!container,
+          hasDetail: !!detail,
+          detailInContainer: container && detail ? container.contains(detail) : false
+        });
+
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
             const containerRect = container.getBoundingClientRect();
