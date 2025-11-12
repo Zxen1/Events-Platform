@@ -15316,7 +15316,7 @@ function makePosts(){
               </div>
             </div>
             <div class="post-details-description-container">
-              <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
+              <div class="desc-wrap"><div class="desc" aria-expanded="false">${p.desc} <span class="desc-toggle" role="button" tabindex="0">See More</span></div></div>
               <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
             </div>
           </div>
@@ -18304,6 +18304,7 @@ function openPostModal(id){
       };
 
       if(descEl){
+        const descToggleBtn = descEl.querySelector('.desc-toggle');
         const handleDescToggle = evt => {
           const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
           if(evt.type === 'keydown' && !allowed.includes(evt.key)){
@@ -18314,10 +18315,16 @@ function openPostModal(id){
           const isExpanded = openPostEl
             ? openPostEl.classList.contains('desc-expanded')
             : descEl.classList.contains('expanded');
-          setDescExpandedState(!isExpanded);
+          const willExpand = !isExpanded;
+          setDescExpandedState(willExpand);
+          if(descToggleBtn){
+            descToggleBtn.textContent = willExpand ? 'See Less' : 'See More';
+          }
         };
-        descEl.addEventListener('click', handleDescToggle);
-        descEl.addEventListener('keydown', handleDescToggle);
+        if(descToggleBtn){
+          descToggleBtn.addEventListener('click', handleDescToggle);
+          descToggleBtn.addEventListener('keydown', handleDescToggle);
+        }
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
