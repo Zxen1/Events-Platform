@@ -4394,6 +4394,10 @@ body.mode-map .post-board{
   border-bottom:none;
 }
 
+.open-post .post-card:hover{
+  background:#1f2750 !important;
+}
+
 .open-post .card-actions{
   display:flex;
   flex-direction:column;
