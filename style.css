@@ -4384,7 +4384,7 @@ body.mode-map .post-board{
   position:sticky;
   top:0;
   z-index:10;
-  background:#1f2750;
+  background:#1f2750 !important;
   border-bottom:none;
 }
 
