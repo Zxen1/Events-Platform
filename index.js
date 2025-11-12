@@ -17690,6 +17690,17 @@ if (!map.__pillHooksInstalled) {
       if(postSentinel) postSentinel.remove();
       postSentinel = null;
 
+      // Preserve any existing open post before clearing
+      const existingOpenPost = postsWideEl.querySelector('.open-post');
+      let preservedOpenPost = null;
+      let openPostScrollTop = 0;
+      if(existingOpenPost){
+        // Detach the element to preserve it with all event handlers and state
+        preservedOpenPost = existingOpenPost;
+        openPostScrollTop = postsWideEl.scrollTop;
+        existingOpenPost.remove();
+      }
+
       if(resultsEl) resultsEl.innerHTML = '';
       postsWideEl.innerHTML = '';
 
@@ -17747,6 +17758,30 @@ if (!map.__pillHooksInstalled) {
         postBatchObserver.observe(postSentinel);
       } else {
         postBoardScrollOptions = addPassiveScrollListener(postsWideEl, onPostBoardScroll);
+      }
+
+      // Restore the preserved open post if it exists
+      if(preservedOpenPost){
+        const openPostId = preservedOpenPost.dataset ? preservedOpenPost.dataset.id : null;
+        if(openPostId){
+          // Find and replace the regular card with the preserved open post
+          const regularCard = postsWideEl.querySelector(`.post-card[data-id="${openPostId}"]`);
+          if(regularCard){
+            regularCard.replaceWith(preservedOpenPost);
+          } else {
+            // If card not found, insert at the beginning
+            const firstChild = postsWideEl.firstChild;
+            if(firstChild){
+              postsWideEl.insertBefore(preservedOpenPost, firstChild);
+            } else {
+              postsWideEl.appendChild(preservedOpenPost);
+            }
+          }
+          // Restore scroll position
+          if(openPostScrollTop && postsWideEl){
+            postsWideEl.scrollTop = openPostScrollTop;
+          }
+        }
       }
     }
     function updateResultCount(n){
