@@ -4384,8 +4384,12 @@ body.mode-map .post-board{
   position:sticky;
   top:0;
   z-index:10;
-  background:#1f2750 !important;
+  background:#1f2750;
   border-bottom:none;
+}
+
+.open-post .post-card.is-map-highlight{
+  background:#1f2750;
 }
 
 .open-post .card-actions{
