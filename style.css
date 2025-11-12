@@ -4296,11 +4296,6 @@ body.filters-active #filterBtn{
   border-radius:0;
   border-bottom:1px solid rgba(255,255,255,0.12);
 }
-
-.post-board .open-post .post-card{
-  background:#1f2750;
-  border-bottom:none;
-}
 .post-board .post-card.is-map-highlight{
   background-color:#2e3a72;
 }
@@ -4390,8 +4385,6 @@ body.mode-map .post-board{
   z-index:10;
   margin:0;
   border-radius:0;
-  background:#1f2750;
-  border-bottom:none;
 }
 
 .open-post .card-actions{
@@ -4420,7 +4413,6 @@ body.mode-map .post-board{
   transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
   max-height:5000px;
   opacity:1;
-  background:#1f2750;
 }
 
 .open-post.post-collapsed .post-body{
@@ -5510,10 +5502,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
   .post-board .post-card:last-child,
   .recents-board .recents-card:last-child{
-    border-bottom:none;
-  }
-  .post-board .open-post .post-card{
-    background:#1f2750;
     border-bottom:none;
   }
   .panel-content{
