@@ -168,7 +168,7 @@
     .mapmarker-overlay:hover .big-map-card--popup{
       background-color: #2e3a72;
     }
-    .open-post .post-header.is-map-highlight{
+    .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }
     .small-map-card.is-pill-highlight{
@@ -1603,9 +1603,7 @@ button[aria-expanded="true"] .results-arrow{
 .post-card .sub-icon img,
 .post-card .sub-icon svg,
 .recents-card .sub-icon img,
-.recents-card .sub-icon svg,
-.open-post .post-header .sub-icon img,
-.open-post .post-header .sub-icon svg{
+.recents-card .sub-icon svg{
   width:18px;
   height:18px;
 }
@@ -3413,7 +3411,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   }
 }
 
-.post-board .post-header{
+.post-board .open-post .post-card{
   position:sticky;
   top:0;
   z-index:1;
@@ -4381,55 +4379,23 @@ body.mode-map .post-board{
   position:relative;
 }
 
-.open-post .post-header{
-  display:grid;
-  grid-template-columns:80px 1fr 36px;
-  gap:12px;
-  align-items:flex-start;
-  padding:10px 12px 12px 12px;
-  opacity:1;
-  border-top-left-radius:inherit;
-  border-top-right-radius:inherit;
+.open-post .post-card{
   position:sticky;
   top:0;
   z-index:3;
-  background:transparent;
-  cursor:pointer;
-  transition:none;
+  margin:0;
+  border-radius:0;
 }
-.open-post .post-header *{
-  transition:none;
-}
-.open-post .post-header .thumb{
-  width:80px;
-  height:80px;
-  border-radius:8px;
-  object-fit:cover;
-  display:block;
-}
-.open-post .post-header .meta{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  min-width:0;
-}
-.open-post .post-header .header-actions{
+
+.open-post .card-actions{
   display:flex;
   flex-direction:column;
   gap:6px;
   align-items:center;
 }
 
-.open-post.post-collapsed .post-header .share{
+.open-post.post-collapsed .card-actions .share{
   display:none;
-}
-.open-post .post-header button,
-.open-post .post-header [role="button"],
-.open-post .post-header a{
-  pointer-events:auto;
-}
-.post-card .post-header{
-  background-color:transparent;
 }
 
 .open-post .post-body{
@@ -4444,9 +4410,7 @@ body.mode-map .post-board{
   width:100%;
   overflow:hidden;
   position:relative;
-  transition:max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
   max-height:5000px;
   opacity:1;
 }
@@ -4457,12 +4421,6 @@ body.mode-map .post-board{
   padding-top:0;
   padding-bottom:0;
   pointer-events:none;
-}
-
-.open-post.post-expanding .post-body{
-  transition:max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .open-post .post-body > .main-post-column{
   flex:1 1 100%;
@@ -4605,13 +4563,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .open-post .post-body{
     padding:0;
   }
-  .open-post .post-header{
+  .open-post .post-card{
     padding:10px;
-    grid-template-columns:80px 1fr 36px;
-  }
-  .open-post .post-header .thumb{
-    width:80px;
-    height:80px;
   }
   .open-post .post-images,
   .open-post .venue-dropdown,
@@ -4685,7 +4638,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
 }
 
-.open-post .post-header .title{
+.open-post .post-card .title{
   margin:0;
   font-size:16px;
   font-weight:bold;
@@ -4693,12 +4646,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   color:#fff;
 }
 
-.open-post .post-header .title-block{
+.open-post .post-card .title-block{
   display:flex;
   flex-direction:column;
 }
 
-.open-post .post-header .cat-line{
+.open-post .post-card .cat-line{
   font-size:14px;
   margin-top:4px;
   display:flex;
@@ -6089,13 +6042,8 @@ img.thumb{
     left:0;
     right:0;
   }
-  .open-post .post-header{
+  .open-post .post-card{
     padding:10px;
-    grid-template-columns:80px 1fr 36px;
-  }
-  .open-post .post-header .thumb{
-    width:80px;
-    height:80px;
   }
   .open-post .post-body{
     padding:0;
