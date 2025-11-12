@@ -4394,6 +4394,10 @@ body.mode-map .post-board{
   border-bottom:none;
 }
 
+.open-post .post-card:hover{
+  background:#1f2750 !important;
+}
+
 .open-post .card-actions{
   display:flex;
   flex-direction:column;
@@ -4417,6 +4421,7 @@ body.mode-map .post-board{
   width:100%;
   overflow:hidden;
   position:relative;
+  transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
   max-height:5000px;
   opacity:1;
   background:#1f2750;
@@ -5432,13 +5437,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .desc{
   margin-top:8px;
-  font-size:14px;
-}
-
-.desc-toggle{
-  color:#8ab4ff;
   cursor:pointer;
-  white-space:nowrap;
+  font-size:14px;
 }
 
 @media (max-width:440px){
