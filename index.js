@@ -15534,9 +15534,28 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
+        // Store position before buildDetail modifies DOM
+        const targetParent = target.parentElement;
+        const targetNext = target.nextSibling;
+        const wasPostCard = target.classList && target.classList.contains('post-card');
+        
         // Pass the existing target card to buildDetail to preserve it without recreating
-        const detail = buildDetail(p, target);
-        target.replaceWith(detail);
+        const detail = buildDetail(p, wasPostCard ? target : null);
+        
+        // If target wasn't reused, remove it
+        if(!wasPostCard && target.parentElement){
+          target.remove();
+        }
+        
+        // Insert detail at the original position
+        if(targetNext && targetNext.parentElement === targetParent){
+          targetParent.insertBefore(detail, targetNext);
+        } else if(targetParent){
+          targetParent.appendChild(detail);
+        } else {
+          container.appendChild(detail);
+        }
+        
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
