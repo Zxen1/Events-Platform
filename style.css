@@ -4388,10 +4388,6 @@ body.mode-map .post-board{
   border-bottom:none;
 }
 
-.open-post .post-card.is-map-highlight{
-  background:#1f2750;
-}
-
 .open-post .card-actions{
   display:flex;
   flex-direction:column;

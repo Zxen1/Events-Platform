@@ -3259,8 +3259,7 @@ async function ensureMapboxCssFor(container) {
         const selectorId = escapeAttrValue(strId);
         const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
         applyHighlight(listCard);
-        const openCard = document.querySelector(`.open-post[data-id="${selectorId}"] .post-card`);
-        applyHighlight(openCard);
+        // Don't highlight open post cards - they should maintain their #1f2750 background
         const preferredVenue = (overlayId && strId === overlayId && overlayVenueKey)
           ? overlayVenueKey
           : globalVenueKey;
