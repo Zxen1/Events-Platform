@@ -15309,16 +15309,14 @@ function makePosts(){
       }
       wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
-      // Start the expansion animation after a brief moment to allow initial render
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          wrap.classList.remove('post-collapsed');
-          wrap.classList.add('post-expanding');
-          setTimeout(() => {
-            wrap.classList.remove('post-expanding');
-          }, 300);
-        });
-      });
+      // Trigger smooth drawer opening animation after layout
+      setTimeout(() => {
+        wrap.classList.remove('post-collapsed');
+        wrap.classList.add('post-expanding');
+        setTimeout(() => {
+          wrap.classList.remove('post-expanding');
+        }, 350);
+      }, 10);
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');

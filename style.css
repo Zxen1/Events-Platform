@@ -3796,6 +3796,12 @@ body.filters-active #filterBtn{
   padding:12px;
   margin-bottom:12px;
   cursor:pointer;
+  transition:background-color 0.2s ease;
+}
+
+.post-card *,
+.recents-card *{
+  transition:none;
 }
 
 .post-card:hover,
@@ -3811,8 +3817,8 @@ body.filters-active #filterBtn{
 }
 
 .thumb{
-  width: 90px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
   object-fit: cover;
   display: block;
@@ -4389,6 +4395,10 @@ body.mode-map .post-board{
   z-index:3;
   background:transparent;
   cursor:pointer;
+  transition:none;
+}
+.open-post .post-header *{
+  transition:none;
 }
 .open-post .post-header .thumb{
   width:80px;
@@ -4409,6 +4419,10 @@ body.mode-map .post-board{
   gap:6px;
   align-items:center;
 }
+
+.open-post.post-collapsed .post-header .share{
+  display:none;
+}
 .open-post .post-header button,
 .open-post .post-header [role="button"],
 .open-post .post-header a{
@@ -4425,40 +4439,30 @@ body.mode-map .post-board{
   gap:0;
   align-items:stretch;
   align-content:flex-start;
-  flex:1 1 100%;
+  flex:1 1 auto;
   max-width:100%;
   width:100%;
-  transform-origin:top;
-  transition:transform 0.3s ease, opacity 0.3s ease, max-height 0.3s ease;
-  max-height:10000px;
   overflow:hidden;
   position:relative;
+  transition:max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height:5000px;
   opacity:1;
-  transform:translateY(0);
 }
 
 .open-post.post-collapsed .post-body{
-  transform:translateY(-100%);
-  opacity:0;
   max-height:0;
+  opacity:0;
+  padding-top:0;
+  padding-bottom:0;
   pointer-events:none;
 }
 
 .open-post.post-expanding .post-body{
-  animation:slideDown 0.3s ease forwards;
-}
-
-@keyframes slideDown{
-  from{
-    transform:translateY(-100%);
-    opacity:0;
-    max-height:0;
-  }
-  to{
-    transform:translateY(0);
-    opacity:1;
-    max-height:10000px;
-  }
+  transition:max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .open-post .post-body > .main-post-column{
   flex:1 1 100%;
@@ -4701,7 +4705,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   align-items:center;
 }
 
-.open-post .meta{
+.open-post .post-body .meta{
   font-size:14px;
   display:flex;
   gap:12px;
