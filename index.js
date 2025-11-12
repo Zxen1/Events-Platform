@@ -15298,7 +15298,8 @@ function makePosts(){
         </div>`;
       const cardEl = wrap.querySelector('.post-card');
       if(cardEl){
-        // Don't set inline background - let CSS handle it with #1f2750
+        cardEl.dataset.surfaceBg = CARD_SURFACE;
+        cardEl.style.background = CARD_SURFACE;
         // Add click handler to toggle post body
         cardEl.addEventListener('click', (e) => {
           // Don't trigger if clicking on buttons
@@ -15319,7 +15320,8 @@ function makePosts(){
           });
         }
       }
-      // Don't set inline background on wrapper - CSS handles post-card and post-body separately
+      wrap.dataset.surfaceBg = CARD_SURFACE;
+      wrap.style.background = CARD_SURFACE;
       // Trigger smooth drawer opening animation after layout
       setTimeout(() => {
         wrap.classList.remove('post-collapsed');
