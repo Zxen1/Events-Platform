@@ -15314,10 +15314,26 @@ function makePosts(){
       
       // Add click handler to card to toggle post body
       cardEl.addEventListener('click', (e) => {
-        // Don't trigger if clicking on buttons
-        if(e.target.closest('button, [role="button"], a')) return;
+        // Don't trigger if clicking on buttons or their children
+        if(e.target.closest('button, [role="button"], a, .fav, .share')) return;
         wrap.classList.toggle('post-collapsed');
       });
+      
+      // Set up favorites button handler for the card in open post
+      const favBtnInCard = cardEl.querySelector('.fav');
+      if(favBtnInCard && !favBtnInCard._favHandlerBound){
+        favBtnInCard.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          e.preventDefault();
+          p.fav = !p.fav;
+          favSortDirty = true;
+          document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
+            btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
+          });
+          renderHistoryBoard();
+        });
+        favBtnInCard._favHandlerBound = true;
+      }
       
       // Trigger smooth drawer opening animation after layout
       setTimeout(() => {
@@ -15688,7 +15704,8 @@ function makePosts(){
       const resLists = $$('.recents-board');
       resLists.forEach(list=>{
           list.addEventListener('click', (e)=>{
-            if(e.target.closest('.fav')) return;
+            // Check if clicking on fav button or any of its children (like SVG)
+            if(e.target.closest('.fav, .share')) return;
             const cardEl = e.target.closest('.recents-card');
             if(!cardEl) return;
             e.preventDefault();
@@ -15708,7 +15725,8 @@ function makePosts(){
       const postsWide = $('.post-board');
       if(postsWide){
         postsWide.addEventListener('click', e=>{
-          if(e.target.closest('.fav')) return;
+          // Check if clicking on fav/share button or any of its children (like SVG)
+          if(e.target.closest('.fav, .share')) return;
           const cardEl = e.target.closest('.post-card');
           if(cardEl){
             const id = cardEl.getAttribute('data-id');
@@ -18306,13 +18324,8 @@ function openPostModal(id){
             { transform: 'translateY(0)' }
           ];
         } else {
-          keyframes = [
-            { transform: 'translateY(0)' },
-            { transform: `translateY(-${Math.round(distance * 0.75)}px)` },
-            { transform: 'translateY(0)' }
-          ];
-          duration = 220;
-          easing = 'cubic-bezier(0.4, 0, 0.2, 1)';
+          // No bounce animation on collapse
+          return;
         }
         const animation = postImagesEl.animate(keyframes, { duration, easing });
         postImagesEl._descAnimation = animation;
@@ -18490,7 +18503,8 @@ function openPostModal(id){
           thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
           scrollThumbIntoView(t);
         }
-        if(t && slide.src !== t.src){
+        // Don't replace with low-res thumbnail if already showing high-res - prevents flicker
+        if(t && slide.src !== t.src && !alreadyReady){
           slide.src = t.src;
         }
         const full = (t && (t.dataset.full || t.src)) || slide.dataset.full || slide.src;

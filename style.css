@@ -3917,6 +3917,7 @@ body.filters-active #filterBtn{
   fill: none;
   stroke: var(--gold);
   stroke-width: 1.5;
+  pointer-events: none;
 }
 
 .fav[aria-pressed="true"] svg{
@@ -3939,6 +3940,7 @@ body.filters-active #filterBtn{
   width: 18px;
   height: 18px;
   fill: var(--button-text);
+  pointer-events: none;
 }
 
 #favToggle{
