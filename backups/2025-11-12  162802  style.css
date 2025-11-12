@@ -4394,10 +4394,6 @@ body.mode-map .post-board{
   border-bottom:none;
 }
 
-.open-post .post-card:hover{
-  background:#1f2750 !important;
-}
-
 .open-post .card-actions{
   display:flex;
   flex-direction:column;
@@ -4421,7 +4417,6 @@ body.mode-map .post-board{
   width:100%;
   overflow:hidden;
   position:relative;
-  transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
   max-height:5000px;
   opacity:1;
   background:#1f2750;
@@ -4433,16 +4428,6 @@ body.mode-map .post-board{
   padding-top:0;
   padding-bottom:0;
   pointer-events:none;
-}
-
-/* Prevent images from animating/bouncing during post collapse */
-.open-post.post-collapsed .post-images,
-.open-post.post-collapsed .image-box,
-.open-post.post-collapsed .image-track,
-.open-post.post-collapsed img{
-  transition:none !important;
-  transform:none !important;
-  animation:none !important;
 }
 .open-post .post-body > .main-post-column{
   flex:1 1 100%;
@@ -5447,8 +5432,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .desc{
   margin-top:8px;
-  cursor:pointer;
   font-size:14px;
+}
+
+.desc-toggle{
+  color:#8ab4ff;
+  cursor:pointer;
+  white-space:nowrap;
 }
 
 @media (max-width:440px){
