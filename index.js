@@ -18306,8 +18306,13 @@ function openPostModal(id){
             { transform: 'translateY(0)' }
           ];
         } else {
-          // No bounce animation on collapse
-          return;
+          keyframes = [
+            { transform: 'translateY(0)' },
+            { transform: `translateY(-${Math.round(distance * 0.75)}px)` },
+            { transform: 'translateY(0)' }
+          ];
+          duration = 220;
+          easing = 'cubic-bezier(0.4, 0, 0.2, 1)';
         }
         const animation = postImagesEl.animate(keyframes, { duration, easing });
         postImagesEl._descAnimation = animation;
@@ -18485,8 +18490,7 @@ function openPostModal(id){
           thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
           scrollThumbIntoView(t);
         }
-        // Don't swap to low-res thumbnail if already showing high-res - prevents flicker
-        if(t && slide.src !== t.src && !alreadyReady){
+        if(t && slide.src !== t.src){
           slide.src = t.src;
         }
         const full = (t && (t.dataset.full || t.src)) || slide.dataset.full || slide.src;
