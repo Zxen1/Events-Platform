@@ -3414,7 +3414,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .post-board .open-post .post-card{
   position:sticky;
   top:0;
-  z-index:1;
+  z-index:10;
 }
 
 .post-images .thumbnail-row{
@@ -4382,7 +4382,7 @@ body.mode-map .post-board{
 .open-post .post-card{
   position:sticky;
   top:0;
-  z-index:3;
+  z-index:10;
   margin:0;
   border-radius:0;
 }
