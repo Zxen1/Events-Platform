@@ -2863,14 +2863,14 @@ async function ensureMapboxCssFor(container) {
         const openPost = document.querySelector('.post-board .open-post');
         const body = openPost ? openPost.querySelector('.post-body') : null;
         const imgArea = body ? body.querySelector('.post-images') : null;
-        const header = openPost ? openPost.querySelector('.post-header') : null;
+        const cardHeader = openPost ? openPost.querySelector('.post-card') : null;
         document.body.classList.remove('hide-map-calendar');
-        if(!openPost || !body || !imgArea || !header){
+        if(!openPost || !body || !imgArea || !cardHeader){
           document.body.classList.remove('open-post-sticky-images');
           root.style.removeProperty('--open-post-header-h');
           return;
         }
-        root.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
+        root.style.setProperty('--open-post-header-h', cardHeader.offsetHeight + 'px');
         document.body.classList.add('open-post-sticky-images');
       }
 
@@ -3170,7 +3170,7 @@ async function ensureMapboxCssFor(container) {
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
       const markerHighlightClass = 'is-pill-highlight';
-      const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && (el.classList.contains('post-card') || el.classList.contains('post-header')));
+      const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && el.classList.contains('post-card'));
       const restoreHighlightBackground = (el)=>{
         if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
         if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
@@ -3206,7 +3206,7 @@ async function ensureMapboxCssFor(container) {
           delete el.dataset.prevAriaSelected;
         }
       };
-      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .big-map-card.${highlightClass}`).forEach(el => {
+      document.querySelectorAll(`.post-card.${highlightClass}, .big-map-card.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
         restoreHighlightBackground(el);
@@ -3259,8 +3259,8 @@ async function ensureMapboxCssFor(container) {
         const selectorId = escapeAttrValue(strId);
         const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
         applyHighlight(listCard);
-        const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
-        applyHighlight(openHeader);
+        const openCard = document.querySelector(`.open-post[data-id="${selectorId}"] .post-card`);
+        applyHighlight(openCard);
         const preferredVenue = (overlayId && strId === overlayId && overlayVenueKey)
           ? overlayVenueKey
           : globalVenueKey;
@@ -5297,14 +5297,14 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function showCopyMsg(btn){
-    const header = btn && btn.closest('.post-header');
-    if(!header) return;
+    const cardHeader = btn && btn.closest('.post-card');
+    if(!cardHeader) return;
     const msg = document.createElement('div');
     msg.className='copy-msg';
     msg.textContent='Link Copied';
-    header.appendChild(msg);
+    cardHeader.appendChild(msg);
     const btnRect = btn.getBoundingClientRect();
-    const headerRect = header.getBoundingClientRect();
+    const headerRect = cardHeader.getBoundingClientRect();
     const msgRect = msg.getBoundingClientRect();
     msg.style.top = (btnRect.top - headerRect.top + (btnRect.height - msgRect.height)/2) + 'px';
     msg.style.left = (btnRect.left - headerRect.left - msgRect.width - 10) + 'px';
@@ -15226,10 +15226,7 @@ function makePosts(){
         }
       });
 
-    function buildDetail(p){
-      const wrap = document.createElement('div');
-      wrap.className = 'open-post post-collapsed';
-      wrap.dataset.id = p.id;
+    function buildDetail(p, existingCard = null){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
       const loc0 = locationList[0] || {};
       const selectSuffix = '<span style="display:inline-block;margin-left:10px;">(Select Session)</span>';
@@ -15244,82 +15241,78 @@ function makePosts(){
       const posterName = p.member ? p.member.username : 'Anonymous';
       const postedTime = formatPostTimestamp(p.created);
       const postedMeta = postedTime ? `Posted by ${posterName} · ${postedTime}` : `Posted by ${posterName}`;
-      // Keep the same card structure, just add share button and post body below
-      wrap.innerHTML = `
-        <article class="post-card">
-          <img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />
-          <div class="meta">
-            <div class="title">${p.title}</div>
-            <div class="info">
-              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-              <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
-              <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
-            </div>
-          </div>
-          <div class="card-actions">
-            <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
-              <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
-            </button>
-            <button class="share" aria-label="Share post">
-              <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
-            </button>
-          </div>
-        </article>
-        <div class="post-body">
-          <div class="post-nav-buttons">
-            <button class="venue-menu-button" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">
-              <img src="assets/Map Screenshot.png" alt="Map view">
-              <span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}
-            </button>
-            <button class="session-menu-button" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">
-              <img src="assets/Calendar Screenshot.png" alt="Calendar view">
-            </button>
-          </div>
-          <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
-          <div id="sess-${p.id}" class="session-dropdown options-dropdown"><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
-          <div class="post-details">
-            <div class="post-venue-selection-container"></div>
-            <div class="post-session-selection-container"></div>
-            <div class="post-details-info-container">
-              <div id="venue-info-${p.id}" class="venue-info"></div>
-              <div id="session-info-${p.id}" class="session-info">
-                <div>${defaultInfo}</div>
-              </div>
-            </div>
-            <div class="post-details-description-container">
-              <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
-              <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
-            </div>
-          </div>
-          <div class="post-images">
-            <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
-            <div class="thumbnail-row"></div>
-          </div>
-        </div>`;
-      const cardEl = wrap.querySelector('.post-card');
-      if(cardEl){
-        // Don't set inline background - let CSS handle it with #1f2750
-        // Add click handler to toggle post body
-        cardEl.addEventListener('click', (e) => {
-          // Don't trigger if clicking on buttons
-          if(e.target.closest('button, [role="button"], a')) return;
-          wrap.classList.toggle('post-collapsed');
-        });
-        // Add fav button handler
-        const favBtn = cardEl.querySelector('.fav');
-        if(favBtn){
-          favBtn.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            p.fav = !p.fav;
-            favSortDirty = true;
-            document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
-              btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
-            });
-            renderHistoryBoard();
-          });
-        }
+      
+      // Create wrapper for open post
+      const wrap = document.createElement('div');
+      wrap.className = 'open-post post-collapsed';
+      wrap.dataset.id = p.id;
+      
+      // Use existing card or create new one
+      let cardEl = existingCard;
+      if(!cardEl || !cardEl.classList.contains('post-card')){
+        cardEl = card(p, true);
       }
-      // Don't set inline background on wrapper - CSS handles post-card and post-body separately
+      
+      // Add share button if it doesn't exist
+      if(!cardEl.querySelector('.share')){
+        const cardActions = cardEl.querySelector('.card-actions') || document.createElement('div');
+        if(!cardActions.parentElement){
+          cardActions.className = 'card-actions';
+          cardEl.appendChild(cardActions);
+        }
+        
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'share';
+        shareBtn.setAttribute('aria-label', 'Share post');
+        shareBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+        cardActions.appendChild(shareBtn);
+      }
+      
+      // Create post body
+      const postBody = document.createElement('div');
+      postBody.className = 'post-body';
+      postBody.innerHTML = `
+        <div class="post-nav-buttons">
+          <button class="venue-menu-button" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">
+            <img src="assets/Map Screenshot.png" alt="Map view">
+            <span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}
+          </button>
+          <button class="session-menu-button" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">
+            <img src="assets/Calendar Screenshot.png" alt="Calendar view">
+          </button>
+        </div>
+        <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
+        <div id="sess-${p.id}" class="session-dropdown options-dropdown"><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
+        <div class="post-details">
+          <div class="post-venue-selection-container"></div>
+          <div class="post-session-selection-container"></div>
+          <div class="post-details-info-container">
+            <div id="venue-info-${p.id}" class="venue-info"></div>
+            <div id="session-info-${p.id}" class="session-info">
+              <div>${defaultInfo}</div>
+            </div>
+          </div>
+          <div class="post-details-description-container">
+            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
+            <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
+          </div>
+        </div>
+        <div class="post-images">
+          <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
+          <div class="thumbnail-row"></div>
+        </div>`;
+      
+      // Assemble the structure
+      wrap.appendChild(cardEl);
+      wrap.appendChild(postBody);
+      
+      // Add click handler to card to toggle post body
+      cardEl.addEventListener('click', (e) => {
+        // Don't trigger if clicking on buttons
+        if(e.target.closest('button, [role="button"], a')) return;
+        wrap.classList.toggle('post-collapsed');
+      });
+      
       // Trigger smooth drawer opening animation after layout
       setTimeout(() => {
         wrap.classList.remove('post-collapsed');
@@ -15328,23 +15321,25 @@ function makePosts(){
           wrap.classList.remove('post-expanding');
         }, 350);
       }, 10);
-        // progressive hero swap
-        (function(){
-          const img = wrap.querySelector('#hero-img');
-          if(img){
-            const full = img.getAttribute('data-full');
-            const hi = new Image();
-            hi.referrerPolicy = 'no-referrer';
-            hi.fetchPriority = 'high';
-            hi.onload = ()=>{
-              const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
-              if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-            };
-            hi.onerror = ()=>{};
-            hi.src = full;
-          }
-        })();
-        return wrap;
+      
+      // Progressive hero swap
+      (function(){
+        const img = wrap.querySelector('#hero-img');
+        if(img){
+          const full = img.getAttribute('data-full');
+          const hi = new Image();
+          hi.referrerPolicy = 'no-referrer';
+          hi.fetchPriority = 'high';
+          hi.onload = ()=>{
+            const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
+            if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
+          };
+          hi.onerror = ()=>{};
+          hi.src = full;
+        }
+      })();
+      
+      return wrap;
     }
 
       function ensurePostCardForId(id){
@@ -15539,7 +15534,8 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-        const detail = buildDetail(p);
+        // Pass the existing target card to buildDetail to preserve it without recreating
+        const detail = buildDetail(p, target);
         target.replaceWith(detail);
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
@@ -15563,10 +15559,10 @@ function makePosts(){
           }
         }
 
-        const header = detail.querySelector('.post-header');
-        if(header){
-          const h = header.offsetHeight;
-          header.style.scrollMarginTop = h + 'px';
+        const cardHeader = detail.querySelector('.post-card');
+        if(cardHeader){
+          const h = cardHeader.offsetHeight;
+          cardHeader.style.scrollMarginTop = h + 'px';
         }
 
         if(shouldScrollToCard && container && container.contains(detail)){
@@ -17899,9 +17895,11 @@ if (!map.__pillHooksInstalled) {
             <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
-        <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
-          <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
-        </button>
+        <div class="card-actions">
+          <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
+            <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+          </button>
+        </div>
       `;
       el.dataset.surfaceBg = CARD_SURFACE;
       el.style.background = CARD_SURFACE;
@@ -18101,9 +18099,9 @@ function openPostModal(id){
       const wrap = document.createElement('div');
       wrap.className = 'post-board';
       const detail = buildDetail(p);
-      const headerEl = detail.querySelector('.post-header');
-      const favBtn = headerEl && headerEl.querySelector('.fav');
-      if(headerEl && favBtn){
+      const cardEl = detail.querySelector('.post-card');
+      const favBtn = cardEl && cardEl.querySelector('.fav');
+      if(cardEl && favBtn){
         const closeBtn = document.createElement('button');
         closeBtn.type='button';
         closeBtn.className='close-post';
@@ -18208,13 +18206,8 @@ function openPostModal(id){
 
     function hookDetailActions(el, p){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
-      el.querySelectorAll('.post-header').forEach(headerEl => {
-        headerEl.addEventListener('click', evt=>{
-          if(evt.target.closest('button')) return;
-          evt.stopPropagation();
-          closeActivePost();
-        });
-      });
+      // Card click handler is now set in buildDetail() to toggle post-collapsed
+      
       el.querySelectorAll('.fav').forEach(favBtn => {
         favBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
@@ -23894,7 +23887,7 @@ document.addEventListener('pointerdown', (e) => {
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
-    {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-header'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
+    {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-card'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
     {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.big-map-card .mapboxgl-popup-content','.mapboxgl-popup.big-map-card .big-map-card','.mapboxgl-popup.big-map-card .chip','.mapboxgl-popup.big-map-card .chip-small','.mapboxgl-popup.big-map-card .map-card-list-item'], popupText:['.mapboxgl-popup.big-map-card .big-map-card','.mapboxgl-popup.big-map-card .map-card-title','.mapboxgl-popup.big-map-card .map-card-venue','.mapboxgl-popup.big-map-card .chip','.mapboxgl-popup.big-map-card .chip-small','.mapboxgl-popup.big-map-card .map-card-list-item'], title:['.mapboxgl-popup.big-map-card .map-card-title','.mapboxgl-popup.big-map-card .chip .t','.mapboxgl-popup.big-map-card .chip .title','.mapboxgl-popup.big-map-card .chip-small .t','.mapboxgl-popup.big-map-card .chip-small .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
@@ -24568,9 +24561,9 @@ function initPostLayout(board){
       updateStickyImages();
     }
     if(openPost){
-      const header = openPost.querySelector('.post-header');
-      if(header){
-        document.documentElement.style.setProperty('--post-header-h', header.offsetHeight + 'px');
+      const cardHeader = openPost.querySelector('.post-card');
+      if(cardHeader){
+        document.documentElement.style.setProperty('--post-header-h', cardHeader.offsetHeight + 'px');
       } else {
         document.documentElement.style.removeProperty('--post-header-h');
       }
