@@ -15456,18 +15456,7 @@ function makePosts(){
             }
             const exId = ex.dataset && ex.dataset.id;
             const prev = getPostByIdAnywhere(exId);
-            if(prev){
-              // Instead of replacing with a new card, just collapse the existing post
-              ex.classList.add('post-collapsed');
-              // Remove it after the collapse animation completes
-              setTimeout(() => {
-                if(ex && ex.parentElement){
-                  ex.remove();
-                }
-              }, 350);
-            } else {
-              ex.remove();
-            }
+            if(prev){ ex.replaceWith(card(prev, fromHistory ? false : true)); } else { ex.remove(); }
           }
         })();
 
@@ -18218,10 +18207,6 @@ function openPostModal(id){
 
       const animatePostImages = direction => {
         if(!postImagesEl || typeof postImagesEl.animate !== 'function'){
-          return;
-        }
-        // Don't animate if the post is collapsed
-        if(el && el.classList && el.classList.contains('post-collapsed')){
           return;
         }
         try {
