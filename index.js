@@ -15228,7 +15228,7 @@ function makePosts(){
 
     function buildDetail(p){
       const wrap = document.createElement('div');
-      wrap.className = 'open-post post-expanding';
+      wrap.className = 'open-post post-collapsed';
       wrap.dataset.id = p.id;
       const locationList = Array.isArray(p.locations) ? p.locations : [];
       const loc0 = locationList[0] || {};
@@ -15309,10 +15309,16 @@ function makePosts(){
       }
       wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
-      // Remove expanding class after animation
-      setTimeout(() => {
-        wrap.classList.remove('post-expanding');
-      }, 300);
+      // Start the expansion animation after a brief moment to allow initial render
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          wrap.classList.remove('post-collapsed');
+          wrap.classList.add('post-expanding');
+          setTimeout(() => {
+            wrap.classList.remove('post-expanding');
+          }, 300);
+        });
+      });
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
@@ -17834,7 +17840,6 @@ if (!map.__pillHooksInstalled) {
       const el = document.createElement('article');
       el.className = wide ? 'post-card' : 'recents-card';
       el.dataset.id = p.id;
-      if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       const thumbSrc = thumbUrl(p);
       const thumb = `<img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `

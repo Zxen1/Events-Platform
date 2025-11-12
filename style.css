@@ -1603,14 +1603,11 @@ button[aria-expanded="true"] .results-arrow{
 .post-card .sub-icon img,
 .post-card .sub-icon svg,
 .recents-card .sub-icon img,
-.recents-card .sub-icon svg{
-  width:18px;
-  height:18px;
-}
+.recents-card .sub-icon svg,
 .open-post .post-header .sub-icon img,
 .open-post .post-header .sub-icon svg{
-  width:20px;
-  height:20px;
+  width:18px;
+  height:18px;
 }
 #adminPanel .color-group{
   flex:0 0 200px;
@@ -3790,7 +3787,7 @@ body.filters-active #filterBtn{
 .recents-card,
 .post-card{
   display: grid;
-  grid-template-columns:90px 1fr 36px;
+  grid-template-columns:80px 1fr 36px;
   gap:12px;
   align-items: flex-start;
   background-color: transparent;
@@ -4380,7 +4377,7 @@ body.mode-map .post-board{
 
 .open-post .post-header{
   display:grid;
-  grid-template-columns:90px 1fr 36px;
+  grid-template-columns:80px 1fr 36px;
   gap:12px;
   align-items:flex-start;
   padding:10px 12px 12px 12px;
@@ -4394,8 +4391,8 @@ body.mode-map .post-board{
   cursor:pointer;
 }
 .open-post .post-header .thumb{
-  width:90px;
-  height:70px;
+  width:80px;
+  height:80px;
   border-radius:8px;
   object-fit:cover;
   display:block;
@@ -4433,9 +4430,11 @@ body.mode-map .post-board{
   width:100%;
   transform-origin:top;
   transition:transform 0.3s ease, opacity 0.3s ease, max-height 0.3s ease;
-  max-height:none;
+  max-height:10000px;
   overflow:hidden;
   position:relative;
+  opacity:1;
+  transform:translateY(0);
 }
 
 .open-post.post-collapsed .post-body{
@@ -4451,7 +4450,7 @@ body.mode-map .post-board{
 
 @keyframes slideDown{
   from{
-    transform:translateY(-20px);
+    transform:translateY(-100%);
     opacity:0;
     max-height:0;
   }
@@ -4604,6 +4603,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
   .open-post .post-header{
     padding:10px;
+    grid-template-columns:80px 1fr 36px;
+  }
+  .open-post .post-header .thumb{
+    width:80px;
+    height:80px;
   }
   .open-post .post-images,
   .open-post .venue-dropdown,
@@ -6083,6 +6087,11 @@ img.thumb{
   }
   .open-post .post-header{
     padding:10px;
+    grid-template-columns:80px 1fr 36px;
+  }
+  .open-post .post-header .thumb{
+    width:80px;
+    height:80px;
   }
   .open-post .post-body{
     padding:0;
