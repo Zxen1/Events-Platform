@@ -4378,12 +4378,15 @@ body.mode-map .post-board{
   flex-direction:column;
   gap:0;
   position:relative;
+  background:#1f2750;
 }
 
 .open-post .post-card{
   position:sticky;
   top:0;
   z-index:10;
+  background:#1f2750;
+  border-bottom:none;
 }
 
 .open-post .card-actions{
