@@ -15252,6 +15252,15 @@ function makePosts(){
         cardEl = card(p, true);
       }
       
+      // Remove any highlight classes and force #1f2750 background
+      if(cardEl){
+        cardEl.classList.remove('is-map-highlight');
+        cardEl.style.background = '#1f2750';
+        if(cardEl.dataset){
+          delete cardEl.dataset.prevHighlightBackground;
+        }
+      }
+      
       // Add share button ONLY if it doesn't exist (preserves existing card state)
       if(cardEl && !cardEl.querySelector('.share')){
         const cardActions = cardEl.querySelector('.card-actions');
@@ -15466,6 +15475,8 @@ function makePosts(){
               // Remove share button if it was added
               const shareBtn = existingCard.querySelector('.share');
               if(shareBtn) shareBtn.remove();
+              // Restore original card background
+              existingCard.style.background = CARD_SURFACE;
               ex.replaceWith(existingCard);
             } else {
               const prev = getPostByIdAnywhere(exId);
@@ -15645,6 +15656,8 @@ function makePosts(){
           // Remove share button if it was added
           const shareBtn = existingCard.querySelector('.share');
           if(shareBtn) shareBtn.remove();
+          // Restore original card background
+          existingCard.style.background = CARD_SURFACE;
           openEl.replaceWith(existingCard);
         } else if(post){
           const replacement = card(post, !isHistory);
