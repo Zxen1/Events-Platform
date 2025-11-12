@@ -15226,7 +15226,7 @@ function makePosts(){
         }
       });
 
-    function buildDetail(p){
+    function buildDetail(p, existingCard){
       const wrap = document.createElement('div');
       wrap.className = 'open-post post-collapsed';
       wrap.dataset.id = p.id;
@@ -15244,9 +15244,33 @@ function makePosts(){
       const posterName = p.member ? p.member.username : 'Anonymous';
       const postedTime = formatPostTimestamp(p.created);
       const postedMeta = postedTime ? `Posted by ${posterName} · ${postedTime}` : `Posted by ${posterName}`;
-      // Keep the same card structure, just add share button and post body below
-      wrap.innerHTML = `
-        <article class="post-card">
+      
+      // If we have an existing card, use it and just add share button + body
+      let cardEl;
+      if(existingCard && existingCard.classList.contains('post-card')){
+        cardEl = existingCard;
+        // Add share button if not already there
+        let actionsDiv = cardEl.querySelector('.card-actions');
+        if(!actionsDiv){
+          const favBtn = cardEl.querySelector('.fav');
+          if(favBtn){
+            actionsDiv = document.createElement('div');
+            actionsDiv.className = 'card-actions';
+            actionsDiv.innerHTML = `
+              <button class="share" aria-label="Share post">
+                <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+              </button>`;
+            actionsDiv.insertBefore(favBtn, actionsDiv.firstChild);
+            cardEl.appendChild(actionsDiv);
+          }
+        }
+        wrap.appendChild(cardEl);
+      } else {
+        // No existing card, create new one
+        cardEl = document.createElement('article');
+        cardEl.className = 'post-card';
+        cardEl.dataset.id = p.id;
+        cardEl.innerHTML = `
           <img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />
           <div class="meta">
             <div class="title">${p.title}</div>
@@ -15263,9 +15287,14 @@ function makePosts(){
             <button class="share" aria-label="Share post">
               <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
             </button>
-          </div>
-        </article>
-        <div class="post-body">
+          </div>`;
+        wrap.appendChild(cardEl);
+      }
+      
+      // Create post body
+      const bodyDiv = document.createElement('div');
+      bodyDiv.className = 'post-body';
+      bodyDiv.innerHTML = `
           <div class="post-nav-buttons">
             <button class="venue-menu-button" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">
               <img src="assets/Map Screenshot.png" alt="Map view">
@@ -15294,32 +15323,30 @@ function makePosts(){
           <div class="post-images">
             <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
             <div class="thumbnail-row"></div>
-          </div>
-        </div>`;
-      const cardEl = wrap.querySelector('.post-card');
-      if(cardEl){
-        // Don't set inline background - let CSS handle it with #1f2750
-        // Add click handler to toggle post body
-        cardEl.addEventListener('click', (e) => {
-          // Don't trigger if clicking on buttons
-          if(e.target.closest('button, [role="button"], a')) return;
-          wrap.classList.toggle('post-collapsed');
-        });
-        // Add fav button handler
-        const favBtn = cardEl.querySelector('.fav');
-        if(favBtn){
-          favBtn.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            p.fav = !p.fav;
-            favSortDirty = true;
-            document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
-              btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
-            });
-            renderHistoryBoard();
+          </div>`;
+      wrap.appendChild(bodyDiv);
+      
+      // Add click handler to card
+      cardEl.addEventListener('click', (e) => {
+        if(e.target.closest('button, [role="button"], a')) return;
+        wrap.classList.toggle('post-collapsed');
+      });
+      
+      // Add fav button handler
+      const favBtn = cardEl.querySelector('.fav');
+      if(favBtn && !favBtn.dataset.handlerAttached){
+        favBtn.dataset.handlerAttached = 'true';
+        favBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          p.fav = !p.fav;
+          favSortDirty = true;
+          document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
+            btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
           });
-        }
+          renderHistoryBoard();
+        });
       }
-      // Don't set inline background on wrapper - CSS handles post-card and post-body separately
+      
       // Trigger smooth drawer opening animation after layout
       setTimeout(() => {
         wrap.classList.remove('post-collapsed');
@@ -15328,23 +15355,24 @@ function makePosts(){
           wrap.classList.remove('post-expanding');
         }, 350);
       }, 10);
-        // progressive hero swap
-        (function(){
-          const img = wrap.querySelector('#hero-img');
-          if(img){
-            const full = img.getAttribute('data-full');
-            const hi = new Image();
-            hi.referrerPolicy = 'no-referrer';
-            hi.fetchPriority = 'high';
-            hi.onload = ()=>{
-              const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
-              if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-            };
-            hi.onerror = ()=>{};
-            hi.src = full;
-          }
-        })();
-        return wrap;
+      
+      // progressive hero swap
+      (function(){
+        const img = wrap.querySelector('#hero-img');
+        if(img){
+          const full = img.getAttribute('data-full');
+          const hi = new Image();
+          hi.referrerPolicy = 'no-referrer';
+          hi.fetchPriority = 'high';
+          hi.onload = ()=>{
+            const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
+            if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
+          };
+          hi.onerror = ()=>{};
+          hi.src = full;
+        }
+      })();
+      return wrap;
     }
 
       function ensurePostCardForId(id){
@@ -15525,7 +15553,7 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-        const detail = buildDetail(p);
+        const detail = buildDetail(p, target);
         target.replaceWith(detail);
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
