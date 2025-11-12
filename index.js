@@ -15553,6 +15553,7 @@ function makePosts(){
         const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
+        // Build detail with the existing card, then replace
         const detail = buildDetail(p, target);
         target.replaceWith(detail);
         hookDetailActions(detail, p);
