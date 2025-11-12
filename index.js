@@ -15349,8 +15349,22 @@ function makePosts(){
 
       function ensurePostCardForId(id){
         if(!postsWideEl) return null;
+        
+        // Check if there's already an open post - if so, don't trigger a full reload
+        const hasOpenPost = postsWideEl.querySelector('.open-post');
+        
         if(!postSentinel || !postsWideEl.contains(postSentinel)){
-          renderLists(filtered);
+          // Only do a full renderLists if there's no open post
+          if(!hasOpenPost){
+            renderLists(filtered);
+          } else {
+            // If there's an open post, just ensure the sentinel exists without clearing everything
+            if(!postSentinel || !postsWideEl.contains(postSentinel)){
+              postSentinel = document.createElement('div');
+              postSentinel.style.height = '1px';
+              postsWideEl.appendChild(postSentinel);
+            }
+          }
         }
         let cardEl = postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
         if(cardEl) return cardEl;
@@ -17667,6 +17681,30 @@ if (!map.__pillHooksInstalled) {
     window.addPostSource = addPostSource;
     function renderLists(list){
       if(spinning || !postsLoaded) return;
+      
+      // If there's an open post, skip the full re-render to avoid flashing/reloading cards
+      const existingOpenPost = postsWideEl.querySelector('.open-post');
+      if(existingOpenPost){
+        // Just update the sorted list and counts without rebuilding the DOM
+        const sort = currentSort;
+        const arr = list.slice();
+        if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
+        if(sort==='soon') arr.sort((a,b)=> a.dates[0].localeCompare(b.dates[0]));
+        if(sort==='nearest'){
+          let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
+          arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
+        }
+        if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
+        
+        const { postsData } = getMarkerCollections(arr);
+        const boundsForCount = getVisibleMarkerBoundsForCount();
+        const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
+        
+        sortedPostList = arr;
+        updateResultCount(markerTotal);
+        return;
+      }
+      
       const sort = currentSort;
       const arr = list.slice();
       if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -17689,17 +17727,6 @@ if (!map.__pillHooksInstalled) {
       postBoardScrollOptions = null;
       if(postSentinel) postSentinel.remove();
       postSentinel = null;
-
-      // Preserve any existing open post before clearing
-      const existingOpenPost = postsWideEl.querySelector('.open-post');
-      let preservedOpenPost = null;
-      let openPostScrollTop = 0;
-      if(existingOpenPost){
-        // Detach the element to preserve it with all event handlers and state
-        preservedOpenPost = existingOpenPost;
-        openPostScrollTop = postsWideEl.scrollTop;
-        existingOpenPost.remove();
-      }
 
       if(resultsEl) resultsEl.innerHTML = '';
       postsWideEl.innerHTML = '';
@@ -17758,30 +17785,6 @@ if (!map.__pillHooksInstalled) {
         postBatchObserver.observe(postSentinel);
       } else {
         postBoardScrollOptions = addPassiveScrollListener(postsWideEl, onPostBoardScroll);
-      }
-
-      // Restore the preserved open post if it exists
-      if(preservedOpenPost){
-        const openPostId = preservedOpenPost.dataset ? preservedOpenPost.dataset.id : null;
-        if(openPostId){
-          // Find and replace the regular card with the preserved open post
-          const regularCard = postsWideEl.querySelector(`.post-card[data-id="${openPostId}"]`);
-          if(regularCard){
-            regularCard.replaceWith(preservedOpenPost);
-          } else {
-            // If card not found, insert at the beginning
-            const firstChild = postsWideEl.firstChild;
-            if(firstChild){
-              postsWideEl.insertBefore(preservedOpenPost, firstChild);
-            } else {
-              postsWideEl.appendChild(preservedOpenPost);
-            }
-          }
-          // Restore scroll position
-          if(openPostScrollTop && postsWideEl){
-            postsWideEl.scrollTop = openPostScrollTop;
-          }
-        }
       }
     }
     function updateResultCount(n){
