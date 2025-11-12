@@ -4378,7 +4378,6 @@ body.mode-map .post-board{
   flex-direction:column;
   gap:0;
   position:relative;
-  background:#1f2750;
 }
 
 .open-post .post-card{
