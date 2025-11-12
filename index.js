@@ -15257,6 +15257,7 @@ function makePosts(){
         cardEl.classList.remove('is-map-highlight');
         cardEl.style.background = '#1f2750';
         if(cardEl.dataset){
+          cardEl.dataset.surfaceBg = '#1f2750';  // Update the stored background so restoration uses correct color
           delete cardEl.dataset.prevHighlightBackground;
         }
       }
@@ -15477,6 +15478,9 @@ function makePosts(){
               if(shareBtn) shareBtn.remove();
               // Restore original card background
               existingCard.style.background = CARD_SURFACE;
+              if(existingCard.dataset){
+                existingCard.dataset.surfaceBg = CARD_SURFACE;
+              }
               ex.replaceWith(existingCard);
             } else {
               const prev = getPostByIdAnywhere(exId);
@@ -15658,6 +15662,9 @@ function makePosts(){
           if(shareBtn) shareBtn.remove();
           // Restore original card background
           existingCard.style.background = CARD_SURFACE;
+          if(existingCard.dataset){
+            existingCard.dataset.surfaceBg = CARD_SURFACE;
+          }
           openEl.replaceWith(existingCard);
         } else if(post){
           const replacement = card(post, !isHistory);
