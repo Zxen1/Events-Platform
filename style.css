@@ -4394,6 +4394,15 @@ body.mode-map .post-board{
   background:#1f2750 !important;
 }
 
+#recentsBoard .open-post .post-card{
+  border-radius:0;
+  margin-bottom:0;
+}
+
+#recentsBoard .open-post{
+  gap:0;
+}
+
 .open-post .card-actions{
   display:flex;
   flex-direction:column;

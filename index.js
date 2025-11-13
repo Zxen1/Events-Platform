@@ -18503,29 +18503,34 @@ function openPostModal(id){
           thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
           scrollThumbIntoView(t);
         }
-        // Don't replace with low-res thumbnail if already showing high-res - prevents flicker
-        if(t && slide.src !== t.src && !alreadyReady){
-          slide.src = t.src;
-        }
         const full = (t && (t.dataset.full || t.src)) || slide.dataset.full || slide.src;
         if(!slide.dataset.full){
           slide.dataset.full = full;
         }
-        if(!alreadyReady || slide.src !== full){
-          slide.classList.remove('ready');
-          slide.classList.add('lqip');
+        
+        // Seamless image transition - preload full-res, only swap when ready
+        if(slide.src !== full){
           const hi = new Image();
           hi.onload = ()=>{
             const swap = ()=>{
               if(slide.dataset.full !== full){ slide.dataset.full = full; }
+              // Swap immediately - image is already loaded so no flicker
               slide.src = full;
               slide.classList.remove('lqip');
               slide.classList.add('ready');
             };
             if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
           };
-          hi.onerror = ()=>{};
+          hi.onerror = ()=>{
+            // On error, still mark as ready to prevent infinite loading
+            slide.classList.remove('lqip');
+            slide.classList.add('ready');
+          };
           hi.src = full;
+        } else if(!alreadyReady){
+          // Already showing correct image, just mark as ready
+          slide.classList.remove('lqip');
+          slide.classList.add('ready');
         }
       }
       show(0, {instant:true});
