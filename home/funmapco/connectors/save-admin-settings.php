@@ -98,6 +98,8 @@ try {
     $settings = $data;
     if (isset($data['messages']) && is_array($data['messages'])) {
         $messages = $data['messages'];
+        error_log('[Save Admin Settings] Received ' . count($messages) . ' messages to save');
+        error_log('[Save Admin Settings] Messages data: ' . json_encode($messages));
         unset($settings['messages']);
     }
 
@@ -143,9 +145,11 @@ try {
     // Save messages if provided
     $messagesUpdated = 0;
     if ($messages !== null && is_array($messages) && !empty($messages)) {
+        error_log('[Save Admin Settings] Processing messages array...');
         // Check if admin_messages table exists
         $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
         if ($stmt->rowCount() > 0) {
+            error_log('[Save Admin Settings] admin_messages table exists');
             $stmt = $pdo->prepare('
                 UPDATE `admin_messages`
                 SET `message_text` = :message_text,
@@ -155,17 +159,26 @@ try {
 
             foreach ($messages as $message) {
                 if (!isset($message['id']) || !isset($message['message_text'])) {
+                    error_log('[Save Admin Settings] Skipping message - missing id or text: ' . json_encode($message));
                     continue;
                 }
+                error_log('[Save Admin Settings] Updating message ID ' . $message['id'] . ' with text: ' . substr($message['message_text'], 0, 50));
                 $stmt->execute([
                     ':id' => (int)$message['id'],
                     ':message_text' => (string)$message['message_text'],
                 ]);
-                if ($stmt->rowCount() > 0) {
+                $rowsAffected = $stmt->rowCount();
+                error_log('[Save Admin Settings] Rows affected: ' . $rowsAffected);
+                if ($rowsAffected > 0) {
                     $messagesUpdated++;
                 }
             }
+            error_log('[Save Admin Settings] Total messages updated: ' . $messagesUpdated);
+        } else {
+            error_log('[Save Admin Settings] admin_messages table does NOT exist');
         }
+    } else {
+        error_log('[Save Admin Settings] No messages to save (null, empty, or not array)');
     }
 
     $response = [
