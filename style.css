@@ -3323,7 +3323,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   top:calc(var(--header-h, 60px) + var(--safe-top, 0px) + 10px);
   left:50%;
   transform:translateX(-50%);
-  z-index:100;
+  z-index:9999;
   background:var(--btn);
   border:1px solid var(--border);
   border-radius:50%;
@@ -3333,10 +3333,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
   color:var(--ink);
   transition:all 0.2s ease;
-  opacity:0.9;
+  opacity:1;
+  pointer-events:auto;
 }
 
 .collapse-gap-button:hover{
