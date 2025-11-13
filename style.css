@@ -3315,21 +3315,15 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-shrink:0;
   transition:height 0.3s ease;
   pointer-events:none;
-  position:relative;
-}
-
-/* Enable pointer events for button inside spacer */
-.top-gap-spacer .collapse-gap-button{
-  pointer-events:auto;
 }
 
 /* Collapse Gap Button */
 .collapse-gap-button{
-  position:absolute;
-  bottom:10px;
+  position:fixed;
+  top:calc(var(--header-h, 60px) + var(--safe-top, 0px) + 10px);
   left:50%;
   transform:translateX(-50%);
-  z-index:9999;
+  z-index:100;
   background:var(--btn);
   border:1px solid var(--border);
   border-radius:50%;
@@ -3339,11 +3333,10 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
   color:var(--ink);
-  transition:transform 0.2s ease, box-shadow 0.2s ease;
-  opacity:1;
-  pointer-events:auto;
+  transition:all 0.2s ease;
+  opacity:0.9;
 }
 
 .collapse-gap-button:hover{
