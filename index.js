@@ -15401,7 +15401,7 @@ function makePosts(){
         return postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
       }
 
-      async function openPost(id, fromHistory=false, fromMap=false, originEl=null, fromAdBoard=false){
+      async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
@@ -15532,8 +15532,8 @@ function makePosts(){
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldScrollToCard = fromMap || fromAdBoard || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
-        const shouldReorderToTop = !fromMap && !fromAdBoard && pointerInsideCardContainer;
+        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
 
         if(!target && !fromHistory){
           target = ensurePostCardForId(id);
@@ -15623,17 +15623,6 @@ function makePosts(){
 
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
-            // When opening from map or ad board, scroll to top of post board
-            if(fromMap || fromAdBoard){
-              if(typeof container.scrollTo === 'function'){
-                container.scrollTo({ top: 0, behavior: 'smooth' });
-              } else {
-                container.scrollTop = 0;
-              }
-              return;
-            }
-            
-            // Otherwise, scroll to position the detail card in view
             const containerRect = container.getBoundingClientRect();
             const detailRect = detail.getBoundingClientRect();
             if(!containerRect || !detailRect) return;
@@ -19939,8 +19928,12 @@ function openPostModal(id){
       const id = slide.dataset.id;
       requestAnimationFrame(() => {
         callWhenDefined('openPost', (fn)=>{
-          Promise.resolve(fn(id, false, false, null, true)).then(() => {
+          Promise.resolve(fn(id)).then(() => {
             requestAnimationFrame(() => {
+              const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
+              if(openEl){
+                requestAnimationFrame(() => { openEl.scrollIntoView({behavior:'smooth', block:'start'}); });
+              }
               document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
               const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
               if(quickCard){
