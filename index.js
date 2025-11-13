@@ -15401,6 +15401,111 @@ function makePosts(){
         return postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
       }
 
+      // ========================================================================
+      // HELPER FUNCTIONS FOR GAP MANAGEMENT
+      // ========================================================================
+      function createCollapseGapButton(container){
+        if(!container) return;
+        
+        // Remove existing button if any
+        removeCollapseGapButton(container);
+        
+        // Create button
+        const button = document.createElement('button');
+        button.className = 'collapse-gap-button';
+        button.setAttribute('aria-label', 'Scroll to top and close gap');
+        button.setAttribute('title', 'Scroll to top');
+        button.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 4L10 16M10 4L6 8M10 4L14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        
+        // Position fixed at top of container
+        button.style.cssText = `
+          position: absolute;
+          top: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10;
+          background: var(--btn, rgba(255,255,255,0.9));
+          border: 1px solid var(--border, rgba(0,0,0,0.1));
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          color: var(--ink, #000);
+          transition: all 0.2s ease;
+        `;
+        
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          collapseGap(container);
+        });
+        
+        button.addEventListener('mouseenter', () => {
+          button.style.transform = 'translateX(-50%) scale(1.1)';
+        });
+        
+        button.addEventListener('mouseleave', () => {
+          button.style.transform = 'translateX(-50%) scale(1)';
+        });
+        
+        container.appendChild(button);
+        container.dataset.hasCollapseButton = 'true';
+      }
+      
+      function removeCollapseGapButton(container){
+        if(!container) return;
+        const existingButton = container.querySelector('.collapse-gap-button');
+        if(existingButton){
+          existingButton.remove();
+        }
+        delete container.dataset.hasCollapseButton;
+      }
+      
+      function collapseGap(container){
+        if(!container) return;
+        
+        // Smooth animation to collapse the gap
+        const currentPadding = parseFloat(container.style.paddingTop) || 0;
+        if(currentPadding > 0){
+          // Animate padding to 0
+          const duration = 300;
+          const startTime = performance.now();
+          const startPadding = currentPadding;
+          
+          const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+            
+            const newPadding = startPadding * (1 - easeProgress);
+            container.style.paddingTop = `${newPadding}px`;
+            
+            if(progress < 1){
+              requestAnimationFrame(animate);
+            } else {
+              container.style.paddingTop = '0px';
+              delete container.dataset.hasTopGap;
+              removeCollapseGapButton(container);
+              
+              // Scroll to top smoothly
+              if(typeof container.scrollTo === 'function'){
+                container.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                container.scrollTop = 0;
+              }
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        }
+      }
+
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null, scrollToTop=false){
         lockMap(false);
         touchMarker = null;
@@ -15456,9 +15561,23 @@ function makePosts(){
         }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
+        // ========================================================================
+        // CLOSE PREVIOUS OPEN POST & MAINTAIN VISUAL STABILITY
+        // ========================================================================
+        let previousOpenPostHeight = 0;
+        let shouldPreservePosition = false;
+        
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
+            // Measure the height before closing to maintain visual stability
+            previousOpenPostHeight = ex.offsetHeight || 0;
+            
+            // Check if new post will be below the closing post (preserve position)
+            const exTop = ex.offsetTop || 0;
+            const targetTop = target ? (target.offsetTop || 0) : 0;
+            shouldPreservePosition = !scrollToTop && targetTop > exTop;
+            
             const seenDetailMaps = new Set();
             const cleanupDetailMap = node=>{
               if(!node || !node._detailMap) return;
@@ -15603,6 +15722,36 @@ function makePosts(){
         }
 
         await nextFrame();
+        
+        // ========================================================================
+        // MAINTAIN VISUAL STABILITY - ADD GAP TO PREVENT CONTENT SHIFT
+        // ========================================================================
+        if(shouldPreservePosition && previousOpenPostHeight > 0){
+          // Measure the new card height
+          const newTarget = container.querySelector(`[data-id="${id}"]`);
+          const newCardHeight = newTarget ? (newTarget.offsetHeight || 0) : 0;
+          
+          // Calculate the gap left by closing the larger post
+          const heightDifference = previousOpenPostHeight - newCardHeight;
+          
+          if(heightDifference > 0){
+            // Add padding to top to maintain visual positions
+            const currentPadding = parseFloat(container.style.paddingTop) || 0;
+            const newPadding = currentPadding + heightDifference;
+            container.style.paddingTop = `${newPadding}px`;
+            container.dataset.hasTopGap = 'true';
+            
+            // Create/update collapse button in the gap
+            createCollapseGapButton(container);
+          }
+        }
+        
+        // Remove gap when scrolling to top (map/ad clicks)
+        if(scrollToTop){
+          container.style.paddingTop = '0px';
+          delete container.dataset.hasTopGap;
+          removeCollapseGapButton(container);
+        }
 
         if(fromMap){
           if(typeof window.adjustBoards === 'function'){
