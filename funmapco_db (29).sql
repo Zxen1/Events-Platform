@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 12, 2025 at 01:00 AM
+-- Generation Time: Nov 13, 2025 at 09:27 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -101,7 +101,9 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (18, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-10 04:10:24'),
 (73, 'spin_zoom_max', '5', 'integer', 'Maximum zoom spin threshold', '2025-11-09 20:39:10', '2025-11-10 09:35:08'),
 (150, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-09 21:56:42', '2025-11-10 09:35:28'),
-(529, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-11 10:44:57', '2025-11-11 13:50:20');
+(529, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-11 10:44:57', '2025-11-11 13:50:20'),
+(710, 'post_mode_shadow', '0', 'decimal', 'Opacity/shadow value for post mode background overlay', '2025-11-13 10:24:32', '2025-11-13 10:24:32'),
+(711, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 10:24:32', '2025-11-13 10:24:32');
 
 -- --------------------------------------------------------
 
@@ -481,7 +483,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `listing_fee`, `renew_fee`, `featured_fee`, `renew_featured_fee`, `listing_days`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-11-11 14:06:23'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
@@ -687,7 +689,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=710;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=712;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
