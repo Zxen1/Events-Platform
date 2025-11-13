@@ -3340,14 +3340,25 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   padding:2px 4px;
 }
 
-.last-opened-label + .recents-card,
-.last-opened-label + .open-post{
+.recents-board .last-opened-label + .recents-card,
+.recents-board .last-opened-label + .open-post{
   margin-top:0;
   padding-top:0;
 }
 
-.last-opened-label + .open-post .post-card{
+.recents-board .last-opened-label + .open-post .post-card{
   padding-top:0;
+  margin-top:0;
+}
+
+.recents-board .recents-card,
+.recents-board .open-post .post-card{
+  padding-top:12px;
+}
+
+.recents-board .last-opened-label{
+  margin-bottom:0;
+  padding-bottom:0;
 }
 
 .post-board{
