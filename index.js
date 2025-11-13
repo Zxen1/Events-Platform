@@ -21887,17 +21887,6 @@ form.addEventListener('input', formChangedWrapper, true);
       }
     }
 
-    // Update original values for messages after successful save
-    if(modifiedMessages.length > 0){
-      document.querySelectorAll('.message-text-input').forEach(textarea => {
-        textarea.dataset.originalValue = textarea.value;
-        const messageItem = textarea.closest('.message-item');
-        if(messageItem){
-          messageItem.classList.remove('modified');
-        }
-      });
-    }
-
     return data;
   }
 
