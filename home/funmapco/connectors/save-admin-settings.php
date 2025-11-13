@@ -93,8 +93,16 @@ try {
         return;
     }
 
+    // Separate messages from settings
+    $messages = null;
+    $settings = $data;
+    if (isset($data['messages']) && is_array($data['messages'])) {
+        $messages = $data['messages'];
+        unset($settings['messages']);
+    }
+
     // Save settings
-    if (!empty($data)) {
+    if (!empty($settings)) {
         $stmt = $pdo->prepare('
             INSERT INTO `admin_settings` (`setting_key`, `setting_value`, `setting_type`)
             VALUES (:key, :value, :type)
@@ -103,7 +111,7 @@ try {
                 `setting_type` = VALUES(`setting_type`)
         ');
 
-        foreach ($data as $key => $value) {
+        foreach ($settings as $key => $value) {
             // Determine type
             $type = 'string';
             $stringValue = null;
@@ -132,10 +140,44 @@ try {
         }
     }
 
-    echo json_encode([
+    // Save messages if provided
+    $messagesUpdated = 0;
+    if ($messages !== null && is_array($messages) && !empty($messages)) {
+        // Check if admin_messages table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `admin_messages`
+                SET `message_text` = :message_text,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+
+            foreach ($messages as $message) {
+                if (!isset($message['id']) || !isset($message['message_text'])) {
+                    continue;
+                }
+                $stmt->execute([
+                    ':id' => (int)$message['id'],
+                    ':message_text' => (string)$message['message_text'],
+                ]);
+                if ($stmt->rowCount() > 0) {
+                    $messagesUpdated++;
+                }
+            }
+        }
+    }
+
+    $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
-    ]);
+    ];
+
+    if ($messagesUpdated > 0) {
+        $response['messages_updated'] = $messagesUpdated;
+    }
+
+    echo json_encode($response);
 
 } catch (Throwable $e) {
     http_response_code(500);
