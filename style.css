@@ -7810,6 +7810,174 @@ html, body { cursor: auto !important; }
               max-width:420px;
               margin:0 auto;
             }
+            
+            /* Message List Styles */
+            .messages-list{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+              padding:10px;
+            }
+            .messages-empty{
+              padding:20px;
+              text-align:center;
+              color:rgba(255,255,255,0.5);
+              font-style:italic;
+            }
+            .message-item{
+              background:rgba(0,0,0,0.3);
+              border:1px solid rgba(255,255,255,0.1);
+              border-radius:8px;
+              overflow:hidden;
+              transition:all 0.2s ease;
+            }
+            .message-item.modified{
+              border-color:rgba(255,200,0,0.5);
+              background:rgba(255,200,0,0.05);
+            }
+            .message-item.expanded{
+              background:rgba(0,0,0,0.4);
+              border-color:rgba(255,255,255,0.2);
+            }
+            .message-header{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              padding:10px 12px;
+              cursor:pointer;
+              transition:background 0.2s ease;
+            }
+            .message-header:hover{
+              background:rgba(255,255,255,0.05);
+            }
+            .message-name{
+              font-size:14px;
+              font-weight:500;
+              color:var(--button-text);
+              flex:1;
+            }
+            .message-actions{
+              display:flex;
+              gap:4px;
+              align-items:center;
+            }
+            .message-edit-btn{
+              background:transparent;
+              border:none;
+              color:rgba(255,255,255,0.6);
+              cursor:pointer;
+              padding:6px;
+              border-radius:6px;
+              transition:all 0.2s ease;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+            }
+            .message-edit-btn:hover{
+              background:rgba(255,255,255,0.1);
+              color:rgba(255,255,255,0.9);
+            }
+            .message-details{
+              padding:12px;
+              border-top:1px solid rgba(255,255,255,0.1);
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            .message-details[hidden]{
+              display:none;
+            }
+            .message-type-badge{
+              display:inline-block;
+              padding:4px 10px;
+              border-radius:12px;
+              font-size:11px;
+              text-transform:uppercase;
+              font-weight:600;
+              letter-spacing:0.5px;
+              background:rgba(255,255,255,0.15);
+              color:rgba(255,255,255,0.8);
+              width:fit-content;
+            }
+            .message-type-badge.type-success{
+              background:rgba(46,160,96,0.3);
+              color:rgba(120,255,150,1);
+            }
+            .message-type-badge.type-error{
+              background:rgba(200,70,70,0.3);
+              color:rgba(255,150,150,1);
+            }
+            .message-type-badge.type-warning{
+              background:rgba(255,180,0,0.3);
+              color:rgba(255,220,100,1);
+            }
+            .message-type-badge.type-toast{
+              background:rgba(100,150,255,0.3);
+              color:rgba(150,200,255,1);
+            }
+            .message-text-preview{
+              font-size:13px;
+              color:rgba(255,255,255,0.7);
+              padding:8px;
+              background:rgba(0,0,0,0.2);
+              border-radius:6px;
+              line-height:1.4;
+            }
+            .message-description{
+              font-size:12px;
+              color:rgba(255,255,255,0.5);
+              font-style:italic;
+              padding:0 8px;
+            }
+            .message-text-edit{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+            }
+            .message-text-edit label{
+              font-size:13px;
+              font-weight:500;
+              color:rgba(255,255,255,0.8);
+            }
+            .message-text-input{
+              width:100%;
+              padding:10px;
+              background:rgba(0,0,0,0.3);
+              border:1px solid rgba(255,255,255,0.15);
+              border-radius:6px;
+              color:var(--button-text);
+              font-size:13px;
+              font-family:inherit;
+              line-height:1.4;
+              resize:vertical;
+              min-height:60px;
+              box-sizing:border-box;
+            }
+            .message-text-input:focus{
+              outline:none;
+              border-color:rgba(255,255,255,0.3);
+              background:rgba(0,0,0,0.4);
+            }
+            .message-placeholders{
+              padding:8px;
+              background:rgba(100,150,255,0.1);
+              border-left:3px solid rgba(100,150,255,0.5);
+              border-radius:4px;
+            }
+            .message-placeholders small{
+              font-size:11px;
+              color:rgba(200,220,255,0.9);
+              line-height:1.5;
+            }
+            .message-placeholders code{
+              background:rgba(0,0,0,0.3);
+              padding:2px 6px;
+              border-radius:3px;
+              font-family:monospace;
+              font-size:11px;
+              color:rgba(255,220,100,1);
+              white-space:nowrap;
+            }
             #tab-messages .category-form-menu{
               position: relative;
               margin-bottom:12px;

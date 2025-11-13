@@ -120,10 +120,93 @@ try {
         }
     }
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'settings' => $settings,
-    ]);
+    ];
+
+    // Optionally include admin messages if requested
+    $includeMessages = isset($_GET['include_messages']) && $_GET['include_messages'] === 'true';
+    if ($includeMessages) {
+        try {
+            // Check if admin_messages table exists
+            $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
+            if ($stmt->rowCount() > 0) {
+                // Fetch all admin messages grouped by container_key
+                $sql = "SELECT 
+                            am.id,
+                            am.message_name,
+                            am.message_key,
+                            am.message_type,
+                            am.message_category,
+                            am.container_key,
+                            am.message_text,
+                            am.message_description,
+                            am.supports_html,
+                            am.placeholders,
+                            am.is_active,
+                            am.is_visible,
+                            am.is_deletable,
+                            am.display_duration,
+                            lc.container_name,
+                            lc.icon_path as container_icon
+                        FROM admin_messages am
+                        LEFT JOIN layout_containers lc ON am.container_key = lc.container_key
+                        WHERE am.is_active = 1
+                        ORDER BY lc.sort_order ASC, am.id ASC";
+                
+                $stmt = $pdo->query($sql);
+                $messages = $stmt->fetchAll();
+
+                // Group messages by container_key
+                $messagesByContainer = [];
+                foreach ($messages as $message) {
+                    $containerKey = $message['container_key'] ?? 'uncategorized';
+                    
+                    if (!isset($messagesByContainer[$containerKey])) {
+                        $messagesByContainer[$containerKey] = [
+                            'container_key' => $containerKey,
+                            'container_name' => $message['container_name'] ?? ucfirst(str_replace('_', ' ', $containerKey)),
+                            'container_icon' => $message['container_icon'] ?? null,
+                            'messages' => []
+                        ];
+                    }
+                    
+                    // Parse placeholders JSON if present
+                    $placeholders = null;
+                    if (!empty($message['placeholders'])) {
+                        $decoded = json_decode($message['placeholders'], true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $placeholders = $decoded;
+                        }
+                    }
+                    
+                    $messagesByContainer[$containerKey]['messages'][] = [
+                        'id' => (int)$message['id'],
+                        'message_name' => $message['message_name'],
+                        'message_key' => $message['message_key'],
+                        'message_type' => $message['message_type'],
+                        'message_category' => $message['message_category'],
+                        'message_text' => $message['message_text'],
+                        'message_description' => $message['message_description'],
+                        'supports_html' => (bool)$message['supports_html'],
+                        'placeholders' => $placeholders,
+                        'is_active' => (bool)$message['is_active'],
+                        'is_visible' => (bool)$message['is_visible'],
+                        'is_deletable' => (bool)$message['is_deletable'],
+                        'display_duration' => $message['display_duration'] ? (int)$message['display_duration'] : null
+                    ];
+                }
+
+                $response['messages'] = array_values($messagesByContainer);
+            }
+        } catch (Throwable $messageError) {
+            // If messages fail, don't break the whole response
+            $response['messages_error'] = $messageError->getMessage();
+        }
+    }
+
+    echo json_encode($response);
 
 } catch (Throwable $e) {
     http_response_code(500);

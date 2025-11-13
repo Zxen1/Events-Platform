@@ -14388,9 +14388,169 @@ function makePosts(){
       messagesCats.appendChild(frag);
     }
     
+    // Fetch and populate admin messages from database
+    async function loadAdminMessages(){
+      try {
+        const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+        if(!response.ok){
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        
+        if(result.success && result.messages){
+          populateMessagesIntoContainers(result.messages);
+        } else {
+          console.error('Failed to load admin messages:', result.message || result.messages_error);
+        }
+      } catch(error){
+        console.error('Error loading admin messages:', error);
+      }
+    }
+    
+    function populateMessagesIntoContainers(messageContainers){
+      // Map container_key to MESSAGE_CATEGORIES key
+      const containerKeyMap = {
+        'msg_user': 'user',
+        'msg_member': 'member',
+        'msg_admin': 'admin',
+        'msg_email': 'email'
+      };
+      
+      messageContainers.forEach(container => {
+        const categoryKey = containerKeyMap[container.container_key];
+        if(!categoryKey) return;
+        
+        // Find the category menu element
+        const categoryMenu = messagesCats.querySelector(`[data-message-category="${categoryKey}"]`);
+        if(!categoryMenu) return;
+        
+        const content = categoryMenu.querySelector('.category-form-content');
+        if(!content) return;
+        
+        // Clear existing content
+        content.innerHTML = '';
+        
+        // Create messages list
+        if(container.messages && container.messages.length > 0){
+          const messagesList = document.createElement('div');
+          messagesList.className = 'messages-list';
+          
+          container.messages.forEach(message => {
+            const messageItem = document.createElement('div');
+            messageItem.className = 'message-item';
+            messageItem.dataset.messageId = message.id;
+            messageItem.dataset.messageKey = message.message_key;
+            
+            // Message header with name and edit button
+            const messageHeader = document.createElement('div');
+            messageHeader.className = 'message-header';
+            
+            const messageName = document.createElement('div');
+            messageName.className = 'message-name';
+            messageName.textContent = message.message_name || message.message_key;
+            
+            const messageActions = document.createElement('div');
+            messageActions.className = 'message-actions';
+            
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'message-edit-btn';
+            editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>';
+            editBtn.title = 'Edit message';
+            
+            messageActions.appendChild(editBtn);
+            messageHeader.append(messageName, messageActions);
+            
+            // Message details
+            const messageDetails = document.createElement('div');
+            messageDetails.className = 'message-details';
+            messageDetails.hidden = true;
+            
+            // Message type badge
+            const typeBadge = document.createElement('span');
+            typeBadge.className = `message-type-badge type-${message.message_type}`;
+            typeBadge.textContent = message.message_type;
+            
+            // Message text preview
+            const textPreview = document.createElement('div');
+            textPreview.className = 'message-text-preview';
+            textPreview.textContent = message.message_text;
+            
+            // Message description
+            if(message.message_description){
+              const description = document.createElement('div');
+              description.className = 'message-description';
+              description.textContent = message.message_description;
+              messageDetails.appendChild(description);
+            }
+            
+            // Editable message text
+            const textEdit = document.createElement('div');
+            textEdit.className = 'message-text-edit';
+            
+            const textLabel = document.createElement('label');
+            textLabel.textContent = 'Message Text:';
+            
+            const textArea = document.createElement('textarea');
+            textArea.className = 'message-text-input';
+            textArea.value = message.message_text;
+            textArea.rows = 3;
+            textArea.dataset.messageId = message.id;
+            textArea.dataset.originalValue = message.message_text;
+            
+            // Track changes
+            textArea.addEventListener('input', () => {
+              if(textArea.value !== textArea.dataset.originalValue){
+                messageItem.classList.add('modified');
+                textPreview.textContent = textArea.value;
+                // Mark admin panel as dirty
+                if(typeof window.adminPanelModule?.markDirty === 'function'){
+                  window.adminPanelModule.markDirty();
+                }
+              } else {
+                messageItem.classList.remove('modified');
+              }
+            });
+            
+            textEdit.append(textLabel, textArea);
+            messageDetails.append(typeBadge, textPreview, textEdit);
+            
+            // Placeholders info
+            if(message.placeholders && message.placeholders.length > 0){
+              const placeholdersInfo = document.createElement('div');
+              placeholdersInfo.className = 'message-placeholders';
+              placeholdersInfo.innerHTML = `<small>Available placeholders: ${message.placeholders.map(p => `<code>{${p}}</code>`).join(', ')}</small>`;
+              messageDetails.appendChild(placeholdersInfo);
+            }
+            
+            // Toggle edit panel
+            editBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              messageDetails.hidden = !messageDetails.hidden;
+              messageItem.classList.toggle('expanded');
+            });
+            
+            messageItem.append(messageHeader, messageDetails);
+            messagesList.appendChild(messageItem);
+          });
+          
+          content.appendChild(messagesList);
+        } else {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'messages-empty';
+          emptyMsg.textContent = 'No messages in this category';
+          content.appendChild(emptyMsg);
+        }
+      });
+    }
+    
     // Initialize messages categories when admin panel opens
     if(messagesCats){
       renderMessagesCategories();
+      
+      // Load messages from database
+      loadAdminMessages();
       
       // Add drag and drop functionality for Messages tab categories
       let draggedMessageCategory = null;
@@ -21500,6 +21660,18 @@ form.addEventListener('input', formChangedWrapper, true);
   }
 
   async function saveAdminChanges(){
+    // Collect modified admin messages
+    const modifiedMessages = [];
+    document.querySelectorAll('.message-text-input').forEach(textarea => {
+      if(textarea.value !== textarea.dataset.originalValue){
+        modifiedMessages.push({
+          id: parseInt(textarea.dataset.messageId),
+          message_text: textarea.value
+        });
+      }
+    });
+    
+    // Collect form data
     let payload = null;
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
@@ -21510,6 +21682,11 @@ form.addEventListener('input', formChangedWrapper, true);
     }
     if(!payload || typeof payload !== 'object'){
       payload = {};
+    }
+
+    // Add messages to payload if any were modified
+    if(modifiedMessages.length > 0){
+      payload.messages = modifiedMessages;
     }
 
     let response;
@@ -21586,6 +21763,17 @@ form.addEventListener('input', formChangedWrapper, true);
       }catch(err){
         console.error('Failed to update saved formbuilder state after ID assignment', err);
       }
+    }
+
+    // Update original values for messages after successful save
+    if(modifiedMessages.length > 0){
+      document.querySelectorAll('.message-text-input').forEach(textarea => {
+        textarea.dataset.originalValue = textarea.value;
+        const messageItem = textarea.closest('.message-item');
+        if(messageItem){
+          messageItem.classList.remove('modified');
+        }
+      });
     }
 
     return data;
@@ -21996,6 +22184,18 @@ const adminPanelChangeManager = (()=>{
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restoreSaved === 'function'){
       window.formbuilderStateManager.restoreSaved();
     }
+    // Reset admin messages to original values
+    document.querySelectorAll('.message-text-input').forEach(textarea => {
+      textarea.value = textarea.dataset.originalValue;
+      const messageItem = textarea.closest('.message-item');
+      if(messageItem){
+        messageItem.classList.remove('modified');
+      }
+      const textPreview = messageItem?.querySelector('.message-text-preview');
+      if(textPreview){
+        textPreview.textContent = textarea.dataset.originalValue;
+      }
+    });
     if(savedState) applyState(savedState);
     setDirty(false);
     showStatus('Changes Discarded');

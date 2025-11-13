@@ -93,47 +93,91 @@ try {
         return;
     }
 
-    // Save each setting
-    $stmt = $pdo->prepare('
-        INSERT INTO `admin_settings` (`setting_key`, `setting_value`, `setting_type`)
-        VALUES (:key, :value, :type)
-        ON DUPLICATE KEY UPDATE
-            `setting_value` = VALUES(`setting_value`),
-            `setting_type` = VALUES(`setting_type`)
-    ');
-
-    foreach ($data as $key => $value) {
-        // Determine type
-        $type = 'string';
-        $stringValue = null;
-
-        if (is_bool($value)) {
-            $type = 'boolean';
-            $stringValue = $value ? 'true' : 'false';
-        } elseif (is_int($value)) {
-            $type = 'integer';
-            $stringValue = (string)$value;
-        } elseif (is_numeric($value)) {
-            $type = 'decimal';
-            $stringValue = (string)$value;
-        } elseif (is_array($value) || is_object($value)) {
-            $type = 'json';
-            $stringValue = json_encode($value);
-        } else {
-            $stringValue = (string)$value;
-        }
-
-        $stmt->execute([
-            ':key' => $key,
-            ':value' => $stringValue,
-            ':type' => $type,
-        ]);
+    // Separate messages from settings
+    $messages = null;
+    $settings = $data;
+    if (isset($data['messages']) && is_array($data['messages'])) {
+        $messages = $data['messages'];
+        unset($settings['messages']);
     }
 
-    echo json_encode([
+    // Save settings
+    if (!empty($settings)) {
+        $stmt = $pdo->prepare('
+            INSERT INTO `admin_settings` (`setting_key`, `setting_value`, `setting_type`)
+            VALUES (:key, :value, :type)
+            ON DUPLICATE KEY UPDATE
+                `setting_value` = VALUES(`setting_value`),
+                `setting_type` = VALUES(`setting_type`)
+        ');
+
+        foreach ($settings as $key => $value) {
+            // Determine type
+            $type = 'string';
+            $stringValue = null;
+
+            if (is_bool($value)) {
+                $type = 'boolean';
+                $stringValue = $value ? 'true' : 'false';
+            } elseif (is_int($value)) {
+                $type = 'integer';
+                $stringValue = (string)$value;
+            } elseif (is_numeric($value)) {
+                $type = 'decimal';
+                $stringValue = (string)$value;
+            } elseif (is_array($value) || is_object($value)) {
+                $type = 'json';
+                $stringValue = json_encode($value);
+            } else {
+                $stringValue = (string)$value;
+            }
+
+            $stmt->execute([
+                ':key' => $key,
+                ':value' => $stringValue,
+                ':type' => $type,
+            ]);
+        }
+    }
+
+    // Save messages if provided
+    $messagesUpdated = 0;
+    if ($messages !== null && is_array($messages) && !empty($messages)) {
+        // Check if admin_messages table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `admin_messages`
+                SET `message_text` = :message_text,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+
+            foreach ($messages as $message) {
+                if (!isset($message['id']) || !isset($message['message_text'])) {
+                    continue;
+                }
+                $stmt->execute([
+                    ':id' => (int)$message['id'],
+                    ':message_text' => (string)$message['message_text'],
+                ]);
+                if ($stmt->rowCount() > 0) {
+                    $messagesUpdated++;
+                }
+            }
+        }
+    }
+
+    $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
-    ]);
+    ];
+
+    if ($messagesUpdated > 0) {
+        $response['messages_updated'] = $messagesUpdated;
+    }
+
+    echo json_encode($response);
 
 } catch (Throwable $e) {
     http_response_code(500);
