@@ -2190,6 +2190,16 @@ async function ensureMapboxCssFor(container) {
                 localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
               }
               
+              // Store message category names and icons
+              ['user', 'member', 'admin', 'email'].forEach(key => {
+                if(data.settings[`msg_category_${key}_name`]){
+                  localStorage.setItem(`msg_category_${key}_name`, data.settings[`msg_category_${key}_name`]);
+                }
+                if(data.settings[`msg_category_${key}_icon`]){
+                  localStorage.setItem(`msg_category_${key}_icon`, data.settings[`msg_category_${key}_icon`]);
+                }
+              });
+              
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
               spinEnabled = shouldSpin;
@@ -14157,6 +14167,14 @@ function makePosts(){
       { name: 'Email Messages', key: 'email', icon: 'assets/admin-icons/email-messages.svg', description: 'Email communications' }
     ];
     
+    // Load custom category names and icons from database if available
+    MESSAGE_CATEGORIES.forEach(cat => {
+      const savedName = localStorage.getItem(`msg_category_${cat.key}_name`);
+      const savedIcon = localStorage.getItem(`msg_category_${cat.key}_icon`);
+      if(savedName) cat.name = savedName;
+      if(savedIcon) cat.icon = savedIcon;
+    });
+    
     function renderMessagesCategories(){
       if(!messagesCats) return;
       messagesCats.innerHTML = '';
@@ -14228,6 +14246,21 @@ function makePosts(){
         nameInput.placeholder = 'Category Name';
         nameInput.value = cat.name;
         
+        // Auto-save category name on change
+        nameInput.addEventListener('blur', () => {
+          const newName = nameInput.value.trim();
+          if(newName && newName !== cat.name){
+            cat.name = newName;
+            label.textContent = newName;
+            const settingKey = `msg_category_${cat.key}_name`;
+            fetch('/gateway.php?action=save-admin-settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ [settingKey]: newName })
+            }).catch(err => console.error('Failed to save category name:', err));
+          }
+        });
+        
         const iconPicker = document.createElement('div');
         iconPicker.className = 'iconpicker-container';
         
@@ -14244,7 +14277,41 @@ function makePosts(){
         previewImg.src = cat.icon;
         previewImg.alt = `${cat.name} icon preview`;
         preview.append(previewLabel, previewImg);
-        iconPicker.append(iconPickerButton, preview);
+        iconPicker.append(preview, iconPickerButton);
+        
+        // Attach icon picker functionality
+        if(typeof attachIconPicker === 'function'){
+          // Temporarily override window.iconFolder for this picker
+          const originalIconFolder = window.iconFolder;
+          window.iconFolder = 'assets/admin-icons';
+          
+          attachIconPicker(iconPickerButton, iconPicker, {
+            getCurrentPath: () => cat.icon,
+            onSelect: (value) => {
+              if(value){
+                previewImg.src = value;
+                preview.classList.add('has-image');
+                previewLabel.textContent = '';
+                iconPickerButton.textContent = 'Change Icon';
+                cat.icon = value;
+                logoImg.src = value;
+                // Save to admin_settings
+                const settingKey = `msg_category_${cat.key}_icon`;
+                fetch('/gateway.php?action=save-admin-settings', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ [settingKey]: value })
+                }).catch(err => console.error('Failed to save category icon:', err));
+              }
+            },
+            label: `Choose icon for ${cat.name}`,
+            parentMenu: content,
+            parentCategoryMenu: menu
+          });
+          
+          // Restore original icon folder
+          window.iconFolder = originalIconFolder;
+        }
         
         const saveBtn = document.createElement('button');
         saveBtn.type = 'button';

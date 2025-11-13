@@ -7939,14 +7939,17 @@ html, body { cursor: auto !important; }
             }
             #tab-messages .iconpicker-container{
               display:flex;
-              flex-direction:column;
+              flex-direction:row;
+              align-items:center;
               gap:12px;
             }
             #tab-messages .iconpicker-preview{
               display:flex;
               align-items:center;
-              gap:10px;
+              justify-content:center;
               min-height:40px;
+              min-width:40px;
+              flex-shrink:0;
             }
             #tab-messages .iconpicker-preview img{
               width:30px;
@@ -7956,8 +7959,10 @@ html, body { cursor: auto !important; }
             #tab-messages .iconpicker-preview.has-image span{
               display:none;
             }
+            #tab-messages .iconpicker-preview:not(.has-image) img{
+              display:none;
+            }
             #tab-messages .iconpicker-button{
-              align-self:flex-start;
               padding:10px 16px;
               border-radius:8px;
               background:rgba(0,0,0,0.3);
@@ -7965,6 +7970,7 @@ html, body { cursor: auto !important; }
               color:var(--button-text);
               cursor:pointer;
               transition:background .2s,border-color .2s;
+              white-space:nowrap;
             }
             #tab-messages .iconpicker-button:hover{
               background:rgba(255,255,255,0.1);
