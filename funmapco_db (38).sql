@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 14, 2025 at 02:51 AM
+-- Generation Time: Nov 14, 2025 at 03:17 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -164,38 +164,30 @@ CREATE TABLE `admin_settings` (
 --
 
 INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(2, 'site_tagline', NULL, 'string', 'Site tagline/slogan', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(3, 'contact_email', NULL, 'string', 'Admin contact email', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(4, 'support_email', NULL, 'string', 'Support contact email', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(5, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(6, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-09 16:13:48', '2025-11-09 16:50:56'),
-(9, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(10, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(11, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(12, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(13, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(14, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(15, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-09 15:36:38', '2025-11-09 16:18:33'),
-(16, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-09 15:36:38', '2025-11-09 22:17:14'),
-(17, 'spin_load_type', 'new_users', 'string', 'Spin for: everyone or new_users', '2025-11-09 15:36:38', '2025-11-10 04:10:23'),
-(18, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-09 15:36:38', '2025-11-10 04:10:24'),
-(73, 'spin_zoom_max', '5', 'integer', 'Maximum zoom spin threshold', '2025-11-09 20:39:10', '2025-11-10 09:35:08'),
-(150, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-09 21:56:42', '2025-11-10 09:35:28'),
-(529, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-11 10:44:57', '2025-11-11 13:50:20'),
-(710, 'post_mode_shadow', '0', 'decimal', 'Opacity/shadow value for post mode background overlay', '2025-11-13 10:24:32', '2025-11-13 11:50:14'),
-(711, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 10:24:32', '2025-11-13 11:47:29'),
-(714, 'msg_category_user_icon', 'assets/admin-icons/user-messages.svg', 'string', 'Icon path for User Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(715, 'msg_category_member_icon', 'assets/admin-icons/member-messages.svg', 'string', 'Icon path for Member Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(716, 'msg_category_admin_icon', 'assets/admin-icons/admin-messages.svg', 'string', 'Icon path for Admin Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(717, 'msg_category_email_icon', 'assets/admin-icons/email-messages.svg', 'string', 'Icon path for Email Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(718, 'msg_category_user_name', 'User Messages', 'string', 'Display name for User Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(719, 'msg_category_member_name', 'Member Messages', 'string', 'Display name for Member Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(720, 'msg_category_admin_name', 'Admin Messages', 'string', 'Display name for Admin Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(721, 'msg_category_email_name', 'Email Messages', 'string', 'Display name for Email Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(724, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 12:07:47', '2025-11-13 12:07:47'),
-(725, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 13:27:17', '2025-11-13 13:27:17'),
-(726, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 13:27:17', '2025-11-13 13:27:17');
+(1, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(2, 'site_tagline', NULL, 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(3, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(4, 'contact_email', NULL, 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(5, 'support_email', NULL, 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(10, 'post_mode_shadow', '0', 'decimal', 'Opacity/shadow value for post mode background overlay', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(11, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(14, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(15, 'spin_load_type', 'new_users', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(17, 'spin_zoom_max', '5', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(18, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(19, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(20, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(21, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(22, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(23, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10');
 
 -- --------------------------------------------------------
 
@@ -442,16 +434,22 @@ CREATE TABLE `layout_containers` (
 --
 
 INSERT INTO `layout_containers` (`id`, `tab_id`, `tab_name`, `container_key`, `container_name`, `icon_path`, `sort_order`, `is_visible`, `is_locked`, `is_collapsible`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 4, NULL, 'msg_user', 'User Messages', 'assets/admin-icons/user-messages.svg', 1, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
-(2, 4, NULL, 'msg_member', 'Member Messages', 'assets/admin-icons/member-messages.svg', 2, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
-(3, 4, NULL, 'msg_admin', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
-(4, 4, NULL, 'msg_email', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
-(5, 3, NULL, 'map-spin-container', 'Map Spin Settings', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(6, 1, NULL, 'post-mode-background-field', 'Post Mode Shadow', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(7, 1, NULL, 'settings-welcome-container', 'Welcome Message', NULL, 2, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(8, 1, NULL, 'settings-paypal-container', 'PayPal Settings', NULL, 3, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(9, 1, NULL, 'settings-icon-folders-container', 'Icon Folders', NULL, 4, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(10, 1, NULL, 'container_console_filter', 'Console Filter', NULL, 5, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02');
+(1, 4, 'Messages', 'msg_user', 'User Messages', 'assets/admin-icons/user-messages.svg', 1, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(2, 4, 'Messages', 'msg_member', 'Member Messages', 'assets/admin-icons/member-messages.svg', 2, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(3, 4, 'Messages', 'msg_admin', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(4, 4, 'Messages', 'msg_email', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(5, 3, 'Map', 'map-spin-container', 'Map Spin Settings', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(6, 1, 'Settings', 'post-mode-background-field', 'Post Mode Shadow', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(7, 1, 'Settings', 'settings-welcome-container', 'Welcome Message', NULL, 2, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(8, 1, 'Settings', 'settings-paypal-container', 'PayPal Settings', NULL, 3, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(9, 1, 'Settings', 'settings-icon-folders-container', 'Icon Folders', NULL, 4, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(10, 1, 'Settings', 'container_console_filter', 'Console Filter', NULL, 5, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:05:29'),
+(11, 8, 'Filter Panel', 'filter-basics-container', 'Filter Basics', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:02:40'),
+(12, 8, 'Filter Panel', 'filter-category-container', 'Filter Categories', NULL, 2, 1, 1, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:02:40'),
+(13, 5, 'Create Post', 'member-create-selects', 'Category Selection', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:02:40'),
+(14, 5, 'Create Post', 'member-create-form', 'Post Form', NULL, 2, 1, 1, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:02:40'),
+(15, 7, 'Profile', 'member-auth', 'Authentication', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:02:40'),
+(16, 9, 'Advert Panel', 'ad-panel', 'Advertisement Panel', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:02:40');
 
 -- --------------------------------------------------------
 
@@ -916,7 +914,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=727;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -970,7 +968,7 @@ ALTER TABLE `field_values`
 -- AUTO_INCREMENT for table `layout_containers`
 --
 ALTER TABLE `layout_containers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `layout_rows`
