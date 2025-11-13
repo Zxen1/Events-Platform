@@ -15407,10 +15407,21 @@ function makePosts(){
       function createCollapseGapButton(container){
         if(!container) return;
         
-        // Check if button already exists - don't recreate unnecessarily
-        let button = document.querySelector('.collapse-gap-button');
+        // Check spacer height first - only show button if void > 60px
+        const spacer = container.querySelector('.top-gap-spacer');
+        if(!spacer) return;
+        
+        const spacerHeight = parseFloat(spacer.style.height) || 0;
+        if(spacerHeight <= 60){
+          // Void too small - don't show button
+          removeCollapseGapButton(container);
+          return;
+        }
+        
+        // Check if button already exists in this container
+        let button = container.querySelector('.collapse-gap-button');
         if(button){
-          // Button already exists, just ensure it's visible
+          // Button already exists
           return;
         }
         
@@ -15429,15 +15440,19 @@ function makePosts(){
           collapseGap(container);
         });
         
-        // Append to body since button is position:fixed
-        document.body.appendChild(button);
+        // Insert button after spacer (at top of board, in the void area)
+        if(spacer.nextSibling){
+          container.insertBefore(button, spacer.nextSibling);
+        } else {
+          container.appendChild(button);
+        }
         container.dataset.hasCollapseButton = 'true';
       }
       
       function removeCollapseGapButton(container){
         if(!container) return;
-        // Button is in body now, not in container
-        const existingButton = document.querySelector('.collapse-gap-button');
+        // Button is in the container
+        const existingButton = container.querySelector('.collapse-gap-button');
         if(existingButton){
           existingButton.remove();
         }
@@ -15756,51 +15771,34 @@ function makePosts(){
           }
         }
         // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
-        else if(!scrollToTop){
-          // If not scrollToTop, handle spacer logic
-          if(shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
-            // Find the closed card (what the open post became)
-            const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
-            const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
-            
-            // Calculate the gap left by closing the larger post
-            const heightDifference = previousOpenPostHeight - closedCardHeight;
-            
-            if(heightDifference > 10){ // Only add spacer if difference is significant
-              // Use a spacer element instead of padding to avoid pushing everything down
-              let spacer = container.querySelector('.top-gap-spacer');
-              if(!spacer){
-                spacer = document.createElement('div');
-                spacer.className = 'top-gap-spacer';
-                spacer.style.height = '0px';
-                container.insertBefore(spacer, container.firstChild);
-              }
-              
-              // REPLACE spacer height (don't accumulate) - this prevents cumulative errors
-              // The spacer represents the gap left by THIS specific card closure
-              spacer.style.height = `${heightDifference}px`;
-              container.dataset.hasTopGap = 'true';
-              
-              // Create/update collapse button in the gap
-              createCollapseGapButton(container);
-            } else {
-              // If difference is too small, remove any existing spacer
-              const spacer = container.querySelector('.top-gap-spacer');
-              if(spacer){
-                spacer.remove();
-              }
-              delete container.dataset.hasTopGap;
-              removeCollapseGapButton(container);
+        else if(!scrollToTop && shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
+          // Find the closed card (what the open post became)
+          const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
+          const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
+          
+          // Calculate the gap left by closing the larger post
+          const heightDifference = previousOpenPostHeight - closedCardHeight;
+          
+          if(heightDifference > 10){ // Only update spacer if difference is significant
+            // Use a spacer element instead of padding to avoid pushing everything down
+            let spacer = container.querySelector('.top-gap-spacer');
+            if(!spacer){
+              spacer = document.createElement('div');
+              spacer.className = 'top-gap-spacer';
+              spacer.style.height = '0px';
+              container.insertBefore(spacer, container.firstChild);
             }
-          } else {
-            // Card clicked above or not preserving position - no spacer needed, remove if exists
-            const spacer = container.querySelector('.top-gap-spacer');
-            if(spacer){
-              spacer.remove();
-            }
-            delete container.dataset.hasTopGap;
-            removeCollapseGapButton(container);
+            
+            // REPLACE spacer height (don't accumulate) - this prevents cumulative errors
+            // The spacer represents the gap left by THIS specific card closure
+            spacer.style.height = `${heightDifference}px`;
+            container.dataset.hasTopGap = 'true';
           }
+          
+          // Always check button visibility after spacer update (show/hide based on spacer height)
+          createCollapseGapButton(container);
+          
+          // IMPORTANT: Never remove spacer on card clicks - only on map/ad clicks or manual collapse
         }
 
         // Update history on open (keep newest-first)

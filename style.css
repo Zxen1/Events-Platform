@@ -3319,8 +3319,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 /* Collapse Gap Button */
 .collapse-gap-button{
-  position:fixed;
-  top:calc(var(--header-h, 60px) + var(--safe-top, 0px) + 10px);
+  position:sticky;
+  top:10px;
   left:50%;
   transform:translateX(-50%);
   z-index:9999;
@@ -3338,6 +3338,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   transition:all 0.2s ease;
   opacity:1;
   pointer-events:auto;
+  flex-shrink:0;
 }
 
 .collapse-gap-button:hover{
