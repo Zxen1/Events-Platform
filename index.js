@@ -14938,6 +14938,18 @@ function makePosts(){
         } else if(hadHistory && typeof adjustBoards === 'function'){
           adjustBoards();
         }
+        
+        // Scroll post board to top when opened from map cluster
+        requestAnimationFrame(() => {
+          const postBoard = document.querySelector('.post-board');
+          if(postBoard){
+            if(typeof postBoard.scrollTo === 'function'){
+              postBoard.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              postBoard.scrollTop = 0;
+            }
+          }
+        });
       }
 
       updatePostsButtonState = function(currentZoom){
@@ -15623,6 +15635,17 @@ function makePosts(){
 
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
+            // When opening from map, scroll to top of post board
+            if(fromMap){
+              if(typeof container.scrollTo === 'function'){
+                container.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                container.scrollTop = 0;
+              }
+              return;
+            }
+            
+            // Otherwise, scroll to position the detail card in view
             const containerRect = container.getBoundingClientRect();
             const detailRect = detail.getBoundingClientRect();
             if(!containerRect || !detailRect) return;
