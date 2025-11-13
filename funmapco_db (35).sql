@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 14, 2025 at 12:22 AM
+-- Generation Time: Nov 14, 2025 at 12:28 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -193,7 +193,9 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (719, 'msg_category_member_name', 'Member Messages', 'string', 'Display name for Member Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
 (720, 'msg_category_admin_name', 'Admin Messages', 'string', 'Display name for Admin Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
 (721, 'msg_category_email_name', 'Email Messages', 'string', 'Display name for Email Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
-(724, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 12:07:47', '2025-11-13 12:07:47');
+(724, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 12:07:47', '2025-11-13 12:07:47'),
+(725, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 13:27:17', '2025-11-13 13:27:17'),
+(726, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 13:27:17', '2025-11-13 13:27:17');
 
 -- --------------------------------------------------------
 
@@ -1100,7 +1102,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=725;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=727;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
