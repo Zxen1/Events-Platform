@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 13, 2025 at 11:10 PM
+-- Generation Time: Nov 14, 2025 at 12:22 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -416,6 +416,229 @@ CREATE TABLE `field_values` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `layout_admin_forms`
+--
+
+CREATE TABLE `layout_admin_forms` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_admin_map`
+--
+
+CREATE TABLE `layout_admin_map` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `layout_admin_map`
+--
+
+INSERT INTO `layout_admin_map` (`id`, `layout_key`, `parent_key`, `layout_name`, `layout_type`, `icon_path`, `sort_order`, `is_visible`, `is_locked`, `metadata`, `created_at`, `updated_at`) VALUES
+(1, 'container_map_spin', NULL, 'Map Spin Settings', 'container', NULL, 1, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(2, 'row_spin_on_load', 'container_map_spin', 'Spin on Load', 'row', NULL, 1, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(3, 'row_spin_on_logo', 'container_map_spin', 'Spin on Logo', 'row', NULL, 2, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(4, 'row_spin_max_zoom', 'container_map_spin', 'Spin Max Zoom', 'row', NULL, 3, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(5, 'row_spin_speed', 'container_map_spin', 'Spin Speed', 'row', NULL, 4, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_admin_messages`
+--
+
+CREATE TABLE `layout_admin_messages` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `layout_admin_messages`
+--
+
+INSERT INTO `layout_admin_messages` (`id`, `layout_key`, `parent_key`, `layout_name`, `layout_type`, `icon_path`, `sort_order`, `is_visible`, `is_locked`, `metadata`, `created_at`, `updated_at`) VALUES
+(1, 'container_user_messages', NULL, 'User Messages', 'container', 'assets/admin-icons/user-messages.svg', 1, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(2, 'container_member_messages', NULL, 'Member Messages', 'container', 'assets/admin-icons/member-messages.svg', 2, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(3, 'container_admin_messages', NULL, 'Admin Messages', 'container', 'assets/admin-icons/admin-messages.svg', 3, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(4, 'container_email_messages', NULL, 'Email Messages', 'container', 'assets/admin-icons/email-messages.svg', 4, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_admin_settings`
+--
+
+CREATE TABLE `layout_admin_settings` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL COMMENT 'Unique identifier',
+  `parent_key` varchar(100) DEFAULT NULL COMMENT 'Parent container (NULL for top-level containers)',
+  `layout_name` varchar(100) NOT NULL COMMENT 'Display name',
+  `layout_type` enum('container','row') DEFAULT 'row' COMMENT 'container > row',
+  `icon_path` varchar(255) DEFAULT NULL COMMENT 'Path to icon',
+  `sort_order` int(11) NOT NULL DEFAULT 1 COMMENT 'Display order within parent',
+  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide element',
+  `is_locked` tinyint(1) DEFAULT 0 COMMENT 'Prevent deletion/modification',
+  `metadata` text DEFAULT NULL COMMENT 'JSON for additional settings',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `layout_admin_settings`
+--
+
+INSERT INTO `layout_admin_settings` (`id`, `layout_key`, `parent_key`, `layout_name`, `layout_type`, `icon_path`, `sort_order`, `is_visible`, `is_locked`, `metadata`, `created_at`, `updated_at`) VALUES
+(1, 'container_post_mode_shadow', NULL, 'Post Mode Shadow', 'container', NULL, 1, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(2, 'container_welcome_message', NULL, 'Welcome Message', 'container', NULL, 2, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(3, 'container_paypal', NULL, 'PayPal Settings', 'container', NULL, 3, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(4, 'container_icon_folders', NULL, 'Icon Folders', 'container', NULL, 4, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(5, 'row_icon_folder', 'container_icon_folders', 'Icon Folder', 'row', NULL, 1, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(6, 'row_admin_icon_folder', 'container_icon_folders', 'Admin Icon Folder', 'row', NULL, 2, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26'),
+(7, 'row_console_filter', NULL, 'Enable Console Filter', 'row', NULL, 5, 1, 1, NULL, '2025-11-13 13:06:26', '2025-11-13 13:06:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_advert`
+--
+
+CREATE TABLE `layout_advert` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_filter`
+--
+
+CREATE TABLE `layout_filter` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_member_create`
+--
+
+CREATE TABLE `layout_member_create` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_member_myposts`
+--
+
+CREATE TABLE `layout_member_myposts` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_member_profile`
+--
+
+CREATE TABLE `layout_member_profile` (
+  `id` int(11) NOT NULL,
+  `layout_key` varchar(100) NOT NULL,
+  `parent_key` varchar(100) DEFAULT NULL,
+  `layout_name` varchar(100) NOT NULL,
+  `layout_type` enum('container','row') DEFAULT 'row',
+  `icon_path` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `is_visible` tinyint(1) DEFAULT 1,
+  `is_locked` tinyint(1) DEFAULT 0,
+  `metadata` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `logs`
 --
 
@@ -712,6 +935,87 @@ ALTER TABLE `field_values`
   ADD KEY `field_id` (`field_id`);
 
 --
+-- Indexes for table `layout_admin_forms`
+--
+ALTER TABLE `layout_admin_forms`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_admin_map`
+--
+ALTER TABLE `layout_admin_map`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_admin_messages`
+--
+ALTER TABLE `layout_admin_messages`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_admin_settings`
+--
+ALTER TABLE `layout_admin_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_advert`
+--
+ALTER TABLE `layout_advert`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_filter`
+--
+ALTER TABLE `layout_filter`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_member_create`
+--
+ALTER TABLE `layout_member_create`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_member_myposts`
+--
+ALTER TABLE `layout_member_myposts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
+-- Indexes for table `layout_member_profile`
+--
+ALTER TABLE `layout_member_profile`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `layout_key` (`layout_key`),
+  ADD KEY `idx_parent_key` (`parent_key`),
+  ADD KEY `idx_sort_order` (`sort_order`);
+
+--
 -- Indexes for table `logs`
 --
 ALTER TABLE `logs`
@@ -844,6 +1148,60 @@ ALTER TABLE `field_types`
 -- AUTO_INCREMENT for table `field_values`
 --
 ALTER TABLE `field_values`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `layout_admin_forms`
+--
+ALTER TABLE `layout_admin_forms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `layout_admin_map`
+--
+ALTER TABLE `layout_admin_map`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `layout_admin_messages`
+--
+ALTER TABLE `layout_admin_messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `layout_admin_settings`
+--
+ALTER TABLE `layout_admin_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `layout_advert`
+--
+ALTER TABLE `layout_advert`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `layout_filter`
+--
+ALTER TABLE `layout_filter`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `layout_member_create`
+--
+ALTER TABLE `layout_member_create`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `layout_member_myposts`
+--
+ALTER TABLE `layout_member_myposts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `layout_member_profile`
+--
+ALTER TABLE `layout_member_profile`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
