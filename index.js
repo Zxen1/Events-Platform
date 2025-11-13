@@ -104,13 +104,34 @@ const MessageSystem = (function() {
     return isLoaded;
   }
   
+  // Clear cache and force reload (for after admin edits)
+  function clearCache() {
+    messageCache.clear();
+    isLoaded = false;
+    userMessagesLoaded = false;
+    adminMessagesLoaded = false;
+    loadPromise = null;
+    console.log('MessageSystem cache cleared');
+  }
+  
+  // Reload messages from database
+  async function reload() {
+    clearCache();
+    console.log('Reloading messages from database...');
+    await preload();
+    console.log('Messages reloaded:', messageCache.size, 'messages in cache');
+    return messageCache.size;
+  }
+  
   return {
     preload,
     getMessage,
     ensureUserMessages,
     ensureAdminMessages,
     getAllMessages,
-    isReady
+    isReady,
+    clearCache,
+    reload
   };
 })();
 
@@ -22282,7 +22303,8 @@ const adminPanelChangeManager = (()=>{
       return;
     }
     Promise.resolve(result).then(async ()=>{
-      await MessageSystem.ensureAdminMessages();
+      // Reload messages from database after save
+      await MessageSystem.reload();
       refreshSavedState();
       showStatus(MessageSystem.getMessage('msg_admin_saved'));
       const panelToClose = closeAfter ? pendingCloseTarget : null;
