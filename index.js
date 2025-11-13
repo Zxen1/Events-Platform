@@ -8249,6 +8249,7 @@ function makePosts(){
         const parentMenu = opts.parentMenu || null;
         const parentCategoryMenu = opts.parentCategoryMenu || null;
         const useIconFolder = opts.useIconFolder !== false;
+        const customIconFolder = typeof opts.iconFolder === 'string' ? opts.iconFolder : null;
         let popup = null;
         let alignFrame = 0;
         let resizeObserver = null;
@@ -8347,9 +8348,10 @@ function makePosts(){
           
           // Load icons from folder if configured
           let iconsToShow = [];
-          if(useIconFolder && window.iconFolder){
+          const folderToUse = customIconFolder || window.iconFolder;
+          if(useIconFolder && folderToUse){
             try {
-              iconsToShow = await loadIconsFromFolder(window.iconFolder);
+              iconsToShow = await loadIconsFromFolder(folderToUse);
             } catch(err){
               console.warn('Failed to load from icon folder', err);
             }
@@ -8569,7 +8571,7 @@ function makePosts(){
             writeIconPath(categoryIconPaths, c.id, c.name, normalizedCategoryIconPath);
           }
         }
-        iconPicker.append(iconPickerButton, preview);
+        iconPicker.append(preview, iconPickerButton);
         attachIconPicker(iconPickerButton, iconPicker, {
           getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
           onSelect: value => {
@@ -8926,7 +8928,7 @@ function makePosts(){
           subPreview.append(subPreviewLabel, subPreviewImg);
     
 
-          subIconPicker.append(subIconButton, subPreview);
+          subIconPicker.append(subPreview, subIconButton);
           attachIconPicker(subIconButton, subIconPicker, {
             getCurrentPath: ()=> applyNormalizeIconPath(getSubcategoryIconPath(c, currentSubName)),
             onSelect: value => {
@@ -14281,10 +14283,6 @@ function makePosts(){
         
         // Attach icon picker functionality
         if(typeof attachIconPicker === 'function'){
-          // Temporarily override window.iconFolder for this picker
-          const originalIconFolder = window.iconFolder;
-          window.iconFolder = 'assets/admin-icons';
-          
           attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: () => cat.icon,
             onSelect: (value) => {
@@ -14306,11 +14304,9 @@ function makePosts(){
             },
             label: `Choose icon for ${cat.name}`,
             parentMenu: content,
-            parentCategoryMenu: menu
+            parentCategoryMenu: menu,
+            iconFolder: 'assets/admin-icons'
           });
-          
-          // Restore original icon folder
-          window.iconFolder = originalIconFolder;
         }
         
         const saveBtn = document.createElement('button');

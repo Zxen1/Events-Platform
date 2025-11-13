@@ -6476,9 +6476,9 @@ html, body { cursor: auto !important; }
             #tab-forms .iconpicker-container{
               position:relative;
               display:flex;
+              flex-direction:row;
               align-items:center;
-              gap:16px;
-              flex-wrap:wrap;
+              gap:12px;
             }
             #tab-forms .iconpicker-button{
               position:relative;
@@ -6530,6 +6530,9 @@ html, body { cursor: auto !important; }
               overflow:hidden;
               background:none;
               border:none;
+              min-height:40px;
+              min-width:40px;
+              flex-shrink:0;
             }
             #tab-forms .iconpicker-preview img{
               max-width:100%;
