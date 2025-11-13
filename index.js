@@ -15623,12 +15623,17 @@ function makePosts(){
 
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
-            // When opening from map or ad board, scroll to top of post board
+            // When opening from map or ad board, scroll the post to the top of the post board
             if(fromMap || !!pointerInAdBoard){
-              if(typeof container.scrollTo === 'function'){
-                container.scrollTo({ top: 0, behavior: 'smooth' });
-              } else {
-                container.scrollTop = 0;
+              const containerRect = container.getBoundingClientRect();
+              const detailRect = detail.getBoundingClientRect();
+              if(containerRect && detailRect){
+                const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+                if(typeof container.scrollTo === 'function'){
+                  container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
+                } else {
+                  container.scrollTop = Math.max(0, topTarget);
+                }
               }
             }
             // Cards clicked inside container don't scroll - they open in place
@@ -19930,16 +19935,7 @@ function openPostModal(id){
         callWhenDefined('openPost', (fn)=>{
           Promise.resolve(fn(id)).then(() => {
             requestAnimationFrame(() => {
-              // Scroll post board to top instead of scrolling to the opened post
-              const postBoard = document.querySelector('.post-board');
-              if(postBoard){
-                if(typeof postBoard.scrollTo === 'function'){
-                  postBoard.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                  postBoard.scrollTop = 0;
-                }
-              }
-              
+              // openPost handles scrolling the post to top of post board
               document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
               const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
               if(quickCard){
