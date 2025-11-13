@@ -3266,9 +3266,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   transition:left var(--panel-transition-duration, 0.3s) ease,
              margin var(--panel-transition-duration, 0.3s) ease,
-             transform var(--panel-transition-duration, 0.3s) ease,
-             padding-top 0.3s ease;
-  will-change:left, margin, transform, padding-top;
+             transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:left, margin, transform;
   transform:translateX(0);
 }
 
@@ -3283,7 +3282,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .recents-board,
 .post-board{
-  transition:transform var(--panel-transition-duration, 0.3s) ease, padding-top 0.3s ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
   will-change:transform;
 }
 
@@ -3310,13 +3309,21 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:none;
 }
 
+/* Top Gap Spacer - maintains visual stability */
+.top-gap-spacer{
+  width:100%;
+  flex-shrink:0;
+  transition:height 0.3s ease;
+  pointer-events:none;
+}
+
 /* Collapse Gap Button */
 .collapse-gap-button{
-  position:absolute;
-  top:10px;
+  position:fixed;
+  top:calc(var(--header-h, 60px) + var(--safe-top, 0px) + 10px);
   left:50%;
   transform:translateX(-50%);
-  z-index:10;
+  z-index:100;
   background:var(--btn);
   border:1px solid var(--border);
   border-radius:50%;

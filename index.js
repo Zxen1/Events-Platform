@@ -15419,19 +15419,24 @@ function makePosts(){
           <path d="M10 4L10 16M10 4L6 8M10 4L14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>`;
         
+        // Store container reference for the click handler
+        button.dataset.containerId = container.className;
+        
         button.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           collapseGap(container);
         });
         
-        container.appendChild(button);
+        // Append to body since button is position:fixed
+        document.body.appendChild(button);
         container.dataset.hasCollapseButton = 'true';
       }
       
       function removeCollapseGapButton(container){
         if(!container) return;
-        const existingButton = container.querySelector('.collapse-gap-button');
+        // Button is in body now, not in container
+        const existingButton = document.querySelector('.collapse-gap-button');
         if(existingButton){
           existingButton.remove();
         }
@@ -15441,26 +15446,28 @@ function makePosts(){
       function collapseGap(container){
         if(!container) return;
         
+        const spacer = container.querySelector('.top-gap-spacer');
+        if(!spacer) return;
+        
         // Smooth animation to collapse the gap
-        const currentPadding = parseFloat(container.style.paddingTop) || 0;
-        if(currentPadding > 0){
-          // Animate padding to 0
+        const startHeight = parseFloat(spacer.style.height) || 0;
+        if(startHeight > 0){
+          // Animate spacer height to 0
           const duration = 300;
           const startTime = performance.now();
-          const startPadding = currentPadding;
           
           const animate = (currentTime) => {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
             const easeProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
             
-            const newPadding = startPadding * (1 - easeProgress);
-            container.style.paddingTop = `${newPadding}px`;
+            const newHeight = startHeight * (1 - easeProgress);
+            spacer.style.height = `${newHeight}px`;
             
             if(progress < 1){
               requestAnimationFrame(animate);
             } else {
-              container.style.paddingTop = '0px';
+              spacer.remove();
               delete container.dataset.hasTopGap;
               removeCollapseGapButton(container);
               
@@ -15723,27 +15730,28 @@ function makePosts(){
         
         // CASE 3 & 4: Map marker or Ad board clicked - SCROLL TO TOP
         if(scrollToTop){
-          // Remove any existing gap
-          container.style.paddingTop = '0px';
+          // Remove any existing gap spacer
+          const spacer = container.querySelector('.top-gap-spacer');
+          if(spacer){
+            spacer.remove();
+          }
           delete container.dataset.hasTopGap;
           removeCollapseGapButton(container);
           
-          // Scroll to show post at top of viewport
+          // Scroll to show post at top of viewport with slight delay for DOM update
           if(container && container.contains(detail)){
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                const containerRect = container.getBoundingClientRect();
-                const detailRect = detail.getBoundingClientRect();
-                if(containerRect && detailRect){
-                  const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
-                  if(typeof container.scrollTo === 'function'){
-                    container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
-                  } else {
-                    container.scrollTop = Math.max(0, topTarget);
-                  }
+            setTimeout(() => {
+              const containerRect = container.getBoundingClientRect();
+              const detailRect = detail.getBoundingClientRect();
+              if(containerRect && detailRect){
+                const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+                if(typeof container.scrollTo === 'function'){
+                  container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
+                } else {
+                  container.scrollTop = Math.max(0, topTarget);
                 }
-              });
-            });
+              }
+            }, 50);
           }
         }
         // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
@@ -15755,11 +15763,19 @@ function makePosts(){
           // Calculate the gap left by closing the larger post
           const heightDifference = previousOpenPostHeight - closedCardHeight;
           
-          if(heightDifference > 10){ // Only add padding if difference is significant
-            // Add padding to top to maintain visual positions
-            const currentPadding = parseFloat(container.style.paddingTop) || 0;
-            const newPadding = currentPadding + heightDifference;
-            container.style.paddingTop = `${newPadding}px`;
+          if(heightDifference > 10){ // Only add spacer if difference is significant
+            // Use a spacer element instead of padding to avoid pushing everything down
+            let spacer = container.querySelector('.top-gap-spacer');
+            if(!spacer){
+              spacer = document.createElement('div');
+              spacer.className = 'top-gap-spacer';
+              container.insertBefore(spacer, container.firstChild);
+            }
+            
+            // Get existing spacer height and add to it
+            const currentSpacerHeight = parseFloat(spacer.style.height) || 0;
+            const newSpacerHeight = currentSpacerHeight + heightDifference;
+            spacer.style.height = `${newSpacerHeight}px`;
             container.dataset.hasTopGap = 'true';
             
             // Create/update collapse button in the gap
