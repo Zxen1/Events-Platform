@@ -21790,7 +21790,9 @@ form.addEventListener('input', formChangedWrapper, true);
 
 // Extracted from <script>
 (function(){
-  const SAVE_ENDPOINT = '/gateway.php?action=save-form';
+  // Note: Separate endpoints used in saveAdminChanges()
+  // - save-form for formbuilder data
+  // - save-admin-settings for messages
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
   const ERROR_CLASS = 'error';
@@ -21835,59 +21837,89 @@ form.addEventListener('input', formChangedWrapper, true);
       console.log('[Save Admin] Messages to save:', modifiedMessages);
     }
     
-    // Collect form data
-    let payload = null;
+    // Collect formbuilder data
+    let formbuilderPayload = null;
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
-        payload = window.formbuilderStateManager.capture();
+        formbuilderPayload = window.formbuilderStateManager.capture();
       } catch (err) {
         console.error('formbuilderStateManager.capture failed', err);
       }
     }
-    if(!payload || typeof payload !== 'object'){
-      payload = {};
-    }
 
-    // Add messages to payload if any were modified
-    if(modifiedMessages.length > 0){
-      payload.messages = modifiedMessages;
-      console.log('[Save Admin] Payload with messages:', JSON.stringify(payload, null, 2));
-    }
-
-    console.log('[Save Admin] Sending request to:', SAVE_ENDPOINT);
-    let response;
-    try {
-      response = await fetch(SAVE_ENDPOINT, {
-        method: 'POST',
-        headers: JSON_HEADERS,
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      });
-      console.log('[Save Admin] Response status:', response.status, response.statusText);
-    } catch (networkError) {
-      await MessageSystem.ensureAdminMessages();
-      showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_network'));
-      throw networkError;
-    }
-
-    const responseText = await response.text();
-    console.log('[Save Admin] Response text:', responseText);
-    let data = {};
-    if(responseText){
+    // SAVE FORMBUILDER DATA (categories/subcategories)
+    let formbuilderData = null;
+    if(formbuilderPayload && typeof formbuilderPayload === 'object' && Object.keys(formbuilderPayload).length > 0){
+      console.log('[Save Admin] Saving formbuilder data to save-form endpoint');
       try {
-        data = JSON.parse(responseText);
-        console.log('[Save Admin] Parsed response:', data);
-      } catch (parseError) {
+        const formResponse = await fetch('/gateway.php?action=save-form', {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          credentials: 'same-origin',
+          body: JSON.stringify(formbuilderPayload)
+        });
+        console.log('[Save Admin] Formbuilder response status:', formResponse.status);
+        
+        const formResponseText = await formResponse.text();
+        console.log('[Save Admin] Formbuilder response:', formResponseText);
+        
+        if(formResponseText){
+          try {
+            formbuilderData = JSON.parse(formResponseText);
+          } catch(e){
+            console.error('[Save Admin] Failed to parse formbuilder response');
+          }
+        }
+        
+        if(!formResponse.ok || !formbuilderData || formbuilderData.success !== true){
+          throw new Error('Formbuilder save failed');
+        }
+      } catch (formError) {
         await MessageSystem.ensureAdminMessages();
-        console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
-        showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_response'));
-        const error = new Error('Invalid JSON response');
-        error.responseText = responseText;
-        throw error;
+        showErrorBanner('Failed to save formbuilder data: ' + formError.message);
+        throw formError;
       }
     }
 
-    if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
+    // SAVE MESSAGES (if any were modified)
+    let messagesData = null;
+    if(modifiedMessages.length > 0){
+      console.log('[Save Admin] Saving messages to save-admin-settings endpoint');
+      try {
+        const msgResponse = await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          credentials: 'same-origin',
+          body: JSON.stringify({ messages: modifiedMessages })
+        });
+        console.log('[Save Admin] Messages response status:', msgResponse.status);
+        
+        const msgResponseText = await msgResponse.text();
+        console.log('[Save Admin] Messages response:', msgResponseText);
+        
+        if(msgResponseText){
+          try {
+            messagesData = JSON.parse(msgResponseText);
+          } catch(e){
+            console.error('[Save Admin] Failed to parse messages response');
+          }
+        }
+        
+        if(!msgResponse.ok || !messagesData || messagesData.success !== true){
+          throw new Error('Messages save failed');
+        }
+      } catch (msgError) {
+        await MessageSystem.ensureAdminMessages();
+        showErrorBanner('Failed to save messages: ' + msgError.message);
+        throw msgError;
+      }
+    }
+
+    // Use formbuilder data as primary response (for backward compatibility)
+    let data = formbuilderData || messagesData || { success: true };
+    let response = { ok: true, status: 200 };
+
+    if(!data || typeof data !== 'object' || data.success !== true){
       console.error('[SaveAdminChanges] Save failed:', { responseOk: response.ok, data });
       const message = data && typeof data.message === 'string' && data.message.trim()
         ? data.message.trim()
