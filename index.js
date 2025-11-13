@@ -15225,7 +15225,7 @@ function makePosts(){
         }
       });
 
-    function buildDetail(p, existingCard = null){
+    function buildDetail(p, existingCard = null, isRecentsBoard = false){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
       const loc0 = locationList[0] || {};
       const selectSuffix = '<span style="display:inline-block;margin-left:10px;">(Select Session)</span>';
@@ -15246,10 +15246,11 @@ function makePosts(){
       wrap.className = 'open-post post-collapsed';
       wrap.dataset.id = p.id;
       
-      // Use existing card or create new one
+      // Use existing card or create new one - preserve type (recents-card vs post-card)
       let cardEl = existingCard;
-      if(!cardEl || !cardEl.classList.contains('post-card')){
-        cardEl = card(p, true);
+      const isValidCard = cardEl && (cardEl.classList.contains('post-card') || cardEl.classList.contains('recents-card'));
+      if(!isValidCard){
+        cardEl = card(p, !isRecentsBoard);
       }
       
       // Remove any highlight classes and force #1f2750 background
@@ -15487,7 +15488,7 @@ function makePosts(){
             }
             const exId = ex.dataset && ex.dataset.id;
             // Preserve the existing card from the open post instead of creating a new one
-            const existingCard = ex.querySelector('.post-card');
+            const existingCard = ex.querySelector('.post-card, .recents-card');
             if(existingCard){
               // Remove share button if it was added
               const shareBtn = existingCard.querySelector('.share');
@@ -15573,13 +15574,13 @@ function makePosts(){
         // Store position before buildDetail modifies DOM
         const targetParent = target.parentElement;
         const targetNext = target.nextSibling;
-        const wasPostCard = target.classList && target.classList.contains('post-card');
+        const isCardValid = target && target.classList && (target.classList.contains('post-card') || target.classList.contains('recents-card'));
         
         // Pass the existing target card to buildDetail to preserve it without recreating
-        const detail = buildDetail(p, wasPostCard ? target : null);
+        const detail = buildDetail(p, isCardValid ? target : null, fromHistory);
         
         // If target wasn't reused, remove it
-        if(!wasPostCard && target.parentElement){
+        if(!isCardValid && target.parentElement){
           target.remove();
         }
         
@@ -15671,7 +15672,7 @@ function makePosts(){
         document.body.classList.remove('detail-open');
         $$('.recents-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=> el.removeAttribute('aria-selected'));
         // Preserve the existing card instead of creating a new one
-        const existingCard = openEl.querySelector('.post-card');
+        const existingCard = openEl.querySelector('.post-card, .recents-card');
         if(existingCard){
           // Remove share button if it was added
           const shareBtn = existingCard.querySelector('.share');
