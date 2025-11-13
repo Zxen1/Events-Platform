@@ -2181,6 +2181,7 @@ async function ensureMapboxCssFor(container) {
               
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
+              window.adminIconFolder = data.settings.admin_icon_folder || 'assets/admin-icons';
               
               // Store post mode shadow and console filter settings
               if(data.settings.post_mode_shadow !== undefined){
@@ -2248,6 +2249,12 @@ async function ensureMapboxCssFor(container) {
               const iconFolderInput = document.getElementById('adminIconFolder');
               if(iconFolderInput){
                 iconFolderInput.value = window.iconFolder;
+              }
+              
+              // Initialize admin icon folder input
+              const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
+              if(adminIconFolderInput){
+                adminIconFolderInput.value = window.adminIconFolder || 'assets/admin-icons';
               }
               
               // Initialize console filter checkbox
@@ -8218,6 +8225,8 @@ function makePosts(){
         }
       });
     };
+    
+    
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
       if(typeof closeSubcategoryFieldOverlay === 'function'){
@@ -8435,8 +8444,9 @@ function makePosts(){
             openPicker();
           }
         });
-        // Enable picker if we have icon folder
-        if(!window.iconFolder){
+        // Enable picker if we have icon folder (or custom folder specified)
+        const folderAvailable = customIconFolder || window.iconFolder || window.adminIconFolder;
+        if(!folderAvailable){
           trigger.disabled = true;
           trigger.setAttribute('aria-disabled','true');
         } else {
@@ -8445,6 +8455,11 @@ function makePosts(){
         }
         return { open: openPicker, close: closePicker };
       };
+      
+      // Make icon picker functions globally available for Messages tab
+      window.loadIconsFromFolder = loadIconsFromFolder;
+      window.attachIconPicker = attachIconPicker;
+      
       const frag = document.createDocumentFragment();
       const sortedCategoryEntries = getSortedCategoryEntries(categories);
       sortedCategoryEntries.forEach(({ category: c, index: sourceIndex }, viewIndex)=>{
@@ -14282,8 +14297,8 @@ function makePosts(){
         iconPicker.append(preview, iconPickerButton);
         
         // Attach icon picker functionality
-        if(typeof attachIconPicker === 'function'){
-          attachIconPicker(iconPickerButton, iconPicker, {
+        if(typeof window.attachIconPicker === 'function'){
+          window.attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: () => cat.icon,
             onSelect: (value) => {
               if(value){
@@ -14305,7 +14320,7 @@ function makePosts(){
             label: `Choose icon for ${cat.name}`,
             parentMenu: content,
             parentCategoryMenu: menu,
-            iconFolder: 'assets/admin-icons'
+            iconFolder: window.adminIconFolder || 'assets/admin-icons'
           });
         }
         
@@ -20778,6 +20793,16 @@ function openPanel(m){
         }
       }
       
+      // Include admin icon folder setting
+      const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
+      if(adminIconFolderInput){
+        const adminIconFolderValue = adminIconFolderInput.value.trim();
+        if(adminIconFolderValue){
+          settings.admin_icon_folder = adminIconFolderValue;
+          window.adminIconFolder = adminIconFolderValue;
+        }
+      }
+      
       try {
         await fetch('/gateway.php?action=save-admin-settings', {
           method: 'POST',
@@ -20911,6 +20936,18 @@ function openPanel(m){
         autoSaveMapSettings();
       });
       iconFolderInput.addEventListener('change', ()=>{
+        autoSaveMapSettings();
+      });
+    }
+    
+    // Auto-save admin icon folder setting on blur
+    const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
+    if(adminIconFolderInput && !adminIconFolderInput.dataset.autoSaveAdded){
+      adminIconFolderInput.dataset.autoSaveAdded = 'true';
+      adminIconFolderInput.addEventListener('blur', ()=>{
+        autoSaveMapSettings();
+      });
+      adminIconFolderInput.addEventListener('change', ()=>{
         autoSaveMapSettings();
       });
     }
