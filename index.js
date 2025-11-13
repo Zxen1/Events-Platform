@@ -2182,6 +2182,14 @@ async function ensureMapboxCssFor(container) {
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               
+              // Store post mode shadow and console filter settings
+              if(data.settings.post_mode_shadow !== undefined){
+                localStorage.setItem('post_mode_shadow', data.settings.post_mode_shadow);
+              }
+              if(data.settings.console_filter !== undefined){
+                localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
+              }
+              
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
               spinEnabled = shouldSpin;
@@ -2236,9 +2244,20 @@ async function ensureMapboxCssFor(container) {
               const consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
               if(consoleFilterCheckbox){
                 consoleFilterCheckbox.checked = localStorage.getItem('enableConsoleFilter') === 'true';
-                consoleFilterCheckbox.addEventListener('change', () => {
+                consoleFilterCheckbox.addEventListener('change', async () => {
                   const enabled = consoleFilterCheckbox.checked;
                   localStorage.setItem('enableConsoleFilter', enabled ? 'true' : 'false');
+                  
+                  // Auto-save to database
+                  try {
+                    await fetch('/gateway.php?action=save-admin-settings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ console_filter: enabled })
+                    });
+                  } catch (e) {
+                    console.error('Failed to save console filter setting:', e);
+                  }
                   
                   // Show reload prompt
                   const message = enabled 
@@ -24220,7 +24239,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const opacityInput = document.getElementById('postModeBgOpacity');
   const opacityVal = document.getElementById('postModeBgOpacityVal');
   const root = document.documentElement;
-  const settings = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
 
   function apply(){
     const opacity = opacityInput.value;
@@ -24228,9 +24246,26 @@ document.addEventListener('DOMContentLoaded', () => {
     root.style.setProperty('--post-mode-bg-opacity', opacity);
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
+  
+  // Auto-save function for post mode shadow
+  async function autoSavePostModeShadow(){
+    const shadowValue = parseFloat(opacityInput.value);
+    localStorage.setItem('post_mode_shadow', shadowValue);
+    try {
+      await fetch('/gateway.php?action=save-admin-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_mode_shadow: shadowValue })
+      });
+    } catch (e) {
+      console.error('Failed to save post mode shadow:', e);
+    }
+  }
 
   if(opacityInput && opacityVal){
-    opacityInput.value = settings.postModeBgOpacity ?? 0;
+    // Load from localStorage (which is populated from database on page load)
+    const savedValue = localStorage.getItem('post_mode_shadow');
+    opacityInput.value = savedValue !== null ? savedValue : 0;
     apply();
     
     // Update display on slider input
@@ -24238,11 +24273,10 @@ document.addEventListener('DOMContentLoaded', () => {
       opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
     });
     
-    // Save on slider change
+    // Auto-save on slider change
     opacityInput.addEventListener('change', () => {
       apply();
-      settings.postModeBgOpacity = opacityInput.value;
-      localStorage.setItem('admin-settings-current', JSON.stringify(settings));
+      autoSavePostModeShadow();
     });
     
     // Make value display editable on click
@@ -24279,9 +24313,8 @@ document.addEventListener('DOMContentLoaded', () => {
           input.remove();
           opacityInput.value = newValue;
           apply();
-          settings.postModeBgOpacity = newValue;
-      localStorage.setItem('admin-settings-current', JSON.stringify(settings));
-    };
+          autoSavePostModeShadow();
+        };
         
         input.addEventListener('blur', commitValue);
         input.addEventListener('keydown', (e)=>{
@@ -24300,16 +24333,6 @@ document.addEventListener('DOMContentLoaded', () => {
         input.select();
       });
     }
-    
-    const prev = window.saveAdminChanges;
-    window.saveAdminChanges = () => {
-      settings.postModeBgOpacity = opacityInput.value;
-      localStorage.setItem('admin-settings-current', JSON.stringify(settings));
-      if(typeof prev === 'function'){
-        return prev();
-      }
-      return undefined;
-    };
   }
 });
 
