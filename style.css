@@ -3334,10 +3334,15 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .last-opened-label{
   font-size:12px;
-  margin:0;
+  margin:0 0 0 0;
   background:#000;
   color:#fff;
   padding:2px 4px;
+}
+
+.last-opened-label + .recents-card,
+.last-opened-label + .open-post{
+  margin-top:0;
 }
 
 .post-board{
@@ -4401,6 +4406,7 @@ body.mode-map .post-board{
 
 #recentsBoard .open-post{
   gap:0;
+  margin-top:0;
 }
 
 .open-post .card-actions{
