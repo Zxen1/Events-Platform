@@ -14204,15 +14204,11 @@ function makePosts(){
         editBtn.className = 'category-edit-btn';
         editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${cat.name} category`);
+        editBtn.setAttribute('aria-expanded', 'false');
         
-        const dragHandle = document.createElement('div');
-        dragHandle.className = 'formbuilder-drag-handle category-drag-handle';
-        dragHandle.setAttribute('draggable', 'true');
-        dragHandle.setAttribute('role', 'button');
-        dragHandle.setAttribute('aria-label', `Reorder ${cat.name} category`);
-        dragHandle.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.25a.75.75 0 0 1 .53.22l2.5 2.5a.75.75 0 1 1-1.06 1.06L8.75 3.38v3.12a.75.75 0 0 1-1.5 0V3.38L6.03 5.03a.75.75 0 0 1-1.06-1.06l2.5-2.5A.75.75 0 0 1 8 1.25zm0 13.5a.75.75 0 0 0 .53-.22l2.5-2.5a.75.75 0 0 0-1.06-1.06L8.75 12.62V9.5a.75.75 0 0 0-1.5 0v3.12l-1.72-1.66a.75.75 0 1 0-1.06 1.06l2.5 2.5c.14.14.33.22.53.22z"/></svg>';
+        const messageDragHandle = createFormbuilderDragHandle(`Reorder ${cat.name} category`, 'category-drag-handle');
         
-        header.append(triggerWrap, dragHandle, editBtn);
+        header.append(triggerWrap, messageDragHandle, editBtn);
         
         const content = document.createElement('div');
         content.className = 'category-form-content';

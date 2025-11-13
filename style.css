@@ -7798,6 +7798,177 @@ html, body { cursor: auto !important; }
               height:100%;
               object-fit:cover;
             }
+            
+            /* ============= Messages Tab Styles ============= */
+            #tab-messages .messages-container{
+              width:100%;
+              max-width:420px;
+              margin:0 auto;
+            }
+            #tab-messages .category-form-menu{
+              position: relative;
+              margin-bottom:12px;
+              border:none;
+              border-radius:0;
+              background:transparent;
+              padding:0;
+              transition:border-color .2s,background .2s,opacity .2s;
+            }
+            #tab-messages .category-form-menu.filter-category-menu{
+              margin:0;
+            }
+            #tab-messages .category-form-menu:last-child{
+              margin-bottom:0;
+            }
+            #tab-messages .category-form-menu .formbuilder-category-header{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+              padding:0 10px;
+              position:relative;
+            }
+            #tab-messages .category-edit-btn,
+            #tab-messages .formbuilder-drag-handle{
+              background:transparent;
+              border:none;
+              color:var(--button-text);
+              cursor:pointer;
+              padding:8px;
+              border-radius:8px;
+              transition:background .2s ease;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              width:32px;
+              height:32px;
+              flex-shrink:0;
+            }
+            #tab-messages .formbuilder-drag-handle{
+              cursor:grab;
+            }
+            #tab-messages .formbuilder-drag-handle.is-dragging{
+              cursor:grabbing;
+            }
+            #tab-messages .formbuilder-drag-handle svg{
+              pointer-events:none;
+            }
+            #tab-messages .category-edit-btn:hover,
+            #tab-messages .formbuilder-drag-handle:hover,
+            #tab-messages .formbuilder-drag-handle:focus-visible{
+              background:rgba(255,255,255,0.1);
+            }
+            #tab-messages .category-edit-panel{
+              margin:16px 10px 12px;
+              padding:18px;
+              background:rgba(0,0,0,0.25);
+              border:1px solid rgba(255,255,255,0.1);
+              border-radius:12px;
+              display:flex;
+              flex-direction:column;
+              gap:14px;
+            }
+            #tab-messages .category-name-input{
+              font-size:15px;
+              height:40px;
+              padding:0 12px;
+              background:rgba(0,0,0,0.3);
+              border:1px solid rgba(255,255,255,0.15);
+              border-radius:8px;
+              color:var(--button-text);
+              width:100%;
+              box-sizing:border-box;
+            }
+            #tab-messages .category-name-input:focus{
+              outline:none;
+              border-color:rgba(255,255,255,0.3);
+            }
+            #tab-messages .category-form-menu .filter-category-trigger{
+              min-width:0;
+              background:transparent;
+              border-color:transparent;
+              color:var(--button-text);
+            }
+            #tab-messages .category-form-menu .filter-category-trigger-wrap{
+              flex:1;
+            }
+            #tab-messages .category-form-content{
+              border-top:none;
+              padding:0;
+              margin-top:8px;
+            }
+            #tab-messages .category-logo{
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              text-transform:uppercase;
+              font-weight:700;
+              font-size:12px;
+              line-height:1;
+              padding:0;
+              background:none;
+              border:none;
+            }
+            #tab-messages .category-logo img,
+            #tab-messages .category-logo svg{
+              width:auto;
+              height:auto;
+              max-width:none;
+              max-height:none;
+            }
+            #tab-messages .iconpicker-container{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-messages .iconpicker-preview{
+              display:flex;
+              align-items:center;
+              gap:10px;
+              min-height:40px;
+            }
+            #tab-messages .iconpicker-preview img{
+              width:30px;
+              height:30px;
+              object-fit:contain;
+            }
+            #tab-messages .iconpicker-preview.has-image span{
+              display:none;
+            }
+            #tab-messages .iconpicker-button{
+              align-self:flex-start;
+              padding:10px 16px;
+              border-radius:8px;
+              background:rgba(0,0,0,0.3);
+              border:1px solid rgba(255,255,255,0.15);
+              color:var(--button-text);
+              cursor:pointer;
+              transition:background .2s,border-color .2s;
+            }
+            #tab-messages .iconpicker-button:hover{
+              background:rgba(255,255,255,0.1);
+              border-color:rgba(255,255,255,0.25);
+            }
+            #tab-messages .formbuilder-inline-save{
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              padding:10px 16px;
+              border-radius:8px;
+              background:var(--button-selected, var(--btn-selected));
+              border:1px solid var(--button-selected-border, var(--button-selected, var(--btn-selected)));
+              color:var(--button-selected-text, var(--button-active-text));
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+              width:100%;
+            }
+            #tab-messages .formbuilder-inline-save:hover{
+              background:var(--button-selected-hover, var(--btn-selected-hover));
+              border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+              color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+            }
+            /* ============= End Messages Tab Styles ============= */
+            
             #memberPanel .member-create-fields{
               display:flex;
               flex-direction:column;
