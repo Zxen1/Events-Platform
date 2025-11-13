@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 14, 2025 at 02:39 AM
+-- Generation Time: Nov 14, 2025 at 02:51 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -74,7 +74,7 @@ CREATE TABLE `admin_messages` (
   `message_key` varchar(100) NOT NULL COMMENT 'Unique identifier for the message',
   `message_type` enum('toast','error','success','warning','confirm','modal','email','label') NOT NULL DEFAULT 'toast' COMMENT 'Type of message',
   `message_category` varchar(50) DEFAULT NULL COMMENT 'Category grouping (auth, post, admin, member, etc)',
-  `category_key` varchar(50) DEFAULT NULL,
+  `container_key` varchar(50) DEFAULT NULL COMMENT 'References layout_containers.container_key',
   `message_text` text NOT NULL COMMENT 'The actual message text',
   `message_description` varchar(255) DEFAULT NULL COMMENT 'Admin-facing description of where/when used',
   `supports_html` tinyint(1) DEFAULT 0 COMMENT 'Whether HTML is allowed in this message',
@@ -89,59 +89,59 @@ CREATE TABLE `admin_messages` (
 -- Dumping data for table `admin_messages`
 --
 
-INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type`, `message_category`, `category_key`, `message_text`, `message_description`, `supports_html`, `placeholders`, `is_active`, `display_duration`, `created_at`, `updated_at`) VALUES
-(1, 'Login Success Message', 'msg_auth_login_success', 'success', 'auth', 'member', 'Welcome back, {name}!', 'Shown after successful login', 0, '[\"name\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(2, 'Logout Success Message', 'msg_auth_logout_success', 'success', 'auth', 'member', 'You have been logged out.', 'Shown after logout', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(3, 'Login Fields Empty Message', 'msg_auth_login_empty', 'error', 'auth', 'member', 'Enter your email and password.', 'When login fields are empty', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(4, 'Incorrect Credentials Message', 'msg_auth_login_incorrect', 'error', 'auth', 'member', 'Incorrect email or password. Try again.', 'When credentials are wrong', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(5, 'Login Failed Message', 'msg_auth_login_failed', 'error', 'auth', 'member', 'Unable to verify credentials. Please try again.', 'When login request fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(6, 'Registration Success Message', 'msg_auth_register_success', 'success', 'auth', 'member', 'Welcome, {name}!', 'Shown after successful registration', 0, '[\"name\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(7, 'Registration Fields Empty Message', 'msg_auth_register_empty', 'error', 'auth', 'member', 'Please complete all required fields.', 'When registration fields are empty', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(8, 'Password Too Short Message', 'msg_auth_register_password_short', 'error', 'auth', 'member', 'Password must be at least 4 characters.', 'Password too short', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(9, 'Passwords Don\'t Match Message', 'msg_auth_register_password_mismatch', 'error', 'auth', 'member', 'Passwords do not match.', 'When passwords don\'t match', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(10, 'Registration Failed Message', 'msg_auth_register_failed', 'error', 'auth', 'member', 'Registration failed.', 'When registration request fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(11, 'Settings Saved Message', 'msg_admin_saved', 'success', 'admin', 'admin', 'Saved', 'Shown when admin settings are saved', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(12, 'Changes Discarded Message', 'msg_admin_discarded', 'toast', 'admin', 'admin', 'Changes Discarded', 'Shown when changes are discarded', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(13, 'Server Connection Error Message', 'msg_admin_save_error_network', 'error', 'admin', 'admin', 'Unable to reach the server. Please try again.', 'When save request fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(14, 'Save Response Error Message', 'msg_admin_save_error_response', 'error', 'admin', 'admin', 'Unexpected response while saving changes.', 'When server returns invalid response', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(15, 'Unsaved Changes Dialog Title Message', 'msg_admin_unsaved_title', 'label', 'admin', 'admin', 'Unsaved Changes', 'Title of unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(16, 'Unsaved Changes Dialog Message', 'msg_admin_unsaved_message', 'label', 'admin', 'admin', 'You have unsaved changes. Save before closing the admin panel?', 'Message in unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(17, 'Listing Posted Successfully Message', 'msg_post_create_success', 'success', 'post', 'member', 'Your listing has been posted!', 'When post is created successfully', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(18, 'Listing Posted With Images Message', 'msg_post_create_with_images', 'success', 'post', 'member', 'Your listing and images have been posted!', 'When post with images is created', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(19, 'Listing Post Failed Message', 'msg_post_create_error', 'error', 'post', 'member', 'Unable to post your listing. Please try again.', 'When post creation fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(20, 'Category Not Selected Message', 'msg_post_create_no_category', 'error', 'post', 'member', 'Select a category and subcategory before posting.', 'When category not selected', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(21, 'Dropdown Selection Required Message', 'msg_post_validation_select', 'error', 'post', 'member', 'Select an option for {field}.', 'Dropdown validation error', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(22, 'Field Required Message', 'msg_post_validation_required', 'error', 'post', 'member', 'Enter a value for {field}.', 'Required field validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(23, 'Location Required Message', 'msg_post_validation_location', 'error', 'post', 'member', 'Select a location for {field}.', 'Location field validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(24, 'Delete Item Confirmation Message', 'msg_confirm_delete_item', 'confirm', 'general', 'admin', 'Are you sure you want to delete this item?', 'Generic delete confirmation', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(25, 'Delete Venue Confirmation Message', 'msg_confirm_delete_venue', 'confirm', 'post', 'member', 'Are you sure you want to remove this venue?', 'Remove venue confirmation', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(26, 'Console Filter Enabled Confirmation Message', 'msg_confirm_console_filter_enable', 'confirm', 'admin', 'admin', 'Console filter will be enabled on next page load. Reload now?', 'Enable console filter prompt', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(27, 'Console Filter Disabled Confirmation Message', 'msg_confirm_console_filter_disable', 'confirm', 'admin', 'admin', 'Console filter will be disabled on next page load. Reload now?', 'Disable console filter prompt', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(28, 'Map Zoom Required Message', 'msg_map_zoom_required', 'toast', 'map', 'user', 'Zoom the map to see posts', 'Shown when zoom level too low', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(29, 'No Listings Found Message', 'msg_posts_empty_state', 'label', 'post', 'member', 'There are no posts here. Try moving the map or changing your filter settings.', 'Empty posts message', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 11:47:29'),
-(30, 'Welcome Modal Title Message', 'msg_welcome_title', 'label', 'welcome', 'user', 'Welcome to FunMap', 'Title shown in the welcome modal', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(31, 'Welcome Modal Content Message', 'msg_welcome_body', 'modal', 'welcome', 'user', '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class=\"icon-search\" width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" role=\"img\" aria-label=\"Filters\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg> button to refine your search.</p>', 'Main content of the welcome modal (supports HTML and SVG)', 1, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(32, 'Member Login Reminder Message', 'msg_member_login_reminder', 'label', 'member', 'member', 'When you log in as a member, I can remember your recent posts and favourites on any device.', 'Reminder shown to encourage member login', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(33, 'Member Unsaved Changes Dialog Title Message', 'msg_member_unsaved_title', 'label', 'member', 'member', 'Unsaved Changes', 'Title of member unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(34, 'Member Unsaved Changes Dialog Message', 'msg_member_unsaved_message', 'label', 'member', 'member', 'You have unsaved changes. Save before closing the member panel?', 'Message in member unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(35, 'Listing Submission Confirmation Error Message', 'msg_post_submit_confirm_error', 'error', 'post', 'member', 'Unable to confirm your listing submission.', 'When post response cannot be read', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(36, 'Form Loading Message', 'msg_post_loading_form', 'toast', 'post', 'member', 'Loading form fields…', 'Shown while loading form fields', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(37, 'Form Load Failed Message', 'msg_post_form_load_error', 'warning', 'post', 'member', 'We couldn\'t load the latest form fields. You can continue with the defaults for now.', 'When form fields fail to load', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(38, 'Radio Selection Required Message', 'msg_post_validation_choose', 'error', 'post', 'member', 'Choose an option for {field}.', 'Radio button validation error', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(39, 'File Upload Required Message', 'msg_post_validation_file_required', 'error', 'post', 'member', 'Add at least one file for {field}.', 'File upload validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(40, 'Pricing Details Required Message', 'msg_post_validation_pricing', 'error', 'post', 'member', 'Provide pricing details for {field}.', 'Pricing validation error', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(41, 'Price Tiers Required Message', 'msg_post_validation_pricing_tiers', 'error', 'post', 'member', 'Add at least one price tier for {field}.', 'Pricing tiers validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(42, 'Add Field Confirmation Message', 'msg_confirm_add_field', 'confirm', 'formbuilder', 'admin', 'Add a new field to {subcategory}?', 'Confirmation to add new field', 0, '[\"subcategory\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(43, 'Add Subcategory Confirmation Message', 'msg_confirm_add_subcategory', 'confirm', 'formbuilder', 'admin', 'Add a new subcategory to {category}?', 'Confirmation to add new subcategory', 0, '[\"category\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(44, 'Add Category Confirmation Message', 'msg_confirm_add_category', 'confirm', 'formbuilder', 'admin', 'Add a new category to the formbuilder?', 'Confirmation to add new category', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(45, 'Delete Confirmation Dialog Title Message', 'msg_confirm_delete_title', 'label', 'formbuilder', 'admin', 'Delete item?', 'Title for delete confirmation dialog', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(46, 'Cancel Button Label Message', 'msg_button_cancel', 'label', 'general', 'admin', 'Cancel', 'Cancel button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(47, 'Delete Button Label Message', 'msg_button_delete', 'label', 'general', 'admin', 'Delete', 'Delete button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(48, 'Save Button Label Message', 'msg_button_save', 'label', 'general', 'admin', 'Save', 'Save button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(49, 'Discard Changes Button Label Message', 'msg_button_discard', 'label', 'general', 'admin', 'Discard Changes', 'Discard changes button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(50, 'No Icons Found Error Message', 'msg_error_no_icons', 'error', 'admin', 'admin', 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>', 'Shown when icon folder is empty or invalid', 1, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(51, 'Currency Required Error Message', 'msg_error_currency_required', 'error', 'post', 'member', 'Please select a currency before entering a price.', 'Currency validation for pricing', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29'),
-(52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 11:47:29');
+INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type`, `message_category`, `container_key`, `message_text`, `message_description`, `supports_html`, `placeholders`, `is_active`, `display_duration`, `created_at`, `updated_at`) VALUES
+(1, 'Login Success Message', 'msg_auth_login_success', 'success', 'auth', 'msg_member', 'Welcome back, {name}!', 'Shown after successful login', 0, '[\"name\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(2, 'Logout Success Message', 'msg_auth_logout_success', 'success', 'auth', 'msg_member', 'You have been logged out.', 'Shown after logout', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(3, 'Login Fields Empty Message', 'msg_auth_login_empty', 'error', 'auth', 'msg_member', 'Enter your email and password.', 'When login fields are empty', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(4, 'Incorrect Credentials Message', 'msg_auth_login_incorrect', 'error', 'auth', 'msg_member', 'Incorrect email or password. Try again.', 'When credentials are wrong', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(5, 'Login Failed Message', 'msg_auth_login_failed', 'error', 'auth', 'msg_member', 'Unable to verify credentials. Please try again.', 'When login request fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(6, 'Registration Success Message', 'msg_auth_register_success', 'success', 'auth', 'msg_member', 'Welcome, {name}!', 'Shown after successful registration', 0, '[\"name\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(7, 'Registration Fields Empty Message', 'msg_auth_register_empty', 'error', 'auth', 'msg_member', 'Please complete all required fields.', 'When registration fields are empty', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(8, 'Password Too Short Message', 'msg_auth_register_password_short', 'error', 'auth', 'msg_member', 'Password must be at least 4 characters.', 'Password too short', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(9, 'Passwords Don\'t Match Message', 'msg_auth_register_password_mismatch', 'error', 'auth', 'msg_member', 'Passwords do not match.', 'When passwords don\'t match', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(10, 'Registration Failed Message', 'msg_auth_register_failed', 'error', 'auth', 'msg_member', 'Registration failed.', 'When registration request fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(11, 'Settings Saved Message', 'msg_admin_saved', 'success', 'admin', 'msg_admin', 'Saved', 'Shown when admin settings are saved', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(12, 'Changes Discarded Message', 'msg_admin_discarded', 'toast', 'admin', 'msg_admin', 'Changes Discarded', 'Shown when changes are discarded', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(13, 'Server Connection Error Message', 'msg_admin_save_error_network', 'error', 'admin', 'msg_admin', 'Unable to reach the server. Please try again.', 'When save request fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(14, 'Save Response Error Message', 'msg_admin_save_error_response', 'error', 'admin', 'msg_admin', 'Unexpected response while saving changes.', 'When server returns invalid response', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(15, 'Unsaved Changes Dialog Title Message', 'msg_admin_unsaved_title', 'label', 'admin', 'msg_admin', 'Unsaved Changes', 'Title of unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(16, 'Unsaved Changes Dialog Message', 'msg_admin_unsaved_message', 'label', 'admin', 'msg_admin', 'You have unsaved changes. Save before closing the admin panel?', 'Message in unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(17, 'Listing Posted Successfully Message', 'msg_post_create_success', 'success', 'post', 'msg_member', 'Your listing has been posted!', 'When post is created successfully', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(18, 'Listing Posted With Images Message', 'msg_post_create_with_images', 'success', 'post', 'msg_member', 'Your listing and images have been posted!', 'When post with images is created', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(19, 'Listing Post Failed Message', 'msg_post_create_error', 'error', 'post', 'msg_member', 'Unable to post your listing. Please try again.', 'When post creation fails', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(20, 'Category Not Selected Message', 'msg_post_create_no_category', 'error', 'post', 'msg_member', 'Select a category and subcategory before posting.', 'When category not selected', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(21, 'Dropdown Selection Required Message', 'msg_post_validation_select', 'error', 'post', 'msg_member', 'Select an option for {field}.', 'Dropdown validation error', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(22, 'Field Required Message', 'msg_post_validation_required', 'error', 'post', 'msg_member', 'Enter a value for {field}.', 'Required field validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(23, 'Location Required Message', 'msg_post_validation_location', 'error', 'post', 'msg_member', 'Select a location for {field}.', 'Location field validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(24, 'Delete Item Confirmation Message', 'msg_confirm_delete_item', 'confirm', 'general', 'msg_admin', 'Are you sure you want to delete this item?', 'Generic delete confirmation', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(25, 'Delete Venue Confirmation Message', 'msg_confirm_delete_venue', 'confirm', 'post', 'msg_member', 'Are you sure you want to remove this venue?', 'Remove venue confirmation', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(26, 'Console Filter Enabled Confirmation Message', 'msg_confirm_console_filter_enable', 'confirm', 'admin', 'msg_admin', 'Console filter will be enabled on next page load. Reload now?', 'Enable console filter prompt', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(27, 'Console Filter Disabled Confirmation Message', 'msg_confirm_console_filter_disable', 'confirm', 'admin', 'msg_admin', 'Console filter will be disabled on next page load. Reload now?', 'Disable console filter prompt', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(28, 'Map Zoom Required Message', 'msg_map_zoom_required', 'toast', 'map', 'msg_user', 'Zoom the map to see posts', 'Shown when zoom level too low', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(29, 'No Listings Found Message', 'msg_posts_empty_state', 'label', 'post', 'msg_member', 'There are no posts here. Try moving the map or changing your filter settings.', 'Empty posts message', 0, NULL, 1, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(30, 'Welcome Modal Title Message', 'msg_welcome_title', 'label', 'welcome', 'msg_user', 'Welcome to FunMap', 'Title shown in the welcome modal', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(31, 'Welcome Modal Content Message', 'msg_welcome_body', 'modal', 'welcome', 'msg_user', '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class=\"icon-search\" width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" role=\"img\" aria-label=\"Filters\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line></svg> button to refine your search.</p>', 'Main content of the welcome modal (supports HTML and SVG)', 1, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(32, 'Member Login Reminder Message', 'msg_member_login_reminder', 'label', 'member', 'msg_member', 'When you log in as a member, I can remember your recent posts and favourites on any device.', 'Reminder shown to encourage member login', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(33, 'Member Unsaved Changes Dialog Title Message', 'msg_member_unsaved_title', 'label', 'member', 'msg_member', 'Unsaved Changes', 'Title of member unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(34, 'Member Unsaved Changes Dialog Message', 'msg_member_unsaved_message', 'label', 'member', 'msg_member', 'You have unsaved changes. Save before closing the member panel?', 'Message in member unsaved changes dialog', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(35, 'Listing Submission Confirmation Error Message', 'msg_post_submit_confirm_error', 'error', 'post', 'msg_member', 'Unable to confirm your listing submission.', 'When post response cannot be read', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(36, 'Form Loading Message', 'msg_post_loading_form', 'toast', 'post', 'msg_member', 'Loading form fields…', 'Shown while loading form fields', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(37, 'Form Load Failed Message', 'msg_post_form_load_error', 'warning', 'post', 'msg_member', 'We couldn\'t load the latest form fields. You can continue with the defaults for now.', 'When form fields fail to load', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(38, 'Radio Selection Required Message', 'msg_post_validation_choose', 'error', 'post', 'msg_member', 'Choose an option for {field}.', 'Radio button validation error', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(39, 'File Upload Required Message', 'msg_post_validation_file_required', 'error', 'post', 'msg_member', 'Add at least one file for {field}.', 'File upload validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(40, 'Pricing Details Required Message', 'msg_post_validation_pricing', 'error', 'post', 'msg_member', 'Provide pricing details for {field}.', 'Pricing validation error', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(41, 'Price Tiers Required Message', 'msg_post_validation_pricing_tiers', 'error', 'post', 'msg_member', 'Add at least one price tier for {field}.', 'Pricing tiers validation', 0, '[\"field\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(42, 'Add Field Confirmation Message', 'msg_confirm_add_field', 'confirm', 'formbuilder', 'msg_admin', 'Add a new field to {subcategory}?', 'Confirmation to add new field', 0, '[\"subcategory\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(43, 'Add Subcategory Confirmation Message', 'msg_confirm_add_subcategory', 'confirm', 'formbuilder', 'msg_admin', 'Add a new subcategory to {category}?', 'Confirmation to add new subcategory', 0, '[\"category\"]', 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(44, 'Add Category Confirmation Message', 'msg_confirm_add_category', 'confirm', 'formbuilder', 'msg_admin', 'Add a new category to the formbuilder?', 'Confirmation to add new category', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(45, 'Delete Confirmation Dialog Title Message', 'msg_confirm_delete_title', 'label', 'formbuilder', 'msg_admin', 'Delete item?', 'Title for delete confirmation dialog', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(46, 'Cancel Button Label Message', 'msg_button_cancel', 'label', 'general', 'msg_admin', 'Cancel', 'Cancel button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(47, 'Delete Button Label Message', 'msg_button_delete', 'label', 'general', 'msg_admin', 'Delete', 'Delete button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(48, 'Save Button Label Message', 'msg_button_save', 'label', 'general', 'msg_admin', 'Save', 'Save button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(49, 'Discard Changes Button Label Message', 'msg_button_discard', 'label', 'general', 'msg_admin', 'Discard Changes', 'Discard changes button text', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(50, 'No Icons Found Error Message', 'msg_error_no_icons', 'error', 'admin', 'msg_admin', 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>', 'Shown when icon folder is empty or invalid', 1, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(51, 'Currency Required Error Message', 'msg_error_currency_required', 'error', 'post', 'msg_member', 'Please select a currency before entering a price.', 'Currency validation for pricing', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'msg_member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07');
 
 -- --------------------------------------------------------
 
@@ -442,10 +442,10 @@ CREATE TABLE `layout_containers` (
 --
 
 INSERT INTO `layout_containers` (`id`, `tab_id`, `tab_name`, `container_key`, `container_name`, `icon_path`, `sort_order`, `is_visible`, `is_locked`, `is_collapsible`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 4, NULL, 'container_user_messages', 'User Messages', 'assets/admin-icons/user-messages.svg', 1, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(2, 4, NULL, 'container_member_messages', 'Member Messages', 'assets/admin-icons/member-messages.svg', 2, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(3, 4, NULL, 'container_admin_messages', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
-(4, 4, NULL, 'container_email_messages', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
+(1, 4, NULL, 'msg_user', 'User Messages', 'assets/admin-icons/user-messages.svg', 1, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
+(2, 4, NULL, 'msg_member', 'Member Messages', 'assets/admin-icons/member-messages.svg', 2, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
+(3, 4, NULL, 'msg_admin', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
+(4, 4, NULL, 'msg_email', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:45:07'),
 (5, 3, NULL, 'map-spin-container', 'Map Spin Settings', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
 (6, 1, NULL, 'post-mode-background-field', 'Post Mode Shadow', NULL, 1, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
 (7, 1, NULL, 'settings-welcome-container', 'Welcome Message', NULL, 2, 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
@@ -482,7 +482,7 @@ CREATE TABLE `layout_rows` (
 CREATE TABLE `layout_tabs` (
   `id` int(11) NOT NULL,
   `tab_key` varchar(100) NOT NULL COMMENT 'admin_settings, member_create, etc.',
-  `panel` enum('admin','member','filter','advert') NOT NULL COMMENT 'Which panel this tab belongs to',
+  `panel_key` enum('admin','member','filter','advert') NOT NULL COMMENT 'Which panel this tab belongs to',
   `tab_name` varchar(100) NOT NULL COMMENT 'Display name',
   `sort_order` int(11) NOT NULL DEFAULT 1 COMMENT 'Order within panel',
   `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
@@ -496,7 +496,7 @@ CREATE TABLE `layout_tabs` (
 -- Dumping data for table `layout_tabs`
 --
 
-INSERT INTO `layout_tabs` (`id`, `tab_key`, `panel`, `tab_name`, `sort_order`, `is_visible`, `is_locked`, `is_active`, `created_at`, `updated_at`) VALUES
+INSERT INTO `layout_tabs` (`id`, `tab_key`, `panel_key`, `tab_name`, `sort_order`, `is_visible`, `is_locked`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, 'admin_settings', 'admin', 'Settings', 1, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
 (2, 'admin_forms', 'admin', 'Forms', 2, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
 (3, 'admin_map', 'admin', 'Map', 3, 1, 1, 1, '2025-11-13 15:19:02', '2025-11-13 15:19:02'),
@@ -741,7 +741,7 @@ ALTER TABLE `admin_messages`
   ADD KEY `idx_message_type` (`message_type`),
   ADD KEY `idx_message_category` (`message_category`),
   ADD KEY `idx_is_active` (`is_active`),
-  ADD KEY `idx_category_key` (`category_key`);
+  ADD KEY `idx_category_key` (`container_key`);
 
 --
 -- Indexes for table `admin_settings`
@@ -828,7 +828,7 @@ ALTER TABLE `layout_rows`
 ALTER TABLE `layout_tabs`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `tab_key` (`tab_key`),
-  ADD KEY `idx_panel` (`panel`),
+  ADD KEY `idx_panel` (`panel_key`),
   ADD KEY `idx_sort_order` (`sort_order`);
 
 --
