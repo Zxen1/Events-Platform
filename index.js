@@ -15438,13 +15438,9 @@ function makePosts(){
         button.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
-          // Scroll to top immediately (no animation needed)
-          if(typeof container.scrollTo === 'function'){
-            container.scrollTo({ top: 0, behavior: 'smooth' });
-          } else {
-            container.scrollTop = 0;
-          }
+          e.stopImmediatePropagation();
+          collapseGap(container);
+          return false;
         });
         
         // Append button inside spacer (positioned at bottom: 10px)
@@ -15780,45 +15776,36 @@ function makePosts(){
         }
         // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
         else if(!scrollToTop && savedScrollPosition > 0 && previousOpenPostHeight > 0 && previousOpenPostId){
-          // Maintain visual stability: create spacer AND adjust scroll
           requestAnimationFrame(() => {
             const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
             
             if(closedCard){
-              // Calculate how much height was lost when post closed to card
               const closedCardHeight = closedCard.offsetHeight || 0;
               const heightLost = previousOpenPostHeight - closedCardHeight;
               
-              if(heightLost > 10){
-                // Create/update spacer to represent void
+              if(heightLost > 60){
+                // Create spacer for void
                 let spacer = container.querySelector('.top-gap-spacer');
+                const spacerExisted = !!spacer;
+                
                 if(!spacer){
                   spacer = document.createElement('div');
                   spacer.className = 'top-gap-spacer';
-                  spacer.style.height = '0px';
-                  
-                  // Prevent spacer clicks from bubbling
-                  spacer.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                  });
-                  
+                  spacer.addEventListener('click', (e) => e.stopPropagation());
                   container.insertBefore(spacer, container.firstChild);
                 }
                 
-                // Set spacer height to the lost height
+                const oldSpacerHeight = spacerExisted ? (parseFloat(spacer.style.height) || 0) : 0;
                 spacer.style.height = `${heightLost}px`;
                 container.dataset.hasTopGap = 'true';
                 
-                // Adjust scroll position to compensate for spacer insertion
-                // This prevents the visual jump
-                container.scrollTop = savedScrollTop + heightLost;
-                
-                // Show button if void is big enough
-                if(heightLost > 60){
-                  createCollapseGapButton(container);
-                } else {
-                  removeCollapseGapButton(container);
+                // Adjust scroll to compensate for spacer size change
+                const spacerChange = heightLost - oldSpacerHeight;
+                if(Math.abs(spacerChange) > 5){
+                  container.scrollTop = savedScrollTop + spacerChange;
                 }
+                
+                createCollapseGapButton(container);
               }
             }
           });
