@@ -1,3 +1,119 @@
+// === Message System ===
+// Centralized message loading and caching system for database-backed messages
+const MessageSystem = (function() {
+  const messageCache = new Map();
+  let loadPromise = null;
+  let isLoaded = false;
+  
+  // Load messages from database via existing get-admin-settings endpoint
+  async function loadMessages(filters = {}) {
+    try {
+      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
+        method: 'GET'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.messages)) {
+        // Cache messages by message_key - flatten the grouped structure
+        data.messages.forEach(container => {
+          if (Array.isArray(container.messages)) {
+            container.messages.forEach(msg => {
+              messageCache.set(msg.message_key, msg);
+            });
+          }
+        });
+        isLoaded = true;
+        return data.messages;
+      } else {
+        console.error('Failed to load messages:', data.messages_error || 'Unknown error');
+        return [];
+      }
+    } catch (e) {
+      console.error('Error loading messages:', e);
+      return [];
+    }
+  }
+  
+  // Get a message by key with optional placeholder replacement
+  function getMessage(messageKey, placeholders = {}) {
+    const msg = messageCache.get(messageKey);
+    if (!msg) {
+      console.warn(`Message not found: ${messageKey}`);
+      return `[${messageKey}]`;
+    }
+    
+    if (!msg.is_active || !msg.is_visible) {
+      return '';
+    }
+    
+    let text = msg.message_text;
+    
+    // Replace placeholders like {name}, {field}, etc.
+    if (placeholders && typeof placeholders === 'object') {
+      Object.keys(placeholders).forEach(key => {
+        const placeholder = `{${key}}`;
+        text = text.replace(new RegExp(placeholder, 'g'), placeholders[key]);
+      });
+    }
+    
+    return text;
+  }
+  
+  // Preload messages for specific containers or categories
+  async function preload(filters = {}) {
+    if (loadPromise) {
+      return loadPromise;
+    }
+    
+    loadPromise = loadMessages(filters).then(messages => {
+      loadPromise = null;
+      return messages;
+    });
+    
+    return loadPromise;
+  }
+  
+  // Load user messages in background on first message display
+  let userMessagesLoaded = false;
+  async function ensureUserMessages() {
+    if (userMessagesLoaded) return;
+    userMessagesLoaded = true;
+    
+    // Load non-email messages for users in background
+    await preload();
+  }
+  
+  // Load admin messages when admin opens messages tab
+  let adminMessagesLoaded = false;
+  async function ensureAdminMessages() {
+    if (adminMessagesLoaded) return;
+    adminMessagesLoaded = true;
+    
+    // Load all messages for admin
+    await preload();
+  }
+  
+  // Get all messages (for admin panel editing)
+  function getAllMessages() {
+    return Array.from(messageCache.values());
+  }
+  
+  // Check if messages are loaded
+  function isReady() {
+    return isLoaded;
+  }
+  
+  return {
+    preload,
+    getMessage,
+    ensureUserMessages,
+    ensureAdminMessages,
+    getAllMessages,
+    isReady
+  };
+})();
+
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
@@ -2277,9 +2393,10 @@ async function ensureMapboxCssFor(container) {
                   }
                   
                   // Show reload prompt
+                  await MessageSystem.ensureAdminMessages();
                   const message = enabled 
-                    ? 'Console filter will be enabled on next page load. Reload now?' 
-                    : 'Console filter will be disabled on next page load. Reload now?';
+                    ? MessageSystem.getMessage('msg_confirm_console_filter_enable')
+                    : MessageSystem.getMessage('msg_confirm_console_filter_disable');
                   if(confirm(message)){
                     location.reload();
                   }
@@ -7826,11 +7943,11 @@ function makePosts(){
 
       const title = document.createElement('h2');
       title.id = 'formbuilderConfirmTitle';
-      title.textContent = 'Delete item?';
+      title.textContent = MessageSystem.getMessage('msg_confirm_delete_title');
 
       const message = document.createElement('p');
       message.id = 'formbuilderConfirmMessage';
-      message.textContent = 'Are you sure you want to delete this item?';
+      message.textContent = MessageSystem.getMessage('msg_confirm_delete_item');
 
       const actions = document.createElement('div');
       actions.className = 'formbuilder-confirm-actions';
@@ -7839,13 +7956,13 @@ function makePosts(){
       cancelBtn.type = 'button';
       cancelBtn.className = 'formbuilder-confirm-cancel';
       cancelBtn.dataset.role = 'cancel';
-      cancelBtn.textContent = 'Cancel';
+      cancelBtn.textContent = MessageSystem.getMessage('msg_button_cancel');
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
       deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete';
       deleteBtn.dataset.role = 'confirm';
-      deleteBtn.textContent = 'Delete';
+      deleteBtn.textContent = MessageSystem.getMessage('msg_button_delete');
 
       actions.append(cancelBtn, deleteBtn);
       dialog.append(title, message, actions);
@@ -7954,9 +8071,9 @@ function makePosts(){
 
     function confirmFormbuilderDeletion(messageText, titleText){
       const result = confirmFormbuilderAction({
-        messageText: messageText || 'Are you sure you want to delete this item?',
-        titleText: titleText || 'Delete item?',
-        confirmLabel: 'Delete',
+        messageText: messageText || MessageSystem.getMessage('msg_confirm_delete_item'),
+        titleText: titleText || MessageSystem.getMessage('msg_confirm_delete_title'),
+        confirmLabel: MessageSystem.getMessage('msg_button_delete'),
         confirmClassName: 'formbuilder-confirm-delete',
         focusCancel: true
       });
@@ -8379,7 +8496,9 @@ function makePosts(){
             console.warn('No icons available to display in picker');
             const errorMsg = document.createElement('div');
             errorMsg.className = 'icon-picker-error';
-            errorMsg.innerHTML = 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>';
+            MessageSystem.ensureAdminMessages().then(() => {
+              errorMsg.innerHTML = MessageSystem.getMessage('msg_error_no_icons');
+            });
             grid.appendChild(errorMsg);
           } else {
           const currentPath = applyNormalizeIconPath(getCurrentPath());
@@ -9143,10 +9262,10 @@ function makePosts(){
               };
             };
 
-            const currencyAlertMessage = 'Please select a currency before entering a price.';
-            const showCurrencyAlert = createTransientInputAlert(currencyAlertMessage);
-            const sessionTimeAlertMessage = 'There is already a session for that time.';
-            const showSessionTimeAlert = createTransientInputAlert(sessionTimeAlertMessage);
+            const getCurrencyAlertMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_error_currency_required') : 'Please select a currency before entering a price.';
+            const showCurrencyAlert = createTransientInputAlert(getCurrencyAlertMessage());
+            const getSessionTimeAlertMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_error_duplicate_session_time') : 'There is already a session for that time.';
+            const showSessionTimeAlert = createTransientInputAlert(getSessionTimeAlertMessage());
 
             const sanitizeSessionPriceValue = value => {
               const raw = typeof value === 'string' ? value : String(value ?? '');
@@ -9665,10 +9784,11 @@ function makePosts(){
               renderVenues({ type: 'venue-name', venueIndex: nextIndex });
             };
 
-            const requestVenueRemoval = (index)=>{
+            const requestVenueRemoval = async (index)=>{
+              await MessageSystem.ensureUserMessages();
               ensureOptions();
               if(previewField.options.length <= 1) return;
-              if(window.confirm('Are you sure you want to remove this venue?')){
+              if(window.confirm(MessageSystem.getMessage('msg_confirm_delete_venue'))){
                 removeVenue(index);
               }
             };
@@ -12373,7 +12493,7 @@ function makePosts(){
                   normalizeOptions();
                   versionList.innerHTML = '';
                   let firstId = null;
-                  const currencyAlertMessage = 'Please select a currency before entering a price.';
+                  const currencyAlertMessage = MessageSystem.isReady() ? MessageSystem.getMessage('msg_error_currency_required') : 'Please select a currency before entering a price.';
                   let lastCurrencyAlertAt = 0;
                   let currencyAlertHandle = null;
                   let currencyAlertTimeout = 0;
@@ -13231,10 +13351,11 @@ function makePosts(){
           });
 
           addFieldBtn.addEventListener('click', async ()=>{
+            await MessageSystem.ensureAdminMessages();
             const subDisplayName = getSubDisplayName();
             const confirmed = await confirmFormbuilderAction({
               titleText: 'Add Field',
-              messageText: `Add a new field to ${subDisplayName}?`,
+              messageText: MessageSystem.getMessage('msg_confirm_add_field', { subcategory: subDisplayName }),
               confirmLabel: 'Add Field',
               confirmClassName: 'formbuilder-confirm-primary',
               focusCancel: false
@@ -13779,10 +13900,11 @@ function makePosts(){
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
         const handleAddSubClick = async ()=>{
+          await MessageSystem.ensureAdminMessages();
           const categoryDisplayName = getCategoryDisplayName();
           const confirmed = await confirmFormbuilderAction({
             titleText: 'Add Subcategory',
-            messageText: `Add a new subcategory to ${categoryDisplayName}?`,
+            messageText: MessageSystem.getMessage('msg_confirm_add_subcategory', { category: categoryDisplayName }),
             confirmLabel: 'Add Subcategory',
             confirmClassName: 'formbuilder-confirm-primary',
             focusCancel: false
@@ -13894,9 +14016,10 @@ function makePosts(){
     };
     if(formbuilderAddCategoryBtn){
       async function handleFormbuilderAddCategoryClick(){
+        await MessageSystem.ensureAdminMessages();
         const confirmed = await confirmFormbuilderAction({
           titleText: 'Add Category',
-          messageText: 'Add a new category to the formbuilder?',
+          messageText: MessageSystem.getMessage('msg_confirm_add_category'),
           confirmLabel: 'Add Category',
           confirmClassName: 'formbuilder-confirm-primary',
           focusCancel: false
@@ -15468,12 +15591,15 @@ function makePosts(){
       function showZoomToast(){
         let toast = document.getElementById('zoom-toast');
         if(!toast){
-          toast = document.createElement('div');
-          toast.id = 'zoom-toast';
-          toast.className = 'zoom-toast';
-          toast.textContent = 'Zoom the map to see posts';
-          document.body.appendChild(toast);
+          MessageSystem.ensureUserMessages().then(() => {
+            toast = document.createElement('div');
+            toast.id = 'zoom-toast';
+            toast.className = 'zoom-toast';
+            toast.textContent = MessageSystem.getMessage('msg_map_zoom_required');
+            document.body.appendChild(toast);
+          });
         }
+        if(!toast) return;
         
         toast.classList.add('show');
         setTimeout(() => {
@@ -18457,7 +18583,9 @@ if (!map.__pillHooksInstalled) {
         emptyWrap.appendChild(emptyImg);
         const emptyMsg = document.createElement('p');
         emptyMsg.className = 'post-board-empty-message';
-        emptyMsg.textContent = 'There are no posts here. Try moving the map or changing your filter settings.';
+        MessageSystem.ensureUserMessages().then(() => {
+          emptyMsg.textContent = MessageSystem.getMessage('msg_posts_empty_state');
+        });
         emptyWrap.appendChild(emptyMsg);
         postsWideEl.appendChild(emptyWrap);
         return;
@@ -18793,7 +18921,9 @@ if (!map.__pillHooksInstalled) {
       reminderImg.alt = 'Cute little monkey in red cape pointing up';
       reminderWrap.appendChild(reminderImg);
       const reminderMsg = document.createElement('p');
-      reminderMsg.textContent = 'When you log in as a member, I can remember your recent posts and favourites on any device.';
+      MessageSystem.ensureUserMessages().then(() => {
+        reminderMsg.textContent = MessageSystem.getMessage('msg_member_login_reminder');
+      });
       reminderWrap.appendChild(reminderMsg);
       recentsBoard.appendChild(reminderWrap);
     }
@@ -21450,9 +21580,10 @@ const memberPanelChangeManager = (()=>{
     }
   }
 
-  function handleSave({ closeAfter } = {}){
+  async function handleSave({ closeAfter } = {}){
+    await MessageSystem.ensureUserMessages();
     refreshSavedState();
-    showStatus('Saved');
+    showStatus(MessageSystem.getMessage('msg_admin_saved'));
     if(closeAfter){
       const target = pendingCloseTarget;
       pendingCloseTarget = null;
@@ -21471,7 +21602,8 @@ const memberPanelChangeManager = (()=>{
     }
   }
 
-  function discardChanges({ closeAfter } = {}){
+  async function discardChanges({ closeAfter } = {}){
+    await MessageSystem.ensureUserMessages();
     if(form && typeof form.reset === 'function'){
       applying = true;
       try{
@@ -21482,7 +21614,7 @@ const memberPanelChangeManager = (()=>{
     }
     applyState(savedState);
     setDirty(false);
-    showStatus('Changes Discarded');
+    showStatus(MessageSystem.getMessage('msg_admin_discarded'));
     notifyDiscard({ closeAfter: !!closeAfter });
     if(closeAfter){
       const target = pendingCloseTarget;
@@ -21698,7 +21830,8 @@ form.addEventListener('input', formChangedWrapper, true);
         body: JSON.stringify(payload)
       });
     } catch (networkError) {
-      showErrorBanner('Unable to reach the server. Please try again.');
+      await MessageSystem.ensureAdminMessages();
+      showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_network'));
       throw networkError;
     }
 
@@ -21708,8 +21841,9 @@ form.addEventListener('input', formChangedWrapper, true);
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
+        await MessageSystem.ensureAdminMessages();
         console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
-        showErrorBanner('Unexpected response while saving changes.');
+        showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_response'));
         const error = new Error('Invalid JSON response');
         error.responseText = responseText;
         throw error;
@@ -22147,9 +22281,10 @@ const adminPanelChangeManager = (()=>{
       if(!closeAfter) cancelPrompt();
       return;
     }
-    Promise.resolve(result).then(()=>{
+    Promise.resolve(result).then(async ()=>{
+      await MessageSystem.ensureAdminMessages();
       refreshSavedState();
-      showStatus('Saved');
+      showStatus(MessageSystem.getMessage('msg_admin_saved'));
       const panelToClose = closeAfter ? pendingCloseTarget : null;
       if(closeAfter) pendingCloseTarget = null;
       closePrompt();
@@ -22198,7 +22333,9 @@ const adminPanelChangeManager = (()=>{
     });
     if(savedState) applyState(savedState);
     setDirty(false);
-    showStatus('Changes Discarded');
+    MessageSystem.ensureAdminMessages().then(() => {
+      showStatus(MessageSystem.getMessage('msg_admin_discarded'));
+    });
     notifyDiscard({ closeAfter: !!closeAfter });
     const panelToClose = closeAfter ? pendingCloseTarget : null;
     pendingCloseTarget = null;
@@ -23114,8 +23251,9 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
-    const loadingMessage = 'Loading form fields…';
-    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
+    // Messages will be loaded on-demand
+    const getLoadingMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_post_loading_form') : 'Loading form fields…';
+    const getFetchErrorMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_post_form_load_error') : 'We couldn't load the latest form fields. You can continue with the defaults for now.';
 
     const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
     let memberSnapshot = defaultMemberSnapshot;
@@ -23731,7 +23869,9 @@ document.addEventListener('pointerdown', (e) => {
       if(subcategorySelect){
         subcategorySelect.disabled = true;
       }
-      renderEmptyState(loadingMessage);
+      // Ensure messages are preloaded
+      await MessageSystem.ensureUserMessages();
+      renderEmptyState(getLoadingMessage());
       try{
         const backendSnapshot = await persistedFormbuilderSnapshotPromise;
         const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
@@ -23748,8 +23888,8 @@ document.addEventListener('pointerdown', (e) => {
         } else {
           console.error('Failed to load formbuilder snapshot for members', error);
         }
-        memberSnapshotErrorMessage = fetchErrorMessage;
-        setEmptyStateMessage(fetchErrorMessage);
+        memberSnapshotErrorMessage = getFetchErrorMessage();
+        setEmptyStateMessage(getFetchErrorMessage());
         applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
       } finally {
         if(categorySelect){
@@ -24191,10 +24331,13 @@ document.addEventListener('pointerdown', (e) => {
         }
       };
 
+      // Ensure messages are loaded
+      await MessageSystem.ensureUserMessages();
+      
       const categoryName = categorySelect ? categorySelect.value.trim() : '';
       const subcategoryName = subcategorySelect ? subcategorySelect.value.trim() : '';
       if(!categoryName || !subcategoryName){
-        showCreateStatus('Select a category and subcategory before posting.', { error: true });
+        showCreateStatus(MessageSystem.getMessage('msg_post_create_no_category'), { error: true });
         if(!categoryName && categorySelect){
           focusElement(categorySelect);
         } else if(subcategorySelect){
@@ -24245,7 +24388,7 @@ document.addEventListener('pointerdown', (e) => {
           value = checked ? checked.value : '';
           if(field.required && !value){
             invalid = {
-              message: `Select an option for ${label}.`,
+              message: MessageSystem.getMessage('msg_post_validation_select', { field: label }),
               focus: ()=> focusElement(findFirstFocusable(['input[type="radio"]']))
             };
             break;
@@ -24255,7 +24398,7 @@ document.addEventListener('pointerdown', (e) => {
           value = select ? select.value : '';
           if(field.required && (!value || !value.trim())){
             invalid = {
-              message: `Choose an option for ${label}.`,
+              message: MessageSystem.getMessage('msg_post_validation_choose', { field: label }),
               focus: ()=> focusElement(select)
             };
             break;
@@ -24281,7 +24424,7 @@ document.addEventListener('pointerdown', (e) => {
           }
           if(field.required && value.length === 0){
             invalid = {
-              message: `Add at least one file for ${label}.`,
+              message: MessageSystem.getMessage('msg_post_validation_file_required', { field: label }),
               focus: ()=> focusElement(input)
             };
             break;
@@ -24297,7 +24440,7 @@ document.addEventListener('pointerdown', (e) => {
             const hasComplete = value.some(opt => opt.currency && opt.price);
             if(!hasComplete){
               invalid = {
-                message: `Provide pricing details for ${label}.`,
+                message: MessageSystem.getMessage('msg_post_validation_pricing', { field: label }),
                 focus: ()=> focusElement(findFirstFocusable(['.variant-pricing-option select','.variant-pricing-option input']))
               };
               break;
@@ -24314,7 +24457,7 @@ document.addEventListener('pointerdown', (e) => {
             })))));
             if(!hasTierPrice){
               invalid = {
-                message: `Add at least one price tier for ${label}.`,
+                message: MessageSystem.getMessage('msg_post_validation_pricing_tiers', { field: label }),
                 focus: ()=> focusElement(findFirstFocusable(['.tier-row select','.tier-row input']))
               };
               break;
@@ -24325,7 +24468,7 @@ document.addEventListener('pointerdown', (e) => {
           value = textarea ? textarea.value : '';
           if(field.required && (!value || !value.trim())){
             invalid = {
-              message: `Enter a value for ${label}.`,
+              message: MessageSystem.getMessage('msg_post_validation_required', { field: label }),
               focus: ()=> focusElement(textarea)
             };
             break;
@@ -24350,7 +24493,7 @@ document.addEventListener('pointerdown', (e) => {
           value = trimmedLocation;
           if(field.required && (!trimmedLocation.address || !trimmedLocation.latitude || !trimmedLocation.longitude)){
             invalid = {
-              message: `Select a location for ${label}.`,
+              message: MessageSystem.getMessage('msg_post_validation_location', { field: label }),
               focus: ()=> focusElement(addressInput)
             };
             break;
@@ -24360,7 +24503,7 @@ document.addEventListener('pointerdown', (e) => {
           value = input ? input.value : '';
           if(field.required && (!value || !String(value).trim())){
             invalid = {
-              message: `Enter a value for ${label}.`,
+              message: MessageSystem.getMessage('msg_post_validation_required', { field: label }),
               focus: ()=> focusElement(input)
             };
             break;
@@ -24428,7 +24571,7 @@ document.addEventListener('pointerdown', (e) => {
         });
       }catch(err){
         console.error('Failed to submit member post', err);
-        showCreateStatus('Unable to post your listing. Please try again.', { error: true });
+        showCreateStatus(MessageSystem.getMessage('msg_post_create_error'), { error: true });
         restoreButtonState();
         isSubmittingCreatePost = false;
         return;
@@ -24439,7 +24582,7 @@ document.addEventListener('pointerdown', (e) => {
         responseText = await response.text();
       }catch(err){
         console.error('Failed to read member post response', err);
-        showCreateStatus('Unable to confirm your listing submission.', { error: true });
+        showCreateStatus(MessageSystem.getMessage('msg_post_submit_confirm_error'), { error: true });
         restoreButtonState();
         isSubmittingCreatePost = false;
         return;
@@ -24455,7 +24598,7 @@ document.addEventListener('pointerdown', (e) => {
       }
 
       if(!response.ok || (responseData && responseData.success === false)){
-        let errorMessage = 'Unable to post your listing.';
+        let errorMessage = MessageSystem.getMessage('msg_post_create_error');
         if(responseData && typeof responseData === 'object'){
           const candidate = responseData.error || responseData.message;
           if(typeof candidate === 'string' && candidate.trim()){
@@ -24499,7 +24642,7 @@ document.addEventListener('pointerdown', (e) => {
         }
       }
 
-      const successMessage = 'Your listing has been posted!';
+      const successMessage = MessageSystem.getMessage('msg_post_create_success');
       let finalMessage = successMessage;
       const finalOptions = {};
       if(Array.isArray(uploadOutcome.errors) && uploadOutcome.errors.length){
@@ -24511,7 +24654,7 @@ document.addEventListener('pointerdown', (e) => {
           : 'Your listing was posted, but some images could not be uploaded.';
         finalOptions.error = true;
       } else if(Array.isArray(uploadOutcome.uploaded) && uploadOutcome.uploaded.length){
-        finalMessage = 'Your listing and images have been posted!';
+        finalMessage = MessageSystem.getMessage('msg_post_create_with_images');
       }
 
       showCreateStatus(finalMessage, finalOptions);
@@ -26348,12 +26491,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function handleLogin(){
+    // Ensure messages are loaded
+    await MessageSystem.ensureUserMessages();
+    
     const emailInput = document.getElementById('memberLoginEmail');
     const passwordInput = document.getElementById('memberLoginPassword');
     const usernameRaw = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
     if(!usernameRaw || !password){
-      showStatus('Enter your email and password.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_login_empty'), { error: true });
       if(!usernameRaw && emailInput){
         emailInput.focus();
       } else if(passwordInput){
@@ -26366,11 +26512,11 @@ document.addEventListener('DOMContentLoaded', () => {
       verification = await verifyUserLogin(usernameRaw, password);
     }catch(err){
       console.error('Login verification failed', err);
-      showStatus('Unable to verify credentials. Please try again.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_login_failed'), { error: true });
       return;
     }
     if(!verification || verification.success !== true){
-      showStatus('Incorrect email or password. Try again.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_login_incorrect'), { error: true });
       if(passwordInput){
         passwordInput.focus();
         passwordInput.select();
@@ -26456,10 +26602,13 @@ document.addEventListener('DOMContentLoaded', () => {
     storeCurrent(currentUser);
     render();
     const displayName = currentUser.name || currentUser.email || currentUser.username;
-    showStatus(`Welcome back, ${displayName}!`);
+    showStatus(MessageSystem.getMessage('msg_auth_login_success', { name: displayName }));
   }
 
   async function handleRegister(){
+    // Ensure messages are loaded
+    await MessageSystem.ensureUserMessages();
+    
     const nameInput = document.getElementById('memberRegisterName');
     const emailInput = document.getElementById('memberRegisterEmail');
     const passwordInput = document.getElementById('memberRegisterPassword');
@@ -26471,7 +26620,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordConfirm = passwordConfirmInput ? passwordConfirmInput.value : '';
     const avatar = avatarInput ? avatarInput.value.trim() : '';
     if(!name || !emailRaw || !password){
-      showStatus('Please complete all required fields.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_register_empty'), { error: true });
       if(!name && nameInput){
         nameInput.focus();
         return;
@@ -26486,17 +26635,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if(password.length < 4){
-      showStatus('Password must be at least 4 characters.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_register_password_short'), { error: true });
       if(passwordInput) passwordInput.focus();
       return;
     }
     if(!passwordConfirm){
-      showStatus('Please complete all required fields.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_register_empty'), { error: true });
       if(passwordConfirmInput) passwordConfirmInput.focus();
       return;
     }
     if(password !== passwordConfirm){
-      showStatus('Passwords do not match.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_register_password_mismatch'), { error: true });
       if(passwordConfirmInput){
         passwordConfirmInput.focus();
         if(typeof passwordConfirmInput.select === 'function'){
@@ -26520,7 +26669,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }catch(err){
       console.error('Registration request failed', err);
-      showStatus('Registration failed.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_register_failed'), { error: true });
       return;
     }
     let responseText = '';
@@ -26528,7 +26677,7 @@ document.addEventListener('DOMContentLoaded', () => {
       responseText = await response.text();
     }catch(err){
       console.error('Failed to read registration response', err);
-      showStatus('Registration failed.', { error: true });
+      showStatus(MessageSystem.getMessage('msg_auth_register_failed'), { error: true });
       return;
     }
     let payload = null;
@@ -26588,14 +26737,15 @@ document.addEventListener('DOMContentLoaded', () => {
       clearInputs(registerInputs);
     }
     render();
-    showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
+    showStatus(MessageSystem.getMessage('msg_auth_register_success', { name: currentUser.name || currentUser.email }));
   }
 
-  function handleLogout(){
+  async function handleLogout(){
+    await MessageSystem.ensureUserMessages();
     currentUser = null;
     storeCurrent(null);
     render();
-    showStatus('You have been logged out.');
+    showStatus(MessageSystem.getMessage('msg_auth_logout_success'));
   }
 
   function setup(){
