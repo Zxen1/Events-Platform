@@ -14147,6 +14147,150 @@ function makePosts(){
         }
       });
     }
+    
+    // ============= Messages Tab =============
+    const messagesCats = document.getElementById('messagesCats');
+    const MESSAGE_CATEGORIES = [
+      { name: 'User Messages', key: 'user', icon: 'assets/admin-icons/user-messages.svg', description: 'Messages for public visitors' },
+      { name: 'Member Messages', key: 'member', icon: 'assets/admin-icons/member-messages.svg', description: 'Messages for authenticated members' },
+      { name: 'Admin Messages', key: 'admin', icon: 'assets/admin-icons/admin-messages.svg', description: 'Messages for admin panel' },
+      { name: 'Email Messages', key: 'email', icon: 'assets/admin-icons/email-messages.svg', description: 'Email communications' }
+    ];
+    
+    function renderMessagesCategories(){
+      if(!messagesCats) return;
+      messagesCats.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      
+      MESSAGE_CATEGORIES.forEach((cat, index) => {
+        const menu = document.createElement('div');
+        menu.className = 'category-form-menu filter-category-menu messages-category-menu';
+        menu.dataset.messageCategory = cat.key;
+        menu.setAttribute('role', 'group');
+        menu.setAttribute('aria-expanded', 'false');
+        
+        const header = document.createElement('div');
+        header.className = 'formbuilder-category-header';
+        
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+        
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup', 'true');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        
+        const logo = document.createElement('span');
+        logo.className = 'category-logo has-icon';
+        const logoImg = document.createElement('img');
+        logoImg.src = cat.icon;
+        logoImg.alt = '';
+        logo.appendChild(logoImg);
+        
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = cat.name;
+        
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        
+        menuBtn.append(logo, label, arrow);
+        triggerWrap.appendChild(menuBtn);
+        
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'category-edit-btn';
+        editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
+        editBtn.setAttribute('aria-label', `Edit ${cat.name} category`);
+        
+        const dragHandle = document.createElement('div');
+        dragHandle.className = 'formbuilder-drag-handle category-drag-handle';
+        dragHandle.setAttribute('draggable', 'true');
+        dragHandle.setAttribute('role', 'button');
+        dragHandle.setAttribute('aria-label', `Reorder ${cat.name} category`);
+        dragHandle.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.25a.75.75 0 0 1 .53.22l2.5 2.5a.75.75 0 1 1-1.06 1.06L8.75 3.38v3.12a.75.75 0 0 1-1.5 0V3.38L6.03 5.03a.75.75 0 0 1-1.06-1.06l2.5-2.5A.75.75 0 0 1 8 1.25zm0 13.5a.75.75 0 0 0 .53-.22l2.5-2.5a.75.75 0 0 0-1.06-1.06L8.75 12.62V9.5a.75.75 0 0 0-1.5 0v3.12l-1.72-1.66a.75.75 0 1 0-1.06 1.06l2.5 2.5c.14.14.33.22.53.22z"/></svg>';
+        
+        header.append(triggerWrap, dragHandle, editBtn);
+        
+        const content = document.createElement('div');
+        content.className = 'category-form-content';
+        content.hidden = true;
+        
+        const editPanel = document.createElement('div');
+        editPanel.className = 'category-edit-panel';
+        
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'category-name-input';
+        nameInput.placeholder = 'Category Name';
+        nameInput.value = cat.name;
+        
+        const iconPicker = document.createElement('div');
+        iconPicker.className = 'iconpicker-container';
+        
+        const iconPickerButton = document.createElement('button');
+        iconPickerButton.type = 'button';
+        iconPickerButton.className = 'iconpicker-button';
+        iconPickerButton.textContent = 'Change Icon';
+        
+        const preview = document.createElement('div');
+        preview.className = 'iconpicker-preview has-image';
+        const previewLabel = document.createElement('span');
+        previewLabel.textContent = '';
+        const previewImg = document.createElement('img');
+        previewImg.src = cat.icon;
+        previewImg.alt = `${cat.name} icon preview`;
+        preview.append(previewLabel, previewImg);
+        iconPicker.append(iconPickerButton, preview);
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'save-changes primary-action formbuilder-inline-save';
+        saveBtn.textContent = 'Save';
+        saveBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if(typeof window.adminPanelModule?.runSave === 'function'){
+            window.adminPanelModule.runSave({ closeAfter: false });
+          }
+        });
+        
+        editPanel.append(nameInput, iconPicker, saveBtn);
+        content.appendChild(editPanel);
+        
+        menu.append(header, content);
+        frag.appendChild(menu);
+        
+        // Toggle category on click
+        menuBtn.addEventListener('click', () => {
+          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
+          menu.setAttribute('aria-expanded', String(!isExpanded));
+          menuBtn.setAttribute('aria-expanded', String(!isExpanded));
+          content.hidden = isExpanded;
+        });
+        
+        // Toggle edit panel
+        editBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isOpen = editPanel.style.display !== 'none' && !editPanel.hidden;
+          editPanel.style.display = isOpen ? 'none' : '';
+          editPanel.hidden = isOpen;
+          editBtn.setAttribute('aria-expanded', String(!isOpen));
+        });
+      });
+      
+      messagesCats.appendChild(frag);
+    }
+    
+    // Initialize messages categories when admin panel opens
+    if(messagesCats){
+      renderMessagesCategories();
+    }
+    // ============= End Messages Tab =============
+    
     function renderFilterCategories(){
       if(!catsEl) return;
       catsEl.textContent = '';
