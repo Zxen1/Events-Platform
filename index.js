@@ -15576,13 +15576,14 @@ function makePosts(){
             previousOpenPostHeight = ex.offsetHeight || 0;
             previousOpenPostId = ex.dataset && ex.dataset.id;
             
-            // If target exists and is a card, save its position relative to viewport
+            // If target exists and is a card, save its absolute scroll position
             if(target && (target.classList.contains('post-card') || target.classList.contains('recents-card'))){
-              const containerRect = container.getBoundingClientRect();
-              const targetRect = target.getBoundingClientRect();
-              // Save where the target is relative to the container top
-              savedScrollPosition = targetRect.top - containerRect.top + savedScrollTop;
+              targetOriginalTop = target.offsetTop || 0;
+              savedScrollPosition = targetOriginalTop;
             }
+            
+            const exOffsetTop = ex.offsetTop || 0;
+            targetOriginalTop = target ? (target.offsetTop || 0) : 0;
             
             const seenDetailMaps = new Set();
             const cleanupDetailMap = node=>{
@@ -15774,42 +15775,8 @@ function makePosts(){
             }, 50);
           }
         }
-        // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
-        else if(!scrollToTop && savedScrollPosition > 0 && previousOpenPostHeight > 0 && previousOpenPostId){
-          requestAnimationFrame(() => {
-            const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
-            
-            if(closedCard){
-              const closedCardHeight = closedCard.offsetHeight || 0;
-              const heightLost = previousOpenPostHeight - closedCardHeight;
-              
-              if(heightLost > 60){
-                // Create spacer for void
-                let spacer = container.querySelector('.top-gap-spacer');
-                const spacerExisted = !!spacer;
-                
-                if(!spacer){
-                  spacer = document.createElement('div');
-                  spacer.className = 'top-gap-spacer';
-                  spacer.addEventListener('click', (e) => e.stopPropagation());
-                  container.insertBefore(spacer, container.firstChild);
-                }
-                
-                const oldSpacerHeight = spacerExisted ? (parseFloat(spacer.style.height) || 0) : 0;
-                spacer.style.height = `${heightLost}px`;
-                container.dataset.hasTopGap = 'true';
-                
-                // Adjust scroll to compensate for spacer size change
-                const spacerChange = heightLost - oldSpacerHeight;
-                if(Math.abs(spacerChange) > 5){
-                  container.scrollTop = savedScrollTop + spacerChange;
-                }
-                
-                createCollapseGapButton(container);
-              }
-            }
-          });
-        }
+        // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY  
+        // Cards open in place, no scrolling, no jumping
 
         // Update history on open (keep newest-first)
         viewHistory = viewHistory.filter(x=>x.id!==id);
