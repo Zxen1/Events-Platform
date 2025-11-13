@@ -3343,6 +3343,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .last-opened-label + .recents-card,
 .last-opened-label + .open-post{
   margin-top:0;
+  padding-top:0;
+}
+
+.last-opened-label + .open-post .post-card{
+  padding-top:0;
 }
 
 .post-board{
