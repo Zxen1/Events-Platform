@@ -3333,13 +3333,13 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .collapse-gap-button:hover{
-  transform:translateX(-50%) scale(1.1);
   opacity:1;
   box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  transform:translateX(-50%) scale(1.05);
 }
 
 .collapse-gap-button:active{
-  transform:translateX(-50%) scale(0.95);
+  transform:translateX(-50%) scale(0.98);
 }
 
 .collapse-gap-button svg{

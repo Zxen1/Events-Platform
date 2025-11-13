@@ -15419,39 +15419,10 @@ function makePosts(){
           <path d="M10 4L10 16M10 4L6 8M10 4L14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>`;
         
-        // Position fixed at top of container
-        button.style.cssText = `
-          position: absolute;
-          top: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 10;
-          background: var(--btn, rgba(255,255,255,0.9));
-          border: 1px solid var(--border, rgba(0,0,0,0.1));
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          color: var(--ink, #000);
-          transition: all 0.2s ease;
-        `;
-        
         button.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           collapseGap(container);
-        });
-        
-        button.addEventListener('mouseenter', () => {
-          button.style.transform = 'translateX(-50%) scale(1.1)';
-        });
-        
-        button.addEventListener('mouseleave', () => {
-          button.style.transform = 'translateX(-50%) scale(1)';
         });
         
         container.appendChild(button);
@@ -15565,18 +15536,26 @@ function makePosts(){
         // CLOSE PREVIOUS OPEN POST & MAINTAIN VISUAL STABILITY
         // ========================================================================
         let previousOpenPostHeight = 0;
+        let previousOpenPostId = null;
         let shouldPreservePosition = false;
+        let savedScrollTop = 0;
         
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
+            // Save current scroll position
+            savedScrollTop = container.scrollTop || 0;
+            
             // Measure the height before closing to maintain visual stability
             previousOpenPostHeight = ex.offsetHeight || 0;
+            previousOpenPostId = ex.dataset && ex.dataset.id;
             
             // Check if new post will be below the closing post (preserve position)
+            // Only preserve if NOT scrollToTop and target exists and is a card click
             const exTop = ex.offsetTop || 0;
             const targetTop = target ? (target.offsetTop || 0) : 0;
-            shouldPreservePosition = !scrollToTop && targetTop > exTop;
+            const targetIsCard = target && (target.classList.contains('post-card') || target.classList.contains('recents-card'));
+            shouldPreservePosition = !scrollToTop && targetIsCard && targetTop > exTop;
             
             const seenDetailMaps = new Set();
             const cleanupDetailMap = node=>{
@@ -15722,36 +15701,6 @@ function makePosts(){
         }
 
         await nextFrame();
-        
-        // ========================================================================
-        // MAINTAIN VISUAL STABILITY - ADD GAP TO PREVENT CONTENT SHIFT
-        // ========================================================================
-        if(shouldPreservePosition && previousOpenPostHeight > 0){
-          // Measure the new card height
-          const newTarget = container.querySelector(`[data-id="${id}"]`);
-          const newCardHeight = newTarget ? (newTarget.offsetHeight || 0) : 0;
-          
-          // Calculate the gap left by closing the larger post
-          const heightDifference = previousOpenPostHeight - newCardHeight;
-          
-          if(heightDifference > 0){
-            // Add padding to top to maintain visual positions
-            const currentPadding = parseFloat(container.style.paddingTop) || 0;
-            const newPadding = currentPadding + heightDifference;
-            container.style.paddingTop = `${newPadding}px`;
-            container.dataset.hasTopGap = 'true';
-            
-            // Create/update collapse button in the gap
-            createCollapseGapButton(container);
-          }
-        }
-        
-        // Remove gap when scrolling to top (map/ad clicks)
-        if(scrollToTop){
-          container.style.paddingTop = '0px';
-          delete container.dataset.hasTopGap;
-          removeCollapseGapButton(container);
-        }
 
         if(fromMap){
           if(typeof window.adjustBoards === 'function'){
@@ -15767,34 +15716,55 @@ function makePosts(){
           const h = cardHeader.offsetHeight;
           cardHeader.style.scrollMarginTop = h + 'px';
         }
-
+        
         // ========================================================================
         // SCROLLING BEHAVIOR - EXPLICITLY SEPARATED BY SOURCE
         // ========================================================================
         
-        // CASE 1 & 2: Recents card or Post card clicked - NO SCROLLING (open in place)
-        // These cases don't pass scrollToTop, so scrollToTop=false by default
-        // No action needed - post opens where it is
-        
-        // CASE 3: Map marker clicked - SCROLL TO TOP
-        // CASE 4: Ad board clicked - SCROLL TO TOP
-        if(scrollToTop && container && container.contains(detail)){
-          // Wait for layout to complete before scrolling
-          requestAnimationFrame(() => {
+        // CASE 3 & 4: Map marker or Ad board clicked - SCROLL TO TOP
+        if(scrollToTop){
+          // Remove any existing gap
+          container.style.paddingTop = '0px';
+          delete container.dataset.hasTopGap;
+          removeCollapseGapButton(container);
+          
+          // Scroll to show post at top of viewport
+          if(container && container.contains(detail)){
             requestAnimationFrame(() => {
-              const containerRect = container.getBoundingClientRect();
-              const detailRect = detail.getBoundingClientRect();
-              if(containerRect && detailRect){
-                // Calculate scroll position to place post at top of viewport
-                const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
-                if(typeof container.scrollTo === 'function'){
-                  container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
-                } else {
-                  container.scrollTop = Math.max(0, topTarget);
+              requestAnimationFrame(() => {
+                const containerRect = container.getBoundingClientRect();
+                const detailRect = detail.getBoundingClientRect();
+                if(containerRect && detailRect){
+                  const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+                  if(typeof container.scrollTo === 'function'){
+                    container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
+                  } else {
+                    container.scrollTop = Math.max(0, topTarget);
+                  }
                 }
-              }
+              });
             });
-          });
+          }
+        }
+        // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
+        else if(shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
+          // Find the closed card (what the open post became)
+          const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
+          const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
+          
+          // Calculate the gap left by closing the larger post
+          const heightDifference = previousOpenPostHeight - closedCardHeight;
+          
+          if(heightDifference > 10){ // Only add padding if difference is significant
+            // Add padding to top to maintain visual positions
+            const currentPadding = parseFloat(container.style.paddingTop) || 0;
+            const newPadding = currentPadding + heightDifference;
+            container.style.paddingTop = `${newPadding}px`;
+            container.dataset.hasTopGap = 'true';
+            
+            // Create/update collapse button in the gap
+            createCollapseGapButton(container);
+          }
         }
 
         // Update history on open (keep newest-first)
