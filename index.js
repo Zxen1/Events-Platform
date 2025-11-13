@@ -21821,7 +21821,6 @@ form.addEventListener('input', formChangedWrapper, true);
     // Collect modified admin messages
     const modifiedMessages = [];
     const allMessageInputs = document.querySelectorAll('.message-text-input');
-    console.log('[Save Admin] Found', allMessageInputs.length, 'message inputs');
     
     allMessageInputs.forEach(textarea => {
       if(textarea.value !== textarea.dataset.originalValue){
@@ -21831,11 +21830,6 @@ form.addEventListener('input', formChangedWrapper, true);
         });
       }
     });
-    
-    console.log('[Save Admin] Modified messages:', modifiedMessages.length);
-    if(modifiedMessages.length > 0){
-      console.log('[Save Admin] Messages to save:', modifiedMessages);
-    }
     
     // Collect formbuilder data
     let formbuilderPayload = null;
@@ -21850,7 +21844,6 @@ form.addEventListener('input', formChangedWrapper, true);
     // SAVE FORMBUILDER DATA (categories/subcategories)
     let formbuilderData = null;
     if(formbuilderPayload && typeof formbuilderPayload === 'object' && Object.keys(formbuilderPayload).length > 0){
-      console.log('[Save Admin] Saving formbuilder data to save-form endpoint');
       try {
         const formResponse = await fetch('/gateway.php?action=save-form', {
           method: 'POST',
@@ -21858,10 +21851,8 @@ form.addEventListener('input', formChangedWrapper, true);
           credentials: 'same-origin',
           body: JSON.stringify(formbuilderPayload)
         });
-        console.log('[Save Admin] Formbuilder response status:', formResponse.status);
         
         const formResponseText = await formResponse.text();
-        console.log('[Save Admin] Formbuilder response:', formResponseText);
         
         if(formResponseText){
           try {
@@ -21875,8 +21866,7 @@ form.addEventListener('input', formChangedWrapper, true);
           throw new Error('Formbuilder save failed');
         }
       } catch (formError) {
-        await MessageSystem.ensureAdminMessages();
-        showErrorBanner('Failed to save formbuilder data: ' + formError.message);
+        console.error('Formbuilder save error:', formError);
         throw formError;
       }
     }
@@ -21884,7 +21874,6 @@ form.addEventListener('input', formChangedWrapper, true);
     // SAVE MESSAGES (if any were modified)
     let messagesData = null;
     if(modifiedMessages.length > 0){
-      console.log('[Save Admin] Saving messages to save-admin-settings endpoint');
       try {
         const msgResponse = await fetch('/gateway.php?action=save-admin-settings', {
           method: 'POST',
@@ -21892,10 +21881,8 @@ form.addEventListener('input', formChangedWrapper, true);
           credentials: 'same-origin',
           body: JSON.stringify({ messages: modifiedMessages })
         });
-        console.log('[Save Admin] Messages response status:', msgResponse.status);
         
         const msgResponseText = await msgResponse.text();
-        console.log('[Save Admin] Messages response:', msgResponseText);
         
         if(msgResponseText){
           try {
@@ -21909,8 +21896,7 @@ form.addEventListener('input', formChangedWrapper, true);
           throw new Error('Messages save failed');
         }
       } catch (msgError) {
-        await MessageSystem.ensureAdminMessages();
-        showErrorBanner('Failed to save messages: ' + msgError.message);
+        console.error('Messages save error:', msgError);
         throw msgError;
       }
     }
