@@ -3341,8 +3341,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .recents-board .last-opened-label{
-  margin-bottom:-12px;
-  padding-bottom:0;
+  margin:0;
+  padding:2px 4px;
 }
 
 .post-board{
