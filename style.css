@@ -2536,6 +2536,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 #tab-map .map-spin-container,
 #tab-settings .settings-welcome-container,
+#tab-settings .settings-paypal-container,
+#tab-settings .settings-icon-folders-container,
 #tab-settings #post-mode-background-field,
 #memberPanel .member-form-container{
   width:100%;
