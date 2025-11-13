@@ -3315,12 +3315,18 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-shrink:0;
   transition:height 0.3s ease;
   pointer-events:none;
+  position:relative;
+}
+
+/* Enable pointer events for button inside spacer */
+.top-gap-spacer .collapse-gap-button{
+  pointer-events:auto;
 }
 
 /* Collapse Gap Button */
 .collapse-gap-button{
-  position:sticky;
-  top:10px;
+  position:absolute;
+  bottom:10px;
   left:50%;
   transform:translateX(-50%);
   z-index:9999;
@@ -3335,10 +3341,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   cursor:pointer;
   box-shadow:0 4px 12px rgba(0,0,0,0.25);
   color:var(--ink);
-  transition:all 0.2s ease;
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
   opacity:1;
   pointer-events:auto;
-  flex-shrink:0;
 }
 
 .collapse-gap-button:hover{

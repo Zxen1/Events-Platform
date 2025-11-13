@@ -15418,8 +15418,8 @@ function makePosts(){
           return;
         }
         
-        // Check if button already exists in this container
-        let button = container.querySelector('.collapse-gap-button');
+        // Check if button already exists in spacer
+        let button = spacer.querySelector('.collapse-gap-button');
         if(button){
           // Button already exists
           return;
@@ -15430,6 +15430,7 @@ function makePosts(){
         button.className = 'collapse-gap-button';
         button.setAttribute('aria-label', 'Scroll to top and close gap');
         button.setAttribute('title', 'Scroll to top');
+        button.setAttribute('type', 'button'); // Prevent form submission
         button.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M10 4L10 16M10 4L6 8M10 4L14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>`;
@@ -15437,24 +15438,34 @@ function makePosts(){
         button.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
           collapseGap(container);
-        });
+          return false;
+        }, { capture: true });
         
-        // Insert button after spacer (at top of board, in the void area)
-        if(spacer.nextSibling){
-          container.insertBefore(button, spacer.nextSibling);
-        } else {
-          container.appendChild(button);
-        }
+        // Prevent any pointer events from bubbling
+        button.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+        }, { capture: true });
+        
+        button.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+        }, { capture: true });
+        
+        // Append button inside spacer (positioned at bottom: 10px)
+        spacer.appendChild(button);
         container.dataset.hasCollapseButton = 'true';
       }
       
       function removeCollapseGapButton(container){
         if(!container) return;
-        // Button is in the container
-        const existingButton = container.querySelector('.collapse-gap-button');
-        if(existingButton){
-          existingButton.remove();
+        // Button is inside the spacer
+        const spacer = container.querySelector('.top-gap-spacer');
+        if(spacer){
+          const existingButton = spacer.querySelector('.collapse-gap-button');
+          if(existingButton){
+            existingButton.remove();
+          }
         }
         delete container.dataset.hasCollapseButton;
       }
@@ -15771,34 +15782,38 @@ function makePosts(){
           }
         }
         // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
-        else if(!scrollToTop && shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
-          // Find the closed card (what the open post became)
-          const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
-          const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
-          
-          // Calculate the gap left by closing the larger post
-          const heightDifference = previousOpenPostHeight - closedCardHeight;
-          
-          if(heightDifference > 10){ // Only update spacer if difference is significant
-            // Use a spacer element instead of padding to avoid pushing everything down
-            let spacer = container.querySelector('.top-gap-spacer');
-            if(!spacer){
-              spacer = document.createElement('div');
-              spacer.className = 'top-gap-spacer';
-              spacer.style.height = '0px';
-              container.insertBefore(spacer, container.firstChild);
-            }
+        else if(!scrollToTop){
+          // Check if we need to create/update spacer
+          if(shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
+            // Find the closed card (what the open post became)
+            const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
+            const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
             
-            // REPLACE spacer height (don't accumulate) - this prevents cumulative errors
-            // The spacer represents the gap left by THIS specific card closure
-            spacer.style.height = `${heightDifference}px`;
-            container.dataset.hasTopGap = 'true';
+            // Calculate the gap left by closing the larger post
+            const heightDifference = previousOpenPostHeight - closedCardHeight;
+            
+            if(heightDifference > 10){ // Only update spacer if difference is significant
+              // Use a spacer element instead of padding to avoid pushing everything down
+              let spacer = container.querySelector('.top-gap-spacer');
+              if(!spacer){
+                spacer = document.createElement('div');
+                spacer.className = 'top-gap-spacer';
+                spacer.style.height = '0px';
+                container.insertBefore(spacer, container.firstChild);
+              }
+              
+              // REPLACE spacer height (don't accumulate) - this prevents cumulative errors
+              // The spacer represents the gap left by THIS specific card closure
+              spacer.style.height = `${heightDifference}px`;
+              container.dataset.hasTopGap = 'true';
+              
+              // Always check button visibility after spacer update (show/hide based on spacer height)
+              createCollapseGapButton(container);
+            }
           }
           
-          // Always check button visibility after spacer update (show/hide based on spacer height)
-          createCollapseGapButton(container);
-          
-          // IMPORTANT: Never remove spacer on card clicks - only on map/ad clicks or manual collapse
+          // IMPORTANT: Never remove existing spacer on card clicks
+          // Spacer persists until: map/ad click or manual collapse button
         }
 
         // Update history on open (keep newest-first)
