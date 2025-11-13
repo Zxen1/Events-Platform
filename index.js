@@ -21818,7 +21818,6 @@ form.addEventListener('input', formChangedWrapper, true);
   }
 
   async function saveAdminChanges(){
-    // Collect modified admin messages
     const modifiedMessages = [];
     document.querySelectorAll('.message-text-input').forEach(textarea => {
       if(textarea.value !== textarea.dataset.originalValue){
@@ -21829,7 +21828,6 @@ form.addEventListener('input', formChangedWrapper, true);
       }
     });
     
-    // Collect form data
     let payload = null;
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
@@ -21842,48 +21840,28 @@ form.addEventListener('input', formChangedWrapper, true);
       payload = {};
     }
 
-    // Add messages to payload if any were modified
     if(modifiedMessages.length > 0){
       payload.messages = modifiedMessages;
     }
 
-    let response;
-    try {
-      response = await fetch('/gateway.php?action=save-form', {
-        method: 'POST',
-        headers: JSON_HEADERS,
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      });
-    } catch (networkError) {
-      showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_network'));
-      throw networkError;
-    }
+    const response = await fetch('/gateway.php?action=save-form', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      credentials: 'same-origin',
+      body: JSON.stringify(payload)
+    });
 
     const responseText = await response.text();
-    let data = {};
-    if(responseText){
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
-        showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_response'));
-        const error = new Error('Invalid JSON response');
-        error.responseText = responseText;
-        throw error;
-      }
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error('Invalid JSON response', responseText);
+      throw new Error('Invalid response');
     }
 
-    if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
-      console.error('[SaveAdminChanges] Save failed:', { responseOk: response.ok, data });
-      const message = data && typeof data.message === 'string' && data.message.trim()
-        ? data.message.trim()
-        : `Failed to save changes${response.ok ? '' : ` (HTTP ${response.status})`}.`;
-      showErrorBanner(message);
-      const error = new Error(message);
-      error.response = response;
-      error.payload = data;
-      throw error;
+    if(!response.ok || !data || data.success !== true){
+      throw new Error(data?.message || 'Save failed');
     }
 
     if(Array.isArray(data.new_category_ids) && data.new_category_ids.length){
