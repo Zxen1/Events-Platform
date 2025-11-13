@@ -21820,9 +21820,7 @@ form.addEventListener('input', formChangedWrapper, true);
   async function saveAdminChanges(){
     // Collect modified admin messages
     const modifiedMessages = [];
-    const allMessageInputs = document.querySelectorAll('.message-text-input');
-    
-    allMessageInputs.forEach(textarea => {
+    document.querySelectorAll('.message-text-input').forEach(textarea => {
       if(textarea.value !== textarea.dataset.originalValue){
         modifiedMessages.push({
           id: parseInt(textarea.dataset.messageId),
@@ -21831,81 +21829,52 @@ form.addEventListener('input', formChangedWrapper, true);
       }
     });
     
-    // Collect formbuilder data
-    let formbuilderPayload = null;
+    // Collect form data
+    let payload = null;
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
-        formbuilderPayload = window.formbuilderStateManager.capture();
+        payload = window.formbuilderStateManager.capture();
       } catch (err) {
         console.error('formbuilderStateManager.capture failed', err);
       }
     }
-
-    // SAVE FORMBUILDER DATA (categories/subcategories)
-    let formbuilderData = null;
-    if(formbuilderPayload && typeof formbuilderPayload === 'object' && Object.keys(formbuilderPayload).length > 0){
-      try {
-        const formResponse = await fetch('/gateway.php?action=save-form', {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          credentials: 'same-origin',
-          body: JSON.stringify(formbuilderPayload)
-        });
-        
-        const formResponseText = await formResponse.text();
-        
-        if(formResponseText){
-          try {
-            formbuilderData = JSON.parse(formResponseText);
-          } catch(e){
-            console.error('[Save Admin] Failed to parse formbuilder response');
-          }
-        }
-        
-        if(!formResponse.ok || !formbuilderData || formbuilderData.success !== true){
-          throw new Error('Formbuilder save failed');
-        }
-      } catch (formError) {
-        console.error('Formbuilder save error:', formError);
-        throw formError;
-      }
+    if(!payload || typeof payload !== 'object'){
+      payload = {};
     }
 
-    // SAVE MESSAGES (if any were modified)
-    let messagesData = null;
+    // Add messages to payload if any were modified
     if(modifiedMessages.length > 0){
+      payload.messages = modifiedMessages;
+    }
+
+    let response;
+    try {
+      response = await fetch('/gateway.php?action=save-form', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      });
+    } catch (networkError) {
+      showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_network'));
+      throw networkError;
+    }
+
+    const responseText = await response.text();
+    let data = {};
+    if(responseText){
       try {
-        const msgResponse = await fetch('/gateway.php?action=save-admin-settings', {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          credentials: 'same-origin',
-          body: JSON.stringify({ messages: modifiedMessages })
-        });
-        
-        const msgResponseText = await msgResponse.text();
-        
-        if(msgResponseText){
-          try {
-            messagesData = JSON.parse(msgResponseText);
-          } catch(e){
-            console.error('[Save Admin] Failed to parse messages response');
-          }
-        }
-        
-        if(!msgResponse.ok || !messagesData || messagesData.success !== true){
-          throw new Error('Messages save failed');
-        }
-      } catch (msgError) {
-        console.error('Messages save error:', msgError);
-        throw msgError;
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
+        showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_response'));
+        const error = new Error('Invalid JSON response');
+        error.responseText = responseText;
+        throw error;
       }
     }
 
-    // Use formbuilder data as primary response (for backward compatibility)
-    let data = formbuilderData || messagesData || { success: true };
-    let response = { ok: true, status: 200 };
-
-    if(!data || typeof data !== 'object' || data.success !== true){
+    if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
       console.error('[SaveAdminChanges] Save failed:', { responseOk: response.ok, data });
       const message = data && typeof data.message === 'string' && data.message.trim()
         ? data.message.trim()
