@@ -14534,6 +14534,7 @@ function makePosts(){
     
     // Fetch and populate admin messages from database
     async function loadAdminMessages(){
+      console.log('[Admin Messages] Loading messages from database...');
       try {
         const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
         if(!response.ok){
@@ -14542,12 +14543,14 @@ function makePosts(){
         const result = await response.json();
         
         if(result.success && result.messages){
+          console.log('[Admin Messages] Loaded', result.messages.length, 'message containers');
           populateMessagesIntoContainers(result.messages);
+          console.log('[Admin Messages] UI populated successfully');
         } else {
-          console.error('Failed to load admin messages:', result.message || result.messages_error);
+          console.error('[Admin Messages] Failed to load:', result.message || result.messages_error);
         }
       } catch(error){
-        console.error('Error loading admin messages:', error);
+        console.error('[Admin Messages] Error loading:', error);
       }
     }
     
@@ -21815,7 +21818,10 @@ form.addEventListener('input', formChangedWrapper, true);
   async function saveAdminChanges(){
     // Collect modified admin messages
     const modifiedMessages = [];
-    document.querySelectorAll('.message-text-input').forEach(textarea => {
+    const allMessageInputs = document.querySelectorAll('.message-text-input');
+    console.log('[Save Admin] Found', allMessageInputs.length, 'message inputs');
+    
+    allMessageInputs.forEach(textarea => {
       if(textarea.value !== textarea.dataset.originalValue){
         modifiedMessages.push({
           id: parseInt(textarea.dataset.messageId),
@@ -21823,6 +21829,11 @@ form.addEventListener('input', formChangedWrapper, true);
         });
       }
     });
+    
+    console.log('[Save Admin] Modified messages:', modifiedMessages.length);
+    if(modifiedMessages.length > 0){
+      console.log('[Save Admin] Messages to save:', modifiedMessages);
+    }
     
     // Collect form data
     let payload = null;
