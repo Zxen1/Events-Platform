@@ -15401,7 +15401,7 @@ function makePosts(){
         return postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
       }
 
-      async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
+      async function openPost(id, fromHistory=false, fromMap=false, originEl=null, scrollToTop=false){
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
@@ -15531,8 +15531,6 @@ function makePosts(){
         }
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
-        const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer);
         const shouldReorderToTop = false; // Never reorder posts - maintain sort order
 
         if(!target && !fromHistory){
@@ -15621,13 +15619,24 @@ function makePosts(){
           cardHeader.style.scrollMarginTop = h + 'px';
         }
 
-        if(shouldScrollToCard && container && container.contains(detail)){
+        // ========================================================================
+        // SCROLLING BEHAVIOR - EXPLICITLY SEPARATED BY SOURCE
+        // ========================================================================
+        
+        // CASE 1 & 2: Recents card or Post card clicked - NO SCROLLING (open in place)
+        // These cases don't pass scrollToTop, so scrollToTop=false by default
+        // No action needed - post opens where it is
+        
+        // CASE 3: Map marker clicked - SCROLL TO TOP
+        // CASE 4: Ad board clicked - SCROLL TO TOP
+        if(scrollToTop && container && container.contains(detail)){
+          // Wait for layout to complete before scrolling
           requestAnimationFrame(() => {
-            // When opening from map or ad board, scroll the post to the top of the post board
-            if(fromMap || !!pointerInAdBoard){
+            requestAnimationFrame(() => {
               const containerRect = container.getBoundingClientRect();
               const detailRect = detail.getBoundingClientRect();
               if(containerRect && detailRect){
+                // Calculate scroll position to place post at top of viewport
                 const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
                 if(typeof container.scrollTo === 'function'){
                   container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
@@ -15635,8 +15644,7 @@ function makePosts(){
                   container.scrollTop = Math.max(0, topTarget);
                 }
               }
-            }
-            // Cards clicked inside container don't scroll - they open in place
+            });
           });
         }
 
@@ -15721,6 +15729,8 @@ function makePosts(){
               requestAnimationFrame(() => {
                 try{
                   stopSpin();
+                  // CASE 1: RECENTS CARD CLICKED - Open in place, NO scrolling
+                  // Parameters: (id, fromHistory=true, fromMap=false, originEl=cardEl, scrollToTop=false)
                   fn(id, true, false, cardEl);
                 }catch(err){ console.error(err); }
               });
@@ -15742,6 +15752,8 @@ function makePosts(){
                 requestAnimationFrame(() => {
                   try{
                     stopSpin();
+                    // CASE 2: POST CARD CLICKED - Open in place, NO scrolling
+                    // Parameters: (id, fromHistory=false, fromMap=false, originEl=cardEl, scrollToTop=false)
                     fn(id, false, false, cardEl);
                   }catch(err){ console.error(err); }
                 });
@@ -17568,7 +17580,9 @@ if (!map.__pillHooksInstalled) {
                     if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
                       try{ closePanel(filterPanel); }catch(err){}
                     }
-                    fn(pid, false, true);
+                    // CASE 3: MAP MARKER CLICKED (overlay) - SCROLL TO TOP
+                    // Parameters: (id, fromHistory=false, fromMap=true, originEl=null, scrollToTop=true)
+                    fn(pid, false, true, null, true);
                   }catch(err){ console.error(err); }
                 });
               });
@@ -18271,7 +18285,9 @@ function openPostModal(id){
                 if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
                   try{ closePanel(filterPanel); }catch(err){}
                 }
-                fn(pid, false, true);
+                // CASE 3: MAP MARKER CLICKED (popup card) - SCROLL TO TOP
+                // Parameters: (id, fromHistory=false, fromMap=true, originEl=null, scrollToTop=true)
+                fn(pid, false, true, null, true);
               }catch(err){ console.error(err); }
             });
           });
@@ -19933,7 +19949,9 @@ function openPostModal(id){
       const id = slide.dataset.id;
       requestAnimationFrame(() => {
         callWhenDefined('openPost', (fn)=>{
-          Promise.resolve(fn(id)).then(() => {
+          // CASE 4: AD BOARD CLICKED - SCROLL TO TOP
+          // Parameters: (id, fromHistory=false, fromMap=false, originEl=null, scrollToTop=true)
+          Promise.resolve(fn(id, false, false, null, true)).then(() => {
             requestAnimationFrame(() => {
               // openPost handles scrolling the post to top of post board
               document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
