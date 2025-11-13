@@ -21851,8 +21851,10 @@ form.addEventListener('input', formChangedWrapper, true);
     // Add messages to payload if any were modified
     if(modifiedMessages.length > 0){
       payload.messages = modifiedMessages;
+      console.log('[Save Admin] Payload with messages:', JSON.stringify(payload, null, 2));
     }
 
+    console.log('[Save Admin] Sending request to:', SAVE_ENDPOINT);
     let response;
     try {
       response = await fetch(SAVE_ENDPOINT, {
@@ -21861,6 +21863,7 @@ form.addEventListener('input', formChangedWrapper, true);
         credentials: 'same-origin',
         body: JSON.stringify(payload)
       });
+      console.log('[Save Admin] Response status:', response.status, response.statusText);
     } catch (networkError) {
       await MessageSystem.ensureAdminMessages();
       showErrorBanner(MessageSystem.getMessage('msg_admin_save_error_network'));
@@ -21868,10 +21871,12 @@ form.addEventListener('input', formChangedWrapper, true);
     }
 
     const responseText = await response.text();
+    console.log('[Save Admin] Response text:', responseText);
     let data = {};
     if(responseText){
       try {
         data = JSON.parse(responseText);
+        console.log('[Save Admin] Parsed response:', data);
       } catch (parseError) {
         await MessageSystem.ensureAdminMessages();
         console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
