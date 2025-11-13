@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 13, 2025 at 10:48 PM
+-- Generation Time: Nov 13, 2025 at 10:50 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -183,7 +183,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (73, 'spin_zoom_max', '5', 'integer', 'Maximum zoom spin threshold', '2025-11-09 20:39:10', '2025-11-10 09:35:08'),
 (150, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-09 21:56:42', '2025-11-10 09:35:28'),
 (529, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-11 10:44:57', '2025-11-11 13:50:20'),
-(710, 'post_mode_shadow', '0', 'integer', 'Opacity/shadow value for post mode background overlay', '2025-11-13 10:24:32', '2025-11-13 11:47:29'),
+(710, 'post_mode_shadow', '0', 'decimal', 'Opacity/shadow value for post mode background overlay', '2025-11-13 10:24:32', '2025-11-13 11:50:14'),
 (711, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 10:24:32', '2025-11-13 11:47:29'),
 (714, 'msg_category_user_icon', 'assets/admin-icons/user-messages.svg', 'string', 'Icon path for User Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
 (715, 'msg_category_member_icon', 'assets/admin-icons/member-messages.svg', 'string', 'Icon path for Member Messages category', '2025-11-13 11:47:29', '2025-11-13 11:47:29'),
