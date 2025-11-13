@@ -7859,14 +7859,19 @@ html, body { cursor: auto !important; }
               background:rgba(255,255,255,0.1);
             }
             #tab-messages .category-edit-panel{
-              margin:16px 10px 12px;
               padding:18px;
-              background:rgba(0,0,0,0.25);
-              border:1px solid rgba(255,255,255,0.1);
+              background:rgba(0,0,0,0.96);
+              border:1px solid rgba(255,255,255,0.15);
               border-radius:12px;
               display:flex;
               flex-direction:column;
               gap:14px;
+              box-shadow:0 8px 24px rgba(0,0,0,0.4);
+              min-width:280px;
+              max-width:320px;
+            }
+            #tab-messages .category-edit-panel[hidden]{
+              display:none;
             }
             #tab-messages .category-name-input{
               font-size:15px;
@@ -7886,16 +7891,32 @@ html, body { cursor: auto !important; }
             #tab-messages .category-form-menu .filter-category-trigger{
               min-width:0;
               background:transparent;
+              border:none;
               border-color:transparent;
               color:var(--button-text);
+              height:auto;
+              padding:0;
             }
             #tab-messages .category-form-menu .filter-category-trigger-wrap{
               flex:1;
+            }
+            #tab-messages .formbuilder-container button:not([class*="mapboxgl-"]):active,
+            #tab-messages .formbuilder-container [role="button"]:not([class*="mapboxgl-"]):active{
+              transform:none;
             }
             #tab-messages .category-form-content{
               border-top:none;
               padding:0;
               margin-top:8px;
+            }
+            #tab-messages .category-form-menu.is-dragging{
+              opacity:0.65;
+            }
+            #tab-messages .category-form-menu.drag-target-before{
+              box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-messages .category-form-menu.drag-target-after{
+              box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
             }
             #tab-messages .category-logo{
               display:inline-flex;

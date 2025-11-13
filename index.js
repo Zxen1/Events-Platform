@@ -14216,6 +14216,11 @@ function makePosts(){
         
         const editPanel = document.createElement('div');
         editPanel.className = 'category-edit-panel';
+        editPanel.hidden = true;
+        editPanel.style.position = 'absolute';
+        editPanel.style.right = '0';
+        editPanel.style.top = 'calc(100% + 10px)';
+        editPanel.style.zIndex = '100';
         
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
@@ -14251,15 +14256,17 @@ function makePosts(){
           if(typeof window.adminPanelModule?.runSave === 'function'){
             window.adminPanelModule.runSave({ closeAfter: false });
           }
+          editPanel.hidden = true;
+          editBtn.setAttribute('aria-expanded', 'false');
         });
         
         editPanel.append(nameInput, iconPicker, saveBtn);
-        content.appendChild(editPanel);
+        header.appendChild(editPanel);
         
         menu.append(header, content);
         frag.appendChild(menu);
         
-        // Toggle category on click
+        // Toggle category dropdown on button click
         menuBtn.addEventListener('click', () => {
           const isExpanded = menu.getAttribute('aria-expanded') === 'true';
           menu.setAttribute('aria-expanded', String(!isExpanded));
@@ -14267,15 +14274,37 @@ function makePosts(){
           content.hidden = isExpanded;
         });
         
-        // Toggle edit panel
+        // Toggle edit panel on edit button click
         editBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          const isOpen = editPanel.style.display !== 'none' && !editPanel.hidden;
-          editPanel.style.display = isOpen ? 'none' : '';
-          editPanel.hidden = isOpen;
-          editBtn.setAttribute('aria-expanded', String(!isOpen));
+          // Close all other edit panels
+          document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+            if(panel === editPanel) return;
+            panel.hidden = true;
+            const relatedButton = panel.parentElement
+              ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
+              : null;
+            if(relatedButton){
+              relatedButton.setAttribute('aria-expanded','false');
+            }
+          });
+          // Toggle this edit panel
+          editPanel.hidden = !editPanel.hidden;
+          editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
         });
+        
+        // Close edit panel when clicking outside
+        const handleEditPointerDown = event => {
+          if(editPanel.hidden) return;
+          const target = event.target;
+          if(editPanel.contains(target)) return;
+          const clickedEditBtn = target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
+          if(clickedEditBtn) return;
+          editPanel.hidden = true;
+          editBtn.setAttribute('aria-expanded', 'false');
+        };
+        document.addEventListener('pointerdown', handleEditPointerDown, true);
       });
       
       messagesCats.appendChild(frag);
@@ -14284,6 +14313,69 @@ function makePosts(){
     // Initialize messages categories when admin panel opens
     if(messagesCats){
       renderMessagesCategories();
+      
+      // Add drag and drop functionality for Messages tab categories
+      let draggedMessageCategory = null;
+      let messageCategoryDropIndicatorTarget = null;
+      let messageCategoryDropIndicatorBefore = null;
+      
+      messagesCats.addEventListener('dragstart', event => {
+        const menu = event.target.closest('.messages-category-menu');
+        if(!menu) return;
+        draggedMessageCategory = menu;
+        menu.classList.add('is-dragging');
+        if(event.dataTransfer){
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/html', menu.innerHTML);
+        }
+      });
+      
+      messagesCats.addEventListener('dragend', event => {
+        if(draggedMessageCategory){
+          draggedMessageCategory.classList.remove('is-dragging');
+          draggedMessageCategory = null;
+        }
+        messageCategoryDropIndicatorTarget = null;
+        messageCategoryDropIndicatorBefore = null;
+        messagesCats.querySelectorAll('.drag-target-before, .drag-target-after').forEach(el => {
+          el.classList.remove('drag-target-before', 'drag-target-after');
+        });
+      });
+      
+      messagesCats.addEventListener('dragover', event => {
+        if(!draggedMessageCategory) return;
+        event.preventDefault();
+        if(event.dataTransfer){
+          event.dataTransfer.dropEffect = 'move';
+        }
+        const target = event.target.closest('.messages-category-menu');
+        if(!target || target === draggedMessageCategory) return;
+        
+        const rect = target.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        const before = event.clientY < midpoint;
+        
+        if(messageCategoryDropIndicatorTarget && messageCategoryDropIndicatorTarget !== target){
+          messageCategoryDropIndicatorTarget.classList.remove('drag-target-before', 'drag-target-after');
+        }
+        messageCategoryDropIndicatorTarget = target;
+        messageCategoryDropIndicatorBefore = before;
+        target.classList.remove('drag-target-before', 'drag-target-after');
+        target.classList.add(before ? 'drag-target-before' : 'drag-target-after');
+      });
+      
+      messagesCats.addEventListener('drop', event => {
+        if(!draggedMessageCategory) return;
+        event.preventDefault();
+        const target = messageCategoryDropIndicatorTarget;
+        const before = messageCategoryDropIndicatorBefore;
+        if(target && target !== draggedMessageCategory){
+          const reference = before ? target : target.nextSibling;
+          if(reference !== draggedMessageCategory && reference !== draggedMessageCategory.nextSibling){
+            messagesCats.insertBefore(draggedMessageCategory, reference || null);
+          }
+        }
+      });
     }
     // ============= End Messages Tab =============
     
