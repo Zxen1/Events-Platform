@@ -15438,32 +15438,14 @@ function makePosts(){
         button.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          e.stopImmediatePropagation();
           
-          // Collapse the gap
-          collapseGap(container);
-          
-          return false;
-        }, { capture: true });
-        
-        // Prevent any pointer events from bubbling
-        button.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }, { capture: true });
-        
-        button.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }, { capture: true });
-        
-        button.addEventListener('touchstart', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }, { capture: true, passive: false });
+          // Scroll to top immediately (no animation needed)
+          if(typeof container.scrollTo === 'function'){
+            container.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            container.scrollTop = 0;
+          }
+        });
         
         // Append button inside spacer (positioned at bottom: 10px)
         spacer.appendChild(button);
@@ -15584,8 +15566,9 @@ function makePosts(){
         // ========================================================================
         let previousOpenPostHeight = 0;
         let previousOpenPostId = null;
-        let shouldPreservePosition = false;
         let savedScrollTop = 0;
+        let savedScrollPosition = 0;
+        let targetOriginalTop = 0;
         
         (function(){
           const ex = container.querySelector('.open-post');
@@ -15597,12 +15580,13 @@ function makePosts(){
             previousOpenPostHeight = ex.offsetHeight || 0;
             previousOpenPostId = ex.dataset && ex.dataset.id;
             
-            // Check if new post will be below the closing post (preserve position)
-            // Only preserve if NOT scrollToTop and target exists and is a card click
-            const exTop = ex.offsetTop || 0;
-            const targetTop = target ? (target.offsetTop || 0) : 0;
-            const targetIsCard = target && (target.classList.contains('post-card') || target.classList.contains('recents-card'));
-            shouldPreservePosition = !scrollToTop && targetIsCard && targetTop > exTop;
+            // If target exists and is a card, save its position relative to viewport
+            if(target && (target.classList.contains('post-card') || target.classList.contains('recents-card'))){
+              const containerRect = container.getBoundingClientRect();
+              const targetRect = target.getBoundingClientRect();
+              // Save where the target is relative to the container top
+              savedScrollPosition = targetRect.top - containerRect.top + savedScrollTop;
+            }
             
             const seenDetailMaps = new Set();
             const cleanupDetailMap = node=>{
@@ -15795,44 +15779,49 @@ function makePosts(){
           }
         }
         // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
-        else if(!scrollToTop){
-          // Check if we need to create/update spacer
-          if(shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
-            // Find the closed card (what the open post became)
+        else if(!scrollToTop && savedScrollPosition > 0 && previousOpenPostHeight > 0 && previousOpenPostId){
+          // Maintain visual stability: create spacer AND adjust scroll
+          requestAnimationFrame(() => {
             const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
-            const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
             
-            // Calculate the gap left by closing the larger post
-            const heightDifference = previousOpenPostHeight - closedCardHeight;
-            
-            if(heightDifference > 10){ // Only update spacer if difference is significant
-              // Use a spacer element instead of padding to avoid pushing everything down
-              let spacer = container.querySelector('.top-gap-spacer');
-              if(!spacer){
-                spacer = document.createElement('div');
-                spacer.className = 'top-gap-spacer';
-                spacer.style.height = '0px';
+            if(closedCard){
+              // Calculate how much height was lost when post closed to card
+              const closedCardHeight = closedCard.offsetHeight || 0;
+              const heightLost = previousOpenPostHeight - closedCardHeight;
+              
+              if(heightLost > 10){
+                // Create/update spacer to represent void
+                let spacer = container.querySelector('.top-gap-spacer');
+                if(!spacer){
+                  spacer = document.createElement('div');
+                  spacer.className = 'top-gap-spacer';
+                  spacer.style.height = '0px';
+                  
+                  // Prevent spacer clicks from bubbling
+                  spacer.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                  });
+                  
+                  container.insertBefore(spacer, container.firstChild);
+                }
                 
-                // Prevent spacer from triggering mode switches
-                spacer.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                }, { capture: true });
+                // Set spacer height to the lost height
+                spacer.style.height = `${heightLost}px`;
+                container.dataset.hasTopGap = 'true';
                 
-                container.insertBefore(spacer, container.firstChild);
+                // Adjust scroll position to compensate for spacer insertion
+                // This prevents the visual jump
+                container.scrollTop = savedScrollTop + heightLost;
+                
+                // Show button if void is big enough
+                if(heightLost > 60){
+                  createCollapseGapButton(container);
+                } else {
+                  removeCollapseGapButton(container);
+                }
               }
-              
-              // REPLACE spacer height (don't accumulate) - this prevents cumulative errors
-              // The spacer represents the gap left by THIS specific card closure
-              spacer.style.height = `${heightDifference}px`;
-              container.dataset.hasTopGap = 'true';
-              
-              // Always check button visibility after spacer update (show/hide based on spacer height)
-              createCollapseGapButton(container);
             }
-          }
-          
-          // IMPORTANT: Never remove existing spacer on card clicks
-          // Spacer persists until: map/ad click or manual collapse button
+          });
         }
 
         // Update history on open (keep newest-first)
