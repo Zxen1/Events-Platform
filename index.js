@@ -14938,18 +14938,6 @@ function makePosts(){
         } else if(hadHistory && typeof adjustBoards === 'function'){
           adjustBoards();
         }
-        
-        // Scroll post board to top when opened from map cluster
-        requestAnimationFrame(() => {
-          const postBoard = document.querySelector('.post-board');
-          if(postBoard){
-            if(typeof postBoard.scrollTo === 'function'){
-              postBoard.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-              postBoard.scrollTop = 0;
-            }
-          }
-        });
       }
 
       updatePostsButtonState = function(currentZoom){
@@ -15413,7 +15401,7 @@ function makePosts(){
         return postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
       }
 
-      async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
+      async function openPost(id, fromHistory=false, fromMap=false, originEl=null, fromAdBoard=false){
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
@@ -15544,8 +15532,8 @@ function makePosts(){
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
-        const shouldReorderToTop = !fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer);
+        const shouldScrollToCard = fromMap || fromAdBoard || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        const shouldReorderToTop = !fromMap && !fromAdBoard && pointerInsideCardContainer;
 
         if(!target && !fromHistory){
           target = ensurePostCardForId(id);
@@ -15635,8 +15623,8 @@ function makePosts(){
 
         if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
-            // When opening from map, scroll to top of post board
-            if(fromMap){
+            // When opening from map or ad board, scroll to top of post board
+            if(fromMap || fromAdBoard){
               if(typeof container.scrollTo === 'function'){
                 container.scrollTo({ top: 0, behavior: 'smooth' });
               } else {
@@ -19951,12 +19939,8 @@ function openPostModal(id){
       const id = slide.dataset.id;
       requestAnimationFrame(() => {
         callWhenDefined('openPost', (fn)=>{
-          Promise.resolve(fn(id)).then(() => {
+          Promise.resolve(fn(id, false, false, null, true)).then(() => {
             requestAnimationFrame(() => {
-              const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
-              if(openEl){
-                requestAnimationFrame(() => { openEl.scrollIntoView({behavior:'smooth', block:'start'}); });
-              }
               document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
               const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
               if(quickCard){
