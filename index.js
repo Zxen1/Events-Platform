@@ -111,15 +111,11 @@ const MessageSystem = (function() {
     userMessagesLoaded = false;
     adminMessagesLoaded = false;
     loadPromise = null;
-    console.log('MessageSystem cache cleared');
   }
   
-  // Reload messages from database
   async function reload() {
     clearCache();
-    console.log('Reloading messages from database...');
     await preload();
-    console.log('Messages reloaded:', messageCache.size, 'messages in cache');
     return messageCache.size;
   }
   
@@ -14532,9 +14528,7 @@ function makePosts(){
       messagesCats.appendChild(frag);
     }
     
-    // Fetch and populate admin messages from database
     async function loadAdminMessages(){
-      console.log('[Admin Messages] Loading messages from database...');
       try {
         const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
         if(!response.ok){
@@ -14543,14 +14537,10 @@ function makePosts(){
         const result = await response.json();
         
         if(result.success && result.messages){
-          console.log('[Admin Messages] Loaded', result.messages.length, 'message containers');
           populateMessagesIntoContainers(result.messages);
-          console.log('[Admin Messages] UI populated successfully');
-        } else {
-          console.error('[Admin Messages] Failed to load:', result.message || result.messages_error);
         }
       } catch(error){
-        console.error('[Admin Messages] Error loading:', error);
+        console.error('Error loading admin messages:', error);
       }
     }
     
