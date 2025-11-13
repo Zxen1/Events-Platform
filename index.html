@@ -279,9 +279,10 @@
           </div>
         </div>
         <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="forms" aria-selected="true">Forms</button>
+          <button type="button" class="tab-btn" data-tab="settings" aria-selected="true">Settings</button>
+          <button type="button" class="tab-btn" data-tab="forms" aria-selected="false">Forms</button>
           <button type="button" class="tab-btn" data-tab="map" aria-selected="false">Map</button>
-          <button type="button" class="tab-btn" data-tab="settings" aria-selected="false">Settings</button>
+          <button type="button" class="tab-btn" data-tab="messages" aria-selected="false">Messages</button>
         </div>
       </div>
       <form id="adminForm" class="panel-body">
@@ -331,7 +332,7 @@
             </div>
           </div>
         </div>
-        <div id="tab-settings" class="tab-panel">
+        <div id="tab-settings" class="tab-panel active">
         <div id="post-mode-background-field" class="panel-field">
           <label for="postModeBgOpacity">Post Mode Shadow</label>
           <div class="spin-control-row">
@@ -374,7 +375,7 @@
           </label>
         </div>
         </div>
-        <div id="tab-forms" class="tab-panel active">
+        <div id="tab-forms" class="tab-panel">
           <div class="formbuilder-container">
             <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
             <div class="formbuilder-actions">
@@ -385,6 +386,9 @@
           <div id="formsControls">
             <div id="formsCategories"></div>
           </div>
+        </div>
+        <div id="tab-messages" class="tab-panel">
+          <!-- Messages management interface will be added here -->
         </div>
       </form>
   </div>
