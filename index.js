@@ -22351,14 +22351,17 @@ const adminPanelChangeManager = (()=>{
       return;
     }
     Promise.resolve(result).then(async ()=>{
-      // Reload messages from database after save
-      await MessageSystem.reload();
       refreshSavedState();
       showStatus(MessageSystem.getMessage('msg_admin_saved'));
       const panelToClose = closeAfter ? pendingCloseTarget : null;
       if(closeAfter) pendingCloseTarget = null;
       closePrompt();
       if(panelToClose) closePanel(panelToClose);
+      
+      // Reload messages in background (non-blocking)
+      MessageSystem.reload().catch(reloadErr => {
+        console.warn('Failed to reload messages after save:', reloadErr);
+      });
     }).catch(err => {
       const message = err && typeof err.message === 'string' ? err.message : '';
       if(message && message.toLowerCase().includes('database connection not configured')){
@@ -22366,6 +22369,7 @@ const adminPanelChangeManager = (()=>{
       } else {
         console.error('Failed to save admin changes', err);
       }
+      cancelPrompt();
     });
   }
 
