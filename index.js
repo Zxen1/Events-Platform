@@ -23253,7 +23253,7 @@ document.addEventListener('pointerdown', (e) => {
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
     // Messages will be loaded on-demand
     const getLoadingMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_post_loading_form') : 'Loading form fields…';
-    const getFetchErrorMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_post_form_load_error') : 'We couldn't load the latest form fields. You can continue with the defaults for now.';
+    const getFetchErrorMessage = () => MessageSystem.isReady() ? MessageSystem.getMessage('msg_post_form_load_error') : 'We could not load the latest form fields. You can continue with the defaults for now.';
 
     const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
     let memberSnapshot = defaultMemberSnapshot;
