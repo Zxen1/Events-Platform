@@ -21818,16 +21818,6 @@ form.addEventListener('input', formChangedWrapper, true);
   }
 
   async function saveAdminChanges(){
-    const modifiedMessages = [];
-    document.querySelectorAll('.message-text-input').forEach(textarea => {
-      if(textarea.value !== textarea.dataset.originalValue){
-        modifiedMessages.push({
-          id: parseInt(textarea.dataset.messageId),
-          message_text: textarea.value
-        });
-      }
-    });
-    
     let payload = null;
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
@@ -21838,10 +21828,6 @@ form.addEventListener('input', formChangedWrapper, true);
     }
     if(!payload || typeof payload !== 'object'){
       payload = {};
-    }
-
-    if(modifiedMessages.length > 0){
-      payload.messages = modifiedMessages;
     }
 
     const response = await fetch('/gateway.php?action=save-form', {

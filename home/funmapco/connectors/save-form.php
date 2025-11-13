@@ -24,16 +24,13 @@ try {
         return;
     }
 
-    // Separate messages from form data
-    $messages = null;
-    if (isset($decoded['messages']) && is_array($decoded['messages'])) {
-        $messages = $decoded['messages'];
-        unset($decoded['messages']);
-    }
-
-    // Allow messages-only saves
     if (!isset($decoded['categories']) || !is_array($decoded['categories'])) {
-        $decoded['categories'] = [];
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Missing categories payload'
+        ]);
+        return;
     }
 
     $configCandidates = [
@@ -978,48 +975,16 @@ try {
     }
     // === END DELETE ORPHANED ITEMS ===
 
-    // Save messages if provided
-    $messagesUpdated = 0;
-    if ($messages !== null && is_array($messages) && !empty($messages)) {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->prepare('
-                UPDATE `admin_messages`
-                SET `message_text` = :message_text,
-                    `updated_at` = CURRENT_TIMESTAMP
-                WHERE `id` = :id
-            ');
-            foreach ($messages as $message) {
-                if (!isset($message['id']) || !isset($message['message_text'])) {
-                    continue;
-                }
-                $stmt->execute([
-                    ':id' => (int)$message['id'],
-                    ':message_text' => (string)$message['message_text'],
-                ]);
-                if ($stmt->rowCount() > 0) {
-                    $messagesUpdated++;
-                }
-            }
-        }
-    }
-
     $pdo->commit();
 
-    $response = [
+    echo json_encode([
         'success' => true,
         'updated' => count($updated),
         'subcategory_ids' => $updated,
         'new_category_ids' => $newCategoryIds,
         'new_subcategory_ids' => $newSubcategoryIds,
         'iconLibrary' => array_values($iconLibrary),
-    ];
-    
-    if ($messagesUpdated > 0) {
-        $response['messages_updated'] = $messagesUpdated;
-    }
-    
-    echo json_encode($response);
+    ]);
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
         $pdo->rollBack();
