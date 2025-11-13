@@ -15439,18 +15439,31 @@ function makePosts(){
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
+          
+          // Collapse the gap
           collapseGap(container);
+          
           return false;
         }, { capture: true });
         
         // Prevent any pointer events from bubbling
         button.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
         }, { capture: true });
         
         button.addEventListener('mousedown', (e) => {
+          e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
         }, { capture: true });
+        
+        button.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }, { capture: true, passive: false });
         
         // Append button inside spacer (positioned at bottom: 10px)
         spacer.appendChild(button);
@@ -15799,6 +15812,12 @@ function makePosts(){
                 spacer = document.createElement('div');
                 spacer.className = 'top-gap-spacer';
                 spacer.style.height = '0px';
+                
+                // Prevent spacer from triggering mode switches
+                spacer.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                }, { capture: true });
+                
                 container.insertBefore(spacer, container.firstChild);
               }
               
@@ -15929,17 +15948,28 @@ function makePosts(){
             }
             return;
           }
+          // Only switch to map mode if clicking the board background (not spacer or button)
           if(e.target === postsWide && postsWide.querySelector('.open-post')){
-            userClosedPostBoard = true;
-            setTimeout(()=> setModeFromUser('map'), 0);
+            // Make sure we're not clicking spacer or collapse button
+            const isSpacerClick = e.target.closest('.top-gap-spacer');
+            const isButtonClick = e.target.closest('.collapse-gap-button');
+            if(!isSpacerClick && !isButtonClick){
+              userClosedPostBoard = true;
+              setTimeout(()=> setModeFromUser('map'), 0);
+            }
           }
         }, { capture:true });
       }
 
       recentsBoard && recentsBoard.addEventListener('click', e=>{
         if(e.target === recentsBoard){
-          userClosedPostBoard = true;
-          setModeFromUser('map');
+          // Make sure we're not clicking spacer or collapse button
+          const isSpacerClick = e.target.closest('.top-gap-spacer');
+          const isButtonClick = e.target.closest('.collapse-gap-button');
+          if(!isSpacerClick && !isButtonClick){
+            userClosedPostBoard = true;
+            setModeFromUser('map');
+          }
         }
       });
 
