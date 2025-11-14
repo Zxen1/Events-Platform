@@ -16365,8 +16365,17 @@ function makePosts(){
           }
         }
 
+        // Update history on open (keep newest-first)
+        viewHistory = viewHistory.filter(x=>x.id!==id);
+        viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
+        if(viewHistory.length>100) viewHistory.length=100;
+        saveHistory();
+        if(!fromHistory){
+          renderHistoryBoard();
+        }
+
         // ========================================================================
-        // SCROLL TO TOP
+        // SCROLL TO TOP - MUST BE LAST
         // ========================================================================
         
         // Find the actual scrollable element
@@ -16382,29 +16391,23 @@ function makePosts(){
           return postsChild || cont;
         };
         
-        // Scroll to top after DOM updates
+        // Scroll to top - do it multiple times to ensure it works
         if(container && container.contains(detail)){
-          requestAnimationFrame(() => {
+          const scrollContainer = getScrollContainer(container);
+          if(scrollContainer){
+            // Scroll immediately
+            scrollContainer.scrollTop = 0;
+            
+            // Also scroll after layout adjustments complete
             requestAnimationFrame(() => {
-              const scrollContainer = getScrollContainer(container);
-              if(scrollContainer){
-                if(typeof scrollContainer.scrollTo === 'function'){
-                  scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
+              requestAnimationFrame(() => {
+                scrollContainer.scrollTop = 0;
+                setTimeout(() => {
                   scrollContainer.scrollTop = 0;
-                }
-              }
+                }, 150);
+              });
             });
-          });
-        }
-
-        // Update history on open (keep newest-first)
-        viewHistory = viewHistory.filter(x=>x.id!==id);
-        viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
-        if(viewHistory.length>100) viewHistory.length=100;
-        saveHistory();
-        if(!fromHistory){
-          renderHistoryBoard();
+          }
         }
       }
 
@@ -20715,14 +20718,10 @@ function openPostModal(id){
           // Parameters: (id, fromHistory=false, fromMap=false, originEl=null)
           Promise.resolve(fn(id, false, false, null)).then(() => {
             requestAnimationFrame(() => {
-              // openPost handles scrolling the post to top of post board
               document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
               const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
               if(quickCard){
                 quickCard.setAttribute('aria-selected','true');
-                requestAnimationFrame(() => {
-                  quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-                });
               }
             });
           }).catch(err => console.error(err));
