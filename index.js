@@ -24248,6 +24248,9 @@ document.addEventListener('pointerdown', (e) => {
     async function initializeMemberFormbuilderSnapshot(){
       const loadingMsg = await getMessage('msg_post_loading_form', {}, false) || 'Loading form fields…';
       renderEmptyState(loadingMsg);
+      if(formWrapper) formWrapper.hidden = true;
+      if(formFields) formFields.innerHTML = '';
+      if(postButton) postButton.disabled = true;
       try{
         const backendSnapshot = await persistedFormbuilderSnapshotPromise;
         const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
@@ -24767,6 +24770,16 @@ document.addEventListener('pointerdown', (e) => {
     
     function renderFormPreviewForMember(fields){
       formFields.innerHTML = '';
+      
+      const subcategoryTitle = document.createElement('div');
+      subcategoryTitle.className = 'member-form-subcategory-title';
+      subcategoryTitle.textContent = selectedSubcategory || '';
+      subcategoryTitle.style.marginBottom = '16px';
+      subcategoryTitle.style.fontSize = '18px';
+      subcategoryTitle.style.fontWeight = '700';
+      subcategoryTitle.style.color = 'var(--button-text)';
+      formFields.appendChild(subcategoryTitle);
+      
       if(!fields || fields.length === 0){
         const empty = document.createElement('p');
         empty.className = 'form-preview-empty';
@@ -25541,6 +25554,10 @@ document.addEventListener('pointerdown', (e) => {
       formpickerCats.innerHTML = '';
       selectedCategory = '';
       selectedSubcategory = '';
+      
+      if(formWrapper) formWrapper.hidden = true;
+      if(formFields) formFields.innerHTML = '';
+      if(postButton) postButton.disabled = true;
       
       const categoryIcons = window.categoryIcons = window.categoryIcons || {};
       const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
