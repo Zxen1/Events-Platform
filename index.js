@@ -16378,47 +16378,41 @@ function makePosts(){
         // SCROLL TO TOP - MUST BE LAST
         // ========================================================================
         
-        // Find and scroll the actual scrollable element
-        // Check both container and .posts child to find which one is actually scrollable
+        // Always scroll to top when opening a post
+        // Try both container and .posts child - scroll whichever one works
         if(container && container.contains(detail)){
           const scrollToTop = (el) => {
             if(el && typeof el.scrollTop !== 'undefined'){
-              el.scrollTop = 0;
+              try {
+                el.scrollTop = 0;
+              } catch(e) {}
             }
           };
           
-          // Find the element that is actually scrollable (has scrollHeight > clientHeight)
-          const findScrollable = (el) => {
-            if(!el) return null;
-            // Check if this element can scroll
-            if(el.scrollHeight > el.clientHeight){
-              return el;
+          // Try scrolling both container and .posts child
+          const tryScroll = () => {
+            // Try .posts child first (if it exists)
+            const postsChild = container.querySelector('.posts');
+            if(postsChild){
+              scrollToTop(postsChild);
             }
-            // Check .posts child if it exists
-            const postsChild = el.querySelector('.posts');
-            if(postsChild && postsChild.scrollHeight > postsChild.clientHeight){
-              return postsChild;
-            }
-            // Return container as fallback (will try to scroll it anyway)
-            return el;
+            // Always try container too
+            scrollToTop(container);
           };
           
-          const scrollContainer = findScrollable(container);
+          // Scroll immediately
+          tryScroll();
           
-          if(scrollContainer){
-            // Scroll immediately
-            scrollToTop(scrollContainer);
-            
-            // Also scroll after layout adjustments complete
+          // Scroll after layout adjustments complete (multiple times to ensure it works)
+          requestAnimationFrame(() => {
+            tryScroll();
             requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                scrollToTop(scrollContainer);
-                setTimeout(() => {
-                  scrollToTop(scrollContainer);
-                }, 150);
-              });
+              tryScroll();
+              setTimeout(() => {
+                tryScroll();
+              }, 200);
             });
-          }
+          });
         }
       }
 
