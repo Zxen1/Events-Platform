@@ -16149,90 +16149,7 @@ function makePosts(){
         return postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
       }
 
-      // ========================================================================
-      // HELPER FUNCTIONS FOR GAP MANAGEMENT
-      // ========================================================================
-      function createCollapseGapButton(container){
-        if(!container) return;
-        
-        // Remove existing button if any
-        removeCollapseGapButton(container);
-        
-        // Create button
-        const button = document.createElement('button');
-        button.className = 'collapse-gap-button';
-        button.setAttribute('aria-label', 'Scroll to top and close gap');
-        button.setAttribute('title', 'Scroll to top');
-        button.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 4L10 16M10 4L6 8M10 4L14 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>`;
-        
-        // Store container reference for the click handler
-        button.dataset.containerId = container.className;
-        
-        button.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          collapseGap(container);
-        });
-        
-        // Append to body since button is position:fixed
-        document.body.appendChild(button);
-        container.dataset.hasCollapseButton = 'true';
-      }
-      
-      function removeCollapseGapButton(container){
-        if(!container) return;
-        // Button is in body now, not in container
-        const existingButton = document.querySelector('.collapse-gap-button');
-        if(existingButton){
-          existingButton.remove();
-        }
-        delete container.dataset.hasCollapseButton;
-      }
-      
-      function collapseGap(container){
-        if(!container) return;
-        
-        const spacer = container.querySelector('.top-gap-spacer');
-        if(!spacer) return;
-        
-        // Smooth animation to collapse the gap
-        const startHeight = parseFloat(spacer.style.height) || 0;
-        if(startHeight > 0){
-          // Animate spacer height to 0
-          const duration = 300;
-          const startTime = performance.now();
-          
-          const animate = (currentTime) => {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const easeProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-            
-            const newHeight = startHeight * (1 - easeProgress);
-            spacer.style.height = `${newHeight}px`;
-            
-            if(progress < 1){
-              requestAnimationFrame(animate);
-            } else {
-              spacer.remove();
-              delete container.dataset.hasTopGap;
-              removeCollapseGapButton(container);
-              
-              // Scroll to top smoothly
-              if(typeof container.scrollTo === 'function'){
-                container.scrollTo({ top: 0, behavior: 'smooth' });
-              } else {
-                container.scrollTop = 0;
-              }
-            }
-          };
-          
-          requestAnimationFrame(animate);
-        }
-      }
-
-      async function openPost(id, fromHistory=false, fromMap=false, originEl=null, scrollToTop=false){
+      async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
@@ -16448,67 +16365,21 @@ function makePosts(){
           }
         }
 
-        const cardHeader = detail.querySelector('.post-card');
-        if(cardHeader){
-          const h = cardHeader.offsetHeight;
-          cardHeader.style.scrollMarginTop = h + 'px';
-        }
-        
         // ========================================================================
-        // SCROLLING BEHAVIOR - ALWAYS SCROLL TO TOP
+        // SCROLL TO TOP
         // ========================================================================
         
-        // Remove any existing gap spacer
-        const spacer = container.querySelector('.top-gap-spacer');
-        if(spacer){
-          spacer.remove();
-        }
-        delete container.dataset.hasTopGap;
-        removeCollapseGapButton(container);
-        
-        // Find the actual scrollable element (container or its scrollable child)
-        const getScrollableElement = (el) => {
-          if(!el) return null;
-          // Check if this element is scrollable
-          const style = window.getComputedStyle(el);
-          const isScrollable = style.overflowY === 'auto' || style.overflowY === 'scroll' || 
-                               style.overflow === 'auto' || style.overflow === 'scroll';
-          if(isScrollable && el.scrollHeight > el.clientHeight){
-            return el;
-          }
-          // Check for common scrollable child elements
-          const postsChild = el.querySelector('.posts');
-          if(postsChild){
-            const postsStyle = window.getComputedStyle(postsChild);
-            const postsScrollable = postsStyle.overflowY === 'auto' || postsStyle.overflowY === 'scroll' || 
-                                   postsStyle.overflow === 'auto' || postsStyle.overflow === 'scroll';
-            if(postsScrollable && postsChild.scrollHeight > postsChild.clientHeight){
-              return postsChild;
-            }
-          }
-          return el;
-        };
-        
-        // Scroll container to top - do it immediately and after layout updates
-        const scrollToTop = () => {
-          const scrollEl = getScrollableElement(container);
-          if(scrollEl){
-            if(typeof scrollEl.scrollTo === 'function'){
-              scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-              scrollEl.scrollTop = 0;
-            }
-          }
-        };
-        
-        // Scroll immediately
-        scrollToTop();
-        
-        // Also scroll after DOM updates complete
+        // Scroll container to top after DOM updates
         if(container && container.contains(detail)){
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              scrollToTop();
+              if(container){
+                if(typeof container.scrollTo === 'function'){
+                  container.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  container.scrollTop = 0;
+                }
+              }
             });
           });
         }
@@ -16595,8 +16466,8 @@ function makePosts(){
                 try{
                   stopSpin();
                   // CASE 1: RECENTS CARD CLICKED - SCROLL TO TOP
-                  // Parameters: (id, fromHistory=true, fromMap=false, originEl=cardEl, scrollToTop=true)
-                  fn(id, true, false, cardEl, true);
+                  // Parameters: (id, fromHistory=true, fromMap=false, originEl=cardEl)
+                  fn(id, true, false, cardEl);
                 }catch(err){ console.error(err); }
               });
             });
@@ -16618,8 +16489,8 @@ function makePosts(){
                   try{
                     stopSpin();
                     // CASE 2: POST CARD CLICKED - SCROLL TO TOP
-                    // Parameters: (id, fromHistory=false, fromMap=false, originEl=cardEl, scrollToTop=true)
-                    fn(id, false, false, cardEl, true);
+                    // Parameters: (id, fromHistory=false, fromMap=false, originEl=cardEl)
+                    fn(id, false, false, cardEl);
                   }catch(err){ console.error(err); }
                 });
               });
@@ -18446,8 +18317,8 @@ if (!map.__pillHooksInstalled) {
                       try{ closePanel(filterPanel); }catch(err){}
                     }
                     // CASE 3: MAP MARKER CLICKED (overlay) - SCROLL TO TOP
-                    // Parameters: (id, fromHistory=false, fromMap=true, originEl=null, scrollToTop=true)
-                    fn(pid, false, true, null, true);
+                    // Parameters: (id, fromHistory=false, fromMap=true, originEl=null)
+                    fn(pid, false, true, null);
                   }catch(err){ console.error(err); }
                 });
               });
@@ -19163,8 +19034,8 @@ function openPostModal(id){
                   try{ closePanel(filterPanel); }catch(err){}
                 }
                 // CASE 3: MAP MARKER CLICKED (popup card) - SCROLL TO TOP
-                // Parameters: (id, fromHistory=false, fromMap=true, originEl=null, scrollToTop=true)
-                fn(pid, false, true, null, true);
+                // Parameters: (id, fromHistory=false, fromMap=true, originEl=null)
+                fn(pid, false, true, null);
               }catch(err){ console.error(err); }
             });
           });
@@ -20827,8 +20698,8 @@ function openPostModal(id){
       requestAnimationFrame(() => {
         callWhenDefined('openPost', (fn)=>{
           // CASE 4: AD BOARD CLICKED - SCROLL TO TOP
-          // Parameters: (id, fromHistory=false, fromMap=false, originEl=null, scrollToTop=true)
-          Promise.resolve(fn(id, false, false, null, true)).then(() => {
+          // Parameters: (id, fromHistory=false, fromMap=false, originEl=null)
+          Promise.resolve(fn(id, false, false, null)).then(() => {
             requestAnimationFrame(() => {
               // openPost handles scrolling the post to top of post board
               document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
