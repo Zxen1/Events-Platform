@@ -16217,11 +16217,21 @@ function makePosts(){
           console.error('[openPost] Container not found!', { fromHistory, postsWideEl: !!postsWideEl, recentsBoard: !!document.getElementById('recentsBoard') });
           return;
         }
+        
+        // Capture scroll position EARLY - before any DOM operations that might reset it
+        const earlyScrollTop = container.scrollTop;
+        const earlyScrollHeight = container.scrollHeight;
+        const earlyClientHeight = container.clientHeight;
+        
         console.log(`[openPost] Container selected: ${container.id || container.className}`, {
           containerId: container.id,
           containerClass: container.className,
           isRecentsBoard: container.id === 'recentsBoard',
-          isPostBoard: container === postsWideEl
+          isPostBoard: container === postsWideEl,
+          earlyScrollTop,
+          earlyScrollHeight,
+          earlyClientHeight,
+          wasScrolled: earlyScrollTop > 0
         });
 
         const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
@@ -16481,13 +16491,16 @@ function makePosts(){
         console.log(
           `[openPost] Starting scroll sequence for ${entryPoint}`,
           `\n  Container: ${containerName}`,
-          `\n  Initial position: ${initialScrollTop}px`,
+          `\n  Early scroll (before DOM ops): ${earlyScrollTop}px${earlyScrollTop > 0 ? ' ⚠️ WAS SCROLLED' : ''}`,
+          `\n  Current position (after DOM ops): ${initialScrollTop}px`,
           `\n  Dimensions: ${initialClientHeight}px viewport / ${initialScrollHeight}px content`,
           {
             container: containerName,
+            earlyScrollTop,
             initialScrollTop,
             scrollHeight: initialScrollHeight,
-            clientHeight: initialClientHeight
+            clientHeight: initialClientHeight,
+            needsScroll: earlyScrollTop > 0 || initialScrollTop > 0
           }
         );
         
@@ -27144,20 +27157,16 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       e.stopPropagation();
       
-      if(confirm('Clear all LocalStorage data? This will reset all saved preferences, history, and settings.')){
-        try {
-          const keys = Object.keys(localStorage);
-          const keyCount = keys.length;
-          localStorage.clear();
-          console.log(`[LocalStorage] Cleared ${keyCount} items`);
-          alert(`LocalStorage cleared! Removed ${keyCount} items.`);
-          
-          // Reload the page to apply changes
-          location.reload();
-        } catch(err){
-          console.error('[LocalStorage] Error clearing:', err);
-          alert('Error clearing LocalStorage: ' + err.message);
-        }
+      try {
+        const keys = Object.keys(localStorage);
+        const keyCount = keys.length;
+        localStorage.clear();
+        console.log(`[LocalStorage] Cleared ${keyCount} items`);
+        
+        // Reload the page to apply changes
+        location.reload();
+      } catch(err){
+        console.error('[LocalStorage] Error clearing:', err);
       }
     });
     
