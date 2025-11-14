@@ -16086,14 +16086,18 @@ function makePosts(){
         favBtnInCard._favHandlerBound = true;
       }
       
-      // Trigger smooth drawer opening animation after layout
-      setTimeout(() => {
+      // Store animation trigger function on the wrap element
+      // This will be called after scroll completes to prevent flicker
+      wrap._triggerAnimation = () => {
         wrap.classList.remove('post-collapsed');
         wrap.classList.add('post-expanding');
         setTimeout(() => {
           wrap.classList.remove('post-expanding');
         }, 350);
-      }, 10);
+      };
+      
+      // Don't auto-trigger animation - wait for scroll to complete first
+      // Animation will be triggered from openPost after scroll
       
       // Progressive hero swap
       (function(){
@@ -16574,6 +16578,24 @@ function makePosts(){
           }
         );
         
+        // Scroll to top BEFORE animation to prevent flicker
+        const openPostEl = container.querySelector(`.open-post[data-id="${id}"]`);
+        let animationTriggered = false;
+        const triggerAnimation = () => {
+          if(!animationTriggered && openPostEl && typeof openPostEl._triggerAnimation === 'function'){
+            animationTriggered = true;
+            openPostEl._triggerAnimation();
+          }
+        };
+        
+        // Fallback timeout to ensure animation triggers even if scroll fails
+        const fallbackTimeout = setTimeout(() => {
+          if(!animationTriggered){
+            console.warn('[openPost] Fallback: Triggering animation after timeout');
+            triggerAnimation();
+          }
+        }, 500);
+        
         requestAnimationFrame(() => {
           scrollToTop(1);
           requestAnimationFrame(() => {
@@ -16613,6 +16635,10 @@ function makePosts(){
                     clientHeight: finalClientHeight
                   }
                 );
+                
+                // Now that scroll is complete, trigger the animation
+                clearTimeout(fallbackTimeout);
+                triggerAnimation();
               });
             }, 100);
           });
