@@ -16422,45 +16422,74 @@ function makePosts(){
             const afterScroll = scrollElement.scrollTop;
             const scrollSuccess = afterScroll === 0;
             
-            console.log(`[openPost] Scroll attempt ${attempt} (${entryPoint})`, {
-              container: container.id || container.className,
-              beforeScroll,
-              afterScroll,
-              scrollSuccess,
-              scrollHeight,
-              clientHeight,
-              canScroll,
-              scrollTopProperty: typeof scrollElement.scrollTop,
-              element: scrollElement
-            });
-            
-            if(!scrollSuccess && attempt === 3){
-              console.error(`[openPost] SCROLL FAILED after 3 attempts!`, {
-                entryPoint,
-                container: container.id || container.className,
-                finalScrollTop: afterScroll,
+            // Enhanced logging with inline values for easy reading
+            const containerName = container.id || container.className;
+            console.log(
+              `[openPost] Scroll attempt ${attempt} (${entryPoint}): ${scrollSuccess ? '✓ SUCCESS' : '✗ FAILED'}`,
+              `\n  Container: ${containerName}`,
+              `\n  Before: ${beforeScroll}px → After: ${afterScroll}px`,
+              `\n  Dimensions: ${clientHeight}px viewport / ${scrollHeight}px content (${canScroll ? 'scrollable' : 'not scrollable'})`,
+              {
+                container: containerName,
+                beforeScroll,
+                afterScroll,
+                scrollSuccess,
                 scrollHeight,
                 clientHeight,
-                element: scrollElement
-              });
+                canScroll,
+                scrollTopProperty: typeof scrollElement.scrollTop
+              }
+            );
+            
+            if(!scrollSuccess && attempt === 3){
+              console.error(
+                `[openPost] ⚠️ SCROLL FAILED after 3 attempts for ${entryPoint}!`,
+                `\n  Container: ${containerName}`,
+                `\n  Final position: ${afterScroll}px (expected: 0px)`,
+                `\n  Content height: ${scrollHeight}px, Viewport: ${clientHeight}px`,
+                {
+                  entryPoint,
+                  container: containerName,
+                  finalScrollTop: afterScroll,
+                  scrollHeight,
+                  clientHeight,
+                  element: scrollElement
+                }
+              );
             }
           } else {
-            console.warn(`[openPost] Scroll attempt ${attempt}: scrollTop property undefined`, {
-              hasElement: !!scrollElement,
-              scrollTopType: typeof scrollElement?.scrollTop,
-              element: scrollElement
-            });
+            console.warn(
+              `[openPost] Scroll attempt ${attempt}: scrollTop property undefined`,
+              `\n  Has element: ${!!scrollElement}`,
+              `\n  scrollTop type: ${typeof scrollElement?.scrollTop}`,
+              {
+                hasElement: !!scrollElement,
+                scrollTopType: typeof scrollElement?.scrollTop,
+                element: scrollElement
+              }
+            );
           }
         };
 
         // Use multiple attempts to ensure scroll happens after all layout changes
         // This handles timing issues with layout operations, DOM updates, and animations
-        console.log(`[openPost] Starting scroll sequence for ${entryPoint}`, {
-          container: container.id || container.className,
-          initialScrollTop: container.scrollTop,
-          scrollHeight: container.scrollHeight,
-          clientHeight: container.clientHeight
-        });
+        const containerName = container.id || container.className;
+        const initialScrollTop = container.scrollTop;
+        const initialScrollHeight = container.scrollHeight;
+        const initialClientHeight = container.clientHeight;
+        
+        console.log(
+          `[openPost] Starting scroll sequence for ${entryPoint}`,
+          `\n  Container: ${containerName}`,
+          `\n  Initial position: ${initialScrollTop}px`,
+          `\n  Dimensions: ${initialClientHeight}px viewport / ${initialScrollHeight}px content`,
+          {
+            container: containerName,
+            initialScrollTop,
+            scrollHeight: initialScrollHeight,
+            clientHeight: initialClientHeight
+          }
+        );
         
         requestAnimationFrame(() => {
           scrollToTop(1);
@@ -16470,15 +16499,25 @@ function makePosts(){
             setTimeout(() => {
               requestAnimationFrame(() => {
                 scrollToTop(3);
-                // Final verification
+                // Final verification with clear success/failure message
                 const finalScrollTop = container.scrollTop;
-                console.log(`[openPost] Scroll sequence complete for ${entryPoint}`, {
-                  container: container.id || container.className,
-                  finalScrollTop,
-                  success: finalScrollTop === 0,
-                  scrollHeight: container.scrollHeight,
-                  clientHeight: container.clientHeight
-                });
+                const finalScrollHeight = container.scrollHeight;
+                const finalClientHeight = container.clientHeight;
+                const success = finalScrollTop === 0;
+                
+                console.log(
+                  `[openPost] ${success ? '✅ SUCCESS' : '❌ FAILED'}: Scroll sequence complete for ${entryPoint}`,
+                  `\n  Container: ${containerName}`,
+                  `\n  Final position: ${finalScrollTop}px (${success ? 'scrolled to top' : 'NOT at top'})`,
+                  `\n  Dimensions: ${finalClientHeight}px viewport / ${finalScrollHeight}px content`,
+                  {
+                    container: containerName,
+                    finalScrollTop,
+                    success,
+                    scrollHeight: finalScrollHeight,
+                    clientHeight: finalClientHeight
+                  }
+                );
               });
             }, 100);
           });
@@ -27090,6 +27129,48 @@ document.addEventListener('DOMContentLoaded', () => {
     applyWrapper(name);
   };
 })();
- 
+
+// LocalStorage Clear Button Handler
+(function(){
+  function initClearLocalStorageBtn(){
+    const btn = document.getElementById('clearLocalStorageBtn');
+    if(!btn) {
+      // Retry if button not ready yet
+      setTimeout(initClearLocalStorageBtn, 100);
+      return;
+    }
+    
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if(confirm('Clear all LocalStorage data? This will reset all saved preferences, history, and settings.')){
+        try {
+          const keys = Object.keys(localStorage);
+          const keyCount = keys.length;
+          localStorage.clear();
+          console.log(`[LocalStorage] Cleared ${keyCount} items`);
+          alert(`LocalStorage cleared! Removed ${keyCount} items.`);
+          
+          // Reload the page to apply changes
+          location.reload();
+        } catch(err){
+          console.error('[LocalStorage] Error clearing:', err);
+          alert('Error clearing LocalStorage: ' + err.message);
+        }
+      }
+    });
+    
+    console.log('[LocalStorage] Clear button initialized');
+  }
+  
+  // Initialize when DOM is ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initClearLocalStorageBtn);
+  } else {
+    initClearLocalStorageBtn();
+  }
+})();
+
  
 

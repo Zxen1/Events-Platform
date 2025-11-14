@@ -8495,9 +8495,46 @@ html, body { cursor: auto !important; }
             }
  
  
+/* LocalStorage Clear Button */
+.clear-localstorage-btn{
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #ffc107;
+  color: #000;
+  border: 1px solid #ffc107;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
+}
 
+.clear-localstorage-btn:hover{
+  background: #ffb300;
+  border-color: #ffb300;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
 
+.clear-localstorage-btn:active{
+  transform: scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
 
+.clear-localstorage-btn:focus{
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
 
 
 
