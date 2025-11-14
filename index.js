@@ -24005,7 +24005,9 @@ document.addEventListener('pointerdown', (e) => {
           removeSessionBtn.type = 'button';
           removeSessionBtn.className = 'member-create-secondary-btn';
           removeSessionBtn.textContent = 'Remove Session';
-          removeSessionBtn.addEventListener('click', ()=>{
+          removeSessionBtn.addEventListener('click', (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
             if(venue.sessions.length <= 1){
               session.date = '';
               dateInput.value = '';
@@ -24045,18 +24047,20 @@ document.addEventListener('pointerdown', (e) => {
             removeTimeBtn.type = 'button';
             removeTimeBtn.className = 'member-create-secondary-btn';
             removeTimeBtn.textContent = 'Remove Time';
-            removeTimeBtn.addEventListener('click', ()=>{
-              if(session.times.length <= 1){
-                time.time = '';
-                timeInput.value = '';
-                return;
-              }
-              const idx = session.times.indexOf(time);
-              if(idx !== -1){
-                session.times.splice(idx, 1);
-              }
-              timeCard.remove();
-            });
+          removeTimeBtn.addEventListener('click', (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            if(session.times.length <= 1){
+              time.time = '';
+              timeInput.value = '';
+              return;
+            }
+            const idx = session.times.indexOf(time);
+            if(idx !== -1){
+              session.times.splice(idx, 1);
+            }
+            timeCard.remove();
+          });
             timeActions.appendChild(removeTimeBtn);
             timeHeader.appendChild(timeActions);
             timeCard.appendChild(timeHeader);
@@ -24114,22 +24118,24 @@ document.addEventListener('pointerdown', (e) => {
                 removeTierBtn.type = 'button';
                 removeTierBtn.className = 'member-create-secondary-btn';
                 removeTierBtn.textContent = 'Remove';
-                removeTierBtn.addEventListener('click', ()=>{
-                  if(version.tiers.length <= 1){
-                    tier.name = '';
-                    tier.currency = '';
-                    tier.price = '';
-                    tierNameInput.value = '';
-                    tierCurrencySelect.value = '';
-                    tierPriceInput.value = '';
-                    return;
-                  }
-                  const idx = version.tiers.indexOf(tier);
-                  if(idx !== -1){
-                    version.tiers.splice(idx, 1);
-                  }
-                  tierRow.remove();
-                });
+              removeTierBtn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                e.stopPropagation();
+                if(version.tiers.length <= 1){
+                  tier.name = '';
+                  tier.currency = '';
+                  tier.price = '';
+                  tierNameInput.value = '';
+                  tierCurrencySelect.value = '';
+                  tierPriceInput.value = '';
+                  return;
+                }
+                const idx = version.tiers.indexOf(tier);
+                if(idx !== -1){
+                  version.tiers.splice(idx, 1);
+                }
+                tierRow.remove();
+              });
 
                 tierActions.appendChild(removeTierBtn);
                 tierRow.append(tierNameInput, tierCurrencySelect, tierPriceInput, tierActions);
@@ -24147,7 +24153,9 @@ document.addEventListener('pointerdown', (e) => {
               addTierBtn.type = 'button';
               addTierBtn.className = 'member-create-secondary-btn';
               addTierBtn.textContent = 'Add Tier';
-              addTierBtn.addEventListener('click', ()=>{
+              addTierBtn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                e.stopPropagation();
                 const tier = venueSessionCreateTier();
                 version.tiers.push(tier);
                 addTierRow(tier);
@@ -24156,7 +24164,9 @@ document.addEventListener('pointerdown', (e) => {
               removeVersionBtn.type = 'button';
               removeVersionBtn.className = 'member-create-secondary-btn';
               removeVersionBtn.textContent = 'Remove Version';
-              removeVersionBtn.addEventListener('click', ()=>{
+              removeVersionBtn.addEventListener('click', (e)=>{
+                e.preventDefault();
+                e.stopPropagation();
                 if(time.versions.length <= 1){
                   version.name = '';
                   versionNameInput.value = '';
@@ -24191,7 +24201,9 @@ document.addEventListener('pointerdown', (e) => {
             addVersionBtn.type = 'button';
             addVersionBtn.className = 'member-create-secondary-btn';
             addVersionBtn.textContent = 'Add Version';
-            addVersionBtn.addEventListener('click', ()=>{
+            addVersionBtn.addEventListener('click', (e)=>{
+              e.preventDefault();
+              e.stopPropagation();
               const version = venueSessionCreateVersion();
               time.versions.push(version);
               addVersionCard(version);
@@ -24212,7 +24224,9 @@ document.addEventListener('pointerdown', (e) => {
           addTimeBtn.type = 'button';
           addTimeBtn.className = 'member-create-secondary-btn';
           addTimeBtn.textContent = 'Add Time Slot';
-          addTimeBtn.addEventListener('click', ()=>{
+          addTimeBtn.addEventListener('click', (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
             const time = venueSessionCreateTime();
             session.times.push(time);
             addTimeCard(time);
@@ -24233,7 +24247,9 @@ document.addEventListener('pointerdown', (e) => {
         addSessionBtn.type = 'button';
         addSessionBtn.className = 'member-create-secondary-btn';
         addSessionBtn.textContent = 'Add Session';
-        addSessionBtn.addEventListener('click', ()=>{
+        addSessionBtn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
           const session = venueSessionCreateSession();
           venue.sessions.push(session);
           addSessionCard(session);
@@ -24242,7 +24258,9 @@ document.addEventListener('pointerdown', (e) => {
         removeVenueBtn.type = 'button';
         removeVenueBtn.className = 'member-create-secondary-btn';
         removeVenueBtn.textContent = 'Remove Venue';
-        removeVenueBtn.addEventListener('click', ()=>{
+        removeVenueBtn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
           if(venues.length <= 1){
             venue.name = '';
             venue.address = '';
@@ -24272,7 +24290,9 @@ document.addEventListener('pointerdown', (e) => {
       addVenueBtn.type = 'button';
       addVenueBtn.className = 'member-create-secondary-btn';
       addVenueBtn.textContent = 'Add Venue';
-      addVenueBtn.addEventListener('click', ()=>{
+      addVenueBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
         const venue = venueSessionCreateVenue();
         venues.push(venue);
         addVenueCard(venue);
