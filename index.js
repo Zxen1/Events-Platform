@@ -5617,6 +5617,11 @@ function uniqueTitle(seed, cityName, idx){
   }
 
 function makePosts(){
+  // COMMENTED OUT FOR PERFORMANCE TESTING - dummy data generation disabled
+  // Return empty array to test if dummy posts were causing slow loading
+  return [];
+  
+  /* COMMENTED OUT - Original dummy data generation code
   const out = [];
   const cityCounts = Object.create(null);
   const MAX_POSTS_PER_CITY = 200;
@@ -6577,6 +6582,7 @@ function makePosts(){
   });
 
   return out;
+  */ // End of commented out dummy data generation
 }
 
     let ALL_POSTS_CACHE = null;
@@ -27221,6 +27227,43 @@ document.addEventListener('DOMContentLoaded', () => {
   window.__wrapForInputYield = function(name){
     applyWrapper(name);
   };
+})();
+
+// DevTools Toggle Button Handler
+(function(){
+  function initDevToolsBtn(){
+    const btn = document.getElementById('devToolsBtn');
+    if(!btn) {
+      // Retry if button not ready yet
+      setTimeout(initDevToolsBtn, 100);
+      return;
+    }
+    
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Toggle console visibility and focus
+      // Note: DevTools can't be programmatically opened/closed for security,
+      // but we can help by clearing console and logging helpful info
+      console.clear();
+      console.log('%cDevTools Helper', 'color: #ff9800; font-size: 20px; font-weight: bold;');
+      console.log('Press F12 or Ctrl+Shift+I (Cmd+Option+I on Mac) to open DevTools');
+      console.log('Console cleared. DevTools should be visible.');
+      
+      // Try to focus the window (helps if DevTools is already open)
+      window.focus();
+    });
+    
+    console.log('[DevTools] Toggle button initialized');
+  }
+  
+  // Initialize when DOM is ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initDevToolsBtn);
+  } else {
+    initDevToolsBtn();
+  }
 })();
 
 // LocalStorage Clear Button Handler

@@ -8495,6 +8495,57 @@ html, body { cursor: auto !important; }
             }
  
  
+/* DevTools Toggle Button */
+.devtools-btn{
+  position: fixed !important;
+  bottom: 60px !important;
+  right: 10px !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 8px !important;
+  background: #ff9800 !important;
+  background-color: #ff9800 !important;
+  color: #000 !important;
+  border: 1px solid #ff9800 !important;
+  border-color: #ff9800 !important;
+  padding: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  z-index: 10000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+}
+
+.devtools-btn:hover{
+  background: #f57c00 !important;
+  background-color: #f57c00 !important;
+  border-color: #f57c00 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  transform: scale(1.05) !important;
+  color: #000 !important;
+}
+
+.devtools-btn:active{
+  background: #e65100 !important;
+  background-color: #e65100 !important;
+  transform: scale(0.95) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+  color: #000 !important;
+}
+
+.devtools-btn:focus{
+  outline: 2px solid #000 !important;
+  outline-offset: 2px !important;
+  background: #ff9800 !important;
+  background-color: #ff9800 !important;
+  color: #000 !important;
+}
+
 /* LocalStorage Clear Button */
 .clear-localstorage-btn{
   position: fixed !important;
