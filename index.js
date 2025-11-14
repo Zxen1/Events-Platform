@@ -24653,7 +24653,10 @@ document.addEventListener('pointerdown', (e) => {
         memberSnapshotErrorMessage = '';
         renderFormPreviewForMember(fields);
       }
-      if(emptyState) emptyState.hidden = true;
+      if(emptyState){
+        emptyState.textContent = `${selectedCategory} > ${selectedSubcategory}`;
+        emptyState.hidden = true;
+      }
       if(formWrapper) formWrapper.hidden = false;
       if(postButton) postButton.disabled = false;
     }
@@ -25530,6 +25533,7 @@ document.addEventListener('pointerdown', (e) => {
       const categoryIcons = window.categoryIcons = window.categoryIcons || {};
       const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
       const sortedCategories = getSortedCategories(memberCategories);
+      let currentlyOpenMenu = null;
       
       sortedCategories.forEach(c => {
         if(!c || typeof c.name !== 'string') return;
@@ -25581,15 +25585,6 @@ document.addEventListener('pointerdown', (e) => {
         
         triggerWrap.append(menuBtn, optionsMenu);
         
-        const toggle = document.createElement('label');
-        toggle.className = 'cat-switch';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.setAttribute('aria-label', `Toggle ${c.name} category`);
-        const slider = document.createElement('span');
-        slider.className = 'slider';
-        toggle.append(input, slider);
-        
         const subButtons = [];
         (Array.isArray(c.subs) ? c.subs : []).forEach(s => {
           const subBtn = document.createElement('button');
@@ -25614,7 +25609,6 @@ document.addEventListener('pointerdown', (e) => {
             }
           }
           subBtn.addEventListener('click', () => {
-            if(!input.checked) return;
             const isActive = subBtn.getAttribute('aria-pressed') === 'true';
             if(isActive){
               subBtn.setAttribute('aria-pressed', 'false');
@@ -25641,54 +25635,43 @@ document.addEventListener('pointerdown', (e) => {
           subButtons.push(subBtn);
         });
         
-        header.append(triggerWrap, toggle);
+        header.append(triggerWrap);
         menu.appendChild(header);
         formpickerCats.appendChild(menu);
         
         let openState = false;
         function syncExpanded(){
-          const expanded = input.checked && openState;
-          menu.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          optionsMenu.hidden = !expanded;
+          menu.setAttribute('aria-expanded', openState ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', openState ? 'true' : 'false');
+          optionsMenu.hidden = !openState;
         }
         function setOpenState(next){
+          const wasOpen = openState;
           openState = !!next;
-          syncExpanded();
-        }
-        function setCategoryActive(active){
-          const enabled = !!active;
-          input.checked = enabled;
-          menu.classList.toggle('cat-off', !enabled);
-          menuBtn.disabled = !enabled;
-          menuBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-          subButtons.forEach(btn => {
-            btn.disabled = !enabled;
-            btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-          });
-          if(!enabled){
-            setOpenState(false);
-            if(selectedCategory === c.name){
-              selectedCategory = '';
-              selectedSubcategory = '';
-              subButtons.forEach(btn => {
-                btn.setAttribute('aria-pressed', 'false');
-                btn.classList.remove('on');
-              });
+          
+          if(openState && !wasOpen){
+            if(currentlyOpenMenu && currentlyOpenMenu !== menu){
+              const otherMenuBtn = currentlyOpenMenu.querySelector('.filter-category-trigger');
+              const otherOptionsMenu = currentlyOpenMenu.querySelector('.options-menu');
+              if(otherMenuBtn && otherOptionsMenu){
+                otherMenuBtn.setAttribute('aria-expanded', 'false');
+                otherOptionsMenu.hidden = true;
+                currentlyOpenMenu.setAttribute('aria-expanded', 'false');
+              }
+            }
+            currentlyOpenMenu = menu;
+          } else if(!openState && wasOpen){
+            if(currentlyOpenMenu === menu){
+              currentlyOpenMenu = null;
             }
           }
+          
           syncExpanded();
-          renderCreateFields();
         }
+        
         menuBtn.addEventListener('click', () => {
-          if(menuBtn.disabled) return;
           setOpenState(!openState);
         });
-        input.addEventListener('change', () => {
-          setCategoryActive(input.checked);
-        });
-        
-        setCategoryActive(true);
       });
     }
     if(memberForm){
