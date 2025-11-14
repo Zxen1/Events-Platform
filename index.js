@@ -16288,29 +16288,11 @@ function makePosts(){
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
         // ========================================================================
-        // CLOSE PREVIOUS OPEN POST & MAINTAIN VISUAL STABILITY
+        // CLOSE PREVIOUS OPEN POST
         // ========================================================================
-        let previousOpenPostHeight = 0;
-        let previousOpenPostId = null;
-        let shouldPreservePosition = false;
-        let savedScrollTop = 0;
-        
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
-            // Save current scroll position
-            savedScrollTop = container.scrollTop || 0;
-            
-            // Measure the height before closing to maintain visual stability
-            previousOpenPostHeight = ex.offsetHeight || 0;
-            previousOpenPostId = ex.dataset && ex.dataset.id;
-            
-            // Check if new post will be below the closing post (preserve position)
-            // Only preserve if NOT scrollToTop and target exists and is a card click
-            const exTop = ex.offsetTop || 0;
-            const targetTop = target ? (target.offsetTop || 0) : 0;
-            const targetIsCard = target && (target.classList.contains('post-card') || target.classList.contains('recents-card'));
-            shouldPreservePosition = !scrollToTop && targetIsCard && targetTop > exTop;
             
             const seenDetailMaps = new Set();
             const cleanupDetailMap = node=>{
@@ -16473,62 +16455,31 @@ function makePosts(){
         }
         
         // ========================================================================
-        // SCROLLING BEHAVIOR - EXPLICITLY SEPARATED BY SOURCE
+        // SCROLLING BEHAVIOR - ALWAYS SCROLL TO TOP
         // ========================================================================
         
-        // CASE 3 & 4: Map marker or Ad board clicked - SCROLL TO TOP
-        if(scrollToTop){
-          // Remove any existing gap spacer
-          const spacer = container.querySelector('.top-gap-spacer');
-          if(spacer){
-            spacer.remove();
-          }
-          delete container.dataset.hasTopGap;
-          removeCollapseGapButton(container);
-          
-          // Scroll to show post at top of viewport with slight delay for DOM update
-          if(container && container.contains(detail)){
-            setTimeout(() => {
-              const containerRect = container.getBoundingClientRect();
-              const detailRect = detail.getBoundingClientRect();
-              if(containerRect && detailRect){
-                const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
-                if(typeof container.scrollTo === 'function'){
-                  container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
-                } else {
-                  container.scrollTop = Math.max(0, topTarget);
-                }
-              }
-            }, 50);
-          }
+        // Remove any existing gap spacer
+        const spacer = container.querySelector('.top-gap-spacer');
+        if(spacer){
+          spacer.remove();
         }
-        // CASE 1 & 2: Post card or Recents card clicked - MAINTAIN VISUAL STABILITY
-        else if(shouldPreservePosition && previousOpenPostHeight > 0 && previousOpenPostId){
-          // Find the closed card (what the open post became)
-          const closedCard = container.querySelector(`[data-id="${previousOpenPostId}"]`);
-          const closedCardHeight = closedCard ? (closedCard.offsetHeight || 0) : 0;
-          
-          // Calculate the gap left by closing the larger post
-          const heightDifference = previousOpenPostHeight - closedCardHeight;
-          
-          if(heightDifference > 10){ // Only add spacer if difference is significant
-            // Use a spacer element instead of padding to avoid pushing everything down
-            let spacer = container.querySelector('.top-gap-spacer');
-            if(!spacer){
-              spacer = document.createElement('div');
-              spacer.className = 'top-gap-spacer';
-              container.insertBefore(spacer, container.firstChild);
+        delete container.dataset.hasTopGap;
+        removeCollapseGapButton(container);
+        
+        // Scroll to show post at top of viewport with slight delay for DOM update
+        if(container && container.contains(detail)){
+          setTimeout(() => {
+            const containerRect = container.getBoundingClientRect();
+            const detailRect = detail.getBoundingClientRect();
+            if(containerRect && detailRect){
+              const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+              if(typeof container.scrollTo === 'function'){
+                container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
+              } else {
+                container.scrollTop = Math.max(0, topTarget);
+              }
             }
-            
-            // Get existing spacer height and add to it
-            const currentSpacerHeight = parseFloat(spacer.style.height) || 0;
-            const newSpacerHeight = currentSpacerHeight + heightDifference;
-            spacer.style.height = `${newSpacerHeight}px`;
-            container.dataset.hasTopGap = 'true';
-            
-            // Create/update collapse button in the gap
-            createCollapseGapButton(container);
-          }
+          }, 50);
         }
 
         // Update history on open (keep newest-first)
@@ -16612,9 +16563,9 @@ function makePosts(){
               requestAnimationFrame(() => {
                 try{
                   stopSpin();
-                  // CASE 1: RECENTS CARD CLICKED - Open in place, NO scrolling
-                  // Parameters: (id, fromHistory=true, fromMap=false, originEl=cardEl, scrollToTop=false)
-                  fn(id, true, false, cardEl);
+                  // CASE 1: RECENTS CARD CLICKED - SCROLL TO TOP
+                  // Parameters: (id, fromHistory=true, fromMap=false, originEl=cardEl, scrollToTop=true)
+                  fn(id, true, false, cardEl, true);
                 }catch(err){ console.error(err); }
               });
             });
@@ -16635,9 +16586,9 @@ function makePosts(){
                 requestAnimationFrame(() => {
                   try{
                     stopSpin();
-                    // CASE 2: POST CARD CLICKED - Open in place, NO scrolling
-                    // Parameters: (id, fromHistory=false, fromMap=false, originEl=cardEl, scrollToTop=false)
-                    fn(id, false, false, cardEl);
+                    // CASE 2: POST CARD CLICKED - SCROLL TO TOP
+                    // Parameters: (id, fromHistory=false, fromMap=false, originEl=cardEl, scrollToTop=true)
+                    fn(id, false, false, cardEl, true);
                   }catch(err){ console.error(err); }
                 });
               });
