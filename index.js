@@ -14705,6 +14705,20 @@ function makePosts(){
             
             // Click outside or blur to switch back to display mode
             textArea.addEventListener('blur', () => {
+              // Update display with current textarea value before hiding
+              messageTextDisplay.innerHTML = textArea.value;
+              
+              // Update modified state based on comparison with original
+              if(textArea.value !== textArea.dataset.originalValue){
+                messageItem.classList.add('modified');
+                // Mark admin panel as dirty
+                if(typeof window.adminPanelModule?.markDirty === 'function'){
+                  window.adminPanelModule.markDirty();
+                }
+              } else {
+                messageItem.classList.remove('modified');
+              }
+              
               messageTextDisplay.hidden = false;
               textArea.hidden = true;
             });
@@ -21911,6 +21925,27 @@ form.addEventListener('input', formChangedWrapper, true);
             console.error('Failed to save messages:', messageResult.message || 'Unknown error');
           } else {
             console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+            
+            // Update originalValue for all successfully saved messages
+            modifiedMessages.forEach(savedMessage => {
+              const textArea = document.querySelector(`.message-text-input[data-message-id="${savedMessage.id}"]`);
+              if(textArea){
+                // Update the originalValue to the current value (now saved)
+                textArea.dataset.originalValue = textArea.value;
+                
+                // Update the display
+                const messageItem = textArea.closest('.message-item');
+                if(messageItem){
+                  const messageTextDisplay = messageItem.querySelector('.message-text-display');
+                  if(messageTextDisplay){
+                    messageTextDisplay.innerHTML = textArea.value;
+                  }
+                  
+                  // Remove modified class since it's now saved
+                  messageItem.classList.remove('modified');
+                }
+              }
+            });
           }
         }
       } catch(err) {
