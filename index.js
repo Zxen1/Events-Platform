@@ -16415,32 +16415,82 @@ function makePosts(){
 
         // Scroll to top when opening any post - must happen AFTER all layout operations
         // Works for: post cards, recents cards, map markers, and ad board clicks
+        // IMPORTANT: The card becomes the header (sticky top:0) and post-body slides out
+        // We need to scroll the container so the .open-post (with card-as-header) is at the top
         const scrollToTop = (attempt = 1) => {
           if(!container){
             console.warn(`[openPost] Scroll attempt ${attempt}: Container missing`);
             return;
           }
-          // Both .post-board and #recentsBoard are scrollable containers
-          const scrollElement = container;
+          
+          // Find the actual scrollable element
+          // For post-board: .posts element is scrollable (has overflow-y: auto)
+          // For recents-board: container itself is scrollable
+          let scrollElement = container;
+          if(container === postsWideEl || container.classList.contains('post-board')){
+            // Post board - find the .posts element inside
+            const postsEl = container.querySelector('.posts');
+            if(postsEl){
+              scrollElement = postsEl;
+            }
+          }
+          // For recents-board, container itself is scrollable, so use it directly
+          
+          // Find the open-post element that was just created
+          // The card becomes the header (sticky top:0) and post-body slides out underneath
+          const openPostEl = container.querySelector(`.open-post[data-id="${id}"]`);
+          
           const beforeScroll = scrollElement.scrollTop;
           const scrollHeight = scrollElement.scrollHeight;
           const clientHeight = scrollElement.clientHeight;
           const canScroll = scrollHeight > clientHeight;
           
           if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
-            scrollElement.scrollTop = 0;
+            // Calculate the position of the open-post relative to the scroll container
+            // Then scroll the container so the open-post (with card-as-header) is at the top
+            // The card becomes the header (sticky top:0) and post-body slides out underneath
+            if(openPostEl){
+              // Calculate open-post's position within the scroll container
+              // We need to scroll so the open-post is visible at the top
+              const scrollRect = scrollElement.getBoundingClientRect();
+              const openPostRect = openPostEl.getBoundingClientRect();
+              
+              // Calculate current offset from top of scroll container
+              const currentOffset = openPostRect.top - scrollRect.top;
+              
+              // Scroll to position the open-post at the top (accounting for any padding/margins)
+              scrollElement.scrollTop = scrollElement.scrollTop + currentOffset;
+            } else {
+              // Fallback: Just scroll to top if we can't find the element
+              scrollElement.scrollTop = 0;
+            }
+            
             const afterScroll = scrollElement.scrollTop;
-            const scrollSuccess = afterScroll === 0;
+            // Success if the open-post is now at or near the top of the scroll container
+            const openPostAtTop = openPostEl ? (() => {
+              const scrollRect = scrollElement.getBoundingClientRect();
+              const openPostRect = openPostEl.getBoundingClientRect();
+              const offsetFromTop = openPostRect.top - scrollRect.top;
+              return offsetFromTop >= -5 && offsetFromTop <= 10; // Allow 5px tolerance
+            })() : false;
+            const scrollSuccess = afterScroll === 0 || openPostAtTop;
             
             // Enhanced logging with inline values for easy reading
             const containerName = container.id || container.className;
+            const scrollElementName = scrollElement === container ? 'container' : (scrollElement.className || 'posts');
+            const openPostOffsetTop = openPostEl ? openPostEl.offsetTop : null;
             console.log(
               `[openPost] Scroll attempt ${attempt} (${entryPoint}): ${scrollSuccess ? '✓ SUCCESS' : '✗ FAILED'}`,
               `\n  Container: ${containerName}`,
+              `\n  Scroll element: ${scrollElementName}${scrollElement !== container ? ' (child)' : ' (container)'}`,
+              `\n  Open-post found: ${!!openPostEl}${openPostEl ? ` (offsetTop: ${openPostOffsetTop}px)` : ''}`,
               `\n  Before: ${beforeScroll}px → After: ${afterScroll}px`,
               `\n  Dimensions: ${clientHeight}px viewport / ${scrollHeight}px content (${canScroll ? 'scrollable' : 'not scrollable'})`,
               {
                 container: containerName,
+                scrollElement: scrollElementName,
+                hasOpenPost: !!openPostEl,
+                openPostOffsetTop,
                 beforeScroll,
                 afterScroll,
                 scrollSuccess,
@@ -16455,11 +16505,13 @@ function makePosts(){
               console.error(
                 `[openPost] ⚠️ SCROLL FAILED after 3 attempts for ${entryPoint}!`,
                 `\n  Container: ${containerName}`,
+                `\n  Scroll element: ${scrollElementName}`,
                 `\n  Final position: ${afterScroll}px (expected: 0px)`,
                 `\n  Content height: ${scrollHeight}px, Viewport: ${clientHeight}px`,
                 {
                   entryPoint,
                   container: containerName,
+                  scrollElement: scrollElementName,
                   finalScrollTop: afterScroll,
                   scrollHeight,
                   clientHeight,
@@ -16481,26 +16533,42 @@ function makePosts(){
           }
         };
 
-        // Use multiple attempts to ensure scroll happens after all layout changes
+        // Use multiple attempts to ensure scroll happens after all layout operations
         // This handles timing issues with layout operations, DOM updates, and animations
+        // Find the actual scrollable element first
+        let actualScrollElement = container;
+        if(container === postsWideEl || container.classList.contains('post-board')){
+          const postsEl = container.querySelector('.posts');
+          if(postsEl){
+            actualScrollElement = postsEl;
+          }
+        }
+        
         const containerName = container.id || container.className;
-        const initialScrollTop = container.scrollTop;
-        const initialScrollHeight = container.scrollHeight;
-        const initialClientHeight = container.clientHeight;
+        const scrollElementName = actualScrollElement === container ? 'container' : (actualScrollElement.className || 'posts');
+        const initialScrollTop = actualScrollElement.scrollTop;
+        const initialScrollHeight = actualScrollElement.scrollHeight;
+        const initialClientHeight = actualScrollElement.clientHeight;
+        
+        // Capture early scroll from actual scroll element too
+        const earlyActualScrollTop = actualScrollElement.scrollTop;
         
         console.log(
           `[openPost] Starting scroll sequence for ${entryPoint}`,
           `\n  Container: ${containerName}`,
-          `\n  Early scroll (before DOM ops): ${earlyScrollTop}px${earlyScrollTop > 0 ? ' ⚠️ WAS SCROLLED' : ''}`,
+          `\n  Scroll element: ${scrollElementName}${actualScrollElement !== container ? ' (child)' : ' (container)'}`,
+          `\n  Early scroll (before DOM ops): container=${earlyScrollTop}px, scrollEl=${earlyActualScrollTop}px${earlyActualScrollTop > 0 ? ' ⚠️ WAS SCROLLED' : ''}`,
           `\n  Current position (after DOM ops): ${initialScrollTop}px`,
           `\n  Dimensions: ${initialClientHeight}px viewport / ${initialScrollHeight}px content`,
           {
             container: containerName,
+            scrollElement: scrollElementName,
             earlyScrollTop,
+            earlyActualScrollTop,
             initialScrollTop,
             scrollHeight: initialScrollHeight,
             clientHeight: initialClientHeight,
-            needsScroll: earlyScrollTop > 0 || initialScrollTop > 0
+            needsScroll: earlyActualScrollTop > 0 || initialScrollTop > 0
           }
         );
         
@@ -16513,18 +16581,30 @@ function makePosts(){
               requestAnimationFrame(() => {
                 scrollToTop(3);
                 // Final verification with clear success/failure message
-                const finalScrollTop = container.scrollTop;
-                const finalScrollHeight = container.scrollHeight;
-                const finalClientHeight = container.clientHeight;
+                // Use the actual scroll element for final check
+                let finalScrollElement = container;
+                if(container === postsWideEl || container.classList.contains('post-board')){
+                  const postsEl = container.querySelector('.posts');
+                  if(postsEl){
+                    finalScrollElement = postsEl;
+                  }
+                }
+                
+                const finalScrollTop = finalScrollElement.scrollTop;
+                const finalScrollHeight = finalScrollElement.scrollHeight;
+                const finalClientHeight = finalScrollElement.clientHeight;
                 const success = finalScrollTop === 0;
+                const finalScrollElementName = finalScrollElement === container ? 'container' : (finalScrollElement.className || 'posts');
                 
                 console.log(
                   `[openPost] ${success ? '✅ SUCCESS' : '❌ FAILED'}: Scroll sequence complete for ${entryPoint}`,
                   `\n  Container: ${containerName}`,
+                  `\n  Scroll element: ${finalScrollElementName}${finalScrollElement !== container ? ' (child)' : ' (container)'}`,
                   `\n  Final position: ${finalScrollTop}px (${success ? 'scrolled to top' : 'NOT at top'})`,
                   `\n  Dimensions: ${finalClientHeight}px viewport / ${finalScrollHeight}px content`,
                   {
                     container: containerName,
+                    scrollElement: finalScrollElementName,
                     finalScrollTop,
                     success,
                     scrollHeight: finalScrollHeight,
