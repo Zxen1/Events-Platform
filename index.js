@@ -16369,15 +16369,29 @@ function makePosts(){
         // SCROLL TO TOP
         // ========================================================================
         
-        // Scroll container to top after DOM updates
+        // Find the actual scrollable element
+        // For post-board, it's the .posts child. For recentsBoard, it's the container itself.
+        const getScrollContainer = (cont) => {
+          if(!cont) return null;
+          // Check if recentsBoard (directly scrollable)
+          if(cont.id === 'recentsBoard'){
+            return cont;
+          }
+          // For post-board, find the .posts child
+          const postsChild = cont.querySelector('.posts');
+          return postsChild || cont;
+        };
+        
+        // Scroll to top after DOM updates
         if(container && container.contains(detail)){
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              if(container){
-                if(typeof container.scrollTo === 'function'){
-                  container.scrollTo({ top: 0, behavior: 'smooth' });
+              const scrollContainer = getScrollContainer(container);
+              if(scrollContainer){
+                if(typeof scrollContainer.scrollTo === 'function'){
+                  scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
-                  container.scrollTop = 0;
+                  scrollContainer.scrollTop = 0;
                 }
               }
             });
