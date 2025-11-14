@@ -14441,68 +14441,59 @@ function makePosts(){
             messageItem.dataset.messageId = message.id;
             messageItem.dataset.messageKey = message.message_key;
             
-            // Message header with name and edit button
-            const messageHeader = document.createElement('div');
-            messageHeader.className = 'message-header';
+            // Message label with hover popup
+            const messageLabel = document.createElement('div');
+            messageLabel.className = 'message-label';
+            messageLabel.textContent = message.message_name || message.message_key;
             
-            const messageName = document.createElement('div');
-            messageName.className = 'message-name';
-            messageName.textContent = message.message_name || message.message_key;
+            // Create hover popup with metadata
+            const hoverPopup = document.createElement('div');
+            hoverPopup.className = 'message-hover-popup';
             
-            const messageActions = document.createElement('div');
-            messageActions.className = 'message-actions';
-            
-            const editBtn = document.createElement('button');
-            editBtn.type = 'button';
-            editBtn.className = 'message-edit-btn';
-            editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>';
-            editBtn.title = 'Edit message';
-            
-            messageActions.appendChild(editBtn);
-            messageHeader.append(messageName, messageActions);
-            
-            // Message details
-            const messageDetails = document.createElement('div');
-            messageDetails.className = 'message-details';
-            messageDetails.hidden = true;
-            
-            // Message type badge
+            // Type badge in popup
             const typeBadge = document.createElement('span');
             typeBadge.className = `message-type-badge type-${message.message_type}`;
             typeBadge.textContent = message.message_type;
+            hoverPopup.appendChild(typeBadge);
             
-            // Message text preview
-            const textPreview = document.createElement('div');
-            textPreview.className = 'message-text-preview';
-            textPreview.textContent = message.message_text;
-            
-            // Message description
+            // Description in popup
             if(message.message_description){
               const description = document.createElement('div');
-              description.className = 'message-description';
+              description.className = 'message-popup-description';
               description.textContent = message.message_description;
-              messageDetails.appendChild(description);
+              hoverPopup.appendChild(description);
             }
             
-            // Editable message text
-            const textEdit = document.createElement('div');
-            textEdit.className = 'message-text-edit';
+            // Placeholders in popup
+            if(message.placeholders && message.placeholders.length > 0){
+              const placeholdersInfo = document.createElement('div');
+              placeholdersInfo.className = 'message-popup-placeholders';
+              placeholdersInfo.innerHTML = `<strong>Placeholders:</strong> ${message.placeholders.map(p => `<code>{${p}}</code>`).join(', ')}`;
+              hoverPopup.appendChild(placeholdersInfo);
+            }
             
-            const textLabel = document.createElement('label');
-            textLabel.textContent = 'Message Text:';
+            messageLabel.appendChild(hoverPopup);
             
+            // Message text display (shown by default)
+            const messageTextDisplay = document.createElement('div');
+            messageTextDisplay.className = 'message-text-display';
+            messageTextDisplay.textContent = message.message_text;
+            messageTextDisplay.title = 'Click to edit';
+            
+            // Message text input (hidden by default)
             const textArea = document.createElement('textarea');
             textArea.className = 'message-text-input';
             textArea.value = message.message_text;
             textArea.rows = 3;
             textArea.dataset.messageId = message.id;
             textArea.dataset.originalValue = message.message_text;
+            textArea.hidden = true;
             
             // Track changes
             textArea.addEventListener('input', () => {
               if(textArea.value !== textArea.dataset.originalValue){
                 messageItem.classList.add('modified');
-                textPreview.textContent = textArea.value;
+                messageTextDisplay.textContent = textArea.value;
                 // Mark admin panel as dirty
                 if(typeof window.adminPanelModule?.markDirty === 'function'){
                   window.adminPanelModule.markDirty();
@@ -14512,26 +14503,20 @@ function makePosts(){
               }
             });
             
-            textEdit.append(textLabel, textArea);
-            messageDetails.append(typeBadge, textPreview, textEdit);
-            
-            // Placeholders info
-            if(message.placeholders && message.placeholders.length > 0){
-              const placeholdersInfo = document.createElement('div');
-              placeholdersInfo.className = 'message-placeholders';
-              placeholdersInfo.innerHTML = `<small>Available placeholders: ${message.placeholders.map(p => `<code>{${p}}</code>`).join(', ')}</small>`;
-              messageDetails.appendChild(placeholdersInfo);
-            }
-            
-            // Toggle edit panel
-            editBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              messageDetails.hidden = !messageDetails.hidden;
-              messageItem.classList.toggle('expanded');
+            // Click to switch to edit mode
+            messageTextDisplay.addEventListener('click', () => {
+              messageTextDisplay.hidden = true;
+              textArea.hidden = false;
+              textArea.focus();
             });
             
-            messageItem.append(messageHeader, messageDetails);
+            // Click outside or blur to switch back to display mode
+            textArea.addEventListener('blur', () => {
+              messageTextDisplay.hidden = false;
+              textArea.hidden = true;
+            });
+            
+            messageItem.append(messageLabel, messageTextDisplay, textArea);
             messagesList.appendChild(messageItem);
           });
           
