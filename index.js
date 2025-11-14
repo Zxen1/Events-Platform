@@ -21696,27 +21696,27 @@ form.addEventListener('input', formChangedWrapper, true);
     const websiteSettings = {};
     
     const websiteNameInput = document.getElementById('adminWebsiteName');
-    if(websiteNameInput && websiteNameInput.value.trim()){
+    if(websiteNameInput){
       websiteSettings.website_name = websiteNameInput.value.trim();
     }
     
     const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
-    if(websiteTaglineInput && websiteTaglineInput.value.trim()){
+    if(websiteTaglineInput){
       websiteSettings.website_tagline = websiteTaglineInput.value.trim();
     }
     
     const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
-    if(websiteCurrencyInput && websiteCurrencyInput.value.trim()){
+    if(websiteCurrencyInput){
       websiteSettings.website_currency = websiteCurrencyInput.value.trim();
     }
     
     const contactEmailInput = document.getElementById('adminContactEmail');
-    if(contactEmailInput && contactEmailInput.value.trim()){
+    if(contactEmailInput){
       websiteSettings.contact_email = contactEmailInput.value.trim();
     }
     
     const supportEmailInput = document.getElementById('adminSupportEmail');
-    if(supportEmailInput && supportEmailInput.value.trim()){
+    if(supportEmailInput){
       websiteSettings.support_email = supportEmailInput.value.trim();
     }
     
@@ -21733,11 +21733,22 @@ form.addEventListener('input', formChangedWrapper, true);
     // Save general settings to database if any exist
     if(Object.keys(websiteSettings).length > 0){
       try {
-        await fetch('/gateway.php?action=save-admin-settings', {
+        const response = await fetch('/gateway.php?action=save-admin-settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(websiteSettings)
         });
+        
+        if(!response.ok){
+          console.error('Failed to save website settings - HTTP status:', response.status);
+        } else {
+          const result = await response.json();
+          if(!result.success){
+            console.error('Failed to save website settings:', result.message || 'Unknown error');
+          } else {
+            console.log('Website settings saved successfully');
+          }
+        }
       } catch(err) {
         console.error('Failed to save website settings:', err);
       }
