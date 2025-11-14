@@ -11934,6 +11934,9 @@ function makePosts(){
             return editor;
           };
 
+          // Expose buildVenueSessionPreview for use in member forms
+          window.buildVenueSessionPreview = buildVenueSessionPreview;
+
           // Fields now come from backend via field_types, no hardcoded defaults
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
@@ -24880,10 +24883,363 @@ document.addEventListener('pointerdown', (e) => {
           control = radioGroup;
         } else if(previewField.type === 'venue-ticketing'){
           wrapper.classList.add('form-preview-field--venues-sessions-pricing');
-          control = buildVenueSessionEditor(previewField, labelId);
+          // Use the same builder as admin form preview for identical structure
+          if(typeof window.buildVenueSessionPreview === 'function'){
+            control = window.buildVenueSessionPreview(previewField, baseId);
+          } else {
+            // Fallback if not available yet
+            control = buildVenueSessionEditor(previewField, labelId);
+          }
         } else if(previewField.type === 'variant-pricing'){
           wrapper.classList.add('form-preview-field--variant-pricing');
-          control = buildVersionPriceEditor(previewField, labelId);
+          // Use exact same logic as admin form preview for identical structure
+          const editor = document.createElement('div');
+          editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+          const versionList = document.createElement('div');
+          versionList.className = 'variant-pricing-options-list';
+          editor.appendChild(versionList);
+
+          const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
+
+          const normalizeOptions = ()=>{
+            if(!Array.isArray(previewField.options)){
+              previewField.options = [];
+            }
+            previewField.options = previewField.options.map(opt => {
+              if(opt && typeof opt === 'object'){
+                return {
+                  version: typeof opt.version === 'string' ? opt.version : '',
+                  currency: typeof opt.currency === 'string' ? opt.currency : '',
+                  price: typeof opt.price === 'string' ? opt.price : ''
+                };
+              }
+              const str = typeof opt === 'string' ? opt : String(opt ?? '');
+              return { version: str, currency: '', price: '' };
+            });
+            if(previewField.options.length === 0){
+              previewField.options.push(createEmptyOption());
+            }
+          };
+
+          // Make notifyFormbuilderChange optional for member forms
+          const safeNotifyFormbuilderChange = typeof notifyFormbuilderChange === 'function' 
+            ? notifyFormbuilderChange 
+            : (()=>{});
+
+          const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
+            normalizeOptions();
+            versionList.innerHTML = '';
+            let firstId = null;
+            const currencyAlertMessage = 'Please select a currency before entering a price.';
+            let lastCurrencyAlertAt = 0;
+            let currencyAlertHandle = null;
+            let currencyAlertTimeout = 0;
+            const showCurrencyAlert = target => {
+              const candidate = (target && typeof target.getBoundingClientRect === 'function')
+                ? target
+                : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+                  ? document.activeElement
+                  : null);
+              const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+              if(!inputEl) return;
+              const now = Date.now();
+              if(now - lastCurrencyAlertAt < 400){
+                if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
+                  currencyAlertHandle.reposition();
+                }
+                return;
+              }
+              lastCurrencyAlertAt = now;
+              if(currencyAlertTimeout){
+                clearTimeout(currencyAlertTimeout);
+                currencyAlertTimeout = 0;
+              }
+              if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
+                currencyAlertHandle.remove();
+                currencyAlertHandle = null;
+              }
+              const handle = showCopyStyleMessage(currencyAlertMessage, inputEl);
+              if(!handle) return;
+              currencyAlertHandle = handle;
+              currencyAlertTimeout = window.setTimeout(()=>{
+                handle.remove();
+                if(currencyAlertHandle === handle){
+                  currencyAlertHandle = null;
+                }
+                currencyAlertTimeout = 0;
+              }, 1500);
+            };
+            previewField.options.forEach((optionValue, optionIndex)=>{
+              const optionRow = document.createElement('div');
+              optionRow.className = 'variant-pricing-option';
+              optionRow.dataset.optionIndex = String(optionIndex);
+
+              const topRow = document.createElement('div');
+              topRow.className = 'variant-pricing-row variant-pricing-row--top';
+
+              const versionInput = document.createElement('input');
+              versionInput.type = 'text';
+              versionInput.className = 'variant-pricing-name';
+              versionInput.placeholder = 'Version Name';
+              const versionInputId = `${baseId}-version-${optionIndex}`;
+              versionInput.id = versionInputId;
+              if(optionIndex === 0){
+                firstId = versionInputId;
+              }
+              versionInput.value = optionValue.version || '';
+              versionInput.addEventListener('input', ()=>{
+                previewField.options[optionIndex].version = versionInput.value;
+                safeNotifyFormbuilderChange();
+              });
+              topRow.appendChild(versionInput);
+
+              const bottomRow = document.createElement('div');
+              bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
+
+              const currencySelect = document.createElement('select');
+              currencySelect.className = 'variant-pricing-currency';
+              const emptyOption = document.createElement('option');
+              emptyOption.value = '';
+              emptyOption.textContent = 'Currency';
+              currencySelect.appendChild(emptyOption);
+              // Currency options should come from backend via currency field
+              const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+              currencyOptions.forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = code;
+                currencySelect.appendChild(opt);
+              });
+              currencySelect.value = optionValue.currency || '';
+              const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
+
+              const priceInput = document.createElement('input');
+              priceInput.type = 'text';
+              priceInput.inputMode = 'decimal';
+              priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
+              priceInput.className = 'variant-pricing-price';
+              priceInput.placeholder = '0.00';
+              const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
+              const formatPriceValue = value => {
+                const trimmed = (value || '').trim();
+                if(trimmed === '') return '';
+                let normalized = trimmed.replace(/,/g, '.');
+                if(normalized === '.') return '0.00';
+                if(normalized.startsWith('.')){
+                  normalized = `0${normalized}`;
+                }
+                const dotIndex = normalized.indexOf('.');
+                if(dotIndex === -1){
+                  return `${normalized}.00`;
+                }
+                let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
+                if(integerPart === ''){
+                  integerPart = '0';
+                }
+                let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
+                if(decimalPart.length === 0){
+                  decimalPart = '00';
+                } else if(decimalPart.length === 1){
+                  decimalPart = `${decimalPart}0`;
+                } else {
+                  decimalPart = decimalPart.slice(0, 2);
+                }
+                return `${integerPart}.${decimalPart}`;
+              };
+              const initialPriceValue = sanitizePriceValue(optionValue.price || '');
+              const formattedInitialPrice = formatPriceValue(initialPriceValue);
+              priceInput.value = formattedInitialPrice;
+              if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
+                previewField.options[optionIndex].price = formattedInitialPrice;
+              }
+              const clearPriceValue = ()=>{
+                let changed = false;
+                if(priceInput.value !== ''){
+                  priceInput.value = '';
+                  changed = true;
+                }
+                if(previewField.options[optionIndex].price !== ''){
+                  previewField.options[optionIndex].price = '';
+                  changed = true;
+                } else if(typeof previewField.options[optionIndex].price !== 'string'){
+                  previewField.options[optionIndex].price = '';
+                }
+                return changed;
+              };
+              const updatePriceState = ()=>{
+                if(isCurrencySelected()){
+                  priceInput.readOnly = false;
+                  priceInput.classList.remove('is-awaiting-currency');
+                  priceInput.removeAttribute('aria-disabled');
+                  return false;
+                }
+                priceInput.readOnly = true;
+                priceInput.classList.add('is-awaiting-currency');
+                priceInput.setAttribute('aria-disabled', 'true');
+                return clearPriceValue();
+              };
+              const blockPriceAccess = event => {
+                if(isCurrencySelected()) return false;
+                if(event && event.type === 'pointerdown' && event.button !== 0) return false;
+                if(event && typeof event.preventDefault === 'function'){
+                  event.preventDefault();
+                }
+                if(event && typeof event.stopPropagation === 'function'){
+                  event.stopPropagation();
+                }
+                if(typeof priceInput.blur === 'function'){
+                  requestAnimationFrame(()=>{
+                    try{ priceInput.blur(); }catch(err){}
+                  });
+                }
+                showCurrencyAlert(priceInput);
+                return true;
+              };
+              currencySelect.addEventListener('change', ()=>{
+                const previousCurrency = previewField.options[optionIndex].currency || '';
+                const nextCurrency = currencySelect.value;
+                previewField.options[optionIndex].currency = nextCurrency;
+                const priceCleared = updatePriceState();
+                if(isCurrencySelected()){
+                  commitPriceValue();
+                }
+                if(previousCurrency !== nextCurrency || priceCleared){
+                  safeNotifyFormbuilderChange();
+                }
+              });
+
+              const commitPriceValue = event => {
+                if(!isCurrencySelected()){
+                  if(clearPriceValue()){
+                    safeNotifyFormbuilderChange();
+                  }
+                  return;
+                }
+                const rawValue = priceInput.value;
+                const sanitized = sanitizePriceValue(rawValue);
+                if(rawValue !== sanitized){
+                  priceInput.value = sanitized;
+                }
+                const formatted = formatPriceValue(sanitized);
+                if(priceInput.value !== formatted){
+                  priceInput.value = formatted;
+                }
+                if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
+                  if(formatted === ''){
+                    priceInput.setSelectionRange(0, 0);
+                  } else if(!/[.,]/.test(sanitized)){ 
+                    const dotIndex = formatted.indexOf('.');
+                    const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
+                    priceInput.setSelectionRange(caretPos, caretPos);
+                  } else {
+                    const dotIndex = formatted.indexOf('.');
+                    if(dotIndex === -1){
+                      priceInput.setSelectionRange(formatted.length, formatted.length);
+                    } else {
+                      const decimals = sanitized.split(/[.,]/)[1] || '';
+                      if(decimals.length === 0){
+                        priceInput.setSelectionRange(dotIndex + 1, formatted.length);
+                      } else {
+                        const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
+                        priceInput.setSelectionRange(caretPos, caretPos);
+                      }
+                    }
+                  }
+                }
+                const previous = previewField.options[optionIndex].price || '';
+                if(previous !== formatted){
+                  previewField.options[optionIndex].price = formatted;
+                  safeNotifyFormbuilderChange();
+                }
+              };
+              priceInput.addEventListener('beforeinput', event => {
+                if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
+                  event.preventDefault();
+                }
+              });
+              priceInput.addEventListener('pointerdown', event => {
+                blockPriceAccess(event);
+              });
+              priceInput.addEventListener('focus', event => {
+                blockPriceAccess(event);
+              });
+              priceInput.addEventListener('keydown', event => {
+                if(event.key === 'Tab' || event.key === 'Shift') return;
+                if(blockPriceAccess(event)) return;
+              });
+              priceInput.addEventListener('input', commitPriceValue);
+              priceInput.addEventListener('change', commitPriceValue);
+              const initialCleared = updatePriceState();
+              if(isCurrencySelected()){
+                commitPriceValue();
+              } else if(initialCleared){
+                safeNotifyFormbuilderChange();
+              }
+
+              const actions = document.createElement('div');
+              actions.className = 'dropdown-option-actions variant-pricing-option-actions';
+
+              const addBtn = document.createElement('button');
+              addBtn.type = 'button';
+              addBtn.className = 'dropdown-option-add';
+              addBtn.textContent = '+';
+              addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
+              addBtn.addEventListener('click', ()=>{
+                previewField.options.splice(optionIndex + 1, 0, createEmptyOption());
+                safeNotifyFormbuilderChange();
+                renderVersionEditor(optionIndex + 1);
+              });
+
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'dropdown-option-remove';
+              removeBtn.textContent = '-';
+              removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
+              removeBtn.disabled = previewField.options.length <= 1;
+              removeBtn.addEventListener('click', ()=>{
+                if(previewField.options.length <= 1){
+                  previewField.options[0] = createEmptyOption();
+                } else {
+                  previewField.options.splice(optionIndex, 1);
+                }
+                safeNotifyFormbuilderChange();
+                const nextFocus = Math.min(optionIndex, Math.max(previewField.options.length - 1, 0));
+                renderVersionEditor(nextFocus);
+              });
+
+              actions.append(addBtn, removeBtn);
+              bottomRow.append(currencySelect, priceInput, actions);
+
+              optionRow.append(topRow, bottomRow);
+              versionList.appendChild(optionRow);
+            });
+
+            if(focusIndex !== null){
+              requestAnimationFrame(()=>{
+                const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
+                if(!targetRow) return;
+                let focusEl = null;
+                if(focusTarget === 'price'){
+                  focusEl = targetRow.querySelector('.variant-pricing-price');
+                } else if(focusTarget === 'currency'){
+                  focusEl = targetRow.querySelector('.variant-pricing-currency');
+                }
+                if(!focusEl){
+                  focusEl = targetRow.querySelector('.variant-pricing-name');
+                }
+                if(focusEl && typeof focusEl.focus === 'function'){
+                  try{ focusEl.focus({ preventScroll: true }); }
+                  catch(err){
+                    try{ focusEl.focus(); }catch(e){}
+                  }
+                }
+              });
+            }
+          };
+
+          renderVersionEditor();
+          editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+          control = editor;
         } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
           wrapper.classList.add('form-preview-field--url');
           const urlWrapper = document.createElement('div');
