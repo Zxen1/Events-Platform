@@ -21,21 +21,7 @@
     onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
   />
   
-  <link rel="stylesheet" href="style.css" id="main-css" />
-  <script>
-    // Development: Add cache-busting to CSS and JS files
-    // This ensures changes are seen instantly during development
-    (function() {
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.search.includes('nocache');
-      if (isDev) {
-        const timestamp = Date.now();
-        const cssLink = document.getElementById('main-css');
-        if (cssLink) {
-          cssLink.href = cssLink.href.split('?')[0] + '?v=' + timestamp;
-        }
-      }
-    })();
-  </script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <div id="headerLoadingOverlay" class="header-loading-overlay" role="status" aria-live="polite">
@@ -504,16 +490,7 @@
       document.head.appendChild(script);
     }
   </script>
-  <script>
-    // Development: Add cache-busting to main JS file
-    (function() {
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.search.includes('nocache');
-      const script = document.createElement('script');
-      script.defer = true;
-      script.src = 'index.js' + (isDev ? '?v=' + Date.now() : '');
-      document.head.appendChild(script);
-    })();
-  </script>
+  <script src="index.js" defer></script>
 
   <!-- DevTools Toggle Button -->
   <button id="devToolsBtn" class="devtools-btn" aria-label="Toggle DevTools" title="Toggle DevTools">
