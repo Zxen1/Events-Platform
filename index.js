@@ -8227,8 +8227,6 @@ function makePosts(){
         confirmClassName: 'formbuilder-confirm-delete',
         focusCancel: true
       });
-      result.then(confirmed => {
-      });
       return result;
     }
     let subcategoryFieldOverlayEl = null;
@@ -9352,6 +9350,8 @@ function makePosts(){
             const editor = document.createElement('div');
             editor.className = 'venue-session-editor';
             editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            // Generate unique prefix from baseId to ensure unique IDs across multiple editors
+            const uniquePrefix = baseId ? baseId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const venueList = document.createElement('div');
             venueList.className = 'venue-session-venues';
             editor.appendChild(venueList);
@@ -11485,7 +11485,7 @@ function makePosts(){
                         const seatingLabel = document.createElement('label');
                         seatingLabel.className = 'seating_area-label';
                         seatingLabel.textContent = seatingLabelText;
-                        const seatingInputId = `seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
+                        const seatingInputId = `${uniquePrefix}_seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
@@ -11552,7 +11552,7 @@ function makePosts(){
                           const tierLabel = document.createElement('label');
                           tierLabel.className = 'pricing_tier-label';
                           tierLabel.textContent = tierLabelText;
-                          const tierInputId = `pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          const tierInputId = `${uniquePrefix}_pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
@@ -23960,6 +23960,8 @@ document.addEventListener('pointerdown', (e) => {
       editor.className = 'venue-session-editor';
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
+      // Generate unique prefix from labelId to ensure unique IDs across multiple editors
+      const uniquePrefix = labelId ? labelId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const venueList = document.createElement('div');
       venueList.className = 'venue-session-venues';
       editor.appendChild(venueList);
