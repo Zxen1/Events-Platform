@@ -733,6 +733,7 @@ input[type="checkbox"]{
     background: rgba(0,0,0,0.7);
   }
 
+  /* COMMENTED OUT: Header loading overlay
   .header-loading-overlay{
     position: fixed;
     top: 0;
@@ -792,6 +793,7 @@ input[type="checkbox"]{
     40%, 60%{ opacity: 1; }
     80%, 100%{ opacity: 0; }
   }
+  */
 
   .logo{
     position: absolute;
@@ -8469,6 +8471,13 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .form-preview-field label{
               font-weight:600;
             }
+            #memberPanel .member-create-fields .form-preview-field-header{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              margin:0;
+              padding-top:10px;
+            }
             #memberPanel .member-create-fields .form-preview-field input,
             #memberPanel .member-create-fields .form-preview-field select,
             #memberPanel .member-create-fields .form-preview-field textarea{
@@ -8603,30 +8612,56 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:16px;
             }
+            #memberPanel .member-create-fields .venue-card > *{
+              width:100%;
+            }
             #memberPanel .member-create-fields .venue-card{
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
-              padding:16px;
+              padding:0;
               display:flex;
               flex-direction:column;
-              gap:16px;
-            }
-            #memberPanel .member-create-fields .venue-line{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
               gap:12px;
-              align-items:center;
+            }
+            #memberPanel .member-create-fields .venue-line,
+            #memberPanel .member-create-fields .session-date-row,
+            #memberPanel .member-create-fields .session-time-row,
+            #memberPanel .member-create-fields .session-pricing-card,
+            #memberPanel .member-create-fields .tier-row{
+              display:grid;
+              grid-template-columns:minmax(0, 1fr) auto;
+              justify-items:start;
+              align-items:start;
+              column-gap:8px;
+              row-gap:12px;
+              width:100%;
+            }
+            #memberPanel .member-create-fields .address_line-line{
+              grid-template-columns:1fr;
+              justify-items:stretch;
+              align-items:stretch;
+            }
+            #memberPanel .member-create-fields .address_line-line > *{
+              width:100%;
+              min-width:0;
+            }
+            #memberPanel .member-create-fields .venue-line,
+            #memberPanel .member-create-fields .session-date-row{
+              position:relative;
             }
             #memberPanel .member-create-fields .venue-line-actions,
             #memberPanel .member-create-fields .session-date-actions,
             #memberPanel .member-create-fields .session-time-actions,
             #memberPanel .member-create-fields .version-actions,
             #memberPanel .member-create-fields .tier-actions{
+              margin-left:0;
               display:flex;
+              gap:4px;
+              align-items:center;
+              justify-self:end;
+              align-self:center;
               justify-content:flex-end;
-              gap:8px;
-              flex-wrap:wrap;
             }
             #memberPanel .member-create-fields .session-pricing-card-list{
               display:flex;
@@ -8637,7 +8672,7 @@ html, body { cursor: auto !important; }
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.2);
-              padding:12px;
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:12px;
@@ -8648,9 +8683,10 @@ html, body { cursor: auto !important; }
               gap:10px;
             }
             #memberPanel .member-create-fields .session-time-row{
+              border:none;
               border-radius:8px;
-              background:rgba(0,0,0,0.2);
-              padding:12px;
+              background:rgba(0,0,0,0.25);
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:12px;
@@ -8661,6 +8697,128 @@ html, body { cursor: auto !important; }
               justify-content:space-between;
               gap:12px;
             }
+            #memberPanel .member-create-fields .session-time-input,
+            #memberPanel .member-create-fields .seating_area-input,
+            #memberPanel .member-create-fields .pricing_tier-input,
+            #memberPanel .member-create-fields .session-price-input{
+              width:100%;
+              height:36px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
+              padding:0 12px;
+              box-sizing:border-box;
+            }
+            #memberPanel .member-create-fields .venue-name-input,
+            #memberPanel .member-create-fields .session-date-input{
+              background:#2e3a72 !important;
+              color:var(--button-text);
+            }
+            #memberPanel .member-create-fields .session-time-input{
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
+            }
+            #memberPanel .member-create-fields .session-date-input-wrapper{
+              position:relative;
+              display:flex;
+              align-items:center;
+              width:100%;
+            }
+            #memberPanel .member-create-fields .session-date-input{
+              padding-right:36px;
+              text-align:left;
+            }
+            #memberPanel .member-create-fields .session-date-dropdown-indicator{
+              position:absolute;
+              right:12px;
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              pointer-events:none;
+              color:var(--button-text);
+              transition:transform 0.2s ease;
+            }
+            #memberPanel .member-create-fields .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
+              transform:rotate(180deg);
+            }
+            #memberPanel .member-create-fields .session-time-input{
+              font-variant-numeric:tabular-nums;
+            }
+            #memberPanel .member-create-fields .session-time-input.is-invalid{
+              border-color:#b83030;
+              box-shadow:0 0 0 1px #b83030;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container,
+            #memberPanel .member-create-fields .address_line-fallback{
+              position:relative;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container{
+              z-index:var(--forms-layer-stacked);
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl{
+              width:100%;
+              min-width:0;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
+              box-shadow:none;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              min-height:36px;
+              position:relative;
+              z-index:var(--forms-layer-overlay);
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
+              height:36px;
+              line-height:36px;
+              padding:0 12px;
+              color:var(--input-text);
+              background:transparent;
+              font-size:inherit;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
+              display:none;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
+              background:transparent;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+              display:none;
+            }
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
+              z-index:var(--forms-layer-popover);
+            }
+            #memberPanel .member-create-fields .session-list{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .session-card{
+              border:none;
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
+              padding:0;
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+              position:relative;
+            }
+            #memberPanel .member-create-fields .session-date-input{
+              cursor:pointer;
+            }
+            #memberPanel .member-create-fields .session-times{
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #memberPanel .member-create-fields .seating_area-list{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
             #memberPanel .member-create-fields .session-version-list{
               display:flex;
               flex-direction:column;
@@ -8669,7 +8827,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .version-entry-card{
               border-radius:8px;
               background:rgba(0,0,0,0.2);
-              padding:12px;
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:10px;
