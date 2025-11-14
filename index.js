@@ -24669,7 +24669,6 @@ document.addEventListener('pointerdown', (e) => {
         renderFormPreviewForMember(fields);
       }
       if(emptyState){
-        emptyState.textContent = `${selectedCategory} > ${selectedSubcategory}`;
         emptyState.hidden = true;
       }
       if(formWrapper) formWrapper.hidden = false;
