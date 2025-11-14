@@ -16374,29 +16374,19 @@ function makePosts(){
           renderHistoryBoard();
         }
 
-        // Scroll to top when opening any post - must be last
-        const scrollToTop = () => {
-          const postsChild = container.querySelector('.posts');
-          // Scroll both .posts (if exists) and container
-          if(postsChild){
-            postsChild.scrollTop = 0;
+        // Scroll to top when opening any post
+        setTimeout(() => {
+          if(detail && container.contains(detail)){
+            // Scroll the opened post to top of container
+            detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Also set scrollTop directly as fallback
+            const postsChild = container.querySelector('.posts');
+            const scrollTarget = postsChild || container;
+            if(scrollTarget){
+              scrollTarget.scrollTop = 0;
+            }
           }
-          container.scrollTop = 0;
-        };
-        
-        // Scroll immediately
-        scrollToTop();
-        
-        // Scroll after layout updates
-        requestAnimationFrame(() => {
-          scrollToTop();
-          requestAnimationFrame(() => {
-            scrollToTop();
-            setTimeout(() => {
-              scrollToTop();
-            }, 250);
-          });
-        });
+        }, 200);
       }
 
       function closeActivePost(){
