@@ -644,6 +644,31 @@ function handlePromptKeydown(event, context){
     loadMessagesFromDatabase(false).catch(err => {
       console.warn('Failed to preload messages:', err);
     });
+    
+    // Load unsaved dialog messages from DB
+    (async () => {
+      const adminTitle = document.getElementById('adminUnsavedTitle');
+      const adminMessage = adminTitle?.nextElementSibling;
+      const memberTitle = document.getElementById('memberUnsavedTitle');
+      const memberMessage = memberTitle?.nextElementSibling;
+      
+      if(adminTitle && adminTitle.dataset.messageKey){
+        const msg = await getMessage(adminTitle.dataset.messageKey, {}, true);
+        if(msg) adminTitle.textContent = msg;
+      }
+      if(adminMessage && adminMessage.dataset.messageKey){
+        const msg = await getMessage(adminMessage.dataset.messageKey, {}, true);
+        if(msg) adminMessage.textContent = msg;
+      }
+      if(memberTitle && memberTitle.dataset.messageKey){
+        const msg = await getMessage(memberTitle.dataset.messageKey, {}, false);
+        if(msg) memberTitle.textContent = msg;
+      }
+      if(memberMessage && memberMessage.dataset.messageKey){
+        const msg = await getMessage(memberMessage.dataset.messageKey, {}, false);
+        if(msg) memberMessage.textContent = msg;
+      }
+    })();
   });
 })();
 
@@ -2284,7 +2309,7 @@ async function ensureMapboxCssFor(container) {
 
     let mode = localStorage.getItem('mode') || 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
-    const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
+    // Welcome message will be loaded from DB
 
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
@@ -2470,12 +2495,15 @@ async function ensureMapboxCssFor(container) {
                   }
                   
                   // Show reload prompt
-                  const message = enabled 
-                    ? 'Console filter will be enabled on next page load. Reload now?' 
-                    : 'Console filter will be disabled on next page load. Reload now?';
-                  if(confirm(message)){
-                    location.reload();
-                  }
+                  const messageKey = enabled ? 'msg_confirm_console_filter_enable' : 'msg_confirm_console_filter_disable';
+                  (async () => {
+                    const message = await getMessage(messageKey, {}, true) || (enabled 
+                      ? 'Console filter will be enabled on next page load. Reload now?' 
+                      : 'Console filter will be disabled on next page load. Reload now?');
+                    if(confirm(message)){
+                      location.reload();
+                    }
+                  })();
                 });
               }
             }
@@ -2878,11 +2906,18 @@ async function ensureMapboxCssFor(container) {
       }
       updateLogoClickState();
 
-      function openWelcome(){
+      async function openWelcome(){
         const popup = document.getElementById('welcome-modal');
         const msgEl = document.getElementById('welcomeMessageBox');
+        const titleEl = document.getElementById('welcomeTitle');
         const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
-        msgEl.innerHTML = saved.welcomeMessage || DEFAULT_WELCOME;
+        
+        // Load welcome messages from DB
+        const welcomeBody = await getMessage('msg_welcome_body', {}, false) || saved.welcomeMessage || '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
+        const welcomeTitle = await getMessage('msg_welcome_title', {}, false) || 'Welcome to FunMap';
+        
+        msgEl.innerHTML = welcomeBody;
+        if(titleEl) titleEl.textContent = welcomeTitle;
         openPanel(popup);
         const body = document.getElementById('welcomeBody');
         body.style.padding = '20px';
@@ -8019,11 +8054,11 @@ function makePosts(){
 
       const title = document.createElement('h2');
       title.id = 'formbuilderConfirmTitle';
-      title.textContent = 'Delete item?';
+      // Title will be set from DB message
 
       const message = document.createElement('p');
       message.id = 'formbuilderConfirmMessage';
-      message.textContent = 'Are you sure you want to delete this item?';
+      // Message will be set from DB message
 
       const actions = document.createElement('div');
       actions.className = 'formbuilder-confirm-actions';
@@ -8048,12 +8083,15 @@ function makePosts(){
       return overlay;
     }
 
-    function confirmFormbuilderAction({
+    async function confirmFormbuilderAction({
       messageText = 'Are you sure you want to continue?',
       titleText = 'Confirm action',
       confirmLabel = 'Confirm',
       confirmClassName = 'formbuilder-confirm-delete',
-      focusCancel = true
+      focusCancel = true,
+      messageKey = null,
+      titleKey = null,
+      placeholders = {}
     } = {}){
       const overlay = ensureFormbuilderConfirmOverlay();
       const dialog = overlay.querySelector('.formbuilder-confirm-dialog');
@@ -8078,8 +8116,21 @@ function makePosts(){
         confirmBtn = replacement;
       }
 
-      title.textContent = titleText || 'Confirm action';
-      message.textContent = messageText || 'Are you sure you want to continue?';
+      // Load messages from DB if keys provided
+      let finalTitle = titleText || 'Confirm action';
+      let finalMessage = messageText || 'Are you sure you want to continue?';
+      
+      if(titleKey){
+        const dbTitle = await getMessage(titleKey, placeholders, true);
+        if(dbTitle) finalTitle = dbTitle;
+      }
+      if(messageKey){
+        const dbMessage = await getMessage(messageKey, placeholders, true);
+        if(dbMessage) finalMessage = dbMessage;
+      }
+
+      title.textContent = finalTitle;
+      message.textContent = finalMessage;
 
       const normalizedConfirmClass = typeof confirmClassName === 'string' && confirmClassName.trim()
         ? `formbuilder-confirm-button ${confirmClassName.trim()}`
@@ -8145,10 +8196,12 @@ function makePosts(){
       });
     }
 
-    function confirmFormbuilderDeletion(messageText, titleText){
-      const result = confirmFormbuilderAction({
-        messageText: messageText || 'Are you sure you want to delete this item?',
-        titleText: titleText || 'Delete item?',
+    async function confirmFormbuilderDeletion(messageText, titleText){
+      const result = await confirmFormbuilderAction({
+        messageText: messageText,
+        titleText: titleText,
+        messageKey: !messageText ? 'msg_confirm_delete_item' : null,
+        titleKey: !titleText ? 'msg_confirm_delete_title' : null,
         confirmLabel: 'Delete',
         confirmClassName: 'formbuilder-confirm-delete',
         focusCancel: true
@@ -8574,6 +8627,11 @@ function makePosts(){
             errorMsg.className = 'icon-picker-error';
             errorMsg.innerHTML = 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>';
             grid.appendChild(errorMsg);
+            // Load error message from DB
+            (async () => {
+              const msg = await getMessage('msg_error_no_icons', {}, true) || errorMsg.innerHTML;
+              if(msg) errorMsg.innerHTML = msg;
+            })();
           } else {
           const currentPath = applyNormalizeIconPath(getCurrentPath());
           const optionsList = [{ value: '', label: 'No Icon' }];
@@ -9295,11 +9353,11 @@ function makePosts(){
               openPickers.clear();
             };
 
-            const createTransientInputAlert = message => {
+            const createTransientInputAlert = (messageOrKey, isKey = false) => {
               let lastTimestamp = 0;
               let activeAlert = null;
               let activeAlertTimeout = 0;
-              return target => {
+              return async target => {
                 const candidate = (target && typeof target.getBoundingClientRect === 'function')
                   ? target
                   : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
@@ -9323,6 +9381,13 @@ function makePosts(){
                   activeAlert.remove();
                   activeAlert = null;
                 }
+                
+                // Load message from DB if key provided, otherwise use message directly
+                let message = messageOrKey;
+                if(isKey && typeof messageOrKey === 'string' && messageOrKey.startsWith('msg_')){
+                  message = await getMessage(messageOrKey, {}, false) || messageOrKey;
+                }
+                
                 const handle = showCopyStyleMessage(message, inputEl);
                 if(!handle) return;
                 activeAlert = handle;
@@ -9336,10 +9401,9 @@ function makePosts(){
               };
             };
 
-            const currencyAlertMessage = 'Please select a currency before entering a price.';
-            const showCurrencyAlert = createTransientInputAlert(currencyAlertMessage);
-            const sessionTimeAlertMessage = 'There is already a session for that time.';
-            const showSessionTimeAlert = createTransientInputAlert(sessionTimeAlertMessage);
+            // Currency and session time alerts will load messages from DB
+            const showCurrencyAlert = createTransientInputAlert('msg_error_currency_required', true);
+            const showSessionTimeAlert = createTransientInputAlert('msg_error_duplicate_session_time', true);
 
             const sanitizeSessionPriceValue = value => {
               const raw = typeof value === 'string' ? value : String(value ?? '');
@@ -9858,10 +9922,11 @@ function makePosts(){
               renderVenues({ type: 'venue-name', venueIndex: nextIndex });
             };
 
-            const requestVenueRemoval = (index)=>{
+            const requestVenueRemoval = async (index)=>{
               ensureOptions();
               if(previewField.options.length <= 1) return;
-              if(window.confirm('Are you sure you want to remove this venue?')){
+              const msg = await getMessage('msg_confirm_delete_venue', {}, false) || 'Are you sure you want to remove this venue?';
+              if(window.confirm(msg)){
                 removeVenue(index);
               }
             };
@@ -13425,9 +13490,10 @@ function makePosts(){
 
           addFieldBtn.addEventListener('click', async ()=>{
             const subDisplayName = getSubDisplayName();
-            const confirmed = await confirmFormbuilderAction({
-              titleText: 'Add Field',
-              messageText: `Add a new field to ${subDisplayName}?`,
+          const confirmed = await confirmFormbuilderAction({
+            titleText: 'Add Field',
+            messageKey: 'msg_confirm_add_field',
+            placeholders: { subcategory: subDisplayName },
               confirmLabel: 'Add Field',
               confirmClassName: 'formbuilder-confirm-primary',
               focusCancel: false
@@ -13975,7 +14041,8 @@ function makePosts(){
           const categoryDisplayName = getCategoryDisplayName();
           const confirmed = await confirmFormbuilderAction({
             titleText: 'Add Subcategory',
-            messageText: `Add a new subcategory to ${categoryDisplayName}?`,
+            messageKey: 'msg_confirm_add_subcategory',
+            placeholders: { category: categoryDisplayName },
             confirmLabel: 'Add Subcategory',
             confirmClassName: 'formbuilder-confirm-primary',
             focusCancel: false
@@ -14089,7 +14156,7 @@ function makePosts(){
       async function handleFormbuilderAddCategoryClick(){
         const confirmed = await confirmFormbuilderAction({
           titleText: 'Add Category',
-          messageText: 'Add a new category to the formbuilder?',
+          messageKey: 'msg_confirm_add_category',
           confirmLabel: 'Add Category',
           confirmClassName: 'formbuilder-confirm-primary',
           focusCancel: false
@@ -15657,16 +15724,17 @@ function makePosts(){
         }, true);
       }
 
-      function showZoomToast(){
+      async function showZoomToast(){
         let toast = document.getElementById('zoom-toast');
         if(!toast){
           toast = document.createElement('div');
           toast.id = 'zoom-toast';
           toast.className = 'zoom-toast';
-          toast.textContent = 'Zoom the map to see posts';
           document.body.appendChild(toast);
         }
         
+        const msg = await getMessage('msg_map_zoom_required', {}, false) || 'Zoom the map to see posts';
+        toast.textContent = msg;
         toast.classList.add('show');
         setTimeout(() => {
           toast.classList.remove('show');
@@ -18649,8 +18717,14 @@ if (!map.__pillHooksInstalled) {
         emptyWrap.appendChild(emptyImg);
         const emptyMsg = document.createElement('p');
         emptyMsg.className = 'post-board-empty-message';
+        emptyMsg.dataset.messageKey = 'msg_posts_empty_state';
         emptyMsg.textContent = 'There are no posts here. Try moving the map or changing your filter settings.';
         emptyWrap.appendChild(emptyMsg);
+        // Load message from DB asynchronously
+        (async () => {
+          const msg = await getMessage('msg_posts_empty_state', {}, false);
+          if(msg) emptyMsg.textContent = msg;
+        })();
         postsWideEl.appendChild(emptyWrap);
         return;
       }
@@ -18985,7 +19059,13 @@ if (!map.__pillHooksInstalled) {
       reminderImg.alt = 'Cute little monkey in red cape pointing up';
       reminderWrap.appendChild(reminderImg);
       const reminderMsg = document.createElement('p');
+      reminderMsg.dataset.messageKey = 'msg_member_login_reminder';
       reminderMsg.textContent = 'When you log in as a member, I can remember your recent posts and favourites on any device.';
+      // Load message from DB asynchronously
+      (async () => {
+        const msg = await getMessage('msg_member_login_reminder', {}, false);
+        if(msg) reminderMsg.textContent = msg;
+      })();
       reminderWrap.appendChild(reminderMsg);
       recentsBoard.appendChild(reminderWrap);
     }
@@ -23347,11 +23427,18 @@ document.addEventListener('pointerdown', (e) => {
       ? window.cloneVenueSessionVenue
       : cloneVenueSessionVenue;
 
-    function showCreateStatus(message, options = {}){
+    async function showCreateStatus(message, options = {}){
       const statusEl = document.getElementById('memberStatusMessage');
       if(!statusEl || typeof message !== 'string') return;
       const isError = !!options.error;
-      statusEl.textContent = message;
+      
+      // If message looks like a message key (starts with 'msg_'), fetch from DB
+      let displayMessage = message;
+      if(typeof message === 'string' && message.startsWith('msg_')){
+        displayMessage = await getMessage(message, options.placeholders || {}, false) || message;
+      }
+      
+      statusEl.textContent = displayMessage;
       statusEl.classList.remove('error','success','show');
       statusEl.classList.add(isError ? 'error' : 'success');
       statusEl.setAttribute('aria-hidden','false');
@@ -23427,8 +23514,7 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
-    const loadingMessage = 'Loading form fields…';
-    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
+    // Messages will be loaded from DB when needed
 
     const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
     let memberSnapshot = defaultMemberSnapshot;
@@ -24044,7 +24130,8 @@ document.addEventListener('pointerdown', (e) => {
       if(subcategorySelect){
         subcategorySelect.disabled = true;
       }
-      renderEmptyState(loadingMessage);
+      const loadingMsg = await getMessage('msg_post_loading_form', {}, false) || 'Loading form fields…';
+      renderEmptyState(loadingMsg);
       try{
         const backendSnapshot = await persistedFormbuilderSnapshotPromise;
         const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
@@ -24061,8 +24148,9 @@ document.addEventListener('pointerdown', (e) => {
         } else {
           console.error('Failed to load formbuilder snapshot for members', error);
         }
-        memberSnapshotErrorMessage = fetchErrorMessage;
-        setEmptyStateMessage(fetchErrorMessage);
+        const errorMsg = await getMessage('msg_post_form_load_error', {}, false) || 'We couldn't load the latest form fields. You can continue with the defaults for now.';
+        memberSnapshotErrorMessage = errorMsg;
+        setEmptyStateMessage(errorMsg);
         applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
       } finally {
         if(categorySelect){
@@ -24507,7 +24595,7 @@ document.addEventListener('pointerdown', (e) => {
       const categoryName = categorySelect ? categorySelect.value.trim() : '';
       const subcategoryName = subcategorySelect ? subcategorySelect.value.trim() : '';
       if(!categoryName || !subcategoryName){
-        showCreateStatus('Select a category and subcategory before posting.', { error: true });
+        await showCreateStatus('msg_post_create_no_category', { error: true });
         if(!categoryName && categorySelect){
           focusElement(categorySelect);
         } else if(subcategorySelect){
@@ -24557,8 +24645,9 @@ document.addEventListener('pointerdown', (e) => {
           const checked = element.querySelector('input[type="radio"]:checked');
           value = checked ? checked.value : '';
           if(field.required && !value){
+            const msg = await getMessage('msg_post_validation_select', { field: label }, false) || `Select an option for ${label}.`;
             invalid = {
-              message: `Select an option for ${label}.`,
+              message: msg,
               focus: ()=> focusElement(findFirstFocusable(['input[type="radio"]']))
             };
             break;
@@ -24567,8 +24656,9 @@ document.addEventListener('pointerdown', (e) => {
           const select = element.querySelector('select');
           value = select ? select.value : '';
           if(field.required && (!value || !value.trim())){
+            const msg = await getMessage('msg_post_validation_choose', { field: label }, false) || `Choose an option for ${label}.`;
             invalid = {
-              message: `Choose an option for ${label}.`,
+              message: msg,
               focus: ()=> focusElement(select)
             };
             break;
@@ -24593,8 +24683,9 @@ document.addEventListener('pointerdown', (e) => {
             imageUploadQueue.push({ files: files.slice(), label });
           }
           if(field.required && value.length === 0){
+            const msg = await getMessage('msg_post_validation_file_required', { field: label }, false) || `Add at least one file for ${label}.`;
             invalid = {
-              message: `Add at least one file for ${label}.`,
+              message: msg,
               focus: ()=> focusElement(input)
             };
             break;
@@ -24609,8 +24700,9 @@ document.addEventListener('pointerdown', (e) => {
           if(field.required){
             const hasComplete = value.some(opt => opt.currency && opt.price);
             if(!hasComplete){
+              const msg = await getMessage('msg_post_validation_pricing', { field: label }, false) || `Provide pricing details for ${label}.`;
               invalid = {
-                message: `Provide pricing details for ${label}.`,
+                message: msg,
                 focus: ()=> focusElement(findFirstFocusable(['.variant-pricing-option select','.variant-pricing-option input']))
               };
               break;
@@ -24626,8 +24718,9 @@ document.addEventListener('pointerdown', (e) => {
               return price && currency;
             })))));
             if(!hasTierPrice){
+              const msg = await getMessage('msg_post_validation_pricing_tiers', { field: label }, false) || `Add at least one price tier for ${label}.`;
               invalid = {
-                message: `Add at least one price tier for ${label}.`,
+                message: msg,
                 focus: ()=> focusElement(findFirstFocusable(['.tier-row select','.tier-row input']))
               };
               break;
@@ -24637,8 +24730,9 @@ document.addEventListener('pointerdown', (e) => {
           const textarea = element.querySelector('textarea');
           value = textarea ? textarea.value : '';
           if(field.required && (!value || !value.trim())){
+            const msg = await getMessage('msg_post_validation_required', { field: label }, false) || `Enter a value for ${label}.`;
             invalid = {
-              message: `Enter a value for ${label}.`,
+              message: msg,
               focus: ()=> focusElement(textarea)
             };
             break;
@@ -24662,8 +24756,9 @@ document.addEventListener('pointerdown', (e) => {
           };
           value = trimmedLocation;
           if(field.required && (!trimmedLocation.address || !trimmedLocation.latitude || !trimmedLocation.longitude)){
+            const msg = await getMessage('msg_post_validation_location', { field: label }, false) || `Select a location for ${label}.`;
             invalid = {
-              message: `Select a location for ${label}.`,
+              message: msg,
               focus: ()=> focusElement(addressInput)
             };
             break;
@@ -24672,8 +24767,9 @@ document.addEventListener('pointerdown', (e) => {
           const input = element.querySelector('input, textarea');
           value = input ? input.value : '';
           if(field.required && (!value || !String(value).trim())){
+            const msg = await getMessage('msg_post_validation_required', { field: label }, false) || `Enter a value for ${label}.`;
             invalid = {
-              message: `Enter a value for ${label}.`,
+              message: msg,
               focus: ()=> focusElement(input)
             };
             break;
@@ -24697,7 +24793,7 @@ document.addEventListener('pointerdown', (e) => {
       }
 
       if(invalid){
-        showCreateStatus(invalid.message, { error: true });
+        await showCreateStatus(invalid.message, { error: true });
         if(invalid.focus){
           invalid.focus();
         }
@@ -24741,7 +24837,7 @@ document.addEventListener('pointerdown', (e) => {
         });
       }catch(err){
         console.error('Failed to submit member post', err);
-        showCreateStatus('Unable to post your listing. Please try again.', { error: true });
+        await showCreateStatus('msg_post_create_error', { error: true });
         restoreButtonState();
         isSubmittingCreatePost = false;
         return;
@@ -24752,7 +24848,7 @@ document.addEventListener('pointerdown', (e) => {
         responseText = await response.text();
       }catch(err){
         console.error('Failed to read member post response', err);
-        showCreateStatus('Unable to confirm your listing submission.', { error: true });
+        await showCreateStatus('msg_post_submit_confirm_error', { error: true });
         restoreButtonState();
         isSubmittingCreatePost = false;
         return;
@@ -24768,7 +24864,7 @@ document.addEventListener('pointerdown', (e) => {
       }
 
       if(!response.ok || (responseData && responseData.success === false)){
-        let errorMessage = 'Unable to post your listing.';
+        let errorMessage = await getMessage('msg_post_create_error', {}, false) || 'Unable to post your listing.';
         if(responseData && typeof responseData === 'object'){
           const candidate = responseData.error || responseData.message;
           if(typeof candidate === 'string' && candidate.trim()){
@@ -24777,7 +24873,7 @@ document.addEventListener('pointerdown', (e) => {
         } else if(responseText && responseText.trim()){
           errorMessage = responseText.trim();
         }
-        showCreateStatus(errorMessage, { error: true });
+        await showCreateStatus(errorMessage, { error: true });
         restoreButtonState();
         isSubmittingCreatePost = false;
         return;
@@ -24812,7 +24908,7 @@ document.addEventListener('pointerdown', (e) => {
         }
       }
 
-      const successMessage = 'Your listing has been posted!';
+      const successMessage = await getMessage('msg_post_create_success', {}, false) || 'Your listing has been posted!';
       let finalMessage = successMessage;
       const finalOptions = {};
       if(Array.isArray(uploadOutcome.errors) && uploadOutcome.errors.length){
@@ -24824,10 +24920,10 @@ document.addEventListener('pointerdown', (e) => {
           : 'Your listing was posted, but some images could not be uploaded.';
         finalOptions.error = true;
       } else if(Array.isArray(uploadOutcome.uploaded) && uploadOutcome.uploaded.length){
-        finalMessage = 'Your listing and images have been posted!';
+        finalMessage = await getMessage('msg_post_create_with_images', {}, false) || 'Your listing and images have been posted!';
       }
 
-      showCreateStatus(finalMessage, finalOptions);
+      await showCreateStatus(finalMessage, finalOptions);
       if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
         window.memberPanelChangeManager.markSaved();
       }
