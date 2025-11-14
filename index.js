@@ -16372,6 +16372,75 @@ function makePosts(){
         const targetNext = target.nextSibling;
         const isCardValid = target && target.classList && (target.classList.contains('post-card') || target.classList.contains('recents-card'));
         
+        // Scroll the card to the top BEFORE converting it to open-post
+        // Find the actual scrollable element
+        let scrollElement = container;
+        if(container === postsWideEl || container.classList.contains('post-board')){
+          const postsEl = container.querySelector('.posts');
+          if(postsEl){
+            scrollElement = postsEl;
+          }
+        }
+        
+        // Scroll the card to the top of the scroll container
+        let scrollPromise = Promise.resolve();
+        if(scrollElement && target && container.contains(target) && typeof scrollElement.scrollTop !== 'undefined'){
+          // Calculate the card's position relative to the scroll container
+          const scrollRect = scrollElement.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const currentOffset = targetRect.top - scrollRect.top;
+          
+          // Scroll to position the card at the top
+          if(Math.abs(currentOffset) > 5){
+            // Use smooth scrolling and wait for it to complete
+            scrollElement.scrollTo({
+              top: scrollElement.scrollTop + currentOffset,
+              behavior: 'smooth'
+            });
+            // Wait for smooth scroll to complete (approximate - smooth scrolls don't have a completion event)
+            const targetScrollTop = scrollElement.scrollTop + currentOffset;
+            scrollPromise = new Promise(resolve => {
+              let lastScrollTop = scrollElement.scrollTop;
+              let stableFrames = 0;
+              let frameCount = 0;
+              const maxFrames = 60; // Max ~1 second at 60fps
+              
+              const checkScroll = () => {
+                frameCount++;
+                const newScrollTop = scrollElement.scrollTop;
+                const newRect = scrollElement.getBoundingClientRect();
+                const newTargetRect = target.getBoundingClientRect();
+                const newOffset = newTargetRect.top - newRect.top;
+                
+                // Check if scroll has stopped (position hasn't changed much)
+                if(Math.abs(newScrollTop - lastScrollTop) < 1){
+                  stableFrames++;
+                } else {
+                  stableFrames = 0;
+                }
+                lastScrollTop = newScrollTop;
+                
+                // If we're close to the target (within 10px), scroll has been stable for 2 frames, or timeout
+                if(Math.abs(newOffset) <= 10 || stableFrames >= 2 || frameCount >= maxFrames){
+                  // Final positioning to ensure exact placement
+                  scrollElement.scrollTop = scrollElement.scrollTop + newOffset;
+                  resolve();
+                } else {
+                  requestAnimationFrame(checkScroll);
+                }
+              };
+              // Start checking after a short delay to let smooth scroll begin
+              setTimeout(() => requestAnimationFrame(checkScroll), 50);
+            });
+          } else {
+            // Already at top, but ensure scrollTop is 0
+            scrollElement.scrollTop = 0;
+          }
+        }
+        
+        // Wait for scroll to complete before building detail
+        await scrollPromise;
+        
         // Pass the existing target card to buildDetail to preserve it without recreating
         const detail = buildDetail(p, isCardValid ? target : null, fromHistory);
         
@@ -16419,10 +16488,8 @@ function makePosts(){
           window.adjustListHeight();
         }
 
-        // Scroll to top when opening any post - must happen AFTER all layout operations
-        // Works for: post cards, recents cards, map markers, and ad board clicks
-        // IMPORTANT: The card becomes the header (sticky top:0) and post-body slides out
-        // We need to scroll the container so the .open-post (with card-as-header) is at the top
+        // Ensure scroll is at top after layout operations
+        // The card should already be scrolled to top, but verify and adjust if needed
         const scrollToTop = (attempt = 1) => {
           if(!container){
             console.warn(`[openPost] Scroll attempt ${attempt}: Container missing`);
@@ -16452,9 +16519,11 @@ function makePosts(){
           const canScroll = scrollHeight > clientHeight;
           
           if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
-            // Simply scroll to the top of the container
-            // The open-post will be at the top after scrolling
-            scrollElement.scrollTop = 0;
+            // Ensure we're at the top - use instant scroll for final positioning
+            // (The smooth scroll should have already happened, this is just a safety check)
+            if(beforeScroll > 5){
+              scrollElement.scrollTop = 0;
+            }
             
             const afterScroll = scrollElement.scrollTop;
             // Success if we scrolled to the top (or very close to it, within 5px tolerance)
