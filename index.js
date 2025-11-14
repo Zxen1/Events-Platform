@@ -92,6 +92,158 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+// === Message Utility Functions ===
+// Cache for loaded messages
+let messageCache = null;
+let messageCachePromise = null;
+
+/**
+ * Load messages from database and cache them
+ * @param {boolean} includeAdmin - If true, includes admin and email messages (for admin panel)
+ * @returns {Promise<Object>} Object mapping message_key to message data
+ */
+async function loadMessagesFromDatabase(includeAdmin = false){
+  // Return cached messages if available
+  if(messageCache && !includeAdmin){
+    return messageCache;
+  }
+  
+  // Prevent duplicate requests
+  if(messageCachePromise){
+    return messageCachePromise;
+  }
+  
+  messageCachePromise = (async () => {
+    try {
+      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+      if(!response.ok){
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      
+      if(!result.success || !result.messages){
+        console.warn('Failed to load messages from database:', result.message || result.messages_error);
+        return {};
+      }
+      
+      // Flatten messages by message_key for easy lookup
+      const messagesMap = {};
+      result.messages.forEach(container => {
+        if(!container.messages || !Array.isArray(container.messages)) return;
+        
+        container.messages.forEach(message => {
+          // Filter visibility: users see only msg_user and msg_member, exclude msg_email
+          // Admin sees everything when includeAdmin is true
+          if(!includeAdmin){
+            const visibleContainers = ['msg_user', 'msg_member'];
+            if(!visibleContainers.includes(message.container_key || container.container_key)){
+              return; // Skip admin and email messages for regular users
+            }
+            // Also check is_visible flag
+            if(message.is_visible === false || message.is_visible === 0){
+              return; // Skip hidden messages
+            }
+          }
+          
+          // Only include active messages
+          if(message.is_active !== false && message.is_active !== 0){
+            messagesMap[message.message_key] = message;
+          }
+        });
+      });
+      
+      // Cache user-visible messages separately from admin messages
+      if(!includeAdmin){
+        messageCache = messagesMap;
+      }
+      
+      return messagesMap;
+    } catch(error){
+      console.error('Error loading messages from database:', error);
+      return {};
+    } finally {
+      messageCachePromise = null;
+    }
+  })();
+  
+  return messageCachePromise;
+}
+
+/**
+ * Replace placeholders in message text (e.g., {name} -> actual value)
+ * @param {string} text - Message text with placeholders
+ * @param {Object} placeholders - Object with placeholder values
+ * @returns {string} Message with placeholders replaced
+ */
+function replacePlaceholders(text, placeholders = {}){
+  if(!text || typeof text !== 'string'){
+    return text || '';
+  }
+  
+  return text.replace(/\{(\w+)\}/g, (match, key) => {
+    return placeholders[key] !== undefined ? String(placeholders[key]) : match;
+  });
+}
+
+/**
+ * Get a message by key from the database
+ * @param {string} messageKey - The message_key to look up
+ * @param {Object} placeholders - Object with placeholder values to replace
+ * @param {boolean} includeAdmin - If true, includes admin/email messages (for admin panel)
+ * @returns {Promise<string>} The message text with placeholders replaced, or empty string if not found
+ */
+async function getMessage(messageKey, placeholders = {}, includeAdmin = false){
+  if(!messageKey || typeof messageKey !== 'string'){
+    return '';
+  }
+  
+  const messages = await loadMessagesFromDatabase(includeAdmin);
+  const message = messages[messageKey];
+  
+  if(!message){
+    console.warn(`Message not found: ${messageKey}`);
+    return '';
+  }
+  
+  return replacePlaceholders(message.message_text || '', placeholders);
+}
+
+/**
+ * Get a message synchronously from cache (must have been loaded first)
+ * @param {string} messageKey - The message_key to look up
+ * @param {Object} placeholders - Object with placeholder values to replace
+ * @param {boolean} includeAdmin - If true, looks in admin messages cache
+ * @returns {string} The message text with placeholders replaced, or empty string if not found
+ */
+function getMessageSync(messageKey, placeholders = {}, includeAdmin = false){
+  if(!messageKey || typeof messageKey !== 'string'){
+    return '';
+  }
+  
+  // If cache not loaded yet, return empty (should use async getMessage instead)
+  if(!includeAdmin && !messageCache){
+    console.warn(`Message cache not loaded yet for: ${messageKey}. Use getMessage() instead.`);
+    return '';
+  }
+  
+  // For sync version, we need to use cache
+  // Note: Admin messages would need separate cache, but for now we'll return empty
+  const messages = includeAdmin ? {} : messageCache || {};
+  const message = messages[messageKey];
+  
+  if(!message){
+    return '';
+  }
+  
+  return replacePlaceholders(message.message_text || '', placeholders);
+}
+
+// Make message functions globally available
+window.getMessage = getMessage;
+window.getMessageSync = getMessageSync;
+window.loadMessagesFromDatabase = loadMessagesFromDatabase;
+window.replacePlaceholders = replacePlaceholders;
+
 function handlePromptKeydown(event, context){
   if(!context || !context.prompt || typeof context.cancelPrompt !== 'function'){
     return;
@@ -487,6 +639,11 @@ function handlePromptKeydown(event, context){
     updateManifest();
     hideGeocoderIconFromAT();
     setupGeocoderObserver();
+    
+    // Load user-visible messages on page load (excludes admin and email messages)
+    loadMessagesFromDatabase(false).catch(err => {
+      console.warn('Failed to preload messages:', err);
+    });
   });
 })();
 
@@ -14570,7 +14727,7 @@ function makePosts(){
     if(messagesCats){
       renderMessagesCategories();
       
-      // Load messages from database
+      // Load messages from database (admin panel sees all messages including email/admin)
       loadAdminMessages();
       
       // Add drag and drop functionality for Messages tab categories
@@ -21331,10 +21488,17 @@ const memberPanelChangeManager = (()=>{
     setDirty(!stateEquals(current, savedState));
   }
 
-  function showStatus(message){
+  async function showStatus(message){
     ensureElements();
     if(!statusMessage) return;
-    statusMessage.textContent = message;
+    
+    // If message looks like a message key (starts with 'msg_'), fetch from DB
+    let displayMessage = message;
+    if(typeof message === 'string' && message.startsWith('msg_')){
+      displayMessage = await getMessage(message, {}, true) || message;
+    }
+    
+    statusMessage.textContent = displayMessage;
     statusMessage.setAttribute('aria-hidden','false');
     statusMessage.classList.add('show');
     clearTimeout(statusTimer);
@@ -21471,9 +21635,9 @@ const memberPanelChangeManager = (()=>{
     }
   }
 
-  function handleSave({ closeAfter } = {}){
+  async function handleSave({ closeAfter } = {}){
     refreshSavedState();
-    showStatus('Saved');
+    await showStatus('msg_admin_saved');
     if(closeAfter){
       const target = pendingCloseTarget;
       pendingCloseTarget = null;
@@ -21492,7 +21656,7 @@ const memberPanelChangeManager = (()=>{
     }
   }
 
-  function discardChanges({ closeAfter } = {}){
+  async function discardChanges({ closeAfter } = {}){
     if(form && typeof form.reset === 'function'){
       applying = true;
       try{
@@ -21503,7 +21667,7 @@ const memberPanelChangeManager = (()=>{
     }
     applyState(savedState);
     setDirty(false);
-    showStatus('Changes Discarded');
+    await showStatus('msg_admin_discarded');
     notifyDiscard({ closeAfter: !!closeAfter });
     if(closeAfter){
       const target = pendingCloseTarget;
@@ -21730,6 +21894,30 @@ form.addEventListener('input', formChangedWrapper, true);
       websiteSettings.welcome_enabled = welcomeEnabledCheckbox.checked;
     }
     
+    // Save messages separately to admin-settings endpoint (not formbuilder)
+    if(modifiedMessages.length > 0){
+      try {
+        const messageResponse = await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: modifiedMessages })
+        });
+        
+        if(!messageResponse.ok){
+          console.error('Failed to save messages - HTTP status:', messageResponse.status);
+        } else {
+          const messageResult = await messageResponse.json();
+          if(!messageResult.success){
+            console.error('Failed to save messages:', messageResult.message || 'Unknown error');
+          } else {
+            console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+          }
+        }
+      } catch(err) {
+        console.error('Failed to save messages:', err);
+      }
+    }
+    
     // Save general settings to database if any exist
     if(Object.keys(websiteSettings).length > 0){
       try {
@@ -21754,7 +21942,7 @@ form.addEventListener('input', formChangedWrapper, true);
       }
     }
     
-    // Collect form data
+    // Collect form data (separate from messages and settings)
     let payload = null;
     if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
       try {
@@ -21767,21 +21955,27 @@ form.addEventListener('input', formChangedWrapper, true);
       payload = {};
     }
 
-    // Add messages to payload if any were modified
-    if(modifiedMessages.length > 0){
-      payload.messages = modifiedMessages;
-    }
-
+    // Only save form data if there's actual form data (not just empty object)
     let response;
     try {
-      response = await fetch(SAVE_ENDPOINT, {
-        method: 'POST',
-        headers: JSON_HEADERS,
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      });
+      // Only send form data if there's something to save
+      if(Object.keys(payload).length > 0){
+        response = await fetch(SAVE_ENDPOINT, {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // No form data to save, create a successful response object
+        response = {
+          ok: true,
+          text: async () => JSON.stringify({ success: true })
+        };
+      }
     } catch (networkError) {
-      showErrorBanner('Unable to reach the server. Please try again.');
+      const errorMsg = await getMessage('msg_admin_save_error_network', {}, true) || 'Unable to reach the server. Please try again.';
+      showErrorBanner(errorMsg);
       throw networkError;
     }
 
@@ -21792,7 +21986,8 @@ form.addEventListener('input', formChangedWrapper, true);
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
-        showErrorBanner('Unexpected response while saving changes.');
+        const errorMsg = await getMessage('msg_admin_save_error_response', {}, true) || 'Unexpected response while saving changes.';
+        showErrorBanner(errorMsg);
         const error = new Error('Invalid JSON response');
         error.responseText = responseText;
         throw error;
@@ -26268,11 +26463,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function showStatus(message, options = {}){
+  async function showStatus(message, options = {}){
     const statusEl = document.getElementById('memberStatusMessage');
     if(!statusEl) return;
     const isError = !!options.error;
-    statusEl.textContent = message;
+    
+    // If message looks like a message key (starts with 'msg_'), fetch from DB
+    let displayMessage = message;
+    if(typeof message === 'string' && message.startsWith('msg_')){
+      displayMessage = await getMessage(message, options.placeholders || {}, false) || message;
+    }
+    
+    statusEl.textContent = displayMessage;
     statusEl.classList.remove('error','success','show');
     statusEl.classList.add(isError ? 'error' : 'success');
     statusEl.setAttribute('aria-hidden','false');
@@ -26436,7 +26638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameRaw = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
     if(!usernameRaw || !password){
-      showStatus('Enter your email and password.', { error: true });
+      await showStatus('msg_auth_login_empty', { error: true });
       if(!usernameRaw && emailInput){
         emailInput.focus();
       } else if(passwordInput){
@@ -26449,11 +26651,11 @@ document.addEventListener('DOMContentLoaded', () => {
       verification = await verifyUserLogin(usernameRaw, password);
     }catch(err){
       console.error('Login verification failed', err);
-      showStatus('Unable to verify credentials. Please try again.', { error: true });
+      await showStatus('msg_auth_login_failed', { error: true });
       return;
     }
     if(!verification || verification.success !== true){
-      showStatus('Incorrect email or password. Try again.', { error: true });
+      await showStatus('msg_auth_login_incorrect', { error: true });
       if(passwordInput){
         passwordInput.focus();
         passwordInput.select();
@@ -26539,7 +26741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     storeCurrent(currentUser);
     render();
     const displayName = currentUser.name || currentUser.email || currentUser.username;
-    showStatus(`Welcome back, ${displayName}!`);
+    await showStatus('msg_auth_login_success', { placeholders: { name: displayName } });
   }
 
   async function handleRegister(){
@@ -26554,7 +26756,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordConfirm = passwordConfirmInput ? passwordConfirmInput.value : '';
     const avatar = avatarInput ? avatarInput.value.trim() : '';
     if(!name || !emailRaw || !password){
-      showStatus('Please complete all required fields.', { error: true });
+      await showStatus('msg_auth_register_empty', { error: true });
       if(!name && nameInput){
         nameInput.focus();
         return;
@@ -26569,17 +26771,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if(password.length < 4){
-      showStatus('Password must be at least 4 characters.', { error: true });
+      await showStatus('msg_auth_register_password_short', { error: true });
       if(passwordInput) passwordInput.focus();
       return;
     }
     if(!passwordConfirm){
-      showStatus('Please complete all required fields.', { error: true });
+      await showStatus('msg_auth_register_empty', { error: true });
       if(passwordConfirmInput) passwordConfirmInput.focus();
       return;
     }
     if(password !== passwordConfirm){
-      showStatus('Passwords do not match.', { error: true });
+      await showStatus('msg_auth_register_password_mismatch', { error: true });
       if(passwordConfirmInput){
         passwordConfirmInput.focus();
         if(typeof passwordConfirmInput.select === 'function'){
@@ -26603,7 +26805,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }catch(err){
       console.error('Registration request failed', err);
-      showStatus('Registration failed.', { error: true });
+      await showStatus('msg_auth_register_failed', { error: true });
       return;
     }
     let responseText = '';
@@ -26611,7 +26813,7 @@ document.addEventListener('DOMContentLoaded', () => {
       responseText = await response.text();
     }catch(err){
       console.error('Failed to read registration response', err);
-      showStatus('Registration failed.', { error: true });
+      await showStatus('msg_auth_register_failed', { error: true });
       return;
     }
     let payload = null;
@@ -26623,7 +26825,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     if(!response.ok || !payload || payload.success === false){
-      let errorMessage = 'Registration failed.';
+      let errorMessage = await getMessage('msg_auth_register_failed', {}, false) || 'Registration failed.';
       if(payload && typeof payload === 'object'){
         const possible = payload.error || payload.message;
         if(typeof possible === 'string' && possible.trim()){
@@ -26632,7 +26834,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if(responseText && responseText.trim()){
         errorMessage = responseText.trim();
       }
-      showStatus(errorMessage, { error: true });
+      await showStatus(errorMessage, { error: true });
       return;
     }
     const memberData = payload && typeof payload === 'object'
@@ -26671,14 +26873,15 @@ document.addEventListener('DOMContentLoaded', () => {
       clearInputs(registerInputs);
     }
     render();
-    showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
+    const displayName = currentUser.name || currentUser.email;
+    await showStatus('msg_auth_register_success', { placeholders: { name: displayName } });
   }
 
-  function handleLogout(){
+  async function handleLogout(){
     currentUser = null;
     storeCurrent(null);
     render();
-    showStatus('You have been logged out.');
+    await showStatus('msg_auth_logout_success');
   }
 
   function setup(){
