@@ -23650,7 +23650,7 @@ document.addEventListener('pointerdown', (e) => {
       memberCategories = memberSnapshot.categories;
       currencyCodes = collectCurrencyCodes(memberSnapshot);
       if(options.populate !== false){
-        populateCategoryOptions(options.preserveSelection === true);
+        buildFormpicker();
       }
     }
 
