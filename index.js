@@ -16150,6 +16150,27 @@ function makePosts(){
       }
 
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
+        // ========================================================================
+        // ENTRY POINT TRACKING
+        // ========================================================================
+        let entryPoint = 'unknown';
+        if(fromHistory && originEl && originEl.classList.contains('recents-card')){
+          entryPoint = 'recents-card';
+        } else if(!fromHistory && !fromMap && originEl && originEl.classList.contains('post-card')){
+          entryPoint = 'post-card';
+        } else if(fromMap){
+          entryPoint = 'map-marker';
+        } else if(!fromHistory && !fromMap && !originEl){
+          entryPoint = 'ad-board'; // Ad board calls without originEl
+        }
+        console.log(`[openPost] Entry Point: ${entryPoint}`, {
+          id,
+          fromHistory,
+          fromMap,
+          hasOriginEl: !!originEl,
+          originElClass: originEl ? originEl.className : null
+        });
+        
         lockMap(false);
         touchMarker = null;
         if(hoverPopup){
@@ -16192,7 +16213,16 @@ function makePosts(){
         $$('.mapboxgl-popup.big-map-card .big-map-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
 
         const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
-        if(!container) return;
+        if(!container){
+          console.error('[openPost] Container not found!', { fromHistory, postsWideEl: !!postsWideEl, recentsBoard: !!document.getElementById('recentsBoard') });
+          return;
+        }
+        console.log(`[openPost] Container selected: ${container.id || container.className}`, {
+          containerId: container.id,
+          containerClass: container.className,
+          isRecentsBoard: container.id === 'recentsBoard',
+          isPostBoard: container === postsWideEl
+        });
 
         const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
         if(alreadyOpen){
@@ -16374,23 +16404,81 @@ function makePosts(){
         }
 
         // Scroll to top when opening any post - must happen AFTER all layout operations
-        const scrollToTop = () => {
-          if(!container) return;
-          const scrollElement = (container === postsWideEl) ? postsWideEl : container;
+        // Works for: post cards, recents cards, map markers, and ad board clicks
+        const scrollToTop = (attempt = 1) => {
+          if(!container){
+            console.warn(`[openPost] Scroll attempt ${attempt}: Container missing`);
+            return;
+          }
+          // Both .post-board and #recentsBoard are scrollable containers
+          const scrollElement = container;
+          const beforeScroll = scrollElement.scrollTop;
+          const scrollHeight = scrollElement.scrollHeight;
+          const clientHeight = scrollElement.clientHeight;
+          const canScroll = scrollHeight > clientHeight;
+          
           if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
             scrollElement.scrollTop = 0;
+            const afterScroll = scrollElement.scrollTop;
+            const scrollSuccess = afterScroll === 0;
+            
+            console.log(`[openPost] Scroll attempt ${attempt} (${entryPoint})`, {
+              container: container.id || container.className,
+              beforeScroll,
+              afterScroll,
+              scrollSuccess,
+              scrollHeight,
+              clientHeight,
+              canScroll,
+              scrollTopProperty: typeof scrollElement.scrollTop,
+              element: scrollElement
+            });
+            
+            if(!scrollSuccess && attempt === 3){
+              console.error(`[openPost] SCROLL FAILED after 3 attempts!`, {
+                entryPoint,
+                container: container.id || container.className,
+                finalScrollTop: afterScroll,
+                scrollHeight,
+                clientHeight,
+                element: scrollElement
+              });
+            }
+          } else {
+            console.warn(`[openPost] Scroll attempt ${attempt}: scrollTop property undefined`, {
+              hasElement: !!scrollElement,
+              scrollTopType: typeof scrollElement?.scrollTop,
+              element: scrollElement
+            });
           }
         };
 
         // Use multiple attempts to ensure scroll happens after all layout changes
+        // This handles timing issues with layout operations, DOM updates, and animations
+        console.log(`[openPost] Starting scroll sequence for ${entryPoint}`, {
+          container: container.id || container.className,
+          initialScrollTop: container.scrollTop,
+          scrollHeight: container.scrollHeight,
+          clientHeight: container.clientHeight
+        });
+        
         requestAnimationFrame(() => {
-          scrollToTop();
+          scrollToTop(1);
           requestAnimationFrame(() => {
-            scrollToTop();
+            scrollToTop(2);
             // Final attempt after a short delay to catch any late layout changes
             setTimeout(() => {
               requestAnimationFrame(() => {
-                scrollToTop();
+                scrollToTop(3);
+                // Final verification
+                const finalScrollTop = container.scrollTop;
+                console.log(`[openPost] Scroll sequence complete for ${entryPoint}`, {
+                  container: container.id || container.className,
+                  finalScrollTop,
+                  success: finalScrollTop === 0,
+                  scrollHeight: container.scrollHeight,
+                  clientHeight: container.clientHeight
+                });
               });
             }, 100);
           });
