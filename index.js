@@ -16374,45 +16374,13 @@ function makePosts(){
           renderHistoryBoard();
         }
 
-        // ========================================================================
-        // SCROLL TO TOP - MUST BE LAST
-        // ========================================================================
-        
-        // Always scroll to top when opening a post
-        // Try both container and .posts child - scroll whichever one works
-        if(container && container.contains(detail)){
-          const scrollToTop = (el) => {
-            if(el && typeof el.scrollTop !== 'undefined'){
-              try {
-                el.scrollTop = 0;
-              } catch(e) {}
-            }
-          };
-          
-          // Try scrolling both container and .posts child
-          const tryScroll = () => {
-            // Try .posts child first (if it exists)
-            const postsChild = container.querySelector('.posts');
-            if(postsChild){
-              scrollToTop(postsChild);
-            }
-            // Always try container too
-            scrollToTop(container);
-          };
-          
-          // Scroll immediately
-          tryScroll();
-          
-          // Scroll after layout adjustments complete (multiple times to ensure it works)
-          requestAnimationFrame(() => {
-            tryScroll();
-            requestAnimationFrame(() => {
-              tryScroll();
-              setTimeout(() => {
-                tryScroll();
-              }, 200);
-            });
-          });
+        // Scroll to top when opening any post
+        const scrollEl = container.querySelector('.posts') || container;
+        if(scrollEl){
+          scrollEl.scrollTop = 0;
+          setTimeout(() => {
+            scrollEl.scrollTop = 0;
+          }, 100);
         }
       }
 
