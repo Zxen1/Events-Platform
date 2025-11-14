@@ -198,26 +198,12 @@
           </div>
         </div>
         <div class="tab-bar" role="tablist" aria-label="Member sections">
+          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile" data-message-key="msg_member_tab_profile">Profile</button>
           <button type="button" class="tab-btn" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create" data-message-key="msg_member_tab_create">Create Post</button>
           <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts" data-message-key="msg_member_tab_myposts">My Posts</button>
-          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile" data-message-key="msg_member_tab_profile">Profile</button>
         </div>
       </div>
       <form id="memberForm" class="panel-body" novalidate>
-        <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
-          <p class="member-create-intro" data-message-key="msg_member_create_intro">Choose a category and subcategory to load the matching post form.</p>
-          <div class="formpicker-container">
-            <div class="cats" id="memberFormpickerCats" aria-label="Categories"></div>
-          </div>
-          <p id="memberCreateEmpty" class="member-create-placeholder" data-message-key="msg_member_create_empty">Select a category and subcategory to begin.</p>
-          <div id="memberCreateFormWrapper" class="member-create-form" hidden>
-            <div id="memberCreateFormFields" class="member-create-fields" role="group" aria-live="polite"></div>
-          </div>
-          <div class="member-create-actions">
-            <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled data-message-key="msg_member_post_listing">Post Listing</button>
-          </div>
-        </section>
-        <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
         <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
           <div class="member-auth" data-state="logged-out">
             <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
@@ -256,6 +242,20 @@
             </section>
           </div>
         </section>
+        <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
+          <p class="member-create-intro" data-message-key="msg_member_create_intro">Choose a category and subcategory to load the matching post form.</p>
+          <div class="formpicker-container">
+            <div class="cats" id="memberFormpickerCats" aria-label="Categories"></div>
+          </div>
+          <p id="memberCreateEmpty" class="member-create-placeholder" data-message-key="msg_member_create_empty">Select a category and subcategory to begin.</p>
+          <div id="memberCreateFormWrapper" class="member-create-form" hidden>
+            <div id="memberCreateFormFields" class="member-create-fields" role="group" aria-live="polite"></div>
+          </div>
+          <div class="member-create-actions">
+            <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled data-message-key="msg_member_post_listing">Post Listing</button>
+          </div>
+        </section>
+        <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
       </form>
     </div>
   </div>
