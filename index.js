@@ -23762,6 +23762,11 @@ document.addEventListener('pointerdown', (e) => {
           safe.name = field.name.trim();
         }
         let type = typeof field.type === 'string' ? field.type : 'text-box';
+        // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+        const normalizedType = getBaseFieldType(type);
+        if(normalizedType){
+          type = normalizedType;
+        }
         if(!FORM_FIELD_TYPES.some(opt => opt.value === type)){
           type = 'text-box';
         }
@@ -24344,7 +24349,7 @@ document.addEventListener('pointerdown', (e) => {
         }
         if(field.required) textarea.required = true;
         control = textarea;
-      } else if(field.type === 'dropdown'){
+      } else if(baseType === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
@@ -24362,7 +24367,7 @@ document.addEventListener('pointerdown', (e) => {
           select.appendChild(option);
         });
         control = select;
-      } else if(field.type === 'radio-toggle'){
+      } else if(baseType === 'radio-toggle'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
         const radioGroup = document.createElement('div');
@@ -24397,7 +24402,7 @@ document.addEventListener('pointerdown', (e) => {
           radioGroup.appendChild(placeholderOption);
         }
         control = radioGroup;
-      } else if(field.type === 'images'){
+      } else if(baseType === 'images'){
         wrapper.classList.add('form-preview-field--images');
         label.removeAttribute('for');
         const imageWrapper = document.createElement('div');
@@ -24850,7 +24855,7 @@ document.addEventListener('pointerdown', (e) => {
           }
           if(previewField.required) textarea.required = true;
           control = textarea;
-        } else if(previewField.type === 'dropdown'){
+        } else if(baseType === 'dropdown'){
           const select = document.createElement('select');
           select.className = 'form-preview-select';
           wrapper.classList.add('form-preview-field--dropdown');
@@ -24874,7 +24879,7 @@ document.addEventListener('pointerdown', (e) => {
           select.id = selectId;
           if(previewField.required) select.required = true;
           control = select;
-        } else if(previewField.type === 'radio-toggle'){
+        } else if(baseType === 'radio-toggle'){
           const options = Array.isArray(previewField.options) ? previewField.options : [];
           const radioGroup = document.createElement('div');
           radioGroup.className = 'form-preview-radio-group';
@@ -24905,7 +24910,7 @@ document.addEventListener('pointerdown', (e) => {
             radioGroup.appendChild(placeholderOption);
           }
           control = radioGroup;
-        } else if(previewField.type === 'venue-ticketing'){
+        } else if(baseType === 'venue-ticketing'){
           wrapper.classList.add('form-preview-field--venues-sessions-pricing');
           // Use the same builder as admin form preview for identical structure
           if(typeof window.buildVenueSessionPreview === 'function'){
@@ -24914,7 +24919,7 @@ document.addEventListener('pointerdown', (e) => {
             // Fallback if not available yet
             control = buildVenueSessionEditor(previewField, labelId);
           }
-        } else if(previewField.type === 'variant-pricing'){
+        } else if(baseType === 'variant-pricing'){
           wrapper.classList.add('form-preview-field--variant-pricing');
           // Use exact same logic as admin form preview for identical structure
           const editor = document.createElement('div');
