@@ -16382,64 +16382,25 @@ function makePosts(){
           }
         }
         
-        // Scroll the card to the top of the scroll container
-        let scrollPromise = Promise.resolve();
-        if(scrollElement && target && container.contains(target) && typeof scrollElement.scrollTop !== 'undefined'){
-          // Calculate the card's position relative to the scroll container
-          const scrollRect = scrollElement.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          const currentOffset = targetRect.top - scrollRect.top;
+        // Scroll the card to the top of the scroll container - ALWAYS scroll to top
+        // This prevents posts from opening where they are instead of at the top
+        if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
+          // Always scroll to top immediately - don't wait for smooth scroll
+          scrollElement.scrollTop = 0;
           
-          // Scroll to position the card at the top
-          if(Math.abs(currentOffset) > 5){
-            // Use smooth scrolling and wait for it to complete
-            scrollElement.scrollTo({
-              top: scrollElement.scrollTop + currentOffset,
-              behavior: 'smooth'
-            });
-            // Wait for smooth scroll to complete (approximate - smooth scrolls don't have a completion event)
-            const targetScrollTop = scrollElement.scrollTop + currentOffset;
-            scrollPromise = new Promise(resolve => {
-              let lastScrollTop = scrollElement.scrollTop;
-              let stableFrames = 0;
-              let frameCount = 0;
-              const maxFrames = 60; // Max ~1 second at 60fps
-              
-              const checkScroll = () => {
-                frameCount++;
-                const newScrollTop = scrollElement.scrollTop;
-                const newRect = scrollElement.getBoundingClientRect();
-                const newTargetRect = target.getBoundingClientRect();
-                const newOffset = newTargetRect.top - newRect.top;
-                
-                // Check if scroll has stopped (position hasn't changed much)
-                if(Math.abs(newScrollTop - lastScrollTop) < 1){
-                  stableFrames++;
-                } else {
-                  stableFrames = 0;
+          // Small delay to ensure scroll position is set
+          await new Promise(resolve => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // Ensure we're at the top
+                if(scrollElement.scrollTop > 0){
+                  scrollElement.scrollTop = 0;
                 }
-                lastScrollTop = newScrollTop;
-                
-                // If we're close to the target (within 10px), scroll has been stable for 2 frames, or timeout
-                if(Math.abs(newOffset) <= 10 || stableFrames >= 2 || frameCount >= maxFrames){
-                  // Final positioning to ensure exact placement
-                  scrollElement.scrollTop = scrollElement.scrollTop + newOffset;
-                  resolve();
-                } else {
-                  requestAnimationFrame(checkScroll);
-                }
-              };
-              // Start checking after a short delay to let smooth scroll begin
-              setTimeout(() => requestAnimationFrame(checkScroll), 50);
+                resolve();
+              });
             });
-          } else {
-            // Already at top, but ensure scrollTop is 0
-            scrollElement.scrollTop = 0;
-          }
+          });
         }
-        
-        // Wait for scroll to complete before building detail
-        await scrollPromise;
         
         // Pass the existing target card to buildDetail to preserve it without recreating
         const detail = buildDetail(p, isCardValid ? target : null, fromHistory);
@@ -25333,13 +25294,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // Auto-save function for post mode shadow
   async function autoSavePostModeShadow(){
     const shadowValue = parseFloat(opacityInput.value);
+    if(isNaN(shadowValue)) {
+      console.error('Invalid shadow value:', opacityInput.value);
+      return;
+    }
     localStorage.setItem('post_mode_shadow', shadowValue);
     try {
-      await fetch('/gateway.php?action=save-admin-settings', {
+      const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ post_mode_shadow: shadowValue })
       });
+      if(!response.ok){
+        console.error('Failed to save post mode shadow: HTTP', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Response:', text);
+      } else {
+        const result = await response.json();
+        if(result && result.success !== false){
+          console.log('Post mode shadow saved successfully:', shadowValue);
+        } else {
+          console.error('Failed to save post mode shadow:', result);
+        }
+      }
     } catch (e) {
       console.error('Failed to save post mode shadow:', e);
     }

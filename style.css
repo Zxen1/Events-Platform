@@ -4316,6 +4316,13 @@ body.filters-active #filterBtn{
   overflow-x:hidden;
   padding:0;
   margin:0;
+  scrollbar-gutter:stable;
+}
+@supports (scrollbar-gutter: stable){
+  .post-board .posts,
+  .recents-board{
+    scrollbar-gutter:stable;
+  }
 }
 @supports (scrollbar-width: thin){
   .post-board .posts,
