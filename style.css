@@ -3255,9 +3255,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-direction:column;
   gap:0;
   pointer-events:auto;
-  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  min-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
   transform:translateX(0);
 }
 
@@ -3269,9 +3269,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   left:0;
   display:flex;
   flex-direction:column;
-  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  min-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
   transition:left var(--panel-transition-duration, 0.3s) ease,
              margin var(--panel-transition-duration, 0.3s) ease,
              transform var(--panel-transition-duration, 0.3s) ease;
@@ -3283,9 +3283,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:var(--post-board-max-w);
   max-width:var(--post-board-max-w);
   flex-shrink:0;
-  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  min-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
 }
 
 .recents-board,
