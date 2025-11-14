@@ -1202,13 +1202,13 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel #adminPaypalClientSecret{
   background:rgba(0,0,0,0.2);
   color:#fff;
-  border:1px solid #fff;
+  border:none;
 }
 #adminPanel #adminIconFolder,
 #adminPanel #adminAdminIconFolder{
   background:rgba(0,0,0,0.2);
   color:#fff;
-  border:1px solid #fff;
+  border:none;
 }
 #filterPanel input[type="text"],
 #filterPanel input[type="date"]{
@@ -1565,21 +1565,21 @@ button[aria-expanded="true"] .results-arrow{
 .settings-general-container input,
 .settings-paypal-container input{
   background:rgba(0,0,0,0.2);
-  border:1px solid #fff;
+  border:none;
   color:#fff;
 }
 
 .settings-icon-folders-container input{
   background:rgba(0,0,0,0.2);
-  border:1px solid #fff;
+  border:none;
   color:#fff;
 }
 
-/* Ensure all text/email/password inputs in settings tab have white borders */
+/* Remove borders from all text/email/password inputs in settings tab */
 #tab-settings .panel-field input[type="text"],
 #tab-settings .panel-field input[type="email"],
 #tab-settings .panel-field input[type="password"]{
-  border:1px solid #fff !important;
+  border:none !important;
   background:rgba(0,0,0,0.2);
   color:#fff;
 }
