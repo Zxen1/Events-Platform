@@ -25928,146 +25928,169 @@ document.addEventListener('pointerdown', (e) => {
       const categoryIcons = window.categoryIcons = window.categoryIcons || {};
       const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
       const sortedCategories = getSortedCategories(memberCategories);
-      let currentlyOpenMenu = null;
       
+      // Create container for dropdowns
+      const dropdownsContainer = document.createElement('div');
+      dropdownsContainer.className = 'formpicker-dropdowns';
+      dropdownsContainer.style.display = 'flex';
+      dropdownsContainer.style.flexDirection = 'column';
+      dropdownsContainer.style.gap = '12px';
+      
+      // Create category dropdown wrapper
+      const categoryWrapper = document.createElement('div');
+      categoryWrapper.className = 'form-preview-field form-preview-field--dropdown';
+      categoryWrapper.style.position = 'relative';
+      
+      const categoryLabel = document.createElement('label');
+      categoryLabel.className = 'form-preview-field-label';
+      categoryLabel.textContent = 'Category';
+      categoryLabel.style.fontWeight = '600';
+      categoryLabel.style.marginBottom = '8px';
+      categoryLabel.style.display = 'block';
+      
+      const categorySelect = document.createElement('select');
+      categorySelect.className = 'form-preview-select';
+      categorySelect.id = 'memberFormpickerCategory';
+      categorySelect.style.width = '100%';
+      categorySelect.style.height = '36px';
+      categorySelect.style.padding = '0 12px';
+      categorySelect.style.paddingRight = '40px';
+      categorySelect.style.appearance = 'none';
+      categorySelect.style.border = '1px solid var(--border)';
+      categorySelect.style.borderRadius = '8px';
+      categorySelect.style.background = 'rgba(0,0,0,0.35)';
+      categorySelect.style.color = 'var(--button-text)';
+      categorySelect.style.boxSizing = 'border-box';
+      
+      // Add placeholder option
+      const categoryPlaceholder = document.createElement('option');
+      categoryPlaceholder.value = '';
+      categoryPlaceholder.textContent = 'Select a category';
+      categoryPlaceholder.disabled = true;
+      categoryPlaceholder.selected = true;
+      categorySelect.appendChild(categoryPlaceholder);
+      
+      // Add category options with icons stored in data attributes
       sortedCategories.forEach(c => {
         if(!c || typeof c.name !== 'string') return;
-        
-        const menu = document.createElement('div');
-        menu.className = 'filter-category-menu';
-        menu.dataset.category = c.name;
-        menu.setAttribute('role', 'group');
-        menu.setAttribute('aria-expanded', 'false');
-        
-        const header = document.createElement('div');
-        header.className = 'filter-category-header';
-        
-        const triggerWrap = document.createElement('div');
-        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
-        
-        const menuBtn = document.createElement('button');
-        menuBtn.type = 'button';
-        menuBtn.className = 'filter-category-trigger';
-        menuBtn.setAttribute('aria-haspopup', 'true');
-        menuBtn.setAttribute('aria-expanded', 'false');
-        const menuId = `formpicker-menu-${slugify(c.name)}`;
-        menuBtn.setAttribute('aria-controls', menuId);
-        
-        const categoryLogo = document.createElement('span');
-        categoryLogo.className = 'category-logo';
-        const categoryIconHtml = categoryIcons[c.name] || '';
-        if(categoryIconHtml){
-          categoryLogo.innerHTML = categoryIconHtml;
-          categoryLogo.classList.add('has-icon');
-        } else {
-          categoryLogo.textContent = c.name.charAt(0) || '';
-        }
-        
-        const label = document.createElement('span');
-        label.className = 'label';
-        label.textContent = c.name;
-        
-        const arrow = document.createElement('span');
-        arrow.className = 'dropdown-arrow';
-        arrow.setAttribute('aria-hidden', 'true');
-        
-        menuBtn.append(categoryLogo, label, arrow);
-        
-        const optionsMenu = document.createElement('div');
-        optionsMenu.className = 'options-menu';
-        optionsMenu.id = menuId;
-        optionsMenu.hidden = true;
-        
-        triggerWrap.append(menuBtn, optionsMenu);
-        
-        const subButtons = [];
-        (Array.isArray(c.subs) ? c.subs : []).forEach(s => {
-          const subBtn = document.createElement('button');
-          subBtn.type = 'button';
-          subBtn.className = 'subcategory-option';
-          subBtn.dataset.category = c.name;
-          subBtn.dataset.subcategory = s;
-          subBtn.setAttribute('aria-pressed', 'false');
-          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
-          const subLabel = subBtn.querySelector('.subcategory-label');
-          if(subLabel){
-            subLabel.textContent = s;
-          }
-          const logoSpan = subBtn.querySelector('.subcategory-logo');
-          if(logoSpan){
-            const iconHtml = subcategoryIcons[s] || '';
-            if(iconHtml){
-              logoSpan.innerHTML = iconHtml;
-              logoSpan.classList.add('has-icon');
-            } else {
-              logoSpan.textContent = s.charAt(0) || '';
-            }
-          }
-          subBtn.addEventListener('click', () => {
-            const isActive = subBtn.getAttribute('aria-pressed') === 'true';
-            if(isActive){
-              subBtn.setAttribute('aria-pressed', 'false');
-              subBtn.classList.remove('on');
-              if(selectedCategory === c.name && selectedSubcategory === s){
-                selectedCategory = '';
-                selectedSubcategory = '';
-              }
-            } else {
-              subButtons.forEach(btn => {
-                if(btn !== subBtn){
-                  btn.setAttribute('aria-pressed', 'false');
-                  btn.classList.remove('on');
-                }
-              });
-              subBtn.setAttribute('aria-pressed', 'true');
-              subBtn.classList.add('on');
-              selectedCategory = c.name;
-              selectedSubcategory = s;
-            }
-            renderCreateFields();
-          });
-          optionsMenu.appendChild(subBtn);
-          subButtons.push(subBtn);
-        });
-        
-        header.append(triggerWrap);
-        menu.appendChild(header);
-        formpickerCats.appendChild(menu);
-        
-        let openState = false;
-        function syncExpanded(){
-          menu.setAttribute('aria-expanded', openState ? 'true' : 'false');
-          menuBtn.setAttribute('aria-expanded', openState ? 'true' : 'false');
-          optionsMenu.hidden = !openState;
-        }
-        function setOpenState(next){
-          const wasOpen = openState;
-          openState = !!next;
-          
-          if(openState && !wasOpen){
-            if(currentlyOpenMenu && currentlyOpenMenu !== menu){
-              const otherMenuBtn = currentlyOpenMenu.querySelector('.filter-category-trigger');
-              const otherOptionsMenu = currentlyOpenMenu.querySelector('.options-menu');
-              if(otherMenuBtn && otherOptionsMenu){
-                otherMenuBtn.setAttribute('aria-expanded', 'false');
-                otherOptionsMenu.hidden = true;
-                currentlyOpenMenu.setAttribute('aria-expanded', 'false');
-              }
-            }
-            currentlyOpenMenu = menu;
-          } else if(!openState && wasOpen){
-            if(currentlyOpenMenu === menu){
-              currentlyOpenMenu = null;
-            }
-          }
-          
-          syncExpanded();
-        }
-        
-        menuBtn.addEventListener('click', () => {
-          setOpenState(!openState);
-        });
+        const option = document.createElement('option');
+        option.value = c.name;
+        option.textContent = c.name;
+        option.dataset.icon = categoryIcons[c.name] || '';
+        categorySelect.appendChild(option);
       });
+      
+      // Create dropdown arrow for category
+      const categoryArrow = document.createElement('span');
+      categoryArrow.className = 'formpicker-dropdown-arrow';
+      categoryArrow.style.position = 'absolute';
+      categoryArrow.style.top = '50%';
+      categoryArrow.style.right = '18px';
+      categoryArrow.style.width = '8px';
+      categoryArrow.style.height = '8px';
+      categoryArrow.style.border = '2px solid var(--button-text)';
+      categoryArrow.style.borderTop = '0';
+      categoryArrow.style.borderLeft = '0';
+      categoryArrow.style.transform = 'translateY(-50%) rotate(45deg)';
+      categoryArrow.style.pointerEvents = 'none';
+      categoryArrow.setAttribute('aria-hidden', 'true');
+      
+      categoryWrapper.appendChild(categoryLabel);
+      categoryWrapper.appendChild(categorySelect);
+      categoryWrapper.appendChild(categoryArrow);
+      
+      // Create subcategory dropdown wrapper (initially hidden)
+      const subcategoryWrapper = document.createElement('div');
+      subcategoryWrapper.className = 'form-preview-field form-preview-field--dropdown';
+      subcategoryWrapper.style.position = 'relative';
+      subcategoryWrapper.hidden = true;
+      
+      const subcategoryLabel = document.createElement('label');
+      subcategoryLabel.className = 'form-preview-field-label';
+      subcategoryLabel.textContent = 'Subcategory';
+      subcategoryLabel.style.fontWeight = '600';
+      subcategoryLabel.style.marginBottom = '8px';
+      subcategoryLabel.style.display = 'block';
+      
+      const subcategorySelect = document.createElement('select');
+      subcategorySelect.className = 'form-preview-select';
+      subcategorySelect.id = 'memberFormpickerSubcategory';
+      subcategorySelect.style.width = '100%';
+      subcategorySelect.style.height = '36px';
+      subcategorySelect.style.padding = '0 12px';
+      subcategorySelect.style.paddingRight = '40px';
+      subcategorySelect.style.appearance = 'none';
+      subcategorySelect.style.border = '1px solid var(--border)';
+      subcategorySelect.style.borderRadius = '8px';
+      subcategorySelect.style.background = 'rgba(0,0,0,0.35)';
+      subcategorySelect.style.color = 'var(--button-text)';
+      subcategorySelect.style.boxSizing = 'border-box';
+      
+      // Create dropdown arrow for subcategory
+      const subcategoryArrow = document.createElement('span');
+      subcategoryArrow.className = 'formpicker-dropdown-arrow';
+      subcategoryArrow.style.position = 'absolute';
+      subcategoryArrow.style.top = '50%';
+      subcategoryArrow.style.right = '18px';
+      subcategoryArrow.style.width = '8px';
+      subcategoryArrow.style.height = '8px';
+      subcategoryArrow.style.border = '2px solid var(--button-text)';
+      subcategoryArrow.style.borderTop = '0';
+      subcategoryArrow.style.borderLeft = '0';
+      subcategoryArrow.style.transform = 'translateY(-50%) rotate(45deg)';
+      subcategoryArrow.style.pointerEvents = 'none';
+      subcategoryArrow.setAttribute('aria-hidden', 'true');
+      
+      subcategoryWrapper.appendChild(subcategoryLabel);
+      subcategoryWrapper.appendChild(subcategorySelect);
+      subcategoryWrapper.appendChild(subcategoryArrow);
+      
+      // Handle category selection
+      categorySelect.addEventListener('change', () => {
+        const categoryName = categorySelect.value;
+        selectedCategory = categoryName;
+        selectedSubcategory = '';
+        
+        // Clear and populate subcategory dropdown
+        subcategorySelect.innerHTML = '';
+        if(categoryName){
+          const category = sortedCategories.find(c => c.name === categoryName);
+          if(category && Array.isArray(category.subs) && category.subs.length > 0){
+            const subPlaceholder = document.createElement('option');
+            subPlaceholder.value = '';
+            subPlaceholder.textContent = 'Select a subcategory';
+            subPlaceholder.disabled = true;
+            subPlaceholder.selected = true;
+            subcategorySelect.appendChild(subPlaceholder);
+            
+            category.subs.forEach(s => {
+              const option = document.createElement('option');
+              option.value = s;
+              option.textContent = s;
+              option.dataset.icon = subcategoryIcons[s] || '';
+              subcategorySelect.appendChild(option);
+            });
+            
+            subcategoryWrapper.hidden = false;
+          } else {
+            subcategoryWrapper.hidden = true;
+          }
+        } else {
+          subcategoryWrapper.hidden = true;
+        }
+        
+        renderCreateFields();
+      });
+      
+      // Handle subcategory selection
+      subcategorySelect.addEventListener('change', () => {
+        selectedSubcategory = subcategorySelect.value;
+        renderCreateFields();
+      });
+      
+      dropdownsContainer.appendChild(categoryWrapper);
+      dropdownsContainer.appendChild(subcategoryWrapper);
+      formpickerCats.appendChild(dropdownsContainer);
     }
     if(memberForm){
       memberForm.addEventListener('submit', event => {
