@@ -24147,7 +24147,7 @@ document.addEventListener('pointerdown', (e) => {
         } else {
           console.error('Failed to load formbuilder snapshot for members', error);
         }
-        const errorMsg = await getMessage('msg_post_form_load_error', {}, false) || 'We couldn't load the latest form fields. You can continue with the defaults for now.';
+        const errorMsg = await getMessage('msg_post_form_load_error', {}, false) || "We couldn't load the latest form fields. You can continue with the defaults for now.";
         memberSnapshotErrorMessage = errorMsg;
         setEmptyStateMessage(errorMsg);
         applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
