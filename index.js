@@ -16385,21 +16385,8 @@ function makePosts(){
         // Scroll the card to the top of the scroll container - ALWAYS scroll to top
         // This prevents posts from opening where they are instead of at the top
         if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
-          // Always scroll to top immediately - don't wait for smooth scroll
+          // Always scroll to top immediately - no delays
           scrollElement.scrollTop = 0;
-          
-          // Small delay to ensure scroll position is set
-          await new Promise(resolve => {
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                // Ensure we're at the top
-                if(scrollElement.scrollTop > 0){
-                  scrollElement.scrollTop = 0;
-                }
-                resolve();
-              });
-            });
-          });
         }
         
         // Pass the existing target card to buildDetail to preserve it without recreating
