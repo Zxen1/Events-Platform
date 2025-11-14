@@ -12503,6 +12503,16 @@ function makePosts(){
           let formPreviewFieldIdCounter = 0;
           function renderFormPreview(){
             formPreviewFields.innerHTML = '';
+            
+            const categorySubcategoryLabel = document.createElement('div');
+            categorySubcategoryLabel.className = 'form-preview-category-label';
+            categorySubcategoryLabel.textContent = `${c.name} > ${sub}`;
+            categorySubcategoryLabel.style.marginBottom = '12px';
+            categorySubcategoryLabel.style.fontSize = '14px';
+            categorySubcategoryLabel.style.fontWeight = '600';
+            categorySubcategoryLabel.style.color = 'var(--button-text)';
+            formPreviewFields.appendChild(categorySubcategoryLabel);
+            
             if(!fields.length){
               const empty = document.createElement('p');
               empty.className = 'form-preview-empty';

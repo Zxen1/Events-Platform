@@ -4721,6 +4721,7 @@ body.mode-map .post-board{
   z-index:10;
   background:#1f2750 !important;
   border-bottom:none;
+  margin-bottom:0;
 }
 
 .open-post .post-card:hover{
@@ -4772,6 +4773,8 @@ body.mode-map .post-board{
   max-height:5000px;
   opacity:1;
   background:#1f2750;
+  margin-top:0;
+  border-top:none;
 }
 
 .open-post.post-collapsed .post-body{
