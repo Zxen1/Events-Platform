@@ -16452,34 +16452,13 @@ function makePosts(){
           const canScroll = scrollHeight > clientHeight;
           
           if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
-            // Calculate the position of the open-post relative to the scroll container
-            // Then scroll the container so the open-post (with card-as-header) is at the top
-            // The card becomes the header (sticky top:0) and post-body slides out underneath
-            if(openPostEl){
-              // Calculate open-post's position within the scroll container
-              // We need to scroll so the open-post is visible at the top
-              const scrollRect = scrollElement.getBoundingClientRect();
-              const openPostRect = openPostEl.getBoundingClientRect();
-              
-              // Calculate current offset from top of scroll container
-              const currentOffset = openPostRect.top - scrollRect.top;
-              
-              // Scroll to position the open-post at the top (accounting for any padding/margins)
-              scrollElement.scrollTop = scrollElement.scrollTop + currentOffset;
-            } else {
-              // Fallback: Just scroll to top if we can't find the element
-              scrollElement.scrollTop = 0;
-            }
+            // Simply scroll to the top of the container
+            // The open-post will be at the top after scrolling
+            scrollElement.scrollTop = 0;
             
             const afterScroll = scrollElement.scrollTop;
-            // Success if the open-post is now at or near the top of the scroll container
-            const openPostAtTop = openPostEl ? (() => {
-              const scrollRect = scrollElement.getBoundingClientRect();
-              const openPostRect = openPostEl.getBoundingClientRect();
-              const offsetFromTop = openPostRect.top - scrollRect.top;
-              return offsetFromTop >= -5 && offsetFromTop <= 10; // Allow 5px tolerance
-            })() : false;
-            const scrollSuccess = afterScroll === 0 || openPostAtTop;
+            // Success if we scrolled to the top (or very close to it, within 5px tolerance)
+            const scrollSuccess = afterScroll <= 5;
             
             // Enhanced logging with inline values for easy reading
             const containerName = container.id || container.className;
@@ -16617,7 +16596,7 @@ function makePosts(){
                 const finalScrollTop = finalScrollElement.scrollTop;
                 const finalScrollHeight = finalScrollElement.scrollHeight;
                 const finalClientHeight = finalScrollElement.clientHeight;
-                const success = finalScrollTop === 0;
+                const success = finalScrollTop <= 5; // Allow 5px tolerance
                 const finalScrollElementName = finalScrollElement === container ? 'container' : (finalScrollElement.className || 'posts');
                 
                 console.log(
