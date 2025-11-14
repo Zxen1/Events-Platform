@@ -25980,6 +25980,11 @@ document.addEventListener('pointerdown', (e) => {
       categoryLabel.style.marginBottom = '8px';
       categoryLabel.style.display = 'block';
       
+      // Create select wrapper for arrow positioning
+      const categorySelectWrapper = document.createElement('div');
+      categorySelectWrapper.style.position = 'relative';
+      categorySelectWrapper.style.width = '100%';
+      
       const categorySelect = document.createElement('select');
       categorySelect.className = 'form-preview-select';
       categorySelect.id = 'memberFormpickerCategory';
@@ -26012,7 +26017,7 @@ document.addEventListener('pointerdown', (e) => {
         categorySelect.appendChild(option);
       });
       
-      // Create dropdown arrow for category
+      // Create dropdown arrow for category - positioned relative to select wrapper
       const categoryArrow = document.createElement('span');
       categoryArrow.className = 'formpicker-dropdown-arrow';
       categoryArrow.style.position = 'absolute';
@@ -26027,9 +26032,11 @@ document.addEventListener('pointerdown', (e) => {
       categoryArrow.style.pointerEvents = 'none';
       categoryArrow.setAttribute('aria-hidden', 'true');
       
+      categorySelectWrapper.appendChild(categorySelect);
+      categorySelectWrapper.appendChild(categoryArrow);
+      
       categoryWrapper.appendChild(categoryLabel);
-      categoryWrapper.appendChild(categorySelect);
-      categoryWrapper.appendChild(categoryArrow);
+      categoryWrapper.appendChild(categorySelectWrapper);
       
       // Create subcategory dropdown wrapper (initially hidden)
       const subcategoryWrapper = document.createElement('div');
@@ -26043,6 +26050,11 @@ document.addEventListener('pointerdown', (e) => {
       subcategoryLabel.style.fontWeight = '600';
       subcategoryLabel.style.marginBottom = '8px';
       subcategoryLabel.style.display = 'block';
+      
+      // Create select wrapper for arrow positioning
+      const subcategorySelectWrapper = document.createElement('div');
+      subcategorySelectWrapper.style.position = 'relative';
+      subcategorySelectWrapper.style.width = '100%';
       
       const subcategorySelect = document.createElement('select');
       subcategorySelect.className = 'form-preview-select';
@@ -26058,7 +26070,7 @@ document.addEventListener('pointerdown', (e) => {
       subcategorySelect.style.color = 'var(--button-text)';
       subcategorySelect.style.boxSizing = 'border-box';
       
-      // Create dropdown arrow for subcategory
+      // Create dropdown arrow for subcategory - positioned relative to select wrapper
       const subcategoryArrow = document.createElement('span');
       subcategoryArrow.className = 'formpicker-dropdown-arrow';
       subcategoryArrow.style.position = 'absolute';
@@ -26073,9 +26085,11 @@ document.addEventListener('pointerdown', (e) => {
       subcategoryArrow.style.pointerEvents = 'none';
       subcategoryArrow.setAttribute('aria-hidden', 'true');
       
+      subcategorySelectWrapper.appendChild(subcategorySelect);
+      subcategorySelectWrapper.appendChild(subcategoryArrow);
+      
       subcategoryWrapper.appendChild(subcategoryLabel);
-      subcategoryWrapper.appendChild(subcategorySelect);
-      subcategoryWrapper.appendChild(subcategoryArrow);
+      subcategoryWrapper.appendChild(subcategorySelectWrapper);
       
       // Handle category selection
       categorySelect.addEventListener('change', () => {
