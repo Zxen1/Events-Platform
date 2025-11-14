@@ -1575,6 +1575,15 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 
+/* Ensure all text/email/password inputs in settings tab have white borders */
+#tab-settings .panel-field input[type="text"],
+#tab-settings .panel-field input[type="email"],
+#tab-settings .panel-field input[type="password"]{
+  border:1px solid #fff !important;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+}
+
 .sub-icon svg{
   width:18px;
   height:18px;
