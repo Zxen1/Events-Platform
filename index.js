@@ -16466,20 +16466,51 @@ function makePosts(){
         delete container.dataset.hasTopGap;
         removeCollapseGapButton(container);
         
-        // Scroll to show post at top of viewport with slight delay for DOM update
-        if(container && container.contains(detail)){
-          setTimeout(() => {
-            const containerRect = container.getBoundingClientRect();
-            const detailRect = detail.getBoundingClientRect();
-            if(containerRect && detailRect){
-              const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
-              if(typeof container.scrollTo === 'function'){
-                container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
-              } else {
-                container.scrollTop = Math.max(0, topTarget);
-              }
+        // Find the actual scrollable element (container or its scrollable child)
+        const getScrollableElement = (el) => {
+          if(!el) return null;
+          // Check if this element is scrollable
+          const style = window.getComputedStyle(el);
+          const isScrollable = style.overflowY === 'auto' || style.overflowY === 'scroll' || 
+                               style.overflow === 'auto' || style.overflow === 'scroll';
+          if(isScrollable && el.scrollHeight > el.clientHeight){
+            return el;
+          }
+          // Check for common scrollable child elements
+          const postsChild = el.querySelector('.posts');
+          if(postsChild){
+            const postsStyle = window.getComputedStyle(postsChild);
+            const postsScrollable = postsStyle.overflowY === 'auto' || postsStyle.overflowY === 'scroll' || 
+                                   postsStyle.overflow === 'auto' || postsStyle.overflow === 'scroll';
+            if(postsScrollable && postsChild.scrollHeight > postsChild.clientHeight){
+              return postsChild;
             }
-          }, 50);
+          }
+          return el;
+        };
+        
+        // Scroll container to top - do it immediately and after layout updates
+        const scrollToTop = () => {
+          const scrollEl = getScrollableElement(container);
+          if(scrollEl){
+            if(typeof scrollEl.scrollTo === 'function'){
+              scrollEl.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              scrollEl.scrollTop = 0;
+            }
+          }
+        };
+        
+        // Scroll immediately
+        scrollToTop();
+        
+        // Also scroll after DOM updates complete
+        if(container && container.contains(detail)){
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              scrollToTop();
+            });
+          });
         }
 
         // Update history on open (keep newest-first)
