@@ -16374,14 +16374,29 @@ function makePosts(){
           renderHistoryBoard();
         }
 
-        // Scroll to top when opening any post
-        const scrollEl = container.querySelector('.posts') || container;
-        if(scrollEl){
-          scrollEl.scrollTop = 0;
-          setTimeout(() => {
-            scrollEl.scrollTop = 0;
-          }, 100);
-        }
+        // Scroll to top when opening any post - must be last
+        const scrollToTop = () => {
+          const postsChild = container.querySelector('.posts');
+          // Scroll both .posts (if exists) and container
+          if(postsChild){
+            postsChild.scrollTop = 0;
+          }
+          container.scrollTop = 0;
+        };
+        
+        // Scroll immediately
+        scrollToTop();
+        
+        // Scroll after layout updates
+        requestAnimationFrame(() => {
+          scrollToTop();
+          requestAnimationFrame(() => {
+            scrollToTop();
+            setTimeout(() => {
+              scrollToTop();
+            }, 250);
+          });
+        });
       }
 
       function closeActivePost(){
