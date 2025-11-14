@@ -5617,11 +5617,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
 function makePosts(){
-  // COMMENTED OUT FOR PERFORMANCE TESTING - dummy data generation disabled
-  // Return empty array to test if dummy posts were causing slow loading
-  return [];
-  
-  /* COMMENTED OUT - Original dummy data generation code
+  // OPTIMIZED: Reduced post counts for faster loading (was 1500+, now ~300)
   const out = [];
   const cityCounts = Object.create(null);
   const MAX_POSTS_PER_CITY = 200;
@@ -5684,10 +5680,10 @@ function makePosts(){
     const lat = clampLatitude(point.lat + (rnd() - 0.5) * jitterRange * 2);
     return { lng, lat };
   }
-  // ---- 100 posts at Federation Square (as before) ----
+  // ---- OPTIMIZED: 30 posts at Federation Square (was 100) ----
   const fsLng = 144.9695, fsLat = -37.8178;
   const fsCity = "Federation Square, Melbourne";
-  for(let i=0;i<100;i++){
+  for(let i=0;i<30;i++){
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
     if(!cat || !sub) continue;
@@ -5719,11 +5715,11 @@ function makePosts(){
     });
   }
 
-  // ---- 100 posts in Tasmania ----
+  // ---- OPTIMIZED: 30 posts in Tasmania (was 100) ----
   const tasLng = 147.3272, tasLat = -42.8821;
   const tasCity = "Hobart, Tasmania";
   const todayTas = new Date(); todayTas.setHours(0,0,0,0);
-  for(let i=0;i<100;i++){
+  for(let i=0;i<30;i++){
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
     if(!cat || !sub) continue;
@@ -5806,8 +5802,8 @@ function makePosts(){
     {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489}
   ];
 
-  // Generate ~900 posts across hubs with curated neighbourhood jitter
-  const TOTAL_WORLD = 900;
+  // OPTIMIZED: Generate ~200 posts across hubs (was 900)
+  const TOTAL_WORLD = 200;
   const worldCitySpecs = hubs.map(hub => ({
     city: hub.c,
     baseLng: hub.lng,
@@ -5881,13 +5877,13 @@ function makePosts(){
     worldProduced++;
   }
 
-  // ---- Fixed Sydney Opera House posts to show multi-marker clustering ----
+  // ---- OPTIMIZED: 5 Sydney Opera House posts (was 10) ----
   const operaCity = 'Sydney, Australia';
   const operaVenueName = 'Sydney Opera House';
   const operaAddress = 'Bennelong Point, Sydney NSW 2000, Australia';
   const operaLng = 151.2153;
   const operaLat = -33.8568;
-  for(let i=0;i<10;i++){
+  for(let i=0;i<5;i++){
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
     if(!cat || !sub) continue;
@@ -5923,7 +5919,7 @@ function makePosts(){
     });
   }
 
-  // ---- 400 single-venue posts across unique locations ----
+  // ---- OPTIMIZED: 100 single-venue posts (was 400) ----
   const coordKey = (lng, lat)=>{
     if(!Number.isFinite(lng) || !Number.isFinite(lat)) return '';
     return `${lng.toFixed(6)},${lat.toFixed(6)}`;
@@ -6089,7 +6085,7 @@ function makePosts(){
     { city: "Christchurch, New Zealand", lng: 172.6362, lat: -43.5321 },
     { city: "Suva, Fiji", lng: 178.4419, lat: -18.1248 }
   ];
-  const SINGLE_VENUE_POSTS = 400;
+  const SINGLE_VENUE_POSTS = 100;
   const singleVenueSpecs = singleVenueBases.map(base => ({
     city: base.city,
     baseLng: base.lng,
@@ -6568,7 +6564,8 @@ function makePosts(){
     return assigned;
   }
 
-  assignMultiVenues(out, 1000);
+  // OPTIMIZED: Reduced multi-venue assignment target (was 1000, now 200 to match reduced post count)
+  assignMultiVenues(out, 200);
 
   out.forEach(post => {
     if(!post) return;
@@ -6582,7 +6579,6 @@ function makePosts(){
   });
 
   return out;
-  */ // End of commented out dummy data generation
 }
 
     let ALL_POSTS_CACHE = null;
