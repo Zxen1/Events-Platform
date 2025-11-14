@@ -24428,15 +24428,15 @@ document.addEventListener('pointerdown', (e) => {
         fileInput.dataset.imagePreviewTarget = previewId;
         imageWrapper.append(fileInput, hint, message, previewGrid);
         control = imageWrapper;
-      } else if(field.type === 'variant-pricing'){
+      } else if(baseType === 'variant-pricing'){
         wrapper.classList.add('form-preview-field--variant-pricing');
         label.removeAttribute('for');
         control = buildVersionPriceEditor(field, labelId);
-      } else if(field.type === 'venue-ticketing'){
+      } else if(baseType === 'venue-ticketing'){
         wrapper.classList.add('form-preview-field--venues-sessions-pricing');
         label.removeAttribute('for');
         control = buildVenueSessionEditor(field, labelId);
-      } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+      } else if(baseType === 'website-url' || baseType === 'tickets-url'){
         wrapper.classList.add('form-preview-field--url');
         const urlWrapper = document.createElement('div');
         urlWrapper.className = 'form-preview-url-wrapper';
@@ -24449,7 +24449,7 @@ document.addEventListener('pointerdown', (e) => {
         if(field.required) input.required = true;
         urlWrapper.appendChild(input);
         control = urlWrapper;
-      } else if(field.type === 'location'){
+      } else if(baseType === 'location'){
         wrapper.classList.add('form-preview-field--location');
         const ensureLocationState = ()=>{
           if(!field.location || typeof field.location !== 'object'){
@@ -25271,7 +25271,7 @@ document.addEventListener('pointerdown', (e) => {
           renderVersionEditor();
           editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
           control = editor;
-        } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
+        } else if(baseType === 'website-url' || baseType === 'tickets-url'){
           wrapper.classList.add('form-preview-field--url');
           const urlWrapper = document.createElement('div');
           urlWrapper.className = 'form-preview-url-wrapper';
@@ -25284,13 +25284,13 @@ document.addEventListener('pointerdown', (e) => {
             ? previewField.placeholder
             : 'https://example.com';
           urlInput.placeholder = placeholderValue;
-          urlInput.dataset.urlType = previewField.type === 'website-url' ? 'website' : 'tickets';
+          urlInput.dataset.urlType = baseType === 'website-url' ? 'website' : 'tickets';
           urlInput.autocomplete = 'url';
           urlInput.inputMode = 'url';
           if(previewField.required) urlInput.required = true;
           urlWrapper.appendChild(urlInput);
           control = urlWrapper;
-        } else if(previewField.type === 'images'){
+        } else if(baseType === 'images'){
           wrapper.classList.add('form-preview-field--images');
           const imageWrapper = document.createElement('div');
           imageWrapper.className = 'form-preview-images';
@@ -25320,7 +25320,7 @@ document.addEventListener('pointerdown', (e) => {
           imageWrapper.append(fileInput, hint, message, previewGrid);
           handleImagePreview(fileInput);
           control = imageWrapper;
-        } else if(previewField.type === 'location'){
+        } else if(baseType === 'location'){
           wrapper.classList.add('form-preview-field--location');
           const ensureLocationState = () => {
             if(!previewField.location || typeof previewField.location !== 'object'){
@@ -25535,7 +25535,7 @@ document.addEventListener('pointerdown', (e) => {
           input.placeholder = previewField.placeholder || '';
           const inputId = `${baseId}-input`;
           input.id = inputId;
-          if(previewField.type === 'title'){
+          if(baseType === 'title'){
             input.classList.add('form-preview-title-input');
           }
           if(previewField.required) input.required = true;
