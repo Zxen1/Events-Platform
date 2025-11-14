@@ -16378,32 +16378,43 @@ function makePosts(){
         // SCROLL TO TOP - MUST BE LAST
         // ========================================================================
         
-        // Find the actual scrollable element
-        // For post-board, it's the .posts child. For recentsBoard, it's the container itself.
-        const getScrollContainer = (cont) => {
-          if(!cont) return null;
-          // Check if recentsBoard (directly scrollable)
-          if(cont.id === 'recentsBoard'){
-            return cont;
-          }
-          // For post-board, find the .posts child
-          const postsChild = cont.querySelector('.posts');
-          return postsChild || cont;
-        };
-        
-        // Scroll to top - do it multiple times to ensure it works
+        // Find and scroll the actual scrollable element
+        // Check both container and .posts child to find which one is actually scrollable
         if(container && container.contains(detail)){
-          const scrollContainer = getScrollContainer(container);
+          const scrollToTop = (el) => {
+            if(el && typeof el.scrollTop !== 'undefined'){
+              el.scrollTop = 0;
+            }
+          };
+          
+          // Find the element that is actually scrollable (has scrollHeight > clientHeight)
+          const findScrollable = (el) => {
+            if(!el) return null;
+            // Check if this element can scroll
+            if(el.scrollHeight > el.clientHeight){
+              return el;
+            }
+            // Check .posts child if it exists
+            const postsChild = el.querySelector('.posts');
+            if(postsChild && postsChild.scrollHeight > postsChild.clientHeight){
+              return postsChild;
+            }
+            // Return container as fallback (will try to scroll it anyway)
+            return el;
+          };
+          
+          const scrollContainer = findScrollable(container);
+          
           if(scrollContainer){
             // Scroll immediately
-            scrollContainer.scrollTop = 0;
+            scrollToTop(scrollContainer);
             
             // Also scroll after layout adjustments complete
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                scrollContainer.scrollTop = 0;
+                scrollToTop(scrollContainer);
                 setTimeout(() => {
-                  scrollContainer.scrollTop = 0;
+                  scrollToTop(scrollContainer);
                 }, 150);
               });
             });
