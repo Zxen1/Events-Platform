@@ -1557,6 +1557,7 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 
+.settings-general-container,
 .settings-paypal-container,
 .settings-icon-folders-container{
   background:rgba(0,0,0,0.2);
@@ -1568,6 +1569,7 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 
+.settings-general-container input,
 .settings-paypal-container input{
   background:rgba(0,0,0,0.2);
   border:1px solid rgba(255,255,255,0.1);
@@ -2038,6 +2040,7 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .panel-field{margin:8px auto;}
 #adminPanel h3{margin:0;}
 .admin-section{display:flex;flex-direction:column;gap:var(--gap);}
+#adminPanel .settings-general-container,
 #adminPanel .settings-paypal-container{
   display:flex;
   flex-direction:column;
@@ -2535,6 +2538,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:0 10px 10px;
 }
 #tab-map .map-spin-container,
+#tab-settings .settings-general-container,
 #tab-settings .settings-welcome-container,
 #tab-settings .settings-paypal-container,
 #tab-settings .settings-icon-folders-container,

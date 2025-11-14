@@ -2257,6 +2257,42 @@ async function ensureMapboxCssFor(container) {
                 adminIconFolderInput.value = window.adminIconFolder || 'assets/admin-icons';
               }
               
+              // Initialize general website settings
+              const websiteNameInput = document.getElementById('adminWebsiteName');
+              if(websiteNameInput && data.settings.website_name){
+                websiteNameInput.value = data.settings.website_name;
+              }
+              
+              const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
+              if(websiteTaglineInput && data.settings.website_tagline){
+                websiteTaglineInput.value = data.settings.website_tagline;
+              }
+              
+              const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
+              if(websiteCurrencyInput && data.settings.website_currency){
+                websiteCurrencyInput.value = data.settings.website_currency;
+              }
+              
+              const contactEmailInput = document.getElementById('adminContactEmail');
+              if(contactEmailInput && data.settings.contact_email){
+                contactEmailInput.value = data.settings.contact_email;
+              }
+              
+              const supportEmailInput = document.getElementById('adminSupportEmail');
+              if(supportEmailInput && data.settings.support_email){
+                supportEmailInput.value = data.settings.support_email;
+              }
+              
+              const maintenanceModeCheckbox = document.getElementById('adminMaintenanceMode');
+              if(maintenanceModeCheckbox){
+                maintenanceModeCheckbox.checked = data.settings.maintenance_mode === true || data.settings.maintenance_mode === 'true';
+              }
+              
+              const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
+              if(welcomeEnabledCheckbox){
+                welcomeEnabledCheckbox.checked = data.settings.welcome_enabled !== false && data.settings.welcome_enabled !== 'false';
+              }
+              
               // Initialize console filter checkbox
               const consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
               if(consoleFilterCheckbox){
@@ -21655,6 +21691,57 @@ form.addEventListener('input', formChangedWrapper, true);
         });
       }
     });
+    
+    // Collect general website settings
+    const websiteSettings = {};
+    
+    const websiteNameInput = document.getElementById('adminWebsiteName');
+    if(websiteNameInput && websiteNameInput.value.trim()){
+      websiteSettings.website_name = websiteNameInput.value.trim();
+    }
+    
+    const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
+    if(websiteTaglineInput && websiteTaglineInput.value.trim()){
+      websiteSettings.website_tagline = websiteTaglineInput.value.trim();
+    }
+    
+    const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
+    if(websiteCurrencyInput && websiteCurrencyInput.value.trim()){
+      websiteSettings.website_currency = websiteCurrencyInput.value.trim();
+    }
+    
+    const contactEmailInput = document.getElementById('adminContactEmail');
+    if(contactEmailInput && contactEmailInput.value.trim()){
+      websiteSettings.contact_email = contactEmailInput.value.trim();
+    }
+    
+    const supportEmailInput = document.getElementById('adminSupportEmail');
+    if(supportEmailInput && supportEmailInput.value.trim()){
+      websiteSettings.support_email = supportEmailInput.value.trim();
+    }
+    
+    const maintenanceModeCheckbox = document.getElementById('adminMaintenanceMode');
+    if(maintenanceModeCheckbox){
+      websiteSettings.maintenance_mode = maintenanceModeCheckbox.checked;
+    }
+    
+    const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
+    if(welcomeEnabledCheckbox){
+      websiteSettings.welcome_enabled = welcomeEnabledCheckbox.checked;
+    }
+    
+    // Save general settings to database if any exist
+    if(Object.keys(websiteSettings).length > 0){
+      try {
+        await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(websiteSettings)
+        });
+      } catch(err) {
+        console.error('Failed to save website settings:', err);
+      }
+    }
     
     // Collect form data
     let payload = null;
