@@ -9255,6 +9255,12 @@ function makePosts(){
           }
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
+          } else {
+            // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+            const normalizedType = getBaseFieldType(safeField.type);
+            if(normalizedType){
+              safeField.type = normalizedType;
+            }
           }
           // Ensure key and fieldTypeKey sync with each other if one is missing
           if(!safeField.key && safeField.fieldTypeKey){
@@ -24709,6 +24715,12 @@ document.addEventListener('pointerdown', (e) => {
       }
       if(typeof safeField.type !== 'string'){
         safeField.type = 'text-box';
+      } else {
+        // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+        const normalizedType = getBaseFieldType(safeField.type);
+        if(normalizedType){
+          safeField.type = normalizedType;
+        }
       }
       if(typeof safeField.placeholder !== 'string'){
         safeField.placeholder = '';
