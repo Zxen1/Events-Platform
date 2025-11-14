@@ -14477,7 +14477,7 @@ function makePosts(){
             // Message text display (shown by default)
             const messageTextDisplay = document.createElement('div');
             messageTextDisplay.className = 'message-text-display';
-            messageTextDisplay.textContent = message.message_text;
+            messageTextDisplay.innerHTML = message.message_text;
             messageTextDisplay.title = 'Click to edit';
             
             // Message text input (hidden by default)
@@ -14493,7 +14493,7 @@ function makePosts(){
             textArea.addEventListener('input', () => {
               if(textArea.value !== textArea.dataset.originalValue){
                 messageItem.classList.add('modified');
-                messageTextDisplay.textContent = textArea.value;
+                messageTextDisplay.innerHTML = textArea.value;
                 // Mark admin panel as dirty
                 if(typeof window.adminPanelModule?.markDirty === 'function'){
                   window.adminPanelModule.markDirty();

@@ -7900,20 +7900,20 @@ html, body { cursor: auto !important; }
             .message-text-display{
               font-size:14px;
               color:rgba(255,255,255,0.75);
-              padding:10px 12px;
-              background:rgba(0,0,0,0.25);
-              border:1px solid rgba(255,255,255,0.1);
-              border-radius:6px;
+              padding:4px 0;
+              background:transparent;
+              border:none;
               cursor:pointer;
               transition:all 0.2s ease;
-              line-height:1.4;
-              min-height:44px;
-              white-space:pre-wrap;
+              line-height:1.5;
+              min-height:24px;
               word-break:break-word;
             }
             .message-text-display:hover{
-              background:rgba(0,0,0,0.35);
-              border-color:rgba(255,255,255,0.2);
+              color:rgba(255,255,255,0.9);
+              text-decoration:underline;
+              text-decoration-style:dotted;
+              text-decoration-color:rgba(255,255,255,0.3);
             }
             .message-text-display[hidden]{
               display:none;
