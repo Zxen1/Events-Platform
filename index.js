@@ -24648,6 +24648,8 @@ document.addEventListener('pointerdown', (e) => {
     function renderCreateFields(){
       if(!selectedCategory || !selectedSubcategory){
         renderEmptyState();
+        if(formWrapper) formWrapper.hidden = true;
+        if(postButton) postButton.disabled = true;
         return;
       }
       const fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
@@ -25603,7 +25605,7 @@ document.addEventListener('pointerdown', (e) => {
           subBtn.dataset.category = c.name;
           subBtn.dataset.subcategory = s;
           subBtn.setAttribute('aria-pressed', 'false');
-          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
           const subLabel = subBtn.querySelector('.subcategory-label');
           if(subLabel){
             subLabel.textContent = s;
