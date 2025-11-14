@@ -1549,14 +1549,6 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
 }
 
-.settings-welcome-container{
-  background:#444444;
-  width:100%;
-  max-width:420px;
-  padding:10px;
-  border-radius:8px;
-}
-
 .settings-general-container,
 .settings-paypal-container,
 .settings-icon-folders-container{

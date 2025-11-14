@@ -2910,10 +2910,9 @@ async function ensureMapboxCssFor(container) {
         const popup = document.getElementById('welcome-modal');
         const msgEl = document.getElementById('welcomeMessageBox');
         const titleEl = document.getElementById('welcomeTitle');
-        const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
         
         // Load welcome messages from DB
-        const welcomeBody = await getMessage('msg_welcome_body', {}, false) || saved.welcomeMessage || '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
+        const welcomeBody = await getMessage('msg_welcome_body', {}, false) || '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
         const welcomeTitle = await getMessage('msg_welcome_title', {}, false) || 'Welcome to FunMap';
         
         msgEl.innerHTML = welcomeBody;
@@ -25139,26 +25138,6 @@ document.addEventListener('pointerdown', (e) => {
     ['openPost','updateVenue','togglePanel','ensureMapForVenue'].forEach(name => window.__wrapForInputYield(name));
   }
 })();
-
-// Extracted from <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const editor = document.getElementById('welcomeMessageEditor');
-  const hidden = document.getElementById('welcomeMessage');
-  if(editor && hidden){
-    const placeholder = editor.getAttribute('data-placeholder') || '';
-    hidden.value = hidden.value || placeholder;
-    editor.innerHTML = hidden.value;
-    editor.addEventListener('input', () => hidden.value = editor.innerHTML);
-    document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
-      btn.addEventListener('mousedown', (event) => {
-        event.preventDefault();
-        editor.focus();
-        document.execCommand(btn.dataset.command, false, null);
-        hidden.value = editor.innerHTML;
-      });
-    });
-  }
-});
 
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
