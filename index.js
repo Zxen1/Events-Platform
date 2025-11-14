@@ -16376,12 +16376,11 @@ function makePosts(){
 
         // Scroll to top when opening any post
         setTimeout(() => {
-          if(detail && container.contains(detail)){
-            // Scroll the opened post to top of container
-            detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Also set scrollTop directly as fallback
-            const postsChild = container.querySelector('.posts');
-            const scrollTarget = postsChild || container;
+          if(container){
+            // Scroll the element that has the scroll listener
+            // For post-board: postsWideEl (which is .post-board)
+            // For recentsBoard: container (which is #recentsBoard)
+            const scrollTarget = (container === postsWideEl) ? postsWideEl : container;
             if(scrollTarget){
               scrollTarget.scrollTop = 0;
             }
@@ -17862,7 +17861,22 @@ if (!map.__pillHooksInstalled) {
       venueGroups.forEach(group => {
         const result = buildMultiFeature(group);
         if(Array.isArray(result)){
-          result.forEach(feature => { if(feature) features.push(feature); });
+          result.forEach(feature => { 
+            if(feature) {
+              // Prevent nested clusters - check if cluster feature with same coordinates already exists
+              const existing = features.find(f => 
+                f && f.geometry && feature.geometry &&
+                Array.isArray(f.geometry.coordinates) && Array.isArray(feature.geometry.coordinates) &&
+                f.geometry.coordinates.length >= 2 && feature.geometry.coordinates.length >= 2 &&
+                Math.abs(f.geometry.coordinates[0] - feature.geometry.coordinates[0]) < 0.0001 &&
+                Math.abs(f.geometry.coordinates[1] - feature.geometry.coordinates[1]) < 0.0001 &&
+                f.properties && f.properties.isMultiVenue && feature.properties && feature.properties.isMultiVenue
+              );
+              if(!existing){
+                features.push(feature);
+              }
+            }
+          });
         }
       });
 
