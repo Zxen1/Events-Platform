@@ -16377,12 +16377,13 @@ function makePosts(){
         // Scroll to top when opening any post
         setTimeout(() => {
           if(container){
-            // Scroll the element that has the scroll listener
-            // For post-board: postsWideEl (which is .post-board)
-            // For recentsBoard: container (which is #recentsBoard)
-            const scrollTarget = (container === postsWideEl) ? postsWideEl : container;
-            if(scrollTarget){
-              scrollTarget.scrollTop = 0;
+            // Scroll the exact element that has the scroll listener
+            if(container === postsWideEl){
+              // Post board - scroll postsWideEl (same element scroll listener uses)
+              postsWideEl.scrollTop = 0;
+            } else {
+              // Recents board - scroll container directly
+              container.scrollTop = 0;
             }
           }
         }, 200);
