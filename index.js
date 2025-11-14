@@ -16356,15 +16356,6 @@ function makePosts(){
 
         await nextFrame();
 
-        if(fromMap){
-          if(typeof window.adjustBoards === 'function'){
-            window.adjustBoards();
-          }
-          if(typeof window.adjustListHeight === 'function'){
-            window.adjustListHeight();
-          }
-        }
-
         // Update history on open (keep newest-first)
         viewHistory = viewHistory.filter(x=>x.id!==id);
         viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
@@ -16374,19 +16365,36 @@ function makePosts(){
           renderHistoryBoard();
         }
 
-        // Scroll to top when opening any post
-        setTimeout(() => {
-          if(container){
-            // Scroll the exact element that has the scroll listener
-            if(container === postsWideEl){
-              // Post board - scroll postsWideEl (same element scroll listener uses)
-              postsWideEl.scrollTop = 0;
-            } else {
-              // Recents board - scroll container directly
-              container.scrollTop = 0;
-            }
+        // Ensure all layout operations complete before scrolling
+        if(typeof window.adjustBoards === 'function'){
+          window.adjustBoards();
+        }
+        if(typeof window.adjustListHeight === 'function'){
+          window.adjustListHeight();
+        }
+
+        // Scroll to top when opening any post - must happen AFTER all layout operations
+        const scrollToTop = () => {
+          if(!container) return;
+          const scrollElement = (container === postsWideEl) ? postsWideEl : container;
+          if(scrollElement && typeof scrollElement.scrollTop !== 'undefined'){
+            scrollElement.scrollTop = 0;
           }
-        }, 200);
+        };
+
+        // Use multiple attempts to ensure scroll happens after all layout changes
+        requestAnimationFrame(() => {
+          scrollToTop();
+          requestAnimationFrame(() => {
+            scrollToTop();
+            // Final attempt after a short delay to catch any late layout changes
+            setTimeout(() => {
+              requestAnimationFrame(() => {
+                scrollToTop();
+              });
+            }, 100);
+          });
+        });
       }
 
       function closeActivePost(){
