@@ -2259,18 +2259,18 @@ async function ensureMapboxCssFor(container) {
               
               // Initialize general website settings
               const websiteNameInput = document.getElementById('adminWebsiteName');
-              if(websiteNameInput && data.settings.website_name){
-                websiteNameInput.value = data.settings.website_name;
+              if(websiteNameInput && data.settings.site_name){
+                websiteNameInput.value = data.settings.site_name;
               }
               
               const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
-              if(websiteTaglineInput && data.settings.website_tagline){
-                websiteTaglineInput.value = data.settings.website_tagline;
+              if(websiteTaglineInput && data.settings.site_tagline){
+                websiteTaglineInput.value = data.settings.site_tagline;
               }
               
               const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
-              if(websiteCurrencyInput && data.settings.website_currency){
-                websiteCurrencyInput.value = data.settings.website_currency;
+              if(websiteCurrencyInput && data.settings.site_currency){
+                websiteCurrencyInput.value = data.settings.site_currency;
               }
               
               const contactEmailInput = document.getElementById('adminContactEmail');
@@ -21697,17 +21697,17 @@ form.addEventListener('input', formChangedWrapper, true);
     
     const websiteNameInput = document.getElementById('adminWebsiteName');
     if(websiteNameInput){
-      websiteSettings.website_name = websiteNameInput.value.trim();
+      websiteSettings.site_name = websiteNameInput.value.trim();
     }
     
     const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
     if(websiteTaglineInput){
-      websiteSettings.website_tagline = websiteTaglineInput.value.trim();
+      websiteSettings.site_tagline = websiteTaglineInput.value.trim();
     }
     
     const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
     if(websiteCurrencyInput){
-      websiteSettings.website_currency = websiteCurrencyInput.value.trim();
+      websiteSettings.site_currency = websiteCurrencyInput.value.trim();
     }
     
     const contactEmailInput = document.getElementById('adminContactEmail');
