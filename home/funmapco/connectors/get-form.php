@@ -838,10 +838,16 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             // If field_type has only ONE item and it's a field → use field_type properties
             if (count($itemIds) === 1 && $itemIds[0]['type'] === 'field' && isset($fieldsById[$itemIds[0]['id']])) {
                 $field = $fieldsById[$itemIds[0]['id']];
+                // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+                $rawType = isset($field['type']) ? trim((string) $field['type']) : '';
+                $normalizedType = $rawType;
+                if ($rawType !== '' && preg_match('/^([^\s\[]+)/', $rawType, $matches)) {
+                    $normalizedType = trim($matches[1]);
+                }
                 $builtField = [
                     'id' => $matchingFieldType['id'],
                     'key' => $matchingFieldType['field_type_key'],
-                    'type' => $field['type'],
+                    'type' => $normalizedType,
                     'name' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => $requiredValue,

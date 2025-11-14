@@ -26299,7 +26299,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const result = await response.json();
         if(result && result.success !== false){
-          console.log('Post mode shadow saved successfully:', shadowValue);
+          console.log('Post mode shadow saved successfully:', shadowValue, result);
+          if(result.settings_saved !== undefined){
+            console.log('Settings saved count:', result.settings_saved);
+          }
         } else {
           console.error('Failed to save post mode shadow:', result);
         }

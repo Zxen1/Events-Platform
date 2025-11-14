@@ -73,11 +73,21 @@ try {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
 
-    if (!is_array($data) || empty($data)) {
+    if (!is_array($data)) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'Invalid request data',
+            'message' => 'Invalid request data - not an array',
+        ]);
+        return;
+    }
+
+    // Check if data has any settings (allow empty array if only messages are being sent)
+    if (empty($data)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid request data - empty payload',
         ]);
         return;
     }
@@ -102,7 +112,9 @@ try {
     }
 
     // Save settings
-    if (!empty($settings)) {
+    $settingsSaved = 0;
+    // Check if settings array exists and has elements (not just empty check, which fails for 0 values)
+    if (is_array($settings) && count($settings) > 0) {
         $stmt = $pdo->prepare('
             INSERT INTO `admin_settings` (`setting_key`, `setting_value`, `setting_type`)
             VALUES (:key, :value, :type)
@@ -112,17 +124,26 @@ try {
         ');
 
         foreach ($settings as $key => $value) {
-            // Determine type
+            // Determine type - handle null, false, 0, and empty string explicitly
             $type = 'string';
             $stringValue = null;
 
-            if (is_bool($value)) {
+            // Check for null first
+            if ($value === null) {
+                $type = 'string';
+                $stringValue = '';
+            } elseif (is_bool($value)) {
                 $type = 'boolean';
                 $stringValue = $value ? 'true' : 'false';
-            } elseif (is_int($value)) {
+            } elseif (is_float($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') !== false)) {
+                // Handle float/decimal values, including 0.0
+                $type = 'decimal';
+                $stringValue = (string)$value;
+            } elseif (is_int($value) || (is_string($value) && ctype_digit($value))) {
                 $type = 'integer';
                 $stringValue = (string)$value;
             } elseif (is_numeric($value)) {
+                // Fallback for any numeric value
                 $type = 'decimal';
                 $stringValue = (string)$value;
             } elseif (is_array($value) || is_object($value)) {
@@ -132,11 +153,21 @@ try {
                 $stringValue = (string)$value;
             }
 
-            $stmt->execute([
-                ':key' => $key,
-                ':value' => $stringValue,
-                ':type' => $type,
-            ]);
+            try {
+                $result = $stmt->execute([
+                    ':key' => $key,
+                    ':value' => $stringValue,
+                    ':type' => $type,
+                ]);
+                if ($result) {
+                    $settingsSaved++;
+                }
+            } catch (PDOException $e) {
+                // Log error for specific setting but continue with others
+                error_log("Failed to save setting '{$key}' with value '{$stringValue}' (type: {$type}): " . $e->getMessage());
+                // Re-throw to be caught by outer try-catch
+                throw $e;
+            }
         }
     }
 
@@ -171,6 +202,7 @@ try {
     $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
+        'settings_saved' => $settingsSaved,
     ];
 
     if ($messagesUpdated > 0) {
