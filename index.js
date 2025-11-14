@@ -23270,13 +23270,15 @@ document.addEventListener('pointerdown', (e) => {
 
   const memberCreateSection = document.getElementById('memberTab-create');
   if(memberCreateSection){
-    const categorySelect = document.getElementById('memberCreateCategory');
-    const subcategorySelect = document.getElementById('memberCreateSubcategory');
+    const formpickerCats = document.getElementById('memberFormpickerCats');
     const emptyState = document.getElementById('memberCreateEmpty');
     const formWrapper = document.getElementById('memberCreateFormWrapper');
     const formFields = document.getElementById('memberCreateFormFields');
     const postButton = document.getElementById('memberCreatePostBtn');
     const memberForm = document.getElementById('memberForm');
+    
+    let selectedCategory = '';
+    let selectedSubcategory = '';
 
     let currentCreateFields = [];
     let createStatusTimer = 0;
@@ -24234,12 +24236,6 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     async function initializeMemberFormbuilderSnapshot(){
-      if(categorySelect){
-        categorySelect.disabled = true;
-      }
-      if(subcategorySelect){
-        subcategorySelect.disabled = true;
-      }
       const loadingMsg = await getMessage('msg_post_loading_form', {}, false) || 'Loading form fields…';
       renderEmptyState(loadingMsg);
       try{
@@ -24251,6 +24247,7 @@ document.addEventListener('pointerdown', (e) => {
         applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
+        buildFormpicker();
       }catch(error){
         const message = error && typeof error.message === 'string' ? error.message : '';
         if(message && message.toLowerCase().includes('database connection not configured')){
@@ -24262,11 +24259,7 @@ document.addEventListener('pointerdown', (e) => {
         memberSnapshotErrorMessage = errorMsg;
         setEmptyStateMessage(errorMsg);
         applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
-      } finally {
-        if(categorySelect){
-          categorySelect.disabled = false;
-        }
-        populateCategoryOptions(false);
+        buildFormpicker();
       }
     }
 
@@ -24643,34 +24636,513 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function renderCreateFields(){
-      const categoryName = categorySelect ? categorySelect.value : '';
-      const subcategoryName = subcategorySelect ? subcategorySelect.value : '';
-      if(!categoryName || !subcategoryName){
+      if(!selectedCategory || !selectedSubcategory){
         renderEmptyState();
         return;
       }
-      const fields = getFieldsForSelection(categoryName, subcategoryName);
+      const fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
       fieldIdCounter = 0;
       formFields.innerHTML = '';
       currentCreateFields = [];
       if(fields.length === 0){
         const placeholder = document.createElement('p');
-        placeholder.className = 'member-create-placeholder';
+        placeholder.className = 'form-preview-empty';
         placeholder.textContent = 'No fields configured for this subcategory yet.';
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
-        fields.forEach((field, index)=>{
-          const fieldEl = buildMemberCreateField(field, index);
-          if(fieldEl){
-            formFields.appendChild(fieldEl);
-            currentCreateFields.push({ field, element: fieldEl });
-          }
-        });
+        renderFormPreviewForMember(fields);
       }
       if(emptyState) emptyState.hidden = true;
       if(formWrapper) formWrapper.hidden = false;
       if(postButton) postButton.disabled = false;
+    }
+    
+    function ensureFieldDefaultsForMember(field){
+      const safeField = field && typeof field === 'object' ? field : {};
+      if(typeof safeField.name !== 'string'){
+        safeField.name = '';
+      } else if(!safeField.name.trim()){
+        safeField.name = '';
+      }
+      if(typeof safeField.type !== 'string'){
+        safeField.type = 'text-box';
+      }
+      if(typeof safeField.placeholder !== 'string'){
+        safeField.placeholder = '';
+      }
+      if(typeof safeField.required !== 'boolean'){
+        safeField.required = false;
+      }
+      if(!Array.isArray(safeField.options)){
+        safeField.options = [];
+      }
+      return safeField;
+    }
+    
+    function handleImagePreview(fileInput){
+      if(!fileInput || fileInput.type !== 'file') return;
+      const previewTargetId = fileInput.dataset.imagePreviewTarget;
+      const messageTargetId = fileInput.dataset.imageMessageTarget;
+      if(!previewTargetId) return;
+      
+      const previewGrid = document.getElementById(previewTargetId);
+      const messageEl = messageTargetId ? document.getElementById(messageTargetId) : null;
+      if(!previewGrid) return;
+      
+      const maxImages = parseInt(fileInput.dataset.maxImages || '10', 10);
+      const fileMap = new WeakMap();
+      
+      fileInput.addEventListener('change', function(event){
+        const files = Array.from(event.target.files || []);
+        if(files.length === 0) return;
+        
+        const existingPreviews = previewGrid.querySelectorAll('.form-preview-image-thumb').length;
+        const remainingSlots = maxImages - existingPreviews;
+        
+        if(files.length > remainingSlots){
+          if(messageEl){
+            messageEl.textContent = `You can only upload ${maxImages} images total.`;
+            messageEl.hidden = false;
+          }
+          return;
+        }
+        
+        if(messageEl){
+          messageEl.hidden = true;
+        }
+        
+        files.forEach(file => {
+          if(!file.type.startsWith('image/')) return;
+          
+          const reader = new FileReader();
+          reader.onload = function(e){
+            const thumb = document.createElement('div');
+            thumb.className = 'form-preview-image-thumb';
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = file.name;
+            fileMap.set(thumb, file);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'form-preview-image-remove';
+            removeBtn.setAttribute('aria-label', `Remove ${file.name}`);
+            removeBtn.innerHTML = '<span>×</span>';
+            removeBtn.addEventListener('click', function(){
+              const fileToRemove = fileMap.get(thumb);
+              thumb.remove();
+              if(fileToRemove){
+                const dataTransfer = new DataTransfer();
+                Array.from(fileInput.files).forEach(f => {
+                  if(f !== fileToRemove){
+                    dataTransfer.items.add(f);
+                  }
+                });
+                fileInput.files = dataTransfer.files;
+              }
+            });
+            thumb.appendChild(img);
+            thumb.appendChild(removeBtn);
+            previewGrid.appendChild(thumb);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+    
+    function renderFormPreviewForMember(fields){
+      formFields.innerHTML = '';
+      if(!fields || fields.length === 0){
+        const empty = document.createElement('p');
+        empty.className = 'form-preview-empty';
+        empty.textContent = 'No fields added yet.';
+        formFields.appendChild(empty);
+        return;
+      }
+      fields.forEach((fieldData, previewIndex) => {
+        const previewField = ensureFieldDefaultsForMember(fieldData);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'panel-field form-preview-field';
+        const baseId = `memberForm-field-${++fieldIdCounter}`;
+        const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+        const labelEl = document.createElement('span');
+        labelEl.className = 'subcategory-form-label';
+        labelEl.textContent = labelText;
+        const labelId = `${baseId}-label`;
+        labelEl.id = labelId;
+        let control = null;
+        
+        if(previewField.type === 'text-area' || previewField.type === 'description'){
+          const textarea = document.createElement('textarea');
+          textarea.rows = 5;
+          textarea.placeholder = previewField.placeholder || '';
+          textarea.className = 'form-preview-textarea';
+          textarea.style.resize = 'vertical';
+          const textareaId = `${baseId}-input`;
+          textarea.id = textareaId;
+          if(previewField.type === 'description'){
+            textarea.classList.add('form-preview-description');
+          }
+          if(previewField.required) textarea.required = true;
+          control = textarea;
+        } else if(previewField.type === 'dropdown'){
+          const select = document.createElement('select');
+          select.className = 'form-preview-select';
+          wrapper.classList.add('form-preview-field--dropdown');
+          const options = Array.isArray(previewField.options) ? previewField.options : [];
+          if(options.length){
+            options.forEach((optionValue, optionIndex) => {
+              const option = document.createElement('option');
+              const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                ? optionValue
+                : `Option ${optionIndex + 1}`;
+              option.value = optionValue;
+              option.textContent = displayValue;
+              select.appendChild(option);
+            });
+          } else {
+            const placeholderOption = document.createElement('option');
+            placeholderOption.textContent = 'Select an option';
+            select.appendChild(placeholderOption);
+          }
+          const selectId = `${baseId}-input`;
+          select.id = selectId;
+          if(previewField.required) select.required = true;
+          control = select;
+        } else if(previewField.type === 'radio-toggle'){
+          const options = Array.isArray(previewField.options) ? previewField.options : [];
+          const radioGroup = document.createElement('div');
+          radioGroup.className = 'form-preview-radio-group';
+          wrapper.classList.add('form-preview-field--radio-toggle');
+          const groupName = `${baseId}-radio`;
+          if(options.length){
+            options.forEach((optionValue, optionIndex) => {
+              const radioLabel = document.createElement('label');
+              radioLabel.className = 'form-preview-radio-option';
+              const radio = document.createElement('input');
+              radio.type = 'radio';
+              radio.name = groupName;
+              radio.value = optionValue;
+              const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                ? optionValue
+                : `Option ${optionIndex + 1}`;
+              const radioText = document.createElement('span');
+              radioText.textContent = displayValue;
+              radioLabel.append(radio, radioText);
+              radioGroup.appendChild(radioLabel);
+            });
+          } else {
+            const placeholderOption = document.createElement('label');
+            placeholderOption.className = 'form-preview-radio-option';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            placeholderOption.append(radio, document.createTextNode('Option'));
+            radioGroup.appendChild(placeholderOption);
+          }
+          control = radioGroup;
+        } else if(previewField.type === 'venue-ticketing'){
+          wrapper.classList.add('form-preview-field--venues-sessions-pricing');
+          control = buildVenueSessionEditor(previewField, labelId);
+        } else if(previewField.type === 'variant-pricing'){
+          wrapper.classList.add('form-preview-field--variant-pricing');
+          control = buildVersionPriceEditor(previewField, labelId);
+        } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
+          wrapper.classList.add('form-preview-field--url');
+          const urlWrapper = document.createElement('div');
+          urlWrapper.className = 'form-preview-url-wrapper';
+          const urlInput = document.createElement('input');
+          urlInput.type = 'text';
+          urlInput.className = 'form-preview-url-input';
+          const urlInputId = `${baseId}-input`;
+          urlInput.id = urlInputId;
+          const placeholderValue = previewField.placeholder && /\.[A-Za-z]{2,}/.test(previewField.placeholder)
+            ? previewField.placeholder
+            : 'https://example.com';
+          urlInput.placeholder = placeholderValue;
+          urlInput.dataset.urlType = previewField.type === 'website-url' ? 'website' : 'tickets';
+          urlInput.autocomplete = 'url';
+          urlInput.inputMode = 'url';
+          if(previewField.required) urlInput.required = true;
+          urlWrapper.appendChild(urlInput);
+          control = urlWrapper;
+        } else if(previewField.type === 'images'){
+          wrapper.classList.add('form-preview-field--images');
+          const imageWrapper = document.createElement('div');
+          imageWrapper.className = 'form-preview-images';
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          const fileInputId = `${baseId}-input`;
+          fileInput.id = fileInputId;
+          fileInput.accept = 'image/*';
+          fileInput.multiple = true;
+          fileInput.dataset.imagesField = 'true';
+          fileInput.dataset.maxImages = '10';
+          const previewId = `${baseId}-previews`;
+          const messageId = `${baseId}-message`;
+          fileInput.dataset.imagePreviewTarget = previewId;
+          fileInput.dataset.imageMessageTarget = messageId;
+          if(previewField.required) fileInput.required = true;
+          const hint = document.createElement('div');
+          hint.className = 'form-preview-image-hint';
+          hint.textContent = 'Upload up to 10 images.';
+          const message = document.createElement('div');
+          message.className = 'form-preview-image-message';
+          message.id = messageId;
+          message.hidden = true;
+          const previewGrid = document.createElement('div');
+          previewGrid.className = 'form-preview-image-previews';
+          previewGrid.id = previewId;
+          imageWrapper.append(fileInput, hint, message, previewGrid);
+          handleImagePreview(fileInput);
+          control = imageWrapper;
+        } else if(previewField.type === 'location'){
+          wrapper.classList.add('form-preview-field--location');
+          const ensureLocationState = () => {
+            if(!previewField.location || typeof previewField.location !== 'object'){
+              previewField.location = { address: '', latitude: '', longitude: '' };
+            } else {
+              if(typeof previewField.location.address !== 'string') previewField.location.address = '';
+              if(typeof previewField.location.latitude !== 'string') previewField.location.latitude = '';
+              if(typeof previewField.location.longitude !== 'string') previewField.location.longitude = '';
+            }
+            return previewField.location;
+          };
+          const locationState = ensureLocationState();
+          const locationWrapper = document.createElement('div');
+          locationWrapper.className = 'location-field-wrapper';
+          locationWrapper.setAttribute('role', 'group');
+          const addressRow = document.createElement('div');
+          addressRow.className = 'venue-line address_line-line';
+          const geocoderContainer = document.createElement('div');
+          geocoderContainer.className = 'address_line-geocoder-container';
+          const addressInputId = `${baseId}-location-address`;
+          geocoderContainer.id = `${baseId}-location-geocoder`;
+          addressRow.appendChild(geocoderContainer);
+          locationWrapper.appendChild(addressRow);
+          const latitudeInput = document.createElement('input');
+          latitudeInput.type = 'hidden';
+          latitudeInput.dataset.locationLatitude = 'true';
+          latitudeInput.value = locationState.latitude || '';
+          const longitudeInput = document.createElement('input');
+          longitudeInput.type = 'hidden';
+          longitudeInput.dataset.locationLongitude = 'true';
+          longitudeInput.value = locationState.longitude || '';
+          locationWrapper.append(latitudeInput, longitudeInput);
+          const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
+            ? previewField.placeholder
+            : 'Search for a location';
+          const syncCoordinateInputs = () => {
+            latitudeInput.value = locationState.latitude || '';
+            longitudeInput.value = locationState.longitude || '';
+          };
+          syncCoordinateInputs();
+          const formatCoord = value => {
+            const num = Number(value);
+            return Number.isFinite(num) ? num.toFixed(6) : '';
+          };
+          const applyAddressLabel = input => {
+            if(input){
+              input.setAttribute('aria-labelledby', labelId);
+            }
+            return input;
+          };
+          const createFallbackAddressInput = () => {
+            geocoderContainer.innerHTML = '';
+            geocoderContainer.classList.remove('is-geocoder-active');
+            const fallback = document.createElement('input');
+            fallback.type = 'text';
+            fallback.id = addressInputId;
+            fallback.className = 'address_line-fallback';
+            fallback.placeholder = placeholderValue;
+            fallback.setAttribute('aria-label', placeholderValue);
+            fallback.dataset.locationAddress = 'true';
+            fallback.value = locationState.address || '';
+            if(previewField.required) fallback.required = true;
+            fallback.addEventListener('input', () => {
+              locationState.address = fallback.value;
+            });
+            geocoderContainer.appendChild(fallback);
+            addressInput = fallback;
+            applyAddressLabel(fallback);
+            return fallback;
+          };
+          const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+          let addressInput = null;
+          if(mapboxReady){
+            const geocoderOptions = {
+              accessToken: window.mapboxgl.accessToken,
+              mapboxgl: window.mapboxgl,
+              marker: false,
+              placeholder: placeholderValue,
+              geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+              types: 'address,poi',
+              reverseGeocode: true,
+              localGeocoder: localVenueGeocoder,
+              externalGeocoder: externalMapboxVenueGeocoder,
+              filter: majorVenueFilter,
+              limit: 7,
+              language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+            };
+            const geocoder = new MapboxGeocoder(geocoderOptions);
+            const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+              ? window.requestAnimationFrame.bind(window)
+              : (cb) => setTimeout(cb, 16);
+            let attempts = 0;
+            const maxAttempts = 20;
+            let geocoderMounted = false;
+            let fallbackActivated = false;
+            const attachGeocoder = () => {
+              if(fallbackActivated){
+                return;
+              }
+              const scheduleRetry = () => {
+                attempts += 1;
+                if(attempts > maxAttempts){
+                  addressInput = createFallbackAddressInput();
+                  fallbackActivated = true;
+                  return false;
+                }
+                schedule(attachGeocoder);
+                return true;
+              };
+              if(!geocoderContainer.isConnected){
+                scheduleRetry();
+                return;
+              }
+              if(!geocoderMounted){
+                try{
+                  geocoder.addTo(geocoderContainer);
+                  geocoderMounted = true;
+                }catch(err){
+                  addressInput = createFallbackAddressInput();
+                  fallbackActivated = true;
+                  return;
+                }
+              }
+              const setGeocoderActive = isActive => {
+                const active = !!isActive;
+                geocoderContainer.classList.toggle('is-geocoder-active', active);
+              };
+              setGeocoderActive(false);
+              const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
+              if(geocoderRoot && !geocoderRoot.__memberFormGeocoderBound){
+                geocoderRoot.__memberFormGeocoderBound = true;
+                const handleFocusIn = () => setGeocoderActive(true);
+                const handleFocusOut = event => {
+                  const nextTarget = event && event.relatedTarget;
+                  if(!nextTarget || !geocoderRoot.contains(nextTarget)){
+                    setGeocoderActive(false);
+                  }
+                };
+                const handlePointerDown = () => setGeocoderActive(true);
+                geocoderRoot.addEventListener('focusin', handleFocusIn);
+                geocoderRoot.addEventListener('focusout', handleFocusOut);
+                geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+              }
+              const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+              if(!geocoderInput){
+                scheduleRetry();
+                return;
+              }
+              if(geocoderInput.__memberFormLocationBound){
+                addressInput = geocoderInput;
+                applyAddressLabel(geocoderInput);
+                return;
+              }
+              geocoderInput.__memberFormLocationBound = true;
+              geocoderInput.placeholder = placeholderValue;
+              geocoderInput.setAttribute('aria-label', placeholderValue);
+              geocoderInput.id = addressInputId;
+              geocoderInput.dataset.locationAddress = 'true';
+              geocoderInput.value = locationState.address || '';
+              if(previewField.required) geocoderInput.required = true;
+              addressInput = geocoderInput;
+              applyAddressLabel(geocoderInput);
+              geocoderInput.addEventListener('blur', () => {
+                const nextValue = geocoderInput.value || '';
+                if(locationState.address !== nextValue){
+                  locationState.address = nextValue;
+                }
+              });
+              geocoder.on('result', event => {
+                const result = event && event.result;
+                if(result){
+                  const clone = cloneGeocoderFeature(result);
+                  const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
+                  if(placeName){
+                    locationState.address = placeName;
+                    geocoderInput.value = placeName;
+                  } else {
+                    locationState.address = geocoderInput.value || '';
+                  }
+                  const center = getMapboxVenueFeatureCenter(clone);
+                  if(center && center.length >= 2){
+                    const [lng, lat] = center;
+                    locationState.longitude = formatCoord(lng);
+                    locationState.latitude = formatCoord(lat);
+                  }
+                  syncCoordinateInputs();
+                }
+                setGeocoderActive(false);
+              });
+              geocoder.on('clear', () => {
+                locationState.address = '';
+                locationState.latitude = '';
+                locationState.longitude = '';
+                geocoderInput.value = '';
+                syncCoordinateInputs();
+                setGeocoderActive(false);
+              });
+              geocoder.on('error', () => setGeocoderActive(false));
+              return geocoderInput;
+            };
+            attachGeocoder();
+          } else {
+            addressInput = createFallbackAddressInput();
+          }
+          if(addressInput){
+            addressInput.setAttribute('aria-labelledby', labelId);
+          }
+          control = locationWrapper;
+        } else {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = previewField.placeholder || '';
+          const inputId = `${baseId}-input`;
+          input.id = inputId;
+          if(previewField.type === 'title'){
+            input.classList.add('form-preview-title-input');
+          }
+          if(previewField.required) input.required = true;
+          control = input;
+        }
+        
+        if(control){
+          if(control instanceof HTMLElement){
+            control.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            if(labelId){
+              control.setAttribute('aria-labelledby', labelId);
+            }
+          }
+        }
+        if(previewField.required){
+          wrapper.classList.add('form-preview-field--required');
+          labelEl.appendChild(document.createTextNode(' '));
+          const asterisk = document.createElement('span');
+          asterisk.className = 'required-asterisk';
+          asterisk.textContent = '*';
+          labelEl.appendChild(asterisk);
+        }
+        
+        const header = document.createElement('div');
+        header.className = 'form-preview-field-header';
+        header.style.position = 'relative';
+        header.appendChild(labelEl);
+        
+        wrapper.append(header, control);
+        formFields.appendChild(wrapper);
+        currentCreateFields.push({ field: previewField, element: wrapper });
+      });
     }
 
     async function handleMemberCreatePost(event){
@@ -24702,24 +25174,17 @@ document.addEventListener('pointerdown', (e) => {
         }
       };
 
-      const categoryName = categorySelect ? categorySelect.value.trim() : '';
-      const subcategoryName = subcategorySelect ? subcategorySelect.value.trim() : '';
-      if(!categoryName || !subcategoryName){
+      if(!selectedCategory || !selectedSubcategory){
         await showCreateStatus('msg_post_create_no_category', { error: true });
-        if(!categoryName && categorySelect){
-          focusElement(categorySelect);
-        } else if(subcategorySelect){
-          focusElement(subcategorySelect);
-        }
         restoreButtonState();
         isSubmittingCreatePost = false;
         return;
       }
 
-      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName) || null;
+      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === selectedCategory) || null;
       const categoryId = category && Object.prototype.hasOwnProperty.call(category, 'id') ? category.id : null;
-      const subcategoryId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subcategoryName)
-        ? category.subIds[subcategoryName]
+      const subcategoryId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, selectedSubcategory)
+        ? category.subIds[selectedSubcategory]
         : null;
 
       let postTitle = '';
@@ -25038,13 +25503,15 @@ document.addEventListener('pointerdown', (e) => {
         window.memberPanelChangeManager.markSaved();
       }
 
-      if(categorySelect){
-        categorySelect.value = '';
+      selectedCategory = '';
+      selectedSubcategory = '';
+      if(formpickerCats){
+        const allSubButtons = formpickerCats.querySelectorAll('.subcategory-option');
+        allSubButtons.forEach(btn => {
+          btn.setAttribute('aria-pressed', 'false');
+          btn.classList.remove('on');
+        });
       }
-      if(subcategorySelect){
-        subcategorySelect.dataset.lastSelected = '';
-      }
-      populateSubcategoryOptions(false);
       currentCreateFields = [];
       renderEmptyState();
 
@@ -25054,74 +25521,174 @@ document.addEventListener('pointerdown', (e) => {
       isSubmittingCreatePost = false;
     }
 
-    function populateSubcategoryOptions(preserveValue){
-      if(!subcategorySelect) return;
-      const categoryName = categorySelect ? categorySelect.value : '';
-      subcategorySelect.innerHTML = '';
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = categoryName ? 'Select Subcategory' : 'Select Category First';
-      subcategorySelect.appendChild(placeholder);
-      if(!categoryName){
-        subcategorySelect.disabled = true;
-        renderEmptyState();
-        return;
-      }
-      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
-      if(!category){
-        subcategorySelect.disabled = true;
-        renderEmptyState();
-        return;
-      }
-      subcategorySelect.disabled = false;
-      const previous = preserveValue ? subcategorySelect.dataset.lastSelected || '' : '';
-      (Array.isArray(category.subs) ? category.subs : []).forEach(sub => {
-        const option = document.createElement('option');
-        option.value = sub;
-        option.textContent = sub;
-        subcategorySelect.appendChild(option);
-      });
-      if(previous && Array.isArray(category.subs) && category.subs.includes(previous)){
-        subcategorySelect.value = previous;
-      } else {
-        subcategorySelect.value = '';
-      }
-      renderCreateFields();
-    }
-
-    function populateCategoryOptions(preserveSelection){
-      if(!categorySelect) return;
-      const previous = preserveSelection ? categorySelect.value : '';
-      categorySelect.innerHTML = '';
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = 'Select Category';
-      categorySelect.appendChild(placeholder);
-      const sortedMemberCategories = getSortedCategories(memberCategories);
-      sortedMemberCategories.forEach(cat => {
-        if(!cat || typeof cat.name !== 'string') return;
-        const option = document.createElement('option');
-        option.value = cat.name;
-        option.textContent = cat.name;
-        categorySelect.appendChild(option);
-      });
-      if(previous && memberCategories.some(cat => cat && cat.name === previous)){
-        categorySelect.value = previous;
-      } else {
-        categorySelect.value = '';
-      }
-      populateSubcategoryOptions(preserveSelection && !!categorySelect.value);
-    }
-
-    if(categorySelect){
-      categorySelect.addEventListener('change', ()=>{
-        populateSubcategoryOptions(false);
-      });
-    }
-    if(subcategorySelect){
-      subcategorySelect.addEventListener('change', ()=>{
-        subcategorySelect.dataset.lastSelected = subcategorySelect.value;
-        renderCreateFields();
+    function buildFormpicker(){
+      if(!formpickerCats) return;
+      formpickerCats.innerHTML = '';
+      selectedCategory = '';
+      selectedSubcategory = '';
+      
+      const categoryIcons = window.categoryIcons = window.categoryIcons || {};
+      const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
+      const sortedCategories = getSortedCategories(memberCategories);
+      
+      sortedCategories.forEach(c => {
+        if(!c || typeof c.name !== 'string') return;
+        
+        const menu = document.createElement('div');
+        menu.className = 'filter-category-menu';
+        menu.dataset.category = c.name;
+        menu.setAttribute('role', 'group');
+        menu.setAttribute('aria-expanded', 'false');
+        
+        const header = document.createElement('div');
+        header.className = 'filter-category-header';
+        
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+        
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup', 'true');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        const menuId = `formpicker-menu-${slugify(c.name)}`;
+        menuBtn.setAttribute('aria-controls', menuId);
+        
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className = 'category-logo';
+        const categoryIconHtml = categoryIcons[c.name] || '';
+        if(categoryIconHtml){
+          categoryLogo.innerHTML = categoryIconHtml;
+          categoryLogo.classList.add('has-icon');
+        } else {
+          categoryLogo.textContent = c.name.charAt(0) || '';
+        }
+        
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = c.name;
+        
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        
+        menuBtn.append(categoryLogo, label, arrow);
+        
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className = 'options-menu';
+        optionsMenu.id = menuId;
+        optionsMenu.hidden = true;
+        
+        triggerWrap.append(menuBtn, optionsMenu);
+        
+        const toggle = document.createElement('label');
+        toggle.className = 'cat-switch';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.setAttribute('aria-label', `Toggle ${c.name} category`);
+        const slider = document.createElement('span');
+        slider.className = 'slider';
+        toggle.append(input, slider);
+        
+        const subButtons = [];
+        (Array.isArray(c.subs) ? c.subs : []).forEach(s => {
+          const subBtn = document.createElement('button');
+          subBtn.type = 'button';
+          subBtn.className = 'subcategory-option';
+          subBtn.dataset.category = c.name;
+          subBtn.dataset.subcategory = s;
+          subBtn.setAttribute('aria-pressed', 'false');
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
+          const subLabel = subBtn.querySelector('.subcategory-label');
+          if(subLabel){
+            subLabel.textContent = s;
+          }
+          const logoSpan = subBtn.querySelector('.subcategory-logo');
+          if(logoSpan){
+            const iconHtml = subcategoryIcons[s] || '';
+            if(iconHtml){
+              logoSpan.innerHTML = iconHtml;
+              logoSpan.classList.add('has-icon');
+            } else {
+              logoSpan.textContent = s.charAt(0) || '';
+            }
+          }
+          subBtn.addEventListener('click', () => {
+            if(!input.checked) return;
+            const isActive = subBtn.getAttribute('aria-pressed') === 'true';
+            if(isActive){
+              subBtn.setAttribute('aria-pressed', 'false');
+              subBtn.classList.remove('on');
+              if(selectedCategory === c.name && selectedSubcategory === s){
+                selectedCategory = '';
+                selectedSubcategory = '';
+              }
+            } else {
+              subButtons.forEach(btn => {
+                if(btn !== subBtn){
+                  btn.setAttribute('aria-pressed', 'false');
+                  btn.classList.remove('on');
+                }
+              });
+              subBtn.setAttribute('aria-pressed', 'true');
+              subBtn.classList.add('on');
+              selectedCategory = c.name;
+              selectedSubcategory = s;
+            }
+            renderCreateFields();
+          });
+          optionsMenu.appendChild(subBtn);
+          subButtons.push(subBtn);
+        });
+        
+        header.append(triggerWrap, toggle);
+        menu.appendChild(header);
+        formpickerCats.appendChild(menu);
+        
+        let openState = false;
+        function syncExpanded(){
+          const expanded = input.checked && openState;
+          menu.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          optionsMenu.hidden = !expanded;
+        }
+        function setOpenState(next){
+          openState = !!next;
+          syncExpanded();
+        }
+        function setCategoryActive(active){
+          const enabled = !!active;
+          input.checked = enabled;
+          menu.classList.toggle('cat-off', !enabled);
+          menuBtn.disabled = !enabled;
+          menuBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+          subButtons.forEach(btn => {
+            btn.disabled = !enabled;
+            btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+          });
+          if(!enabled){
+            setOpenState(false);
+            if(selectedCategory === c.name){
+              selectedCategory = '';
+              selectedSubcategory = '';
+              subButtons.forEach(btn => {
+                btn.setAttribute('aria-pressed', 'false');
+                btn.classList.remove('on');
+              });
+            }
+          }
+          syncExpanded();
+          renderCreateFields();
+        }
+        menuBtn.addEventListener('click', () => {
+          if(menuBtn.disabled) return;
+          setOpenState(!openState);
+        });
+        input.addEventListener('change', () => {
+          setCategoryActive(input.checked);
+        });
+        
+        setCategoryActive(true);
       });
     }
     if(memberForm){
