@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 14, 2025 at 03:51 AM
+-- Generation Time: Nov 15, 2025 at 03:06 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -85,14 +85,14 @@ CREATE TABLE `admin_messages` (
   `display_duration` int(11) DEFAULT 3000 COMMENT 'Duration in ms for toast messages (null = use default)',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admin_messages`
 --
 
 INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type`, `message_category`, `container_key`, `message_text`, `message_description`, `supports_html`, `placeholders`, `is_active`, `is_visible`, `is_deletable`, `display_duration`, `created_at`, `updated_at`) VALUES
-(1, 'Login Success Message', 'msg_auth_login_success', 'success', 'auth', 'msg_member', 'Welcome back, {name}!', 'Shown after successful login', 0, '[\"name\"]', 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
+(1, 'Login Success Message', 'msg_auth_login_success', 'success', 'auth', 'msg_member', 'Welcome back, {name}!', 'Shown after successful login', 0, '[\"name\"]', 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-14 09:59:01'),
 (2, 'Logout Success Message', 'msg_auth_logout_success', 'success', 'auth', 'msg_member', 'You have been logged out.', 'Shown after logout', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
 (3, 'Login Fields Empty Message', 'msg_auth_login_empty', 'error', 'auth', 'msg_member', 'Enter your email and password.', 'When login fields are empty', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
 (4, 'Incorrect Credentials Message', 'msg_auth_login_incorrect', 'error', 'auth', 'msg_member', 'Incorrect email or password. Try again.', 'When credentials are wrong', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
@@ -143,7 +143,22 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (49, 'Discard Changes Button Label Message', 'msg_button_discard', 'label', 'general', 'msg_admin', 'Discard Changes', 'Discard changes button text', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (50, 'No Icons Found Error Message', 'msg_error_no_icons', 'error', 'admin', 'msg_admin', 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>', 'Shown when icon folder is empty or invalid', 1, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (51, 'Currency Required Error Message', 'msg_error_currency_required', 'error', 'post', 'msg_member', 'Please select a currency before entering a price.', 'Currency validation for pricing', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
-(52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'msg_member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07');
+(52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'msg_member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
+(53, 'Member Create Intro Message', 'msg_member_create_intro', 'label', 'member', 'msg_member', 'Choose the subcategory and subcategory for your post.', 'Intro text shown in member create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:05:52'),
+(54, 'Member Create Empty State Message', 'msg_member_create_empty', 'label', 'member', 'msg_member', 'Select a category and subcategory to begin.', 'Empty state message when no category/subcategory selected', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(55, 'Member Post Listing Button', 'msg_member_post_listing', 'label', 'member', 'msg_member', 'Post Listing', 'Button text to submit a new listing', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(56, 'Member Tab Create', 'msg_member_tab_create', 'label', 'member', 'msg_member', 'Create Post', 'Tab label for create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(57, 'Member Tab My Posts', 'msg_member_tab_myposts', 'label', 'member', 'msg_member', 'My Posts', 'Tab label for my posts section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(58, 'Member Tab Profile', 'msg_member_tab_profile', 'label', 'member', 'msg_member', 'Profile', 'Tab label for profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(59, 'Member Auth Login Tab', 'msg_member_auth_login', 'label', 'member', 'msg_member', 'Login', 'Login tab label in member profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(60, 'Member Auth Register Tab', 'msg_member_auth_register', 'label', 'member', 'msg_member', 'Register', 'Register tab label in member profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(61, 'Member Label Email', 'msg_member_label_email', 'label', 'member', 'msg_member', 'Email', 'Email field label in member forms', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(62, 'Member Label Password', 'msg_member_label_password', 'label', 'member', 'msg_member', 'Password', 'Password field label in member forms', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(63, 'Member Button Log In', 'msg_member_btn_log_in', 'label', 'member', 'msg_member', 'Log In', 'Log in button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(64, 'Member Label Display Name', 'msg_member_label_display_name', 'label', 'member', 'msg_member', 'Display Name', 'Display name field label in registration form', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(65, 'Member Label Avatar URL', 'msg_member_label_avatar_url', 'label', 'member', 'msg_member', 'Avatar URL', 'Avatar URL field label in registration form', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(66, 'Member Button Create Account', 'msg_member_btn_create_account', 'label', 'member', 'msg_member', 'Create Account', 'Create account button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(67, 'Member Button Log Out', 'msg_member_btn_log_out', 'label', 'member', 'msg_member', 'Log Out', 'Log out button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49');
 
 -- --------------------------------------------------------
 
@@ -166,23 +181,23 @@ CREATE TABLE `admin_settings` (
 --
 
 INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(2, 'site_tagline', NULL, 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(1, 'site_name', 'FunMap.com', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-14 09:57:22'),
+(2, 'site_tagline', 'The place to find stuff to do.', 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-14 09:23:36'),
 (3, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(4, 'contact_email', NULL, 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(5, 'support_email', NULL, 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(4, 'contact_email', '', 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
+(5, 'support_email', '', 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(10, 'post_mode_shadow', '0', 'decimal', 'Opacity/shadow value for post mode background overlay', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(11, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(10, 'post_mode_shadow', '0.7', 'decimal', 'Opacity/shadow value for post mode background overlay', '2025-11-13 16:17:10', '2025-11-14 14:17:32'),
+(11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-14 13:43:32'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (14, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (15, 'spin_load_type', 'new_users', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(17, 'spin_zoom_max', '5', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(17, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-13 18:02:54'),
 (18, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (19, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (20, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -228,7 +243,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `created_at`, `updated_at`) VALUES
-(1, 'What\'s On', 'whats-on', 1, 0, 'assets/icons-30/whats-on-category-icon-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
+(1, 'What\'s On', 'whats-on', 1, 0, 'assets/icons-30/whats-on-category-icon-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-14 09:08:51'),
 (2, 'Opportunities', 'opportunities', 4, 0, 'assets/icons-30/opportunities-category-icon-30.webp', '#F1C40F', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (3, 'Learning', 'learning', 3, 0, 'assets/icons-30/learning-category-icon-30.webp', '#3498DB', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/icons-30/Buy-and-sell-category-icon-30.webp', '#2ECC71', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
@@ -691,13 +706,13 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `listing_fee`, `renew_fee`, `featured_fee`, `renew_featured_fee`, `listing_days`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-11-11 14:06:23'),
-(2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
-(3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
-(4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
-(5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
-(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
-(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
+(2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
+(3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
+(4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
+(5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
+(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
+(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-13 22:08:51'),
 (8, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '6', 0, 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
 (9, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '5', 0, 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
 (10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
@@ -934,13 +949,13 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
 
 --
 -- AUTO_INCREMENT for table `banned_words`

@@ -668,6 +668,17 @@ function handlePromptKeydown(event, context){
         const msg = await getMessage(memberMessage.dataset.messageKey, {}, false);
         if(msg) memberMessage.textContent = msg;
       }
+      
+      const memberPanel = document.getElementById('memberPanel');
+      if(memberPanel){
+        const memberElements = memberPanel.querySelectorAll('[data-message-key]');
+        for(const el of memberElements){
+          if(el.dataset.messageKey){
+            const msg = await getMessage(el.dataset.messageKey, {}, false);
+            if(msg) el.textContent = msg;
+          }
+        }
+      }
     })();
   });
 })();

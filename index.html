@@ -198,49 +198,49 @@
           </div>
         </div>
         <div class="tab-bar" role="tablist" aria-label="Member sections">
-          <button type="button" class="tab-btn" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create">Create Post</button>
-          <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts">My Posts</button>
-          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile">Profile</button>
+          <button type="button" class="tab-btn" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create" data-message-key="msg_member_tab_create">Create Post</button>
+          <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts" data-message-key="msg_member_tab_myposts">My Posts</button>
+          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile" data-message-key="msg_member_tab_profile">Profile</button>
         </div>
       </div>
       <form id="memberForm" class="panel-body" novalidate>
         <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
-          <p class="member-create-intro">Choose a category and subcategory to load the matching post form.</p>
+          <p class="member-create-intro" data-message-key="msg_member_create_intro">Choose a category and subcategory to load the matching post form.</p>
           <div class="formpicker-container">
             <div class="cats" id="memberFormpickerCats" aria-label="Categories"></div>
           </div>
-          <p id="memberCreateEmpty" class="member-create-placeholder">Select a category and subcategory to begin.</p>
+          <p id="memberCreateEmpty" class="member-create-placeholder" data-message-key="msg_member_create_empty">Select a category and subcategory to begin.</p>
           <div id="memberCreateFormWrapper" class="member-create-form" hidden>
             <div id="memberCreateFormFields" class="member-create-fields" role="group" aria-live="polite"></div>
           </div>
           <div class="member-create-actions">
-            <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled>Post Listing</button>
+            <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled data-message-key="msg_member_post_listing">Post Listing</button>
           </div>
         </section>
         <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
         <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
           <div class="member-auth" data-state="logged-out">
             <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
-              <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
-              <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
+              <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin" data-message-key="msg_member_auth_login">Login</button>
+              <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister" data-message-key="msg_member_auth_register">Register</button>
             </div>
             <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
-              <label for="memberLoginEmail">Email</label>
+              <label for="memberLoginEmail" data-message-key="msg_member_label_email">Email</label>
               <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
-              <label for="memberLoginPassword">Password</label>
+              <label for="memberLoginPassword" data-message-key="msg_member_label_password">Password</label>
               <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
-              <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
+              <button type="submit" class="primary-action member-auth-submit" data-action="login" data-message-key="msg_member_btn_log_in">Log In</button>
             </section>
             <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
-              <label for="memberRegisterName">Display Name</label>
+              <label for="memberRegisterName" data-message-key="msg_member_label_display_name">Display Name</label>
               <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
-              <label for="memberRegisterEmail">Email</label>
+              <label for="memberRegisterEmail" data-message-key="msg_member_label_email">Email</label>
               <input type="email" id="memberRegisterEmail" name="registerEmail" autocomplete="email" />
-              <label for="memberRegisterPassword">Password</label>
+              <label for="memberRegisterPassword" data-message-key="msg_member_label_password">Password</label>
               <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
-              <label for="memberRegisterAvatar">Avatar URL</label>
+              <label for="memberRegisterAvatar" data-message-key="msg_member_label_avatar_url">Avatar URL</label>
               <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
-              <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
+              <button type="submit" class="primary-action member-auth-submit" data-action="register" data-message-key="msg_member_btn_create_account">Create Account</button>
             </section>
             <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
               <div class="member-profile">
@@ -251,7 +251,7 @@
                 </div>
               </div>
               <div class="member-profile-actions">
-                <button type="button" class="tiny" id="memberLogoutBtn">Log Out</button>
+                <button type="button" class="tiny" id="memberLogoutBtn" data-message-key="msg_member_btn_log_out">Log Out</button>
               </div>
             </section>
           </div>
