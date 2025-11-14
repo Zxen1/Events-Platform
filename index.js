@@ -44,6 +44,15 @@ function normalizeCategorySortOrderValue(raw) {
   return null;
 }
 
+function getBaseFieldType(fieldType){
+  if(typeof fieldType !== 'string' || !fieldType.trim()){
+    return '';
+  }
+  // Extract base type from formats like "description [field=2]" or "text-area [field=15]"
+  const match = fieldType.match(/^([^\s\[]+)/);
+  return match ? match[1].trim() : fieldType.trim();
+}
+
 function compareCategoriesForDisplay(a, b) {
   if (a === b) {
     return 0;
@@ -12546,7 +12555,8 @@ function makePosts(){
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
               let control = null;
-              if(previewField.type === 'text-area' || previewField.type === 'description'){
+              const baseType = getBaseFieldType(previewField.type);
+              if(baseType === 'text-area' || baseType === 'description'){
                 const textarea = document.createElement('textarea');
                 textarea.rows = 5;
                 textarea.readOnly = true;
@@ -12556,7 +12566,7 @@ function makePosts(){
                 textarea.style.resize = 'vertical';
                 const textareaId = `${baseId}-input`;
                 textarea.id = textareaId;
-                if(previewField.type === 'description'){
+                if(baseType === 'description'){
                   textarea.classList.add('form-preview-description');
                 }
                 control = textarea;
@@ -24316,13 +24326,14 @@ document.addEventListener('pointerdown', (e) => {
       const placeholder = field.placeholder || '';
       let control = null;
 
-      if(field.type === 'description' || field.type === 'text-area'){
+      const baseType = getBaseFieldType(field.type);
+      if(baseType === 'description' || baseType === 'text-area'){
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
-        textarea.rows = field.type === 'description' ? 6 : 4;
+        textarea.rows = baseType === 'description' ? 6 : 4;
         textarea.placeholder = placeholder;
         textarea.className = 'form-preview-textarea';
-        if(field.type === 'description'){
+        if(baseType === 'description'){
           textarea.classList.add('form-preview-description');
         }
         if(field.required) textarea.required = true;
@@ -24813,7 +24824,8 @@ document.addEventListener('pointerdown', (e) => {
         labelEl.id = labelId;
         let control = null;
         
-        if(previewField.type === 'text-area' || previewField.type === 'description'){
+        const baseType = getBaseFieldType(previewField.type);
+        if(baseType === 'text-area' || baseType === 'description'){
           const textarea = document.createElement('textarea');
           textarea.rows = 5;
           textarea.placeholder = previewField.placeholder || '';
@@ -24821,7 +24833,7 @@ document.addEventListener('pointerdown', (e) => {
           textarea.style.resize = 'vertical';
           const textareaId = `${baseId}-input`;
           textarea.id = textareaId;
-          if(previewField.type === 'description'){
+          if(baseType === 'description'){
             textarea.classList.add('form-preview-description');
           }
           if(previewField.required) textarea.required = true;
@@ -25594,7 +25606,8 @@ document.addEventListener('pointerdown', (e) => {
         if(!field || !element){
           continue;
         }
-        const type = typeof field.type === 'string' ? field.type : 'text-box';
+        const rawType = typeof field.type === 'string' ? field.type : 'text-box';
+        const type = getBaseFieldType(rawType) || 'text-box';
         const label = field.name && field.name.trim() ? field.name.trim() : 'This field';
         let value;
 
