@@ -11008,39 +11008,77 @@ function makePosts(){
                     activePickerHost.classList.add('has-open-session-picker');
                     console.log('[Formbuilder] Added has-open-session-picker class');
                   }
-                  if(appendTarget instanceof Element){
-                    appendTarget.appendChild(picker);
-                    console.log('[Formbuilder] Picker appended to appendTarget');
+                  // Determine the best append target - prefer pickerHostRow for proper positioning
+                  let finalAppendTarget = null;
+                  if(pickerHostRow instanceof Element){
+                    finalAppendTarget = pickerHostRow;
+                    console.log('[Formbuilder] Using pickerHostRow as append target', { pickerHostRow: pickerHostRow.className });
+                  } else if(appendTarget instanceof Element){
+                    finalAppendTarget = appendTarget;
+                    console.log('[Formbuilder] Using appendTarget as fallback', { appendTarget: appendTarget.className });
                   } else if(input.parentElement instanceof Element){
-                    input.parentElement.appendChild(picker);
-                    console.log('[Formbuilder] Picker appended to input.parentElement');
+                    finalAppendTarget = input.parentElement;
+                    console.log('[Formbuilder] Using input.parentElement as fallback', { parentElement: input.parentElement.className });
                   } else {
                     console.error('[Formbuilder] ERROR: Cannot append picker - no valid parent element');
                     picker.remove();
                     picker = null;
                     return;
                   }
+                  
+                  // Ensure the append target has position:relative for absolute positioning to work
+                  const computedStyle = window.getComputedStyle(finalAppendTarget);
+                  const position = computedStyle.position;
+                  if(position !== 'relative' && position !== 'absolute' && position !== 'fixed'){
+                    console.log('[Formbuilder] Setting position:relative on append target for proper picker positioning');
+                    finalAppendTarget.style.position = 'relative';
+                  }
+                  
+                  // Append the picker
+                  finalAppendTarget.appendChild(picker);
+                  console.log('[Formbuilder] Picker appended to finalAppendTarget', { 
+                    target: finalAppendTarget.className,
+                    pickerInDOM: document.body.contains(picker)
+                  });
+                  
                   if(parentSubMenu){
                     parentSubMenu.classList.add('has-floating-overlay');
+                    console.log('[Formbuilder] Added has-floating-overlay to parentSubMenu');
                   }
                   if(parentCategoryMenu){
                     parentCategoryMenu.classList.add('has-floating-overlay');
+                    console.log('[Formbuilder] Added has-floating-overlay to parentCategoryMenu');
                   }
+                  
+                  // Initialize and show the picker
                   if(picker){
                     initializePicker(picker);
-                    const pickerEl = picker;
+                    console.log('[Formbuilder] Picker initialized');
+                    
+                    // Use a small delay to ensure DOM is ready before showing
                     const showPicker = ()=> {
-                      if(pickerEl){
-                        pickerEl.classList.add('is-visible');
-                        console.log('[Formbuilder] Picker made visible');
+                      if(picker && document.body.contains(picker)){
+                        picker.classList.add('is-visible');
+                        console.log('[Formbuilder] Picker made visible - is-visible class added', {
+                          hasIsVisible: picker.classList.contains('is-visible'),
+                          computedOpacity: window.getComputedStyle(picker).opacity,
+                          computedVisibility: window.getComputedStyle(picker).visibility
+                        });
                       } else {
-                        console.warn('[Formbuilder] WARNING: pickerEl is null in showPicker');
+                        console.warn('[Formbuilder] WARNING: picker is null or not in DOM in showPicker', {
+                          picker: !!picker,
+                          inDOM: picker ? document.body.contains(picker) : false
+                        });
                       }
                     };
+                    
+                    // Use double RAF to ensure styles are applied
                     if(typeof requestAnimationFrame === 'function'){
-                      requestAnimationFrame(showPicker);
+                      requestAnimationFrame(() => {
+                        requestAnimationFrame(showPicker);
+                      });
                     } else {
-                      showPicker();
+                      setTimeout(showPicker, 0);
                     }
                   }
                   document.addEventListener('pointerdown', onPointerDown, true);
@@ -11497,9 +11535,22 @@ function makePosts(){
                   openDatePickerBtn.textContent = '+';
                   openDatePickerBtn.setAttribute('aria-label', 'Select Session Dates');
                   openDatePickerBtn.setAttribute('aria-haspopup', 'dialog');
+                  // Note: The click handler will be set up by setupDatePicker via the trigger option
+                  // But we add a backup handler here in case setupDatePicker hasn't run yet
                   openDatePickerBtn.addEventListener('click', (e)=>{ 
-                    console.log('[Formbuilder] Open datepicker button clicked', { venueIndex, sessionIndex });
-                    e.stopPropagation(); 
+                    console.log('[Formbuilder] Open datepicker button clicked', { venueIndex, sessionIndex, dateInput: !!dateInput });
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    // Try to get controls from the button property (set after setupDatePicker runs)
+                    const controls = openDatePickerBtn._datePickerControls || datePickerControls;
+                    if(controls && typeof controls.open === 'function'){
+                      console.log('[Formbuilder] Manually calling datePickerControls.open()');
+                      controls.open();
+                    } else {
+                      console.warn('[Formbuilder] WARNING: datePickerControls.open not available yet - setupDatePicker may not have completed');
+                    }
                   }, true);
                   dateActions.appendChild(openDatePickerBtn);
                   const removeDateBtn = createActionButton('-', 'Remove Session Date', ()=> removeSession(venue, venueIndex, sessionIndex));
@@ -11513,9 +11564,26 @@ function makePosts(){
                   dateActions.appendChild(removeDateBtn);
                   dateRow.appendChild(dateActions);
                   sessionCard.appendChild(dateRow);
-                  console.log('[Formbuilder] Setting up datepicker for session', { venueIndex, sessionIndex, dateInput: !!dateInput, openDatePickerBtn: !!openDatePickerBtn });
+                  console.log('[Formbuilder] Setting up datepicker for session', { 
+                    venueIndex, 
+                    sessionIndex, 
+                    dateInput: !!dateInput, 
+                    openDatePickerBtn: !!openDatePickerBtn,
+                    dateRow: !!dateRow,
+                    dateRowClassName: dateRow.className
+                  });
                   const datePickerControls = setupDatePicker(dateInput, venue, session, venueIndex, sessionIndex, { trigger: openDatePickerBtn });
-                  console.log('[Formbuilder] Datepicker controls received', { datePickerControls: !!datePickerControls, hasOpen: typeof datePickerControls?.open === 'function' });
+                  console.log('[Formbuilder] Datepicker controls received', { 
+                    datePickerControls: !!datePickerControls, 
+                    hasOpen: typeof datePickerControls?.open === 'function',
+                    hasClose: typeof datePickerControls?.close === 'function'
+                  });
+                  
+                  // Store controls on the button for manual access
+                  if(openDatePickerBtn && datePickerControls){
+                    openDatePickerBtn._datePickerControls = datePickerControls;
+                    openDatePickerBtn.dataset.datePickerReady = 'true';
+                  }
 
                   const sessionDetails = document.createElement('div');
                   sessionDetails.className = 'session-details';
