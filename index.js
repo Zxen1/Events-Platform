@@ -2360,17 +2360,25 @@ async function ensureMapboxCssFor(container) {
       }
     }
 
-    // Require valid saved view or get from backend - no random default
-    if(!savedView || !savedView.center || !Array.isArray(savedView.center) || savedView.center.length !== 2){
-      // Get center from backend or show error - don't use random
-      console.error('No valid map center available');
-      // You may want to fetch default center from backend here
-      // For now, throw error to make it visible
-      throw new Error('Map center not available');
+    // Map center is a UI preference - use sensible default if not available, but log it
+    let startCenter;
+    let startZoom;
+    if(savedView && savedView.center && Array.isArray(savedView.center) && savedView.center.length === 2){
+      startCenter = savedView.center;
+      startZoom = savedView.zoom || 1.5;
+    } else {
+      // No saved view - use sensible default (center of world map) but log it
+      console.warn('No saved map view found - using default center. This is expected on first visit.');
+      startCenter = [0, 0]; // Center of world map - sensible default
+      startZoom = 1.5;
+      // Save this default so it's available next time
+      try{
+        const defaultView = { center: startCenter, zoom: startZoom, bearing: 0 };
+        localStorage.setItem('mapView', JSON.stringify(defaultView));
+      }catch(err){
+        console.error('Failed to save default map view:', err);
+      }
     }
-
-    const startCenter = savedView.center;
-    const startZoom = savedView.zoom || 1.5;
     let lastKnownZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
