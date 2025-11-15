@@ -23960,6 +23960,10 @@ document.addEventListener('pointerdown', (e) => {
       editor.className = 'venue-session-editor';
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
+      // Prevent clicks inside the venue editor from bubbling up and potentially closing the form
+      editor.addEventListener('click', (e)=>{ e.stopPropagation(); });
+      editor.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); });
+      editor.addEventListener('mousedown', (e)=>{ e.stopPropagation(); });
       // Generate unique prefix from labelId to ensure unique IDs across multiple editors
       const uniquePrefix = labelId ? labelId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const venueList = document.createElement('div');
@@ -23977,12 +23981,22 @@ document.addEventListener('pointerdown', (e) => {
         nameInput.type = 'text';
         nameInput.placeholder = 'Venue Name';
         nameInput.value = venue.name || '';
-        nameInput.addEventListener('input', ()=>{ venue.name = nameInput.value; });
+        nameInput.addEventListener('input', (e)=>{ 
+          e.stopPropagation();
+          venue.name = nameInput.value; 
+        });
+        nameInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+        nameInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
         const addressInput = document.createElement('input');
         addressInput.type = 'text';
         addressInput.placeholder = 'Venue Address';
         addressInput.value = venue.address || '';
-        addressInput.addEventListener('input', ()=>{ venue.address = addressInput.value; });
+        addressInput.addEventListener('input', (e)=>{ 
+          e.stopPropagation();
+          venue.address = addressInput.value; 
+        });
+        addressInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+        addressInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
         venueHeader.append(nameInput, addressInput);
 
         const sessionList = document.createElement('div');
@@ -23996,7 +24010,12 @@ document.addEventListener('pointerdown', (e) => {
           const dateInput = document.createElement('input');
           dateInput.type = 'date';
           dateInput.value = session.date || '';
-          dateInput.addEventListener('change', ()=>{ session.date = dateInput.value; });
+          dateInput.addEventListener('change', (e)=>{ 
+            e.stopPropagation();
+            session.date = dateInput.value; 
+          });
+          dateInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+          dateInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
           sessionTop.appendChild(dateInput);
 
           const sessionActions = document.createElement('div');
@@ -24038,7 +24057,12 @@ document.addEventListener('pointerdown', (e) => {
             const timeInput = document.createElement('input');
             timeInput.type = 'time';
             timeInput.value = time.time || '';
-            timeInput.addEventListener('change', ()=>{ time.time = timeInput.value; });
+            timeInput.addEventListener('change', (e)=>{ 
+              e.stopPropagation();
+              time.time = timeInput.value; 
+            });
+            timeInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+            timeInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
             timeHeader.appendChild(timeInput);
 
             const timeActions = document.createElement('div');
@@ -24076,7 +24100,12 @@ document.addEventListener('pointerdown', (e) => {
               versionNameInput.type = 'text';
               versionNameInput.placeholder = 'Version Name';
               versionNameInput.value = version.name || '';
-              versionNameInput.addEventListener('input', ()=>{ version.name = versionNameInput.value; });
+              versionNameInput.addEventListener('input', (e)=>{ 
+                e.stopPropagation();
+                version.name = versionNameInput.value; 
+              });
+              versionNameInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+              versionNameInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
               versionCard.appendChild(versionNameInput);
 
               const tierList = document.createElement('div');
@@ -24090,7 +24119,12 @@ document.addEventListener('pointerdown', (e) => {
                 tierNameInput.type = 'text';
                 tierNameInput.placeholder = 'Tier Name';
                 tierNameInput.value = tier.name || '';
-                tierNameInput.addEventListener('input', ()=>{ tier.name = tierNameInput.value; });
+                tierNameInput.addEventListener('input', (e)=>{ 
+                  e.stopPropagation();
+                  tier.name = tierNameInput.value; 
+                });
+                tierNameInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+                tierNameInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
 
                 const tierCurrencySelect = document.createElement('select');
                 tierCurrencySelect.innerHTML = '<option value="">Currency</option>';
@@ -24101,16 +24135,24 @@ document.addEventListener('pointerdown', (e) => {
                   tierCurrencySelect.appendChild(opt);
                 });
                 tierCurrencySelect.value = tier.currency || '';
-                tierCurrencySelect.addEventListener('change', ()=>{ tier.currency = tierCurrencySelect.value; });
+                tierCurrencySelect.addEventListener('change', (e)=>{ 
+                  e.stopPropagation();
+                  tier.currency = tierCurrencySelect.value; 
+                });
+                tierCurrencySelect.addEventListener('click', (e)=>{ e.stopPropagation(); });
+                tierCurrencySelect.addEventListener('focus', (e)=>{ e.stopPropagation(); });
 
                 const tierPriceInput = document.createElement('input');
                 tierPriceInput.type = 'text';
                 tierPriceInput.placeholder = '0.00';
                 tierPriceInput.value = tier.price || '';
-                tierPriceInput.addEventListener('blur', ()=>{
+                tierPriceInput.addEventListener('blur', (e)=>{
+                  e.stopPropagation();
                   tier.price = formatPriceValue(tierPriceInput.value);
                   tierPriceInput.value = tier.price;
                 });
+                tierPriceInput.addEventListener('click', (e)=>{ e.stopPropagation(); });
+                tierPriceInput.addEventListener('focus', (e)=>{ e.stopPropagation(); });
 
                 const tierActions = document.createElement('div');
                 tierActions.className = 'tier-actions';
