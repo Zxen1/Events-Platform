@@ -11463,6 +11463,18 @@ function makePosts(){
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
                     if(geocoderRoot && !geocoderRoot.__formPreviewGeocoderBound){
                       geocoderRoot.__formPreviewGeocoderBound = true;
+                      // For member forms, set high z-index to ensure geocoder is visible above other elements
+                      if(isMemberForm){
+                        geocoderRoot.style.zIndex = '1000001';
+                        geocoderRoot.style.position = 'relative';
+                        const suggestions = geocoderRoot.querySelector('.suggestions');
+                        if(suggestions){
+                          suggestions.style.zIndex = '1000002';
+                        }
+                        // Also ensure container has proper positioning
+                        geocoderContainer.style.position = 'relative';
+                        geocoderContainer.style.zIndex = '1000000';
+                      }
                       const handleFocusIn = ()=> setGeocoderActive(true);
                       const handleFocusOut = event => {
                         const nextTarget = event && event.relatedTarget;
@@ -11470,7 +11482,14 @@ function makePosts(){
                           setGeocoderActive(false);
                         }
                       };
-                      const handlePointerDown = ()=> setGeocoderActive(true);
+                      const handlePointerDown = (e) => {
+                        setGeocoderActive(true);
+                        // For member forms, prevent form closure
+                        if(isMemberForm && e){
+                          e.stopPropagation();
+                          e.stopImmediatePropagation();
+                        }
+                      };
                       geocoderRoot.addEventListener('focusin', handleFocusIn);
                       geocoderRoot.addEventListener('focusout', handleFocusOut);
                       geocoderRoot.addEventListener('pointerdown', handlePointerDown);
@@ -11490,6 +11509,32 @@ function makePosts(){
                             e.stopPropagation();
                             e.stopImmediatePropagation();
                           }, true);
+                          // Also handle individual suggestion items to prevent form closure
+                          const handleSuggestionEvents = (e) => {
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                          };
+                          // Use MutationObserver to catch dynamically added suggestions
+                          const suggestionObserver = new MutationObserver(() => {
+                            const suggestionItems = suggestionsWrapper.querySelectorAll('.suggestions > li, .suggestions > div, li[role="option"]');
+                            suggestionItems.forEach(item => {
+                              if(!item.__venueGeocoderBound){
+                                item.__venueGeocoderBound = true;
+                                item.addEventListener('click', handleSuggestionEvents, true);
+                                item.addEventListener('pointerdown', handleSuggestionEvents, true);
+                                item.addEventListener('mousedown', handleSuggestionEvents, true);
+                              }
+                            });
+                          });
+                          suggestionObserver.observe(suggestionsWrapper, { childList: true, subtree: true });
+                          // Also handle existing items
+                          const existingItems = suggestionsWrapper.querySelectorAll('.suggestions > li, .suggestions > div, li[role="option"]');
+                          existingItems.forEach(item => {
+                            item.__venueGeocoderBound = true;
+                            item.addEventListener('click', handleSuggestionEvents, true);
+                            item.addEventListener('pointerdown', handleSuggestionEvents, true);
+                            item.addEventListener('mousedown', handleSuggestionEvents, true);
+                          });
                         }
                       }
                     }
@@ -11510,6 +11555,21 @@ function makePosts(){
                         notifyFormbuilderChange();
                       }
                     });
+                    // For member forms, prevent form closure when interacting with geocoder input
+                    if(isMemberForm){
+                      geocoderInput.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                      }, true);
+                      geocoderInput.addEventListener('pointerdown', (e) => {
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                      }, true);
+                      geocoderInput.addEventListener('input', (e) => {
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                      }, true);
+                    }
                     geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
                       // For member forms, stop propagation to prevent form closure
