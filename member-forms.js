@@ -1141,11 +1141,15 @@
     }
 
     async function initializeMemberFormbuilderSnapshot(){
-      const loadingMsg = await getMessage('msg_post_loading_form', {}, false) || 'Loading form fieldsΓÇª';
-      renderEmptyState(loadingMsg);
-      if(formWrapper) formWrapper.hidden = true;
-      if(formFields) formFields.innerHTML = '';
-      if(postButton) postButton.disabled = true;
+      const loadingMsg = await getMessage('msg_post_loading_form', {}, false) || 'Loading form fields…';
+      // Don't close form if venue editor exists (check before clearing)
+      const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
+      if(!hasVenueEditor){
+        renderEmptyState(loadingMsg);
+        if(formWrapper) formWrapper.hidden = true;
+        if(formFields) formFields.innerHTML = '';
+        if(postButton) postButton.disabled = true;
+      }
       try{
         // Try both possible locations for the snapshot promise
         const snapshotPromise = (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) 
@@ -1663,11 +1667,23 @@
       }
       
       if(!selectedCategory || !selectedSubcategory){
-        renderEmptyState();
-        if(formWrapper) formWrapper.hidden = true;
-        if(postButton) postButton.disabled = true;
+        // Don't close form if venue editor exists
+        const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
+        if(!hasVenueEditor){
+          renderEmptyState();
+          if(formWrapper) formWrapper.hidden = true;
+          if(postButton) postButton.disabled = true;
+        }
         return;
       }
+      // Don't clear form if venue editor exists and user is interacting with it
+      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
+      const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
+      if(activeVenueEditor || hasVenueEditor){
+        console.log('[Member Forms] renderConfiguredFields: Skipping re-render - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditor });
+        return;
+      }
+      
       const fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
       fieldIdCounter = 0;
       formFields.innerHTML = '';

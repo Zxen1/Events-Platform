@@ -14951,31 +14951,21 @@ function makePosts(){
     // Fetch and populate admin messages from database
     async function loadAdminMessages(){
       try {
-        // Use the shared message loading function to avoid duplicate requests and conflicts
-        const messages = await loadMessagesFromDatabase(true);
+        // Fetch messages directly for messages tab to get full container structure
+        // This preserves the original container format needed by populateMessagesIntoContainers
+        const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+        if(!response.ok){
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
         
-        // Convert messages map back to container format for the messages tab
-        // Group messages by container_key
-        const containersMap = {};
-        Object.values(messages).forEach(message => {
-          const containerKey = message.container_key || 'msg_admin';
-          if(!containersMap[containerKey]){
-            containersMap[containerKey] = {
-              container_key: containerKey,
-              messages: []
-            };
-          }
-          containersMap[containerKey].messages.push(message);
-        });
-        
-        // Convert to array format
-        const messageContainers = Object.values(containersMap);
-        
-        if(messageContainers.length > 0){
-          populateMessagesIntoContainers(messageContainers);
+        if(result.success && result.messages){
+          populateMessagesIntoContainers(result.messages);
+        } else {
+          console.error('Failed to load admin messages:', result.message || result.messages_error);
         }
         
-        // Also update all message elements in the messages tab
+        // Also update all message elements in the messages tab (for any dynamically added elements)
         await updateAllMessageElements(true);
       } catch(error){
         console.error('Error loading admin messages:', error);
