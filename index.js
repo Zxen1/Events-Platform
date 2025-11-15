@@ -9356,20 +9356,62 @@ function makePosts(){
             
             // Prevent clicks inside the venue editor from bubbling up (especially important for member forms)
             // This prevents form closure when interacting with venue fields
-            editor.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
-            editor.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
-            editor.addEventListener('mousedown', (e)=>{ e.stopPropagation(); }, true);
-            editor.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
-            editor.addEventListener('focusin', (e)=>{ e.stopPropagation(); }, true);
+            // BUT allow geocoder events to propagate so autocomplete works
+            editor.addEventListener('click', (e)=>{
+              // Don't stop propagation for geocoder elements - they need events to work
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
+            editor.addEventListener('pointerdown', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
+            editor.addEventListener('mousedown', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
+            editor.addEventListener('change', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
+            editor.addEventListener('focusin', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
             
             // Generate unique prefix from baseId to ensure unique IDs across multiple editors
             const uniquePrefix = baseId ? baseId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const venueList = document.createElement('div');
             venueList.className = 'venue-session-venues';
-            // Also stop propagation on the venue list container
-            venueList.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
-            venueList.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
-            venueList.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
+            // Also stop propagation on the venue list container, but allow geocoder events
+            venueList.addEventListener('click', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
+            venueList.addEventListener('pointerdown', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
+            venueList.addEventListener('change', (e)=>{
+              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+              if(!isGeocoderElement){
+                e.stopPropagation();
+              }
+            }, true);
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
@@ -10897,9 +10939,25 @@ function makePosts(){
                 const venueCard = document.createElement('div');
                 venueCard.className = 'venue-card';
                 // Prevent clicks on venue card from bubbling up (important for member forms)
-                venueCard.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
-                venueCard.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
-                venueCard.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
+                // BUT allow geocoder events to propagate
+                venueCard.addEventListener('click', (e)=>{
+                  const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+                  if(!isGeocoderElement){
+                    e.stopPropagation();
+                  }
+                }, true);
+                venueCard.addEventListener('pointerdown', (e)=>{
+                  const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+                  if(!isGeocoderElement){
+                    e.stopPropagation();
+                  }
+                }, true);
+                venueCard.addEventListener('change', (e)=>{
+                  const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
+                  if(!isGeocoderElement){
+                    e.stopPropagation();
+                  }
+                }, true);
                 venueList.appendChild(venueCard);
 
                 const venueLine = document.createElement('div');
@@ -11075,6 +11133,8 @@ function makePosts(){
                 venueNameInput.addEventListener('blur', commitNameSelection);
                 venueNameInput.addEventListener('keydown', (event)=>{
                   if(event.key === 'Enter'){
+                    event.preventDefault();
+                    event.stopPropagation();
                     commitNameSelection();
                   }
                 });
@@ -11206,6 +11266,13 @@ function makePosts(){
                       if(venue.address !== nextValue){
                         venue.address = nextValue;
                         notifyFormbuilderChange();
+                      }
+                    });
+                    // Prevent Enter key from submitting form when in geocoder (form preview)
+                    geocoderInput.addEventListener('keydown', (e)=>{
+                      if(e.key === 'Enter'){
+                        e.stopPropagation();
+                        // Don't preventDefault - let geocoder handle it
                       }
                     });
                     geocoder.on('results', ()=> setGeocoderActive(true));
@@ -13263,6 +13330,13 @@ function makePosts(){
                       if(locationState.address !== nextValue){
                         locationState.address = nextValue;
                         notifyFormbuilderChange();
+                      }
+                    });
+                    // Prevent Enter key from submitting form when in geocoder (form preview location field)
+                    geocoderInput.addEventListener('keydown', (e)=>{
+                      if(e.key === 'Enter'){
+                        e.stopPropagation();
+                        // Don't preventDefault - let geocoder handle it
                       }
                     });
                     geocoder.on('results', ()=> setGeocoderActive(true));
@@ -24714,6 +24788,12 @@ document.addEventListener('pointerdown', (e) => {
             const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
             if(geocoderRoot && !geocoderRoot.__memberCreateGeocoderBound){
               geocoderRoot.__memberCreateGeocoderBound = true;
+              // Set z-index for member panel geocoder
+              geocoderRoot.style.zIndex = '1000001';
+              const suggestions = geocoderRoot.querySelector('.suggestions');
+              if(suggestions){
+                suggestions.style.zIndex = '1000002';
+              }
               const handleFocusIn = ()=> setGeocoderActive(true);
               const handleFocusOut = event => {
                 const nextTarget = event && event.relatedTarget;
@@ -24749,6 +24829,13 @@ document.addEventListener('pointerdown', (e) => {
               const nextValue = geocoderInput.value || '';
               if(locationState.address !== nextValue){
                 locationState.address = nextValue;
+              }
+            });
+            // Prevent Enter key from submitting form when in geocoder
+            geocoderInput.addEventListener('keydown', (e)=>{
+              if(e.key === 'Enter'){
+                e.stopPropagation();
+                // Don't preventDefault - let geocoder handle it
               }
             });
             geocoder.on('results', ()=> setGeocoderActive(true));
@@ -25609,6 +25696,12 @@ document.addEventListener('pointerdown', (e) => {
               const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
               if(geocoderRoot && !geocoderRoot.__memberFormGeocoderBound){
                 geocoderRoot.__memberFormGeocoderBound = true;
+                // Set z-index for member panel geocoder
+                geocoderRoot.style.zIndex = '1000001';
+                const suggestions = geocoderRoot.querySelector('.suggestions');
+                if(suggestions){
+                  suggestions.style.zIndex = '1000002';
+                }
                 const handleFocusIn = () => setGeocoderActive(true);
                 const handleFocusOut = event => {
                   const nextTarget = event && event.relatedTarget;
@@ -25644,6 +25737,13 @@ document.addEventListener('pointerdown', (e) => {
                 const nextValue = geocoderInput.value || '';
                 if(locationState.address !== nextValue){
                   locationState.address = nextValue;
+                }
+              });
+              // Prevent Enter key from submitting form when in geocoder
+              geocoderInput.addEventListener('keydown', (e)=>{
+                if(e.key === 'Enter'){
+                  e.stopPropagation();
+                  // Don't preventDefault - let geocoder handle it
                 }
               });
               geocoder.on('result', event => {

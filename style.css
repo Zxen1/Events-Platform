@@ -1158,6 +1158,15 @@ button[aria-expanded="true"] .results-arrow{
   #adminPanel .mapboxgl-ctrl-geocoder .suggestions{
     z-index:1000002;
   }
+
+  #memberPanel .mapboxgl-ctrl-geocoder{
+    position:relative;
+    z-index:1000001;
+  }
+
+  #memberPanel .mapboxgl-ctrl-geocoder .suggestions{
+    z-index:1000002;
+  }
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
