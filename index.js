@@ -275,8 +275,10 @@ async function updateAllMessageElements(includeAdmin = false){
     const allElements = document.querySelectorAll('[data-message-key]');
     
     for(const el of allElements){
-      // SKIP message items in the messages tab - they're already properly formatted
-      // These have complex HTML structure with labels, edit panels, etc.
+      // CRITICAL: SKIP message items in the messages tab - they're already properly formatted
+      // These have complex HTML structure with labels, edit panels, input transforms, etc.
+      // If we update these with textContent, we'll destroy the entire messages tab UI
+      // DO NOT REMOVE THIS CHECK - it prevents breaking the messages tab
       if(el.closest('.messages-list') || el.closest('.message-item')){
         continue;
       }
