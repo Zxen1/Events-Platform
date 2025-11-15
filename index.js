@@ -275,6 +275,12 @@ async function updateAllMessageElements(includeAdmin = false){
     const allElements = document.querySelectorAll('[data-message-key]');
     
     for(const el of allElements){
+      // SKIP message items in the messages tab - they're already properly formatted
+      // These have complex HTML structure with labels, edit panels, etc.
+      if(el.closest('.messages-list') || el.closest('.message-item')){
+        continue;
+      }
+      
       const messageKey = el.dataset.messageKey;
       if(!messageKey) continue;
       
@@ -14966,12 +14972,7 @@ function makePosts(){
         }
       } catch(error){
         console.error('Error loading admin messages:', error);
-        // Try to update anyway in case cache is available
-        try {
-          await updateAllMessageElements(true);
-        } catch(err){
-          // Ignore secondary error
-        }
+        // Don't call updateAllMessageElements here - it would overwrite the messages tab
       }
     }
     
