@@ -8287,16 +8287,47 @@ function makePosts(){
       }
 
       // Load messages from DB if keys provided
+      // Use sync version first (from cache) to avoid delays, fallback to async if needed
       let finalTitle = titleText || 'Confirm action';
       let finalMessage = messageText || 'Are you sure you want to continue?';
       
       if(titleKey){
-        const dbTitle = await getMessage(titleKey, placeholders, true);
-        if(dbTitle) finalTitle = dbTitle;
+        // Try sync first (fast, from cache), fallback to async if not in cache
+        const syncTitle = getMessageSync(titleKey, placeholders, true);
+        if(syncTitle){
+          finalTitle = syncTitle;
+        } else {
+          // Only wait for async if sync didn't find it (with timeout to prevent long delays)
+          try {
+            const dbTitle = await Promise.race([
+              getMessage(titleKey, placeholders, true),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
+            ]);
+            if(dbTitle) finalTitle = dbTitle;
+          } catch(err){
+            // Use fallback text if message load times out
+            console.warn('Message load timeout for:', titleKey);
+          }
+        }
       }
       if(messageKey){
-        const dbMessage = await getMessage(messageKey, placeholders, true);
-        if(dbMessage) finalMessage = dbMessage;
+        // Try sync first (fast, from cache), fallback to async if not in cache
+        const syncMessage = getMessageSync(messageKey, placeholders, true);
+        if(syncMessage){
+          finalMessage = syncMessage;
+        } else {
+          // Only wait for async if sync didn't find it (with timeout to prevent long delays)
+          try {
+            const dbMessage = await Promise.race([
+              getMessage(messageKey, placeholders, true),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
+            ]);
+            if(dbMessage) finalMessage = dbMessage;
+          } catch(err){
+            // Use fallback text if message load times out
+            console.warn('Message load timeout for:', messageKey);
+          }
+        }
       }
 
       title.textContent = finalTitle;
@@ -9591,6 +9622,13 @@ function makePosts(){
                   e.stopPropagation();
                 }
               }, true);
+              // CRITICAL: Add input event handler to prevent form closure when typing
+              editor.addEventListener('input', (e)=>{
+                if(shouldStopPropagation(e)){
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
+                }
+              }, true);
             }
             
             const venueList = document.createElement('div');
@@ -9614,6 +9652,14 @@ function makePosts(){
                 const target = e.target;
                 if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
                   e.stopPropagation();
+                }
+              }, true);
+              // CRITICAL: Add input event handler to prevent form closure when typing
+              venueList.addEventListener('input', (e)=>{
+                const target = e.target;
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
                 }
               }, true);
             }

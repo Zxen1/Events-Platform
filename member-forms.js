@@ -1224,11 +1224,18 @@
     }
 
     function renderConfiguredFields(){
-      // Prevent re-rendering if user is currently interacting with venue fields
-      // Check if any venue editor is focused or has active interactions
-      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
-      if(activeVenueEditor){
-        // Don't re-render if user is interacting with venue field
+      // Only block if user is ACTIVELY typing in venue editor (not just if it exists)
+      // This allows subcategory changes to work even when venue editor is present
+      const activeElement = document.activeElement;
+      const activeVenueEditor = activeElement && activeElement.closest('.venue-session-editor');
+      const isActivelyTyping = activeVenueEditor && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA'
+      );
+      
+      // Only block if actively typing - allow subcategory changes
+      if(isActivelyTyping){
+        console.log('[Member Forms] renderConfiguredFields: Blocked - user actively typing in venue editor');
         return;
       }
       
@@ -1242,11 +1249,10 @@
         }
         return;
       }
-      // Don't clear form if venue editor exists and user is interacting with it
-      // Reuse activeVenueEditor from above, check hasVenueEditor again
-      const hasVenueEditorCheck = formFields && formFields.querySelector('.venue-session-editor');
-      if(activeVenueEditor || hasVenueEditorCheck){
-        console.log('[Member Forms] renderConfiguredFields: Skipping re-render - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditorCheck });
+      // Don't clear form if user is actively typing in venue editor
+      // But allow re-render for subcategory changes
+      if(isActivelyTyping){
+        console.log('[Member Forms] renderConfiguredFields: Skipping re-render - user actively typing');
         return;
       }
       
