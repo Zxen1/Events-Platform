@@ -1810,10 +1810,8 @@ function matchFieldId(array $catalog, array $field): ?int
     if (isset($field['name']) && $field['name'] !== '') {
         $candidates[] = mb_strtolower($field['name']);
     }
-    // Support both 'input_type' (new) and 'type' (old) for backwards compatibility
-    $inputType = $field['input_type'] ?? $field['type'] ?? null;
-    if ($inputType && $inputType !== '') {
-        $candidates[] = mb_strtolower((string) $inputType);
+    if (isset($field['input_type']) && $field['input_type'] !== '') {
+        $candidates[] = mb_strtolower((string) $field['input_type']);
     }
 
     foreach ($catalog as $row) {
