@@ -2341,14 +2341,36 @@ async function ensureMapboxCssFor(container) {
         localStorage.setItem(`panel-open-${id}`,'false');
       });
     }
-    const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
+    // Only use saved view if valid - no random fallback
+    let savedView = null;
+    try{
+      const savedViewStr = localStorage.getItem('mapView');
+      if(savedViewStr){
+        savedView = JSON.parse(savedViewStr);
+      }
+    }catch(err){
+      console.error('Failed to parse saved map view:', err);
+      // Don't use fallback - will need to get center from backend or show error
+    }
+
     if(savedView && typeof savedView === 'object'){
       savedView.bearing = 0;
-      try{ localStorage.setItem('mapView', JSON.stringify(savedView)); }catch(err){}
+      try{ localStorage.setItem('mapView', JSON.stringify(savedView)); }catch(err){
+        console.error('Failed to save map view:', err);
+      }
     }
-    const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
-    const startCenter = savedView?.center || defaultCenter;
-    const startZoom = savedView?.zoom || 1.5;
+
+    // Require valid saved view or get from backend - no random default
+    if(!savedView || !savedView.center || !Array.isArray(savedView.center) || savedView.center.length !== 2){
+      // Get center from backend or show error - don't use random
+      console.error('No valid map center available');
+      // You may want to fetch default center from backend here
+      // For now, throw error to make it visible
+      throw new Error('Map center not available');
+    }
+
+    const startCenter = savedView.center;
+    const startZoom = savedView.zoom || 1.5;
     let lastKnownZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
@@ -2529,7 +2551,10 @@ async function ensureMapboxCssFor(container) {
             }
           }
         } catch(err){
-          console.warn('Failed to load admin settings from database, using defaults:', err);
+          console.error('Failed to load admin settings from database:', err);
+          // Don't use defaults - error should be visible
+          // You may want to show an error message in the UI here
+          throw err; // Or handle the error appropriately without using defaults
         }
       })();
       let markersLoaded = false;
@@ -4017,11 +4042,23 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       window.__persistedFormbuilderSnapshot = snapshot;
     }).catch(err => {
       console.error('Failed to load formbuilder snapshot', err);
+      // Don't hide the error - it should be visible
     });
 
-    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
-      getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
-    );
+    // NO FALLBACKS - wait for backend snapshot only
+    // Note: This will throw if snapshot is not available - errors should be visible
+    // For backward compatibility during initialization, create normalized structure
+    // but this should not be used if backend snapshot fails
+    const getInitialSnapshot = () => {
+      const inline = getPersistedFormbuilderSnapshotFromGlobals();
+      if(inline && typeof inline === 'object'){
+        return normalizeFormbuilderSnapshot(inline);
+      }
+      // If no inline snapshot, return normalized empty structure
+      // This should only be used if backend snapshot is not yet loaded
+      return normalizeFormbuilderSnapshot(null);
+    };
+    const initialFormbuilderSnapshot = getInitialSnapshot();
     function sanitizeFieldTypeOptions(options){
       const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
       const sanitized = [];
@@ -14602,10 +14639,8 @@ function makePosts(){
     
     // Load custom category names and icons from database if available
     MESSAGE_CATEGORIES.forEach(cat => {
-      const savedName = localStorage.getItem(`msg_category_${cat.key}_name`);
-      const savedIcon = localStorage.getItem(`msg_category_${cat.key}_icon`);
-      if(savedName) cat.name = savedName;
-      if(savedIcon) cat.icon = savedIcon;
+      // Categories should only come from backend - no localStorage override
+      // Removed localStorage fallback to prevent showing stale category data
     });
     
     function renderMessagesCategories(){
@@ -17358,7 +17393,10 @@ function makePosts(){
                 try{
                   const center = map.getCenter();
                   return toLngLatArray(center);
-                }catch(err){ return null; }
+                }catch(err){ 
+                  console.error('Failed to get bearing:', err);
+                  return null; 
+                }
               }
               return null;
             })();
@@ -17411,7 +17449,10 @@ function makePosts(){
                 try{
                   const bearing = map.getBearing();
                   return Number.isFinite(bearing) ? bearing : null;
-                }catch(err){ return null; }
+                }catch(err){ 
+                  console.error('Failed to get bearing:', err);
+                  return null; 
+                }
               }
               return null;
             })();
@@ -17432,7 +17473,10 @@ function makePosts(){
                 try{
                   const pitch = map.getPitch();
                   return Number.isFinite(pitch) ? pitch : null;
-                }catch(err){ return null; }
+                }catch(err){ 
+                  console.error('Failed to get bearing:', err);
+                  return null; 
+                }
               }
               return null;
             })();
@@ -17614,7 +17658,8 @@ function makePosts(){
         try {
           await window.persistedFormbuilderSnapshotPromise;
         } catch (err) {
-          console.warn('Failed to wait for formbuilder snapshot:', err);
+          console.error('Failed to wait for formbuilder snapshot:', err);
+          throw err; // Don't continue if snapshot failed
         }
       }
       
@@ -19190,7 +19235,17 @@ if (!map.__pillHooksInstalled) {
     });
 
     // History board
-    function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
+    function loadHistory(){ 
+      try{ 
+        const historyStr = localStorage.getItem('openHistoryV2');
+        if(!historyStr) return [];
+        return JSON.parse(historyStr);
+      }catch(e){ 
+        console.error('Failed to load history:', e);
+        // Don't return empty array - show error or return null
+        return null; // Or throw error
+      } 
+    }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
     function formatLastOpened(ts){
       if(!ts) return '';
@@ -22648,28 +22703,28 @@ const adminPanelChangeManager = (()=>{
       formWasFound = !!form;
       const manager = window.formbuilderStateManager;
       let snapshot = null;
+      // NO FALLBACKS - only use backend snapshot
       const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
         ? window.fetchSavedFormbuilderSnapshot
         : null;
-      if(fetchSnapshot){
-        try{
-          snapshot = await fetchSnapshot();
-        }catch(err){
-          console.warn('Failed to fetch admin formbuilder snapshot from server', err);
-        }
+      if(!fetchSnapshot){
+        throw new Error('Formbuilder snapshot fetch function not available');
       }
-      if(!snapshot && typeof window.getSavedFormbuilderSnapshot === 'function'){
-        try{
-          snapshot = await Promise.resolve(window.getSavedFormbuilderSnapshot());
-        }catch(err){
-          console.warn('Failed to load saved admin formbuilder snapshot', err);
+      try{
+        snapshot = await fetchSnapshot();
+        if(!snapshot || typeof snapshot !== 'object'){
+          throw new Error('Invalid formbuilder snapshot received from server');
         }
+      }catch(err){
+        console.error('Failed to fetch admin formbuilder snapshot from server:', err);
+        throw err; // Don't fall back to localStorage
       }
       if(manager && typeof manager.restore === 'function' && snapshot){
         try{
           manager.restore(snapshot);
         }catch(err){
-          console.warn('Failed to hydrate admin formbuilder snapshot', err);
+          console.error('Failed to hydrate admin formbuilder snapshot:', err);
+          throw err; // Don't silently fail
         }
       }
       refreshSavedState({ skipManagerSave: true });
@@ -23795,10 +23850,10 @@ document.addEventListener('pointerdown', (e) => {
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
     // Messages will be loaded from DB when needed
 
-    const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
-    let memberSnapshot = defaultMemberSnapshot;
-    let memberCategories = memberSnapshot.categories;
-    let currencyCodes = collectCurrencyCodes(memberSnapshot);
+    // NO DEFAULT SNAPSHOT - only use backend data
+    let memberSnapshot = null; // Will be set from backend only
+    let memberCategories = [];
+    let currencyCodes = [];
     let fieldIdCounter = 0;
     let memberSnapshotErrorMessage = '';
 
@@ -23812,9 +23867,12 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function applyMemberSnapshot(snapshot, options = {}){
+      if(!snapshot || typeof snapshot !== 'object'){
+        throw new Error('Invalid snapshot provided to applyMemberSnapshot');
+      }
       const normalized = normalizeFormbuilderSnapshot(snapshot);
       memberSnapshot = normalized;
-      memberCategories = memberSnapshot.categories;
+      memberCategories = Array.isArray(memberSnapshot.categories) ? memberSnapshot.categories : [];
       currencyCodes = collectCurrencyCodes(memberSnapshot);
       if(options.populate !== false){
         buildFormpicker();
@@ -24498,11 +24556,16 @@ document.addEventListener('pointerdown', (e) => {
       if(postButton) postButton.disabled = true;
       try{
         const backendSnapshot = await persistedFormbuilderSnapshotPromise;
-        const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
-        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
-          window.formbuilderStateManager.restore(snapshot);
+        
+        // NO FALLBACKS - validate snapshot exists and is valid
+        if(!backendSnapshot || typeof backendSnapshot !== 'object' || !backendSnapshot.categories){
+          throw new Error('Invalid or missing formbuilder snapshot from backend');
         }
-        applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
+        
+        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
+          window.formbuilderStateManager.restore(backendSnapshot);
+        }
+        applyMemberSnapshot(backendSnapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
         buildFormpicker();
@@ -24518,17 +24581,17 @@ document.addEventListener('pointerdown', (e) => {
           }, true);
         }
       }catch(error){
-        const message = error && typeof error.message === 'string' ? error.message : '';
-        if(message && message.toLowerCase().includes('database connection not configured')){
-          console.warn('Formbuilder snapshot service unavailable; using defaults.');
-        } else {
-          console.error('Failed to load formbuilder snapshot for members', error);
-        }
-        const errorMsg = await getMessage('msg_post_form_load_error', {}, false) || "We couldn't load the latest form fields. You can continue with the defaults for now.";
+        // NO FALLBACKS - show error, don't render with incorrect data
+        console.error('Failed to load formbuilder snapshot for members:', error);
+        const errorMsg = await getMessage('msg_post_form_load_error', {}, false) || `Unable to load form configuration. ${error.message || 'Please refresh the page or contact support.'}`;
         memberSnapshotErrorMessage = errorMsg;
         setEmptyStateMessage(errorMsg);
-        applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
-        buildFormpicker();
+        
+        // DON'T apply defaultMemberSnapshot - keep form hidden
+        // DON'T call buildFormpicker() - don't render with incorrect data
+        if(formWrapper) formWrapper.hidden = true;
+        if(formFields) formFields.innerHTML = '';
+        if(postButton) postButton.disabled = true;
       }
     }
 
