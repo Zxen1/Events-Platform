@@ -12117,6 +12117,34 @@ function makePosts(){
             return editor;
           };
 
+          // Fields now come from backend via field_types, no hardcoded defaults
+
+          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+
+          const fieldsContainerState = setupFieldContainer(fieldsList, fields);
+
+          const formPreviewBtn = document.createElement('button');
+          formPreviewBtn.type = 'button';
+          formPreviewBtn.className = 'form-preview-btn';
+          formPreviewBtn.setAttribute('aria-expanded', 'false');
+          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
+          const formPreviewLabel = document.createElement('span');
+          formPreviewLabel.textContent = 'Form Preview';
+          const formPreviewArrow = document.createElement('span');
+          formPreviewArrow.className = 'dropdown-arrow';
+          formPreviewArrow.setAttribute('aria-hidden', 'true');
+          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
+
+          const formPreviewContainer = document.createElement('div');
+          formPreviewContainer.className = 'form-preview-container';
+          formPreviewContainer.hidden = true;
+          const formPreviewFields = document.createElement('div');
+          formPreviewFields.className = 'form-preview-fields';
+          formPreviewContainer.appendChild(formPreviewFields);
+          const formPreviewId = `${subContentId}Preview`;
+          formPreviewContainer.id = formPreviewId;
+          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
+
           // Expose buildVenueSessionPreview for use in member forms
           window.buildVenueSessionPreview = buildVenueSessionPreview;
 
