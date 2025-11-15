@@ -2602,8 +2602,25 @@ async function ensureMapboxCssFor(container) {
               // Initialize console filter checkbox
               const consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
               if(consoleFilterCheckbox){
-                consoleFilterCheckbox.checked = localStorage.getItem('enableConsoleFilter') === 'true';
-                consoleFilterCheckbox.addEventListener('change', async () => {
+                // Track if we're programmatically setting the checkbox (to avoid triggering change event)
+                let isSettingProgrammatically = false;
+                const savedState = localStorage.getItem('enableConsoleFilter') === 'true';
+                isSettingProgrammatically = true;
+                consoleFilterCheckbox.checked = savedState;
+                isSettingProgrammatically = false;
+                
+                consoleFilterCheckbox.addEventListener('change', async (event) => {
+                  // Skip if this change was programmatic
+                  if(isSettingProgrammatically){
+                    return;
+                  }
+                  
+                  // Only show prompt for user-initiated events (not programmatic changes)
+                  // event.isTrusted is false for programmatic changes
+                  if(event.isTrusted === false){
+                    return;
+                  }
+                  
                   const enabled = consoleFilterCheckbox.checked;
                   localStorage.setItem('enableConsoleFilter', enabled ? 'true' : 'false');
                   
@@ -2618,7 +2635,7 @@ async function ensureMapboxCssFor(container) {
                     console.error('Failed to save console filter setting:', e);
                   }
                   
-                  // Show reload prompt
+                  // Show reload prompt only for user-initiated changes
                   const messageKey = enabled ? 'msg_confirm_console_filter_enable' : 'msg_confirm_console_filter_disable';
                   (async () => {
                     const message = await getMessage(messageKey, {}, true) || (enabled 
