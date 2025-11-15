@@ -11409,7 +11409,8 @@ function makePosts(){
                     timeInput.dataset.venueIndex = String(venueIndex);
                     timeInput.dataset.sessionIndex = String(sessionIndex);
                     timeInput.dataset.timeIndex = String(timeIndex);
-                    timeInput.addEventListener('input', ()=>{
+                    timeInput.addEventListener('input', (e)=>{
+                      e.stopPropagation();
                       const sanitized = sanitizeTimeInput(timeInput.value);
                       if(timeInput.value !== sanitized){
                         timeInput.value = sanitized;
@@ -11417,7 +11418,8 @@ function makePosts(){
                       timeInput.classList.remove('is-invalid');
                       setSessionDateInputValue(dateInput, session, sanitized);
                     });
-                    timeInput.addEventListener('blur', ()=>{
+                    timeInput.addEventListener('blur', (e)=>{
+                      e.stopPropagation();
                       commitTimeValue({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input: timeInput });
                       resetSlotIfEmpty(venue, timeIndex);
                       updateSessionDateInputDisplay(venueIndex, sessionIndex);
@@ -11531,7 +11533,8 @@ function makePosts(){
                         versionInput.dataset.sessionIndex = String(sessionIndex);
                         versionInput.dataset.timeIndex = String(timeIndex);
                         versionInput.dataset.versionIndex = String(versionIndex);
-                        versionInput.addEventListener('input', ()=>{
+                        versionInput.addEventListener('input', (e)=>{
+                          e.stopPropagation();
                           const previous = typeof version.name === 'string' ? version.name : '';
                           const nextValue = versionInput.value;
                           version.name = nextValue;
@@ -11600,7 +11603,8 @@ function makePosts(){
                           tierInput.dataset.versionIndex = String(versionIndex);
                           tierInput.dataset.tierIndex = String(tierIndex);
                           tierRow.appendChild(tierLabel);
-                          tierInput.addEventListener('input', ()=>{
+                          tierInput.addEventListener('input', (e)=>{
+                            e.stopPropagation();
                             const previous = typeof tier.name === 'string' ? tier.name : '';
                             const nextValue = tierInput.value;
                             tier.name = nextValue;
@@ -11815,7 +11819,8 @@ function makePosts(){
                             return true;
                           };
 
-                          currencySelect.addEventListener('change', ()=>{
+                          currencySelect.addEventListener('change', (e)=>{
+                            e.stopPropagation();
                             const nextCurrency = currencySelect.value.trim();
                             const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
                             tier.currency = nextCurrency;
@@ -11840,6 +11845,7 @@ function makePosts(){
                           });
 
                           priceInput.addEventListener('beforeinput', event => {
+                            event.stopPropagation();
                             if(hasCurrencySelected()){
                               const data = event && event.data;
                               if(typeof data === 'string' && /[^0-9.,]/.test(data)){
@@ -11855,10 +11861,12 @@ function makePosts(){
                           priceInput.addEventListener('pointerdown', blockPriceAccess);
                           priceInput.addEventListener('focus', blockPriceAccess);
                           priceInput.addEventListener('keydown', event => {
+                            event.stopPropagation();
                             if(event.key === 'Tab' || event.key === 'Shift') return;
                             blockPriceAccess(event);
                           });
-                          priceInput.addEventListener('input', ()=>{
+                          priceInput.addEventListener('input', (e)=>{
+                            e.stopPropagation();
                             if(!hasCurrencySelected()) return;
                             const rawValue = priceInput.value;
                             const sanitized = sanitizeSessionPriceValue(rawValue);
@@ -11874,8 +11882,8 @@ function makePosts(){
                               }
                             }
                           });
-                          priceInput.addEventListener('blur', commitPriceValue);
-                          priceInput.addEventListener('change', commitPriceValue);
+                          priceInput.addEventListener('blur', (e)=>{ e.stopPropagation(); commitPriceValue(); });
+                          priceInput.addEventListener('change', (e)=>{ e.stopPropagation(); commitPriceValue(); });
 
                           updatePriceState({ clearPrice: false, sanitize: false });
                           priceRow.appendChild(priceInput);
