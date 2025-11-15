@@ -838,29 +838,29 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             // If field_type has only ONE item and it's a field → use field_type properties
             if (count($itemIds) === 1 && $itemIds[0]['type'] === 'field' && isset($fieldsById[$itemIds[0]['id']])) {
                 $field = $fieldsById[$itemIds[0]['id']];
-                // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-                // BUT preserve description and text-area types
-                $rawType = isset($field['type']) ? trim((string) $field['type']) : '';
-                $normalizedType = $rawType;
                 
-                // Check if it's a description or text-area type BEFORE normalization
-                $isDescriptionType = ($rawType === 'description' || $rawType === 'text-area' || 
-                                     stripos($rawType, 'description') !== false || 
-                                     stripos($rawType, 'text-area') !== false);
+                // CRITICAL: Use field_type_key as the source of truth for the type
+                // The fields.type column (e.g., "textarea") is just the input type,
+                // but the actual field type identifier is field_type_key (e.g., "description", "text-area")
+                $fieldTypeKey = isset($matchingFieldType['field_type_key']) ? trim((string) $matchingFieldType['field_type_key']) : '';
                 
-                if ($rawType !== '' && preg_match('/^([^\s\[]+)/', $rawType, $matches)) {
-                    $normalizedType = trim($matches[1]);
-                }
-                
-                // Preserve description/text-area types
-                if ($isDescriptionType) {
-                    if ($normalizedType === 'description' || $normalizedType === 'text-area') {
-                        // Use normalized type
-                    } elseif ($rawType === 'description' || $rawType === 'text-area') {
-                        $normalizedType = $rawType;
-                    } elseif (stripos($rawType, 'description') !== false) {
+                // If field_type_key is description or text-area, use it directly
+                // Otherwise, fall back to normalizing from fields.type
+                if ($fieldTypeKey === 'description' || $fieldTypeKey === 'text-area') {
+                    $normalizedType = $fieldTypeKey;
+                } else {
+                    // Fallback: normalize from fields.type column (for other field types)
+                    $rawType = isset($field['type']) ? trim((string) $field['type']) : '';
+                    $normalizedType = $rawType;
+                    
+                    if ($rawType !== '' && preg_match('/^([^\s\[]+)/', $rawType, $matches)) {
+                        $normalizedType = trim($matches[1]);
+                    }
+                    
+                    // Also check if fields.type contains description/text-area (for backwards compatibility)
+                    if (stripos($rawType, 'description') !== false) {
                         $normalizedType = 'description';
-                    } elseif (stripos($rawType, 'text-area') !== false) {
+                    } elseif (stripos($rawType, 'text-area') !== false || stripos($rawType, 'textarea') !== false) {
                         $normalizedType = 'text-area';
                     }
                 }
