@@ -23875,6 +23875,14 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function renderEmptyState(message){
+      // Don't hide form wrapper if user is interacting with venue fields
+      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
+      const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
+      if(activeVenueEditor || (hasVenueEditor && !message)){
+        // User is interacting with venue field, don't close the form
+        return;
+      }
+      
       if(emptyState){
         if(typeof message === 'string'){
           memberSnapshotErrorMessage = message;
@@ -24407,6 +24415,17 @@ document.addEventListener('pointerdown', (e) => {
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
         buildFormpicker();
+        
+        // Prevent form wrapper from closing when clicking inside venue fields
+        if(formWrapper){
+          formWrapper.addEventListener('click', (e)=>{
+            // If click is inside a venue editor, prevent any closing behavior
+            const venueEditor = e.target.closest('.venue-session-editor');
+            if(venueEditor){
+              e.stopPropagation();
+            }
+          }, true);
+        }
       }catch(error){
         const message = error && typeof error.message === 'string' ? error.message : '';
         if(message && message.toLowerCase().includes('database connection not configured')){
@@ -24796,6 +24815,14 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function renderCreateFields(){
+      // Prevent re-rendering if user is currently interacting with venue fields
+      // Check if any venue editor is focused or has active interactions
+      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
+      if(activeVenueEditor){
+        // Don't re-render if user is interacting with venue field
+        return;
+      }
+      
       if(!selectedCategory || !selectedSubcategory){
         renderEmptyState();
         if(formWrapper) formWrapper.hidden = true;
@@ -25655,16 +25682,28 @@ document.addEventListener('pointerdown', (e) => {
           }
           control = locationWrapper;
         } else {
+          // Default to text input, but check if it's actually a description field that wasn't caught
           const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = previewField.placeholder || '';
-          const inputId = `${baseId}-input`;
-          input.id = inputId;
-          if(baseType === 'title'){
-            input.classList.add('form-preview-title-input');
+          // If the field type contains "description", use textarea instead
+          if(baseType && (baseType.includes('description') || previewField.type && previewField.type.includes('description'))){
+            const textarea = document.createElement('textarea');
+            textarea.id = controlId;
+            textarea.rows = 6;
+            textarea.placeholder = placeholder;
+            textarea.className = 'form-preview-textarea form-preview-description';
+            if(previewField.required) textarea.required = true;
+            control = textarea;
+          } else {
+            input.type = 'text';
+            input.placeholder = previewField.placeholder || '';
+            const inputId = `${baseId}-input`;
+            input.id = inputId;
+            if(baseType === 'title'){
+              input.classList.add('form-preview-title-input');
+            }
+            if(previewField.required) input.required = true;
+            control = input;
           }
-          if(previewField.required) input.required = true;
-          control = input;
         }
         
         if(control){
