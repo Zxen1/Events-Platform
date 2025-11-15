@@ -688,6 +688,18 @@ function handlePromptKeydown(event, context){
           }
         }
       }
+      
+      // Load messages for admin panel elements
+      const adminPanel = document.getElementById('adminPanel');
+      if(adminPanel){
+        const adminElements = adminPanel.querySelectorAll('[data-message-key]');
+        for(const el of adminElements){
+          if(el.dataset.messageKey){
+            const msg = await getMessage(el.dataset.messageKey, {}, true);
+            if(msg) el.textContent = msg;
+          }
+        }
+      }
     })();
   });
 })();
@@ -8895,12 +8907,14 @@ function makePosts(){
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
         iconPickerButton.className = 'iconpicker-button';
-        iconPickerButton.textContent = initialCategoryIconSrc ? 'Change Icon' : 'Choose Icon';
+        iconPickerButton.dataset.messageKey = initialCategoryIconSrc ? 'msg_button_change_icon' : 'msg_button_choose_icon';
+        // Text will be loaded from DB
 
         const preview = document.createElement('div');
         preview.className = 'iconpicker-preview';
         const previewLabel = document.createElement('span');
-        previewLabel.textContent = 'No Icon';
+        previewLabel.dataset.messageKey = 'msg_label_no_icon';
+        // Text will be loaded from DB
         const previewImg = document.createElement('img');
         previewImg.alt = `${c.name} icon preview`;
         preview.append(previewLabel, previewImg);
@@ -8929,13 +8943,15 @@ function makePosts(){
         let addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
-        addSubBtn.textContent = 'Add Subcategory';
+        addSubBtn.dataset.messageKey = 'msg_button_add_subcategory';
+        // Text will be loaded from DB
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
         const saveCategoryBtn = document.createElement('button');
         saveCategoryBtn.type = 'button';
         saveCategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
-        saveCategoryBtn.textContent = 'Save';
+        saveCategoryBtn.dataset.messageKey = 'msg_button_save';
+        // Text will be loaded from DB
         saveCategoryBtn.setAttribute('aria-label', 'Save changes');
         saveCategoryBtn.addEventListener('click', (e)=>{
           e.preventDefault();
@@ -8950,13 +8966,15 @@ function makePosts(){
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
         deleteCategoryBtn.className = 'delete-category-btn';
-        deleteCategoryBtn.textContent = 'Delete Category';
+        deleteCategoryBtn.dataset.messageKey = 'msg_button_delete_category';
+        // Text will be loaded from DB
         deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
 
         const hideToggleRow = document.createElement('div');
         hideToggleRow.className = 'category-hide-toggle-row';
         const hideToggleLabel = document.createElement('span');
-        hideToggleLabel.textContent = 'Hide Category';
+        hideToggleLabel.dataset.messageKey = 'msg_label_hide_category';
+        // Text will be loaded from DB
         const hideToggle = document.createElement('label');
         hideToggle.className = 'switch';
         const hideToggleInput = document.createElement('input');
@@ -9068,12 +9086,21 @@ function makePosts(){
             previewImg.src = normalizedSrc;
             preview.classList.add('has-image');
             previewLabel.textContent = '';
-            iconPickerButton.textContent = 'Change Icon';
+            (async ()=>{
+              const changeIconMsg = await getMessage('msg_button_change_icon', {}, true) || 'Change Icon';
+              iconPickerButton.textContent = changeIconMsg;
+            })();
           } else {
             previewImg.removeAttribute('src');
             preview.classList.remove('has-image');
-            previewLabel.textContent = 'No Icon';
-            iconPickerButton.textContent = 'Choose Icon';
+            (async ()=>{
+              const noIconMsg = await getMessage('msg_label_no_icon', {}, true) || 'No Icon';
+              previewLabel.textContent = noIconMsg;
+            })();
+            (async ()=>{
+              const chooseIconMsg = await getMessage('msg_button_choose_icon', {}, true) || 'Choose Icon';
+              iconPickerButton.textContent = chooseIconMsg;
+            })();
           }
         };
         const applyCategoryNameChange = ()=>{
@@ -9260,12 +9287,14 @@ function makePosts(){
           const subIconButton = document.createElement('button');
           subIconButton.type = 'button';
           subIconButton.className = 'iconpicker-button';
-          subIconButton.textContent = initialSubIconPath ? 'Change Icon' : 'Choose Icon';
+          subIconButton.dataset.messageKey = initialSubIconPath ? 'msg_button_change_icon' : 'msg_button_choose_icon';
+          // Text will be loaded from DB
 
           const subPreview = document.createElement('div');
           subPreview.className = 'iconpicker-preview';
           const subPreviewLabel = document.createElement('span');
-          subPreviewLabel.textContent = 'No Icon';
+          subPreviewLabel.dataset.messageKey = 'msg_label_no_icon';
+          // Text will be loaded from DB
           const subPreviewImg = document.createElement('img');
           subPreviewImg.alt = `${sub} icon preview`;
           subPreview.append(subPreviewLabel, subPreviewImg);
@@ -9286,7 +9315,8 @@ function makePosts(){
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
           deleteSubBtn.className = 'delete-subcategory-btn';
-          deleteSubBtn.textContent = 'Delete Subcategory';
+          deleteSubBtn.dataset.messageKey = 'msg_button_delete_subcategory';
+          // Text will be loaded from DB
           deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
 
           const fieldsSection = document.createElement('div');
@@ -9299,7 +9329,8 @@ function makePosts(){
           const addFieldBtn = document.createElement('button');
           addFieldBtn.type = 'button';
           addFieldBtn.className = 'add-field-btn';
-          addFieldBtn.textContent = 'Add Field';
+          addFieldBtn.dataset.messageKey = 'msg_button_add_field';
+          // Text will be loaded from DB
           addFieldBtn.setAttribute('aria-label', `Add field to ${sub}`);
 
           const ensureFieldDefaults = (field)=>{
@@ -13928,7 +13959,8 @@ function makePosts(){
           const subHideToggleRow = document.createElement('div');
           subHideToggleRow.className = 'subcategory-hide-toggle-row';
           const subHideToggleLabel = document.createElement('span');
-          subHideToggleLabel.textContent = 'Hide Subcategory';
+          subHideToggleLabel.dataset.messageKey = 'msg_label_hide_subcategory';
+          // Text will be loaded from DB
           const subHideToggle = document.createElement('label');
           subHideToggle.className = 'switch';
           const subHideToggleInput = document.createElement('input');
