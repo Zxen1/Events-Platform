@@ -5623,12 +5623,13 @@ function uniqueTitle(seed, cityName, idx){
     return `${BASE_URL}#/post/${p.slug}-${p.created}`;
   }
 
-  function showCopyMsg(btn){
+  async function showCopyMsg(btn){
     const cardHeader = btn && btn.closest('.post-card');
     if(!cardHeader) return;
     const msg = document.createElement('div');
     msg.className='copy-msg';
-    msg.textContent='Link Copied';
+    const copyMsg = await getMessage('msg_link_copied', {}, false) || 'Link Copied';
+    msg.textContent = copyMsg;
     cardHeader.appendChild(msg);
     const btnRect = btn.getBoundingClientRect();
     const headerRect = cardHeader.getBoundingClientRect();
@@ -8103,7 +8104,7 @@ function makePosts(){
       });
     }
 
-    function ensureFormbuilderConfirmOverlay(){
+    async function ensureFormbuilderConfirmOverlay(){
       if(formbuilderConfirmOverlay) return formbuilderConfirmOverlay;
       const overlay = document.createElement('div');
       overlay.id = 'formbuilderConfirmOverlay';
@@ -8133,13 +8134,17 @@ function makePosts(){
       cancelBtn.type = 'button';
       cancelBtn.className = 'formbuilder-confirm-cancel';
       cancelBtn.dataset.role = 'cancel';
-      cancelBtn.textContent = 'Cancel';
+      cancelBtn.dataset.messageKey = 'msg_button_cancel';
+      const cancelText = await getMessage('msg_button_cancel', {}, true) || 'Cancel';
+      cancelBtn.textContent = cancelText;
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
       deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete';
       deleteBtn.dataset.role = 'confirm';
-      deleteBtn.textContent = 'Delete';
+      deleteBtn.dataset.messageKey = 'msg_button_delete';
+      const deleteText = await getMessage('msg_button_delete', {}, true) || 'Delete';
+      deleteBtn.textContent = deleteText;
 
       actions.append(cancelBtn, deleteBtn);
       dialog.append(title, message, actions);
@@ -8159,7 +8164,7 @@ function makePosts(){
       titleKey = null,
       placeholders = {}
     } = {}){
-      const overlay = ensureFormbuilderConfirmOverlay();
+      const overlay = await ensureFormbuilderConfirmOverlay();
       const dialog = overlay.querySelector('.formbuilder-confirm-dialog');
       const title = dialog.querySelector('#formbuilderConfirmTitle');
       const message = dialog.querySelector('#formbuilderConfirmMessage');
@@ -8202,7 +8207,14 @@ function makePosts(){
         ? `formbuilder-confirm-button ${confirmClassName.trim()}`
         : previousClassName || 'formbuilder-confirm-button';
       confirmBtn.className = normalizedConfirmClass;
-      confirmBtn.textContent = confirmLabel || previousLabel || 'Confirm';
+      
+      // Load button label from DB if not provided
+      let finalConfirmLabel = confirmLabel;
+      if(!finalConfirmLabel){
+        const confirmKey = confirmBtn.dataset.messageKey || 'msg_button_confirm';
+        finalConfirmLabel = await getMessage(confirmKey, placeholders, true) || previousLabel || 'Confirm';
+      }
+      confirmBtn.textContent = finalConfirmLabel;
 
       overlay.setAttribute('aria-hidden', 'false');
       overlay.classList.add('visible');
@@ -8214,6 +8226,7 @@ function makePosts(){
           window.removeEventListener('keydown', onKeyDown, true);
           overlay.removeEventListener('click', onOverlayClick);
           confirmBtn.className = previousClassName || 'formbuilder-confirm-button formbuilder-confirm-delete';
+          // Restore previous label (which was already loaded from DB when overlay was created)
           confirmBtn.textContent = previousLabel || 'Delete';
           if(previousFocused && typeof previousFocused.focus === 'function'){
             try{
