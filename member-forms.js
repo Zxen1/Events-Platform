@@ -590,8 +590,10 @@
       const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
       if(activeVenueEditor || (hasVenueEditor && !message)){
         // User is interacting with venue field, don't close the form
+        console.log('[Member Forms] renderEmptyState: Skipping form close - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditor, message });
         return;
       }
+      console.log('[Member Forms] renderEmptyState: Closing form', { message });
       
       if(emptyState){
         if(typeof message === 'string'){
@@ -714,6 +716,7 @@
     }
 
     function buildVenueSessionEditor(field, labelId){
+      console.log('[Member Forms] buildVenueSessionEditor called', { field, labelId });
       const cloneVenueSessionVenueFn = typeof window !== 'undefined' && typeof window.cloneVenueSessionVenue === 'function' ? window.cloneVenueSessionVenue : (v => v);
       const venueSessionCreateVenueFn = typeof window !== 'undefined' && typeof window.venueSessionCreateVenue === 'function' ? window.venueSessionCreateVenue : (() => ({ name: '', address: '', sessions: [] }));
       const venues = Array.isArray(field.options) && field.options.length ? field.options.map(cloneVenueSessionVenueFn) : [venueSessionCreateVenueFn()];
@@ -722,11 +725,26 @@
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
       // Prevent clicks inside the venue editor from bubbling up and potentially closing the form
-      editor.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
-      editor.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
-      editor.addEventListener('mousedown', (e)=>{ e.stopPropagation(); }, true);
-      editor.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
-      editor.addEventListener('focusin', (e)=>{ e.stopPropagation(); }, true);
+      // Add comprehensive event handling with logging
+      const handleEvent = (eventType, e) => {
+        const target = e.target;
+        const isInsideVenueEditor = target.closest('.venue-session-editor') === editor;
+        const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
+        
+        if(isInsideVenueEditor && !isGeocoderElement){
+          console.log(`[Member Forms] ${eventType} event stopped in venue editor`, { target: target.tagName, className: target.className });
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+      };
+      
+      editor.addEventListener('click', (e) => handleEvent('click', e), true);
+      editor.addEventListener('pointerdown', (e) => handleEvent('pointerdown', e), true);
+      editor.addEventListener('mousedown', (e) => handleEvent('mousedown', e), true);
+      editor.addEventListener('change', (e) => handleEvent('change', e), true);
+      editor.addEventListener('focusin', (e) => handleEvent('focusin', e), true);
+      editor.addEventListener('focus', (e) => handleEvent('focus', e), true);
+      editor.addEventListener('input', (e) => handleEvent('input', e), true);
       // Generate unique prefix from labelId to ensure unique IDs across multiple editors
       const uniquePrefix = labelId ? labelId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const venueList = document.createElement('div');
@@ -1163,10 +1181,28 @@
         // Prevent form wrapper from closing when clicking inside venue fields
         if(formWrapper){
           formWrapper.addEventListener('click', (e)=>{
-            // If click is inside a venue editor, prevent any closing behavior
-            const venueEditor = e.target.closest('.venue-session-editor');
-            if(venueEditor){
+            const target = e.target;
+            const venueEditor = target.closest('.venue-session-editor');
+            const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
+            
+            if(venueEditor && !isGeocoderElement){
+              console.log('[Member Forms] Click inside venue editor - preventing form close', { target: target.tagName, className: target.className });
               e.stopPropagation();
+              e.stopImmediatePropagation();
+              return false;
+            }
+          }, true);
+          
+          // Also prevent other events that might close the form
+          formWrapper.addEventListener('pointerdown', (e)=>{
+            const target = e.target;
+            const venueEditor = target.closest('.venue-session-editor');
+            const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
+            
+            if(venueEditor && !isGeocoderElement){
+              console.log('[Member Forms] Pointerdown inside venue editor - preventing form close');
+              e.stopPropagation();
+              e.stopImmediatePropagation();
             }
           }, true);
         }
@@ -1308,10 +1344,30 @@
         wrapper.classList.add('form-preview-field--venues-sessions-pricing');
         label.removeAttribute('for');
         // Use buildVenueSessionPreview if available (for member forms), otherwise fall back to editor
-        if(typeof window !== 'undefined' && typeof window.buildVenueSessionPreview === 'function'){
-          control = window.buildVenueSessionPreview(field, controlId);
-        } else {
-          control = buildVenueSessionEditor(field, labelId);
+        console.log('[Member Forms] Building venue-ticketing field', { field, controlId, labelId });
+        try {
+          if(typeof window !== 'undefined' && typeof window.buildVenueSessionPreview === 'function'){
+            console.log('[Member Forms] Using buildVenueSessionPreview from window');
+            control = window.buildVenueSessionPreview(field, controlId);
+            console.log('[Member Forms] buildVenueSessionPreview returned', control);
+          } else {
+            console.log('[Member Forms] Using buildVenueSessionEditor fallback');
+            control = buildVenueSessionEditor(field, labelId);
+            console.log('[Member Forms] buildVenueSessionEditor returned', control);
+          }
+          if(!control){
+            console.error('[Member Forms] ERROR: No control element created for venue-ticketing field');
+            throw new Error('Failed to create venue-ticketing control');
+          }
+        } catch(err){
+          console.error('[Member Forms] ERROR building venue-ticketing field:', err);
+          // Create a fallback error message element
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'venue-ticketing-error';
+          errorDiv.textContent = 'Error loading venue ticketing field. Please refresh the page.';
+          errorDiv.style.color = 'red';
+          errorDiv.style.padding = '10px';
+          control = errorDiv;
         }
       } else if(baseType === 'website-url' || baseType === 'tickets-url'){
         wrapper.classList.add('form-preview-field--url');

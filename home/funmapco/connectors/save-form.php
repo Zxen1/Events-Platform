@@ -1310,7 +1310,15 @@ function sanitizeField(array $field): array
             $safe['options'] = sanitizeOptionList($options);
             break;
         case 'venue-session-version-tier-price':
-            $safe['options'] = sanitizeVenueOptions($options);
+            try {
+                error_log("DEBUG: Processing venue-session-version-tier-price field. Options count: " . count($options));
+                $safe['options'] = sanitizeVenueOptions($options);
+                error_log("DEBUG: Successfully sanitized venue options. Result count: " . count($safe['options']));
+            } catch (Exception $e) {
+                error_log("ERROR: Failed to sanitize venue options: " . $e->getMessage());
+                error_log("ERROR: Stack trace: " . $e->getTraceAsString());
+                $safe['options'] = [];
+            }
             break;
         default:
             $safe['options'] = sanitizeGenericOptions($options);
@@ -1376,19 +1384,29 @@ function sanitizeVariantPricingOptions(array $options): array
 
 function sanitizeVenueOptions(array $options): array
 {
+    error_log("DEBUG: sanitizeVenueOptions called with " . count($options) . " options");
     $venues = [];
-    foreach ($options as $venue) {
-        if (!is_array($venue)) {
-            continue;
+    foreach ($options as $index => $venue) {
+        try {
+            if (!is_array($venue)) {
+                error_log("WARNING: Venue at index $index is not an array: " . gettype($venue));
+                continue;
+            }
+            $venueData = [
+                'name' => sanitizeString($venue['name'] ?? ''),
+                'address' => sanitizeString($venue['address'] ?? ''),
+                'location' => sanitizeLocation($venue['location'] ?? null),
+                'feature' => sanitizeFeature($venue['feature'] ?? null),
+                'sessions' => sanitizeSessions($venue['sessions'] ?? []),
+            ];
+            $venues[] = $venueData;
+            error_log("DEBUG: Processed venue $index: name='" . $venueData['name'] . "', sessions=" . count($venueData['sessions']));
+        } catch (Exception $e) {
+            error_log("ERROR: Failed to process venue at index $index: " . $e->getMessage());
+            error_log("ERROR: Venue data: " . json_encode($venue));
         }
-        $venues[] = [
-            'name' => sanitizeString($venue['name'] ?? ''),
-            'address' => sanitizeString($venue['address'] ?? ''),
-            'location' => sanitizeLocation($venue['location'] ?? null),
-            'feature' => sanitizeFeature($venue['feature'] ?? null),
-            'sessions' => sanitizeSessions($venue['sessions'] ?? []),
-        ];
     }
+    error_log("DEBUG: sanitizeVenueOptions returning " . count($venues) . " venues");
     return $venues;
 }
 
@@ -1427,18 +1445,28 @@ function sanitizeFeature($feature): ?array
 function sanitizeSessions($sessions): array
 {
     if (!is_array($sessions)) {
+        error_log("WARNING: sanitizeSessions received non-array: " . gettype($sessions));
         return [];
     }
     $clean = [];
-    foreach ($sessions as $session) {
-        if (!is_array($session)) {
-            continue;
+    foreach ($sessions as $index => $session) {
+        try {
+            if (!is_array($session)) {
+                error_log("WARNING: Session at index $index is not an array: " . gettype($session));
+                continue;
+            }
+            $sessionData = [
+                'date' => sanitizeString($session['date'] ?? '', 64),
+                'times' => sanitizeTimes($session['times'] ?? []),
+            ];
+            $clean[] = $sessionData;
+            error_log("DEBUG: Processed session $index: date='" . $sessionData['date'] . "', times=" . count($sessionData['times']));
+        } catch (Exception $e) {
+            error_log("ERROR: Failed to process session at index $index: " . $e->getMessage());
+            error_log("ERROR: Session data: " . json_encode($session));
         }
-        $clean[] = [
-            'date' => sanitizeString($session['date'] ?? '', 64),
-            'times' => sanitizeTimes($session['times'] ?? []),
-        ];
     }
+    error_log("DEBUG: sanitizeSessions returning " . count($clean) . " sessions");
     return $clean;
 }
 
