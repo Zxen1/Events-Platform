@@ -1291,7 +1291,12 @@
       } else if(baseType === 'venue-ticketing'){
         wrapper.classList.add('form-preview-field--venues-sessions-pricing');
         label.removeAttribute('for');
-        control = buildVenueSessionEditor(field, labelId);
+        // Use buildVenueSessionPreview if available (for member forms), otherwise fall back to editor
+        if(typeof window !== 'undefined' && typeof window.buildVenueSessionPreview === 'function'){
+          control = window.buildVenueSessionPreview(field, controlId);
+        } else {
+          control = buildVenueSessionEditor(field, labelId);
+        }
       } else if(baseType === 'website-url' || baseType === 'tickets-url'){
         wrapper.classList.add('form-preview-field--url');
         const urlWrapper = document.createElement('div');
@@ -1530,20 +1535,38 @@
         }
         control = locationWrapper;
       } else {
-        const input = document.createElement('input');
-        input.id = controlId;
-        if(field.type === 'email'){
-          input.type = 'email';
-          input.autocomplete = 'email';
-        } else if(field.type === 'phone'){
-          input.type = 'tel';
-          input.autocomplete = 'tel';
+        // Check if it's actually a description field that wasn't caught earlier
+        const isDescriptionField = baseType === 'description' || baseType === 'text-area' || 
+                                   field.type === 'description' || field.type === 'text-area' ||
+                                   (typeof field.type === 'string' && (field.type.includes('description') || field.type.includes('text-area')));
+        
+        if(isDescriptionField){
+          const textarea = document.createElement('textarea');
+          textarea.id = controlId;
+          textarea.rows = baseType === 'description' ? 6 : 4;
+          textarea.placeholder = placeholder;
+          textarea.className = 'form-preview-textarea';
+          if(baseType === 'description' || field.type === 'description' || (typeof field.type === 'string' && field.type.includes('description'))){
+            textarea.classList.add('form-preview-description');
+          }
+          if(field.required) textarea.required = true;
+          control = textarea;
         } else {
-          input.type = 'text';
+          const input = document.createElement('input');
+          input.id = controlId;
+          if(field.type === 'email'){
+            input.type = 'email';
+            input.autocomplete = 'email';
+          } else if(field.type === 'phone'){
+            input.type = 'tel';
+            input.autocomplete = 'tel';
+          } else {
+            input.type = 'text';
+          }
+          input.placeholder = placeholder;
+          if(field.required) input.required = true;
+          control = input;
         }
-        input.placeholder = placeholder;
-        if(field.required) input.required = true;
-        control = input;
       }
 
       if(control){
@@ -2449,18 +2472,25 @@
           }
           control = locationWrapper;
         } else {
-          // Default to text input, but check if it's actually a description field that wasn't caught
-          const input = document.createElement('input');
-          // If the field type contains "description", use textarea instead
-          if(baseType && (baseType.includes('description') || previewField.type && previewField.type.includes('description'))){
+          // Check if it's actually a description field that wasn't caught earlier
+          const isDescriptionField = baseType === 'description' || baseType === 'text-area' || 
+                                     previewField.type === 'description' || previewField.type === 'text-area' ||
+                                     (typeof previewField.type === 'string' && (previewField.type.includes('description') || previewField.type.includes('text-area')));
+          
+          if(isDescriptionField){
             const textarea = document.createElement('textarea');
-            textarea.id = controlId;
-            textarea.rows = 6;
-            textarea.placeholder = placeholder;
-            textarea.className = 'form-preview-textarea form-preview-description';
+            const textareaId = `${baseId}-input`;
+            textarea.id = textareaId;
+            textarea.rows = baseType === 'description' ? 6 : 4;
+            textarea.placeholder = previewField.placeholder || '';
+            textarea.className = 'form-preview-textarea';
+            if(baseType === 'description' || previewField.type === 'description' || (typeof previewField.type === 'string' && previewField.type.includes('description'))){
+              textarea.classList.add('form-preview-description');
+            }
             if(previewField.required) textarea.required = true;
             control = textarea;
           } else {
+            const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = previewField.placeholder || '';
             const inputId = `${baseId}-input`;
