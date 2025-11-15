@@ -23961,13 +23961,19 @@ document.addEventListener('pointerdown', (e) => {
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
       // Prevent clicks inside the venue editor from bubbling up and potentially closing the form
-      editor.addEventListener('click', (e)=>{ e.stopPropagation(); });
-      editor.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); });
-      editor.addEventListener('mousedown', (e)=>{ e.stopPropagation(); });
+      editor.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+      editor.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
+      editor.addEventListener('mousedown', (e)=>{ e.stopPropagation(); }, true);
+      editor.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
+      editor.addEventListener('focusin', (e)=>{ e.stopPropagation(); }, true);
       // Generate unique prefix from labelId to ensure unique IDs across multiple editors
       const uniquePrefix = labelId ? labelId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const venueList = document.createElement('div');
       venueList.className = 'venue-session-venues';
+      // Also stop propagation on the venue list
+      venueList.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+      venueList.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
+      venueList.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
       editor.appendChild(venueList);
       let addVenueBtn = null;
 
@@ -25456,17 +25462,33 @@ document.addEventListener('pointerdown', (e) => {
           const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
           let addressInput = null;
           if(mapboxReady){
+            // Ensure localVenueGeocoder is accessible - it's defined at top level but may not be in scope
+            const safeLocalVenueGeocoder = typeof localVenueGeocoder !== 'undefined' 
+              ? localVenueGeocoder 
+              : (typeof window.localVenueGeocoder !== 'undefined' 
+                  ? window.localVenueGeocoder 
+                  : ((query) => searchLocalVenues(query)));
+            const safeExternalGeocoder = typeof externalMapboxVenueGeocoder !== 'undefined'
+              ? externalMapboxVenueGeocoder
+              : (typeof window.externalMapboxVenueGeocoder !== 'undefined'
+                  ? window.externalMapboxVenueGeocoder
+                  : null);
+            const safeFilter = typeof majorVenueFilter !== 'undefined'
+              ? majorVenueFilter
+              : (typeof window.majorVenueFilter !== 'undefined'
+                  ? window.majorVenueFilter
+                  : null);
             const geocoderOptions = {
               accessToken: window.mapboxgl.accessToken,
               mapboxgl: window.mapboxgl,
               marker: false,
               placeholder: placeholderValue,
-              geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+              geocodingUrl: typeof MAPBOX_VENUE_ENDPOINT !== 'undefined' ? MAPBOX_VENUE_ENDPOINT : 'https://api.mapbox.com/geocoding/v5/mapbox.places/',
               types: 'address,poi',
               reverseGeocode: true,
-              localGeocoder: localVenueGeocoder,
-              externalGeocoder: externalMapboxVenueGeocoder,
-              filter: majorVenueFilter,
+              localGeocoder: safeLocalVenueGeocoder,
+              externalGeocoder: safeExternalGeocoder,
+              filter: safeFilter,
               limit: 7,
               language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
             };
