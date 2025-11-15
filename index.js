@@ -124,7 +124,16 @@ async function loadMessagesFromDatabase(includeAdmin = false){
   
   messageCachePromise = (async () => {
     try {
-      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
       if(!response.ok){
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -168,7 +177,12 @@ async function loadMessagesFromDatabase(includeAdmin = false){
       
       return messagesMap;
     } catch(error){
-      console.error('Error loading messages from database:', error);
+      if(error.name === 'AbortError'){
+        console.error('Message loading timed out after 10 seconds');
+      } else {
+        console.error('Error loading messages from database:', error);
+      }
+      // Return empty object on error - UI will use fallback text
       return {};
     } finally {
       messageCachePromise = null;
@@ -247,11 +261,89 @@ function getMessageSync(messageKey, placeholders = {}, includeAdmin = false){
   return replacePlaceholders(message.message_text || '', placeholders);
 }
 
+/**
+ * Update all elements with data-message-key attributes when messages load
+ * This handles both initial elements and dynamically created ones
+ * @param {boolean} includeAdmin - If true, includes admin messages
+ */
+async function updateAllMessageElements(includeAdmin = false){
+  try {
+    // Wait for messages to be loaded
+    const messages = await loadMessagesFromDatabase(includeAdmin);
+    
+    // Find all elements with data-message-key attribute (including dynamically created ones)
+    const allElements = document.querySelectorAll('[data-message-key]');
+    
+    for(const el of allElements){
+      const messageKey = el.dataset.messageKey;
+      if(!messageKey) continue;
+      
+      const message = messages[messageKey];
+      if(message && message.message_text){
+        const text = replacePlaceholders(message.message_text, {});
+        if(text){
+          el.textContent = text;
+        }
+      }
+    }
+  } catch(error){
+    console.error('Error updating message elements:', error);
+  }
+}
+
+/**
+ * Set up a MutationObserver to automatically update message elements when they're added to DOM
+ */
+function setupMessageObserver(){
+  if(window.messageObserver) return; // Already set up
+  
+  window.messageObserver = new MutationObserver((mutations) => {
+    // Check if any new elements with data-message-key were added
+    let shouldUpdate = false;
+    for(const mutation of mutations){
+      for(const node of mutation.addedNodes){
+        if(node.nodeType === Node.ELEMENT_NODE){
+          if(node.hasAttribute && node.hasAttribute('data-message-key')){
+            shouldUpdate = true;
+            break;
+          }
+          // Also check children
+          if(node.querySelectorAll && node.querySelectorAll('[data-message-key]').length > 0){
+            shouldUpdate = true;
+            break;
+          }
+        }
+      }
+      if(shouldUpdate) break;
+    }
+    
+    // Update messages if new elements were added
+    if(shouldUpdate){
+      // Debounce to avoid too many updates
+      if(window.messageUpdateTimeout){
+        clearTimeout(window.messageUpdateTimeout);
+      }
+      window.messageUpdateTimeout = setTimeout(() => {
+        updateAllMessageElements(true).catch(err => {
+          console.warn('Failed to update message elements:', err);
+        });
+      }, 100);
+    }
+  });
+  
+  // Observe the entire document for new elements
+  window.messageObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
 // Make message functions globally available
 window.getMessage = getMessage;
 window.getMessageSync = getMessageSync;
 window.loadMessagesFromDatabase = loadMessagesFromDatabase;
 window.replacePlaceholders = replacePlaceholders;
+window.updateAllMessageElements = updateAllMessageElements;
 
 function handlePromptKeydown(event, context){
   if(!context || !context.prompt || typeof context.cancelPrompt !== 'function'){
@@ -650,55 +742,25 @@ function handlePromptKeydown(event, context){
     setupGeocoderObserver();
     
     // Load user-visible messages on page load (excludes admin and email messages)
-    loadMessagesFromDatabase(false).catch(err => {
+    loadMessagesFromDatabase(false).then(() => {
+      // Update all message elements after loading
+      updateAllMessageElements(false).catch(err => {
+        console.warn('Failed to update message elements:', err);
+      });
+    }).catch(err => {
       console.warn('Failed to preload messages:', err);
     });
     
-    // Load unsaved dialog messages from DB
+    // Set up observer for dynamically created elements
+    setupMessageObserver();
+    
+    // Load admin messages and update all elements (including dynamically created ones)
     (async () => {
-      const adminTitle = document.getElementById('adminUnsavedTitle');
-      const adminMessage = adminTitle?.nextElementSibling;
-      const memberTitle = document.getElementById('memberUnsavedTitle');
-      const memberMessage = memberTitle?.nextElementSibling;
-      
-      if(adminTitle && adminTitle.dataset.messageKey){
-        const msg = await getMessage(adminTitle.dataset.messageKey, {}, true);
-        if(msg) adminTitle.textContent = msg;
-      }
-      if(adminMessage && adminMessage.dataset.messageKey){
-        const msg = await getMessage(adminMessage.dataset.messageKey, {}, true);
-        if(msg) adminMessage.textContent = msg;
-      }
-      if(memberTitle && memberTitle.dataset.messageKey){
-        const msg = await getMessage(memberTitle.dataset.messageKey, {}, false);
-        if(msg) memberTitle.textContent = msg;
-      }
-      if(memberMessage && memberMessage.dataset.messageKey){
-        const msg = await getMessage(memberMessage.dataset.messageKey, {}, false);
-        if(msg) memberMessage.textContent = msg;
-      }
-      
-      const memberPanel = document.getElementById('memberPanel');
-      if(memberPanel){
-        const memberElements = memberPanel.querySelectorAll('[data-message-key]');
-        for(const el of memberElements){
-          if(el.dataset.messageKey){
-            const msg = await getMessage(el.dataset.messageKey, {}, false);
-            if(msg) el.textContent = msg;
-          }
-        }
-      }
-      
-      // Load messages for admin panel elements
-      const adminPanel = document.getElementById('adminPanel');
-      if(adminPanel){
-        const adminElements = adminPanel.querySelectorAll('[data-message-key]');
-        for(const el of adminElements){
-          if(el.dataset.messageKey){
-            const msg = await getMessage(el.dataset.messageKey, {}, true);
-            if(msg) el.textContent = msg;
-          }
-        }
+      try {
+        await loadMessagesFromDatabase(true);
+        await updateAllMessageElements(true);
+      } catch(err){
+        console.warn('Failed to load admin messages:', err);
       }
     })();
   });
@@ -8947,7 +9009,9 @@ function makePosts(){
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.dataset.messageKey = 'msg_button_add_subcategory';
-        // Text will be loaded from DB
+        // Set fallback text in case messages don't load immediately
+        addSubBtn.textContent = 'Add Subcategory';
+        // Text will be updated from DB when messages are available (via MutationObserver)
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
         const saveCategoryBtn = document.createElement('button');
@@ -14866,19 +14930,40 @@ function makePosts(){
     // Fetch and populate admin messages from database
     async function loadAdminMessages(){
       try {
-        const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
-        if(!response.ok){
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
+        // Use the shared message loading function to avoid duplicate requests and conflicts
+        const messages = await loadMessagesFromDatabase(true);
         
-        if(result.success && result.messages){
-          populateMessagesIntoContainers(result.messages);
-        } else {
-          console.error('Failed to load admin messages:', result.message || result.messages_error);
+        // Convert messages map back to container format for the messages tab
+        // Group messages by container_key
+        const containersMap = {};
+        Object.values(messages).forEach(message => {
+          const containerKey = message.container_key || 'msg_admin';
+          if(!containersMap[containerKey]){
+            containersMap[containerKey] = {
+              container_key: containerKey,
+              messages: []
+            };
+          }
+          containersMap[containerKey].messages.push(message);
+        });
+        
+        // Convert to array format
+        const messageContainers = Object.values(containersMap);
+        
+        if(messageContainers.length > 0){
+          populateMessagesIntoContainers(messageContainers);
         }
+        
+        // Also update all message elements in the messages tab
+        await updateAllMessageElements(true);
       } catch(error){
         console.error('Error loading admin messages:', error);
+        // Try to update anyway in case cache is available
+        try {
+          await updateAllMessageElements(true);
+        } catch(err){
+          // Ignore secondary error
+        }
       }
     }
     
