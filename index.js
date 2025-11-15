@@ -9466,35 +9466,41 @@ function makePosts(){
             
             // Prevent clicks inside the venue editor from bubbling up (especially important for member forms)
             // This prevents form closure when interacting with venue fields
-            // BUT allow geocoder events to propagate so autocomplete works
-            editor.addEventListener('click', (e)=>{
+            // BUT allow geocoder events and button clicks to propagate so they work
+            const shouldStopPropagation = (e) => {
+              const target = e.target;
               // Don't stop propagation for geocoder elements - they need events to work
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(target.closest('.mapboxgl-ctrl-geocoder')) return false;
+              // Don't stop propagation for buttons - they need clicks to work
+              // Check if target is a button or inside a button
+              if(target.tagName === 'BUTTON' || target.closest('button')) return false;
+              // Don't stop propagation for action button containers
+              if(target.closest('.venue-line-actions') || target.closest('.session-date-actions') || target.closest('.session-time-actions')) return false;
+              return true;
+            };
+            
+            editor.addEventListener('click', (e)=>{
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
             editor.addEventListener('pointerdown', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
             editor.addEventListener('mousedown', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
             editor.addEventListener('change', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
             editor.addEventListener('focusin', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
@@ -9503,22 +9509,19 @@ function makePosts(){
             const uniquePrefix = baseId ? baseId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const venueList = document.createElement('div');
             venueList.className = 'venue-session-venues';
-            // Also stop propagation on the venue list container, but allow geocoder events
+            // Also stop propagation on the venue list container, but allow geocoder events and buttons
             venueList.addEventListener('click', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
             venueList.addEventListener('pointerdown', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
             venueList.addEventListener('change', (e)=>{
-              const isGeocoderElement = e.target.closest('.mapboxgl-ctrl-geocoder');
-              if(!isGeocoderElement){
+              if(shouldStopPropagation(e)){
                 e.stopPropagation();
               }
             }, true);
@@ -10117,11 +10120,10 @@ function makePosts(){
               renderVenues({ type: 'venue-name', venueIndex: nextIndex });
             };
 
-            const requestVenueRemoval = async (index)=>{
+            const requestVenueRemoval = (index)=>{
               ensureOptions();
               if(previewField.options.length <= 1) return;
-              const msg = await getMessage('msg_confirm_delete_venue', {}, false) || 'Are you sure you want to remove this venue?';
-              if(window.confirm(msg)){
+              if(window.confirm('Are you sure you want to remove this venue?')){
                 removeVenue(index);
               }
             };
