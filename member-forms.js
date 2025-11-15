@@ -1181,6 +1181,7 @@
         applyMemberSnapshot(backendSnapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
+        console.log('[Member Forms] initializeMemberFormbuilderSnapshot: Calling renderFormPicker', { memberCategories: memberCategories?.length || 0 });
         renderFormPicker();
         
         // Prevent form wrapper from closing when clicking inside venue fields
@@ -1677,7 +1678,7 @@
         return;
       }
       // Don't clear form if venue editor exists and user is interacting with it
-      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
+      // Reuse activeVenueEditor from above, check hasVenueEditor again
       const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
       if(activeVenueEditor || hasVenueEditor){
         console.log('[Member Forms] renderConfiguredFields: Skipping re-render - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditor });
@@ -3011,7 +3012,11 @@
     }
 
     function renderFormPicker(){
-      if(!formpickerCats) return;
+      if(!formpickerCats){
+        console.error('[Member Forms] renderFormPicker: formpickerCats element not found');
+        return;
+      }
+      console.log('[Member Forms] renderFormPicker: Rendering formpicker', { formpickerCats: !!formpickerCats, memberCategories: memberCategories?.length || 0 });
       formpickerCats.innerHTML = '';
       selectedCategory = '';
       selectedSubcategory = '';

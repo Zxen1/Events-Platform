@@ -14964,9 +14964,6 @@ function makePosts(){
         } else {
           console.error('Failed to load admin messages:', result.message || result.messages_error);
         }
-        
-        // Also update all message elements in the messages tab (for any dynamically added elements)
-        await updateAllMessageElements(true);
       } catch(error){
         console.error('Error loading admin messages:', error);
         // Try to update anyway in case cache is available
