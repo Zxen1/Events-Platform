@@ -10652,11 +10652,6 @@ function makePosts(){
             };
 
             const setupDatePicker = (input, venue, session, venueIndex, sessionIndex, options = {})=>{
-              console.log('[Formbuilder] setupDatePicker called', { input: !!input, venue: !!venue, session: !!session, venueIndex, sessionIndex, options });
-              if(!input){
-                console.error('[Formbuilder] ERROR: setupDatePicker called without input element');
-                return { open: () => {}, close: () => {} };
-              }
               const trigger = options && options.trigger ? options.trigger : input;
               let picker = null;
               let todayMonthNode = null;
@@ -10981,16 +10976,10 @@ function makePosts(){
                 scrollToTodayMonth('auto');
               };
               const openPicker = ()=>{
-                console.log('[Formbuilder] openPicker called', { picker: !!picker, input: !!input, pickerHostRow: !!pickerHostRow });
-                if(picker){
-                  console.log('[Formbuilder] Picker already open, returning');
-                  return;
-                }
+                if(picker) return;
                 closeAllPickers();
                 picker = buildCalendar();
-                console.log('[Formbuilder] Calendar built', { picker: !!picker });
                 const appendTarget = pickerHostRow || input.parentElement;
-                console.log('[Formbuilder] Append target determined', { pickerHostRow: !!pickerHostRow, appendTarget: !!appendTarget, inputParent: !!input.parentElement });
                 if(pickerHostRow instanceof Element){
                   activePickerHost = pickerHostRow;
                 } else if(appendTarget instanceof Element){
@@ -11000,17 +10989,11 @@ function makePosts(){
                 }
                 if(activePickerHost){
                   activePickerHost.classList.add('has-open-session-picker');
-                  console.log('[Formbuilder] Added has-open-session-picker class to', activePickerHost.className);
                 }
                 if(appendTarget instanceof Element){
                   appendTarget.appendChild(picker);
-                  console.log('[Formbuilder] Picker appended to appendTarget', appendTarget.className);
                 } else if(input.parentElement instanceof Element){
                   input.parentElement.appendChild(picker);
-                  console.log('[Formbuilder] Picker appended to input.parentElement', input.parentElement.className);
-                } else {
-                  console.error('[Formbuilder] ERROR: Cannot append picker - no valid parent element');
-                  return;
                 }
                 if(parentSubMenu){
                   parentSubMenu.classList.add('has-floating-overlay');
@@ -11021,12 +11004,7 @@ function makePosts(){
                 if(picker){
                   initializePicker(picker);
                   const pickerEl = picker;
-                  const showPicker = ()=> {
-                    if(pickerEl){
-                      pickerEl.classList.add('is-visible');
-                      console.log('[Formbuilder] Picker made visible');
-                    }
-                  };
+                  const showPicker = ()=> pickerEl && pickerEl.classList.add('is-visible');
                   if(typeof requestAnimationFrame === 'function'){
                     requestAnimationFrame(showPicker);
                   } else {
@@ -11036,34 +11014,26 @@ function makePosts(){
                 document.addEventListener('pointerdown', onPointerDown, true);
                 document.addEventListener('keydown', onKeydown, true);
                 openPickers.add(closePicker);
-                console.log('[Formbuilder] Datepicker opened successfully');
               };
               if(trigger === input){
                 input.addEventListener('focus', ()=> openPicker());
                 input.addEventListener('click', ()=> openPicker());
               } else if(trigger){
-                console.log('[Formbuilder] Setting up trigger handlers', { trigger: trigger.tagName, triggerClassName: trigger.className });
                 const handleTriggerClick = event => {
-                  console.log('[Formbuilder] Trigger clicked');
                   event.preventDefault();
                   event.stopPropagation();
                   openPicker();
                 };
                 const handleTriggerKeydown = event => {
                   if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar'){
-                    console.log('[Formbuilder] Trigger keydown');
                     event.preventDefault();
                     openPicker();
                   }
                 };
                 trigger.addEventListener('click', handleTriggerClick);
                 trigger.addEventListener('keydown', handleTriggerKeydown);
-              } else {
-                console.warn('[Formbuilder] WARNING: No trigger element provided for datepicker');
               }
-              const controls = { open: openPicker, close: closePicker };
-              console.log('[Formbuilder] setupDatePicker returning controls', controls);
-              return controls;
+              return { open: openPicker, close: closePicker };
             };
 
             const renderVenues = (nextFocus = null)=>{
@@ -11480,23 +11450,6 @@ function makePosts(){
                   openDatePickerBtn.textContent = '+';
                   openDatePickerBtn.setAttribute('aria-label', 'Select Session Dates');
                   openDatePickerBtn.setAttribute('aria-haspopup', 'dialog');
-                  // Note: The click handler will be set up by setupDatePicker via the trigger option
-                  // But we add a backup handler here in case setupDatePicker hasn't run yet
-                  openDatePickerBtn.addEventListener('click', (e)=>{ 
-                    console.log('[Formbuilder] Open datepicker button clicked', { venueIndex, sessionIndex, dateInput: !!dateInput });
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    
-                    // Try to get controls from the button property (set after setupDatePicker runs)
-                    const controls = openDatePickerBtn._datePickerControls || datePickerControls;
-                    if(controls && typeof controls.open === 'function'){
-                      console.log('[Formbuilder] Manually calling datePickerControls.open()');
-                      controls.open();
-                    } else {
-                      console.warn('[Formbuilder] WARNING: datePickerControls.open not available yet - setupDatePicker may not have completed');
-                    }
-                  }, true);
                   dateActions.appendChild(openDatePickerBtn);
                   const removeDateBtn = createActionButton('-', 'Remove Session Date', ()=> removeSession(venue, venueIndex, sessionIndex));
                   if(venue.sessions.length <= 1){
@@ -11509,26 +11462,7 @@ function makePosts(){
                   dateActions.appendChild(removeDateBtn);
                   dateRow.appendChild(dateActions);
                   sessionCard.appendChild(dateRow);
-                  console.log('[Formbuilder] Setting up datepicker for session', { 
-                    venueIndex, 
-                    sessionIndex, 
-                    dateInput: !!dateInput, 
-                    openDatePickerBtn: !!openDatePickerBtn,
-                    dateRow: !!dateRow,
-                    dateRowClassName: dateRow.className
-                  });
                   const datePickerControls = setupDatePicker(dateInput, venue, session, venueIndex, sessionIndex, { trigger: openDatePickerBtn });
-                  console.log('[Formbuilder] Datepicker controls received', { 
-                    datePickerControls: !!datePickerControls, 
-                    hasOpen: typeof datePickerControls?.open === 'function',
-                    hasClose: typeof datePickerControls?.close === 'function'
-                  });
-                  
-                  // Store controls on the button for manual access
-                  if(openDatePickerBtn && datePickerControls){
-                    openDatePickerBtn._datePickerControls = datePickerControls;
-                    openDatePickerBtn.dataset.datePickerReady = 'true';
-                  }
 
                   const sessionDetails = document.createElement('div');
                   sessionDetails.className = 'session-details';
