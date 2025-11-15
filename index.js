@@ -8723,20 +8723,23 @@ function makePosts(){
             })();
           } else {
           const currentPath = applyNormalizeIconPath(getCurrentPath());
-          const optionsList = [{ value: '', label: 'No Icon' }];
+          // Load "No Icon" label from DB
+          const noIconLabel = await getMessage('msg_label_no_icon', {}, true) || 'No Icon';
+          const optionsList = [{ value: '', label: noIconLabel }];
             iconsToShow.forEach(path => {
             if(typeof path === 'string' && path.trim()){
               optionsList.push({ value: applyNormalizeIconPath(path) });
             }
           });
-          optionsList.forEach(entry => {
+          for(const entry of optionsList){
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'icon-picker-option';
             const value = entry.value || '';
             if(!value){
               btn.classList.add('icon-picker-option--clear');
-              btn.textContent = entry.label || 'No Icon';
+              // Use entry.label (which is already loaded from DB) or fallback
+              btn.textContent = entry.label || noIconLabel;
             } else {
               const img = document.createElement('img');
               img.src = value;
