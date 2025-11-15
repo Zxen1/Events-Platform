@@ -23913,17 +23913,25 @@ document.addEventListener('pointerdown', (e) => {
       if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
         try{
           const snapshot = window.formbuilderStateManager.capture();
-          memberSnapshotErrorMessage = '';
-          applyMemberSnapshot(snapshot, { preserveSelection: true });
-          return;
+          if(snapshot && typeof snapshot === 'object'){
+            memberSnapshotErrorMessage = '';
+            applyMemberSnapshot(snapshot, { preserveSelection: true });
+            return;
+          }
         }catch(err){
-          console.warn('Failed to capture latest formbuilder snapshot', err);
+          console.error('Failed to capture latest formbuilder snapshot', err);
         }
       }
-      applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
+      // Only apply if memberSnapshot is valid
+      if(memberSnapshot && typeof memberSnapshot === 'object'){
+        applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
+      } else {
+        console.warn('Cannot refresh member snapshot - no valid snapshot available');
+      }
     }
 
-    applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false });
+    // NO DEFAULT SNAPSHOT - memberSnapshot will be set from backend via initializeMemberFormbuilderSnapshot()
+    // Don't apply a default snapshot - wait for backend data
 
     function formatPriceValue(value){
       const raw = (value || '').replace(/[^0-9.,]/g, '').replace(/,/g, '.');
