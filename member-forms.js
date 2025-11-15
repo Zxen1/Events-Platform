@@ -15,6 +15,18 @@
       return;
     }
     
+    // Also wait for persistedFormbuilderSnapshotPromise to be available
+    const snapshotPromise = (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) 
+      ? window.persistedFormbuilderSnapshotPromise 
+      : (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise)
+        ? window.__persistedFormbuilderSnapshotPromise
+        : null;
+    if(!snapshotPromise){
+      console.warn("Member forms: Waiting for formbuilder snapshot promise...");
+      setTimeout(init, 100);
+      return;
+    }
+    
     const memberCreateSection = document.getElementById('memberTab-create');
     if(memberCreateSection){
       const formpickerCats = document.getElementById('memberFormpickerCats');
@@ -1100,11 +1112,28 @@
       if(formFields) formFields.innerHTML = '';
       if(postButton) postButton.disabled = true;
       try{
-        const backendSnapshot = await (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise ? window.persistedFormbuilderSnapshotPromise : Promise.resolve(null));
+        // Try both possible locations for the snapshot promise
+        const snapshotPromise = (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) 
+          ? window.persistedFormbuilderSnapshotPromise 
+          : (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise)
+            ? window.__persistedFormbuilderSnapshotPromise
+            : null;
+        
+        if(!snapshotPromise){
+          throw new Error('Formbuilder snapshot promise not available');
+        }
+        
+        const backendSnapshot = await snapshotPromise;
         
         // NO FALLBACKS - validate snapshot exists and is valid
-        if(!backendSnapshot || typeof backendSnapshot !== 'object' || !backendSnapshot.categories){
-          throw new Error('Invalid or missing formbuilder snapshot from backend');
+        if(!backendSnapshot){
+          throw new Error('No formbuilder snapshot available from backend. Please configure the formbuilder in the admin panel first.');
+        }
+        if(typeof backendSnapshot !== 'object'){
+          throw new Error('Formbuilder snapshot is not a valid object');
+        }
+        if(!backendSnapshot.categories || !Array.isArray(backendSnapshot.categories)){
+          throw new Error('Formbuilder snapshot is missing categories. Please configure categories in the formbuilder.');
         }
         
         if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
