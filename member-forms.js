@@ -588,7 +588,9 @@
       // Don't hide form wrapper if user is interacting with venue fields
       const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
       const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
-      if(activeVenueEditor || (hasVenueEditor && !message)){
+      // Never close the form if there's an active venue editor or if venue editor exists (regardless of message)
+      // This prevents closing when user is working with venue ticketing fields
+      if(activeVenueEditor || hasVenueEditor){
         // User is interacting with venue field, don't close the form
         console.log('[Member Forms] renderEmptyState: Skipping form close - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditor, message });
         return;
@@ -725,7 +727,6 @@
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
       // Prevent clicks inside the venue editor from bubbling up and potentially closing the form
-      // Add comprehensive event handling with logging
       const handleEvent = (eventType, e) => {
         const target = e.target;
         const isInsideVenueEditor = target.closest('.venue-session-editor') === editor;

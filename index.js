@@ -11662,6 +11662,9 @@ function makePosts(){
                     let samePricingYesInput = null;
                     let samePricingNoInput = null;
                     const showSamePricingOptions = sessionIndex > 0 || timeIndex > 0;
+                    
+                    // Generate unique suffix once per time row to ensure IDs are unique across multiple venue ticketing fields
+                    const uniqueSuffix = baseId ? baseId.replace(/[^a-zA-Z0-9]/g, '_') : `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
                     const getSamePricingReference = ()=>{
                       if(timeIndex > 0){
@@ -11734,7 +11737,7 @@ function makePosts(){
                         const seatingLabel = document.createElement('label');
                         seatingLabel.className = 'seating_area-label';
                         seatingLabel.textContent = seatingLabelText;
-                        const seatingInputId = `seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
+                        const seatingInputId = `seating_area-${uniqueSuffix}-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
@@ -11801,7 +11804,8 @@ function makePosts(){
                           const tierLabel = document.createElement('label');
                           tierLabel.className = 'pricing_tier-label';
                           tierLabel.textContent = tierLabelText;
-                          const tierInputId = `pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          // Use same unique suffix for consistency
+                          const tierInputId = `pricing_tier-${uniqueSuffix}-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
