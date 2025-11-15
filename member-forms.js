@@ -492,18 +492,34 @@
           safe.name = field.name.trim();
         }
         let type = typeof field.type === 'string' ? field.type : 'text-box';
-        // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-        const normalizedType = getBaseFieldType(type);
-        if(normalizedType){
-          type = normalizedType;
-        }
-        // Check for description/text-area BEFORE FORM_FIELD_TYPES validation to preserve them
-        if(type === 'description' || type === 'text-area'){
-          safe.type = type;
-        } else if(!(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELD_TYPES) ? window.FORM_FIELD_TYPES : []).some(opt => opt.value === type)){
-          type = 'text-box';
-          safe.type = type;
+        const originalType = type;
+        
+        // Check for description/text-area FIRST, before any normalization
+        // This ensures they're preserved even if they come in different formats
+        const isDescriptionType = type === 'description' || type === 'text-area' ||
+                                 (typeof type === 'string' && (type.includes('description') || type.includes('text-area')));
+        
+        if(isDescriptionType){
+          // Normalize but preserve description/text-area
+          const normalizedType = getBaseFieldType(type);
+          if(normalizedType === 'description' || normalizedType === 'text-area'){
+            safe.type = normalizedType;
+          } else if(type === 'description' || type === 'text-area'){
+            safe.type = type;
+          } else {
+            // Extract description/text-area from the type string
+            safe.type = type.includes('description') ? 'description' : 'text-area';
+          }
         } else {
+          // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+          const normalizedType = getBaseFieldType(type);
+          if(normalizedType){
+            type = normalizedType;
+          }
+          // Validate against FORM_FIELD_TYPES
+          if(!(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELD_TYPES) ? window.FORM_FIELD_TYPES : []).some(opt => opt.value === type)){
+            type = 'text-box';
+          }
           safe.type = type;
         }
         if(typeof field.placeholder === 'string'){
@@ -1626,13 +1642,26 @@
         safeField.type = 'text-box';
       } else {
         // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-        const normalizedType = getBaseFieldType(safeField.type);
-        if(normalizedType){
+        // BUT preserve description and text-area types BEFORE normalization
+        const originalType = safeField.type;
+        const normalizedType = getBaseFieldType(originalType);
+        
+        // If the original type or normalized type is description/text-area, preserve it
+        if(originalType === 'description' || originalType === 'text-area' || 
+           normalizedType === 'description' || normalizedType === 'text-area' ||
+           (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')))){
+          // Use normalized type if it's description/text-area, otherwise use original
+          if(normalizedType === 'description' || normalizedType === 'text-area'){
+            safeField.type = normalizedType;
+          } else if(originalType === 'description' || originalType === 'text-area'){
+            safeField.type = originalType;
+          } else {
+            // Fallback: check if original contains description/text-area
+            safeField.type = originalType.includes('description') ? 'description' : 
+                           originalType.includes('text-area') ? 'text-area' : normalizedType || 'text-box';
+          }
+        } else if(normalizedType){
           safeField.type = normalizedType;
-        }
-        // Preserve description and text-area types
-        if(safeField.type === 'description' || safeField.type === 'text-area'){
-          // Keep as is - don't override
         } else if(!safeField.type || safeField.type === ''){
           safeField.type = 'text-box';
         }

@@ -9299,10 +9299,28 @@ function makePosts(){
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
           } else {
-            // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-            const normalizedType = getBaseFieldType(safeField.type);
-            if(normalizedType){
-              safeField.type = normalizedType;
+            // Preserve description and text-area types BEFORE normalization
+            const originalType = safeField.type;
+            const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
+                                     (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
+            
+            if(isDescriptionType){
+              // Normalize but preserve description/text-area
+              const normalizedType = getBaseFieldType(originalType);
+              if(normalizedType === 'description' || normalizedType === 'text-area'){
+                safeField.type = normalizedType;
+              } else if(originalType === 'description' || originalType === 'text-area'){
+                safeField.type = originalType;
+              } else {
+                // Extract description/text-area from the type string
+                safeField.type = originalType.includes('description') ? 'description' : 'text-area';
+              }
+            } else {
+              // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+              const normalizedType = getBaseFieldType(safeField.type);
+              if(normalizedType){
+                safeField.type = normalizedType;
+              }
             }
           }
           // Ensure key and fieldTypeKey sync with each other if one is missing

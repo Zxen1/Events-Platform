@@ -839,11 +839,32 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             if (count($itemIds) === 1 && $itemIds[0]['type'] === 'field' && isset($fieldsById[$itemIds[0]['id']])) {
                 $field = $fieldsById[$itemIds[0]['id']];
                 // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+                // BUT preserve description and text-area types
                 $rawType = isset($field['type']) ? trim((string) $field['type']) : '';
                 $normalizedType = $rawType;
+                
+                // Check if it's a description or text-area type BEFORE normalization
+                $isDescriptionType = ($rawType === 'description' || $rawType === 'text-area' || 
+                                     stripos($rawType, 'description') !== false || 
+                                     stripos($rawType, 'text-area') !== false);
+                
                 if ($rawType !== '' && preg_match('/^([^\s\[]+)/', $rawType, $matches)) {
                     $normalizedType = trim($matches[1]);
                 }
+                
+                // Preserve description/text-area types
+                if ($isDescriptionType) {
+                    if ($normalizedType === 'description' || $normalizedType === 'text-area') {
+                        // Use normalized type
+                    } elseif ($rawType === 'description' || $rawType === 'text-area') {
+                        $normalizedType = $rawType;
+                    } elseif (stripos($rawType, 'description') !== false) {
+                        $normalizedType = 'description';
+                    } elseif (stripos($rawType, 'text-area') !== false) {
+                        $normalizedType = 'text-area';
+                    }
+                }
+                
                 $builtField = [
                     'id' => $matchingFieldType['id'],
                     'key' => $matchingFieldType['field_type_key'],
