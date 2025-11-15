@@ -8754,7 +8754,7 @@ function makePosts(){
               closePicker();
             });
             grid.appendChild(btn);
-          });
+          }
           }
           popup.appendChild(grid);
           container.appendChild(popup);
