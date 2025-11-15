@@ -5342,6 +5342,11 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   const localVenueGeocoder = (query) => searchLocalVenues(query);
+  // Expose to window for member-forms.js access
+  if(typeof window !== 'undefined'){
+    window.searchLocalVenues = searchLocalVenues;
+    window.localVenueGeocoder = localVenueGeocoder;
+  }
 
   const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
   const MAPBOX_VENUE_CACHE_LIMIT = 40;
@@ -11469,6 +11474,24 @@ function makePosts(){
                       geocoderRoot.addEventListener('focusin', handleFocusIn);
                       geocoderRoot.addEventListener('focusout', handleFocusOut);
                       geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+                      // For member forms, prevent form closure when clicking geocoder suggestions
+                      if(isMemberForm){
+                        geocoderRoot.addEventListener('click', (e) => {
+                          e.stopPropagation();
+                          e.stopImmediatePropagation();
+                        }, true);
+                        const suggestionsWrapper = geocoderRoot.querySelector('.suggestions-wrapper');
+                        if(suggestionsWrapper){
+                          suggestionsWrapper.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                          }, true);
+                          suggestionsWrapper.addEventListener('pointerdown', (e) => {
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                          }, true);
+                        }
+                      }
                     }
                     const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
                     if(!geocoderInput){
@@ -11489,6 +11512,11 @@ function makePosts(){
                     });
                     geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
+                      // For member forms, stop propagation to prevent form closure
+                      if(isMemberForm && event && event.originalEvent){
+                        event.originalEvent.stopPropagation();
+                        event.originalEvent.stopImmediatePropagation();
+                      }
                       const result = event && event.result;
                       if(result){
                         const shouldUpdateName = !(venue.name && venue.name.trim());

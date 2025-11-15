@@ -760,7 +760,7 @@
         applyMemberSnapshot(backendSnapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
-        console.log('[Member Forms] initializeMemberFormbuilderSnapshot: Calling renderFormPicker', { memberCategories: memberCategories?.length || 0 });
+        // Removed excessive logging
         renderFormPicker();
         
         // Prevent form wrapper from closing when clicking inside venue fields
@@ -1986,7 +1986,9 @@
               ? localVenueGeocoder 
               : (typeof window.localVenueGeocoder !== 'undefined' 
                   ? window.localVenueGeocoder 
-                  : ((query) => searchLocalVenues(query)));
+                  : (typeof window.searchLocalVenues === 'function'
+                      ? ((query) => window.searchLocalVenues(query))
+                      : null));
             const safeExternalGeocoder = typeof externalMapboxVenueGeocoder !== 'undefined'
               ? externalMapboxVenueGeocoder
               : (typeof window.externalMapboxVenueGeocoder !== 'undefined'
@@ -2068,10 +2070,34 @@
                     setGeocoderActive(false);
                   }
                 };
-                const handlePointerDown = () => setGeocoderActive(true);
+                const handlePointerDown = (e) => {
+                  setGeocoderActive(true);
+                  // CRITICAL: Prevent form closure when clicking on geocoder
+                  if(e){
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                  }
+                };
                 geocoderRoot.addEventListener('focusin', handleFocusIn);
                 geocoderRoot.addEventListener('focusout', handleFocusOut);
                 geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+                // CRITICAL: Prevent form closure when clicking on geocoder suggestions
+                geocoderRoot.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
+                }, true);
+                // Also handle suggestions wrapper if it exists
+                const suggestionsWrapper = geocoderRoot.querySelector('.suggestions-wrapper');
+                if(suggestionsWrapper){
+                  suggestionsWrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                  }, true);
+                  suggestionsWrapper.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                  }, true);
+                }
               }
               const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
               if(!geocoderInput){
@@ -2106,6 +2132,11 @@
                 }
               });
               geocoder.on('result', event => {
+                // CRITICAL: Stop propagation to prevent form closure when selecting geocoder result
+                if(event && event.originalEvent){
+                  event.originalEvent.stopPropagation();
+                  event.originalEvent.stopImmediatePropagation();
+                }
                 const result = event && event.result;
                 if(result){
                   const clone = cloneGeocoderFeature(result);
@@ -2587,7 +2618,7 @@
         console.error('[Member Forms] renderFormPicker: formpickerCats element not found');
         return;
       }
-      console.log('[Member Forms] renderFormPicker: Rendering formpicker', { formpickerCats: !!formpickerCats, memberCategories: memberCategories?.length || 0 });
+      // Removed excessive logging - only log errors
       formpickerCats.innerHTML = '';
       selectedCategory = '';
       selectedSubcategory = '';
