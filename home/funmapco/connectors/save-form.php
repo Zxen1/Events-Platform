@@ -654,7 +654,8 @@ try {
                     
                     // Get field_type_id from the field's key or fieldTypeKey
                     $fieldTypeKey = $fieldData['fieldTypeKey'] ?? $fieldData['key'] ?? null;
-                    error_log("DEBUG: Field $fieldIndex - key=$fieldTypeKey, type=" . ($fieldData['type'] ?? 'null') . ", name=" . ($fieldData['name'] ?? 'null') . ", required=" . json_encode($fieldData['required'] ?? null));
+                    $fieldType = $fieldData['input_type'] ?? $fieldData['type'] ?? 'null';
+                    error_log("DEBUG: Field $fieldIndex - key=$fieldTypeKey, type=" . $fieldType . ", name=" . ($fieldData['name'] ?? 'null') . ", required=" . json_encode($fieldData['required'] ?? null));
                     
                     if ($fieldTypeKey && is_string($fieldTypeKey)) {
                         // Look up field_type_id by key
@@ -741,7 +742,7 @@ try {
             if ($hasFieldsForThisSub) {
                 foreach ($sanitizedFields as $field) {
                     // Use field type (field_type_key) as fallback for field name, not input_type
-                    $fieldTypeKey = $field['fieldTypeKey'] ?? $field['key'] ?? $field['type'] ?? '';
+                    $fieldTypeKey = $field['fieldTypeKey'] ?? $field['key'] ?? $field['input_type'] ?? $field['type'] ?? '';
                     $fieldNames[] = $field['name'] !== '' ? $field['name'] : $fieldTypeKey;
                     $matchedId = matchFieldId($fieldCatalog, $field);
                     if ($matchedId !== null) {
@@ -1280,10 +1281,14 @@ function sanitizeField(array $field): array
         'venue-session-version-tier-price',
     ];
 
+    // Support both 'type' (old) and 'input_type' (new) for backwards compatibility
+    $inputType = $field['input_type'] ?? $field['type'] ?? 'text-box';
+    
     $safe = [
         'id' => sanitizeString($field['id'] ?? '', 128),
         'name' => sanitizeString($field['name'] ?? ''),
-        'type' => sanitizeString($field['type'] ?? 'text-box', 64),
+        'type' => sanitizeString($inputType, 64),
+        'input_type' => sanitizeString($inputType, 64), // Also include input_type for database compatibility
         'placeholder' => sanitizeString($field['placeholder'] ?? '', 512),
         'required' => sanitizeBool($field['required'] ?? false),
     ];

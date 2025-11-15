@@ -9455,14 +9455,80 @@ function makePosts(){
             }
             return safeField;
           };
-
           const buildVenueSessionPreview = (previewField, baseId)=>{
             const editor = document.createElement('div');
             editor.className = 'venue-session-editor';
             editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
             
+            // Detect if we're in member form context (needs stopPropagation to prevent form closure)
+            const isMemberForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
+            
+            // For member forms, prevent clicks from bubbling up to prevent form closure
+            // BUT allow buttons and geocoder events to propagate so they work
+            if(isMemberForm){
+              const shouldStopPropagation = (e) => {
+                const target = e.target;
+                // Don't stop propagation for geocoder elements - they need events to work
+                if(target.closest('.mapboxgl-ctrl-geocoder')) return false;
+                // Don't stop propagation for buttons - they need clicks to work
+                if(target.tagName === 'BUTTON' || target.closest('button')) return false;
+                // Don't stop propagation for action button containers
+                if(target.closest('.venue-line-actions') || target.closest('.session-date-actions') || target.closest('.session-time-actions')) return false;
+                return true;
+              };
+              
+              editor.addEventListener('click', (e)=>{
+                if(shouldStopPropagation(e)){
+                  e.stopPropagation();
+                }
+              }, true);
+              editor.addEventListener('pointerdown', (e)=>{
+                if(shouldStopPropagation(e)){
+                  e.stopPropagation();
+                }
+              }, true);
+              editor.addEventListener('mousedown', (e)=>{
+                if(shouldStopPropagation(e)){
+                  e.stopPropagation();
+                }
+              }, true);
+              editor.addEventListener('change', (e)=>{
+                if(shouldStopPropagation(e)){
+                  e.stopPropagation();
+                }
+              }, true);
+              editor.addEventListener('focusin', (e)=>{
+                if(shouldStopPropagation(e)){
+                  e.stopPropagation();
+                }
+              }, true);
+            }
+            
             const venueList = document.createElement('div');
             venueList.className = 'venue-session-venues';
+            
+            // Also stop propagation on venue list for member forms (but allow buttons)
+            if(isMemberForm){
+              venueList.addEventListener('click', (e)=>{
+                const target = e.target;
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                  e.stopPropagation();
+                }
+              }, true);
+              venueList.addEventListener('pointerdown', (e)=>{
+                const target = e.target;
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                  e.stopPropagation();
+                }
+              }, true);
+              venueList.addEventListener('change', (e)=>{
+                const target = e.target;
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                  e.stopPropagation();
+                }
+              }, true);
+            }
+            
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
@@ -9489,11 +9555,11 @@ function makePosts(){
               openPickers.clear();
             };
 
-            const createTransientInputAlert = (messageOrKey, isKey = false) => {
+            const createTransientInputAlert = message => {
               let lastTimestamp = 0;
               let activeAlert = null;
               let activeAlertTimeout = 0;
-              return async target => {
+              return target => {
                 const candidate = (target && typeof target.getBoundingClientRect === 'function')
                   ? target
                   : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
@@ -9517,13 +9583,6 @@ function makePosts(){
                   activeAlert.remove();
                   activeAlert = null;
                 }
-                
-                // Load message from DB if key provided, otherwise use message directly
-                let message = messageOrKey;
-                if(isKey && typeof messageOrKey === 'string' && messageOrKey.startsWith('msg_')){
-                  message = await getMessage(messageOrKey, {}, false) || messageOrKey;
-                }
-                
                 const handle = showCopyStyleMessage(message, inputEl);
                 if(!handle) return;
                 activeAlert = handle;
@@ -9537,9 +9596,10 @@ function makePosts(){
               };
             };
 
-            // Currency and session time alerts will load messages from DB
-            const showCurrencyAlert = createTransientInputAlert('msg_error_currency_required', true);
-            const showSessionTimeAlert = createTransientInputAlert('msg_error_duplicate_session_time', true);
+            const currencyAlertMessage = 'Please select a currency before entering a price.';
+            const showCurrencyAlert = createTransientInputAlert(currencyAlertMessage);
+            const sessionTimeAlertMessage = 'There is already a session for that time.';
+            const showSessionTimeAlert = createTransientInputAlert(sessionTimeAlertMessage);
 
             const sanitizeSessionPriceValue = value => {
               const raw = typeof value === 'string' ? value : String(value ?? '');
@@ -10425,8 +10485,7 @@ function makePosts(){
               btn.setAttribute('aria-label', ariaLabel);
               btn.addEventListener('click', event => {
                 event.preventDefault();
-                event.stopPropagation();
-                onClick(event);
+                onClick();
               });
               return btn;
             };
@@ -10988,32 +11047,6 @@ function makePosts(){
                 ensureSessionStructure(venue);
                 const venueCard = document.createElement('div');
                 venueCard.className = 'venue-card';
-                // Prevent clicks on venue card from bubbling up (important for member forms)
-                // BUT allow geocoder events and buttons to propagate
-                venueCard.addEventListener('click', (e)=>{
-                  const target = e.target;
-                  const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
-                  const isButton = target.tagName === 'BUTTON' || target.closest('button');
-                  if(!isGeocoderElement && !isButton){
-                    e.stopPropagation();
-                  }
-                }, true);
-                venueCard.addEventListener('pointerdown', (e)=>{
-                  const target = e.target;
-                  const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
-                  const isButton = target.tagName === 'BUTTON' || target.closest('button');
-                  if(!isGeocoderElement && !isButton){
-                    e.stopPropagation();
-                  }
-                }, true);
-                venueCard.addEventListener('change', (e)=>{
-                  const target = e.target;
-                  const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
-                  const isButton = target.tagName === 'BUTTON' || target.closest('button');
-                  if(!isGeocoderElement && !isButton){
-                    e.stopPropagation();
-                  }
-                }, true);
                 venueList.appendChild(venueCard);
 
                 const venueLine = document.createElement('div');
@@ -11103,8 +11136,7 @@ function makePosts(){
                 venueNameInput.value = venue.name || '';
                 venueNameInput.dataset.venueIndex = String(venueIndex);
                 venueNameInput.setAttribute('list', nameDatalistId);
-                venueNameInput.addEventListener('input', (e)=>{
-                  e.stopPropagation();
+                venueNameInput.addEventListener('input', ()=>{
                   const value = venueNameInput.value || '';
                   venue.name = value;
                   notifyFormbuilderChange();
@@ -11189,8 +11221,6 @@ function makePosts(){
                 venueNameInput.addEventListener('blur', commitNameSelection);
                 venueNameInput.addEventListener('keydown', (event)=>{
                   if(event.key === 'Enter'){
-                    event.preventDefault();
-                    event.stopPropagation();
                     commitNameSelection();
                   }
                 });
@@ -11198,9 +11228,7 @@ function makePosts(){
                 const venueActions = document.createElement('div');
                 venueActions.className = 'venue-line-actions';
                 venueActions.appendChild(createActionButton('+', 'Add Venue', ()=> addVenue(venueIndex)));
-                const removeVenueBtn = createActionButton('-', 'Remove Venue', ()=>{
-                  requestVenueRemoval(venueIndex);
-                });
+                const removeVenueBtn = createActionButton('-', 'Remove Venue', ()=> requestVenueRemoval(venueIndex));
                 removeVenueBtn.classList.add('danger');
                 if(previewField.options.length <= 1){
                   removeVenueBtn.disabled = true;
@@ -11324,13 +11352,6 @@ function makePosts(){
                         notifyFormbuilderChange();
                       }
                     });
-                    // Prevent Enter key from submitting form when in geocoder (form preview)
-                    geocoderInput.addEventListener('keydown', (e)=>{
-                      if(e.key === 'Enter'){
-                        e.stopPropagation();
-                        // Don't preventDefault - let geocoder handle it
-                      }
-                    });
                     geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
                       const result = event && event.result;
@@ -11375,9 +11396,6 @@ function makePosts(){
                   dateInput.dataset.sessionIndex = String(sessionIndex);
                   dateInput.setAttribute('role', 'button');
                   dateInput.setAttribute('aria-haspopup', 'region');
-                  // Prevent clicks on date input from bubbling up
-                  dateInput.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
-                  dateInput.addEventListener('focus', (e)=>{ e.stopPropagation(); }, true);
                   const dateInputWrapper = document.createElement('div');
                   dateInputWrapper.className = 'session-date-input-wrapper';
                   dateInputWrapper.appendChild(dateInput);
@@ -11522,17 +11540,11 @@ function makePosts(){
                     timeInput.setAttribute('aria-label', timePlaceholder);
                     timeInput.inputMode = 'numeric';
                     timeInput.pattern = '([01]\\d|2[0-3]):[0-5]\\d';
-                    // Prevent clicks on time input from bubbling up
-                    timeInput.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
-                    timeInput.addEventListener('focus', (e)=>{ e.stopPropagation(); }, true);
-                    timeInput.addEventListener('input', (e)=>{ e.stopPropagation(); }, true);
-                    timeInput.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
                     timeInput.value = timeObj.time || '';
                     timeInput.dataset.venueIndex = String(venueIndex);
                     timeInput.dataset.sessionIndex = String(sessionIndex);
                     timeInput.dataset.timeIndex = String(timeIndex);
-                    timeInput.addEventListener('input', (e)=>{
-                      e.stopPropagation();
+                    timeInput.addEventListener('input', ()=>{
                       const sanitized = sanitizeTimeInput(timeInput.value);
                       if(timeInput.value !== sanitized){
                         timeInput.value = sanitized;
@@ -11540,8 +11552,7 @@ function makePosts(){
                       timeInput.classList.remove('is-invalid');
                       setSessionDateInputValue(dateInput, session, sanitized);
                     });
-                    timeInput.addEventListener('blur', (e)=>{
-                      e.stopPropagation();
+                    timeInput.addEventListener('blur', ()=>{
                       commitTimeValue({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input: timeInput });
                       resetSlotIfEmpty(venue, timeIndex);
                       updateSessionDateInputDisplay(venueIndex, sessionIndex);
@@ -11642,7 +11653,7 @@ function makePosts(){
                         const seatingLabel = document.createElement('label');
                         seatingLabel.className = 'seating_area-label';
                         seatingLabel.textContent = seatingLabelText;
-                        const seatingInputId = `${uniquePrefix}_seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
+                        const seatingInputId = `seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
@@ -11655,8 +11666,7 @@ function makePosts(){
                         versionInput.dataset.sessionIndex = String(sessionIndex);
                         versionInput.dataset.timeIndex = String(timeIndex);
                         versionInput.dataset.versionIndex = String(versionIndex);
-                        versionInput.addEventListener('input', (e)=>{
-                          e.stopPropagation();
+                        versionInput.addEventListener('input', ()=>{
                           const previous = typeof version.name === 'string' ? version.name : '';
                           const nextValue = versionInput.value;
                           version.name = nextValue;
@@ -11710,7 +11720,7 @@ function makePosts(){
                           const tierLabel = document.createElement('label');
                           tierLabel.className = 'pricing_tier-label';
                           tierLabel.textContent = tierLabelText;
-                          const tierInputId = `${uniquePrefix}_pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          const tierInputId = `pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
@@ -11725,8 +11735,7 @@ function makePosts(){
                           tierInput.dataset.versionIndex = String(versionIndex);
                           tierInput.dataset.tierIndex = String(tierIndex);
                           tierRow.appendChild(tierLabel);
-                          tierInput.addEventListener('input', (e)=>{
-                            e.stopPropagation();
+                          tierInput.addEventListener('input', ()=>{
                             const previous = typeof tier.name === 'string' ? tier.name : '';
                             const nextValue = tierInput.value;
                             tier.name = nextValue;
@@ -11941,8 +11950,7 @@ function makePosts(){
                             return true;
                           };
 
-                          currencySelect.addEventListener('change', (e)=>{
-                            e.stopPropagation();
+                          currencySelect.addEventListener('change', ()=>{
                             const nextCurrency = currencySelect.value.trim();
                             const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
                             tier.currency = nextCurrency;
@@ -11967,7 +11975,6 @@ function makePosts(){
                           });
 
                           priceInput.addEventListener('beforeinput', event => {
-                            event.stopPropagation();
                             if(hasCurrencySelected()){
                               const data = event && event.data;
                               if(typeof data === 'string' && /[^0-9.,]/.test(data)){
@@ -11983,12 +11990,10 @@ function makePosts(){
                           priceInput.addEventListener('pointerdown', blockPriceAccess);
                           priceInput.addEventListener('focus', blockPriceAccess);
                           priceInput.addEventListener('keydown', event => {
-                            event.stopPropagation();
                             if(event.key === 'Tab' || event.key === 'Shift') return;
                             blockPriceAccess(event);
                           });
-                          priceInput.addEventListener('input', (e)=>{
-                            e.stopPropagation();
+                          priceInput.addEventListener('input', ()=>{
                             if(!hasCurrencySelected()) return;
                             const rawValue = priceInput.value;
                             const sanitized = sanitizeSessionPriceValue(rawValue);
@@ -12004,8 +12009,8 @@ function makePosts(){
                               }
                             }
                           });
-                          priceInput.addEventListener('blur', (e)=>{ e.stopPropagation(); commitPriceValue(); });
-                          priceInput.addEventListener('change', (e)=>{ e.stopPropagation(); commitPriceValue(); });
+                          priceInput.addEventListener('blur', commitPriceValue);
+                          priceInput.addEventListener('change', commitPriceValue);
 
                           updatePriceState({ clearPrice: false, sanitize: false });
                           priceRow.appendChild(priceInput);
@@ -12114,34 +12119,6 @@ function makePosts(){
 
           // Expose buildVenueSessionPreview for use in member forms
           window.buildVenueSessionPreview = buildVenueSessionPreview;
-
-          // Fields now come from backend via field_types, no hardcoded defaults
-
-          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-
-          const fieldsContainerState = setupFieldContainer(fieldsList, fields);
-
-          const formPreviewBtn = document.createElement('button');
-          formPreviewBtn.type = 'button';
-          formPreviewBtn.className = 'form-preview-btn';
-          formPreviewBtn.setAttribute('aria-expanded', 'false');
-          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
-          const formPreviewLabel = document.createElement('span');
-          formPreviewLabel.textContent = 'Form Preview';
-          const formPreviewArrow = document.createElement('span');
-          formPreviewArrow.className = 'dropdown-arrow';
-          formPreviewArrow.setAttribute('aria-hidden', 'true');
-          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
-
-          const formPreviewContainer = document.createElement('div');
-          formPreviewContainer.className = 'form-preview-container';
-          formPreviewContainer.hidden = true;
-          const formPreviewFields = document.createElement('div');
-          formPreviewFields.className = 'form-preview-fields';
-          formPreviewContainer.appendChild(formPreviewFields);
-          const formPreviewId = `${subContentId}Preview`;
-          formPreviewContainer.id = formPreviewId;
-          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
           fieldsSection.append(fieldsList, addFieldBtn, formPreviewBtn, formPreviewContainer);
 
