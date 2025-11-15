@@ -22079,6 +22079,12 @@ function formChangedWrapper(event){
                        target.id === 'memberRegisterPasswordConfirm' ||
                        target.id === 'memberRegisterAvatar';
     if(isAuthInput) return;
+    // Exclude venue field inputs - they should not trigger form change
+    const isVenueField = target.closest('.venue-session-editor') || 
+                        target.closest('.venue-card') ||
+                        target.closest('.venue-session-venues') ||
+                        target.closest('.mapboxgl-ctrl-geocoder');
+    if(isVenueField) return;
   }
   formChanged();
 }
@@ -22887,6 +22893,12 @@ const adminPanelChangeManager = (()=>{
                            target.id === 'memberRegisterPasswordConfirm' ||
                            target.id === 'memberRegisterAvatar';
         if(isAuthInput) return;
+        // Exclude venue field inputs - they should not trigger form change
+        const isVenueField = target.closest('.venue-session-editor') || 
+                            target.closest('.venue-card') ||
+                            target.closest('.venue-session-venues') ||
+                            target.closest('.mapboxgl-ctrl-geocoder');
+        if(isVenueField) return;
       }
       formChanged();
     }
@@ -24956,6 +24968,12 @@ document.addEventListener('pointerdown', (e) => {
         if(normalizedType){
           safeField.type = normalizedType;
         }
+        // Preserve description and text-area types
+        if(safeField.type === 'description' || safeField.type === 'text-area'){
+          // Keep as is - don't override
+        } else if(!safeField.type || safeField.type === ''){
+          safeField.type = 'text-box';
+        }
       }
       if(typeof safeField.placeholder !== 'string'){
         safeField.placeholder = '';
@@ -25072,7 +25090,11 @@ document.addEventListener('pointerdown', (e) => {
         let control = null;
         
         const baseType = getBaseFieldType(previewField.type);
-        if(baseType === 'text-area' || baseType === 'description'){
+        // Check both baseType and original type for description/text-area
+        const isDescription = baseType === 'description' || baseType === 'text-area' || 
+                            previewField.type === 'description' || previewField.type === 'text-area' ||
+                            (typeof previewField.type === 'string' && (previewField.type.includes('description') || previewField.type.includes('text-area')));
+        if(isDescription){
           const textarea = document.createElement('textarea');
           textarea.rows = 5;
           textarea.placeholder = previewField.placeholder || '';
@@ -25080,7 +25102,7 @@ document.addEventListener('pointerdown', (e) => {
           textarea.style.resize = 'vertical';
           const textareaId = `${baseId}-input`;
           textarea.id = textareaId;
-          if(baseType === 'description'){
+          if(baseType === 'description' || previewField.type === 'description' || (typeof previewField.type === 'string' && previewField.type.includes('description'))){
             textarea.classList.add('form-preview-description');
           }
           if(previewField.required) textarea.required = true;
