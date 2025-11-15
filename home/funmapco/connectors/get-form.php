@@ -586,10 +586,15 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
 function fetchAllFields(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
-    foreach (['id', 'field_key', 'type', 'options'] as $col) {
+    // Support both 'type' (old) and 'input_type' (new) for backwards compatibility
+    $typeColumn = in_array('input_type', $columns, true) ? 'input_type' : (in_array('type', $columns, true) ? 'type' : null);
+    foreach (['id', 'field_key', 'options'] as $col) {
         if (in_array($col, $columns, true)) {
             $selectColumns[] = "`$col`";
         }
+    }
+    if ($typeColumn) {
+        $selectColumns[] = "`$typeColumn`";
     }
     
     if (empty($selectColumns)) {
@@ -603,10 +608,14 @@ function fetchAllFields(PDO $pdo, array $columns): array
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if (!isset($row['id'])) continue;
         
+        // Support both 'input_type' (new) and 'type' (old) for backwards compatibility
+        $inputType = isset($row['input_type']) ? trim((string) $row['input_type']) : 
+                    (isset($row['type']) ? trim((string) $row['type']) : 'text');
+        
         $field = [
             'id' => (int) $row['id'],
             'field_key' => isset($row['field_key']) ? trim((string) $row['field_key']) : '',
-            'type' => isset($row['type']) ? trim((string) $row['type']) : 'text',
+            'input_type' => $inputType,
             'options' => isset($row['options']) && is_string($row['options']) ? trim($row['options']) : null,
         ];
         
@@ -840,24 +849,26 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $field = $fieldsById[$itemIds[0]['id']];
                 
                 // CRITICAL: Use field_type_key as the source of truth for the type
-                // The fields.type column (e.g., "textarea") is just the input type,
+                // The fields.input_type column (e.g., "textarea") is just the input type,
                 // but the actual field type identifier is field_type_key (e.g., "description", "text-area")
                 $fieldTypeKey = isset($matchingFieldType['field_type_key']) ? trim((string) $matchingFieldType['field_type_key']) : '';
                 
                 // If field_type_key is description or text-area, use it directly
-                // Otherwise, fall back to normalizing from fields.type
+                // Otherwise, fall back to normalizing from fields.input_type
                 if ($fieldTypeKey === 'description' || $fieldTypeKey === 'text-area') {
                     $normalizedType = $fieldTypeKey;
                 } else {
-                    // Fallback: normalize from fields.type column (for other field types)
-                    $rawType = isset($field['type']) ? trim((string) $field['type']) : '';
+                    // Fallback: normalize from fields.input_type column (for other field types)
+                    // Support both 'input_type' (new) and 'type' (old) for backwards compatibility
+                    $rawType = isset($field['input_type']) ? trim((string) $field['input_type']) : 
+                              (isset($field['type']) ? trim((string) $field['type']) : '');
                     $normalizedType = $rawType;
                     
                     if ($rawType !== '' && preg_match('/^([^\s\[]+)/', $rawType, $matches)) {
                         $normalizedType = trim($matches[1]);
                     }
                     
-                    // Also check if fields.type contains description/text-area (for backwards compatibility)
+                    // Also check if fields.input_type contains description/text-area (for backwards compatibility)
                     if (stripos($rawType, 'description') !== false) {
                         $normalizedType = 'description';
                     } elseif (stripos($rawType, 'text-area') !== false || stripos($rawType, 'textarea') !== false) {
@@ -910,10 +921,12 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                         foreach ($fieldset['field_ids'] as $childId) {
                             if (isset($fieldsById[(int)$childId])) {
                                 $childField = $fieldsById[(int)$childId];
+                                // Support both 'input_type' (new) and 'type' (old) for backwards compatibility
+                                $childInputType = $childField['input_type'] ?? $childField['type'] ?? 'text';
                                 $childFieldset['fields'][] = [
                                     'id' => $childField['id'],
                                     'key' => $childField['field_key'],
-                                    'type' => $childField['type'],
+                                    'type' => $childInputType,
                                     'name' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
                                 ];
                             }

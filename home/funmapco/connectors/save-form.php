@@ -740,7 +740,9 @@ try {
             $fieldIds = [];
             if ($hasFieldsForThisSub) {
                 foreach ($sanitizedFields as $field) {
-                    $fieldNames[] = $field['name'] !== '' ? $field['name'] : $field['type'];
+                    // Use field type (field_type_key) as fallback for field name, not input_type
+                    $fieldTypeKey = $field['fieldTypeKey'] ?? $field['key'] ?? $field['type'] ?? '';
+                    $fieldNames[] = $field['name'] !== '' ? $field['name'] : $fieldTypeKey;
                     $matchedId = matchFieldId($fieldCatalog, $field);
                     if ($matchedId !== null) {
                         $fieldIds[] = $matchedId;
@@ -1808,8 +1810,10 @@ function matchFieldId(array $catalog, array $field): ?int
     if (isset($field['name']) && $field['name'] !== '') {
         $candidates[] = mb_strtolower($field['name']);
     }
-    if (isset($field['type']) && $field['type'] !== '') {
-        $candidates[] = mb_strtolower($field['type']);
+    // Support both 'input_type' (new) and 'type' (old) for backwards compatibility
+    $inputType = $field['input_type'] ?? $field['type'] ?? null;
+    if ($inputType && $inputType !== '') {
+        $candidates[] = mb_strtolower((string) $inputType);
     }
 
     foreach ($catalog as $row) {
