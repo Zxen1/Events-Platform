@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 15, 2025 at 04:27 PM
+-- Generation Time: Nov 15, 2025 at 05:34 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -158,7 +158,9 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (64, 'Member Label Display Name', 'msg_member_label_display_name', 'label', 'member', 'msg_member', 'Display Name', 'Display name field label in registration form', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (65, 'Member Label Avatar URL', 'msg_member_label_avatar_url', 'label', 'member', 'msg_member', 'Avatar URL', 'Avatar URL field label in registration form', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (66, 'Member Button Create Account', 'msg_member_btn_create_account', 'label', 'member', 'msg_member', 'Create Account', 'Create account button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
-(67, 'Member Button Log Out', 'msg_member_btn_log_out', 'label', 'member', 'msg_member', 'Log Out', 'Log out button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49');
+(67, 'Member Button Log Out', 'msg_member_btn_log_out', 'label', 'member', 'msg_member', 'Log Out', 'Log out button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(68, 'Link Copied Notification', 'msg_link_copied', 'toast', 'member', 'msg_member', 'Link Copied', 'Shown when user copies a post link', 0, NULL, 1, 1, 0, 2000, '2025-11-15 06:34:46', '2025-11-15 06:34:46'),
+(69, 'Confirm Button', 'msg_button_confirm', 'label', 'admin', 'msg_admin', 'Confirm', 'Confirm button label', 0, NULL, 1, 1, 0, NULL, '2025-11-15 06:34:46', '2025-11-15 06:34:46');
 
 -- --------------------------------------------------------
 
@@ -949,7 +951,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`
