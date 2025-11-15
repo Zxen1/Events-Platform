@@ -10986,112 +10986,57 @@ function makePosts(){
                   console.log('[Formbuilder] Picker already open, returning');
                   return;
                 }
-                try {
-                  closeAllPickers();
-                  picker = buildCalendar();
-                  console.log('[Formbuilder] Calendar built', { picker: !!picker });
-                  if(!picker){
-                    console.error('[Formbuilder] ERROR: buildCalendar returned null');
-                    return;
-                  }
-                  const appendTarget = pickerHostRow || input.parentElement;
-                  console.log('[Formbuilder] Append target determined', { pickerHostRow: !!pickerHostRow, appendTarget: !!appendTarget, inputParent: !!input.parentElement });
-                  if(pickerHostRow instanceof Element){
-                    activePickerHost = pickerHostRow;
-                  } else if(appendTarget instanceof Element){
-                    activePickerHost = appendTarget;
-                  } else {
-                    activePickerHost = null;
-                    console.warn('[Formbuilder] WARNING: No valid append target found');
-                  }
-                  if(activePickerHost){
-                    activePickerHost.classList.add('has-open-session-picker');
-                    console.log('[Formbuilder] Added has-open-session-picker class');
-                  }
-                  // Determine the best append target - prefer pickerHostRow for proper positioning
-                  let finalAppendTarget = null;
-                  if(pickerHostRow instanceof Element){
-                    finalAppendTarget = pickerHostRow;
-                    console.log('[Formbuilder] Using pickerHostRow as append target', { pickerHostRow: pickerHostRow.className });
-                  } else if(appendTarget instanceof Element){
-                    finalAppendTarget = appendTarget;
-                    console.log('[Formbuilder] Using appendTarget as fallback', { appendTarget: appendTarget.className });
-                  } else if(input.parentElement instanceof Element){
-                    finalAppendTarget = input.parentElement;
-                    console.log('[Formbuilder] Using input.parentElement as fallback', { parentElement: input.parentElement.className });
-                  } else {
-                    console.error('[Formbuilder] ERROR: Cannot append picker - no valid parent element');
-                    picker.remove();
-                    picker = null;
-                    return;
-                  }
-                  
-                  // Ensure the append target has position:relative for absolute positioning to work
-                  const computedStyle = window.getComputedStyle(finalAppendTarget);
-                  const position = computedStyle.position;
-                  if(position !== 'relative' && position !== 'absolute' && position !== 'fixed'){
-                    console.log('[Formbuilder] Setting position:relative on append target for proper picker positioning');
-                    finalAppendTarget.style.position = 'relative';
-                  }
-                  
-                  // Append the picker
-                  finalAppendTarget.appendChild(picker);
-                  console.log('[Formbuilder] Picker appended to finalAppendTarget', { 
-                    target: finalAppendTarget.className,
-                    pickerInDOM: document.body.contains(picker)
-                  });
-                  
-                  if(parentSubMenu){
-                    parentSubMenu.classList.add('has-floating-overlay');
-                    console.log('[Formbuilder] Added has-floating-overlay to parentSubMenu');
-                  }
-                  if(parentCategoryMenu){
-                    parentCategoryMenu.classList.add('has-floating-overlay');
-                    console.log('[Formbuilder] Added has-floating-overlay to parentCategoryMenu');
-                  }
-                  
-                  // Initialize and show the picker
-                  if(picker){
-                    initializePicker(picker);
-                    console.log('[Formbuilder] Picker initialized');
-                    
-                    // Use a small delay to ensure DOM is ready before showing
-                    const showPicker = ()=> {
-                      if(picker && document.body.contains(picker)){
-                        picker.classList.add('is-visible');
-                        console.log('[Formbuilder] Picker made visible - is-visible class added', {
-                          hasIsVisible: picker.classList.contains('is-visible'),
-                          computedOpacity: window.getComputedStyle(picker).opacity,
-                          computedVisibility: window.getComputedStyle(picker).visibility
-                        });
-                      } else {
-                        console.warn('[Formbuilder] WARNING: picker is null or not in DOM in showPicker', {
-                          picker: !!picker,
-                          inDOM: picker ? document.body.contains(picker) : false
-                        });
-                      }
-                    };
-                    
-                    // Use double RAF to ensure styles are applied
-                    if(typeof requestAnimationFrame === 'function'){
-                      requestAnimationFrame(() => {
-                        requestAnimationFrame(showPicker);
-                      });
-                    } else {
-                      setTimeout(showPicker, 0);
+                closeAllPickers();
+                picker = buildCalendar();
+                console.log('[Formbuilder] Calendar built', { picker: !!picker });
+                const appendTarget = pickerHostRow || input.parentElement;
+                console.log('[Formbuilder] Append target determined', { pickerHostRow: !!pickerHostRow, appendTarget: !!appendTarget, inputParent: !!input.parentElement });
+                if(pickerHostRow instanceof Element){
+                  activePickerHost = pickerHostRow;
+                } else if(appendTarget instanceof Element){
+                  activePickerHost = appendTarget;
+                } else {
+                  activePickerHost = null;
+                }
+                if(activePickerHost){
+                  activePickerHost.classList.add('has-open-session-picker');
+                  console.log('[Formbuilder] Added has-open-session-picker class to', activePickerHost.className);
+                }
+                if(appendTarget instanceof Element){
+                  appendTarget.appendChild(picker);
+                  console.log('[Formbuilder] Picker appended to appendTarget', appendTarget.className);
+                } else if(input.parentElement instanceof Element){
+                  input.parentElement.appendChild(picker);
+                  console.log('[Formbuilder] Picker appended to input.parentElement', input.parentElement.className);
+                } else {
+                  console.error('[Formbuilder] ERROR: Cannot append picker - no valid parent element');
+                  return;
+                }
+                if(parentSubMenu){
+                  parentSubMenu.classList.add('has-floating-overlay');
+                }
+                if(parentCategoryMenu){
+                  parentCategoryMenu.classList.add('has-floating-overlay');
+                }
+                if(picker){
+                  initializePicker(picker);
+                  const pickerEl = picker;
+                  const showPicker = ()=> {
+                    if(pickerEl){
+                      pickerEl.classList.add('is-visible');
+                      console.log('[Formbuilder] Picker made visible');
                     }
-                  }
-                  document.addEventListener('pointerdown', onPointerDown, true);
-                  document.addEventListener('keydown', onKeydown, true);
-                  openPickers.add(closePicker);
-                  console.log('[Formbuilder] Datepicker opened successfully');
-                } catch(err){
-                  console.error('[Formbuilder] ERROR opening datepicker:', err);
-                  if(picker){
-                    try { picker.remove(); } catch(e){}
-                    picker = null;
+                  };
+                  if(typeof requestAnimationFrame === 'function'){
+                    requestAnimationFrame(showPicker);
+                  } else {
+                    showPicker();
                   }
                 }
+                document.addEventListener('pointerdown', onPointerDown, true);
+                document.addEventListener('keydown', onKeydown, true);
+                openPickers.add(closePicker);
+                console.log('[Formbuilder] Datepicker opened successfully');
               };
               if(trigger === input){
                 input.addEventListener('focus', ()=> openPicker());
