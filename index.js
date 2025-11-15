@@ -9350,10 +9350,26 @@ function makePosts(){
             const editor = document.createElement('div');
             editor.className = 'venue-session-editor';
             editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            
+            // Detect if we're in member form context
+            const isMemberForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
+            
+            // Prevent clicks inside the venue editor from bubbling up (especially important for member forms)
+            // This prevents form closure when interacting with venue fields
+            editor.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+            editor.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
+            editor.addEventListener('mousedown', (e)=>{ e.stopPropagation(); }, true);
+            editor.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
+            editor.addEventListener('focusin', (e)=>{ e.stopPropagation(); }, true);
+            
             // Generate unique prefix from baseId to ensure unique IDs across multiple editors
             const uniquePrefix = baseId ? baseId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const venueList = document.createElement('div');
             venueList.className = 'venue-session-venues';
+            // Also stop propagation on the venue list container
+            venueList.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+            venueList.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
+            venueList.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
@@ -10317,7 +10333,8 @@ function makePosts(){
               btn.setAttribute('aria-label', ariaLabel);
               btn.addEventListener('click', event => {
                 event.preventDefault();
-                onClick();
+                event.stopPropagation();
+                onClick(event);
               });
               return btn;
             };
@@ -10879,6 +10896,10 @@ function makePosts(){
                 ensureSessionStructure(venue);
                 const venueCard = document.createElement('div');
                 venueCard.className = 'venue-card';
+                // Prevent clicks on venue card from bubbling up (important for member forms)
+                venueCard.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+                venueCard.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); }, true);
+                venueCard.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
                 venueList.appendChild(venueCard);
 
                 const venueLine = document.createElement('div');
@@ -10968,7 +10989,8 @@ function makePosts(){
                 venueNameInput.value = venue.name || '';
                 venueNameInput.dataset.venueIndex = String(venueIndex);
                 venueNameInput.setAttribute('list', nameDatalistId);
-                venueNameInput.addEventListener('input', ()=>{
+                venueNameInput.addEventListener('input', (e)=>{
+                  e.stopPropagation();
                   const value = venueNameInput.value || '';
                   venue.name = value;
                   notifyFormbuilderChange();
@@ -11060,7 +11082,9 @@ function makePosts(){
                 const venueActions = document.createElement('div');
                 venueActions.className = 'venue-line-actions';
                 venueActions.appendChild(createActionButton('+', 'Add Venue', ()=> addVenue(venueIndex)));
-                const removeVenueBtn = createActionButton('-', 'Remove Venue', ()=> requestVenueRemoval(venueIndex));
+                const removeVenueBtn = createActionButton('-', 'Remove Venue', ()=>{
+                  requestVenueRemoval(venueIndex);
+                });
                 removeVenueBtn.classList.add('danger');
                 if(previewField.options.length <= 1){
                   removeVenueBtn.disabled = true;
@@ -11228,6 +11252,9 @@ function makePosts(){
                   dateInput.dataset.sessionIndex = String(sessionIndex);
                   dateInput.setAttribute('role', 'button');
                   dateInput.setAttribute('aria-haspopup', 'region');
+                  // Prevent clicks on date input from bubbling up
+                  dateInput.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+                  dateInput.addEventListener('focus', (e)=>{ e.stopPropagation(); }, true);
                   const dateInputWrapper = document.createElement('div');
                   dateInputWrapper.className = 'session-date-input-wrapper';
                   dateInputWrapper.appendChild(dateInput);
@@ -11246,6 +11273,7 @@ function makePosts(){
                   openDatePickerBtn.textContent = '+';
                   openDatePickerBtn.setAttribute('aria-label', 'Select Session Dates');
                   openDatePickerBtn.setAttribute('aria-haspopup', 'dialog');
+                  openDatePickerBtn.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
                   dateActions.appendChild(openDatePickerBtn);
                   const removeDateBtn = createActionButton('-', 'Remove Session Date', ()=> removeSession(venue, venueIndex, sessionIndex));
                   if(venue.sessions.length <= 1){
@@ -11372,6 +11400,11 @@ function makePosts(){
                     timeInput.setAttribute('aria-label', timePlaceholder);
                     timeInput.inputMode = 'numeric';
                     timeInput.pattern = '([01]\\d|2[0-3]):[0-5]\\d';
+                    // Prevent clicks on time input from bubbling up
+                    timeInput.addEventListener('click', (e)=>{ e.stopPropagation(); }, true);
+                    timeInput.addEventListener('focus', (e)=>{ e.stopPropagation(); }, true);
+                    timeInput.addEventListener('input', (e)=>{ e.stopPropagation(); }, true);
+                    timeInput.addEventListener('change', (e)=>{ e.stopPropagation(); }, true);
                     timeInput.value = timeObj.time || '';
                     timeInput.dataset.venueIndex = String(venueIndex);
                     timeInput.dataset.sessionIndex = String(sessionIndex);
