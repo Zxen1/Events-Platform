@@ -9581,12 +9581,25 @@ function makePosts(){
             return safeField;
           };
           const buildVenueSessionPreview = (previewField, baseId)=>{
+            // CRITICAL: Clone options to prevent sharing state between form preview and member forms
+            // Each instance needs its own independent copy of the options
+            const clonedOptions = Array.isArray(previewField.options) 
+              ? previewField.options.map(venue => cloneVenueSessionVenue(venue))
+              : [];
+            // Create a local field copy to work with, so we don't mutate the original
+            const localField = {
+              ...previewField,
+              options: clonedOptions.length > 0 ? clonedOptions : [venueSessionCreateVenue()]
+            };
+            
             const editor = document.createElement('div');
             editor.className = 'venue-session-editor';
             editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
             
             // Detect if we're in member form context (needs stopPropagation to prevent form closure)
             const isMemberForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
+            // Detect if we're in formbuilder (needs to sync back to previewField.options)
+            const isFormbuilder = !isMemberForm && baseId && (baseId.includes('formPreview') || baseId.includes('formbuilder'));
             
             // For member forms, prevent clicks from bubbling up to prevent form closure
             // BUT allow buttons and geocoder events to propagate so they work
@@ -9672,9 +9685,21 @@ function makePosts(){
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
-              previewField.options = normalizeVenueSessionOptions(previewField.options);
-              if(!Array.isArray(previewField.options) || previewField.options.length === 0){
-                previewField.options = [venueSessionCreateVenue()];
+              // Work with localField.options, not previewField.options
+              localField.options = normalizeVenueSessionOptions(localField.options);
+              if(!Array.isArray(localField.options) || localField.options.length === 0){
+                localField.options = [venueSessionCreateVenue()];
+              }
+              // Only sync back to previewField.options if we're in formbuilder (not member forms)
+              if(isFormbuilder){
+                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
+              }
+            };
+            
+            // Sync function to update previewField.options from localField.options (only for formbuilder)
+            const syncToPreviewField = ()=>{
+              if(isFormbuilder){
+                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
               }
             };
 
@@ -9942,8 +9967,8 @@ function makePosts(){
             };
 
             const updateSessionDateInputDisplay = (venueIndex, sessionIndex, overrideTime) => {
-              if(!previewField || !Array.isArray(previewField.options)) return;
-              const venue = previewField.options[venueIndex];
+              if(!localField || !Array.isArray(localField.options)) return;
+              const venue = localField.options[venueIndex];
               if(!venue || !Array.isArray(venue.sessions)) return;
               const session = venue.sessions[sessionIndex];
               if(!session) return;
@@ -10246,8 +10271,12 @@ function makePosts(){
 
             const removeVenue = (index)=>{
               ensureOptions();
-              if(previewField.options.length <= 1) return;
-              const removed = previewField.options.splice(index, 1)[0];
+              if(localField.options.length <= 1) return;
+              const removed = localField.options.splice(index, 1)[0];
+              // Sync back to previewField if in formbuilder
+              if(isFormbuilder){
+                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
+              }
               const state = VENUE_TIME_AUTOFILL_STATE.get(previewField);
               if(state && removed){
                 try{ state.delete(removed); }catch(err){}
@@ -10260,7 +10289,7 @@ function makePosts(){
 
             const requestVenueRemoval = (index)=>{
               ensureOptions();
-              if(previewField.options.length <= 1) return;
+              if(localField.options.length <= 1) return;
               if(window.confirm('Are you sure you want to remove this venue?')){
                 removeVenue(index);
               }
@@ -11183,7 +11212,7 @@ function makePosts(){
               if(nextFocus) setFocus(nextFocus);
               venueList.innerHTML = '';
               const datalistSeed = Date.now();
-              previewField.options.forEach((venue, venueIndex)=>{
+              localField.options.forEach((venue, venueIndex)=>{
                 ensureSessionStructure(venue);
                 const venueCard = document.createElement('div');
                 venueCard.className = 'venue-card';
@@ -11251,12 +11280,14 @@ function makePosts(){
                   if(updateName && featureName){
                     venue.name = featureName;
                     venueNameInput.value = featureName;
+                    syncToPreviewField();
                   }
                   if(placeName){
                     venue.address = placeName;
                     if(geocoderInputRef){
                       geocoderInputRef.value = placeName;
                     }
+                    syncToPreviewField();
                   }
                   if(center){
                     venue.location = {
@@ -11279,6 +11310,7 @@ function makePosts(){
                 venueNameInput.addEventListener('input', ()=>{
                   const value = venueNameInput.value || '';
                   venue.name = value;
+                  syncToPreviewField();
                   notifyFormbuilderChange();
                   if(nameSearchTimeout){
                     clearTimeout(nameSearchTimeout);
@@ -11370,7 +11402,7 @@ function makePosts(){
                 venueActions.appendChild(createActionButton('+', 'Add Venue', ()=> addVenue(venueIndex)));
                 const removeVenueBtn = createActionButton('-', 'Remove Venue', ()=> requestVenueRemoval(venueIndex));
                 removeVenueBtn.classList.add('danger');
-                if(previewField.options.length <= 1){
+                if(localField.options.length <= 1){
                   removeVenueBtn.disabled = true;
                   removeVenueBtn.setAttribute('aria-disabled', 'true');
                 } else {
@@ -11552,6 +11584,7 @@ function makePosts(){
                       const nextValue = geocoderInput.value || '';
                       if(venue.address !== nextValue){
                         venue.address = nextValue;
+                        syncToPreviewField();
                         notifyFormbuilderChange();
                       }
                     });
