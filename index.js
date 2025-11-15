@@ -23808,10 +23808,15 @@ document.addEventListener('pointerdown', (e) => {
         if(normalizedType){
           type = normalizedType;
         }
-        if(!FORM_FIELD_TYPES.some(opt => opt.value === type)){
+        // Check for description/text-area BEFORE FORM_FIELD_TYPES validation to preserve them
+        if(type === 'description' || type === 'text-area'){
+          safe.type = type;
+        } else if(!FORM_FIELD_TYPES.some(opt => opt.value === type)){
           type = 'text-box';
+          safe.type = type;
+        } else {
+          safe.type = type;
         }
-        safe.type = type;
         if(typeof field.placeholder === 'string'){
           safe.placeholder = field.placeholder;
         }
