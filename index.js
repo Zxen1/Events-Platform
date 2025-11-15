@@ -15045,16 +15045,16 @@ function makePosts(){
             // Message text display (shown by default)
             const messageTextDisplay = document.createElement('div');
             messageTextDisplay.className = 'message-text-display';
-            messageTextDisplay.innerHTML = message.message_text;
+            messageTextDisplay.innerHTML = message.message_text || '';
             messageTextDisplay.title = 'Click to edit';
             
             // Message text input (hidden by default)
             const textArea = document.createElement('textarea');
             textArea.className = 'message-text-input';
-            textArea.value = message.message_text;
+            textArea.value = message.message_text || '';
             textArea.rows = 3;
             textArea.dataset.messageId = message.id;
-            textArea.dataset.originalValue = message.message_text;
+            textArea.dataset.originalValue = message.message_text || '';
             textArea.hidden = true;
             
             // Track changes

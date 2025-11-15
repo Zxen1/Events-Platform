@@ -745,7 +745,19 @@
       editor.addEventListener('change', (e) => handleEvent('change', e), true);
       editor.addEventListener('focusin', (e) => handleEvent('focusin', e), true);
       editor.addEventListener('focus', (e) => handleEvent('focus', e), true);
-      editor.addEventListener('input', (e) => handleEvent('input', e), true);
+      editor.addEventListener('input', (e) => {
+        // Stop propagation for input events to prevent form closure
+        const target = e.target;
+        const isInsideVenueEditor = target.closest('.venue-session-editor') === editor;
+        const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
+        
+        if(isInsideVenueEditor && !isGeocoderElement){
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+        // Also call handleEvent for consistency
+        handleEvent('input', e);
+      }, true);
       // Generate unique prefix from labelId to ensure unique IDs across multiple editors
       const uniquePrefix = labelId ? labelId.replace(/[^a-zA-Z0-9]/g, '_') : `venue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const venueList = document.createElement('div');
@@ -1679,9 +1691,9 @@
       }
       // Don't clear form if venue editor exists and user is interacting with it
       // Reuse activeVenueEditor from above, check hasVenueEditor again
-      const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
-      if(activeVenueEditor || hasVenueEditor){
-        console.log('[Member Forms] renderConfiguredFields: Skipping re-render - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditor });
+      const hasVenueEditorCheck = formFields && formFields.querySelector('.venue-session-editor');
+      if(activeVenueEditor || hasVenueEditorCheck){
+        console.log('[Member Forms] renderConfiguredFields: Skipping re-render - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditorCheck });
         return;
       }
       
