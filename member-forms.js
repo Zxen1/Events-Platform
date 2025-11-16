@@ -2139,7 +2139,11 @@
                 }
                 const result = event && event.result;
                 if(result){
-                  const clone = cloneGeocoderFeature(result);
+                  const clone = (typeof window !== 'undefined' && typeof window.cloneGeocoderFeature === 'function')
+                    ? window.cloneGeocoderFeature(result)
+                    : (function(f){
+                        try { return JSON.parse(JSON.stringify(f)); } catch(e){ return { ...f }; }
+                      })(result);
                   const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
                   if(placeName){
                     locationState.address = placeName;
