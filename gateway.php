@@ -67,6 +67,9 @@ $map = [
   'add-post' => $connectorDir . '/add-post.php',
   'upload-media' => $connectorDir . '/upload-media.php',
   'issue-token' => $connectorDir . '/issue-token.php',
+  // Backwards-compat routes for rename
+  'edit-post' => $connectorDir . '/edit-post.php',
+  'edit-member' => $connectorDir . '/edit-member.php',
   'get-admin-settings' => $connectorDir . '/get-admin-settings.php',
   'save-admin-settings' => $connectorDir . '/save-admin-settings.php',
   // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
