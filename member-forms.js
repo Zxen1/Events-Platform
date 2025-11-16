@@ -1421,6 +1421,16 @@
 				};
 				formFields.addEventListener('input', autosave, true);
 				formFields.addEventListener('change', autosave, true);
+				// Re-check submit state when composite editors mutate via clicks (add/remove rows, etc.)
+				formFields.addEventListener('click', function(e){
+					try{
+						var t = e.target;
+						if(!t) return;
+						if(t.closest('.venue-session-editor') || t.closest('.variant-pricing-option') || t.closest('.variant-pricing-option-actions')){
+							setTimeout(function(){ try{ updatePostButtonState(); }catch(_e){} }, 0);
+						}
+					}catch(_e){}
+				}, true);
 				formFields.__draftAutosaveBound = true;
 			}
     }
