@@ -7568,9 +7568,6 @@ html, body { cursor: auto !important; }
               opacity:0.5;
               font-style:italic;
             }
-            #tab-forms .subcategory-field-row .field-row-header .field-name-input{
-              flex:1;
-            }
             #tab-forms .subcategory-field-row input:not([type="radio"]):not([type="checkbox"]),
             #tab-forms .subcategory-field-row select{
               width:100%;

@@ -8188,7 +8188,11 @@ function makePosts(){
         handle.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
-          try{ event.dataTransfer.setData('text/plain', (row.querySelector('.field-name-input')?.value || 'Field')); }catch(err){}
+          try{ 
+            const summaryLabel = row.querySelector('.field-summary-label');
+            const labelText = summaryLabel ? summaryLabel.textContent.trim() : 'Field';
+            event.dataTransfer.setData('text/plain', labelText);
+          }catch(err){}
           try{
             const rect = row.getBoundingClientRect();
             event.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2);
@@ -9539,11 +9543,9 @@ function makePosts(){
           resolvedFieldTypeName = resolvedFieldTypeName || '';
           safeField.field_type_name = resolvedFieldTypeName;
           safeField.fieldTypeName = resolvedFieldTypeName;
-          // Only auto-set name if field type is explicitly provided (not defaulted)
-          if(fieldTypeKey && (!safeField.name || !safeField.name.trim())){
-            if(resolvedFieldTypeName){
-              safeField.name = resolvedFieldTypeName;
-            }
+          // Always name field after its field type name when field type is set
+          if(fieldTypeKey && resolvedFieldTypeName){
+            safeField.name = resolvedFieldTypeName;
           }
             if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
@@ -12838,9 +12840,6 @@ function makePosts(){
             };
 
             fieldTypeSelect.addEventListener('change', ()=>{
-              const previousType = safeField.type;
-              const previousLabel = getFormFieldTypeLabel(previousType).trim();
-              const currentName = typeof safeField.name === 'string' ? safeField.name.trim() : '';
               const nextType = fieldTypeSelect.value;
               
               // Don't process if placeholder is selected
@@ -12849,17 +12848,21 @@ function makePosts(){
               }
               
               const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
-              const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
-              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
 
               safeField.fieldTypeKey = nextValidType;
               safeField.key = nextValidType;
 
               const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
               const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
-              const updatedFieldTypeName = (matchingDisplayName || nextLabel || nextValidType || '').trim();
+              const updatedFieldTypeName = (matchingDisplayName || nextValidType || '').trim();
               safeField.field_type_name = updatedFieldTypeName;
               safeField.fieldTypeName = updatedFieldTypeName;
+              
+              // Always name field after its field type name
+              if(updatedFieldTypeName){
+                safeField.name = updatedFieldTypeName;
+              }
+              
               if(matchingFieldType){
                 if(matchingFieldType.placeholder){
                   safeField.placeholder = matchingFieldType.placeholder;
@@ -12867,9 +12870,6 @@ function makePosts(){
                 safeField.type = nextValidType;
               }
 
-              if(shouldAutofillName && nextLabel){
-                safeField.name = nextLabel;
-              }
               notifyFormbuilderChange();
               updateFieldEditorsByType();
               renderFormPreview();
