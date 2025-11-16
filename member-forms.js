@@ -848,10 +848,14 @@
       const placeholder = field.placeholder || '';
       let control = null;
 
-      const baseType = getBaseFieldType(field.type);
-      // Use fieldTypeKey/key as fallback for field type identification
+      // Use fieldTypeKey/key as primary source for field type identification
       const fieldTypeKey = field.fieldTypeKey || field.key || '';
-      const resolvedBaseType = baseType || (fieldTypeKey === 'radio-toggle' ? 'radio-toggle' : fieldTypeKey === 'dropdown' ? 'dropdown' : baseType);
+      // Only use getBaseFieldType if fieldTypeKey is not available
+      const baseType = fieldTypeKey ? fieldTypeKey : getBaseFieldType(field.type);
+      // For specific field types, use fieldTypeKey directly
+      const resolvedBaseType = (fieldTypeKey === 'radio-toggle' || fieldTypeKey === 'dropdown' || 
+                                fieldTypeKey === 'description' || fieldTypeKey === 'text-area') 
+                                ? fieldTypeKey : baseType;
       
       if(resolvedBaseType === 'description' || resolvedBaseType === 'text-area'){
         const textarea = document.createElement('textarea');
