@@ -21,8 +21,21 @@
       to { transform: rotate(360deg); }
     }
 
+    /* Layer scale */
+    :root{
+      --layer-modal: 80;        /* welcome modal, full-screen modals */
+      --layer-image-modal: 78;  /* lightbox/image modal */
+      --layer-dialog: 76;       /* confirmations/dialogs/toasts */
+      --layer-menu: 74;         /* menus, dropdowns, tooltips, pickers */
+      --layer-panel: 60;        /* member/admin/filter panels */
+      --layer-header: 40;       /* headers/nav */
+      --layer-card: 30;         /* floating cards above content */
+      --layer-content: 20;      /* primary content */
+      --layer-base: 0;          /* map/base */
+    }
+
     /* Menus stay clickable above overlays */
-    .options-menu { z-index: 10000; }
+    .options-menu { z-index: var(--layer-menu); }
 
     /* Cards stay clickable on narrow screens */
     @media (max-width: 600px){
@@ -70,7 +83,7 @@
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
-      z-index: 20000;
+      z-index: var(--layer-card);
     }
     .big-map-card img,
     .small-map-card img{ display:block; }
@@ -1152,20 +1165,20 @@ button[aria-expanded="true"] .results-arrow{
 
   #adminPanel .mapboxgl-ctrl-geocoder{
     position:relative;
-    z-index:1000001;
+    z-index:var(--layer-menu);
   }
 
   #adminPanel .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:1000002;
+    z-index:var(--layer-menu);
   }
 
   #memberPanel .mapboxgl-ctrl-geocoder{
     position:relative;
-    z-index:1000001;
+    z-index:var(--layer-menu);
   }
 
   #memberPanel .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:1000002;
+    z-index:var(--layer-menu);
   }
 #filterPanel .panel-content{
   width:100%;
@@ -1252,7 +1265,7 @@ button[aria-expanded="true"] .results-arrow{
   pointer-events:none;
   transform:translateY(4px);
   transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-  z-index:5000;
+  z-index:var(--layer-menu);
 }
 #filterPanel .calendar-container.is-visible{
   opacity:1;
@@ -2188,7 +2201,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,0.65);
-  z-index:12000;
+  z-index:var(--layer-dialog);
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease;
@@ -2222,7 +2235,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,0.65);
-  z-index:12000;
+  z-index:var(--layer-dialog);
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease;
@@ -2262,7 +2275,7 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease, transform 0.2s ease;
-  z-index:13000;
+  z-index:var(--layer-dialog);
   font-size:14px;
 }
 #adminStatusMessage.error{
@@ -2286,7 +2299,7 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease, transform 0.2s ease;
-  z-index:13000;
+  z-index:var(--layer-dialog);
   font-size:14px;
 }
 #memberStatusMessage.show{
