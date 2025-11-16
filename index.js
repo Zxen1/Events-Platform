@@ -9589,7 +9589,7 @@ function makePosts(){
                 }
                 return String(opt ?? '');
               });
-              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
+              if((safeField.type === 'dropdown' || safeField.type === 'radio') && safeField.options.length === 0){
                 safeField.options.push('', '', '');
               }
             }
@@ -12619,7 +12619,7 @@ function makePosts(){
                 safeField.options = [];
               }
               const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              if((fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio-toggle') && safeField.options.length === 0){
+              if((fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio') && safeField.options.length === 0){
                 // Try to get placeholder from field type to seed options
                 const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
                 if(matchingFieldType && matchingFieldType.placeholder){
@@ -12645,7 +12645,7 @@ function makePosts(){
             const renderDropdownOptions = (focusIndex = null)=>{
               // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
               const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio-toggle';
+              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               if(!isOptionsType){
                 dropdownOptionsList.innerHTML = '';
                 return;
@@ -12805,7 +12805,7 @@ function makePosts(){
               const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
               // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
               const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio-toggle';
+              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               const showVariantPricing = fieldTypeKey === 'variant-pricing';
               const showVenueSession = fieldTypeKey === 'venue-ticketing';
               if(type === 'images'){
@@ -12840,7 +12840,7 @@ function makePosts(){
               }
               if(type === 'dropdown'){
                 dropdownOptionsLabel.textContent = 'Dropdown Options';
-              } else if(type === 'radio-toggle'){
+              } else if(type === 'radio'){
                 dropdownOptionsLabel.textContent = 'Radio Options';
               } else {
                 dropdownOptionsLabel.textContent = 'Field Options';
@@ -13113,7 +13113,7 @@ function makePosts(){
                 // Ensure select is not inside any form that could submit
                 select.setAttribute('form', '');
                 control = select;
-              } else if(previewField.type === 'radio-toggle'){
+              } else if(previewField.type === 'radio'){
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
                 const radioGroup = document.createElement('div');
                 radioGroup.className = 'form-preview-radio-group';

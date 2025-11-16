@@ -561,7 +561,7 @@
           if(safe.options.length === 0){
             safe.options.push({ version: '', currency: '', price: '' });
           }
-        } else if(type === 'dropdown' || type === 'radio-toggle'){
+        } else if(type === 'dropdown' || type === 'radio'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => {
             if(typeof opt === 'string') return opt;
@@ -853,10 +853,10 @@
 
       // Use fieldTypeKey/key as PRIMARY source for field type identification (not type)
       const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-      // CRITICAL: For radio-toggle and dropdown, ALWAYS use fieldTypeKey if available
+      // CRITICAL: For radio and dropdown, ALWAYS use fieldTypeKey if available
       // Otherwise fall back to type
       let resolvedBaseType = '';
-      if(fieldTypeKey === 'radio-toggle' || fieldTypeKey === 'dropdown'){
+      if(fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown'){
         resolvedBaseType = fieldTypeKey;
       } else {
         resolvedBaseType = fieldTypeKey || safeField.type || 'text-box';
@@ -892,7 +892,7 @@
           select.appendChild(option);
         });
         control = select;
-      } else if(resolvedBaseType === 'radio-toggle' || fieldTypeKey === 'radio-toggle'){
+      } else if(resolvedBaseType === 'radio' || fieldTypeKey === 'radio'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
         const radioGroup = document.createElement('div');
@@ -1469,9 +1469,9 @@
         const normalizedType = getBaseFieldType(originalType);
         
         // If fieldTypeKey exists and is different from normalized type, prefer fieldTypeKey
-        // This ensures radio-toggle uses 'radio-toggle' not 'radio'
+        // This ensures radio uses 'radio' not something else
         if(fieldTypeKey && fieldTypeKey !== normalizedType && 
-           (fieldTypeKey === 'radio-toggle' || fieldTypeKey === 'dropdown' || 
+           (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown' || 
             fieldTypeKey === 'description' || fieldTypeKey === 'text-area')){
           safeField.type = fieldTypeKey;
         }
@@ -1687,7 +1687,7 @@
         } else {
           // Use fieldTypeKey/key as fallback for field type identification
           const fieldTypeKey = previewField.fieldTypeKey || previewField.key || '';
-          if(fieldTypeKey === 'radio-toggle' || baseType === 'radio-toggle'){
+          if(fieldTypeKey === 'radio' || baseType === 'radio'){
             const options = Array.isArray(previewField.options) ? previewField.options : [];
             const radioGroup = document.createElement('div');
             radioGroup.className = 'form-preview-radio-group';
@@ -2561,7 +2561,7 @@
           return element.querySelector('input, select, textarea');
         };
 
-        if(type === 'radio-toggle'){
+        if(type === 'radio'){
           const checked = element.querySelector('input[type="radio"]:checked');
           value = checked ? checked.value : '';
           if(field.required && !value){
