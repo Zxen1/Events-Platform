@@ -825,9 +825,12 @@
     const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
 
     function buildMemberCreateField(field, index){
+      // Ensure field defaults are applied first
+      const safeField = ensureFieldDefaultsForMember(field);
+      
       const wrapper = document.createElement('div');
       wrapper.className = 'panel-field form-preview-field';
-      const labelText = field.name && field.name.trim() ? field.name.trim() : `Field ${index + 1}`;
+      const labelText = safeField.name && safeField.name.trim() ? safeField.name.trim() : `Field ${index + 1}`;
       const labelId = `memberCreateFieldLabel-${++fieldIdCounter}`;
       const controlId = `memberCreateField-${fieldIdCounter}`;
       const label = document.createElement('label');
@@ -835,7 +838,7 @@
       label.className = 'form-preview-field-label';
       label.setAttribute('for', controlId);
       label.textContent = labelText;
-      if(field.required){
+      if(safeField.required){
         wrapper.classList.add('form-preview-field--required');
         label.appendChild(document.createTextNode(' '));
         const asterisk = document.createElement('span');
@@ -845,17 +848,13 @@
       }
       wrapper.appendChild(label);
 
-      const placeholder = field.placeholder || '';
+      const placeholder = safeField.placeholder || '';
       let control = null;
 
-      // Use fieldTypeKey/key as primary source for field type identification
-      const fieldTypeKey = field.fieldTypeKey || field.key || '';
-      // Only use getBaseFieldType if fieldTypeKey is not available
-      const baseType = fieldTypeKey ? fieldTypeKey : getBaseFieldType(field.type);
-      // For specific field types, use fieldTypeKey directly
-      const resolvedBaseType = (fieldTypeKey === 'radio-toggle' || fieldTypeKey === 'dropdown' || 
-                                fieldTypeKey === 'description' || fieldTypeKey === 'text-area') 
-                                ? fieldTypeKey : baseType;
+      // Use fieldTypeKey/key as PRIMARY source for field type identification (not type)
+      const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+      // If fieldTypeKey is available, use it directly; otherwise fall back to type
+      const resolvedBaseType = fieldTypeKey || safeField.type || 'text-box';
       
       if(resolvedBaseType === 'description' || resolvedBaseType === 'text-area'){
         const textarea = document.createElement('textarea');
@@ -866,19 +865,20 @@
         if(resolvedBaseType === 'description'){
           textarea.classList.add('form-preview-description');
         }
-        if(field.required) textarea.required = true;
+        if(safeField.required) textarea.required = true;
         control = textarea;
       } else if(resolvedBaseType === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
         select.className = 'form-preview-select';
-        if(field.required) select.required = true;
+        if(safeField.required) select.required = true;
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
         placeholderOption.textContent = placeholder || 'Select an option';
         select.appendChild(placeholderOption);
-        field.options.forEach((optionValue, optionIndex) => {
+        const options = Array.isArray(safeField.options) ? safeField.options : [];
+        options.forEach((optionValue, optionIndex) => {
           const option = document.createElement('option');
           const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
           option.value = stringValue;
@@ -894,15 +894,16 @@
         radioGroup.setAttribute('role', 'radiogroup');
         radioGroup.setAttribute('aria-labelledby', labelId);
         const radioName = `member-create-radio-${fieldIdCounter}`;
-        if(field.options.length){
-          field.options.forEach((optionValue, optionIndex)=>{
+        const options = Array.isArray(safeField.options) ? safeField.options : [];
+        if(options.length){
+          options.forEach((optionValue, optionIndex)=>{
             const radioLabel = document.createElement('label');
             radioLabel.className = 'form-preview-radio-option';
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = radioName;
             radio.value = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-            if(field.required && optionIndex === 0) radio.required = true;
+            if(safeField.required && optionIndex === 0) radio.required = true;
             const displayValue = radio.value.trim() ? radio.value : `Option ${optionIndex + 1}`;
             const radioText = document.createElement('span');
             radioText.textContent = displayValue;
@@ -921,7 +922,7 @@
           radioGroup.appendChild(placeholderOption);
         }
         control = radioGroup;
-      } else if(baseType === 'images'){
+      } else if(resolvedBaseType === 'images'){
         wrapper.classList.add('form-preview-field--images');
         label.removeAttribute('for');
         const imageWrapper = document.createElement('div');
@@ -931,7 +932,7 @@
         fileInput.type = 'file';
         fileInput.multiple = true;
         fileInput.accept = 'image/*';
-        if(field.required) fileInput.required = true;
+        if(safeField.required) fileInput.required = true;
         const hint = document.createElement('p');
         hint.className = 'form-preview-image-hint';
         hint.textContent = placeholder || 'Upload images';
@@ -945,16 +946,16 @@
         fileInput.dataset.imagePreviewTarget = previewId;
         imageWrapper.append(fileInput, hint, message, previewGrid);
         control = imageWrapper;
-      } else if(baseType === 'variant-pricing'){
+      } else if(resolvedBaseType === 'variant-pricing'){
         wrapper.classList.add('form-preview-field--variant-pricing');
         label.removeAttribute('for');
-        control = buildVersionPriceEditor(field, labelId);
-      } else if(baseType === 'venue-ticketing'){
+        control = buildVersionPriceEditor(safeField, labelId);
+      } else if(resolvedBaseType === 'venue-ticketing'){
         wrapper.classList.add('form-preview-field--venues-sessions-pricing');
         label.removeAttribute('for');
         // Use the working buildVenueSessionPreview from index.js (form preview)
         if(typeof window !== 'undefined' && typeof window.buildVenueSessionPreview === 'function'){
-          control = window.buildVenueSessionPreview(field, controlId);
+          control = window.buildVenueSessionPreview(safeField, controlId);
         } else {
           // Fallback error if function not available
           const errorDiv = document.createElement('div');
@@ -964,7 +965,7 @@
           errorDiv.style.padding = '10px';
           control = errorDiv;
         }
-      } else if(baseType === 'website-url' || baseType === 'tickets-url'){
+      } else if(resolvedBaseType === 'website-url' || resolvedBaseType === 'tickets-url'){
         wrapper.classList.add('form-preview-field--url');
         const urlWrapper = document.createElement('div');
         urlWrapper.className = 'form-preview-url-wrapper';
@@ -974,20 +975,20 @@
         input.placeholder = placeholder || 'https://example.com';
         input.autocomplete = 'url';
         input.className = 'form-preview-url-input';
-        if(field.required) input.required = true;
+        if(safeField.required) input.required = true;
         urlWrapper.appendChild(input);
         control = urlWrapper;
-      } else if(baseType === 'location'){
+      } else if(resolvedBaseType === 'location'){
         wrapper.classList.add('form-preview-field--location');
         const ensureLocationState = ()=>{
-          if(!field.location || typeof field.location !== 'object'){
-            field.location = { address: '', latitude: '', longitude: '' };
+          if(!safeField.location || typeof safeField.location !== 'object'){
+            safeField.location = { address: '', latitude: '', longitude: '' };
           } else {
-            if(typeof field.location.address !== 'string') field.location.address = '';
-            if(typeof field.location.latitude !== 'string') field.location.latitude = '';
-            if(typeof field.location.longitude !== 'string') field.location.longitude = '';
+            if(typeof safeField.location.address !== 'string') safeField.location.address = '';
+            if(typeof safeField.location.latitude !== 'string') safeField.location.latitude = '';
+            if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
           }
-          return field.location;
+          return safeField.location;
         };
         const locationState = ensureLocationState();
         const locationWrapper = document.createElement('div');
@@ -1038,7 +1039,7 @@
           fallback.setAttribute('aria-label', placeholderValue);
           fallback.dataset.locationAddress = 'true';
           fallback.value = locationState.address || '';
-          if(field.required) fallback.required = true;
+          if(safeField.required) fallback.required = true;
           fallback.addEventListener('input', ()=>{
             locationState.address = fallback.value;
           });
@@ -1143,7 +1144,7 @@
             geocoderInput.id = addressInputId;
             geocoderInput.dataset.locationAddress = 'true';
             geocoderInput.value = locationState.address || '';
-            if(field.required) geocoderInput.required = true;
+            if(safeField.required) geocoderInput.required = true;
             addressInput = geocoderInput;
             applyAddressLabel(geocoderInput);
             geocoderInput.addEventListener('blur', ()=>{
@@ -1203,35 +1204,35 @@
         control = locationWrapper;
       } else {
         // Check if it's actually a description field that wasn't caught earlier
-        const isDescriptionField = baseType === 'description' || baseType === 'text-area' || 
-                                   field.type === 'description' || field.type === 'text-area' ||
-                                   (typeof field.type === 'string' && (field.type.includes('description') || field.type.includes('text-area')));
+        const isDescriptionField = resolvedBaseType === 'description' || resolvedBaseType === 'text-area' || 
+                                   safeField.type === 'description' || safeField.type === 'text-area' ||
+                                   (typeof safeField.type === 'string' && (safeField.type.includes('description') || safeField.type.includes('text-area')));
         
         if(isDescriptionField){
           const textarea = document.createElement('textarea');
           textarea.id = controlId;
-          textarea.rows = baseType === 'description' ? 6 : 4;
+          textarea.rows = resolvedBaseType === 'description' ? 6 : 4;
           textarea.placeholder = placeholder;
           textarea.className = 'form-preview-textarea';
-          if(baseType === 'description' || field.type === 'description' || (typeof field.type === 'string' && field.type.includes('description'))){
+          if(resolvedBaseType === 'description' || safeField.type === 'description' || (typeof safeField.type === 'string' && safeField.type.includes('description'))){
             textarea.classList.add('form-preview-description');
           }
-          if(field.required) textarea.required = true;
+          if(safeField.required) textarea.required = true;
           control = textarea;
         } else {
           const input = document.createElement('input');
           input.id = controlId;
-          if(field.type === 'email'){
+          if(safeField.type === 'email' || resolvedBaseType === 'email'){
             input.type = 'email';
             input.autocomplete = 'email';
-          } else if(field.type === 'phone'){
+          } else if(safeField.type === 'phone' || resolvedBaseType === 'phone'){
             input.type = 'tel';
             input.autocomplete = 'tel';
           } else {
             input.type = 'text';
           }
           input.placeholder = placeholder;
-          if(field.required) input.required = true;
+          if(safeField.required) input.required = true;
           control = input;
         }
       }
