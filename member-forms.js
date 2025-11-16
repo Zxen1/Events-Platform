@@ -2443,6 +2443,7 @@
             control = input;
           }
         }
+        }
         
         if(control){
           if(control instanceof HTMLElement){
