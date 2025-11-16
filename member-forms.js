@@ -2320,6 +2320,11 @@
                   locationState.address = nextValue;
                 }
               });
+              // Keep address in sync as user types (and on draft restore)
+              geocoderInput.addEventListener('input', () => {
+                locationState.address = geocoderInput.value || '';
+                try{ updatePostButtonState(); }catch(_e){}
+              });
               // Prevent Enter key from submitting form when in geocoder
               geocoderInput.addEventListener('keydown', (e)=>{
                 if(e.key === 'Enter'){
