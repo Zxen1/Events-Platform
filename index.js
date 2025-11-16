@@ -9537,6 +9537,12 @@ function makePosts(){
             resolvedFieldTypeName = resolvedFieldTypeName || '';
             safeField.field_type_name = resolvedFieldTypeName;
             safeField.fieldTypeName = resolvedFieldTypeName;
+            // Auto-set name from field type if name is empty
+            if(!safeField.name || !safeField.name.trim()){
+              if(resolvedFieldTypeName){
+                safeField.name = resolvedFieldTypeName;
+              }
+            }
             if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
                 safeField.placeholder = 'Search for a location';
