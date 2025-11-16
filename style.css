@@ -23,11 +23,11 @@
 
     /* Layer scale */
     :root{
-      --layer-devtools: 99999;  /* developer tools (always on top) */
-      --layer-modal: 80;        /* welcome modal, full-screen modals */
-      --layer-image-modal: 78;  /* lightbox/image modal */
-      --layer-dialog: 76;       /* confirmations/dialogs/toasts */
-      --layer-menu: 74;         /* menus, dropdowns, tooltips, pickers */
+      --layer-devtools: 100;    /* developer tools (always on top) */
+      --layer-modal: 90;        /* welcome modal, full-screen modals */
+      --layer-image-modal: 88;  /* lightbox/image modal */
+      --layer-dialog: 86;       /* confirmations/dialogs/toasts */
+      --layer-menu: 84;         /* menus, dropdowns, tooltips, pickers */
       --layer-panel: 60;        /* member/admin/filter panels */
       --layer-header: 40;       /* headers/nav */
       --layer-card: 30;         /* floating cards above content */
@@ -76,7 +76,7 @@
       top: 0;
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
-      z-index: 30;
+      z-index: var(--layer-card);
     }
     .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;
@@ -200,7 +200,7 @@
       border-radius: 50%;
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-      z-index: 40;
+      z-index: var(--layer-header);
     }
     .big-multi-post-map-card .map-card-thumb{
       border-radius: 12px;
@@ -743,7 +743,7 @@ input[type="checkbox"]{
     top: 0;
     left: 0;
     right: 0;
-    z-index: 20;
+    z-index: var(--layer-header);
     background: rgba(0,0,0,0.7);
   }
 
@@ -766,7 +766,7 @@ input[type="checkbox"]{
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    z-index: 2500;
+    z-index: var(--layer-modal);
     opacity: 1;
     pointer-events: auto;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -1701,7 +1701,7 @@ button[aria-expanded="true"] .results-arrow{
   position:absolute;
   top:44px;
   left:0;
-  z-index:20;
+  z-index: var(--layer-menu);
   background:#fff;
   border:1px solid #ccc;
   border-radius:8px;
@@ -3623,7 +3623,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   top:calc(var(--header-h, 60px) + var(--safe-top, 0px) + 10px);
   left:50%;
   transform:translateX(-50%);
-  z-index:100;
+  z-index: var(--layer-panel);
   background:var(--btn);
   border:1px solid var(--border);
   border-radius:50%;
@@ -4128,7 +4128,7 @@ body.filters-active #filterBtn{
   }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index:30; }
+.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
@@ -8973,7 +8973,7 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: 99999 !important;
+  z-index: var(--layer-devtools);
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -9024,7 +9024,7 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: 99999 !important;
+  z-index: var(--layer-devtools);
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
