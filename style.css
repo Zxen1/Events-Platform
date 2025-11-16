@@ -987,7 +987,7 @@ button[aria-expanded="true"] .results-arrow{
   height:calc(var(--vh, 1vh) * 100);
   background:transparent;
   display:none;
-  z-index:2000;
+  z-index: var(--layer-panel);
   pointer-events:none;
 }
 .panel.show{
@@ -1002,7 +1002,7 @@ button[aria-expanded="true"] .results-arrow{
   height:calc(var(--vh, 1vh) * 100);
   background:transparent;
   display:none;
-  z-index:2000;
+  z-index: var(--layer-modal);
   pointer-events:none;
 }
 .modal.show{
@@ -5243,7 +5243,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index:5000;
+  z-index: var(--layer-menu);
 }
 .open-post .post-venue-menu,
 .open-post .session-menu{
@@ -6115,7 +6115,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:3000;
+    z-index: var(--layer-modal);
   }
   #post-modal-container.hidden{display:none;}
     #post-modal-container .post-modal{
@@ -8169,7 +8169,7 @@ html, body { cursor: auto !important; }
               min-width:280px;
               max-width:400px;
               box-shadow:0 8px 24px rgba(0,0,0,0.6);
-              z-index:1000;
+              z-index: var(--layer-menu);
               opacity:0;
               pointer-events:none;
               transform:translateY(-8px);
@@ -8902,7 +8902,7 @@ html, body { cursor: auto !important; }
               left:0;
               display:none;
               background:transparent;
-              z-index:200000;
+              z-index: var(--layer-menu);
               pointer-events:none;
             }
             .subcategory-field-overlay.visible{
