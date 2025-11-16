@@ -191,7 +191,7 @@
       const filesWithContext = [];
       const allowedMimePrefixes = ['image/'];
       const allowedExtensions = ['jpg','jpeg','png','gif','webp','bmp'];
-      const maxFileSizeBytes = 5 * 1024 * 1024; // 5 MB default guard
+      const maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB default guard
       uploadEntries.forEach(entry => {
         if(!entry || typeof entry !== 'object') return;
         const files = Array.isArray(entry.files) ? entry.files : [];
@@ -1354,7 +1354,7 @@
       const maxImages = parseInt(fileInput.dataset.maxImages || '10', 10);
       const maxFileSizeBytes = (() => {
         const custom = parseInt(fileInput.dataset.maxBytes || '0', 10);
-        return Number.isFinite(custom) && custom > 0 ? custom : 5 * 1024 * 1024;
+        return Number.isFinite(custom) && custom > 0 ? custom : 10 * 1024 * 1024;
       })();
       const allowedMimePrefixes = ['image/'];
       const allowedExtensions = ['jpg','jpeg','png','gif','webp','bmp'];
