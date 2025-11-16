@@ -2547,9 +2547,14 @@
 
       let response;
       try{
+        const apiKeyForPost = getConnectorApiKey(currentMember);
+        const headers = { 'Content-Type': 'application/json' };
+        if(apiKeyForPost){
+          headers['X-API-Key'] = apiKeyForPost;
+        }
         response = await fetch('/gateway.php?action=add-post', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(payload)
         });
       }catch(err){
