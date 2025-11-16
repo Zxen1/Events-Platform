@@ -8956,7 +8956,8 @@ html, body { cursor: auto !important; }
             }
  
  
-/* DevTools Toggle Button */
+/* DevTools Toggle Button - Must be above all other elements */
+#devtoolsBtn,
 .devtools-btn{
   position: fixed !important;
   bottom: 60px !important;
@@ -8973,7 +8974,8 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: var(--layer-devtools);
+  z-index: var(--layer-devtools) !important;
+  isolation: isolate !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -9007,7 +9009,8 @@ html, body { cursor: auto !important; }
   color: #000 !important;
 }
 
-/* LocalStorage Clear Button */
+/* LocalStorage Clear Button - Must be above all other elements */
+#clearLocalStorageBtn,
 .clear-localstorage-btn{
   position: fixed !important;
   bottom: 10px !important;
@@ -9024,7 +9027,8 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: var(--layer-devtools);
+  z-index: var(--layer-devtools) !important;
+  isolation: isolate !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
