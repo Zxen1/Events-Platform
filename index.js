@@ -12618,8 +12618,26 @@ function makePosts(){
               if(!Array.isArray(safeField.options)){
                 safeField.options = [];
               }
-              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
-                safeField.options.push('', '', '');
+              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+              if((fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio-toggle') && safeField.options.length === 0){
+                // Try to get placeholder from field type to seed options
+                const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+                if(matchingFieldType && matchingFieldType.placeholder){
+                  // Parse placeholder like "A,B,C" or "1,2,3" into array
+                  const placeholderStr = matchingFieldType.placeholder.trim();
+                  if(placeholderStr){
+                    const parsed = placeholderStr.split(',').map(s => s.trim()).filter(s => s);
+                    if(parsed.length > 0){
+                      safeField.options.push(...parsed);
+                    } else {
+                      safeField.options.push('', '', '');
+                    }
+                  } else {
+                    safeField.options.push('', '', '');
+                  }
+                } else {
+                  safeField.options.push('', '', '');
+                }
                 notifyFormbuilderChange();
               }
             };

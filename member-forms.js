@@ -849,18 +849,22 @@
       let control = null;
 
       const baseType = getBaseFieldType(field.type);
-      if(baseType === 'description' || baseType === 'text-area'){
+      // Use fieldTypeKey/key as fallback for field type identification
+      const fieldTypeKey = field.fieldTypeKey || field.key || '';
+      const resolvedBaseType = baseType || (fieldTypeKey === 'radio-toggle' ? 'radio-toggle' : fieldTypeKey === 'dropdown' ? 'dropdown' : baseType);
+      
+      if(resolvedBaseType === 'description' || resolvedBaseType === 'text-area'){
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
-        textarea.rows = baseType === 'description' ? 6 : 4;
+        textarea.rows = resolvedBaseType === 'description' ? 6 : 4;
         textarea.placeholder = placeholder;
         textarea.className = 'form-preview-textarea';
-        if(baseType === 'description'){
+        if(resolvedBaseType === 'description'){
           textarea.classList.add('form-preview-description');
         }
         if(field.required) textarea.required = true;
         control = textarea;
-      } else if(baseType === 'dropdown'){
+      } else if(resolvedBaseType === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
@@ -878,7 +882,7 @@
           select.appendChild(option);
         });
         control = select;
-      } else if(baseType === 'radio-toggle'){
+      } else if(resolvedBaseType === 'radio-toggle' || fieldTypeKey === 'radio-toggle'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
         const radioGroup = document.createElement('div');
@@ -1442,16 +1446,26 @@
       } else if(!safeField.name.trim()){
         safeField.name = '';
       }
-      if(typeof safeField.type !== 'string'){
-        safeField.type = 'text-box';
+      // Use fieldTypeKey or key as source of truth if type is not set or is just input_type
+      const fieldTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+      if(typeof safeField.type !== 'string' || !safeField.type.trim()){
+        // If we have a fieldTypeKey, use it; otherwise default to text-box
+        safeField.type = fieldTypeKey || 'text-box';
       } else {
         // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
         // BUT preserve description and text-area types BEFORE normalization
         const originalType = safeField.type;
         const normalizedType = getBaseFieldType(originalType);
         
+        // If fieldTypeKey exists and is different from normalized type, prefer fieldTypeKey
+        // This ensures radio-toggle uses 'radio-toggle' not 'radio'
+        if(fieldTypeKey && fieldTypeKey !== normalizedType && 
+           (fieldTypeKey === 'radio-toggle' || fieldTypeKey === 'dropdown' || 
+            fieldTypeKey === 'description' || fieldTypeKey === 'text-area')){
+          safeField.type = fieldTypeKey;
+        }
         // If the original type or normalized type is description/text-area, preserve it
-        if(originalType === 'description' || originalType === 'text-area' || 
+        else if(originalType === 'description' || originalType === 'text-area' || 
            normalizedType === 'description' || normalizedType === 'text-area' ||
            (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')))){
           // Use normalized type if it's description/text-area, otherwise use original
@@ -1654,37 +1668,41 @@
           select.id = selectId;
           if(previewField.required) select.required = true;
           control = select;
-        } else if(baseType === 'radio-toggle'){
-          const options = Array.isArray(previewField.options) ? previewField.options : [];
-          const radioGroup = document.createElement('div');
-          radioGroup.className = 'form-preview-radio-group';
-          wrapper.classList.add('form-preview-field--radio-toggle');
-          const groupName = `${baseId}-radio`;
-          if(options.length){
-            options.forEach((optionValue, optionIndex) => {
-              const radioLabel = document.createElement('label');
-              radioLabel.className = 'form-preview-radio-option';
+        } else {
+          // Use fieldTypeKey/key as fallback for field type identification
+          const fieldTypeKey = previewField.fieldTypeKey || previewField.key || '';
+          if(fieldTypeKey === 'radio-toggle' || baseType === 'radio-toggle'){
+            const options = Array.isArray(previewField.options) ? previewField.options : [];
+            const radioGroup = document.createElement('div');
+            radioGroup.className = 'form-preview-radio-group';
+            wrapper.classList.add('form-preview-field--radio-toggle');
+            const groupName = `${baseId}-radio`;
+            if(options.length){
+              options.forEach((optionValue, optionIndex) => {
+                const radioLabel = document.createElement('label');
+                radioLabel.className = 'form-preview-radio-option';
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = groupName;
+                radio.value = optionValue;
+                const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                  ? optionValue
+                  : `Option ${optionIndex + 1}`;
+                const radioText = document.createElement('span');
+                radioText.textContent = displayValue;
+                radioLabel.append(radio, radioText);
+                radioGroup.appendChild(radioLabel);
+              });
+            } else {
+              const placeholderOption = document.createElement('label');
+              placeholderOption.className = 'form-preview-radio-option';
               const radio = document.createElement('input');
               radio.type = 'radio';
-              radio.name = groupName;
-              radio.value = optionValue;
-              const displayValue = (typeof optionValue === 'string' && optionValue.trim())
-                ? optionValue
-                : `Option ${optionIndex + 1}`;
-              const radioText = document.createElement('span');
-              radioText.textContent = displayValue;
-              radioLabel.append(radio, radioText);
-              radioGroup.appendChild(radioLabel);
-            });
-          } else {
-            const placeholderOption = document.createElement('label');
-            placeholderOption.className = 'form-preview-radio-option';
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            placeholderOption.append(radio, document.createTextNode('Option'));
-            radioGroup.appendChild(placeholderOption);
+              placeholderOption.append(radio, document.createTextNode('Option'));
+              radioGroup.appendChild(placeholderOption);
+            }
+            control = radioGroup;
           }
-          control = radioGroup;
         } else if(baseType === 'venue-ticketing'){
           wrapper.classList.add('form-preview-field--venues-sessions-pricing');
           // Use the same builder as admin form preview for identical structure
