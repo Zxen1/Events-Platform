@@ -23,6 +23,7 @@
 
     /* Layer scale */
     :root{
+      --layer-devtools: 90;     /* developer tools (always on top) */
       --layer-modal: 80;        /* welcome modal, full-screen modals */
       --layer-image-modal: 78;  /* lightbox/image modal */
       --layer-dialog: 76;       /* confirmations/dialogs/toasts */
@@ -8972,7 +8973,7 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: 74 !important;
+  z-index: var(--layer-devtools) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -9023,7 +9024,7 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: 74 !important;
+  z-index: var(--layer-devtools) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;

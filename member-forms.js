@@ -1317,13 +1317,14 @@
       if(emptyState){
         emptyState.hidden = true;
       }
-			if(formWrapper) formWrapper.hidden = false;
-			if(postActions){ postActions.hidden = false; postActions.style.display = ''; }
-			if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
+      if(formWrapper) formWrapper.hidden = false;
+      if(postActions){ postActions.hidden = false; postActions.style.display = ''; }
+      if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
 			
 			// Apply any saved draft and bind autosave for dynamic fields
 			try{
-				const draft = (function(){ try{ return JSON.parse(localStorage.getItem('member-create-draft-v1')||'null'); }catch(_e){ return null; } })();
+        const draftKey = 'member-create-draft-v1::' + (selectedCategory || '') + '::' + (selectedSubcategory || '');
+        const draft = (function(){ try{ return JSON.parse(localStorage.getItem(draftKey)||'null'); }catch(_e){ return null; } })();
 				if(draft && typeof draft === 'object'){
 					formFields.querySelectorAll('input,select,textarea').forEach(function(el){
 						if(!el || el.disabled) return;
@@ -1352,7 +1353,8 @@
 							if(el.type === 'radio'){ if(el.checked){ snapshot[el.name||key] = el.value; } return; }
 							snapshot[key] = el.value;
 						});
-						localStorage.setItem('member-create-draft-v1', JSON.stringify(snapshot));
+            var k = 'member-create-draft-v1::' + (selectedCategory || '') + '::' + (selectedSubcategory || '');
+            localStorage.setItem(k, JSON.stringify(snapshot));
 						try{ updatePostButtonState(); }catch(_e){}
 					}catch(_e){}
 				};
@@ -2718,8 +2720,11 @@
       }
 
       await showCreateStatus(finalMessage, finalOptions);
-      // Clear any saved draft on successful post
-      try{ localStorage.removeItem('member-create-draft-v1'); }catch(_e){}
+      // Clear any saved draft for the active selection on successful post
+      try{
+        var clearKey = 'member-create-draft-v1::' + (selectedCategory || '') + '::' + (selectedSubcategory || '');
+        localStorage.removeItem(clearKey);
+      }catch(_e){}
       if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
         window.memberPanelChangeManager.markSaved();
       }
@@ -2900,6 +2905,7 @@
         const categoryName = categorySelect.value;
         selectedCategory = categoryName;
         selectedSubcategory = '';
+        try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: '' })); }catch(_e){}
         
         // Clear and populate subcategory dropdown
         subcategorySelect.innerHTML = '';
@@ -2935,12 +2941,29 @@
       // Handle subcategory selection
       subcategorySelect.addEventListener('change', () => {
         selectedSubcategory = subcategorySelect.value;
+        try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: selectedSubcategory || '' })); }catch(_e){}
         renderConfiguredFields();
       });
       
       dropdownsContainer.appendChild(categoryWrapper);
       dropdownsContainer.appendChild(subcategoryWrapper);
       formpickerCats.appendChild(dropdownsContainer);
+
+      // Restore last active selection (category/subcategory) and render
+      try{
+        const activeSel = JSON.parse(localStorage.getItem('member-create-active-v1') || 'null');
+        if(activeSel && activeSel.cat){
+          categorySelect.value = activeSel.cat;
+          categorySelect.dispatchEvent(new Event('change'));
+          if(activeSel.sub){
+            // Wait a tick to ensure subcategory options are populated
+            setTimeout(function(){
+              subcategorySelect.value = activeSel.sub;
+              subcategorySelect.dispatchEvent(new Event('change'));
+            }, 0);
+          }
+        }
+      }catch(_e){}
     }
     if(memberForm){
       memberForm.addEventListener('submit', event => {
