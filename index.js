@@ -12643,8 +12643,9 @@ function makePosts(){
             };
 
             const renderDropdownOptions = (focusIndex = null)=>{
-              const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
-              const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
+              // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
+              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio-toggle';
               if(!isOptionsType){
                 dropdownOptionsList.innerHTML = '';
                 return;
@@ -12802,9 +12803,11 @@ function makePosts(){
 
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
-              const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              const showVariantPricing = type === 'variant-pricing';
-              const showVenueSession = type === 'venue-ticketing';
+              // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
+              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio-toggle';
+              const showVariantPricing = fieldTypeKey === 'variant-pricing';
+              const showVenueSession = fieldTypeKey === 'venue-ticketing';
               if(type === 'images'){
                 if(safeField.placeholder){
                   safeField.placeholder = '';
