@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 15, 2025 at 06:25 PM
+-- Generation Time: Nov 16, 2025 at 11:19 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -145,8 +145,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (51, 'Currency Required Error Message', 'msg_error_currency_required', 'error', 'post', 'msg_member', 'Please select a currency before entering a price.', 'Currency validation for pricing', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'msg_member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (53, 'Member Create Intro Message', 'msg_member_create_intro', 'label', 'member', 'msg_member', 'Select the subcategory for your post.', 'Intro text shown in member create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:14:36'),
-(54, 'Member Create Empty State Message', 'msg_member_create_empty', 'label', 'member', 'msg_member', 'Select a category and subcategory to begin.', 'Empty state message when no category/subcategory selected', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
-(55, 'Member Post Listing Button', 'msg_member_post_listing', 'label', 'member', 'msg_member', 'Post Listing', 'Button text to submit a new listing', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(55, 'Member Post Listing Button', 'msg_member_post_listing', 'label', 'member', 'msg_member', 'Submit Post', 'Button text to submit a new listing', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-16 12:13:35'),
 (56, 'Member Tab Create', 'msg_member_tab_create', 'label', 'member', 'msg_member', 'Create Post', 'Tab label for create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (57, 'Member Tab My Posts', 'msg_member_tab_myposts', 'label', 'member', 'msg_member', 'My Posts', 'Tab label for my posts section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (58, 'Member Tab Profile', 'msg_member_tab_profile', 'label', 'member', 'msg_member', 'Profile', 'Tab label for profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
@@ -717,7 +716,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `listing_fee`, `renew_fee`, `featured_fee`, `renew_featured_fee`, `listing_days`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-11-15 05:06:35'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15,6', 'Title, Description, Images, Venue Ticketing, Checkout, Radio Toggle', '1,1,1,1,1,0', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-11-15 16:53:12'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-15 01:51:22'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-15 01:51:03'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-11-15 01:51:42'),
@@ -966,7 +965,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=457;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=567;
 
 --
 -- AUTO_INCREMENT for table `banned_words`

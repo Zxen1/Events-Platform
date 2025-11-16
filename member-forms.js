@@ -615,19 +615,9 @@
       }
       console.log('[Member Forms] renderEmptyState: Closing form', { message });
       
-      if(emptyState){
-        if(typeof message === 'string'){
-          memberSnapshotErrorMessage = message;
-          setEmptyStateMessage(message);
-        } else if(memberSnapshotErrorMessage){
-          setEmptyStateMessage(memberSnapshotErrorMessage);
-        } else {
-          setEmptyStateMessage();
-        }
-        emptyState.hidden = false;
-      }
+      // Remove empty placeholder usage; we no longer show the empty state text
       if(formWrapper) formWrapper.hidden = true;
-      if(postButton) postButton.disabled = true;
+      if(postButton){ postButton.disabled = true; postButton.hidden = true; }
     }
 
     function buildVersionPriceEditor(field, labelId){
@@ -1291,7 +1281,7 @@
         emptyState.hidden = true;
       }
       if(formWrapper) formWrapper.hidden = false;
-      if(postButton) postButton.disabled = false;
+      if(postButton){ postButton.disabled = false; postButton.hidden = false; }
     }
     
     function ensureFieldDefaultsForMember(field){
@@ -2680,7 +2670,10 @@
       
       if(formWrapper) formWrapper.hidden = true;
       if(formFields) formFields.innerHTML = '';
-      if(postButton) postButton.disabled = true;
+      if(postButton){ postButton.disabled = true; postButton.hidden = true; }
+      if(formWrapper) formWrapper.hidden = true;
+      if(formFields) formFields.innerHTML = '';
+      if(postButton){ postButton.disabled = true; postButton.hidden = true; }
       
       const categoryIcons = window.categoryIcons = window.categoryIcons || {};
       const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
