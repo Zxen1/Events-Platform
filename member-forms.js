@@ -34,6 +34,7 @@
       const formWrapper = document.getElementById('memberCreateFormWrapper');
       const formFields = document.getElementById('memberCreateFormFields');
       const postButton = document.getElementById('memberCreatePostBtn');
+      if(postButton){ postButton.hidden = true; postButton.disabled = true; }
       const memberForm = document.getElementById('memberForm');
     
     let selectedCategory = '';
@@ -1231,6 +1232,35 @@
       return wrapper;
     }
 
+    function isCreateFormValid(){
+      if(!formFields) return false;
+      // Query all required standard controls
+      const controls = formFields.querySelectorAll('input[required], textarea[required], select[required]');
+      for(const el of controls){
+        if(el.disabled || el.closest('[hidden]')) continue;
+        if(el.type === 'file'){
+          if(!el.files || el.files.length === 0) return false;
+          continue;
+        }
+        const val = (el.value || '').trim();
+        if(val === '') return false;
+        if(el.type === 'email'){
+          // very light email check
+          if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) return false;
+        }
+        if(el.type === 'url' || el.inputMode === 'url'){
+          try { new URL(val.includes('://') ? val : 'https://' + val); } catch(_e){ return false; }
+        }
+      }
+      return true;
+    }
+
+    function updatePostButtonState(){
+      if(!postButton) return;
+      const ready = isCreateFormValid();
+      postButton.disabled = !ready;
+    }
+
     function renderConfiguredFields(){
       // Only block if user is ACTIVELY typing in venue editor (not just if it exists)
       // This allows subcategory changes to work even when venue editor is present
@@ -1281,7 +1311,7 @@
         emptyState.hidden = true;
       }
       if(formWrapper) formWrapper.hidden = false;
-      if(postButton){ postButton.disabled = false; postButton.hidden = false; }
+      if(postButton){ postButton.hidden = false; updatePostButtonState(); }
     }
     
     function ensureFieldDefaultsForMember(field){
@@ -2887,6 +2917,9 @@
           }
         });
       });
+      // Re-validate on any input/change within the member create form
+      memberForm.addEventListener('input', updatePostButtonState, true);
+      memberForm.addEventListener('change', updatePostButtonState, true);
     }
     if(postButton){
       postButton.addEventListener('click', event => {
