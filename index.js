@@ -5250,6 +5250,10 @@ function uniqueTitle(seed, cityName, idx){
       }
     };
   }
+  // Expose for member-forms.js usage
+  if(typeof window !== 'undefined'){
+    window.cloneGeocoderFeature = cloneGeocoderFeature;
+  }
 
   function addVenueToLocalIndex({ name, address, lng, lat, city }){
     if(!name || !Number.isFinite(lng) || !Number.isFinite(lat)) return;
