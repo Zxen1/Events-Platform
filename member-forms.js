@@ -1279,6 +1279,36 @@
 				if(!(digits.length >= 7 && /^[-+() 0-9]+$/.test(val))) return false;
         }
       }
+
+		// Composite validation: Variant Pricing
+		const requiredVariantEditors = formFields.querySelectorAll('.form-preview-field--variant-pricing .variant-pricing-options-editor[aria-required="true"]');
+		for(const editor of requiredVariantEditors){
+			let ok = false;
+			const rows = editor.querySelectorAll('.variant-pricing-option');
+			for(const row of rows){
+				const currency = row.querySelector('.variant-pricing-currency');
+				const price = row.querySelector('.variant-pricing-price');
+				const hasCurrency = currency && String(currency.value || '').trim();
+				const hasPrice = price && String(price.value || '').trim();
+				if(hasCurrency && hasPrice){ ok = true; break; }
+			}
+			if(!ok) return false;
+		}
+
+		// Composite validation: Venue Ticketing (must have at least one tier with currency+price)
+		const requiredVenueEditors = formFields.querySelectorAll('.venue-session-editor[aria-required="true"]');
+		for(const editor of requiredVenueEditors){
+			let valid = false;
+			const tierRows = editor.querySelectorAll('.tier-row');
+			for(const tr of tierRows){
+				const currency = tr.querySelector('select');
+				const price = tr.querySelector('input[type="text"], input[type="number"]');
+				const hasCurrency = currency && String(currency.value || '').trim();
+				const hasPrice = price && String(price.value || '').trim();
+				if(hasCurrency && hasPrice){ valid = true; break; }
+			}
+			if(!valid) return false;
+		}
       return true;
     }
 
