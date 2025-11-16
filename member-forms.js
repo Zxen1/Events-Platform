@@ -34,7 +34,7 @@
       const formWrapper = document.getElementById('memberCreateFormWrapper');
       const formFields = document.getElementById('memberCreateFormFields');
       const postButton = document.getElementById('memberCreatePostBtn');
-      if(postButton){ postButton.hidden = true; postButton.disabled = true; }
+      if(postButton){ postButton.hidden = true; postButton.disabled = true; postButton.style.display = 'none'; }
       const memberForm = document.getElementById('memberForm');
     
     let selectedCategory = '';
@@ -618,7 +618,7 @@
       
       // Remove empty placeholder usage; we no longer show the empty state text
       if(formWrapper) formWrapper.hidden = true;
-      if(postButton){ postButton.disabled = true; postButton.hidden = true; }
+      if(postButton){ postButton.disabled = true; postButton.hidden = true; postButton.style.display = 'none'; }
     }
 
     function buildVersionPriceEditor(field, labelId){
@@ -1311,7 +1311,7 @@
         emptyState.hidden = true;
       }
       if(formWrapper) formWrapper.hidden = false;
-      if(postButton){ postButton.hidden = false; updatePostButtonState(); }
+      if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
     }
     
     function ensureFieldDefaultsForMember(field){
@@ -2700,10 +2700,10 @@
       
       if(formWrapper) formWrapper.hidden = true;
       if(formFields) formFields.innerHTML = '';
-      if(postButton){ postButton.disabled = true; postButton.hidden = true; }
+      if(postButton){ postButton.disabled = true; postButton.hidden = true; postButton.style.display = 'none'; }
       if(formWrapper) formWrapper.hidden = true;
       if(formFields) formFields.innerHTML = '';
-      if(postButton){ postButton.disabled = true; postButton.hidden = true; }
+      if(postButton){ postButton.disabled = true; postButton.hidden = true; postButton.style.display = 'none'; }
       
       const categoryIcons = window.categoryIcons = window.categoryIcons || {};
       const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
