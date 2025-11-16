@@ -8575,6 +8575,17 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               gap:10px;
+              font-size:14px;
+              cursor:pointer;
+              width:100%;
+              text-align:left;
+            }
+            #memberPanel .member-create-fields .form-preview-radio-option input[type="radio"]{
+              cursor:pointer;
+              flex-shrink:0;
+            }
+            #memberPanel .member-create-fields .form-preview-radio-option span{
+              flex:1;
             }
             #memberPanel .member-create-fields .form-preview-field--url .form-preview-url-wrapper{
               display:flex;
