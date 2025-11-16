@@ -933,9 +933,11 @@
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = radioName;
-            radio.value = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+            // Use the actual option value, don't fall back to "Option X"
+            const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+            radio.value = stringValue;
             if(safeField.required && optionIndex === 0) radio.required = true;
-            const displayValue = radio.value.trim() ? radio.value : `Option ${optionIndex + 1}`;
+            const displayValue = stringValue.trim() || '';
             const radioText = document.createElement('span');
             radioText.textContent = displayValue;
             radioLabel.append(radio, radioText);
