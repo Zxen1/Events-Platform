@@ -1453,6 +1453,8 @@
                 });
                 fileInput.files = dataTransfer.files;
               }
+              // Re-validate submit state after removal
+              try{ updatePostButtonState(); }catch(_e){}
             });
             thumb.appendChild(img);
             thumb.appendChild(removeBtn);
@@ -1460,6 +1462,8 @@
           };
           reader.readAsDataURL(file);
         });
+        // Re-validate submit state after selecting files
+        try{ updatePostButtonState(); }catch(_e){}
       });
     }
     
