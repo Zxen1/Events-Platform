@@ -1702,20 +1702,19 @@
               radioGroup.appendChild(placeholderOption);
             }
             control = radioGroup;
-          }
-        } else if(baseType === 'venue-ticketing'){
-          wrapper.classList.add('form-preview-field--venues-sessions-pricing');
-          // Use the same builder as admin form preview for identical structure
-          if(typeof window.buildVenueSessionPreview === 'function'){
-            control = window.buildVenueSessionPreview(previewField, baseId);
-          } else {
-            // Fallback if not available yet
-            control = buildVenueSessionEditor(previewField, labelId);
-          }
-          if(control && previewField.required){
-            control.setAttribute('aria-required','true');
-          }
-        } else if(baseType === 'variant-pricing'){
+          } else if(baseType === 'venue-ticketing'){
+            wrapper.classList.add('form-preview-field--venues-sessions-pricing');
+            // Use the same builder as admin form preview for identical structure
+            if(typeof window.buildVenueSessionPreview === 'function'){
+              control = window.buildVenueSessionPreview(previewField, baseId);
+            } else {
+              // Fallback if not available yet
+              control = buildVenueSessionEditor(previewField, labelId);
+            }
+            if(control && previewField.required){
+              control.setAttribute('aria-required','true');
+            }
+          } else if(baseType === 'variant-pricing'){
           wrapper.classList.add('form-preview-field--variant-pricing');
           // Use exact same logic as admin form preview for identical structure
           const editor = document.createElement('div');
