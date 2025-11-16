@@ -21,7 +21,7 @@ try {
 		}
 	}
 	if ($configPath === null) {
-		http_response_code(500);
+		// Soft-fail to avoid console 500 noise; token minting just won't occur
 		echo json_encode(['success' => false, 'message' => 'Auth config missing']);
 		return;
 	}
@@ -29,7 +29,6 @@ try {
 
 	// Derive token value from configured API key (do not echo the key in body)
 	if (!isset($API_KEY) || !is_string($API_KEY) || $API_KEY === '') {
-		http_response_code(500);
 		echo json_encode(['success' => false, 'message' => 'API key unavailable']);
 		return;
 	}
@@ -58,8 +57,8 @@ try {
 
 	echo json_encode(['success' => true, 'expires' => $expires]);
 } catch (Throwable $e) {
-	http_response_code(500);
-	echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+	// Soft-fail (200) to avoid noisy console errors
+	echo json_encode(['success' => false, 'message' => 'token_error']);
 }
 ?>
 
