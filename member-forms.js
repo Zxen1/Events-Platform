@@ -1252,11 +1252,31 @@
         const val = (el.value || '').trim();
         if(val === '') return false;
         if(el.type === 'email'){
-          // very light email check
-          if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) return false;
+				// Stricter but still pragmatic email check
+				if(!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val)) return false;
         }
-        if(el.type === 'url' || el.inputMode === 'url'){
-          try { new URL(val.includes('://') ? val : 'https://' + val); } catch(_e){ return false; }
+			if(el.dataset && el.dataset.urlType){ // our URL fields are text inputs with data-url-type
+				let candidate = val;
+				if(candidate && !candidate.includes('://')){
+					candidate = 'https://' + candidate;
+				}
+				try {
+					const parsed = new URL(candidate);
+					// Normalize the input value so downstream logic sees a valid URL
+					if(el.value !== parsed.href){ el.value = parsed.href; }
+				} catch(_e){
+					return false;
+				}
+			} else if(el.type === 'url' || el.inputMode === 'url'){
+				try {
+					const parsed = new URL(val.includes('://') ? val : 'https://' + val);
+					if(el.value !== parsed.href){ el.value = parsed.href; }
+				} catch(_e){ return false; }
+			}
+			if(el.type === 'tel' || el.inputMode === 'tel'){
+				// Allow digits, spaces, parentheses, dashes, plus; require at least 7 digits
+				const digits = val.replace(/\D+/g,'');
+				if(!(digits.length >= 7 && /^[-+() 0-9]+$/.test(val))) return false;
         }
       }
       return true;
@@ -1991,6 +2011,18 @@
           urlInput.autocomplete = 'url';
           urlInput.inputMode = 'url';
           if(previewField.required) urlInput.required = true;
+          // Normalize and validate on input/blur to keep submit state accurate
+          const normalizeUrl = () => {
+            const raw = (urlInput.value || '').trim();
+            if(!raw) return;
+            const withScheme = raw.includes('://') ? raw : ('https://' + raw);
+            try{
+              const parsed = new URL(withScheme);
+              if(urlInput.value !== parsed.href){ urlInput.value = parsed.href; }
+            }catch(_e){ /* ignore here; validation will catch */ }
+          };
+          urlInput.addEventListener('blur', () => { normalizeUrl(); try{ updatePostButtonState(); }catch(_e){} });
+          urlInput.addEventListener('input', () => { try{ updatePostButtonState(); }catch(_e){} });
           urlWrapper.appendChild(urlInput);
           control = urlWrapper;
         } else if(baseType === 'images'){
