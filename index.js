@@ -9511,38 +9511,40 @@ function makePosts(){
             safeField.fieldTypeKey = safeField.key;
           }
           // For brand new fields, default to first field type in list
-          if(!safeField.key && !safeField.fieldTypeKey && FORM_FIELD_TYPES.length > 0){
-            const firstFieldType = FORM_FIELD_TYPES[0];
-            safeField.key = firstFieldType.value;
-            safeField.fieldTypeKey = firstFieldType.value;
-            if(!safeField.type && firstFieldType.type){
-              safeField.type = firstFieldType.type;
+          // Don't default to first field type - let user select
+          // Only set defaults if field type is explicitly provided
+          if(!safeField.key && !safeField.fieldTypeKey){
+            // Leave unset - user must select from dropdown
+          } else if(safeField.fieldTypeKey && !safeField.key){
+            safeField.key = safeField.fieldTypeKey;
+          } else if(safeField.key && !safeField.fieldTypeKey){
+            safeField.fieldTypeKey = safeField.key;
+          }
+          
+          // Only auto-name if field type is explicitly set (not defaulted)
+          if(!safeField.name){
+            safeField.name = '';
+          }
+          if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+          const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+          const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
+          const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
+          let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
+          if(!resolvedFieldTypeName && fieldTypeKey){
+            const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+            if(matchingFieldType){
+              resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
             }
           }
-          // Only auto-name truly new fields
-            if(!safeField.name){
-              safeField.name = '';
+          resolvedFieldTypeName = resolvedFieldTypeName || '';
+          safeField.field_type_name = resolvedFieldTypeName;
+          safeField.fieldTypeName = resolvedFieldTypeName;
+          // Only auto-set name if field type is explicitly provided (not defaulted)
+          if(fieldTypeKey && (!safeField.name || !safeField.name.trim())){
+            if(resolvedFieldTypeName){
+              safeField.name = resolvedFieldTypeName;
             }
-            if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-            const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
-            const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
-            const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-            let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
-            if(!resolvedFieldTypeName && fieldTypeKey){
-              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-              if(matchingFieldType){
-                resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
-              }
-            }
-            resolvedFieldTypeName = resolvedFieldTypeName || '';
-            safeField.field_type_name = resolvedFieldTypeName;
-            safeField.fieldTypeName = resolvedFieldTypeName;
-            // Auto-set name from field type if name is empty
-            if(!safeField.name || !safeField.name.trim()){
-              if(resolvedFieldTypeName){
-                safeField.name = resolvedFieldTypeName;
-              }
-            }
+          }
             if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
                 safeField.placeholder = 'Search for a location';
@@ -12474,6 +12476,16 @@ function makePosts(){
               }
             });
             
+            // Add placeholder option if no field type is selected
+            if(!matchKey){
+              const placeholderOption = document.createElement('option');
+              placeholderOption.value = '';
+              placeholderOption.textContent = 'Select field type...';
+              placeholderOption.disabled = true;
+              placeholderOption.selected = true;
+              fieldTypeSelect.appendChild(placeholderOption);
+            }
+            
             FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
@@ -12830,6 +12842,12 @@ function makePosts(){
               const previousLabel = getFormFieldTypeLabel(previousType).trim();
               const currentName = typeof safeField.name === 'string' ? safeField.name.trim() : '';
               const nextType = fieldTypeSelect.value;
+              
+              // Don't process if placeholder is selected
+              if(!nextType || nextType === ''){
+                return;
+              }
+              
               const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
               const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
