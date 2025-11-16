@@ -2151,7 +2151,7 @@
                   } else {
                     locationState.address = geocoderInput.value || '';
                   }
-                  const center = getMapboxVenueFeatureCenter(clone);
+                  const center = (typeof window !== 'undefined' && typeof window.getMapboxVenueFeatureCenter === 'function')\n+                    ? window.getMapboxVenueFeatureCenter(clone)\n+                    : (Array.isArray(clone?.center) && clone.center.length === 2\n+                        ? clone.center\n+                        : (Array.isArray(clone?.geometry?.coordinates) ? clone.geometry.coordinates : null)); 
                   if(center && center.length >= 2){
                     const [lng, lat] = center;
                     locationState.longitude = formatCoord(lng);

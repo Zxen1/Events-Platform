@@ -5395,6 +5395,10 @@ function uniqueTitle(seed, cityName, idx){
     }
     return null;
   }
+  // Expose for member-forms.js usage
+  if(typeof window !== 'undefined'){
+    window.getMapboxVenueFeatureCenter = getMapboxVenueFeatureCenter;
+  }
 
   function normalizeMapboxVenueFeature(feature){
     if(!feature || typeof feature !== 'object') return null;
