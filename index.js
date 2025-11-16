@@ -22092,6 +22092,7 @@ function openPanel(m){
 }
 
 const memberPanelChangeManager = (()=>{
+  const DRAFT_KEY = 'member-form-draft-v1';
   let panel = null;
   let form = null;
   let saveButton = null;
@@ -22160,6 +22161,24 @@ const memberPanelChangeManager = (()=>{
     return data;
   }
 
+  function saveDraft(state){
+    try{
+      const payload = { ts: Date.now(), state: state || {} };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    }catch(_e){}
+  }
+
+  function loadDraft(){
+    try{
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.state && typeof parsed.state === 'object'){
+        return parsed.state;
+      }
+    }catch(_e){}
+    return null;
+  }
   function stateEquals(a, b){
     const keys = new Set([
       ...Object.keys(a || {}),
@@ -22194,7 +22213,9 @@ const memberPanelChangeManager = (()=>{
     if(applying) return;
     ensureElements();
     const current = serializeState();
-    setDirty(!stateEquals(current, savedState));
+    // Always persist draft; disable prompt for member panel
+    saveDraft(current);
+    setDirty(false);
   }
 
   async function showStatus(message){
@@ -22500,6 +22521,8 @@ form.addEventListener('input', formChangedWrapper, true);
     setTimeout(()=>{
       ensureElements();
       attachListeners();
+      const draft = loadDraft();
+      if(draft){ applyState(draft); }
       refreshSavedState();
     }, 0);
   });
@@ -22509,26 +22532,8 @@ form.addEventListener('input', formChangedWrapper, true);
   }
 
   return {
-    handlePanelClose(panelEl){
-      if(!panel || panelEl !== panel) return false;
-      if(isPromptOpen()) return true;
-      if(dirty){
-        openPrompt(panelEl);
-        return true;
-      }
-      return false;
-    },
-    handleEscape(panelEl){
-      if(isPromptOpen()){
-        cancelPrompt();
-        return true;
-      }
-      if(panel && panelEl === panel && dirty){
-        openPrompt(panelEl);
-        return true;
-      }
-      return false;
-    }
+    handlePanelClose(_panelEl){ return false; },
+    handleEscape(_panelEl){ return false; }
   };
 })();
 

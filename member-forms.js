@@ -1268,7 +1268,7 @@
       postButton.disabled = !ready;
     }
 
-    function renderConfiguredFields(){
+		function renderConfiguredFields(){
       // Only block if user is ACTIVELY typing in venue editor (not just if it exists)
       // This allows subcategory changes to work even when venue editor is present
       const activeElement = document.activeElement;
@@ -1317,9 +1317,49 @@
       if(emptyState){
         emptyState.hidden = true;
       }
-      if(formWrapper) formWrapper.hidden = false;
-      if(postActions){ postActions.hidden = false; postActions.style.display = ''; }
-      if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
+			if(formWrapper) formWrapper.hidden = false;
+			if(postActions){ postActions.hidden = false; postActions.style.display = ''; }
+			if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
+			
+			// Apply any saved draft and bind autosave for dynamic fields
+			try{
+				const draft = (function(){ try{ return JSON.parse(localStorage.getItem('member-create-draft-v1')||'null'); }catch(_e){ return null; } })();
+				if(draft && typeof draft === 'object'){
+					formFields.querySelectorAll('input,select,textarea').forEach(function(el){
+						if(!el || el.disabled) return;
+						if(el.type === 'file') return;
+						var key = el.id || el.name || '';
+						if(!key) return;
+						if(!(key in draft)) return;
+						var val = draft[key];
+						if(el.type === 'checkbox'){ el.checked = !!val; return; }
+						if(el.type === 'radio'){ el.checked = (val === el.value); return; }
+						if(typeof val === 'string' && el.value !== val){ el.value = val; }
+					});
+					try{ updatePostButtonState(); }catch(_e){}
+				}
+			}catch(_e){}
+			if(!formFields.__draftAutosaveBound){
+				var autosave = function(){
+					try{
+						var snapshot = {};
+						formFields.querySelectorAll('input,select,textarea').forEach(function(el){
+							if(!el || el.disabled) return;
+							if(el.type === 'file') return;
+							var key = el.id || el.name || '';
+							if(!key) return;
+							if(el.type === 'checkbox'){ snapshot[key] = !!el.checked; return; }
+							if(el.type === 'radio'){ if(el.checked){ snapshot[el.name||key] = el.value; } return; }
+							snapshot[key] = el.value;
+						});
+						localStorage.setItem('member-create-draft-v1', JSON.stringify(snapshot));
+						try{ updatePostButtonState(); }catch(_e){}
+					}catch(_e){}
+				};
+				formFields.addEventListener('input', autosave, true);
+				formFields.addEventListener('change', autosave, true);
+				formFields.__draftAutosaveBound = true;
+			}
     }
     
     function ensureFieldDefaultsForMember(field){
@@ -2678,6 +2718,8 @@
       }
 
       await showCreateStatus(finalMessage, finalOptions);
+      // Clear any saved draft on successful post
+      try{ localStorage.removeItem('member-create-draft-v1'); }catch(_e){}
       if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
         window.memberPanelChangeManager.markSaved();
       }
