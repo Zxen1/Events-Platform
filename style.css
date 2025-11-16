@@ -7987,6 +7987,7 @@ html, body { cursor: auto !important; }
               border-left:0;
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
+              margin-top:-1px;
             }
             #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
               padding-right:40px;
@@ -8533,6 +8534,7 @@ html, body { cursor: auto !important; }
               border-left:0;
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
+              margin-top:-1px;
             }
             #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
               padding-right:40px;

@@ -12648,6 +12648,13 @@ function makePosts(){
                 optionInput.className = 'dropdown-option-input';
                 optionInput.placeholder = `Option ${optionIndex + 1}`;
                 optionInput.value = optionText;
+                // Prevent clicks on input from opening edit panel
+                optionInput.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                });
+                optionInput.addEventListener('mousedown', (e) => {
+                  e.stopPropagation();
+                });
                 optionInput.addEventListener('input', ()=>{
                   safeField.options[optionIndex] = optionInput.value;
                   optionRow._optionValue = optionInput.value;
@@ -12663,7 +12670,9 @@ function makePosts(){
                 addOptionBtn.className = 'dropdown-option-add';
                 addOptionBtn.textContent = '+';
                 addOptionBtn.setAttribute('aria-label', `Add option after Option ${optionIndex + 1}`);
-                addOptionBtn.addEventListener('click', ()=>{
+                // Prevent clicks on button from opening edit panel
+                addOptionBtn.addEventListener('click', (e)=>{
+                  e.stopPropagation();
                   safeField.options.splice(optionIndex + 1, 0, '');
                   notifyFormbuilderChange();
                   renderDropdownOptions(optionIndex + 1);
@@ -12675,7 +12684,9 @@ function makePosts(){
                 removeOptionBtn.className = 'dropdown-option-remove';
                 removeOptionBtn.textContent = '-';
                 removeOptionBtn.setAttribute('aria-label', `Remove Option ${optionIndex + 1}`);
-                removeOptionBtn.addEventListener('click', ()=>{
+                // Prevent clicks on button from opening edit panel
+                removeOptionBtn.addEventListener('click', (e)=>{
+                  e.stopPropagation();
                   if(safeField.options.length <= 1){
                     safeField.options[0] = '';
                   } else {
@@ -13025,8 +13036,15 @@ function makePosts(){
               if(baseType === 'text-area' || baseType === 'description'){
                 const textarea = document.createElement('textarea');
                 textarea.rows = 5;
-                textarea.readOnly = true;
-                textarea.tabIndex = -1;
+                textarea.readOnly = false;
+                textarea.tabIndex = 0;
+                // Make editable but prevent any form submission or member form linking
+                textarea.addEventListener('change', (e) => {
+                  e.stopPropagation();
+                });
+                textarea.addEventListener('input', (e) => {
+                  e.stopPropagation();
+                });
                 textarea.placeholder = previewField.placeholder || '';
                 textarea.className = 'form-preview-textarea';
                 textarea.style.resize = 'vertical';
@@ -13056,9 +13074,22 @@ function makePosts(){
                   placeholderOption.textContent = 'Select an option';
                   select.appendChild(placeholderOption);
                 }
-                select.tabIndex = -1;
+                select.tabIndex = 0;
                 const selectId = `${baseId}-input`;
                 select.id = selectId;
+                // Make interactive but prevent any form submission or member form linking
+                select.addEventListener('change', (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                });
+                select.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                });
+                select.addEventListener('mousedown', (e) => {
+                  e.stopPropagation();
+                });
+                // Ensure select is not inside any form that could submit
+                select.setAttribute('form', '');
                 control = select;
               } else if(previewField.type === 'radio-toggle'){
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
@@ -13738,13 +13769,20 @@ function makePosts(){
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.placeholder = previewField.placeholder || '';
-                input.readOnly = true;
-                input.tabIndex = -1;
+                input.readOnly = false;
+                input.tabIndex = 0;
                 const inputId = `${baseId}-input`;
                 input.id = inputId;
                 if(previewField.type === 'title'){
                   input.classList.add('form-preview-title-input');
                 }
+                // Make editable but prevent any form submission or member form linking
+                input.addEventListener('change', (e) => {
+                  e.stopPropagation();
+                });
+                input.addEventListener('input', (e) => {
+                  e.stopPropagation();
+                });
                 control = input;
               }
               if(control){
