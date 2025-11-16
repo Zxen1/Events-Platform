@@ -853,8 +853,14 @@
 
       // Use fieldTypeKey/key as PRIMARY source for field type identification (not type)
       const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-      // If fieldTypeKey is available, use it directly; otherwise fall back to type
-      const resolvedBaseType = fieldTypeKey || safeField.type || 'text-box';
+      // CRITICAL: For radio-toggle and dropdown, ALWAYS use fieldTypeKey if available
+      // Otherwise fall back to type
+      let resolvedBaseType = '';
+      if(fieldTypeKey === 'radio-toggle' || fieldTypeKey === 'dropdown'){
+        resolvedBaseType = fieldTypeKey;
+      } else {
+        resolvedBaseType = fieldTypeKey || safeField.type || 'text-box';
+      }
       
       if(resolvedBaseType === 'description' || resolvedBaseType === 'text-area'){
         const textarea = document.createElement('textarea');
@@ -1497,6 +1503,11 @@
       }
       if(!Array.isArray(safeField.options)){
         safeField.options = [];
+      }
+      // CRITICAL: Preserve fieldTypeKey and key on the returned object
+      if(field && typeof field === 'object'){
+        if(field.fieldTypeKey) safeField.fieldTypeKey = field.fieldTypeKey;
+        if(field.key) safeField.key = field.key;
       }
       return safeField;
     }
