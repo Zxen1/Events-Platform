@@ -1376,16 +1376,27 @@
         const draftKey = 'member-create-draft-v1::' + (selectedCategory || '') + '::' + (selectedSubcategory || '');
         const draft = (function(){ try{ return JSON.parse(localStorage.getItem(draftKey)||'null'); }catch(_e){ return null; } })();
 				if(draft && typeof draft === 'object'){
-					formFields.querySelectorAll('input,select,textarea').forEach(function(el){
+          formFields.querySelectorAll('input,select,textarea').forEach(function(el){
 						if(!el || el.disabled) return;
 						if(el.type === 'file') return;
 						var key = el.id || el.name || '';
 						if(!key) return;
 						if(!(key in draft)) return;
 						var val = draft[key];
-						if(el.type === 'checkbox'){ el.checked = !!val; return; }
-						if(el.type === 'radio'){ el.checked = (val === el.value); return; }
-						if(typeof val === 'string' && el.value !== val){ el.value = val; }
+            if(el.type === 'checkbox'){
+              el.checked = !!val;
+              try{ el.dispatchEvent(new Event('input', { bubbles: true })); }catch(_e){}
+              return;
+            }
+            if(el.type === 'radio'){
+              el.checked = (val === el.value);
+              try{ el.dispatchEvent(new Event('input', { bubbles: true })); }catch(_e){}
+              return;
+            }
+            if(typeof val === 'string' && el.value !== val){
+              el.value = val;
+              try{ el.dispatchEvent(new Event('input', { bubbles: true })); }catch(_e){}
+            }
 					});
 					try{ updatePostButtonState(); }catch(_e){}
 				}
@@ -1672,6 +1683,9 @@
           } else {
             // Fallback if not available yet
             control = buildVenueSessionEditor(previewField, labelId);
+          }
+          if(control && previewField.required){
+            control.setAttribute('aria-required','true');
           }
         } else if(baseType === 'variant-pricing'){
           wrapper.classList.add('form-preview-field--variant-pricing');
@@ -2113,10 +2127,14 @@
           latitudeInput.type = 'hidden';
           latitudeInput.dataset.locationLatitude = 'true';
           latitudeInput.value = locationState.latitude || '';
+          latitudeInput.id = `${baseId}-location-latitude`;
+          latitudeInput.addEventListener('input', ()=>{ locationState.latitude = latitudeInput.value; });
           const longitudeInput = document.createElement('input');
           longitudeInput.type = 'hidden';
           longitudeInput.dataset.locationLongitude = 'true';
           longitudeInput.value = locationState.longitude || '';
+          longitudeInput.id = `${baseId}-location-longitude`;
+          longitudeInput.addEventListener('input', ()=>{ locationState.longitude = longitudeInput.value; });
           locationWrapper.append(latitudeInput, longitudeInput);
           const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
             ? previewField.placeholder
