@@ -846,8 +846,11 @@
         asterisk.textContent = '*';
         label.appendChild(asterisk);
       }
-      wrapper.appendChild(label);
-
+      const header = document.createElement('div');
+      header.className = 'form-preview-field-header';
+      header.style.position = 'relative';
+      header.appendChild(label);
+      
       const placeholder = safeField.placeholder || '';
       let control = null;
 
@@ -1249,7 +1252,9 @@
             control.setAttribute('aria-labelledby', labelId);
           }
         }
-        wrapper.appendChild(control);
+        wrapper.append(header, control);
+      } else {
+        wrapper.appendChild(header);
       }
       return wrapper;
     }

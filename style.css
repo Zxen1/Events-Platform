@@ -8546,12 +8546,20 @@ html, body { cursor: auto !important; }
               padding-right:32px;
               position:relative;
               z-index:0;
+              width:100%;
+              box-sizing:border-box;
+            }
+            #memberPanel .member-create-fields .form-preview-field--radio-toggle{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
             }
             #memberPanel .member-create-fields .form-preview-radio-group{
               display:flex;
               flex-direction:column;
               gap:6px;
               align-items:flex-start;
+              width:100%;
             }
             #memberPanel .member-create-fields .form-preview-field--location .location-field-wrapper{
               display:flex;
