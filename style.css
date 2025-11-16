@@ -2740,7 +2740,7 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease;
-  z-index:15000;
+  z-index:var(--layer-dialog);
 }
 
 .formbuilder-confirm-overlay.visible{
@@ -4071,7 +4071,7 @@ body.hide-ads .ad-board{
   box-shadow:0 10px 25px rgba(0,0,0,0.4);
   font-size:14px;
   font-weight:normal;
-  z-index:13000;
+  z-index:var(--layer-dialog);
   pointer-events:none;
   opacity:0;
   transition:opacity 0.2s ease, transform 0.2s ease;
@@ -5555,7 +5555,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .time-popup,
 .post-body .calendar-container .time-popup{
   position:absolute;
-  z-index:10500;
+  z-index:var(--layer-menu);
 }
 
 .open-post .calendar-container .time-popup .time-list,
@@ -6081,7 +6081,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     opacity:0;
     transition:opacity .3s;
     pointer-events:none;
-    z-index:10000;
+    z-index:var(--layer-dialog);
   }
   .copy-msg.show{opacity:1;}
 
@@ -6095,7 +6095,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:3000;
+    z-index:var(--layer-image-modal);
   }
   .image-modal-container.hidden{display:none;}
   .image-modal-container .image-modal img{
@@ -8972,7 +8972,7 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: 10000 !important;
+  z-index: 74 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -9023,7 +9023,7 @@ html, body { cursor: auto !important; }
   font-size: 14px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  z-index: 10000 !important;
+  z-index: 74 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
