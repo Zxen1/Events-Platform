@@ -2670,7 +2670,10 @@
         } else if(!postTitle && typeof value === 'string' && value && field.name && /title/i.test(field.name)){
           postTitle = value;
         }
+        const fieldId = field.id || field.field_id || (field.name ? String(field.name).trim() : `field-${fieldPayload.length + 1}`);
         fieldPayload.push({
+          field_id: fieldId,
+          id: fieldId,
           name: field.name || '',
           type,
           required: !!field.required,
