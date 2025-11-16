@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 16, 2025 at 11:19 PM
+-- Generation Time: Nov 17, 2025 at 04:49 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -144,7 +144,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (50, 'No Icons Found Error Message', 'msg_error_no_icons', 'error', 'admin', 'msg_admin', 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>', 'Shown when icon folder is empty or invalid', 1, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (51, 'Currency Required Error Message', 'msg_error_currency_required', 'error', 'post', 'msg_member', 'Please select a currency before entering a price.', 'Currency validation for pricing', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'msg_member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
-(53, 'Member Create Intro Message', 'msg_member_create_intro', 'label', 'member', 'msg_member', 'Select the subcategory for your post.', 'Intro text shown in member create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:14:36'),
+(53, 'Member Create Intro Message', 'msg_member_create_intro', 'label', 'member', 'msg_member', 'Complete the form below to submit your post.', 'Intro text shown in member create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-16 12:30:31'),
 (55, 'Member Post Listing Button', 'msg_member_post_listing', 'label', 'member', 'msg_member', 'Submit Post', 'Button text to submit a new listing', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-16 12:13:35'),
 (56, 'Member Tab Create', 'msg_member_tab_create', 'label', 'member', 'msg_member', 'Create Post', 'Tab label for create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (57, 'Member Tab My Posts', 'msg_member_tab_myposts', 'label', 'member', 'msg_member', 'My Posts', 'Tab label for my posts section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
@@ -257,7 +257,8 @@ INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `
 (2, 'Opportunities', 'opportunities', 4, 0, 'assets/icons-30/opportunities-category-icon-30.webp', '#F1C40F', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (3, 'Learning', 'learning', 3, 0, 'assets/icons-30/learning-category-icon-30.webp', '#3498DB', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/icons-30/Buy-and-sell-category-icon-30.webp', '#2ECC71', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
-(5, 'For Hire', 'for-hire', 2, 0, 'assets/icons-30/For-hire-category-icon-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-11-11 23:59:15');
+(5, 'For Hire', 'for-hire', 2, 0, 'assets/icons-30/For-hire-category-icon-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
+(47, 'Test', 'test', 6, 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', NULL, '2025-11-17 04:45:27', '2025-11-17 04:45:27');
 
 -- --------------------------------------------------------
 
@@ -739,7 +740,8 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-11 12:59:15'),
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-15 01:53:10'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-15 01:53:22'),
-(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-15 01:52:50');
+(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-11-15 01:52:50'),
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16', 'Title, Description, Text Box, Text Area, Dropdown, Radio Toggle, Email, Phone, Location, Website (URL), Tickets (URL), Images, Coupon, Variant Pricing, Checkout, Venue Ticketing', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, NULL, NULL, NULL, NULL, NULL, 'Standard', '2025-11-16 17:46:29', '2025-11-16 17:49:03');
 
 -- --------------------------------------------------------
 
@@ -965,7 +967,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=567;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=737;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -977,7 +979,7 @@ ALTER TABLE `banned_words`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `commissions`
@@ -1073,7 +1075,7 @@ ALTER TABLE `post_revisions`
 -- AUTO_INCREMENT for table `subcategories`
 --
 ALTER TABLE `subcategories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `transactions`
