@@ -12666,7 +12666,7 @@ function makePosts(){
                 const optionInput = document.createElement('input');
                 optionInput.type = 'text';
                 optionInput.className = 'dropdown-option-input';
-                optionInput.placeholder = `Option ${optionIndex + 1}`;
+                optionInput.placeholder = 'Enter option text';
                 optionInput.value = optionText;
                 // Prevent clicks on input from opening edit panel
                 optionInput.addEventListener('click', (e) => {
@@ -12689,7 +12689,7 @@ function makePosts(){
                 addOptionBtn.type = 'button';
                 addOptionBtn.className = 'dropdown-option-add';
                 addOptionBtn.textContent = '+';
-                addOptionBtn.setAttribute('aria-label', `Add option after Option ${optionIndex + 1}`);
+                addOptionBtn.setAttribute('aria-label', `Add option after this one`);
                 // Prevent clicks on button from opening edit panel
                 addOptionBtn.addEventListener('click', (e)=>{
                   e.stopPropagation();
