@@ -189,6 +189,9 @@
       }
 
       const filesWithContext = [];
+      const allowedMimePrefixes = ['image/'];
+      const allowedExtensions = ['jpg','jpeg','png','gif','webp','bmp'];
+      const maxFileSizeBytes = 5 * 1024 * 1024; // 5 MB default guard
       uploadEntries.forEach(entry => {
         if(!entry || typeof entry !== 'object') return;
         const files = Array.isArray(entry.files) ? entry.files : [];
@@ -197,6 +200,21 @@
           if(!file) return;
           const isFileInstance = typeof File !== 'undefined' ? file instanceof File : true;
           if(isFileInstance || typeof file === 'object'){
+            // Client-side guard before attempting upload
+            const name = typeof file.name === 'string' ? file.name.toLowerCase() : '';
+            const ext = name.includes('.') ? name.split('.').pop() : '';
+            const hasAllowedMime = allowedMimePrefixes.some(prefix => (file.type || '').startsWith(prefix));
+            const hasAllowedExt = allowedExtensions.includes(ext);
+            const tooLarge = typeof file.size === 'number' && file.size > maxFileSizeBytes;
+            if(!(hasAllowedMime && hasAllowedExt)){
+              result.errors.push({ file, label, message: 'Only image files are allowed.' });
+              return;
+            }
+            if(tooLarge){
+              const mb = (maxFileSizeBytes / (1024 * 1024)).toFixed(1);
+              result.errors.push({ file, label, message: `Image exceeds ${mb} MB.` });
+              return;
+            }
             filesWithContext.push({ file, label });
           }
         });
@@ -1334,6 +1352,12 @@
       if(!previewGrid) return;
       
       const maxImages = parseInt(fileInput.dataset.maxImages || '10', 10);
+      const maxFileSizeBytes = (() => {
+        const custom = parseInt(fileInput.dataset.maxBytes || '0', 10);
+        return Number.isFinite(custom) && custom > 0 ? custom : 5 * 1024 * 1024;
+      })();
+      const allowedMimePrefixes = ['image/'];
+      const allowedExtensions = ['jpg','jpeg','png','gif','webp','bmp'];
       const fileMap = new WeakMap();
       
       fileInput.addEventListener('change', function(event){
@@ -1356,7 +1380,25 @@
         }
         
         files.forEach(file => {
-          if(!file.type.startsWith('image/')) return;
+          const name = typeof file.name === 'string' ? file.name.toLowerCase() : '';
+          const ext = name.includes('.') ? name.split('.').pop() : '';
+          const hasAllowedMime = allowedMimePrefixes.some(prefix => (file.type || '').startsWith(prefix));
+          const hasAllowedExt = allowedExtensions.includes(ext);
+          if(!(hasAllowedMime && hasAllowedExt)){
+            if(messageEl){
+              messageEl.textContent = 'Only image files are allowed (jpg, jpeg, png, gif, webp, bmp).';
+              messageEl.hidden = false;
+            }
+            return;
+          }
+          if(typeof file.size === 'number' && file.size > maxFileSizeBytes){
+            if(messageEl){
+              const mb = (maxFileSizeBytes / (1024 * 1024)).toFixed(1);
+              messageEl.textContent = `Each image must be ≤ ${mb} MB.`;
+              messageEl.hidden = false;
+            }
+            return;
+          }
           
           const reader = new FileReader();
           reader.onload = function(e){
