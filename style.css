@@ -23,7 +23,7 @@
 
     /* Layer scale */
     :root{
-      --layer-devtools: 90;     /* developer tools (always on top) */
+      --layer-devtools: 100;    /* developer tools (always on top) */
       --layer-modal: 80;        /* welcome modal, full-screen modals */
       --layer-image-modal: 78;  /* lightbox/image modal */
       --layer-dialog: 76;       /* confirmations/dialogs/toasts */
