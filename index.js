@@ -12625,7 +12625,8 @@ function makePosts(){
             };
 
             const renderDropdownOptions = (focusIndex = null)=>{
-              const isOptionsType = safeField.type === 'dropdown' || safeField.type === 'radio-toggle';
+              const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
+              const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
               if(!isOptionsType){
                 dropdownOptionsList.innerHTML = '';
                 return;
@@ -12782,7 +12783,7 @@ function makePosts(){
             });
 
             const updateFieldEditorsByType = ()=>{
-              const type = safeField.type;
+              const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
               const showVariantPricing = type === 'variant-pricing';
               const showVenueSession = type === 'venue-ticketing';

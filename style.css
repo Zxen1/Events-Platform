@@ -7974,12 +7974,13 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .form-preview-container .form-preview-field--dropdown{
               position:relative;
+              overflow:hidden;
             }
             #tab-forms .form-preview-container .form-preview-field--dropdown::after{
               content:'';
               position:absolute;
               top:50%;
-              right:18px;
+              right:12px;
               width:8px;
               height:8px;
               border:2px solid var(--button-text);
@@ -7988,9 +7989,12 @@ html, body { cursor: auto !important; }
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
               margin-top:-1px;
+              z-index:1;
             }
             #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
-              padding-right:40px;
+              padding-right:32px;
+              position:relative;
+              z-index:0;
             }
             #tab-forms .form-preview-container .form-preview-field--radio-toggle{
               display:flex;
@@ -8521,12 +8525,13 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .form-preview-field--dropdown{
               position:relative;
+              overflow:hidden;
             }
             #memberPanel .member-create-fields .form-preview-field--dropdown::after{
               content:'';
               position:absolute;
               top:50%;
-              right:18px;
+              right:12px;
               width:8px;
               height:8px;
               border:2px solid var(--button-text);
@@ -8535,9 +8540,12 @@ html, body { cursor: auto !important; }
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
               margin-top:-1px;
+              z-index:1;
             }
             #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
-              padding-right:40px;
+              padding-right:32px;
+              position:relative;
+              z-index:0;
             }
             #memberPanel .member-create-fields .form-preview-radio-group{
               display:flex;
