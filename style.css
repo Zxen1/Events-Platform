@@ -7976,7 +7976,12 @@ html, body { cursor: auto !important; }
               position:relative;
               overflow:hidden;
             }
-            #tab-forms .form-preview-container .form-preview-field--dropdown::after{
+            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
+              padding-right:32px;
+              position:relative;
+              z-index:0;
+            }
+            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select::after{
               content:'';
               position:absolute;
               top:50%;
@@ -7990,11 +7995,6 @@ html, body { cursor: auto !important; }
               pointer-events:none;
               margin-top:-1px;
               z-index:1;
-            }
-            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
-              padding-right:32px;
-              position:relative;
-              z-index:0;
             }
             #tab-forms .form-preview-container .form-preview-field--radio-toggle{
               display:flex;
@@ -8527,7 +8527,14 @@ html, body { cursor: auto !important; }
               position:relative;
               overflow:hidden;
             }
-            #memberPanel .member-create-fields .form-preview-field--dropdown::after{
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
+              padding-right:32px;
+              position:relative;
+              z-index:0;
+              width:100%;
+              box-sizing:border-box;
+            }
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select::after{
               content:'';
               position:absolute;
               top:50%;
@@ -8541,13 +8548,6 @@ html, body { cursor: auto !important; }
               pointer-events:none;
               margin-top:-1px;
               z-index:1;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
-              padding-right:32px;
-              position:relative;
-              z-index:0;
-              width:100%;
-              box-sizing:border-box;
             }
             #memberPanel .member-create-fields .form-preview-field--radio-toggle{
               display:flex;

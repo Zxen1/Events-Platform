@@ -568,8 +568,29 @@
             if(opt && typeof opt === 'object' && typeof opt.version === 'string') return opt.version;
             return '';
           });
-          if(safe.options.length === 0){
-            safe.options.push('');
+          // If options are empty or only have empty strings, try to seed from field type placeholder (e.g., "A,B,C")
+          const hasNonEmptyOptions = safe.options.some(opt => opt && typeof opt === 'string' && opt.trim() !== '');
+          if(!hasNonEmptyOptions){
+            const fieldTypeKey = field.fieldTypeKey || field.key || '';
+            if(fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio'){
+              // Try to get placeholder from FORM_FIELD_TYPES
+              if(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELD_TYPES)){
+                const matchingFieldType = window.FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+                if(matchingFieldType && matchingFieldType.placeholder){
+                  const placeholderStr = matchingFieldType.placeholder.trim();
+                  if(placeholderStr){
+                    const parsed = placeholderStr.split(',').map(s => s.trim()).filter(s => s);
+                    if(parsed.length > 0){
+                      safe.options = parsed;
+                    }
+                  }
+                }
+              }
+            }
+            // If still empty after trying placeholder, add empty strings
+            if(safe.options.length === 0){
+              safe.options.push('', '', '');
+            }
           }
         } else if(type === 'venue-ticketing'){
           const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
@@ -891,7 +912,8 @@
           const option = document.createElement('option');
           const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
           option.value = stringValue;
-          option.textContent = stringValue.trim() ? stringValue : `Option ${optionIndex + 1}`;
+          // Use the actual option value, don't fall back to "Option X"
+          option.textContent = stringValue.trim() || '';
           select.appendChild(option);
         });
         control = select;
@@ -1673,11 +1695,10 @@
           if(options.length){
             options.forEach((optionValue, optionIndex) => {
               const option = document.createElement('option');
-              const displayValue = (typeof optionValue === 'string' && optionValue.trim())
-                ? optionValue
-                : `Option ${optionIndex + 1}`;
-              option.value = optionValue;
-              option.textContent = displayValue;
+              // Use the actual option value, don't fall back to "Option X"
+              const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+              option.value = stringValue;
+              option.textContent = stringValue.trim() || '';
               select.appendChild(option);
             });
           } else {
@@ -1705,12 +1726,11 @@
                 const radio = document.createElement('input');
                 radio.type = 'radio';
                 radio.name = groupName;
-                radio.value = optionValue;
-                const displayValue = (typeof optionValue === 'string' && optionValue.trim())
-                  ? optionValue
-                  : `Option ${optionIndex + 1}`;
+                const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+                radio.value = stringValue;
+                // Use the actual option value, don't fall back to "Option X"
                 const radioText = document.createElement('span');
-                radioText.textContent = displayValue;
+                radioText.textContent = stringValue.trim() || '';
                 radioLabel.append(radio, radioText);
                 radioGroup.appendChild(radioLabel);
               });
