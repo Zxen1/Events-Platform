@@ -28,6 +28,10 @@
     }
     
     const memberCreateSection = document.getElementById('memberTab-create');
+    // Mint HttpOnly token for connectors (no secrets in HTML)
+    try{
+      fetch('/gateway.php?action=issue-token', { credentials: 'same-origin' }).catch(()=>{});
+    }catch(_e){}
     if(memberCreateSection){
       const formpickerCats = document.getElementById('memberFormpickerCats');
       const emptyState = document.getElementById('memberCreateEmpty');

@@ -26,6 +26,11 @@ require '../config/config-auth.php';
 require '../config/config-paths.php';
 header('Content-Type: application/json');
 
+// Allow HttpOnly cookie fallback for connector auth
+if (empty($_SERVER['HTTP_X_API_KEY']) && isset($_COOKIE['FUNMAP_TOKEN'])) {
+  $_SERVER['HTTP_X_API_KEY'] = (string) $_COOKIE['FUNMAP_TOKEN'];
+}
+
 if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
   http_response_code(403); exit(json_encode(['error'=>'Forbidden']));
 }
