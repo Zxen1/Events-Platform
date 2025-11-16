@@ -21558,7 +21558,11 @@ function bringToTop(item){
   if(idx!==-1) panelStack.splice(idx,1);
   panelStack.push(item);
   panelStack.forEach((p,i)=>{
-    if(p instanceof Element){ p.style.zIndex = 2000 + i; }
+    if(p instanceof Element){ 
+      // Use CSS variables for z-index, ensuring devtools buttons (z-index 100) stay on top
+      const baseZ = p.classList.contains('panel') ? 60 : (p.classList.contains('modal') ? 90 : 60);
+      p.style.zIndex = String(baseZ + i);
+    }
   });
 }
 function registerPopup(p){
