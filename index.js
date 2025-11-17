@@ -13221,7 +13221,7 @@ function makePosts(){
               editPanel,
               editMenu,
               inlineControls,
-              fieldTypeSelect,
+              fieldTypeMenuBtn,
               fieldRequiredInput,
               dropdownOptionsContainer,
               dropdownOptionsList,
@@ -14232,7 +14232,7 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeSelect, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             header.append(fieldDragHandle);
             header.append(fieldEditBtn);
@@ -14345,35 +14345,40 @@ function makePosts(){
               openEditPanel,
               focus(){
                 try{
-                  fieldTypeSelect.focus({ preventScroll: true });
+                  if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
+                    fieldTypeMenuBtn.focus({ preventScroll: true });
+                  }
                 }catch(err){
-                  try{ fieldTypeSelect.focus(); }catch(e){}
+                  try{ 
+                    if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
+                      fieldTypeMenuBtn.focus(); 
+                    }
+                  }catch(e){}
                 }
               },
               focusTypePicker(){
                 const focusSelect = ()=>{
                   try{
-                    fieldTypeSelect.focus({ preventScroll: true });
+                    if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
+                      fieldTypeMenuBtn.focus({ preventScroll: true });
+                    }
                   }catch(err){
-                    try{ fieldTypeSelect.focus(); }catch(e){}
+                    try{ 
+                      if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
+                        fieldTypeMenuBtn.focus(); 
+                      }
+                    }catch(e){}
                   }
                 };
                 focusSelect();
                 requestAnimationFrame(()=>{
-                  if(typeof fieldTypeSelect.showPicker === 'function'){
+                  // Button elements don't have showPicker, menu is controlled by click handler
+                  // Just click the button to open the menu
+                  if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.click === 'function'){
                     try{
-                      fieldTypeSelect.showPicker();
-                      return;
+                      fieldTypeMenuBtn.click();
                     }catch(err){}
                   }
-                  try{
-                    const openEvent = new MouseEvent('mousedown', {
-                      bubbles: true,
-                      cancelable: true,
-                      view: window
-                    });
-                    fieldTypeSelect.dispatchEvent(openEvent);
-                  }catch(err){}
                 });
               }
             };
