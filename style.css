@@ -7338,24 +7338,7 @@ html, body { cursor: auto !important; }
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
               color:var(--input-text);
-              padding:0 32px 0 10px;
-              appearance:none;
-              -webkit-appearance:none;
-            }
-            /* Session currency select arrows use .dropdown-arrow class */
-            #tab-forms .session-currency-select-wrapper .dropdown-arrow,
-            #tab-forms .tier-price-row > div:has(.session-currency-select) .dropdown-arrow{
-              position:absolute;
-              top:50%;
-              right:10px;
-              transform:translateY(-50%) rotate(45deg);
-              margin-right:0;
-            }
-            #tab-forms .session-currency-select-wrapper:focus-within .dropdown-arrow,
-            #tab-forms .session-currency-select-wrapper.is-focused .dropdown-arrow,
-            #tab-forms .tier-price-row > div:has(.session-currency-select:focus) .dropdown-arrow,
-            #tab-forms .tier-price-row > div:has(.session-currency-select).is-focused .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
+              padding:0 10px;
             }
             #tab-forms .venue-line > *:first-child,
             #tab-forms .session-date-row > *:first-child,
@@ -7601,18 +7584,7 @@ html, body { cursor: auto !important; }
               flex:1 1 auto;
             }
             #tab-forms .field-type-select{
-              padding-right:32px;
-            }
-            #tab-forms .field-type-select-wrapper .dropdown-arrow{
-              position:absolute;
-              top:50%;
-              right:10px;
-              transform:translateY(-50%) rotate(45deg);
-              margin-right:0;
-            }
-            #tab-forms .field-type-select-wrapper:focus-within .dropdown-arrow,
-            #tab-forms .field-type-select-wrapper.is-focused .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
+              padding-right:10px;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
@@ -7797,21 +7769,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .variant-pricing-currency{
               width:100%;
-              padding-right:32px;
-              appearance:none;
-              -webkit-appearance:none;
-            }
-            /* Variant pricing currency arrows use .dropdown-arrow class */
-            #tab-forms .variant-pricing-row > div:has(.variant-pricing-currency) .dropdown-arrow{
-              position:absolute;
-              top:50%;
-              right:10px;
-              transform:translateY(-50%) rotate(45deg);
-              margin-right:0;
-            }
-            #tab-forms .variant-pricing-row > div:has(.variant-pricing-currency:focus) .dropdown-arrow,
-            #tab-forms .variant-pricing-row > div:has(.variant-pricing-currency).is-focused .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .variant-pricing-price{
               width:100%;
@@ -8062,10 +8019,8 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .form-preview-container .panel-field select,
             #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
-              appearance:none;
-              -webkit-appearance:none;
               height:36px;
-              padding:0 32px 0 12px;
+              padding:0 12px;
               width:100%;
               box-sizing:border-box;
               max-width:100%;
@@ -8081,20 +8036,6 @@ html, body { cursor: auto !important; }
               position:relative;
               width:100%;
               box-sizing:border-box;
-            }
-            /* Form preview dropdown arrows use .dropdown-arrow class like formbuilder */
-            #tab-forms .form-preview-container .form-preview-field--dropdown .dropdown-arrow,
-            #tab-forms .form-preview-container .form-preview-field--dropdown > div .dropdown-arrow{
-              position:absolute;
-              top:50%;
-              right:10px;
-              transform:translateY(-50%) rotate(45deg);
-              margin-right:0;
-            }
-            #tab-forms .form-preview-container .form-preview-field--dropdown:focus-within .dropdown-arrow,
-            #tab-forms .form-preview-container .form-preview-field--dropdown > div:focus-within .dropdown-arrow,
-            #tab-forms .form-preview-container .form-preview-field--dropdown > div.is-focused .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .form-preview-container .form-preview-field--radio-toggle{
               display:flex;
@@ -8635,9 +8576,8 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .form-preview-field select,
             #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
-              appearance:none;
               height:36px;
-              padding:0 32px 0 12px;
+              padding:0 12px;
               width:100%;
               box-sizing:border-box;
               max-width:100%;
@@ -8653,23 +8593,6 @@ html, body { cursor: auto !important; }
               position:relative;
               width:100%;
               box-sizing:border-box;
-            }
-            /* Member form dropdown arrows use .dropdown-arrow class like formbuilder */
-            #memberPanel .member-create-fields .form-preview-field--dropdown .dropdown-arrow,
-            #memberPanel .formpicker-dropdowns .form-preview-field--dropdown .dropdown-arrow,
-            #memberPanel .member-create-fields .form-preview-field--dropdown > div .dropdown-arrow{
-              position:absolute;
-              top:50%;
-              right:10px;
-              transform:translateY(-50%) rotate(45deg);
-              margin-right:0;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown:focus-within .dropdown-arrow,
-            #memberPanel .formpicker-dropdowns .form-preview-field--dropdown:focus-within .dropdown-arrow,
-            #memberPanel .member-create-fields .form-preview-field--dropdown > div:focus-within .dropdown-arrow,
-            #memberPanel .member-create-fields .form-preview-field--dropdown > div.is-focused .dropdown-arrow,
-            #memberPanel .formpicker-dropdowns .form-preview-field--dropdown > div.is-focused .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .form-preview-field--radio-toggle{
               display:flex;
@@ -8774,21 +8697,7 @@ html, body { cursor: auto !important; }
               position:relative;
             }
             #memberPanel .member-create-fields .variant-pricing-currency{
-              padding-right:32px;
-              appearance:none;
-              -webkit-appearance:none;
-            }
-            /* Member forms variant pricing currency arrows use .dropdown-arrow class */
-            #memberPanel .member-create-fields .variant-pricing-row > div:has(.variant-pricing-currency) .dropdown-arrow{
-              position:absolute;
-              top:50%;
-              right:10px;
-              transform:translateY(-50%) rotate(45deg);
-              margin-right:0;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row > div:has(.variant-pricing-currency:focus) .dropdown-arrow,
-            #memberPanel .member-create-fields .variant-pricing-row > div:has(.variant-pricing-currency).is-focused .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
+              width:100%;
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom{
               flex-direction:row;

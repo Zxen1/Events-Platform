@@ -697,31 +697,6 @@
         });
         currencySelect.value = option.currency || '';
         currencySelect.addEventListener('change', ()=>{ option.currency = currencySelect.value; });
-        // Add working dropdown arrow
-        const currencyWrapper = document.createElement('div');
-        currencyWrapper.style.position = 'relative';
-        currencyWrapper.style.width = '100%';
-        const currencyArrow = document.createElement('span');
-        currencyArrow.className = 'dropdown-arrow';
-        currencyArrow.setAttribute('aria-hidden', 'true');
-        currencyWrapper.appendChild(currencySelect);
-        currencyWrapper.appendChild(currencyArrow);
-        // Animate arrow on focus/blur with delay to handle dropdown opening
-        let currencyBlurTimeout = null;
-        currencySelect.addEventListener('focus', () => {
-          if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
-          currencyWrapper.classList.add('is-focused');
-        });
-        currencySelect.addEventListener('blur', () => {
-          currencyBlurTimeout = setTimeout(() => {
-            currencyWrapper.classList.remove('is-focused');
-          }, 150);
-        });
-        currencySelect.addEventListener('mousedown', () => {
-          if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
-          currencyWrapper.classList.add('is-focused');
-        });
-
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
         priceInput.className = 'variant-pricing-price form-preview-variant-pricing-price';
@@ -732,7 +707,7 @@
           priceInput.value = option.price;
         });
 
-        bottomRow.append(currencyWrapper, priceInput);
+        bottomRow.append(currencySelect, priceInput);
 
         const actions = document.createElement('div');
         actions.className = 'variant-pricing-option-actions';
@@ -923,9 +898,6 @@
         control = textarea;
       } else if(resolvedBaseType === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
-        const selectWrapper = document.createElement('div');
-        selectWrapper.style.position = 'relative';
-        selectWrapper.style.width = '100%';
         const select = document.createElement('select');
         select.id = controlId;
         select.className = 'form-preview-select';
@@ -943,28 +915,7 @@
           option.textContent = stringValue.trim() || '';
           select.appendChild(option);
         });
-        // Add working dropdown arrow like formbuilder
-        const dropdownArrow = document.createElement('span');
-        dropdownArrow.className = 'dropdown-arrow';
-        dropdownArrow.setAttribute('aria-hidden', 'true');
-        selectWrapper.appendChild(select);
-        selectWrapper.appendChild(dropdownArrow);
-        // Animate arrow on focus/blur with delay to handle dropdown opening
-        let blurTimeout = null;
-        select.addEventListener('focus', () => {
-          if(blurTimeout) clearTimeout(blurTimeout);
-          selectWrapper.classList.add('is-focused');
-        });
-        select.addEventListener('blur', () => {
-          blurTimeout = setTimeout(() => {
-            selectWrapper.classList.remove('is-focused');
-          }, 150);
-        });
-        select.addEventListener('mousedown', () => {
-          if(blurTimeout) clearTimeout(blurTimeout);
-          selectWrapper.classList.add('is-focused');
-        });
-        control = selectWrapper;
+        control = select;
       } else if(resolvedBaseType === 'radio' || fieldTypeKey === 'radio'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
@@ -1739,9 +1690,6 @@
           control = textarea;
         } else if(baseType === 'dropdown'){
           wrapper.classList.add('form-preview-field--dropdown');
-          const selectWrapper = document.createElement('div');
-          selectWrapper.style.position = 'relative';
-          selectWrapper.style.width = '100%';
           const select = document.createElement('select');
           select.className = 'form-preview-select';
           const options = Array.isArray(previewField.options) ? previewField.options : [];
@@ -1762,13 +1710,7 @@
           const selectId = `${baseId}-input`;
           select.id = selectId;
           if(previewField.required) select.required = true;
-          // Add working dropdown arrow like formbuilder
-          const dropdownArrow = document.createElement('span');
-          dropdownArrow.className = 'dropdown-arrow';
-          dropdownArrow.setAttribute('aria-hidden', 'true');
-          selectWrapper.appendChild(select);
-          selectWrapper.appendChild(dropdownArrow);
-          control = selectWrapper;
+          control = select;
         } else {
           // Use fieldTypeKey/key as fallback for field type identification
           const fieldTypeKey = previewField.fieldTypeKey || previewField.key || '';
@@ -1921,9 +1863,6 @@
               const bottomRow = document.createElement('div');
               bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
 
-              const currencyWrapper = document.createElement('div');
-              currencyWrapper.style.position = 'relative';
-              currencyWrapper.style.width = '100%';
               const currencySelect = document.createElement('select');
               currencySelect.className = 'variant-pricing-currency';
               const emptyOption = document.createElement('option');
@@ -1940,27 +1879,6 @@
               });
               currencySelect.value = optionValue.currency || '';
               const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
-              // Add working dropdown arrow
-              const currencyArrow = document.createElement('span');
-              currencyArrow.className = 'dropdown-arrow';
-              currencyArrow.setAttribute('aria-hidden', 'true');
-              currencyWrapper.appendChild(currencySelect);
-              currencyWrapper.appendChild(currencyArrow);
-              // Animate arrow on focus/blur with delay to handle dropdown opening
-              let currencyBlurTimeout = null;
-              currencySelect.addEventListener('focus', () => {
-                if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
-                currencyWrapper.classList.add('is-focused');
-              });
-              currencySelect.addEventListener('blur', () => {
-                currencyBlurTimeout = setTimeout(() => {
-                  currencyWrapper.classList.remove('is-focused');
-                }, 150);
-              });
-              currencySelect.addEventListener('mousedown', () => {
-                if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
-                currencyWrapper.classList.add('is-focused');
-              });
 
               const priceInput = document.createElement('input');
               priceInput.type = 'text';
@@ -2157,7 +2075,7 @@
               });
 
               actions.append(addBtn, removeBtn);
-              bottomRow.append(currencyWrapper, priceInput, actions);
+              bottomRow.append(currencySelect, priceInput, actions);
 
               optionRow.append(topRow, bottomRow);
               versionList.appendChild(optionRow);
@@ -3029,19 +2947,12 @@
       categoryLabel.style.marginBottom = '8px';
       categoryLabel.style.display = 'block';
       
-      // Create select wrapper for arrow positioning
-      const categorySelectWrapper = document.createElement('div');
-      categorySelectWrapper.style.position = 'relative';
-      categorySelectWrapper.style.width = '100%';
-      
       const categorySelect = document.createElement('select');
       categorySelect.className = 'form-preview-select';
       categorySelect.id = 'memberFormpickerCategory';
       categorySelect.style.width = '100%';
       categorySelect.style.height = '36px';
       categorySelect.style.padding = '0 12px';
-      categorySelect.style.paddingRight = '40px';
-      categorySelect.style.appearance = 'none';
       categorySelect.style.border = '1px solid var(--border)';
       categorySelect.style.borderRadius = '8px';
       categorySelect.style.background = 'rgba(0,0,0,0.35)';
@@ -3066,31 +2977,8 @@
         categorySelect.appendChild(option);
       });
       
-      // Create dropdown arrow for category - using working formbuilder pattern
-      const categoryArrow = document.createElement('span');
-      categoryArrow.className = 'dropdown-arrow';
-      categoryArrow.setAttribute('aria-hidden', 'true');
-      
-      categorySelectWrapper.appendChild(categorySelect);
-      categorySelectWrapper.appendChild(categoryArrow);
-      // Animate arrow on focus/blur with delay to handle dropdown opening
-      let categoryBlurTimeout = null;
-      categorySelect.addEventListener('focus', () => {
-        if(categoryBlurTimeout) clearTimeout(categoryBlurTimeout);
-        categorySelectWrapper.classList.add('is-focused');
-      });
-      categorySelect.addEventListener('blur', () => {
-        categoryBlurTimeout = setTimeout(() => {
-          categorySelectWrapper.classList.remove('is-focused');
-        }, 150);
-      });
-      categorySelect.addEventListener('mousedown', () => {
-        if(categoryBlurTimeout) clearTimeout(categoryBlurTimeout);
-        categorySelectWrapper.classList.add('is-focused');
-      });
-      
       categoryWrapper.appendChild(categoryLabel);
-      categoryWrapper.appendChild(categorySelectWrapper);
+      categoryWrapper.appendChild(categorySelect);
       
       // Create subcategory dropdown wrapper (initially hidden)
       const subcategoryWrapper = document.createElement('div');
@@ -3105,50 +2993,20 @@
       subcategoryLabel.style.marginBottom = '8px';
       subcategoryLabel.style.display = 'block';
       
-      // Create select wrapper for arrow positioning
-      const subcategorySelectWrapper = document.createElement('div');
-      subcategorySelectWrapper.style.position = 'relative';
-      subcategorySelectWrapper.style.width = '100%';
-      
       const subcategorySelect = document.createElement('select');
       subcategorySelect.className = 'form-preview-select';
       subcategorySelect.id = 'memberFormpickerSubcategory';
       subcategorySelect.style.width = '100%';
       subcategorySelect.style.height = '36px';
       subcategorySelect.style.padding = '0 12px';
-      subcategorySelect.style.paddingRight = '40px';
-      subcategorySelect.style.appearance = 'none';
       subcategorySelect.style.border = '1px solid var(--border)';
       subcategorySelect.style.borderRadius = '8px';
       subcategorySelect.style.background = 'rgba(0,0,0,0.35)';
       subcategorySelect.style.color = 'var(--button-text)';
       subcategorySelect.style.boxSizing = 'border-box';
       
-      // Create dropdown arrow for subcategory - using working formbuilder pattern
-      const subcategoryArrow = document.createElement('span');
-      subcategoryArrow.className = 'dropdown-arrow';
-      subcategoryArrow.setAttribute('aria-hidden', 'true');
-      
-      subcategorySelectWrapper.appendChild(subcategorySelect);
-      subcategorySelectWrapper.appendChild(subcategoryArrow);
-      // Animate arrow on focus/blur with delay to handle dropdown opening
-      let subcategoryBlurTimeout = null;
-      subcategorySelect.addEventListener('focus', () => {
-        if(subcategoryBlurTimeout) clearTimeout(subcategoryBlurTimeout);
-        subcategorySelectWrapper.classList.add('is-focused');
-      });
-      subcategorySelect.addEventListener('blur', () => {
-        subcategoryBlurTimeout = setTimeout(() => {
-          subcategorySelectWrapper.classList.remove('is-focused');
-        }, 150);
-      });
-      subcategorySelect.addEventListener('mousedown', () => {
-        if(subcategoryBlurTimeout) clearTimeout(subcategoryBlurTimeout);
-        subcategorySelectWrapper.classList.add('is-focused');
-      });
-      
       subcategoryWrapper.appendChild(subcategoryLabel);
-      subcategoryWrapper.appendChild(subcategorySelectWrapper);
+      subcategoryWrapper.appendChild(subcategorySelect);
       
       // Handle category selection
       categorySelect.addEventListener('change', () => {
