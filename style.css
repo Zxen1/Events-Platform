@@ -7993,7 +7993,6 @@ html, body { cursor: auto !important; }
               border-left:0;
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
-              margin-top:-1px;
               z-index:1;
             }
             #tab-forms .form-preview-container .form-preview-field--radio-toggle{
@@ -8012,6 +8011,7 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               justify-content:flex-start;
+              padding-left:10px;
               gap:10px;
               font-size:14px;
               cursor:pointer;
@@ -8546,7 +8546,6 @@ html, body { cursor: auto !important; }
               border-left:0;
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
-              margin-top:-1px;
               z-index:1;
             }
             #memberPanel .member-create-fields .form-preview-field--radio-toggle{
@@ -8574,6 +8573,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .form-preview-radio-option{
               display:flex;
               align-items:center;
+              padding-left:10px;
               gap:10px;
               font-size:14px;
               cursor:pointer;

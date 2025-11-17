@@ -725,6 +725,67 @@ try {
 
             $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
 
+            // Build field_type_edits JSON for editable fields
+            // Match fields by fieldTypeKey to fieldTypeIds by position
+            $fieldTypeEdits = [];
+            if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
+                // Create a map of fieldTypeKey to field data for quick lookup
+                $fieldsByTypeKey = [];
+                foreach ($sanitizedFields as $field) {
+                    $key = $field['fieldTypeKey'] ?? $field['key'] ?? null;
+                    if ($key) {
+                        $fieldsByTypeKey[$key] = $field;
+                    }
+                }
+                
+                // Iterate through fieldTypeIds (CSV order) and match with fields
+                foreach ($fieldTypeIds as $csvIndex => $fieldTypeId) {
+                    // Find the field type definition
+                    $fieldTypeDef = isset($fieldTypeDefinitions[$fieldTypeId]) ? $fieldTypeDefinitions[$fieldTypeId] : null;
+                    if (!$fieldTypeDef) continue;
+                    
+                    $fieldTypeKey = $fieldTypeDef['key'] ?? null;
+                    if (!$fieldTypeKey) continue;
+                    
+                    // Check if this field type is editable
+                    $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
+                    if (!$isEditable) continue;
+                    
+                    // Find matching field data
+                    $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
+                    if (!$fieldData) continue;
+                    
+                    $editData = [];
+                    $defaultName = $fieldTypeDef['name'] ?? '';
+                    $customName = $fieldData['name'] ?? '';
+                    // Only save name if it differs from default
+                    if ($customName !== '' && $customName !== $defaultName) {
+                        $editData['name'] = $customName;
+                    }
+                    
+                    // For dropdown/radio, save options if they differ from default placeholder
+                    if (($fieldTypeKey === 'dropdown' || $fieldTypeKey === 'radio') && isset($fieldData['options'])) {
+                        $customOptions = is_array($fieldData['options']) ? $fieldData['options'] : [];
+                        // Parse default placeholder to compare
+                        $defaultPlaceholder = $fieldTypeDef['placeholder'] ?? '';
+                        $defaultOptions = [];
+                        if ($defaultPlaceholder !== '') {
+                            $defaultOptions = array_map('trim', explode(',', $defaultPlaceholder));
+                            $defaultOptions = array_filter($defaultOptions, function($opt) { return $opt !== ''; });
+                        }
+                        // Only save if options differ from default
+                        if (!empty($customOptions) && $customOptions !== $defaultOptions) {
+                            $editData['options'] = $customOptions;
+                        }
+                    }
+                    
+                    // Only add to JSON if there's something to save
+                    if (!empty($editData)) {
+                        $fieldTypeEdits[(string)$csvIndex] = $editData;
+                    }
+                }
+            }
+            
             $fieldTypeIdCsv = $fieldTypeIds ? implode(',', array_unique($fieldTypeIds)) : null;
             $fieldTypeNameList = [];
             if ($fieldTypeIds) {
@@ -850,6 +911,12 @@ try {
                 if (in_array('required', $subcategoryColumns, true)) {
                     $updateParts[] = 'required = :required';
                     $params[':required'] = $requiredCsv !== null && $requiredCsv !== '' ? $requiredCsv : null;
+                }
+                // Save field_type_edits JSON if fields were provided
+                if ($hasFieldsForThisSub && in_array('field_type_edits', $subcategoryColumns, true)) {
+                    $fieldTypeEditsJson = !empty($fieldTypeEdits) ? json_encode($fieldTypeEdits, JSON_UNESCAPED_UNICODE) : null;
+                    $updateParts[] = 'field_type_edits = :field_type_edits';
+                    $params[':field_type_edits'] = $fieldTypeEditsJson;
                 }
             } else {
                 error_log("DEBUG: NOT updating field types for '$subName' - fieldTypesAreInPayload is false");

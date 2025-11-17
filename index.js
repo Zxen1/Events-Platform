@@ -4216,6 +4216,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           });
         }
       });
+      // Sort by sort_order (editable fields with sort_order=100 will be at bottom)
+      sanitized.sort((a, b) => {
+        const orderA = (typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? parseInt(a.sort_order, 10) : 0)) || 0;
+        const orderB = (typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? parseInt(b.sort_order, 10) : 0)) || 0;
+        if(orderA !== orderB){
+          return orderA - orderB;
+        }
+        // If same sort_order, sort by name
+        const nameA = (a.field_type_name || a.name || a.label || a.value || '').toLowerCase();
+        const nameB = (b.field_type_name || b.name || b.label || b.value || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
       return sanitized;
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
@@ -12540,6 +12552,22 @@ function makePosts(){
             fieldRequiredRow.className = 'field-required-row';
             fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredToggle);
 
+            // Add name input for editable fields
+            const fieldNameContainer = document.createElement('div');
+            fieldNameContainer.className = 'field-name-editor';
+            fieldNameContainer.hidden = true;
+            const fieldNameLabel = document.createElement('label');
+            fieldNameLabel.className = 'field-name-label';
+            fieldNameLabel.textContent = 'Field Name';
+            const fieldNameInput = document.createElement('input');
+            fieldNameInput.type = 'text';
+            fieldNameInput.className = 'field-name-input';
+            fieldNameInput.placeholder = 'Enter field name';
+            fieldNameInput.value = safeField.name || '';
+            fieldNameLabel.appendChild(fieldNameInput);
+            fieldNameContainer.appendChild(fieldNameLabel);
+            editMenu.appendChild(fieldNameContainer);
+
             inlineControls.append(fieldRequiredRow, fieldTypeWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
@@ -12619,26 +12647,30 @@ function makePosts(){
                 safeField.options = [];
               }
               const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              if((fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio') && safeField.options.length === 0){
-                // Try to get placeholder from field type to seed options
-                const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-                if(matchingFieldType && matchingFieldType.placeholder){
-                  // Parse placeholder like "A,B,C" or "1,2,3" into array
-                  const placeholderStr = matchingFieldType.placeholder.trim();
-                  if(placeholderStr){
-                    const parsed = placeholderStr.split(',').map(s => s.trim()).filter(s => s);
-                    if(parsed.length > 0){
-                      safeField.options.push(...parsed);
+              if((fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio')){
+                // Check if options are empty or only have empty strings
+                const hasNonEmptyOptions = safeField.options.some(opt => opt && typeof opt === 'string' && opt.trim() !== '');
+                if(!hasNonEmptyOptions){
+                  // Try to get placeholder from field type to seed options
+                  const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+                  if(matchingFieldType && matchingFieldType.placeholder){
+                    // Parse placeholder like "A,B,C" or "1A,2A,3A" into array
+                    const placeholderStr = matchingFieldType.placeholder.trim();
+                    if(placeholderStr){
+                      const parsed = placeholderStr.split(',').map(s => s.trim()).filter(s => s);
+                      if(parsed.length > 0){
+                        safeField.options = parsed;
+                      } else {
+                        safeField.options.push('', '', '');
+                      }
                     } else {
                       safeField.options.push('', '', '');
                     }
                   } else {
                     safeField.options.push('', '', '');
                   }
-                } else {
-                  safeField.options.push('', '', '');
+                  notifyFormbuilderChange();
                 }
-                notifyFormbuilderChange();
               }
             };
 
@@ -12808,6 +12840,10 @@ function makePosts(){
               const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               const showVariantPricing = fieldTypeKey === 'variant-pricing';
               const showVenueSession = fieldTypeKey === 'venue-ticketing';
+              // Check if this field type is editable
+              const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              fieldNameContainer.hidden = !isEditable;
               if(type === 'images'){
                 if(safeField.placeholder){
                   safeField.placeholder = '';
@@ -12891,9 +12927,18 @@ function makePosts(){
               safeField.field_type_name = updatedFieldTypeName;
               safeField.fieldTypeName = updatedFieldTypeName;
               
-              // Always name field after its field type name
-              if(updatedFieldTypeName){
+              // For editable fields, don't auto-name (let user customize)
+              // For non-editable fields, always name after field type name
+              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              if(!isEditable && updatedFieldTypeName){
                 safeField.name = updatedFieldTypeName;
+              } else if(isEditable && !safeField.name){
+                // Only set default name if field name is empty
+                safeField.name = updatedFieldTypeName;
+              }
+              // Update name input value
+              if(fieldNameInput){
+                fieldNameInput.value = safeField.name || '';
               }
               
               if(matchingFieldType){
@@ -12907,6 +12952,17 @@ function makePosts(){
               updateFieldEditorsByType();
               renderFormPreview();
               runSummaryUpdater();
+            });
+
+            // Wire up name input for editable fields
+            fieldNameInput.addEventListener('input', ()=>{
+              const newName = fieldNameInput.value.trim();
+              if(safeField.name !== newName){
+                safeField.name = newName;
+                notifyFormbuilderChange();
+                renderFormPreview();
+                runSummaryUpdater();
+              }
             });
 
             updateFieldEditorsByType();
@@ -13084,11 +13140,10 @@ function makePosts(){
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
                     const option = document.createElement('option');
-                    const displayValue = (typeof optionValue === 'string' && optionValue.trim())
-                      ? optionValue
-                      : `Option ${optionIndex + 1}`;
-                    option.value = optionValue;
-                    option.textContent = displayValue;
+                    // Use the actual option value, don't fall back to "Option X"
+                    const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+                    option.value = stringValue;
+                    option.textContent = stringValue.trim() || '';
                     select.appendChild(option);
                   });
                 } else {
@@ -13126,14 +13181,13 @@ function makePosts(){
                     const radio = document.createElement('input');
                     radio.type = 'radio';
                     radio.name = groupName;
-                    radio.value = optionValue;
+                    const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+                    radio.value = stringValue;
                     radio.tabIndex = -1;
                     radio.disabled = true;
-                    const displayValue = (typeof optionValue === 'string' && optionValue.trim())
-                      ? optionValue
-                      : `Option ${optionIndex + 1}`;
+                    // Use the actual option value, don't fall back to "Option X"
                     const radioText = document.createElement('span');
-                    radioText.textContent = displayValue;
+                    radioText.textContent = stringValue.trim() || '';
                     radioLabel.append(radio, radioText);
                     radioGroup.appendChild(radioLabel);
                   });

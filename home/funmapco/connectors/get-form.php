@@ -301,6 +301,11 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         $select[] = 's.`field_type_name`';
     }
     
+    $hasFieldTypeEdits = in_array('field_type_edits', $columns, true);
+    if ($hasFieldTypeEdits) {
+        $select[] = 's.`field_type_edits`';
+    }
+    
     // Add fee columns
     if (in_array('listing_fee', $columns, true)) {
         $select[] = 's.`listing_fee`';
@@ -414,6 +419,15 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (isset($row['listing_days'])) {
             $result['listing_days'] = $row['listing_days'];
         }
+        if ($hasFieldTypeEdits && isset($row['field_type_edits'])) {
+            $editsJson = $row['field_type_edits'];
+            if (is_string($editsJson) && $editsJson !== '') {
+                $decoded = json_decode($editsJson, true);
+                if (is_array($decoded)) {
+                    $result['field_type_edits'] = $decoded;
+                }
+            }
+        }
         
         $results[] = $result;
     }
@@ -431,6 +445,7 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     $hasName = in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasPlaceholder = in_array('placeholder', $columns, true);
+    $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
     
     // Check for field_type_item columns
     $hasItem1 = in_array('field_type_item_1', $columns, true);
@@ -552,6 +567,9 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         }
         if ($hasPlaceholder && isset($row['placeholder']) && is_string($row['placeholder'])) {
             $entry['placeholder'] = trim($row['placeholder']);
+        }
+        if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
+            $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
@@ -802,11 +820,20 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
         $fieldTypeNames = array_values(array_unique($fieldTypeNames));
 
+        // Load field_type_edits JSON if available
+        $fieldTypeEdits = [];
+        if ($hasFieldTypeEdits && isset($sub['field_type_edits']) && is_array($sub['field_type_edits'])) {
+            $fieldTypeEdits = $sub['field_type_edits'];
+        }
+        
         // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
         $builtFields = [];
         foreach ($fieldTypeIds as $index => $fieldTypeId) {
             // Get required flag for this field (default to false if not set)
             $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
+            
+            // Get customizations for this field position if it's editable
+            $fieldEdit = isset($fieldTypeEdits[(string)$index]) ? $fieldTypeEdits[(string)$index] : null;
             
             // Find the field_type by ID
             $matchingFieldType = null;
@@ -865,17 +892,33 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     }
                 }
                 
+                // Check if this field type is editable and has customizations
+                $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
+                $customName = null;
+                $customOptions = null;
+                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                    if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
+                        $customName = trim($fieldEdit['name']);
+                    }
+                    if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
+                        $customOptions = $fieldEdit['options'];
+                    }
+                }
+                
                 $builtField = [
                     'id' => $matchingFieldType['id'],
                     'key' => $matchingFieldType['field_type_key'],
                     'type' => $normalizedType,
-                    'name' => $matchingFieldType['field_type_name'],
+                    'name' => $customName !== null ? $customName : $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => $requiredValue,
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
                 ];
                 
-                if ($field['options'] !== null && $field['options'] !== '') {
+                // Use custom options if available, otherwise use field options
+                if ($customOptions !== null && is_array($customOptions)) {
+                    $builtField['options'] = $customOptions;
+                } elseif ($field['options'] !== null && $field['options'] !== '') {
                     $builtField['options'] = $field['options'];
                 }
                 
@@ -883,11 +926,20 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             }
             // Otherwise → create ONE field object using field_type properties, with all items as children
             else {
+                // Check if this field type is editable and has customizations
+                $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
+                $customName = null;
+                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                    if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
+                        $customName = trim($fieldEdit['name']);
+                    }
+                }
+                
                 $builtField = [
                     'id' => $matchingFieldType['id'],
                     'key' => $matchingFieldType['field_type_key'],
                     'type' => $matchingFieldType['field_type_key'],
-                    'name' => $matchingFieldType['field_type_name'],
+                    'name' => $customName !== null ? $customName : $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => $requiredValue,
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
