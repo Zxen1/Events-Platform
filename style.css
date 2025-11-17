@@ -7801,7 +7801,7 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .variant-pricing-row--bottom .options-dropdown{
               position:relative;
-              overflow:hidden;
+              overflow:visible;
               width:100%;
               max-width:100%;
               min-width:0;
@@ -7815,6 +7815,7 @@ html, body { cursor: auto !important; }
               overflow:hidden;
               box-sizing:border-box;
               padding-right:30px;
+              display:block;
             }
             #tab-forms .variant-pricing-currency .dropdown-arrow{
               position:absolute;
@@ -7823,6 +7824,14 @@ html, body { cursor: auto !important; }
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
               z-index:1;
+              width:8px;
+              height:8px;
+              display:inline-block;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:currentColor;
+              margin:0;
+              padding:0;
             }
             #tab-forms .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
@@ -8761,7 +8770,7 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
               position:relative;
-              overflow:hidden;
+              overflow:visible;
               width:100%;
               max-width:100%;
               min-width:0;
@@ -8775,6 +8784,7 @@ html, body { cursor: auto !important; }
               overflow:hidden;
               box-sizing:border-box;
               padding-right:30px;
+              display:block;
             }
             #memberPanel .member-create-fields .variant-pricing-currency .dropdown-arrow{
               position:absolute;
@@ -8783,6 +8793,14 @@ html, body { cursor: auto !important; }
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
               z-index:1;
+              width:8px;
+              height:8px;
+              display:inline-block;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:currentColor;
+              margin:0;
+              padding:0;
             }
             #memberPanel .member-create-fields .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
