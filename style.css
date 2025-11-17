@@ -4162,7 +4162,12 @@ body.filters-active #filterBtn{
   }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
+.options-dropdown > button,
+.options-dropdown .form-preview-select,
+.options-dropdown .variant-pricing-currency,
+.options-dropdown .field-type-select,
+.options-dropdown .session-currency-select{ text-align:left; }
+.options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; right:0; width:100%; min-width:100%; max-width:100%; box-sizing:border-box; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .options-menu .menu-option{ text-align:left; justify-content:flex-start; }
@@ -7582,9 +7587,10 @@ html, body { cursor: auto !important; }
             #tab-forms .field-type-select-wrapper{
               position:relative;
               display:block;
-              flex:1 1 auto;
+              flex:1 1 0;
               width:100%;
               min-width:0;
+              max-width:100%;
             }
             #tab-forms .field-type-select-wrapper .options-menu{
               position:absolute;
@@ -7796,8 +7802,10 @@ html, body { cursor: auto !important; }
             #tab-forms .variant-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:hidden;
+              width:100%;
               max-width:100%;
               min-width:0;
+              box-sizing:border-box;
             }
             #tab-forms .variant-pricing-currency{
               width:100%;
@@ -7806,6 +7814,18 @@ html, body { cursor: auto !important; }
               position:relative;
               overflow:hidden;
               box-sizing:border-box;
+              padding-right:30px;
+            }
+            #tab-forms .variant-pricing-currency .dropdown-arrow{
+              position:absolute;
+              top:50%;
+              right:10px;
+              transform:translateY(-50%) rotate(45deg);
+              pointer-events:none;
+              z-index:1;
+            }
+            #tab-forms .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu{
               width:100%;
@@ -8742,8 +8762,10 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:hidden;
+              width:100%;
               max-width:100%;
               min-width:0;
+              box-sizing:border-box;
             }
             #memberPanel .member-create-fields .variant-pricing-currency{
               width:100%;
@@ -8752,6 +8774,18 @@ html, body { cursor: auto !important; }
               position:relative;
               overflow:hidden;
               box-sizing:border-box;
+              padding-right:30px;
+            }
+            #memberPanel .member-create-fields .variant-pricing-currency .dropdown-arrow{
+              position:absolute;
+              top:50%;
+              right:10px;
+              transform:translateY(-50%) rotate(45deg);
+              pointer-events:none;
+              z-index:1;
+            }
+            #memberPanel .member-create-fields .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu{
               width:100%;
