@@ -731,7 +731,8 @@
           updatePostButtonState();
         });
         currencyMenu.appendChild(placeholderBtn);
-        currencyCodes.forEach(code => {
+        const availableCurrencyCodes = currencyCodes.length > 0 ? currencyCodes : (Array.isArray(window.currencyCodes) ? window.currencyCodes : []);
+        availableCurrencyCodes.forEach(code => {
           const optionBtn = document.createElement('button');
           optionBtn.type = 'button';
           optionBtn.className = 'menu-option';

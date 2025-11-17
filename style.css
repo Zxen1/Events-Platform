@@ -7822,6 +7822,14 @@ html, body { cursor: auto !important; }
               top:50%;
               right:10px;
               transform:translateY(-50%) rotate(45deg);
+              display:inline-block;
+              width:8px;
+              height:8px;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:currentColor;
+              color:inherit;
+              pointer-events:none;
             }
             #tab-forms .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
@@ -8781,6 +8789,14 @@ html, body { cursor: auto !important; }
               top:50%;
               right:10px;
               transform:translateY(-50%) rotate(45deg);
+              display:inline-block;
+              width:8px;
+              height:8px;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:currentColor;
+              color:inherit;
+              pointer-events:none;
             }
             #memberPanel .member-create-fields .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
