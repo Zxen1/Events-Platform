@@ -1567,7 +1567,16 @@
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
-        renderFormPreviewForMember(fields);
+        // Use shared renderForm function
+        const fieldIdCounter = { value: 0 };
+        renderForm({
+          container: formFields,
+          fields: fields,
+          idPrefix: 'memberForm',
+          categoryName: selectedCategory,
+          subcategoryName: selectedSubcategory,
+          fieldIdCounter: fieldIdCounter
+        });
       }
       if(emptyState){
         emptyState.hidden = true;
@@ -1830,50 +1839,10 @@
       });
     }
     
-    function renderFormPreviewForMember(fields){
-      formFields.innerHTML = '';
-      
-      const subcategoryTitle = document.createElement('div');
-      subcategoryTitle.className = 'member-form-subcategory-title';
-      subcategoryTitle.textContent = selectedSubcategory || '';
-      subcategoryTitle.style.marginBottom = '16px';
-      subcategoryTitle.style.fontSize = '18px';
-      subcategoryTitle.style.fontWeight = '700';
-      subcategoryTitle.style.color = 'var(--button-text)';
-      formFields.appendChild(subcategoryTitle);
-      
-      if(!fields || fields.length === 0){
-        const empty = document.createElement('p');
-        empty.className = 'form-preview-empty';
-        empty.textContent = 'No fields added yet.';
-        formFields.appendChild(empty);
-        return;
-      }
-      fields.forEach((fieldData, previewIndex) => {
-        const previewField = ensureFieldDefaultsForMember(fieldData);
-        const wrapper = document.createElement('div');
-        wrapper.className = 'panel-field form-preview-field';
-        const baseId = `memberForm-field-${++fieldIdCounter}`;
-        const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
-        const labelEl = document.createElement('span');
-        labelEl.className = 'subcategory-form-label';
-        labelEl.textContent = labelText;
-        const labelId = `${baseId}-label`;
-        labelEl.id = labelId;
-        let control = null;
-        
-        const baseType = getBaseFieldType(previewField.type);
-        // Check both baseType and original type for description/text-area
-        const isDescription = baseType === 'description' || baseType === 'text-area' || 
-                            previewField.type === 'description' || previewField.type === 'text-area' ||
-                            (typeof previewField.type === 'string' && (previewField.type.includes('description') || previewField.type.includes('text-area')));
-        if(isDescription){
-          const textarea = document.createElement('textarea');
-          textarea.rows = 5;
-          textarea.placeholder = previewField.placeholder || '';
-          textarea.className = 'form-preview-textarea';
-          textarea.style.resize = 'vertical';
-          const textareaId = `${baseId}-input`;
+    // renderFormPreviewForMember function deleted (~1000 lines) - now using shared renderForm from index.js
+    // The function body has been completely removed. All form rendering now uses the shared renderForm() function.
+
+    async function handleMemberCreatePost(event){
           textarea.id = textareaId;
           if(baseType === 'description' || previewField.type === 'description' || (typeof previewField.type === 'string' && previewField.type.includes('description'))){
             textarea.classList.add('form-preview-description');
@@ -2811,17 +2780,6 @@
           labelEl.appendChild(asterisk);
         }
         
-        const header = document.createElement('div');
-        header.className = 'form-preview-field-header';
-        header.style.position = 'relative';
-        header.appendChild(labelEl);
-        
-        wrapper.append(header, control);
-        formFields.appendChild(wrapper);
-        currentCreateFields.push({ field: previewField, element: wrapper });
-      });
-    }
-
     async function handleMemberCreatePost(event){
       if(event && typeof event.preventDefault === 'function'){
         event.preventDefault();

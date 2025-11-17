@@ -101,6 +101,83 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+// === Shared Form Utilities ===
+
+// Normalize field defaults - shared utility for both admin and member forms
+function ensureFieldDefaults(field) {
+  const safeField = field && typeof field === 'object' ? field : {};
+  
+  if (typeof safeField.name !== 'string') {
+    safeField.name = '';
+  } else if (!safeField.name.trim()) {
+    safeField.name = '';
+  }
+  
+  if (typeof safeField.type !== 'string') {
+    safeField.type = '';
+  } else {
+    const originalType = safeField.type;
+    const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
+      (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
+    
+    if (isDescriptionType) {
+      const normalizedType = getBaseFieldType(originalType);
+      if (normalizedType === 'description' || normalizedType === 'text-area') {
+        safeField.type = normalizedType;
+      } else if (originalType === 'description' || originalType === 'text-area') {
+        safeField.type = originalType;
+      } else {
+        safeField.type = originalType.includes('description') ? 'description' : 'text-area';
+      }
+    } else {
+      const normalizedType = getBaseFieldType(safeField.type);
+      if (normalizedType) {
+        safeField.type = normalizedType;
+      }
+    }
+  }
+  
+  if (typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+  const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
+  safeField.required = hasRequiredProp ? !!safeField.required : false;
+  
+  if (!Array.isArray(safeField.options)) {
+    safeField.options = [];
+  }
+  
+  if (safeField.type === 'venue-ticketing') {
+    // Will be normalized by buildVenueSessionPreview
+  } else if (safeField.type === 'variant-pricing') {
+    safeField.options = safeField.options.map(opt => {
+      if (opt && typeof opt === 'object') {
+        return {
+          version: typeof opt.version === 'string' ? opt.version : '',
+          currency: typeof opt.currency === 'string' ? opt.currency : '',
+          price: typeof opt.price === 'string' ? opt.price : ''
+        };
+      }
+      const str = typeof opt === 'string' ? opt : String(opt ?? '');
+      return { version: str, currency: '', price: '' };
+    });
+    if (safeField.options.length === 0) {
+      safeField.options.push({ version: '', currency: '', price: '' });
+    }
+  } else {
+    safeField.options = safeField.options.map(opt => {
+      if (typeof opt === 'string') return opt;
+      if (opt && typeof opt === 'object' && typeof opt.version === 'string') {
+        return opt.version;
+      }
+      return String(opt ?? '');
+    });
+    if ((safeField.type === 'dropdown' || safeField.type === 'radio') && safeField.options.length === 0) {
+      safeField.options.push('', '', '');
+    }
+  }
+  
+  return safeField;
+}
+
 // === Shared Form Rendering Function ===
 // Unified form rendering for both admin preview and member forms
 // Removes all admin-specific UI and stopPropagation calls for full interactivity
@@ -111,7 +188,8 @@ function renderForm(options) {
     idPrefix,            // Prefix for field IDs (e.g., 'memberForm' or 'formPreview')
     categoryName,        // Category name for label
     subcategoryName,     // Subcategory name for label
-    fieldIdCounter = { value: 0 }  // Counter object (shared reference)
+    fieldIdCounter = { value: 0 },  // Counter object (shared reference)
+    onFieldChange = null // Optional callback for field changes (for admin formbuilder)
   } = options;
   
   if (!container || !Array.isArray(fields)) {
@@ -140,9 +218,268 @@ function renderForm(options) {
     return;
   }
   
-  // Note: Full field rendering implementation will be added here
-  // This is a placeholder that will be expanded with the actual rendering logic
-  // from renderFormPreview, removing admin-specific UI and stopPropagation calls
+  fields.forEach((fieldData, index) => {
+    const field = ensureFieldDefaults(fieldData);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'panel-field form-field';
+    const baseId = `${idPrefix}-field-${++fieldIdCounter.value}`;
+    const labelText = field.name.trim() || `Field ${index + 1}`;
+    const labelEl = document.createElement('span');
+    labelEl.className = 'subcategory-form-label';
+    labelEl.textContent = labelText;
+    const labelId = `${baseId}-label`;
+    labelEl.id = labelId;
+    let control = null;
+    const baseType = getBaseFieldType(field.type);
+    
+    // Text area / Description
+    if (baseType === 'text-area' || baseType === 'description') {
+      const textarea = document.createElement('textarea');
+      textarea.rows = 5;
+      textarea.placeholder = field.placeholder || '';
+      textarea.className = 'form-textarea';
+      textarea.style.resize = 'vertical';
+      textarea.id = `${baseId}-input`;
+      if (baseType === 'description') {
+        textarea.classList.add('form-description');
+      }
+      if (field.required) textarea.required = true;
+      control = textarea;
+    }
+    // Dropdown
+    else if (field.type === 'dropdown') {
+      wrapper.classList.add('form-field--dropdown');
+      const dropdownWrapper = document.createElement('div');
+      dropdownWrapper.className = 'options-dropdown';
+      const menuBtn = document.createElement('button');
+      menuBtn.type = 'button';
+      menuBtn.className = 'form-select';
+      menuBtn.setAttribute('aria-haspopup', 'true');
+      menuBtn.setAttribute('aria-expanded', 'false');
+      const selectId = `${baseId}-input`;
+      menuBtn.id = selectId;
+      const menuId = `${selectId}-menu`;
+      menuBtn.setAttribute('aria-controls', menuId);
+      const options = Array.isArray(field.options) ? field.options : [];
+      const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
+      menuBtn.textContent = defaultText;
+      const arrow = document.createElement('span');
+      arrow.className = 'dropdown-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      menuBtn.appendChild(arrow);
+      const optionsMenu = document.createElement('div');
+      optionsMenu.className = 'options-menu';
+      optionsMenu.id = menuId;
+      optionsMenu.hidden = true;
+      if (options.length) {
+        options.forEach((optionValue) => {
+          const optionBtn = document.createElement('button');
+          optionBtn.type = 'button';
+          optionBtn.className = 'menu-option';
+          const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+          optionBtn.textContent = stringValue.trim() || '';
+          optionBtn.dataset.value = stringValue;
+          optionBtn.addEventListener('click', () => {
+            menuBtn.textContent = stringValue.trim() || 'Select an option';
+            optionsMenu.hidden = true;
+            menuBtn.setAttribute('aria-expanded', 'false');
+          });
+          optionsMenu.appendChild(optionBtn);
+        });
+      } else {
+        const placeholderBtn = document.createElement('button');
+        placeholderBtn.type = 'button';
+        placeholderBtn.className = 'menu-option';
+        placeholderBtn.textContent = 'Select an option';
+        placeholderBtn.disabled = true;
+        optionsMenu.appendChild(placeholderBtn);
+      }
+      menuBtn.addEventListener('click', () => {
+        const open = !optionsMenu.hasAttribute('hidden');
+        if (open) {
+          optionsMenu.hidden = true;
+          menuBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          optionsMenu.hidden = false;
+          menuBtn.setAttribute('aria-expanded', 'true');
+          const outsideHandler = (ev) => {
+            if (!ev.target.closest(dropdownWrapper)) {
+              optionsMenu.hidden = true;
+              menuBtn.setAttribute('aria-expanded', 'false');
+              document.removeEventListener('click', outsideHandler);
+              document.removeEventListener('pointerdown', outsideHandler);
+            }
+          };
+          setTimeout(() => {
+            document.addEventListener('click', outsideHandler);
+            document.addEventListener('pointerdown', outsideHandler);
+          }, 0);
+        }
+      });
+      dropdownWrapper.appendChild(menuBtn);
+      dropdownWrapper.appendChild(optionsMenu);
+      control = dropdownWrapper;
+    }
+    // Radio
+    else if (field.type === 'radio') {
+      const options = Array.isArray(field.options) ? field.options : [];
+      const radioGroup = document.createElement('div');
+      radioGroup.className = 'form-radio-group';
+      wrapper.classList.add('form-field--radio-toggle');
+      const groupName = `${baseId}-radio`;
+      if (options.length) {
+        options.forEach((optionValue) => {
+          const radioLabel = document.createElement('label');
+          radioLabel.className = 'form-radio-option';
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = groupName;
+          const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+          radio.value = stringValue;
+          if (field.required) radio.required = true;
+          const radioText = document.createElement('span');
+          radioText.textContent = stringValue.trim() || '';
+          radioLabel.append(radio, radioText);
+          radioGroup.appendChild(radioLabel);
+        });
+      } else {
+        const placeholderOption = document.createElement('label');
+        placeholderOption.className = 'form-radio-option';
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.disabled = true;
+        placeholderOption.append(radio, document.createTextNode('Option'));
+        radioGroup.appendChild(placeholderOption);
+      }
+      control = radioGroup;
+    }
+    // Venue ticketing - use shared builder if available
+    else if (field.type === 'venue-ticketing') {
+      wrapper.classList.add('form-field--venues-sessions-pricing');
+      if (typeof window.buildVenueSessionPreview === 'function') {
+        control = window.buildVenueSessionPreview(field, baseId);
+      } else {
+        // Fallback placeholder
+        control = document.createElement('div');
+        control.className = 'venue-session-editor';
+        control.textContent = 'Venue/Session editor (loading...)';
+      }
+    }
+    // Variant pricing - simplified version (full implementation will be added)
+    else if (field.type === 'variant-pricing') {
+      wrapper.classList.add('form-field--variant-pricing');
+      control = document.createElement('div');
+      control.className = 'variant-pricing-options-editor';
+      control.textContent = 'Variant pricing editor (to be implemented)';
+    }
+    // URL fields
+    else if (field.type === 'website-url' || field.type === 'tickets-url') {
+      wrapper.classList.add('form-field--url');
+      const urlWrapper = document.createElement('div');
+      urlWrapper.className = 'form-url-wrapper';
+      const urlInput = document.createElement('input');
+      urlInput.type = 'text';
+      urlInput.className = 'form-url-input';
+      urlInput.id = `${baseId}-input`;
+      const placeholderValue = field.placeholder && /\.[A-Za-z]{2,}/.test(field.placeholder)
+        ? field.placeholder
+        : 'https://example.com';
+      urlInput.placeholder = placeholderValue;
+      urlInput.autocomplete = 'url';
+      urlInput.inputMode = 'url';
+      if (field.required) urlInput.required = true;
+      urlWrapper.appendChild(urlInput);
+      control = urlWrapper;
+    }
+    // Images
+    else if (field.type === 'images') {
+      wrapper.classList.add('form-field--images');
+      const imageWrapper = document.createElement('div');
+      imageWrapper.className = 'form-images';
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.id = `${baseId}-input`;
+      fileInput.accept = 'image/*';
+      fileInput.multiple = true;
+      fileInput.dataset.imagesField = 'true';
+      fileInput.dataset.maxImages = '10';
+      const previewId = `${baseId}-previews`;
+      const messageId = `${baseId}-message`;
+      fileInput.dataset.imagePreviewTarget = previewId;
+      fileInput.dataset.imageMessageTarget = messageId;
+      const hint = document.createElement('div');
+      hint.className = 'form-image-hint';
+      hint.textContent = 'Upload up to 10 images.';
+      const message = document.createElement('div');
+      message.className = 'form-image-message';
+      message.id = messageId;
+      message.hidden = true;
+      const previewGrid = document.createElement('div');
+      previewGrid.className = 'form-image-previews';
+      previewGrid.id = previewId;
+      imageWrapper.append(fileInput, hint, message, previewGrid);
+      control = imageWrapper;
+    }
+    // Location
+    else if (field.type === 'location') {
+      wrapper.classList.add('form-field--location');
+      const locationWrapper = document.createElement('div');
+      locationWrapper.className = 'location-field-wrapper';
+      locationWrapper.setAttribute('role', 'group');
+      const addressRow = document.createElement('div');
+      addressRow.className = 'venue-line address_line-line';
+      const geocoderContainer = document.createElement('div');
+      geocoderContainer.className = 'address_line-geocoder-container';
+      geocoderContainer.id = `${baseId}-location-geocoder`;
+      addressRow.appendChild(geocoderContainer);
+      locationWrapper.appendChild(addressRow);
+      const latitudeInput = document.createElement('input');
+      latitudeInput.type = 'hidden';
+      latitudeInput.dataset.locationLatitude = 'true';
+      const longitudeInput = document.createElement('input');
+      longitudeInput.type = 'hidden';
+      longitudeInput.dataset.locationLongitude = 'true';
+      locationWrapper.append(latitudeInput, longitudeInput);
+      // Location geocoder initialization will be handled separately
+      control = locationWrapper;
+    }
+    // Default text input
+    else {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = field.placeholder || '';
+      input.id = `${baseId}-input`;
+      if (field.type === 'title') {
+        input.classList.add('form-title-input');
+      }
+      if (field.required) input.required = true;
+      control = input;
+    }
+    
+    if (control) {
+      if (control instanceof HTMLElement) {
+        control.setAttribute('aria-required', field.required ? 'true' : 'false');
+        if (labelId) {
+          control.setAttribute('aria-labelledby', labelId);
+        }
+      }
+      
+      if (field.required) {
+        wrapper.classList.add('form-field--required');
+        labelEl.appendChild(document.createTextNode(' '));
+        const asterisk = document.createElement('span');
+        asterisk.className = 'required-asterisk';
+        asterisk.textContent = '*';
+        labelEl.appendChild(asterisk);
+      }
+      
+      const header = document.createElement('div');
+      header.className = 'form-field-header';
+      header.appendChild(labelEl);
+      wrapper.append(header, control);
+      container.appendChild(wrapper);
+    }
+  });
 }
 
 // === Message Utility Functions ===
