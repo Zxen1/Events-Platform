@@ -12096,28 +12096,116 @@ function makePosts(){
 
                           const priceRow = document.createElement('div');
                           priceRow.className = 'tier-price-row';
-                          const currencySelect = document.createElement('select');
-                          currencySelect.className = 'session-currency-select';
-                          const emptyOpt = document.createElement('option');
-                          emptyOpt.value = '';
-                          emptyOpt.textContent = 'Currency';
-                          currencySelect.appendChild(emptyOpt);
-                          // Currency options should come from backend via currency field
+                          const currencyWrapper = document.createElement('div');
+                          currencyWrapper.className = 'options-dropdown';
+                          const currencyMenuBtn = document.createElement('button');
+                          currencyMenuBtn.type = 'button';
+                          currencyMenuBtn.className = 'session-currency-select';
+                          currencyMenuBtn.setAttribute('aria-haspopup', 'true');
+                          currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                          const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
+                          const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
+                          currencyMenuBtn.textContent = existingCurrency || 'Currency';
+                          currencyMenuBtn.dataset.value = existingCurrency;
+                          currencyMenuBtn.dataset.venueIndex = String(venueIndex);
+                          currencyMenuBtn.dataset.sessionIndex = String(sessionIndex);
+                          currencyMenuBtn.dataset.timeIndex = String(timeIndex);
+                          currencyMenuBtn.dataset.versionIndex = String(versionIndex);
+                          currencyMenuBtn.dataset.tierIndex = String(tierIndex);
+                          const currencyArrow = document.createElement('span');
+                          currencyArrow.className = 'dropdown-arrow';
+                          currencyArrow.setAttribute('aria-hidden', 'true');
+                          currencyMenuBtn.appendChild(currencyArrow);
+                          const currencyMenu = document.createElement('div');
+                          currencyMenu.className = 'options-menu';
+                          currencyMenu.id = currencyMenuId;
+                          currencyMenu.hidden = true;
+                          const placeholderBtn = document.createElement('button');
+                          placeholderBtn.type = 'button';
+                          placeholderBtn.className = 'menu-option';
+                          placeholderBtn.textContent = 'Currency';
+                          placeholderBtn.dataset.value = '';
+                          placeholderBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            currencyMenuBtn.textContent = 'Currency';
+                            currencyMenuBtn.dataset.value = '';
+                            currencyMenuBtn.appendChild(currencyArrow);
+                            currencyMenu.hidden = true;
+                            currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                            const nextCurrency = '';
+                            const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
+                            tier.currency = nextCurrency;
+                            const shouldClearPrice = nextCurrency === '';
+                            const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
+                            const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
+                              sourceTier: tier,
+                              clearPrices: shouldClearPrice
+                            });
+                            if(sessionIndex > 0 && previousCurrency !== nextCurrency){
+                              lockSessionMirror(venue);
+                            }
+                            if(previousCurrency !== nextCurrency || priceCleared || propagated){
+                              markAutoChange();
+                            }
+                          });
+                          currencyMenu.appendChild(placeholderBtn);
                           const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
                           currencyOptions.forEach(code => {
-                            const opt = document.createElement('option');
-                            opt.value = code;
-                            opt.textContent = code;
-                            currencySelect.appendChild(opt);
+                            const optionBtn = document.createElement('button');
+                            optionBtn.type = 'button';
+                            optionBtn.className = 'menu-option';
+                            optionBtn.textContent = code;
+                            optionBtn.dataset.value = code;
+                            optionBtn.addEventListener('click', (e) => {
+                              e.stopPropagation();
+                              currencyMenuBtn.textContent = code;
+                              currencyMenuBtn.dataset.value = code;
+                              currencyMenuBtn.appendChild(currencyArrow);
+                              currencyMenu.hidden = true;
+                              currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                              const nextCurrency = code.trim();
+                              const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
+                              tier.currency = nextCurrency;
+                              const shouldClearPrice = nextCurrency === '';
+                              const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
+                              const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
+                                sourceTier: tier,
+                                clearPrices: shouldClearPrice
+                              });
+                              if(sessionIndex > 0 && previousCurrency !== nextCurrency){
+                                lockSessionMirror(venue);
+                              }
+                              if(previousCurrency !== nextCurrency || priceCleared || propagated){
+                                markAutoChange();
+                              }
+                            });
+                            currencyMenu.appendChild(optionBtn);
                           });
-                          const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
-                          currencySelect.value = existingCurrency;
-                          currencySelect.dataset.venueIndex = String(venueIndex);
-                          currencySelect.dataset.sessionIndex = String(sessionIndex);
-                          currencySelect.dataset.timeIndex = String(timeIndex);
-                          currencySelect.dataset.versionIndex = String(versionIndex);
-                          currencySelect.dataset.tierIndex = String(tierIndex);
-                          priceRow.appendChild(currencySelect);
+                          currencyMenuBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const open = !currencyMenu.hasAttribute('hidden');
+                            if(open){
+                              currencyMenu.hidden = true;
+                              currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                            } else {
+                              currencyMenu.hidden = false;
+                              currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                              const outsideHandler = (ev) => {
+                                if(!ev.target.closest(currencyWrapper)){
+                                  currencyMenu.hidden = true;
+                                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                                  document.removeEventListener('click', outsideHandler);
+                                }
+                              };
+                              setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+                            }
+                          });
+                          currencyMenu.addEventListener('click', (e) => e.stopPropagation());
+                          currencyWrapper.appendChild(currencyMenuBtn);
+                          currencyWrapper.appendChild(currencyMenu);
+                          const currencySelect = currencyMenuBtn; // Keep reference for hasCurrencySelected
+                          priceRow.appendChild(currencyWrapper);
 
                           const priceInput = document.createElement('input');
                           priceInput.type = 'text';
@@ -12138,7 +12226,7 @@ function makePosts(){
                           priceInput.dataset.versionIndex = String(versionIndex);
                           priceInput.dataset.tierIndex = String(tierIndex);
 
-                          const hasCurrencySelected = ()=> currencySelect.value.trim() !== '';
+                          const hasCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
 
                           const updatePriceState = (options = {})=>{
                             const opts = options || {};
@@ -12482,8 +12570,6 @@ function makePosts(){
             inlineControls.className = 'field-inline-controls';
             editMenu.append(inlineControls);
 
-            const fieldTypeSelect = document.createElement('select');
-            fieldTypeSelect.className = 'field-type-select';
             const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
             
             // Get existing field types in this subcategory (excluding current field)
@@ -12494,45 +12580,143 @@ function makePosts(){
               }
             });
             
-            // Add placeholder option if no field type is selected
+            const fieldTypeWrapper = document.createElement('div');
+            fieldTypeWrapper.className = 'field-type-select-wrapper options-dropdown';
+            
+            const fieldTypeMenuBtn = document.createElement('button');
+            fieldTypeMenuBtn.type = 'button';
+            fieldTypeMenuBtn.className = 'field-type-select';
+            fieldTypeMenuBtn.setAttribute('aria-haspopup', 'true');
+            fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+            const menuId = `field-type-menu-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            fieldTypeMenuBtn.setAttribute('aria-controls', menuId);
+            
+            const selectedFieldType = FORM_FIELD_TYPES.find(opt => opt.value === matchKey);
+            const defaultLabel = selectedFieldType 
+              ? (resolveFieldTypeDisplayName(selectedFieldType) || selectedFieldType.label || selectedFieldType.value || 'Select field type...')
+              : 'Select field type...';
+            fieldTypeMenuBtn.textContent = defaultLabel;
+            fieldTypeMenuBtn.dataset.value = matchKey || '';
+            
+            const arrow = document.createElement('span');
+            arrow.className = 'dropdown-arrow';
+            arrow.setAttribute('aria-hidden', 'true');
+            fieldTypeMenuBtn.appendChild(arrow);
+            
+            const fieldTypeMenu = document.createElement('div');
+            fieldTypeMenu.className = 'options-menu';
+            fieldTypeMenu.id = menuId;
+            fieldTypeMenu.hidden = true;
+            
             if(!matchKey){
-              const placeholderOption = document.createElement('option');
-              placeholderOption.value = '';
-              placeholderOption.textContent = 'Select field type...';
-              placeholderOption.disabled = true;
-              placeholderOption.selected = true;
-              fieldTypeSelect.appendChild(placeholderOption);
+              const placeholderBtn = document.createElement('button');
+              placeholderBtn.type = 'button';
+              placeholderBtn.className = 'menu-option';
+              placeholderBtn.textContent = 'Select field type...';
+              placeholderBtn.disabled = true;
+              fieldTypeMenu.appendChild(placeholderBtn);
             }
             
             FORM_FIELD_TYPES.forEach(optionDef => {
-              const option = document.createElement('option');
-              option.value = optionDef.value;
+              const optionBtn = document.createElement('button');
+              optionBtn.type = 'button';
+              optionBtn.className = 'menu-option';
               const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
-              option.textContent = optionLabel || optionDef.value;
+              optionBtn.textContent = optionLabel || optionDef.value;
+              optionBtn.dataset.value = optionDef.value || '';
               if(optionDef.value){
-                option.dataset.fieldTypeKey = optionDef.value;
+                optionBtn.dataset.fieldTypeKey = optionDef.value;
               }
               if(optionLabel){
-                option.dataset.fieldTypeName = optionLabel;
+                optionBtn.dataset.fieldTypeName = optionLabel;
               } else if(optionDef.value){
-                option.dataset.fieldTypeName = optionDef.value;
-              }
-              if(optionDef.value === matchKey){
-                option.selected = true;
+                optionBtn.dataset.fieldTypeName = optionDef.value;
               }
               
               // Disable if this field type already exists in the subcategory
               if(existingFieldTypes.has(optionDef.value) && optionDef.value !== matchKey){
-                option.disabled = true;
-                option.classList.add('field-type-disabled');
+                optionBtn.disabled = true;
+                optionBtn.classList.add('field-type-disabled');
               }
               
-              fieldTypeSelect.appendChild(option);
+              if(optionDef.value === matchKey){
+                optionBtn.setAttribute('aria-pressed', 'true');
+              }
+              
+              optionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const nextType = optionBtn.dataset.value || '';
+                if(!nextType) return;
+                
+                const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+                safeField.fieldTypeKey = nextValidType;
+                safeField.key = nextValidType;
+                
+                const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
+                const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
+                const updatedFieldTypeName = (matchingDisplayName || nextValidType || '').trim();
+                safeField.field_type_name = updatedFieldTypeName;
+                safeField.fieldTypeName = updatedFieldTypeName;
+                
+                const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+                if(!isEditable && updatedFieldTypeName){
+                  safeField.name = updatedFieldTypeName;
+                } else if(isEditable && !safeField.name){
+                  safeField.name = updatedFieldTypeName;
+                }
+                if(fieldNameInput){
+                  fieldNameInput.value = safeField.name || '';
+                }
+                
+                if(matchingFieldType){
+                  if(matchingFieldType.placeholder){
+                    safeField.placeholder = matchingFieldType.placeholder;
+                  }
+                  safeField.type = nextValidType;
+                }
+                
+                fieldTypeMenuBtn.textContent = optionLabel || nextValidType;
+                fieldTypeMenuBtn.dataset.value = nextValidType;
+                fieldTypeMenuBtn.appendChild(arrow);
+                fieldTypeMenu.hidden = true;
+                fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+                
+                // Update all option buttons aria-pressed
+                fieldTypeMenu.querySelectorAll('button.menu-option').forEach(btn => {
+                  btn.setAttribute('aria-pressed', btn === optionBtn ? 'true' : 'false');
+                });
+                
+                notifyFormbuilderChange();
+                updateFieldEditorsByType();
+                renderFormPreview();
+                runSummaryUpdater();
+              });
+              
+              fieldTypeMenu.appendChild(optionBtn);
             });
-
-            const fieldTypeWrapper = document.createElement('div');
-            fieldTypeWrapper.className = 'field-type-select-wrapper';
-            fieldTypeWrapper.append(fieldTypeSelect);
+            
+            fieldTypeMenuBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const open = !fieldTypeMenu.hasAttribute('hidden');
+              if(open){
+                fieldTypeMenu.hidden = true;
+                fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+              } else {
+                fieldTypeMenu.hidden = false;
+                fieldTypeMenuBtn.setAttribute('aria-expanded', 'true');
+                const outsideHandler = (ev) => {
+                  if(!ev.target.closest(fieldTypeWrapper)){
+                    fieldTypeMenu.hidden = true;
+                    fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+                    document.removeEventListener('click', outsideHandler);
+                  }
+                };
+                setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+              }
+            });
+            fieldTypeMenu.addEventListener('click', (e) => e.stopPropagation());
+            
+            fieldTypeWrapper.append(fieldTypeMenuBtn, fieldTypeMenu);
 
             const fieldRequiredLabel = document.createElement('span');
             fieldRequiredLabel.className = 'field-required-label';
@@ -12914,51 +13098,6 @@ function makePosts(){
               runSummaryUpdater();
             };
 
-            fieldTypeSelect.addEventListener('change', ()=>{
-              const nextType = fieldTypeSelect.value;
-              
-              // Don't process if placeholder is selected
-              if(!nextType || nextType === ''){
-                return;
-              }
-              
-              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
-
-              safeField.fieldTypeKey = nextValidType;
-              safeField.key = nextValidType;
-
-              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
-              const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
-              const updatedFieldTypeName = (matchingDisplayName || nextValidType || '').trim();
-              safeField.field_type_name = updatedFieldTypeName;
-              safeField.fieldTypeName = updatedFieldTypeName;
-              
-              // For editable fields, don't auto-name (let user customize)
-              // For non-editable fields, always name after field type name
-              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
-              if(!isEditable && updatedFieldTypeName){
-                safeField.name = updatedFieldTypeName;
-              } else if(isEditable && !safeField.name){
-                // Only set default name if field name is empty
-                safeField.name = updatedFieldTypeName;
-              }
-              // Update name input value
-              if(fieldNameInput){
-                fieldNameInput.value = safeField.name || '';
-              }
-              
-              if(matchingFieldType){
-                if(matchingFieldType.placeholder){
-                  safeField.placeholder = matchingFieldType.placeholder;
-                }
-                safeField.type = nextValidType;
-              }
-
-              notifyFormbuilderChange();
-              updateFieldEditorsByType();
-              renderFormPreview();
-              runSummaryUpdater();
-            });
 
             // Wire up name input for editable fields - only update on blur, not on every keystroke
             // Don't call notifyFormbuilderChange() here as it triggers member form refresh
@@ -13148,40 +13287,76 @@ function makePosts(){
                 control = textarea;
               } else if(previewField.type === 'dropdown'){
                 wrapper.classList.add('form-preview-field--dropdown');
-                const select = document.createElement('select');
-                select.className = 'form-preview-select';
+                const dropdownWrapper = document.createElement('div');
+                dropdownWrapper.className = 'options-dropdown';
+                const menuBtn = document.createElement('button');
+                menuBtn.type = 'button';
+                menuBtn.className = 'form-preview-select';
+                menuBtn.setAttribute('aria-haspopup', 'true');
+                menuBtn.setAttribute('aria-expanded', 'false');
+                const selectId = `${baseId}-input`;
+                menuBtn.id = selectId;
+                const menuId = `${selectId}-menu`;
+                menuBtn.setAttribute('aria-controls', menuId);
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
+                const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
+                menuBtn.textContent = defaultText;
+                const arrow = document.createElement('span');
+                arrow.className = 'dropdown-arrow';
+                arrow.setAttribute('aria-hidden', 'true');
+                menuBtn.appendChild(arrow);
+                const optionsMenu = document.createElement('div');
+                optionsMenu.className = 'options-menu';
+                optionsMenu.id = menuId;
+                optionsMenu.hidden = true;
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
-                    const option = document.createElement('option');
-                    // Use the actual option value, don't fall back to "Option X"
+                    const optionBtn = document.createElement('button');
+                    optionBtn.type = 'button';
+                    optionBtn.className = 'menu-option';
                     const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-                    option.value = stringValue;
-                    option.textContent = stringValue.trim() || '';
-                    select.appendChild(option);
+                    optionBtn.textContent = stringValue.trim() || '';
+                    optionBtn.dataset.value = stringValue;
+                    optionBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      menuBtn.textContent = stringValue.trim() || 'Select an option';
+                      menuBtn.appendChild(arrow);
+                      optionsMenu.hidden = true;
+                      menuBtn.setAttribute('aria-expanded', 'false');
+                    });
+                    optionsMenu.appendChild(optionBtn);
                   });
                 } else {
-                  const placeholderOption = document.createElement('option');
-                  placeholderOption.textContent = 'Select an option';
-                  select.appendChild(placeholderOption);
+                  const placeholderBtn = document.createElement('button');
+                  placeholderBtn.type = 'button';
+                  placeholderBtn.className = 'menu-option';
+                  placeholderBtn.textContent = 'Select an option';
+                  placeholderBtn.disabled = true;
+                  optionsMenu.appendChild(placeholderBtn);
                 }
-                select.tabIndex = 0;
-                const selectId = `${baseId}-input`;
-                select.id = selectId;
-                // Make interactive but prevent any form submission or member form linking
-                select.addEventListener('change', (e) => {
+                menuBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
-                  e.preventDefault();
+                  const open = !optionsMenu.hasAttribute('hidden');
+                  if(open){
+                    optionsMenu.hidden = true;
+                    menuBtn.setAttribute('aria-expanded', 'false');
+                  } else {
+                    optionsMenu.hidden = false;
+                    menuBtn.setAttribute('aria-expanded', 'true');
+                    const outsideHandler = (ev) => {
+                      if(!ev.target.closest(dropdownWrapper)){
+                        optionsMenu.hidden = true;
+                        menuBtn.setAttribute('aria-expanded', 'false');
+                        document.removeEventListener('click', outsideHandler);
+                      }
+                    };
+                    setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+                  }
                 });
-                select.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                });
-                select.addEventListener('mousedown', (e) => {
-                  e.stopPropagation();
-                });
-                // Ensure select is not inside any form that could submit
-                select.setAttribute('form', '');
-                control = select;
+                optionsMenu.addEventListener('click', (e) => e.stopPropagation());
+                dropdownWrapper.appendChild(menuBtn);
+                dropdownWrapper.appendChild(optionsMenu);
+                control = dropdownWrapper;
               } else if(previewField.type === 'radio'){
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
                 const radioGroup = document.createElement('div');
@@ -13337,22 +13512,96 @@ function makePosts(){
                     const bottomRow = document.createElement('div');
                     bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
 
-                    const currencySelect = document.createElement('select');
-                    currencySelect.className = 'variant-pricing-currency';
-                    const emptyOption = document.createElement('option');
-                    emptyOption.value = '';
-                    emptyOption.textContent = 'Currency';
-                    currencySelect.appendChild(emptyOption);
-                    // Currency options should come from backend via currency field
+                    const currencyWrapper = document.createElement('div');
+                    currencyWrapper.className = 'options-dropdown';
+                    const currencyMenuBtn = document.createElement('button');
+                    currencyMenuBtn.type = 'button';
+                    currencyMenuBtn.className = 'variant-pricing-currency';
+                    currencyMenuBtn.setAttribute('aria-haspopup', 'true');
+                    currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                    const currencyMenuId = `variant-currency-${baseId}-${optionIndex}`;
+                    currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
+                    const existingCurrency = optionValue.currency || '';
+                    currencyMenuBtn.textContent = existingCurrency || 'Currency';
+                    currencyMenuBtn.dataset.value = existingCurrency;
+                    const currencyArrow = document.createElement('span');
+                    currencyArrow.className = 'dropdown-arrow';
+                    currencyArrow.setAttribute('aria-hidden', 'true');
+                    currencyMenuBtn.appendChild(currencyArrow);
+                    const currencyMenu = document.createElement('div');
+                    currencyMenu.className = 'options-menu';
+                    currencyMenu.id = currencyMenuId;
+                    currencyMenu.hidden = true;
+                    const placeholderBtn = document.createElement('button');
+                    placeholderBtn.type = 'button';
+                    placeholderBtn.className = 'menu-option';
+                    placeholderBtn.textContent = 'Currency';
+                    placeholderBtn.dataset.value = '';
+                    placeholderBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      currencyMenuBtn.textContent = 'Currency';
+                      currencyMenuBtn.dataset.value = '';
+                      currencyMenuBtn.appendChild(currencyArrow);
+                      currencyMenu.hidden = true;
+                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      const previousCurrency = previewField.options[optionIndex].currency || '';
+                      previewField.options[optionIndex].currency = '';
+                      const priceCleared = updatePriceState();
+                      if(previousCurrency !== '' || priceCleared){
+                        notifyFormbuilderChange();
+                      }
+                    });
+                    currencyMenu.appendChild(placeholderBtn);
                     const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
                     currencyOptions.forEach(code => {
-                      const opt = document.createElement('option');
-                      opt.value = code;
-                      opt.textContent = code;
-                      currencySelect.appendChild(opt);
+                      const optionBtn = document.createElement('button');
+                      optionBtn.type = 'button';
+                      optionBtn.className = 'menu-option';
+                      optionBtn.textContent = code;
+                      optionBtn.dataset.value = code;
+                      optionBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        currencyMenuBtn.textContent = code;
+                        currencyMenuBtn.dataset.value = code;
+                        currencyMenuBtn.appendChild(currencyArrow);
+                        currencyMenu.hidden = true;
+                        currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                        const previousCurrency = previewField.options[optionIndex].currency || '';
+                        previewField.options[optionIndex].currency = code;
+                        const priceCleared = updatePriceState();
+                        if(isCurrencySelected()){
+                          commitPriceValue();
+                        }
+                        if(previousCurrency !== code || priceCleared){
+                          notifyFormbuilderChange();
+                        }
+                      });
+                      currencyMenu.appendChild(optionBtn);
                     });
-                    currencySelect.value = optionValue.currency || '';
-                    const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
+                    currencyMenuBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      const open = !currencyMenu.hasAttribute('hidden');
+                      if(open){
+                        currencyMenu.hidden = true;
+                        currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      } else {
+                        currencyMenu.hidden = false;
+                        currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                        const outsideHandler = (ev) => {
+                          if(!ev.target.closest(currencyWrapper)){
+                            currencyMenu.hidden = true;
+                            currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                            document.removeEventListener('click', outsideHandler);
+                          }
+                        };
+                        setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+                      }
+                    });
+                    currencyMenu.addEventListener('click', (e) => e.stopPropagation());
+                    currencyWrapper.appendChild(currencyMenuBtn);
+                    currencyWrapper.appendChild(currencyMenu);
+                    const currencySelect = currencyMenuBtn; // Keep reference for isCurrencySelected
+                    const isCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
 
                     const priceInput = document.createElement('input');
                     priceInput.type = 'text';
@@ -13436,18 +13685,7 @@ function makePosts(){
                       showCurrencyAlert(priceInput);
                       return true;
                     };
-                    currencySelect.addEventListener('change', ()=>{
-                      const previousCurrency = previewField.options[optionIndex].currency || '';
-                      const nextCurrency = currencySelect.value;
-                      previewField.options[optionIndex].currency = nextCurrency;
-                      const priceCleared = updatePriceState();
-                      if(isCurrencySelected()){
-                        commitPriceValue();
-                      }
-                      if(previousCurrency !== nextCurrency || priceCleared){
-                        notifyFormbuilderChange();
-                      }
-                    });
+                    // Currency change is now handled in the menu option click handlers above
 
                     const commitPriceValue = event => {
                       if(!isCurrencySelected()){
@@ -13549,7 +13787,7 @@ function makePosts(){
                     });
 
                     actions.append(addBtn, removeBtn);
-                    bottomRow.append(currencySelect, priceInput, actions);
+                    bottomRow.append(currencyWrapper, priceInput, actions);
 
                     optionRow.append(topRow, bottomRow);
                     versionList.appendChild(optionRow);
@@ -13563,7 +13801,7 @@ function makePosts(){
                       if(focusTarget === 'price'){
                         focusEl = targetRow.querySelector('.variant-pricing-price');
                       } else if(focusTarget === 'currency'){
-                        focusEl = targetRow.querySelector('.variant-pricing-currency');
+                        focusEl = targetRow.querySelector('button.variant-pricing-currency');
                       }
                       if(!focusEl){
                         focusEl = targetRow.querySelector('.variant-pricing-name');

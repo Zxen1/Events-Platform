@@ -683,20 +683,82 @@
 
         const bottomRow = document.createElement('div');
         bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
-        const currencySelect = document.createElement('select');
-        currencySelect.className = 'variant-pricing-currency';
-        const emptyOption = document.createElement('option');
-        emptyOption.value = '';
-        emptyOption.textContent = 'Currency';
-        currencySelect.appendChild(emptyOption);
-        currencyCodes.forEach(code => {
-          const opt = document.createElement('option');
-          opt.value = code;
-          opt.textContent = code;
-          currencySelect.appendChild(opt);
+        const currencyWrapper = document.createElement('div');
+        currencyWrapper.className = 'options-dropdown';
+        const currencyMenuBtn = document.createElement('button');
+        currencyMenuBtn.type = 'button';
+        currencyMenuBtn.className = 'variant-pricing-currency';
+        currencyMenuBtn.setAttribute('aria-haspopup', 'true');
+        currencyMenuBtn.setAttribute('aria-expanded', 'false');
+        const currencyMenuId = `member-variant-currency-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
+        const existingCurrency = option.currency || '';
+        currencyMenuBtn.textContent = existingCurrency || 'Currency';
+        currencyMenuBtn.dataset.value = existingCurrency;
+        const currencyArrow = document.createElement('span');
+        currencyArrow.className = 'dropdown-arrow';
+        currencyArrow.setAttribute('aria-hidden', 'true');
+        currencyMenuBtn.appendChild(currencyArrow);
+        const currencyMenu = document.createElement('div');
+        currencyMenu.className = 'options-menu';
+        currencyMenu.id = currencyMenuId;
+        currencyMenu.hidden = true;
+        const placeholderBtn = document.createElement('button');
+        placeholderBtn.type = 'button';
+        placeholderBtn.className = 'menu-option';
+        placeholderBtn.textContent = 'Currency';
+        placeholderBtn.dataset.value = '';
+        placeholderBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currencyMenuBtn.textContent = 'Currency';
+          currencyMenuBtn.dataset.value = '';
+          currencyMenuBtn.appendChild(currencyArrow);
+          currencyMenu.hidden = true;
+          currencyMenuBtn.setAttribute('aria-expanded', 'false');
+          option.currency = '';
+          updatePostButtonState();
         });
-        currencySelect.value = option.currency || '';
-        currencySelect.addEventListener('change', ()=>{ option.currency = currencySelect.value; });
+        currencyMenu.appendChild(placeholderBtn);
+        currencyCodes.forEach(code => {
+          const optionBtn = document.createElement('button');
+          optionBtn.type = 'button';
+          optionBtn.className = 'menu-option';
+          optionBtn.textContent = code;
+          optionBtn.dataset.value = code;
+          optionBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currencyMenuBtn.textContent = code;
+            currencyMenuBtn.dataset.value = code;
+            currencyMenuBtn.appendChild(currencyArrow);
+            currencyMenu.hidden = true;
+            currencyMenuBtn.setAttribute('aria-expanded', 'false');
+            option.currency = code;
+            updatePostButtonState();
+          });
+          currencyMenu.appendChild(optionBtn);
+        });
+        currencyMenuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = !currencyMenu.hasAttribute('hidden');
+          if(open){
+            currencyMenu.hidden = true;
+            currencyMenuBtn.setAttribute('aria-expanded', 'false');
+          } else {
+            currencyMenu.hidden = false;
+            currencyMenuBtn.setAttribute('aria-expanded', 'true');
+            const outsideHandler = (ev) => {
+              if(!ev.target.closest(currencyWrapper)){
+                currencyMenu.hidden = true;
+                currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                document.removeEventListener('click', outsideHandler);
+              }
+            };
+            setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+          }
+        });
+        currencyMenu.addEventListener('click', (e) => e.stopPropagation());
+        currencyWrapper.appendChild(currencyMenuBtn);
+        currencyWrapper.appendChild(currencyMenu);
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
         priceInput.className = 'variant-pricing-price form-preview-variant-pricing-price';
@@ -707,7 +769,7 @@
           priceInput.value = option.price;
         });
 
-        bottomRow.append(currencySelect, priceInput);
+        bottomRow.append(currencyWrapper, priceInput);
 
         const actions = document.createElement('div');
         actions.className = 'variant-pricing-option-actions';
@@ -898,24 +960,90 @@
         control = textarea;
       } else if(resolvedBaseType === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
-        const select = document.createElement('select');
-        select.id = controlId;
-        select.className = 'form-preview-select';
-        if(safeField.required) select.required = true;
-        const placeholderOption = document.createElement('option');
-        placeholderOption.value = '';
-        placeholderOption.textContent = placeholder || 'Select an option';
-        select.appendChild(placeholderOption);
+        const dropdownWrapper = document.createElement('div');
+        dropdownWrapper.className = 'options-dropdown';
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.id = controlId;
+        menuBtn.className = 'form-preview-select';
+        menuBtn.setAttribute('aria-haspopup', 'true');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        const menuId = `${controlId}-menu`;
+        menuBtn.setAttribute('aria-controls', menuId);
+        if(safeField.required) {
+          menuBtn.setAttribute('data-required', 'true');
+          menuBtn.setAttribute('aria-required', 'true');
+        }
         const options = Array.isArray(safeField.options) ? safeField.options : [];
+        const defaultText = placeholder || 'Select an option';
+        menuBtn.textContent = defaultText;
+        menuBtn.dataset.value = '';
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        menuBtn.appendChild(arrow);
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className = 'options-menu';
+        optionsMenu.id = menuId;
+        optionsMenu.hidden = true;
+        if(!safeField.required){
+          const placeholderBtn = document.createElement('button');
+          placeholderBtn.type = 'button';
+          placeholderBtn.className = 'menu-option';
+          placeholderBtn.textContent = placeholder || 'Select an option';
+          placeholderBtn.dataset.value = '';
+          placeholderBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuBtn.textContent = placeholder || 'Select an option';
+            menuBtn.appendChild(arrow);
+            menuBtn.dataset.value = '';
+            optionsMenu.hidden = true;
+            menuBtn.setAttribute('aria-expanded', 'false');
+            updatePostButtonState();
+          });
+          optionsMenu.appendChild(placeholderBtn);
+        }
         options.forEach((optionValue, optionIndex) => {
-          const option = document.createElement('option');
+          const optionBtn = document.createElement('button');
+          optionBtn.type = 'button';
+          optionBtn.className = 'menu-option';
           const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-          option.value = stringValue;
-          // Use the actual option value, don't fall back to "Option X"
-          option.textContent = stringValue.trim() || '';
-          select.appendChild(option);
+          optionBtn.textContent = stringValue.trim() || '';
+          optionBtn.dataset.value = stringValue;
+          optionBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuBtn.textContent = stringValue.trim() || 'Select an option';
+            menuBtn.appendChild(arrow);
+            menuBtn.dataset.value = stringValue;
+            optionsMenu.hidden = true;
+            menuBtn.setAttribute('aria-expanded', 'false');
+            updatePostButtonState();
+          });
+          optionsMenu.appendChild(optionBtn);
         });
-        control = select;
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = !optionsMenu.hasAttribute('hidden');
+          if(open){
+            optionsMenu.hidden = true;
+            menuBtn.setAttribute('aria-expanded', 'false');
+          } else {
+            optionsMenu.hidden = false;
+            menuBtn.setAttribute('aria-expanded', 'true');
+            const outsideHandler = (ev) => {
+              if(!ev.target.closest(dropdownWrapper)){
+                optionsMenu.hidden = true;
+                menuBtn.setAttribute('aria-expanded', 'false');
+                document.removeEventListener('click', outsideHandler);
+              }
+            };
+            setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+          }
+        });
+        optionsMenu.addEventListener('click', (e) => e.stopPropagation());
+        dropdownWrapper.appendChild(menuBtn);
+        dropdownWrapper.appendChild(optionsMenu);
+        control = dropdownWrapper;
       } else if(resolvedBaseType === 'radio' || fieldTypeKey === 'radio'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
@@ -1294,6 +1422,20 @@
         }
         const val = (el.value || '').trim();
         if(val === '') return false;
+      }
+      // Check required button-based dropdown menus
+      const requiredMenuBtns = formFields.querySelectorAll('button.form-preview-select[data-required="true"]');
+      for(const menuBtn of requiredMenuBtns){
+        if(menuBtn.disabled || menuBtn.closest('[hidden]')) continue;
+        const val = (menuBtn.dataset.value || '').trim();
+        if(val === '') return false;
+      }
+      
+      // Continue with email/url/tel validation for regular inputs
+      for(const el of controls){
+        if(el.disabled || el.closest('[hidden]')) continue;
+        if(el.type === 'file') continue;
+        const val = (el.value || '').trim();
         if(el.type === 'email'){
 				// Stricter but still pragmatic email check
 				if(!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val)) return false;
@@ -1329,9 +1471,9 @@
 			let ok = false;
 			const rows = editor.querySelectorAll('.variant-pricing-option');
 			for(const row of rows){
-				const currency = row.querySelector('.variant-pricing-currency');
+				const currency = row.querySelector('button.variant-pricing-currency');
 				const price = row.querySelector('.variant-pricing-price');
-				const hasCurrency = currency && String(currency.value || '').trim();
+				const hasCurrency = currency && String(currency.dataset.value || '').trim();
 				const hasPrice = price && String(price.value || '').trim();
 				if(hasCurrency && hasPrice){ ok = true; break; }
 			}
@@ -1441,6 +1583,29 @@
               try{ el.dispatchEvent(new Event('input', { bubbles: true })); }catch(_e){}
             }
 					});
+					// Restore button-based dropdown menus
+					formFields.querySelectorAll('button.form-preview-select').forEach(function(menuBtn){
+						if(!menuBtn || menuBtn.disabled) return;
+						var key = menuBtn.id || '';
+						if(!key || !(key in draft)) return;
+						var val = draft[key];
+						if(typeof val === 'string' && val.trim()){
+							menuBtn.dataset.value = val;
+							// Find matching option button and update text
+							const menuId = menuBtn.getAttribute('aria-controls');
+							if(menuId){
+								const optionsMenu = document.getElementById(menuId);
+								if(optionsMenu){
+									const optionBtn = optionsMenu.querySelector(`button[data-value="${val}"]`);
+									if(optionBtn){
+										menuBtn.textContent = optionBtn.textContent;
+										const arrow = menuBtn.querySelector('.dropdown-arrow');
+										if(arrow) menuBtn.appendChild(arrow);
+									}
+								}
+							}
+						}
+					});
 					try{ updatePostButtonState(); }catch(_e){}
 				}
 			}catch(_e){}
@@ -1456,6 +1621,13 @@
 							if(el.type === 'checkbox'){ snapshot[key] = !!el.checked; return; }
 							if(el.type === 'radio'){ if(el.checked){ snapshot[el.name||key] = el.value; } return; }
 							snapshot[key] = el.value;
+						});
+						// Also save button-based dropdown menus
+						formFields.querySelectorAll('button.form-preview-select').forEach(function(menuBtn){
+							if(!menuBtn || menuBtn.disabled) return;
+							var key = menuBtn.id || '';
+							if(!key) return;
+							snapshot[key] = menuBtn.dataset.value || '';
 						});
             var k = 'member-create-draft-v1::' + (selectedCategory || '') + '::' + (selectedSubcategory || '');
             localStorage.setItem(k, JSON.stringify(snapshot));
@@ -2089,7 +2261,7 @@
                 if(focusTarget === 'price'){
                   focusEl = targetRow.querySelector('.variant-pricing-price');
                 } else if(focusTarget === 'currency'){
-                  focusEl = targetRow.querySelector('.variant-pricing-currency');
+                  focusEl = targetRow.querySelector('button.variant-pricing-currency');
                 }
                 if(!focusEl){
                   focusEl = targetRow.querySelector('.variant-pricing-name');
@@ -2599,13 +2771,21 @@
             break;
           }
         } else if(type === 'dropdown'){
+          // Check for button-based menu (new pattern) or select (old pattern)
+          const menuBtn = element.querySelector('button.form-preview-select');
           const select = element.querySelector('select');
-          value = select ? select.value : '';
+          if(menuBtn){
+            value = menuBtn.dataset.value || '';
+          } else if(select){
+            value = select.value || '';
+          } else {
+            value = '';
+          }
           if(field.required && (!value || !value.trim())){
             const msg = await getMessage('msg_post_validation_choose', { field: label }, false) || `Choose an option for ${label}.`;
             invalid = {
               message: msg,
-              focus: ()=> focusElement(select)
+              focus: ()=> focusElement(menuBtn || select)
             };
             break;
           }
@@ -2947,38 +3127,115 @@
       categoryLabel.style.marginBottom = '8px';
       categoryLabel.style.display = 'block';
       
-      const categorySelect = document.createElement('select');
-      categorySelect.className = 'form-preview-select';
-      categorySelect.id = 'memberFormpickerCategory';
-      categorySelect.style.width = '100%';
-      categorySelect.style.height = '36px';
-      categorySelect.style.padding = '0 30px 0 12px';
-      categorySelect.style.border = '1px solid var(--border)';
-      categorySelect.style.borderRadius = '8px';
-      categorySelect.style.background = 'rgba(0,0,0,0.35)';
-      categorySelect.style.color = 'var(--button-text)';
-      categorySelect.style.boxSizing = 'border-box';
-      
-      // Add placeholder option
-      const categoryPlaceholder = document.createElement('option');
-      categoryPlaceholder.value = '';
-      categoryPlaceholder.textContent = 'Select a category';
-      categoryPlaceholder.disabled = true;
-      categoryPlaceholder.selected = true;
-      categorySelect.appendChild(categoryPlaceholder);
+      const categoryDropdown = document.createElement('div');
+      categoryDropdown.className = 'options-dropdown';
+      const categoryMenuBtn = document.createElement('button');
+      categoryMenuBtn.type = 'button';
+      categoryMenuBtn.className = 'form-preview-select';
+      categoryMenuBtn.id = 'memberFormpickerCategory';
+      categoryMenuBtn.setAttribute('aria-haspopup', 'true');
+      categoryMenuBtn.setAttribute('aria-expanded', 'false');
+      const categoryMenuId = 'memberFormpickerCategoryMenu';
+      categoryMenuBtn.setAttribute('aria-controls', categoryMenuId);
+      categoryMenuBtn.textContent = 'Select a category';
+      categoryMenuBtn.dataset.value = '';
+      const categoryArrow = document.createElement('span');
+      categoryArrow.className = 'dropdown-arrow';
+      categoryArrow.setAttribute('aria-hidden', 'true');
+      categoryMenuBtn.appendChild(categoryArrow);
+      const categoryMenu = document.createElement('div');
+      categoryMenu.className = 'options-menu';
+      categoryMenu.id = categoryMenuId;
+      categoryMenu.hidden = true;
       
       // Add category options with icons stored in data attributes
       sortedCategories.forEach(c => {
         if(!c || typeof c.name !== 'string') return;
-        const option = document.createElement('option');
-        option.value = c.name;
-        option.textContent = c.name;
-        option.dataset.icon = categoryIcons[c.name] || '';
-        categorySelect.appendChild(option);
+        const optionBtn = document.createElement('button');
+        optionBtn.type = 'button';
+        optionBtn.className = 'menu-option';
+        optionBtn.textContent = c.name;
+        optionBtn.dataset.value = c.name;
+        optionBtn.dataset.icon = categoryIcons[c.name] || '';
+        optionBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const categoryName = c.name;
+          categoryMenuBtn.textContent = categoryName;
+          categoryMenuBtn.dataset.value = categoryName;
+          categoryMenuBtn.appendChild(categoryArrow);
+          categoryMenu.hidden = true;
+          categoryMenuBtn.setAttribute('aria-expanded', 'false');
+          selectedCategory = categoryName;
+          selectedSubcategory = '';
+          try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: '' })); }catch(_e){}
+          
+          // Clear and populate subcategory dropdown
+          subcategoryMenu.innerHTML = '';
+          if(categoryName){
+            const category = sortedCategories.find(cat => cat.name === categoryName);
+            if(category && Array.isArray(category.subs) && category.subs.length > 0){
+              category.subs.forEach(s => {
+                const subOptionBtn = document.createElement('button');
+                subOptionBtn.type = 'button';
+                subOptionBtn.className = 'menu-option';
+                subOptionBtn.textContent = s;
+                subOptionBtn.dataset.value = s;
+                subOptionBtn.dataset.icon = subcategoryIcons[s] || '';
+                subOptionBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const subcategoryName = s;
+                  subcategoryMenuBtn.textContent = subcategoryName;
+                  subcategoryMenuBtn.dataset.value = subcategoryName;
+                  subcategoryMenuBtn.appendChild(subcategoryArrow);
+                  subcategoryMenu.hidden = true;
+                  subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+                  selectedSubcategory = subcategoryName;
+                  try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: selectedSubcategory || '' })); }catch(_e){}
+                  renderConfiguredFields();
+                });
+                subcategoryMenu.appendChild(subOptionBtn);
+              });
+              
+              subcategoryMenuBtn.textContent = 'Select a subcategory';
+              subcategoryMenuBtn.dataset.value = '';
+              subcategoryWrapper.hidden = false;
+            } else {
+              subcategoryWrapper.hidden = true;
+            }
+          } else {
+            subcategoryWrapper.hidden = true;
+          }
+          
+          renderConfiguredFields();
+        });
+        categoryMenu.appendChild(optionBtn);
       });
       
+      categoryMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !categoryMenu.hasAttribute('hidden');
+        if(open){
+          categoryMenu.hidden = true;
+          categoryMenuBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          categoryMenu.hidden = false;
+          categoryMenuBtn.setAttribute('aria-expanded', 'true');
+          const outsideHandler = (ev) => {
+            if(!ev.target.closest(categoryDropdown)){
+              categoryMenu.hidden = true;
+              categoryMenuBtn.setAttribute('aria-expanded', 'false');
+              document.removeEventListener('click', outsideHandler);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+        }
+      });
+      categoryMenu.addEventListener('click', (e) => e.stopPropagation());
+      categoryDropdown.appendChild(categoryMenuBtn);
+      categoryDropdown.appendChild(categoryMenu);
+      
       categoryWrapper.appendChild(categoryLabel);
-      categoryWrapper.appendChild(categorySelect);
+      categoryWrapper.appendChild(categoryDropdown);
       
       // Create subcategory dropdown wrapper (initially hidden)
       const subcategoryWrapper = document.createElement('div');
@@ -2993,65 +3250,52 @@
       subcategoryLabel.style.marginBottom = '8px';
       subcategoryLabel.style.display = 'block';
       
-      const subcategorySelect = document.createElement('select');
-      subcategorySelect.className = 'form-preview-select';
-      subcategorySelect.id = 'memberFormpickerSubcategory';
-      subcategorySelect.style.width = '100%';
-      subcategorySelect.style.height = '36px';
-      subcategorySelect.style.padding = '0 30px 0 12px';
-      subcategorySelect.style.border = '1px solid var(--border)';
-      subcategorySelect.style.borderRadius = '8px';
-      subcategorySelect.style.background = 'rgba(0,0,0,0.35)';
-      subcategorySelect.style.color = 'var(--button-text)';
-      subcategorySelect.style.boxSizing = 'border-box';
+      const subcategoryDropdown = document.createElement('div');
+      subcategoryDropdown.className = 'options-dropdown';
+      const subcategoryMenuBtn = document.createElement('button');
+      subcategoryMenuBtn.type = 'button';
+      subcategoryMenuBtn.className = 'form-preview-select';
+      subcategoryMenuBtn.id = 'memberFormpickerSubcategory';
+      subcategoryMenuBtn.setAttribute('aria-haspopup', 'true');
+      subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+      const subcategoryMenuId = 'memberFormpickerSubcategoryMenu';
+      subcategoryMenuBtn.setAttribute('aria-controls', subcategoryMenuId);
+      subcategoryMenuBtn.textContent = 'Select a subcategory';
+      subcategoryMenuBtn.dataset.value = '';
+      const subcategoryArrow = document.createElement('span');
+      subcategoryArrow.className = 'dropdown-arrow';
+      subcategoryArrow.setAttribute('aria-hidden', 'true');
+      subcategoryMenuBtn.appendChild(subcategoryArrow);
+      const subcategoryMenu = document.createElement('div');
+      subcategoryMenu.className = 'options-menu';
+      subcategoryMenu.id = subcategoryMenuId;
+      subcategoryMenu.hidden = true;
+      
+      subcategoryMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !subcategoryMenu.hasAttribute('hidden');
+        if(open){
+          subcategoryMenu.hidden = true;
+          subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          subcategoryMenu.hidden = false;
+          subcategoryMenuBtn.setAttribute('aria-expanded', 'true');
+          const outsideHandler = (ev) => {
+            if(!ev.target.closest(subcategoryDropdown)){
+              subcategoryMenu.hidden = true;
+              subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+              document.removeEventListener('click', outsideHandler);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+        }
+      });
+      subcategoryMenu.addEventListener('click', (e) => e.stopPropagation());
+      subcategoryDropdown.appendChild(subcategoryMenuBtn);
+      subcategoryDropdown.appendChild(subcategoryMenu);
       
       subcategoryWrapper.appendChild(subcategoryLabel);
-      subcategoryWrapper.appendChild(subcategorySelect);
-      
-      // Handle category selection
-      categorySelect.addEventListener('change', () => {
-        const categoryName = categorySelect.value;
-        selectedCategory = categoryName;
-        selectedSubcategory = '';
-        try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: '' })); }catch(_e){}
-        
-        // Clear and populate subcategory dropdown
-        subcategorySelect.innerHTML = '';
-        if(categoryName){
-          const category = sortedCategories.find(c => c.name === categoryName);
-          if(category && Array.isArray(category.subs) && category.subs.length > 0){
-            const subPlaceholder = document.createElement('option');
-            subPlaceholder.value = '';
-            subPlaceholder.textContent = 'Select a subcategory';
-            subPlaceholder.disabled = true;
-            subPlaceholder.selected = true;
-            subcategorySelect.appendChild(subPlaceholder);
-            
-            category.subs.forEach(s => {
-              const option = document.createElement('option');
-              option.value = s;
-              option.textContent = s;
-              option.dataset.icon = subcategoryIcons[s] || '';
-              subcategorySelect.appendChild(option);
-            });
-            
-            subcategoryWrapper.hidden = false;
-          } else {
-            subcategoryWrapper.hidden = true;
-          }
-        } else {
-          subcategoryWrapper.hidden = true;
-        }
-        
-        renderConfiguredFields();
-      });
-      
-      // Handle subcategory selection
-      subcategorySelect.addEventListener('change', () => {
-        selectedSubcategory = subcategorySelect.value;
-        try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: selectedSubcategory || '' })); }catch(_e){}
-        renderConfiguredFields();
-      });
+      subcategoryWrapper.appendChild(subcategoryDropdown);
       
       dropdownsContainer.appendChild(categoryWrapper);
       dropdownsContainer.appendChild(subcategoryWrapper);
@@ -3061,14 +3305,19 @@
       try{
         const activeSel = JSON.parse(localStorage.getItem('member-create-active-v1') || 'null');
         if(activeSel && activeSel.cat){
-          categorySelect.value = activeSel.cat;
-          categorySelect.dispatchEvent(new Event('change'));
-          if(activeSel.sub){
-            // Wait a tick to ensure subcategory options are populated
-            setTimeout(function(){
-              subcategorySelect.value = activeSel.sub;
-              subcategorySelect.dispatchEvent(new Event('change'));
-            }, 0);
+          // Find and click the matching category option
+          const categoryOption = categoryMenu.querySelector(`button[data-value="${activeSel.cat}"]`);
+          if(categoryOption){
+            categoryOption.click();
+            if(activeSel.sub){
+              // Wait a tick to ensure subcategory options are populated
+              setTimeout(function(){
+                const subcategoryOption = subcategoryMenu.querySelector(`button[data-value="${activeSel.sub}"]`);
+                if(subcategoryOption){
+                  subcategoryOption.click();
+                }
+              }, 50);
+            }
           }
         }
       }catch(_e){}
