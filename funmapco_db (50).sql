@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 17, 2025 at 10:14 AM
+-- Generation Time: Nov 17, 2025 at 07:42 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -386,6 +386,7 @@ CREATE TABLE `field_types` (
   `field_type_name` varchar(255) NOT NULL,
   `field_type_key` varchar(255) DEFAULT NULL,
   `placeholder` varchar(512) DEFAULT NULL,
+  `formbuilder_editable` tinyint(1) NOT NULL DEFAULT 0,
   `field_type_item_1` enum('address-line [field=5]','checkout-option [field=24]','checkout-price [field=25]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','title [field=1]','variant [field=21]','venue-name [field=4]','website [field=20]','checkout-details [fieldset=8]','location [fieldset=4]','sessions [fieldset=2]','ticket-pricing [fieldset=3]','variant-pricing [fieldset=5]','venues [fieldset=1]') DEFAULT NULL,
   `field_type_item_2` enum('address-line [field=5]','checkout-option [field=24]','checkout-price [field=25]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','title [field=1]','variant [field=21]','venue-name [field=4]','website [field=20]','checkout-details [fieldset=8]','location [fieldset=4]','sessions [fieldset=2]','ticket-pricing [fieldset=3]','variant-pricing [fieldset=5]','venues [fieldset=1]') DEFAULT NULL,
   `field_type_item_3` enum('address-line [field=5]','checkout-option [field=24]','checkout-price [field=25]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','title [field=1]','variant [field=21]','venue-name [field=4]','website [field=20]','checkout-details [fieldset=8]','location [fieldset=4]','sessions [fieldset=2]','ticket-pricing [fieldset=3]','variant-pricing [fieldset=5]','venues [fieldset=1]') DEFAULT NULL,
@@ -400,23 +401,23 @@ CREATE TABLE `field_types` (
 -- Dumping data for table `field_types`
 --
 
-INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placeholder`, `field_type_item_1`, `field_type_item_2`, `field_type_item_3`, `field_type_item_4`, `field_type_item_5`, `created_at`, `updated_at`, `sort_order`) VALUES
-(1, 'Title', 'title', 'eg. Summer Rain', 'title [field=1]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 02:57:59', 1),
-(2, 'Description', 'description', 'eg. Come and Express Yourself!', 'description [field=2]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 02:58:24', 2),
-(3, 'Text Box', 'text-box', 'text', 'text-box [field=14]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:19:20', 3),
-(4, 'Text Area', 'text-area', 'The quick brown fox jumped over the lazy dogs.', 'text-area [field=15]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:19:28', 4),
-(5, 'Dropdown', 'dropdown', '1A,2A,3A', 'dropdown [field=16]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-16 20:32:41', 5),
-(6, 'Radio Toggle', 'radio', 'A,B,C', 'radio [field=17]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-16 23:12:56', 6),
-(7, 'Email', 'email', 'you@there.com', 'email [field=18]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:00:06', 7),
-(8, 'Phone', 'phone', '+61 455 555 555', 'phone [field=19]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-09 12:26:42', 8),
-(9, 'Location', 'location', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'location [fieldset=4]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:01:02', 9),
-(10, 'Website (URL)', 'website-url', 'www.website.com', 'website [field=20]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:07:35', 10),
-(11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 'website [field=20]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:07:35', 11),
-(12, 'Images', 'images', 'images', 'images [field=3]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:01:51', 12),
-(13, 'Coupon', 'coupon', 'eg. FreeStuff', 'text-box [field=14]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:19:54', 13),
-(14, 'Variant Pricing', 'variant-pricing', 'prices', 'variant-pricing [fieldset=5]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:20:00', 14),
-(15, 'Checkout', 'checkout', 'pay me', 'checkout-details [fieldset=8]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:29:44', 15),
-(16, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 'venues [fieldset=1]', 'sessions [fieldset=2]', 'ticket-pricing [fieldset=3]', NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:25:18', 16);
+INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placeholder`, `formbuilder_editable`, `field_type_item_1`, `field_type_item_2`, `field_type_item_3`, `field_type_item_4`, `field_type_item_5`, `created_at`, `updated_at`, `sort_order`) VALUES
+(1, 'Title', 'title', 'eg. Summer Rain', 0, 'title [field=1]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 02:57:59', 1),
+(2, 'Description', 'description', 'eg. Come and Express Yourself!', 0, 'description [field=2]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 02:58:24', 2),
+(3, 'Text Box (editable)', 'text-box', 'text', 1, 'text-box [field=14]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-17 08:39:26', 100),
+(4, 'Text Area (editable)', 'text-area', 'The quick brown fox jumped over the lazy dogs.', 1, 'text-area [field=15]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-17 08:39:26', 100),
+(5, 'Dropdown (editable)', 'dropdown', '1A,2A,3A', 1, 'dropdown [field=16]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-17 08:39:26', 100),
+(6, 'Radio Toggle (editable)', 'radio', 'A,B,C', 1, 'radio [field=17]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-17 08:39:26', 100),
+(7, 'Email', 'email', 'you@there.com', 0, 'email [field=18]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:00:06', 7),
+(8, 'Phone', 'phone', '+61 455 555 555', 0, 'phone [field=19]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-09 12:26:42', 8),
+(9, 'Location', 'location', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 0, 'location [fieldset=4]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:01:02', 9),
+(10, 'Website (URL)', 'website-url', 'www.website.com', 0, 'website [field=20]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:07:35', 10),
+(11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 0, 'website [field=20]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:07:35', 11),
+(12, 'Images', 'images', 'images', 0, 'images [field=3]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:01:51', 12),
+(13, 'Coupon', 'coupon', 'eg. FreeStuff', 0, 'text-box [field=14]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:19:54', 13),
+(14, 'Variant Pricing', 'variant-pricing', 'prices', 0, 'variant-pricing [fieldset=5]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:20:00', 14),
+(15, 'Checkout', 'checkout', 'pay me', 0, 'checkout-details [fieldset=8]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:29:44', 15),
+(16, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 0, 'venues [fieldset=1]', 'sessions [fieldset=2]', 'ticket-pricing [fieldset=3]', NULL, NULL, '2025-10-29 19:03:05', '2025-11-06 02:25:18', 16);
 
 -- --------------------------------------------------------
 
