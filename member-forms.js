@@ -3115,6 +3115,66 @@
       dropdownsContainer.style.flexDirection = 'column';
       dropdownsContainer.style.gap = '12px';
       
+      // Create subcategory dropdown wrapper FIRST (so it's available for category handlers)
+      const subcategoryWrapper = document.createElement('div');
+      subcategoryWrapper.className = 'form-preview-field form-preview-field--dropdown';
+      subcategoryWrapper.style.position = 'relative';
+      subcategoryWrapper.hidden = true;
+      
+      const subcategoryLabel = document.createElement('label');
+      subcategoryLabel.className = 'form-preview-field-label';
+      subcategoryLabel.textContent = 'Subcategory';
+      subcategoryLabel.style.fontWeight = '600';
+      subcategoryLabel.style.marginBottom = '8px';
+      subcategoryLabel.style.display = 'block';
+      
+      const subcategoryDropdown = document.createElement('div');
+      subcategoryDropdown.className = 'options-dropdown';
+      const subcategoryMenuBtn = document.createElement('button');
+      subcategoryMenuBtn.type = 'button';
+      subcategoryMenuBtn.className = 'form-preview-select';
+      subcategoryMenuBtn.id = 'memberFormpickerSubcategory';
+      subcategoryMenuBtn.setAttribute('aria-haspopup', 'true');
+      subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+      const subcategoryMenuId = 'memberFormpickerSubcategoryMenu';
+      subcategoryMenuBtn.setAttribute('aria-controls', subcategoryMenuId);
+      subcategoryMenuBtn.textContent = 'Select a subcategory';
+      subcategoryMenuBtn.dataset.value = '';
+      const subcategoryArrow = document.createElement('span');
+      subcategoryArrow.className = 'dropdown-arrow';
+      subcategoryArrow.setAttribute('aria-hidden', 'true');
+      subcategoryMenuBtn.appendChild(subcategoryArrow);
+      const subcategoryMenu = document.createElement('div');
+      subcategoryMenu.className = 'options-menu';
+      subcategoryMenu.id = subcategoryMenuId;
+      subcategoryMenu.hidden = true;
+      
+      subcategoryMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !subcategoryMenu.hasAttribute('hidden');
+        if(open){
+          subcategoryMenu.hidden = true;
+          subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          subcategoryMenu.hidden = false;
+          subcategoryMenuBtn.setAttribute('aria-expanded', 'true');
+          const outsideHandler = (ev) => {
+            if(!ev.target.closest(subcategoryDropdown)){
+              subcategoryMenu.hidden = true;
+              subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+              document.removeEventListener('click', outsideHandler);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+        }
+      });
+      subcategoryMenu.addEventListener('click', (e) => e.stopPropagation());
+      subcategoryDropdown.appendChild(subcategoryMenuBtn);
+      subcategoryDropdown.appendChild(subcategoryMenu);
+      
+      subcategoryWrapper.appendChild(subcategoryLabel);
+      subcategoryWrapper.appendChild(subcategoryDropdown);
+      
       // Create category dropdown wrapper
       const categoryWrapper = document.createElement('div');
       categoryWrapper.className = 'form-preview-field form-preview-field--dropdown';
@@ -3236,66 +3296,6 @@
       
       categoryWrapper.appendChild(categoryLabel);
       categoryWrapper.appendChild(categoryDropdown);
-      
-      // Create subcategory dropdown wrapper (initially hidden)
-      const subcategoryWrapper = document.createElement('div');
-      subcategoryWrapper.className = 'form-preview-field form-preview-field--dropdown';
-      subcategoryWrapper.style.position = 'relative';
-      subcategoryWrapper.hidden = true;
-      
-      const subcategoryLabel = document.createElement('label');
-      subcategoryLabel.className = 'form-preview-field-label';
-      subcategoryLabel.textContent = 'Subcategory';
-      subcategoryLabel.style.fontWeight = '600';
-      subcategoryLabel.style.marginBottom = '8px';
-      subcategoryLabel.style.display = 'block';
-      
-      const subcategoryDropdown = document.createElement('div');
-      subcategoryDropdown.className = 'options-dropdown';
-      const subcategoryMenuBtn = document.createElement('button');
-      subcategoryMenuBtn.type = 'button';
-      subcategoryMenuBtn.className = 'form-preview-select';
-      subcategoryMenuBtn.id = 'memberFormpickerSubcategory';
-      subcategoryMenuBtn.setAttribute('aria-haspopup', 'true');
-      subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
-      const subcategoryMenuId = 'memberFormpickerSubcategoryMenu';
-      subcategoryMenuBtn.setAttribute('aria-controls', subcategoryMenuId);
-      subcategoryMenuBtn.textContent = 'Select a subcategory';
-      subcategoryMenuBtn.dataset.value = '';
-      const subcategoryArrow = document.createElement('span');
-      subcategoryArrow.className = 'dropdown-arrow';
-      subcategoryArrow.setAttribute('aria-hidden', 'true');
-      subcategoryMenuBtn.appendChild(subcategoryArrow);
-      const subcategoryMenu = document.createElement('div');
-      subcategoryMenu.className = 'options-menu';
-      subcategoryMenu.id = subcategoryMenuId;
-      subcategoryMenu.hidden = true;
-      
-      subcategoryMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const open = !subcategoryMenu.hasAttribute('hidden');
-        if(open){
-          subcategoryMenu.hidden = true;
-          subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
-        } else {
-          subcategoryMenu.hidden = false;
-          subcategoryMenuBtn.setAttribute('aria-expanded', 'true');
-          const outsideHandler = (ev) => {
-            if(!ev.target.closest(subcategoryDropdown)){
-              subcategoryMenu.hidden = true;
-              subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
-              document.removeEventListener('click', outsideHandler);
-            }
-          };
-          setTimeout(() => document.addEventListener('click', outsideHandler), 0);
-        }
-      });
-      subcategoryMenu.addEventListener('click', (e) => e.stopPropagation());
-      subcategoryDropdown.appendChild(subcategoryMenuBtn);
-      subcategoryDropdown.appendChild(subcategoryMenu);
-      
-      subcategoryWrapper.appendChild(subcategoryLabel);
-      subcategoryWrapper.appendChild(subcategoryDropdown);
       
       dropdownsContainer.appendChild(categoryWrapper);
       dropdownsContainer.appendChild(subcategoryWrapper);

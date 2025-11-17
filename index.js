@@ -13020,9 +13020,8 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
               // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
-              // Get fieldTypeKey from the current fieldTypeSelect value if available, otherwise from safeField
-              const selectedOption = fieldTypeSelect.options[fieldTypeSelect.selectedIndex];
-              const selectedValue = selectedOption ? selectedOption.value : '';
+              // Get fieldTypeKey from the current fieldTypeMenuBtn value if available, otherwise from safeField
+              const selectedValue = fieldTypeMenuBtn ? (fieldTypeMenuBtn.dataset.value || '') : '';
               const fieldTypeKey = selectedValue || safeField.fieldTypeKey || safeField.key || safeField.type || '';
               const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               const showVariantPricing = fieldTypeKey === 'variant-pricing';
