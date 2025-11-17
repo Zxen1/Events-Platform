@@ -13324,9 +13324,8 @@ function makePosts(){
                     optionBtn.dataset.value = stringValue;
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      menuBtn.textContent = stringValue.trim() || 'Select an option';
-                      menuBtn.appendChild(arrow);
-                      optionsMenu.hidden = true;
+                menuBtn.textContent = stringValue.trim() || 'Select an option';
+                optionsMenu.hidden = true;
                       menuBtn.setAttribute('aria-expanded', 'false');
                     });
                     optionsMenu.appendChild(optionBtn);
@@ -13546,7 +13545,6 @@ function makePosts(){
                       e.stopPropagation();
                       currencyMenuBtn.textContent = 'Currency';
                       currencyMenuBtn.dataset.value = '';
-                      currencyMenuBtn.appendChild(currencyArrow);
                       currencyMenu.hidden = true;
                       currencyMenuBtn.setAttribute('aria-expanded', 'false');
                       const previousCurrency = previewField.options[optionIndex].currency || '';
@@ -13568,7 +13566,6 @@ function makePosts(){
                         e.stopPropagation();
                         currencyMenuBtn.textContent = code;
                         currencyMenuBtn.dataset.value = code;
-                        currencyMenuBtn.appendChild(currencyArrow);
                         currencyMenu.hidden = true;
                         currencyMenuBtn.setAttribute('aria-expanded', 'false');
                         const previousCurrency = previewField.options[optionIndex].currency || '';

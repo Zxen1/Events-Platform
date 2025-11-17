@@ -712,7 +712,6 @@
           e.stopPropagation();
           currencyMenuBtn.textContent = 'Currency';
           currencyMenuBtn.dataset.value = '';
-          currencyMenuBtn.appendChild(currencyArrow);
           currencyMenu.hidden = true;
           currencyMenuBtn.setAttribute('aria-expanded', 'false');
           option.currency = '';
@@ -729,7 +728,6 @@
             e.stopPropagation();
             currencyMenuBtn.textContent = code;
             currencyMenuBtn.dataset.value = code;
-            currencyMenuBtn.appendChild(currencyArrow);
             currencyMenu.hidden = true;
             currencyMenuBtn.setAttribute('aria-expanded', 'false');
             option.currency = code;
@@ -1862,27 +1860,76 @@
           control = textarea;
         } else if(baseType === 'dropdown'){
           wrapper.classList.add('form-preview-field--dropdown');
-          const select = document.createElement('select');
-          select.className = 'form-preview-select';
+          const dropdownWrapper = document.createElement('div');
+          dropdownWrapper.className = 'options-dropdown';
+          const menuBtn = document.createElement('button');
+          menuBtn.type = 'button';
+          menuBtn.className = 'form-preview-select';
+          menuBtn.setAttribute('aria-haspopup', 'true');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          const selectId = `${baseId}-input`;
+          menuBtn.id = selectId;
+          if(previewField.required) menuBtn.setAttribute('data-required', 'true');
+          const menuId = `${selectId}-menu`;
+          menuBtn.setAttribute('aria-controls', menuId);
           const options = Array.isArray(previewField.options) ? previewField.options : [];
+          const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
+          menuBtn.textContent = defaultText;
+          const arrow = document.createElement('span');
+          arrow.className = 'dropdown-arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          menuBtn.appendChild(arrow);
+          const optionsMenu = document.createElement('div');
+          optionsMenu.className = 'options-menu';
+          optionsMenu.id = menuId;
+          optionsMenu.hidden = true;
           if(options.length){
             options.forEach((optionValue, optionIndex) => {
-              const option = document.createElement('option');
-              // Use the actual option value, don't fall back to "Option X"
+              const optionBtn = document.createElement('button');
+              optionBtn.type = 'button';
+              optionBtn.className = 'menu-option';
               const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-              option.value = stringValue;
-              option.textContent = stringValue.trim() || '';
-              select.appendChild(option);
+              optionBtn.textContent = stringValue.trim() || '';
+              optionBtn.dataset.value = stringValue;
+              optionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuBtn.textContent = stringValue.trim() || 'Select an option';
+                optionsMenu.hidden = true;
+                menuBtn.setAttribute('aria-expanded', 'false');
+              });
+              optionsMenu.appendChild(optionBtn);
             });
           } else {
-            const placeholderOption = document.createElement('option');
-            placeholderOption.textContent = 'Select an option';
-            select.appendChild(placeholderOption);
+            const placeholderBtn = document.createElement('button');
+            placeholderBtn.type = 'button';
+            placeholderBtn.className = 'menu-option';
+            placeholderBtn.textContent = 'Select an option';
+            placeholderBtn.disabled = true;
+            optionsMenu.appendChild(placeholderBtn);
           }
-          const selectId = `${baseId}-input`;
-          select.id = selectId;
-          if(previewField.required) select.required = true;
-          control = select;
+          menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = !optionsMenu.hasAttribute('hidden');
+            if(open){
+              optionsMenu.hidden = true;
+              menuBtn.setAttribute('aria-expanded', 'false');
+            } else {
+              optionsMenu.hidden = false;
+              menuBtn.setAttribute('aria-expanded', 'true');
+              const outsideHandler = (ev) => {
+                if(!ev.target.closest(dropdownWrapper)){
+                  optionsMenu.hidden = true;
+                  menuBtn.setAttribute('aria-expanded', 'false');
+                  document.removeEventListener('click', outsideHandler);
+                }
+              };
+              setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+            }
+          });
+          optionsMenu.addEventListener('click', (e) => e.stopPropagation());
+          dropdownWrapper.appendChild(menuBtn);
+          dropdownWrapper.appendChild(optionsMenu);
+          control = dropdownWrapper;
         } else {
           // Use fieldTypeKey/key as fallback for field type identification
           const fieldTypeKey = previewField.fieldTypeKey || previewField.key || '';
@@ -2035,22 +2082,99 @@
               const bottomRow = document.createElement('div');
               bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
 
-              const currencySelect = document.createElement('select');
-              currencySelect.className = 'variant-pricing-currency';
-              const emptyOption = document.createElement('option');
-              emptyOption.value = '';
-              emptyOption.textContent = 'Currency';
-              currencySelect.appendChild(emptyOption);
-              // Currency options should come from backend via currency field
+              const currencyWrapper = document.createElement('div');
+              currencyWrapper.className = 'options-dropdown';
+              const currencyMenuBtn = document.createElement('button');
+              currencyMenuBtn.type = 'button';
+              currencyMenuBtn.className = 'variant-pricing-currency';
+              currencyMenuBtn.setAttribute('aria-haspopup', 'true');
+              currencyMenuBtn.setAttribute('aria-expanded', 'false');
+              const currencyMenuId = `${baseId}-currency-${optionIndex}-menu`;
+              currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
+              const currencyArrow = document.createElement('span');
+              currencyArrow.className = 'dropdown-arrow';
+              currencyArrow.setAttribute('aria-hidden', 'true');
+              currencyMenuBtn.appendChild(currencyArrow);
+              const currencyMenu = document.createElement('div');
+              currencyMenu.className = 'options-menu';
+              currencyMenu.id = currencyMenuId;
+              currencyMenu.hidden = true;
+              const placeholderBtn = document.createElement('button');
+              placeholderBtn.type = 'button';
+              placeholderBtn.className = 'menu-option';
+              placeholderBtn.textContent = 'Currency';
+              placeholderBtn.dataset.value = '';
+              placeholderBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currencyMenuBtn.textContent = 'Currency';
+                currencyMenuBtn.dataset.value = '';
+                currencyMenu.hidden = true;
+                currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                const previousCurrency = previewField.options[optionIndex].currency || '';
+                previewField.options[optionIndex].currency = '';
+                const priceCleared = updatePriceState();
+                if(previousCurrency !== '' || priceCleared){
+                  safeNotifyFormbuilderChange();
+                }
+              });
+              currencyMenu.appendChild(placeholderBtn);
               const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
               currencyOptions.forEach(code => {
-                const opt = document.createElement('option');
-                opt.value = code;
-                opt.textContent = code;
-                currencySelect.appendChild(opt);
+                const optionBtn = document.createElement('button');
+                optionBtn.type = 'button';
+                optionBtn.className = 'menu-option';
+                optionBtn.textContent = code;
+                optionBtn.dataset.value = code;
+                optionBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  currencyMenuBtn.textContent = code;
+                  currencyMenuBtn.dataset.value = code;
+                  currencyMenu.hidden = true;
+                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                  const previousCurrency = previewField.options[optionIndex].currency || '';
+                  previewField.options[optionIndex].currency = code;
+                  const priceCleared = updatePriceState();
+                  if(isCurrencySelected()){
+                    commitPriceValue();
+                  }
+                  if(previousCurrency !== code || priceCleared){
+                    safeNotifyFormbuilderChange();
+                  }
+                });
+                currencyMenu.appendChild(optionBtn);
               });
-              currencySelect.value = optionValue.currency || '';
-              const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
+              currencyMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = !currencyMenu.hasAttribute('hidden');
+                if(open){
+                  currencyMenu.hidden = true;
+                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                } else {
+                  currencyMenu.hidden = false;
+                  currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                  const outsideHandler = (ev) => {
+                    if(!ev.target.closest(currencyWrapper)){
+                      currencyMenu.hidden = true;
+                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      document.removeEventListener('click', outsideHandler);
+                    }
+                  };
+                  setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+                }
+              });
+              currencyMenu.addEventListener('click', (e) => e.stopPropagation());
+              currencyWrapper.appendChild(currencyMenuBtn);
+              currencyWrapper.appendChild(currencyMenu);
+              const currencySelect = currencyMenuBtn; // Keep reference for isCurrencySelected
+              const isCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
+              // Set initial value
+              if(optionValue.currency && optionValue.currency.trim()){
+                currencyMenuBtn.textContent = optionValue.currency;
+                currencyMenuBtn.dataset.value = optionValue.currency;
+              } else {
+                currencyMenuBtn.textContent = 'Currency';
+                currencyMenuBtn.dataset.value = '';
+              }
 
               const priceInput = document.createElement('input');
               priceInput.type = 'text';
@@ -2134,18 +2258,7 @@
                 showCurrencyAlert(priceInput);
                 return true;
               };
-              currencySelect.addEventListener('change', ()=>{
-                const previousCurrency = previewField.options[optionIndex].currency || '';
-                const nextCurrency = currencySelect.value;
-                previewField.options[optionIndex].currency = nextCurrency;
-                const priceCleared = updatePriceState();
-                if(isCurrencySelected()){
-                  commitPriceValue();
-                }
-                if(previousCurrency !== nextCurrency || priceCleared){
-                  safeNotifyFormbuilderChange();
-                }
-              });
+              // Currency change is handled in the menu option click handlers above
 
               const commitPriceValue = event => {
                 if(!isCurrencySelected()){
@@ -2247,7 +2360,7 @@
               });
 
               actions.append(addBtn, removeBtn);
-              bottomRow.append(currencySelect, priceInput, actions);
+              bottomRow.append(currencyWrapper, priceInput, actions);
 
               optionRow.append(topRow, bottomRow);
               versionList.appendChild(optionRow);

@@ -965,6 +965,9 @@ input[type="checkbox"]{
   vertical-align:middle;
 }
 
+.options-dropdown{
+  position:relative;
+}
 .options-dropdown .dropdown-arrow,
 .options-dropdown .results-arrow{
   position:absolute;
@@ -972,6 +975,7 @@ input[type="checkbox"]{
   right:10px;
   transform:translateY(-50%) rotate(45deg);
   margin-right:0;
+  pointer-events:none;
 }
 
 button[aria-expanded="true"] .dropdown-arrow,
@@ -4158,7 +4162,7 @@ body.filters-active #filterBtn{
   }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
+.options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
@@ -7770,6 +7774,10 @@ html, body { cursor: auto !important; }
             #tab-forms .variant-pricing-currency{
               width:100%;
             }
+            #tab-forms .variant-pricing-row--bottom .options-dropdown{
+              position:relative;
+              overflow:hidden;
+            }
             #tab-forms .variant-pricing-price{
               width:100%;
             }
@@ -8698,6 +8706,10 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .variant-pricing-currency{
               width:100%;
+            }
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
+              position:relative;
+              overflow:hidden;
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom{
               flex-direction:row;
