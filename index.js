@@ -101,6 +101,50 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+// === Shared Form Rendering Function ===
+// Unified form rendering for both admin preview and member forms
+// Removes all admin-specific UI and stopPropagation calls for full interactivity
+function renderForm(options) {
+  const {
+    container,           // Target container element
+    fields,              // Array of field data
+    idPrefix,            // Prefix for field IDs (e.g., 'memberForm' or 'formPreview')
+    categoryName,        // Category name for label
+    subcategoryName,     // Subcategory name for label
+    fieldIdCounter = { value: 0 }  // Counter object (shared reference)
+  } = options;
+  
+  if (!container || !Array.isArray(fields)) {
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  // Category/subcategory label
+  if (categoryName || subcategoryName) {
+    const label = document.createElement('div');
+    label.className = 'form-category-label';
+    label.textContent = categoryName && subcategoryName ? `${categoryName} > ${subcategoryName}` : (subcategoryName || categoryName || '');
+    label.style.marginBottom = '12px';
+    label.style.fontSize = '14px';
+    label.style.fontWeight = '600';
+    label.style.color = 'var(--button-text)';
+    container.appendChild(label);
+  }
+  
+  if (!fields.length) {
+    const empty = document.createElement('p');
+    empty.className = 'form-empty';
+    empty.textContent = 'No fields added yet.';
+    container.appendChild(empty);
+    return;
+  }
+  
+  // Note: Full field rendering implementation will be added here
+  // This is a placeholder that will be expanded with the actual rendering logic
+  // from renderFormPreview, removing admin-specific UI and stopPropagation calls
+}
+
 // === Message Utility Functions ===
 // Cache for loaded messages
 let messageCache = null;
