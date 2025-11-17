@@ -9536,23 +9536,23 @@ function makePosts(){
           }
           
           // Only auto-name if field type is explicitly set (not defaulted)
-          if(!safeField.name){
-            safeField.name = '';
-          }
-          if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-          const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
-          const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
-          const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-          let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
-          if(!resolvedFieldTypeName && fieldTypeKey){
-            const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-            if(matchingFieldType){
-              resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
+            if(!safeField.name){
+              safeField.name = '';
             }
-          }
-          resolvedFieldTypeName = resolvedFieldTypeName || '';
-          safeField.field_type_name = resolvedFieldTypeName;
-          safeField.fieldTypeName = resolvedFieldTypeName;
+            if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+            const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+            const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
+            const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
+            let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
+            if(!resolvedFieldTypeName && fieldTypeKey){
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+              if(matchingFieldType){
+                resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
+              }
+            }
+            resolvedFieldTypeName = resolvedFieldTypeName || '';
+            safeField.field_type_name = resolvedFieldTypeName;
+            safeField.fieldTypeName = resolvedFieldTypeName;
           // Only auto-name if field type is set AND field doesn't already have a custom name
           // For editable fields, preserve existing custom names
           if(fieldTypeKey && resolvedFieldTypeName){
@@ -12665,7 +12665,7 @@ function makePosts(){
                       if(parsed.length > 0){
                         safeField.options = parsed;
                       } else {
-                        safeField.options.push('', '', '');
+                safeField.options.push('', '', '');
                       }
                     } else {
                       safeField.options.push('', '', '');
@@ -12673,7 +12673,7 @@ function makePosts(){
                   } else {
                     safeField.options.push('', '', '');
                   }
-                  notifyFormbuilderChange();
+                notifyFormbuilderChange();
                 }
               }
             };

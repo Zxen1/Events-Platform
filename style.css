@@ -700,6 +700,37 @@ select:not(.form-preview-select){
 }
 .venue-select{
   color: var(--dropdown-venue-text);
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+select.venue-select,
+.venue-select-wrapper select.venue-select,
+*:has(.venue-select) select.venue-select{
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+*:has(.venue-select){
+  position:relative;
+}
+*:has(.venue-select)::after{
+  content:'';
+  position:absolute;
+  top:50%;
+  right:12px;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:var(--button-text, #ffffff);
+  transform:translateY(-50%) rotate(45deg);
+  transition:transform .3s ease;
+  pointer-events:none;
+  z-index:2;
+}
+*:has(.venue-select:focus)::after{
+  transform:translateY(-50%) rotate(-135deg);
 }
 select option{
   background: var(--dropdown-bg);
@@ -7145,16 +7176,18 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .session-date-dropdown-indicator{
               position:absolute;
+              top:50%;
               right:12px;
+              transform:translateY(-50%);
               display:inline-flex;
               align-items:center;
               justify-content:center;
               pointer-events:none;
               color:var(--button-text);
-              transition:transform 0.2s ease;
+              transition:transform 0.3s ease;
             }
             #tab-forms .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
-              transform:rotate(180deg);
+              transform:translateY(-50%) rotate(180deg);
             }
             #tab-forms .session-time-input{
               font-variant-numeric:tabular-nums;
@@ -7305,7 +7338,30 @@ html, body { cursor: auto !important; }
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
               color:var(--input-text);
-              padding:0 10px;
+              padding:0 32px 0 10px;
+              appearance:none;
+              -webkit-appearance:none;
+            }
+            #tab-forms .session-line:has(.session-currency-select){
+              position:relative;
+            }
+            #tab-forms .session-line:has(.session-currency-select)::after{
+              content:'';
+              position:absolute;
+              top:50%;
+              right:12px;
+              width:8px;
+              height:8px;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:var(--button-text, #ffffff);
+              transform:translateY(-50%) rotate(45deg);
+              transition:transform .3s ease;
+              pointer-events:none;
+              z-index:2;
+            }
+            #tab-forms .session-line:has(.session-currency-select:focus)::after{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .venue-line > *:first-child,
             #tab-forms .session-date-row > *:first-child,
@@ -7555,11 +7611,17 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .field-type-select-arrow{
               position:absolute;
+              top:50%;
               right:12px;
+              transform:translateY(-50%);
               pointer-events:none;
               color:var(--button-text);
               font-size:12px;
               line-height:1;
+              transition:transform .3s ease;
+            }
+            #tab-forms .field-type-select-wrapper:focus-within .field-type-select-arrow{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
@@ -7731,6 +7793,7 @@ html, body { cursor: auto !important; }
               display:flex;
               gap:8px;
               align-items:center;
+              position:relative;
             }
             #tab-forms .variant-pricing-row--top input{
               width:100%;
@@ -7743,6 +7806,27 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .variant-pricing-currency{
               width:100%;
+              padding-right:32px;
+              appearance:none;
+              -webkit-appearance:none;
+            }
+            #tab-forms .variant-pricing-row:has(.variant-pricing-currency)::after{
+              content:'';
+              position:absolute;
+              top:50%;
+              right:12px;
+              width:8px;
+              height:8px;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:var(--button-text, #ffffff);
+              transform:translateY(-50%) rotate(45deg);
+              transition:transform .3s ease;
+              pointer-events:none;
+              z-index:2;
+            }
+            #tab-forms .variant-pricing-row:has(.variant-pricing-currency:focus)::after{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .variant-pricing-price{
               width:100%;
@@ -8016,18 +8100,20 @@ html, body { cursor: auto !important; }
               content:'';
               position:absolute;
               top:50%;
-              right:12px;
+              right:10px;
               display:inline-block;
               width:8px;
               height:8px;
               border-style:solid;
               border-width:0 2px 2px 0;
-              border-color:currentColor;
-              color:inherit;
+              border-color:var(--button-text, #ffffff);
               transform:translateY(-50%) rotate(45deg);
               transition:transform .3s ease;
               pointer-events:none;
-              z-index:1;
+              z-index:2;
+            }
+            #tab-forms .form-preview-container .form-preview-field--dropdown:focus-within::after{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .form-preview-container .form-preview-field--radio-toggle{
               display:flex;
@@ -8591,18 +8677,20 @@ html, body { cursor: auto !important; }
               content:'';
               position:absolute;
               top:50%;
-              right:12px;
+              right:10px;
               display:inline-block;
               width:8px;
               height:8px;
               border-style:solid;
               border-width:0 2px 2px 0;
-              border-color:currentColor;
-              color:inherit;
+              border-color:var(--button-text, #ffffff);
               transform:translateY(-50%) rotate(45deg);
               transition:transform .3s ease;
               pointer-events:none;
-              z-index:1;
+              z-index:2;
+            }
+            #memberPanel .member-create-fields .form-preview-field--dropdown:focus-within::after{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .form-preview-field--radio-toggle{
               display:flex;
@@ -8704,6 +8792,30 @@ html, body { cursor: auto !important; }
               display:flex;
               flex-direction:column;
               gap:8px;
+              position:relative;
+            }
+            #memberPanel .member-create-fields .variant-pricing-currency{
+              padding-right:32px;
+              appearance:none;
+              -webkit-appearance:none;
+            }
+            #memberPanel .member-create-fields .variant-pricing-row:has(.variant-pricing-currency)::after{
+              content:'';
+              position:absolute;
+              top:50%;
+              right:12px;
+              width:8px;
+              height:8px;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:var(--button-text, #ffffff);
+              transform:translateY(-50%) rotate(45deg);
+              transition:transform .3s ease;
+              pointer-events:none;
+              z-index:2;
+            }
+            #memberPanel .member-create-fields .variant-pricing-row:has(.variant-pricing-currency:focus)::after{
+              transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom{
               flex-direction:row;
@@ -8844,16 +8956,18 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .session-date-dropdown-indicator{
               position:absolute;
+              top:50%;
               right:12px;
+              transform:translateY(-50%);
               display:inline-flex;
               align-items:center;
               justify-content:center;
               pointer-events:none;
               color:var(--button-text);
-              transition:transform 0.2s ease;
+              transition:transform 0.3s ease;
             }
             #memberPanel .member-create-fields .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
-              transform:rotate(180deg);
+              transform:translateY(-50%) rotate(180deg);
             }
             #memberPanel .member-create-fields .session-time-input{
               font-variant-numeric:tabular-nums;
