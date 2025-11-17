@@ -8078,6 +8078,7 @@ html, body { cursor: auto !important; }
             #tab-forms .form-preview-container .panel-field select,
             #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
               appearance:none;
+              -webkit-appearance:none;
               height:36px;
               padding:0 32px 0 12px;
               width:100%;
@@ -8096,23 +8097,18 @@ html, body { cursor: auto !important; }
               width:100%;
               box-sizing:border-box;
             }
-            #tab-forms .form-preview-container .form-preview-field--dropdown::after{
-              content:'';
+            /* Form preview dropdown arrows use .dropdown-arrow class like formbuilder */
+            #tab-forms .form-preview-container .form-preview-field--dropdown .dropdown-arrow,
+            #tab-forms .form-preview-container .form-preview-field--dropdown > div .dropdown-arrow{
               position:absolute;
               top:50%;
               right:10px;
-              display:inline-block;
-              width:8px;
-              height:8px;
-              border-style:solid;
-              border-width:0 2px 2px 0;
-              border-color:var(--button-text, #ffffff);
               transform:translateY(-50%) rotate(45deg);
-              transition:transform .3s ease;
-              pointer-events:none;
-              z-index:2;
+              margin-right:0;
             }
-            #tab-forms .form-preview-container .form-preview-field--dropdown:focus-within::after{
+            #tab-forms .form-preview-container .form-preview-field--dropdown:focus-within .dropdown-arrow,
+            #tab-forms .form-preview-container .form-preview-field--dropdown > div:focus-within .dropdown-arrow,
+            #tab-forms .form-preview-container .form-preview-field--dropdown > div.is-focused .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .form-preview-container .form-preview-field--radio-toggle{
@@ -8685,7 +8681,9 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .form-preview-field--dropdown:focus-within .dropdown-arrow,
             #memberPanel .formpicker-dropdowns .form-preview-field--dropdown:focus-within .dropdown-arrow,
-            #memberPanel .member-create-fields .form-preview-field--dropdown > div:focus-within .dropdown-arrow{
+            #memberPanel .member-create-fields .form-preview-field--dropdown > div:focus-within .dropdown-arrow,
+            #memberPanel .member-create-fields .form-preview-field--dropdown > div.is-focused .dropdown-arrow,
+            #memberPanel .formpicker-dropdowns .form-preview-field--dropdown > div.is-focused .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .form-preview-field--radio-toggle{

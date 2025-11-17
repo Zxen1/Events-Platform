@@ -13151,9 +13151,12 @@ function makePosts(){
                 }
                 control = textarea;
               } else if(previewField.type === 'dropdown'){
+                wrapper.classList.add('form-preview-field--dropdown');
+                const selectWrapper = document.createElement('div');
+                selectWrapper.style.position = 'relative';
+                selectWrapper.style.width = '100%';
                 const select = document.createElement('select');
                 select.className = 'form-preview-select';
-                wrapper.classList.add('form-preview-field--dropdown');
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
@@ -13172,6 +13175,19 @@ function makePosts(){
                 select.tabIndex = 0;
                 const selectId = `${baseId}-input`;
                 select.id = selectId;
+                // Add working dropdown arrow like formbuilder
+                const dropdownArrow = document.createElement('span');
+                dropdownArrow.className = 'dropdown-arrow';
+                dropdownArrow.setAttribute('aria-hidden', 'true');
+                selectWrapper.appendChild(select);
+                selectWrapper.appendChild(dropdownArrow);
+                // Animate arrow on focus/blur
+                select.addEventListener('focus', () => {
+                  selectWrapper.classList.add('is-focused');
+                });
+                select.addEventListener('blur', () => {
+                  selectWrapper.classList.remove('is-focused');
+                });
                 // Make interactive but prevent any form submission or member form linking
                 select.addEventListener('change', (e) => {
                   e.stopPropagation();
@@ -13185,7 +13201,7 @@ function makePosts(){
                 });
                 // Ensure select is not inside any form that could submit
                 select.setAttribute('form', '');
-                control = select;
+                control = selectWrapper;
               } else if(previewField.type === 'radio'){
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
                 const radioGroup = document.createElement('div');

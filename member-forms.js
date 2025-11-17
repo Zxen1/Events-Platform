@@ -925,6 +925,13 @@
         dropdownArrow.setAttribute('aria-hidden', 'true');
         selectWrapper.appendChild(select);
         selectWrapper.appendChild(dropdownArrow);
+        // Animate arrow on focus/blur
+        select.addEventListener('focus', () => {
+          selectWrapper.classList.add('is-focused');
+        });
+        select.addEventListener('blur', () => {
+          selectWrapper.classList.remove('is-focused');
+        });
         control = selectWrapper;
       } else if(resolvedBaseType === 'radio' || fieldTypeKey === 'radio'){
         wrapper.classList.add('form-preview-field--radio-toggle');
@@ -3010,6 +3017,13 @@
       
       categorySelectWrapper.appendChild(categorySelect);
       categorySelectWrapper.appendChild(categoryArrow);
+      // Animate arrow on focus/blur
+      categorySelect.addEventListener('focus', () => {
+        categorySelectWrapper.classList.add('is-focused');
+      });
+      categorySelect.addEventListener('blur', () => {
+        categorySelectWrapper.classList.remove('is-focused');
+      });
       
       categoryWrapper.appendChild(categoryLabel);
       categoryWrapper.appendChild(categorySelectWrapper);
@@ -3053,6 +3067,13 @@
       
       subcategorySelectWrapper.appendChild(subcategorySelect);
       subcategorySelectWrapper.appendChild(subcategoryArrow);
+      // Animate arrow on focus/blur
+      subcategorySelect.addEventListener('focus', () => {
+        subcategorySelectWrapper.classList.add('is-focused');
+      });
+      subcategorySelect.addEventListener('blur', () => {
+        subcategorySelectWrapper.classList.remove('is-focused');
+      });
       
       subcategoryWrapper.appendChild(subcategoryLabel);
       subcategoryWrapper.appendChild(subcategorySelectWrapper);
