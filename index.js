@@ -13185,6 +13185,24 @@ function makePosts(){
                     radio.value = stringValue;
                     radio.tabIndex = 0;
                     radio.disabled = false;
+                    // Prevent form preview radio from triggering member form actions
+                    radio.addEventListener('change', (e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    });
+                    radio.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                    });
+                    radio.addEventListener('mousedown', (e) => {
+                      e.stopPropagation();
+                    });
+                    // Also prevent on the label wrapper
+                    radioLabel.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                    });
+                    radioLabel.addEventListener('mousedown', (e) => {
+                      e.stopPropagation();
+                    });
                     // Use the actual option value, don't fall back to "Option X"
                     const radioText = document.createElement('span');
                     radioText.textContent = stringValue.trim() || '';
