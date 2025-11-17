@@ -7580,15 +7580,25 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .field-type-select-wrapper{
               position:relative;
-              display:flex;
-              align-items:center;
+              display:block;
               flex:0 0 auto;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu{
+              position:absolute;
+              top:calc(100% + 4px);
+              left:0;
+              right:auto;
+              bottom:auto;
+              width:100%;
+              min-width:200px;
             }
             #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
               flex:1 1 auto;
             }
             #tab-forms .field-type-select{
               padding-right:30px;
+              width:100%;
+              box-sizing:border-box;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
@@ -7773,6 +7783,8 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .variant-pricing-currency{
               width:100%;
+              position:relative;
+              overflow:hidden;
             }
             #tab-forms .variant-pricing-row--bottom .options-dropdown{
               position:relative;
@@ -8706,6 +8718,8 @@ html, body { cursor: auto !important; }
             }
             #memberPanel .member-create-fields .variant-pricing-currency{
               width:100%;
+              position:relative;
+              overflow:hidden;
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
               position:relative;
