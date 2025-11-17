@@ -899,6 +899,9 @@
         control = textarea;
       } else if(resolvedBaseType === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
+        const selectWrapper = document.createElement('div');
+        selectWrapper.style.position = 'relative';
+        selectWrapper.style.width = '100%';
         const select = document.createElement('select');
         select.id = controlId;
         select.className = 'form-preview-select';
@@ -916,7 +919,13 @@
           option.textContent = stringValue.trim() || '';
           select.appendChild(option);
         });
-        control = select;
+        // Add working dropdown arrow like formbuilder
+        const dropdownArrow = document.createElement('span');
+        dropdownArrow.className = 'dropdown-arrow';
+        dropdownArrow.setAttribute('aria-hidden', 'true');
+        selectWrapper.appendChild(select);
+        selectWrapper.appendChild(dropdownArrow);
+        control = selectWrapper;
       } else if(resolvedBaseType === 'radio' || fieldTypeKey === 'radio'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
@@ -1690,9 +1699,12 @@
           if(previewField.required) textarea.required = true;
           control = textarea;
         } else if(baseType === 'dropdown'){
+          wrapper.classList.add('form-preview-field--dropdown');
+          const selectWrapper = document.createElement('div');
+          selectWrapper.style.position = 'relative';
+          selectWrapper.style.width = '100%';
           const select = document.createElement('select');
           select.className = 'form-preview-select';
-          wrapper.classList.add('form-preview-field--dropdown');
           const options = Array.isArray(previewField.options) ? previewField.options : [];
           if(options.length){
             options.forEach((optionValue, optionIndex) => {
@@ -1711,7 +1723,13 @@
           const selectId = `${baseId}-input`;
           select.id = selectId;
           if(previewField.required) select.required = true;
-          control = select;
+          // Add working dropdown arrow like formbuilder
+          const dropdownArrow = document.createElement('span');
+          dropdownArrow.className = 'dropdown-arrow';
+          dropdownArrow.setAttribute('aria-hidden', 'true');
+          selectWrapper.appendChild(select);
+          selectWrapper.appendChild(dropdownArrow);
+          control = selectWrapper;
         } else {
           // Use fieldTypeKey/key as fallback for field type identification
           const fieldTypeKey = previewField.fieldTypeKey || previewField.key || '';
@@ -2985,19 +3003,9 @@
         categorySelect.appendChild(option);
       });
       
-      // Create dropdown arrow for category - positioned relative to select wrapper
+      // Create dropdown arrow for category - using working formbuilder pattern
       const categoryArrow = document.createElement('span');
-      categoryArrow.className = 'formpicker-dropdown-arrow';
-      categoryArrow.style.position = 'absolute';
-      categoryArrow.style.top = '50%';
-      categoryArrow.style.right = '18px';
-      categoryArrow.style.width = '8px';
-      categoryArrow.style.height = '8px';
-      categoryArrow.style.border = '2px solid var(--button-text)';
-      categoryArrow.style.borderTop = '0';
-      categoryArrow.style.borderLeft = '0';
-      categoryArrow.style.transform = 'translateY(-50%) rotate(45deg)';
-      categoryArrow.style.pointerEvents = 'none';
+      categoryArrow.className = 'dropdown-arrow';
       categoryArrow.setAttribute('aria-hidden', 'true');
       
       categorySelectWrapper.appendChild(categorySelect);
@@ -3038,19 +3046,9 @@
       subcategorySelect.style.color = 'var(--button-text)';
       subcategorySelect.style.boxSizing = 'border-box';
       
-      // Create dropdown arrow for subcategory - positioned relative to select wrapper
+      // Create dropdown arrow for subcategory - using working formbuilder pattern
       const subcategoryArrow = document.createElement('span');
-      subcategoryArrow.className = 'formpicker-dropdown-arrow';
-      subcategoryArrow.style.position = 'absolute';
-      subcategoryArrow.style.top = '50%';
-      subcategoryArrow.style.right = '18px';
-      subcategoryArrow.style.width = '8px';
-      subcategoryArrow.style.height = '8px';
-      subcategoryArrow.style.border = '2px solid var(--button-text)';
-      subcategoryArrow.style.borderTop = '0';
-      subcategoryArrow.style.borderLeft = '0';
-      subcategoryArrow.style.transform = 'translateY(-50%) rotate(45deg)';
-      subcategoryArrow.style.pointerEvents = 'none';
+      subcategoryArrow.className = 'dropdown-arrow';
       subcategoryArrow.setAttribute('aria-hidden', 'true');
       
       subcategorySelectWrapper.appendChild(subcategorySelect);

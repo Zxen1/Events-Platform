@@ -8673,23 +8673,19 @@ html, body { cursor: auto !important; }
               width:100%;
               box-sizing:border-box;
             }
-            #memberPanel .member-create-fields .form-preview-field--dropdown::after{
-              content:'';
+            /* Member form dropdown arrows use .dropdown-arrow class like formbuilder */
+            #memberPanel .member-create-fields .form-preview-field--dropdown .dropdown-arrow,
+            #memberPanel .formpicker-dropdowns .form-preview-field--dropdown .dropdown-arrow,
+            #memberPanel .member-create-fields .form-preview-field--dropdown > div .dropdown-arrow{
               position:absolute;
               top:50%;
               right:10px;
-              display:inline-block;
-              width:8px;
-              height:8px;
-              border-style:solid;
-              border-width:0 2px 2px 0;
-              border-color:var(--button-text, #ffffff);
               transform:translateY(-50%) rotate(45deg);
-              transition:transform .3s ease;
-              pointer-events:none;
-              z-index:2;
+              margin-right:0;
             }
-            #memberPanel .member-create-fields .form-preview-field--dropdown:focus-within::after{
+            #memberPanel .member-create-fields .form-preview-field--dropdown:focus-within .dropdown-arrow,
+            #memberPanel .formpicker-dropdowns .form-preview-field--dropdown:focus-within .dropdown-arrow,
+            #memberPanel .member-create-fields .form-preview-field--dropdown > div:focus-within .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .form-preview-field--radio-toggle{
