@@ -4165,6 +4165,7 @@ body.filters-active #filterBtn{
 .options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.options-menu .menu-option{ text-align:left; justify-content:flex-start; }
 
 .card,
 .recents-card,
@@ -7581,24 +7582,35 @@ html, body { cursor: auto !important; }
             #tab-forms .field-type-select-wrapper{
               position:relative;
               display:block;
-              flex:0 0 auto;
+              flex:1 1 auto;
+              width:100%;
+              min-width:0;
             }
             #tab-forms .field-type-select-wrapper .options-menu{
               position:absolute;
               top:calc(100% + 4px);
               left:0;
-              right:auto;
+              right:0;
               bottom:auto;
               width:100%;
-              min-width:200px;
+              min-width:100%;
+              max-width:100%;
+              box-sizing:border-box;
             }
             #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
               flex:1 1 auto;
+              width:100%;
             }
             #tab-forms .field-type-select{
               padding-right:30px;
               width:100%;
+              min-width:0;
               box-sizing:border-box;
+              text-align:left;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option{
+              text-align:left;
+              justify-content:flex-start;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
@@ -7781,14 +7793,25 @@ html, body { cursor: auto !important; }
               gap:8px;
               align-items:center;
             }
-            #tab-forms .variant-pricing-currency{
-              width:100%;
-              position:relative;
-              overflow:hidden;
-            }
             #tab-forms .variant-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:hidden;
+              max-width:100%;
+              min-width:0;
+            }
+            #tab-forms .variant-pricing-currency{
+              width:100%;
+              max-width:100%;
+              min-width:0;
+              position:relative;
+              overflow:hidden;
+              box-sizing:border-box;
+            }
+            #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu{
+              width:100%;
+              min-width:100%;
+              max-width:100%;
+              box-sizing:border-box;
             }
             #tab-forms .variant-pricing-price{
               width:100%;
@@ -8716,14 +8739,25 @@ html, body { cursor: auto !important; }
               gap:8px;
               position:relative;
             }
-            #memberPanel .member-create-fields .variant-pricing-currency{
-              width:100%;
-              position:relative;
-              overflow:hidden;
-            }
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:hidden;
+              max-width:100%;
+              min-width:0;
+            }
+            #memberPanel .member-create-fields .variant-pricing-currency{
+              width:100%;
+              max-width:100%;
+              min-width:0;
+              position:relative;
+              overflow:hidden;
+              box-sizing:border-box;
+            }
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu{
+              width:100%;
+              min-width:100%;
+              max-width:100%;
+              box-sizing:border-box;
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom{
               flex-direction:row;

@@ -749,9 +749,13 @@
                 currencyMenu.hidden = true;
                 currencyMenuBtn.setAttribute('aria-expanded', 'false');
                 document.removeEventListener('click', outsideHandler);
+                document.removeEventListener('pointerdown', outsideHandler);
               }
             };
-            setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+            setTimeout(() => {
+              document.addEventListener('click', outsideHandler);
+              document.addEventListener('pointerdown', outsideHandler);
+            }, 0);
           }
         });
         currencyMenu.addEventListener('click', (e) => e.stopPropagation());
@@ -1033,9 +1037,13 @@
                 optionsMenu.hidden = true;
                 menuBtn.setAttribute('aria-expanded', 'false');
                 document.removeEventListener('click', outsideHandler);
+                document.removeEventListener('pointerdown', outsideHandler);
               }
             };
-            setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+            setTimeout(() => {
+              document.addEventListener('click', outsideHandler);
+              document.addEventListener('pointerdown', outsideHandler);
+            }, 0);
           }
         });
         optionsMenu.addEventListener('click', (e) => e.stopPropagation());
