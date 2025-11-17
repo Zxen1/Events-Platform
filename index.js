@@ -12834,13 +12834,16 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
               // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
-              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
               const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               const showVariantPricing = fieldTypeKey === 'variant-pricing';
               const showVenueSession = fieldTypeKey === 'venue-ticketing';
-              // Check if this field type is editable
-              const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              // Check if this field type is editable - must have a valid fieldTypeKey
+              let isEditable = false;
+              if(fieldTypeKey){
+                const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+                isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              }
               fieldNameContainer.hidden = !isEditable;
               if(type === 'images'){
                 if(safeField.placeholder){
@@ -12952,8 +12955,8 @@ function makePosts(){
               runSummaryUpdater();
             });
 
-            // Wire up name input for editable fields
-            fieldNameInput.addEventListener('input', ()=>{
+            // Wire up name input for editable fields - only update on blur, not on every keystroke
+            fieldNameInput.addEventListener('blur', ()=>{
               const newName = fieldNameInput.value.trim();
               if(safeField.name !== newName){
                 safeField.name = newName;
@@ -14006,6 +14009,8 @@ function makePosts(){
 
             const updateFieldSummary = ()=>{
               const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+              // For editable fields, use the custom name if set, otherwise use field type name
+              const customName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : '';
               const storedTypeName = (typeof safeField.field_type_name === 'string' && safeField.field_type_name.trim())
                 ? safeField.field_type_name.trim()
                 : (typeof safeField.fieldTypeName === 'string' && safeField.fieldTypeName.trim())
@@ -14013,7 +14018,8 @@ function makePosts(){
                   : '';
               const typeLabelRaw = (storedTypeName || getFormFieldTypeLabel(typeKey)).trim();
               const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
-              summaryLabel.textContent = typeLabel || 'Field';
+              // Use custom name if available (for editable fields), otherwise use type label
+              summaryLabel.textContent = customName || typeLabel || 'Field';
               const isRequired = !!safeField.required;
               summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
               summaryRequired.classList.toggle('is-required', isRequired);

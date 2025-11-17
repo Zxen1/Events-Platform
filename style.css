@@ -8019,9 +8019,9 @@ html, body { cursor: auto !important; }
               right:12px;
               width:8px;
               height:8px;
-              border:2px solid var(--button-text);
-              border-top:0;
-              border-left:0;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:var(--button-text);
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
               z-index:1;
@@ -8047,14 +8047,21 @@ html, body { cursor: auto !important; }
               cursor:pointer;
               width:100%;
               text-align:left;
+              padding:0;
+              margin:0;
             }
             #tab-forms .form-preview-container .form-preview-radio-option input[type="radio"]{
               flex-shrink:0;
               margin:0;
+              padding:0;
               cursor:pointer;
+              width:auto;
+              height:auto;
             }
             #tab-forms .form-preview-container .form-preview-radio-option span{
               flex:0 1 auto;
+              margin:0;
+              padding:0;
             }
             #tab-forms .form-preview-field--url .form-preview-url-wrapper{
               display:flex;
@@ -8584,9 +8591,9 @@ html, body { cursor: auto !important; }
               right:12px;
               width:8px;
               height:8px;
-              border:2px solid var(--button-text);
-              border-top:0;
-              border-left:0;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:var(--button-text);
               transform:translateY(-50%) rotate(45deg);
               pointer-events:none;
               z-index:1;
@@ -8622,14 +8629,21 @@ html, body { cursor: auto !important; }
               cursor:pointer;
               width:100%;
               text-align:left;
+              padding:0;
+              margin:0;
             }
             #memberPanel .member-create-fields .form-preview-radio-option input[type="radio"]{
               flex-shrink:0;
               margin:0;
+              padding:0;
               cursor:pointer;
+              width:auto;
+              height:auto;
             }
             #memberPanel .member-create-fields .form-preview-radio-option span{
               flex:0 1 auto;
+              margin:0;
+              padding:0;
             }
             #memberPanel .member-create-fields .form-preview-field--url .form-preview-url-wrapper{
               display:flex;
