@@ -12965,11 +12965,14 @@ function makePosts(){
             });
 
             // Wire up name input for editable fields - only update on blur, not on every keystroke
+            // Don't call notifyFormbuilderChange() here as it triggers member form refresh
+            // The formbuilder will be marked dirty when the form is saved
             fieldNameInput.addEventListener('blur', ()=>{
               const newName = fieldNameInput.value.trim();
               if(safeField.name !== newName){
                 safeField.name = newName;
-                notifyFormbuilderChange();
+                // Only update preview and summary, don't trigger formbuilder change event
+                // which causes member forms to refresh
                 renderFormPreview();
                 runSummaryUpdater();
               }
