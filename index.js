@@ -13128,9 +13128,15 @@ function makePosts(){
               requestAnimationFrame(()=>{
                 updateFieldEditorsByType();
                 try{
-                  fieldTypeSelect.focus({ preventScroll: true });
+                  if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
+                    fieldTypeMenuBtn.focus({ preventScroll: true });
+                  }
                 }catch(err){
-                  try{ fieldTypeSelect.focus(); }catch(e){}
+                  try{ 
+                    if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
+                      fieldTypeMenuBtn.focus(); 
+                    }
+                  }catch(e){}
                 }
               });
             };
