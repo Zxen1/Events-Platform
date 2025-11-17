@@ -4223,10 +4223,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         if(orderA !== orderB){
           return orderA - orderB;
         }
-        // If same sort_order, sort by name
-        const nameA = (a.field_type_name || a.name || a.label || a.value || '').toLowerCase();
-        const nameB = (b.field_type_name || b.name || b.label || b.value || '').toLowerCase();
-        return nameA.localeCompare(nameB);
+        // If same sort_order, maintain original order (don't sort alphabetically)
+        return 0;
       });
       return sanitized;
     }
@@ -12974,6 +12972,8 @@ function makePosts(){
               if(hostElement && hostElement.classList){
                 hostElement.classList.add('field-edit-open');
               }
+              // Update field editors to show/hide name input for editable fields
+              updateFieldEditorsByType();
               requestAnimationFrame(()=>{
                 try{
                   fieldTypeSelect.focus({ preventScroll: true });
@@ -13183,8 +13183,8 @@ function makePosts(){
                     radio.name = groupName;
                     const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
                     radio.value = stringValue;
-                    radio.tabIndex = -1;
-                    radio.disabled = true;
+                    radio.tabIndex = 0;
+                    radio.disabled = false;
                     // Use the actual option value, don't fall back to "Option X"
                     const radioText = document.createElement('span');
                     radioText.textContent = stringValue.trim() || '';

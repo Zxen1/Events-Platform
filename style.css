@@ -693,7 +693,7 @@ textarea::placeholder{
   font-size: var(--panel-title-size);
 }
 
-select{
+select:not(.form-preview-select):not(.form-preview-field--dropdown select){
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
   border-radius: var(--dropdown-radius);
@@ -721,7 +721,7 @@ input[type="search"],
 input[type="tel"],
 input[type="url"],
 textarea,
-select{
+select:not(.form-preview-select):not(.form-preview-field--dropdown select){
   height: var(--control-h);
   border-radius: 8px;
 }
@@ -2128,8 +2128,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:4px 6px;
 }
 .panel-field input,
-.panel-field textarea,
-.panel-field select{
+.panel-field textarea{
   padding:8px;
   border-radius:var(--dropdown-radius);
   border:none;
@@ -7967,19 +7966,24 @@ html, body { cursor: auto !important; }
               min-height:120px;
               padding:8px 12px;
             }
-            #tab-forms .form-preview-container .panel-field select{
+            #tab-forms .form-preview-container .panel-field select,
+            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
               appearance:none;
               height:36px;
               padding:0 32px 0 12px;
+              width:100%;
+              box-sizing:border-box;
+              max-width:100%;
             }
-            #tab-forms .form-preview-container .panel-field select:focus{
+            #tab-forms .form-preview-container .panel-field select:focus,
+            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select:focus{
               border-color:var(--btn-hover, #2e3a72);
               outline:none;
+              width:100%;
+              box-sizing:border-box;
             }
             #tab-forms .form-preview-container .form-preview-field--dropdown{
               position:relative;
-            }
-            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
               width:100%;
               box-sizing:border-box;
             }
@@ -8527,21 +8531,24 @@ html, body { cursor: auto !important; }
               min-height:120px;
               padding:8px 12px;
             }
-            #memberPanel .member-create-fields .form-preview-field select{
+            #memberPanel .member-create-fields .form-preview-field select,
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
               appearance:none;
               height:36px;
               padding:0 32px 0 12px;
               width:100%;
               box-sizing:border-box;
+              max-width:100%;
             }
-            #memberPanel .member-create-fields .form-preview-field select:focus{
+            #memberPanel .member-create-fields .form-preview-field select:focus,
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select:focus{
               border-color:var(--btn-hover, #2e3a72);
               outline:none;
+              width:100%;
+              box-sizing:border-box;
             }
             #memberPanel .member-create-fields .form-preview-field--dropdown{
               position:relative;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
               width:100%;
               box-sizing:border-box;
             }
