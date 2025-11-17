@@ -7338,7 +7338,7 @@ html, body { cursor: auto !important; }
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
               color:var(--input-text);
-              padding:0 10px;
+              padding:0 30px 0 10px;
             }
             #tab-forms .venue-line > *:first-child,
             #tab-forms .session-date-row > *:first-child,
@@ -7584,7 +7584,7 @@ html, body { cursor: auto !important; }
               flex:1 1 auto;
             }
             #tab-forms .field-type-select{
-              padding-right:10px;
+              padding-right:30px;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
@@ -8020,7 +8020,7 @@ html, body { cursor: auto !important; }
             #tab-forms .form-preview-container .panel-field select,
             #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
               height:36px;
-              padding:0 12px;
+              padding:0 30px 0 12px;
               width:100%;
               box-sizing:border-box;
               max-width:100%;
@@ -8577,7 +8577,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .form-preview-field select,
             #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
               height:36px;
-              padding:0 12px;
+              padding:0 30px 0 12px;
               width:100%;
               box-sizing:border-box;
               max-width:100%;

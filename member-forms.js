@@ -2952,7 +2952,7 @@
       categorySelect.id = 'memberFormpickerCategory';
       categorySelect.style.width = '100%';
       categorySelect.style.height = '36px';
-      categorySelect.style.padding = '0 12px';
+      categorySelect.style.padding = '0 30px 0 12px';
       categorySelect.style.border = '1px solid var(--border)';
       categorySelect.style.borderRadius = '8px';
       categorySelect.style.background = 'rgba(0,0,0,0.35)';
@@ -2998,7 +2998,7 @@
       subcategorySelect.id = 'memberFormpickerSubcategory';
       subcategorySelect.style.width = '100%';
       subcategorySelect.style.height = '36px';
-      subcategorySelect.style.padding = '0 12px';
+      subcategorySelect.style.padding = '0 30px 0 12px';
       subcategorySelect.style.border = '1px solid var(--border)';
       subcategorySelect.style.borderRadius = '8px';
       subcategorySelect.style.background = 'rgba(0,0,0,0.35)';
