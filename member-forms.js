@@ -370,6 +370,17 @@
 
     function collectCurrencyCodes(snapshot){
       const codes = new Set();
+      
+      // First, get currency codes from the currency field (versionPriceCurrencies)
+      if(snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
+        snapshot.versionPriceCurrencies.forEach(code => {
+          if(typeof code === 'string' && code.trim()){
+            codes.add(code.trim().toUpperCase());
+          }
+        });
+      }
+      
+      // Also collect from existing variant-pricing and venue-ticketing fields as fallback
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
       cats.forEach(cat => {
         if(!cat || typeof cat !== 'object') return;
@@ -406,7 +417,7 @@
           });
         });
       });
-      return Array.from(codes);
+      return Array.from(codes).sort();
     }
 
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
@@ -436,6 +447,8 @@
       memberSnapshot = normalized;
       memberCategories = Array.isArray(memberSnapshot.categories) ? memberSnapshot.categories : [];
       currencyCodes = collectCurrencyCodes(memberSnapshot);
+      // Set window.currencyCodes for use in other parts of the application
+      window.currencyCodes = currencyCodes;
       if(options.populate !== false){
         renderFormPicker();
       }

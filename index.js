@@ -4230,6 +4230,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     // versionPriceCurrencies now come from backend via currency field options
+    window.currencyCodes = Array.isArray(initialFormbuilderSnapshot.versionPriceCurrencies) ? initialFormbuilderSnapshot.versionPriceCurrencies : [];
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
