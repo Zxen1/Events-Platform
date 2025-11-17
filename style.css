@@ -7342,25 +7342,19 @@ html, body { cursor: auto !important; }
               appearance:none;
               -webkit-appearance:none;
             }
-            #tab-forms .session-line:has(.session-currency-select){
-              position:relative;
-            }
-            #tab-forms .session-line:has(.session-currency-select)::after{
-              content:'';
+            /* Session currency select arrows use .dropdown-arrow class */
+            #tab-forms .session-currency-select-wrapper .dropdown-arrow,
+            #tab-forms .tier-price-row > div:has(.session-currency-select) .dropdown-arrow{
               position:absolute;
               top:50%;
-              right:12px;
-              width:8px;
-              height:8px;
-              border-style:solid;
-              border-width:0 2px 2px 0;
-              border-color:var(--button-text, #ffffff);
+              right:10px;
               transform:translateY(-50%) rotate(45deg);
-              transition:transform .3s ease;
-              pointer-events:none;
-              z-index:2;
+              margin-right:0;
             }
-            #tab-forms .session-line:has(.session-currency-select:focus)::after{
+            #tab-forms .session-currency-select-wrapper:focus-within .dropdown-arrow,
+            #tab-forms .session-currency-select-wrapper.is-focused .dropdown-arrow,
+            #tab-forms .tier-price-row > div:has(.session-currency-select:focus) .dropdown-arrow,
+            #tab-forms .tier-price-row > div:has(.session-currency-select).is-focused .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .venue-line > *:first-child,
@@ -7609,18 +7603,15 @@ html, body { cursor: auto !important; }
             #tab-forms .field-type-select{
               padding-right:32px;
             }
-            #tab-forms .field-type-select-arrow{
+            #tab-forms .field-type-select-wrapper .dropdown-arrow{
               position:absolute;
               top:50%;
-              right:12px;
-              transform:translateY(-50%);
-              pointer-events:none;
-              color:var(--button-text);
-              font-size:12px;
-              line-height:1;
-              transition:transform .3s ease;
+              right:10px;
+              transform:translateY(-50%) rotate(45deg);
+              margin-right:0;
             }
-            #tab-forms .field-type-select-wrapper:focus-within .field-type-select-arrow{
+            #tab-forms .field-type-select-wrapper:focus-within .dropdown-arrow,
+            #tab-forms .field-type-select-wrapper.is-focused .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .field-type-select option:disabled,
@@ -7810,22 +7801,16 @@ html, body { cursor: auto !important; }
               appearance:none;
               -webkit-appearance:none;
             }
-            #tab-forms .variant-pricing-row:has(.variant-pricing-currency)::after{
-              content:'';
+            /* Variant pricing currency arrows use .dropdown-arrow class */
+            #tab-forms .variant-pricing-row > div:has(.variant-pricing-currency) .dropdown-arrow{
               position:absolute;
               top:50%;
-              right:12px;
-              width:8px;
-              height:8px;
-              border-style:solid;
-              border-width:0 2px 2px 0;
-              border-color:var(--button-text, #ffffff);
+              right:10px;
               transform:translateY(-50%) rotate(45deg);
-              transition:transform .3s ease;
-              pointer-events:none;
-              z-index:2;
+              margin-right:0;
             }
-            #tab-forms .variant-pricing-row:has(.variant-pricing-currency:focus)::after{
+            #tab-forms .variant-pricing-row > div:has(.variant-pricing-currency:focus) .dropdown-arrow,
+            #tab-forms .variant-pricing-row > div:has(.variant-pricing-currency).is-focused .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #tab-forms .variant-pricing-price{
@@ -8793,22 +8778,16 @@ html, body { cursor: auto !important; }
               appearance:none;
               -webkit-appearance:none;
             }
-            #memberPanel .member-create-fields .variant-pricing-row:has(.variant-pricing-currency)::after{
-              content:'';
+            /* Member forms variant pricing currency arrows use .dropdown-arrow class */
+            #memberPanel .member-create-fields .variant-pricing-row > div:has(.variant-pricing-currency) .dropdown-arrow{
               position:absolute;
               top:50%;
-              right:12px;
-              width:8px;
-              height:8px;
-              border-style:solid;
-              border-width:0 2px 2px 0;
-              border-color:var(--button-text, #ffffff);
+              right:10px;
               transform:translateY(-50%) rotate(45deg);
-              transition:transform .3s ease;
-              pointer-events:none;
-              z-index:2;
+              margin-right:0;
             }
-            #memberPanel .member-create-fields .variant-pricing-row:has(.variant-pricing-currency:focus)::after{
+            #memberPanel .member-create-fields .variant-pricing-row > div:has(.variant-pricing-currency:focus) .dropdown-arrow,
+            #memberPanel .member-create-fields .variant-pricing-row > div:has(.variant-pricing-currency).is-focused .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
             #memberPanel .member-create-fields .variant-pricing-row--bottom{

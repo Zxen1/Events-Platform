@@ -12096,6 +12096,9 @@ function makePosts(){
 
                           const priceRow = document.createElement('div');
                           priceRow.className = 'tier-price-row';
+                          const currencyWrapper = document.createElement('div');
+                          currencyWrapper.style.position = 'relative';
+                          currencyWrapper.style.width = '100%';
                           const currencySelect = document.createElement('select');
                           currencySelect.className = 'session-currency-select';
                           const emptyOpt = document.createElement('option');
@@ -12117,7 +12120,28 @@ function makePosts(){
                           currencySelect.dataset.timeIndex = String(timeIndex);
                           currencySelect.dataset.versionIndex = String(versionIndex);
                           currencySelect.dataset.tierIndex = String(tierIndex);
-                          priceRow.appendChild(currencySelect);
+                          // Add working dropdown arrow
+                          const currencyArrow = document.createElement('span');
+                          currencyArrow.className = 'dropdown-arrow';
+                          currencyArrow.setAttribute('aria-hidden', 'true');
+                          currencyWrapper.appendChild(currencySelect);
+                          currencyWrapper.appendChild(currencyArrow);
+                          // Animate arrow on focus/blur with delay to handle dropdown opening
+                          let blurTimeout = null;
+                          currencySelect.addEventListener('focus', () => {
+                            if(blurTimeout) clearTimeout(blurTimeout);
+                            currencyWrapper.classList.add('is-focused');
+                          });
+                          currencySelect.addEventListener('blur', () => {
+                            blurTimeout = setTimeout(() => {
+                              currencyWrapper.classList.remove('is-focused');
+                            }, 150);
+                          });
+                          currencySelect.addEventListener('mousedown', () => {
+                            if(blurTimeout) clearTimeout(blurTimeout);
+                            currencyWrapper.classList.add('is-focused');
+                          });
+                          priceRow.appendChild(currencyWrapper);
 
                           const priceInput = document.createElement('input');
                           priceInput.type = 'text';
@@ -12533,10 +12557,24 @@ function makePosts(){
             const fieldTypeWrapper = document.createElement('div');
             fieldTypeWrapper.className = 'field-type-select-wrapper';
             const fieldTypeArrow = document.createElement('span');
-            fieldTypeArrow.className = 'field-type-select-arrow';
+            fieldTypeArrow.className = 'dropdown-arrow';
             fieldTypeArrow.setAttribute('aria-hidden', 'true');
-            fieldTypeArrow.textContent = '▾';
             fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
+            // Animate arrow on focus/blur with delay to handle dropdown opening
+            let fieldTypeBlurTimeout = null;
+            fieldTypeSelect.addEventListener('focus', () => {
+              if(fieldTypeBlurTimeout) clearTimeout(fieldTypeBlurTimeout);
+              fieldTypeWrapper.classList.add('is-focused');
+            });
+            fieldTypeSelect.addEventListener('blur', () => {
+              fieldTypeBlurTimeout = setTimeout(() => {
+                fieldTypeWrapper.classList.remove('is-focused');
+              }, 150);
+            });
+            fieldTypeSelect.addEventListener('mousedown', () => {
+              if(fieldTypeBlurTimeout) clearTimeout(fieldTypeBlurTimeout);
+              fieldTypeWrapper.classList.add('is-focused');
+            });
 
             const fieldRequiredLabel = document.createElement('span');
             fieldRequiredLabel.className = 'field-required-label';
@@ -13181,12 +13219,20 @@ function makePosts(){
                 dropdownArrow.setAttribute('aria-hidden', 'true');
                 selectWrapper.appendChild(select);
                 selectWrapper.appendChild(dropdownArrow);
-                // Animate arrow on focus/blur
+                // Animate arrow on focus/blur with delay to handle dropdown opening
+                let blurTimeout = null;
                 select.addEventListener('focus', () => {
+                  if(blurTimeout) clearTimeout(blurTimeout);
                   selectWrapper.classList.add('is-focused');
                 });
                 select.addEventListener('blur', () => {
-                  selectWrapper.classList.remove('is-focused');
+                  blurTimeout = setTimeout(() => {
+                    selectWrapper.classList.remove('is-focused');
+                  }, 150);
+                });
+                select.addEventListener('mousedown', () => {
+                  if(blurTimeout) clearTimeout(blurTimeout);
+                  selectWrapper.classList.add('is-focused');
                 });
                 // Make interactive but prevent any form submission or member form linking
                 select.addEventListener('change', (e) => {
@@ -13357,6 +13403,9 @@ function makePosts(){
                     const bottomRow = document.createElement('div');
                     bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
 
+                    const currencyWrapper = document.createElement('div');
+                    currencyWrapper.style.position = 'relative';
+                    currencyWrapper.style.width = '100%';
                     const currencySelect = document.createElement('select');
                     currencySelect.className = 'variant-pricing-currency';
                     const emptyOption = document.createElement('option');
@@ -13370,6 +13419,27 @@ function makePosts(){
                       opt.value = code;
                       opt.textContent = code;
                       currencySelect.appendChild(opt);
+                    });
+                    // Add working dropdown arrow
+                    const currencyArrow = document.createElement('span');
+                    currencyArrow.className = 'dropdown-arrow';
+                    currencyArrow.setAttribute('aria-hidden', 'true');
+                    currencyWrapper.appendChild(currencySelect);
+                    currencyWrapper.appendChild(currencyArrow);
+                    // Animate arrow on focus/blur with delay to handle dropdown opening
+                    let blurTimeout = null;
+                    currencySelect.addEventListener('focus', () => {
+                      if(blurTimeout) clearTimeout(blurTimeout);
+                      currencyWrapper.classList.add('is-focused');
+                    });
+                    currencySelect.addEventListener('blur', () => {
+                      blurTimeout = setTimeout(() => {
+                        currencyWrapper.classList.remove('is-focused');
+                      }, 150);
+                    });
+                    currencySelect.addEventListener('mousedown', () => {
+                      if(blurTimeout) clearTimeout(blurTimeout);
+                      currencyWrapper.classList.add('is-focused');
                     });
                     currencySelect.value = optionValue.currency || '';
                     const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
@@ -13569,7 +13639,7 @@ function makePosts(){
                     });
 
                     actions.append(addBtn, removeBtn);
-                    bottomRow.append(currencySelect, priceInput, actions);
+                    bottomRow.append(currencyWrapper, priceInput, actions);
 
                     optionRow.append(topRow, bottomRow);
                     versionList.appendChild(optionRow);

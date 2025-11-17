@@ -697,6 +697,30 @@
         });
         currencySelect.value = option.currency || '';
         currencySelect.addEventListener('change', ()=>{ option.currency = currencySelect.value; });
+        // Add working dropdown arrow
+        const currencyWrapper = document.createElement('div');
+        currencyWrapper.style.position = 'relative';
+        currencyWrapper.style.width = '100%';
+        const currencyArrow = document.createElement('span');
+        currencyArrow.className = 'dropdown-arrow';
+        currencyArrow.setAttribute('aria-hidden', 'true');
+        currencyWrapper.appendChild(currencySelect);
+        currencyWrapper.appendChild(currencyArrow);
+        // Animate arrow on focus/blur with delay to handle dropdown opening
+        let currencyBlurTimeout = null;
+        currencySelect.addEventListener('focus', () => {
+          if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
+          currencyWrapper.classList.add('is-focused');
+        });
+        currencySelect.addEventListener('blur', () => {
+          currencyBlurTimeout = setTimeout(() => {
+            currencyWrapper.classList.remove('is-focused');
+          }, 150);
+        });
+        currencySelect.addEventListener('mousedown', () => {
+          if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
+          currencyWrapper.classList.add('is-focused');
+        });
 
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
@@ -708,7 +732,7 @@
           priceInput.value = option.price;
         });
 
-        bottomRow.append(currencySelect, priceInput);
+        bottomRow.append(currencyWrapper, priceInput);
 
         const actions = document.createElement('div');
         actions.className = 'variant-pricing-option-actions';
@@ -925,12 +949,20 @@
         dropdownArrow.setAttribute('aria-hidden', 'true');
         selectWrapper.appendChild(select);
         selectWrapper.appendChild(dropdownArrow);
-        // Animate arrow on focus/blur
+        // Animate arrow on focus/blur with delay to handle dropdown opening
+        let blurTimeout = null;
         select.addEventListener('focus', () => {
+          if(blurTimeout) clearTimeout(blurTimeout);
           selectWrapper.classList.add('is-focused');
         });
         select.addEventListener('blur', () => {
-          selectWrapper.classList.remove('is-focused');
+          blurTimeout = setTimeout(() => {
+            selectWrapper.classList.remove('is-focused');
+          }, 150);
+        });
+        select.addEventListener('mousedown', () => {
+          if(blurTimeout) clearTimeout(blurTimeout);
+          selectWrapper.classList.add('is-focused');
         });
         control = selectWrapper;
       } else if(resolvedBaseType === 'radio' || fieldTypeKey === 'radio'){
@@ -1889,6 +1921,9 @@
               const bottomRow = document.createElement('div');
               bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
 
+              const currencyWrapper = document.createElement('div');
+              currencyWrapper.style.position = 'relative';
+              currencyWrapper.style.width = '100%';
               const currencySelect = document.createElement('select');
               currencySelect.className = 'variant-pricing-currency';
               const emptyOption = document.createElement('option');
@@ -1905,6 +1940,27 @@
               });
               currencySelect.value = optionValue.currency || '';
               const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
+              // Add working dropdown arrow
+              const currencyArrow = document.createElement('span');
+              currencyArrow.className = 'dropdown-arrow';
+              currencyArrow.setAttribute('aria-hidden', 'true');
+              currencyWrapper.appendChild(currencySelect);
+              currencyWrapper.appendChild(currencyArrow);
+              // Animate arrow on focus/blur with delay to handle dropdown opening
+              let currencyBlurTimeout = null;
+              currencySelect.addEventListener('focus', () => {
+                if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
+                currencyWrapper.classList.add('is-focused');
+              });
+              currencySelect.addEventListener('blur', () => {
+                currencyBlurTimeout = setTimeout(() => {
+                  currencyWrapper.classList.remove('is-focused');
+                }, 150);
+              });
+              currencySelect.addEventListener('mousedown', () => {
+                if(currencyBlurTimeout) clearTimeout(currencyBlurTimeout);
+                currencyWrapper.classList.add('is-focused');
+              });
 
               const priceInput = document.createElement('input');
               priceInput.type = 'text';
@@ -2101,7 +2157,7 @@
               });
 
               actions.append(addBtn, removeBtn);
-              bottomRow.append(currencySelect, priceInput, actions);
+              bottomRow.append(currencyWrapper, priceInput, actions);
 
               optionRow.append(topRow, bottomRow);
               versionList.appendChild(optionRow);
@@ -3017,12 +3073,20 @@
       
       categorySelectWrapper.appendChild(categorySelect);
       categorySelectWrapper.appendChild(categoryArrow);
-      // Animate arrow on focus/blur
+      // Animate arrow on focus/blur with delay to handle dropdown opening
+      let categoryBlurTimeout = null;
       categorySelect.addEventListener('focus', () => {
+        if(categoryBlurTimeout) clearTimeout(categoryBlurTimeout);
         categorySelectWrapper.classList.add('is-focused');
       });
       categorySelect.addEventListener('blur', () => {
-        categorySelectWrapper.classList.remove('is-focused');
+        categoryBlurTimeout = setTimeout(() => {
+          categorySelectWrapper.classList.remove('is-focused');
+        }, 150);
+      });
+      categorySelect.addEventListener('mousedown', () => {
+        if(categoryBlurTimeout) clearTimeout(categoryBlurTimeout);
+        categorySelectWrapper.classList.add('is-focused');
       });
       
       categoryWrapper.appendChild(categoryLabel);
@@ -3067,12 +3131,20 @@
       
       subcategorySelectWrapper.appendChild(subcategorySelect);
       subcategorySelectWrapper.appendChild(subcategoryArrow);
-      // Animate arrow on focus/blur
+      // Animate arrow on focus/blur with delay to handle dropdown opening
+      let subcategoryBlurTimeout = null;
       subcategorySelect.addEventListener('focus', () => {
+        if(subcategoryBlurTimeout) clearTimeout(subcategoryBlurTimeout);
         subcategorySelectWrapper.classList.add('is-focused');
       });
       subcategorySelect.addEventListener('blur', () => {
-        subcategorySelectWrapper.classList.remove('is-focused');
+        subcategoryBlurTimeout = setTimeout(() => {
+          subcategorySelectWrapper.classList.remove('is-focused');
+        }, 150);
+      });
+      subcategorySelect.addEventListener('mousedown', () => {
+        if(subcategoryBlurTimeout) clearTimeout(subcategoryBlurTimeout);
+        subcategorySelectWrapper.classList.add('is-focused');
       });
       
       subcategoryWrapper.appendChild(subcategoryLabel);
