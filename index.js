@@ -9553,9 +9553,15 @@ function makePosts(){
           resolvedFieldTypeName = resolvedFieldTypeName || '';
           safeField.field_type_name = resolvedFieldTypeName;
           safeField.fieldTypeName = resolvedFieldTypeName;
-          // Always name field after its field type name when field type is set
+          // Only auto-name if field type is set AND field doesn't already have a custom name
+          // For editable fields, preserve existing custom names
           if(fieldTypeKey && resolvedFieldTypeName){
-            safeField.name = resolvedFieldTypeName;
+            const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+            const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+            // Only auto-name if not editable OR if name is empty
+            if(!isEditable || !safeField.name || safeField.name.trim() === ''){
+              safeField.name = resolvedFieldTypeName;
+            }
           }
             if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
@@ -12834,13 +12840,16 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
               // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
-              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+              // Get fieldTypeKey from the current fieldTypeSelect value if available, otherwise from safeField
+              const selectedOption = fieldTypeSelect.options[fieldTypeSelect.selectedIndex];
+              const selectedValue = selectedOption ? selectedOption.value : '';
+              const fieldTypeKey = selectedValue || safeField.fieldTypeKey || safeField.key || safeField.type || '';
               const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               const showVariantPricing = fieldTypeKey === 'variant-pricing';
               const showVenueSession = fieldTypeKey === 'venue-ticketing';
               // Check if this field type is editable - must have a valid fieldTypeKey
               let isEditable = false;
-              if(fieldTypeKey){
+              if(fieldTypeKey && fieldTypeKey !== ''){
                 const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
                 isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
               }
@@ -12976,8 +12985,11 @@ function makePosts(){
                 hostElement.classList.add('field-edit-open');
               }
               // Update field editors to show/hide name input for editable fields
+              // Force update to ensure fieldTypeKey is checked
               updateFieldEditorsByType();
+              // Double-check after a brief delay to catch any async updates
               requestAnimationFrame(()=>{
+                updateFieldEditorsByType();
                 try{
                   fieldTypeSelect.focus({ preventScroll: true });
                 }catch(err){
