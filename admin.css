@@ -1,2 +1,276 @@
-/* Admin panel styles - extracted from style.css */
-
+.header-buttons #adminBtn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#adminPanel .range-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+#adminPanel .range-wrap input[type="range"]{
+  width:300px;
+}
+#adminPanel .range-wrap span{
+  width:40px;
+  text-align:right;
+}
+#adminForm.panel-body,
+#adminForm.panel-body{
+  --panel-base-padding-end: 10px;
+  padding-right:10px;
+}
+#adminPanel #styleControls{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:12px;
+}
+#adminPanel #styleControls > *{
+  width:100%;
+  max-width:420px;
+}
+#adminPanel .admin-fieldset,
+.admin-fieldset{
+  margin:0 auto;
+  border:0;
+  border-radius:8px;
+  padding:0;
+  width:100%;
+  max-width:420px;
+  box-sizing:border-box;
+}
+#adminPanel .admin-fieldset.collapsed{
+  padding:0;
+}
+  #adminPanel .panel-content,
+  #adminPanel .panel-content{
+    background:#222222;
+    color:#fff;
+  }
+  #adminPanel .mapboxgl-ctrl-geocoder{
+    position:relative;
+    z-index:var(--layer-menu);
+  }
+  #adminPanel .mapboxgl-ctrl-geocoder .suggestions{
+    z-index:var(--layer-menu);
+  }
+#adminPanel button,
+#adminPanel button{
+  height:35px;
+  line-height:35px;
+}
+#adminPanel input[type="color"]{
+  width:35px;
+  height:35px;
+}
+#adminPanel #adminPaypalClientId,
+#adminPanel #adminPaypalClientSecret{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:none;
+}
+#adminPanel #adminIconFolder,
+#adminPanel #adminAdminIconFolder{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:none;
+}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;-webkit-user-select:none;user-select:none;width:100%;max-width:420px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
+#adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
+#adminPanel fieldset.collapsed legend::after{content:'\25B6';}
+#adminPanel fieldset.collapsed > :not(legend){display:none;}
+#adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
+#adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:420px;}
+#adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;-webkit-user-select:none;user-select:none;}
+#adminPanel .color-group{
+  flex:0 0 200px;
+  width:100%;
+  max-width:200px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  position:relative;
+}
+#adminPanel .shadow-group{
+  flex:0 0 200px;
+  width:100%;
+  max-width:200px;
+  display:flex;
+  gap:4px;
+  align-items:center;
+}
+#adminPanel .shadow-group input[type=color]{
+  width:40px;
+  height:40px;
+  padding:0;
+  border-radius:8px;
+}
+#adminPanel .shadow-group input[type=number]{
+  flex:1 1 0;
+}
+#adminPanel .textpicker{
+  flex:0 0 200px;
+  width:200px;
+  position:relative;
+}
+#adminPanel .textpicker .text-preview{
+  width:100%;
+  height:35px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+#adminPanel .textpicker .text-popup{
+  display:none;
+  position:absolute;
+  top:44px;
+  left:0;
+  z-index: var(--layer-menu);
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:8px;
+  padding:8px;
+  width:200px;
+}
+#adminPanel .textpicker.open .text-popup{display:block;}
+#adminPanel .textpicker .text-popup select,
+#adminPanel .textpicker .text-popup input[type=color]{
+  width:100%;
+  margin-top:4px;
+  border-radius:var(--dropdown-radius);
+  padding:4px;
+  box-sizing:border-box;
+  height:35px;
+}
+#adminPanel .textpicker .text-popup input[type=color]{padding:0;}
+#adminPanel .textpicker .text-popup .shadow-group{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  margin-top:4px;
+}
+#adminPanel .textpicker .text-popup .shadow-group input[type=color],
+#adminPanel .textpicker .text-popup .shadow-group input[type=number]{
+  width:100%;
+  height:40px;
+  border-radius:var(--dropdown-radius);
+  padding:0;
+  box-sizing:border-box;
+}
+#adminPanel .admin-fieldset input,
+#adminPanel .admin-fieldset select,
+#adminPanel .admin-fieldset textarea{
+  max-width:200px;
+  box-sizing:border-box;
+}
+#adminPanel .control-row select{
+  flex:0 0 200px;
+  width:200px;
+  max-width:200px;
+  margin-left:auto;
+  border-radius:var(--dropdown-radius);
+  padding:4px;
+}
+#adminPanel .color-group input[type=color],
+#adminPanel .color-group input[type=range]{
+  width:100%;
+}
+#adminPanel .color-group input[type=color]{
+  border-radius:8px;
+  padding:0;
+  height:35px;
+  display:block;
+  cursor:pointer;
+  pointer-events:auto;
+}
+#adminPanel .range-group{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+#adminPanel .range-group input[type=range]{
+  flex:1;
+  width:auto;
+}
+#adminPanel .range-group span{
+  min-width:32px;
+  text-align:right;
+  font-size:14px;
+}
+#adminPanel .tab-bar{display:flex;gap:6px;}
+#adminPanel .tab-bar button{
+  flex:1;
+  padding:6px 10px;
+  border-radius:10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
+  color:var(--button-text);
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+#adminPanel .tab-bar button:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+#adminPanel .tab-bar button:active{
+  transform:none;
+}
+#adminPanel .tab-bar button[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
+  color:var(--button-active-text);
+}
+#adminPanel .tab-bar button:focus-visible{
+  outline:2px solid rgba(255,255,255,0.85);
+  outline-offset:2px;
+}
+#adminPanel .tab-panel{display:none;}
+#adminPanel .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
+#adminPanel .marker-grid{display:flex;flex-direction:column;gap:8px;}
+#adminPanel .marker-grid select{min-width:120px;}
+#adminPanel .marker-options{display:flex;gap:8px;align-items:center;}
+#adminPanel .marker-set{display:grid;grid-template-columns:repeat(10,max-content);gap:4px;}
+#adminPanel .marker-set svg.outline *{stroke:#000;stroke-width:1;}
+#adminPanel input[type=range]{width:100%;}
+#adminPanel .panel-field{margin:8px auto;}
+#adminPanel h3{margin:0;}
+.admin-section{display:flex;flex-direction:column;gap:var(--gap);}
+#adminPanel .settings-general-container,
+#adminPanel .settings-paypal-container{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+}
+#adminPanel .panel-actions .save-changes,
+#adminPanel .panel-actions .discard-changes,
+#adminPanel .panel-actions .primary-action,
+#adminPanel .panel-actions .primary-action:hover,
+#adminPanel .panel-actions .discard-changes[disabled],
+#adminUnsavedPrompt .admin-unsaved-dialog{
+  background:var(--dropdown-bg, rgba(17,17,17,0.96));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:360px;
+  width:calc(100% - 40px);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);
+  color:#000;
+}
+#adminUnsavedPrompt .admin-unsaved-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+#adminBtn{
+  gap:4px;
+}
