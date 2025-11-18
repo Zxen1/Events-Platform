@@ -7884,6 +7884,8 @@ function makePosts(){
     function hoverHTML(p){
       return mapCardHTML(p);
     }
+  })();
+
 function closePanel(m){
   const btnId = panelButtons[m && m.id];
   if(btnId){
