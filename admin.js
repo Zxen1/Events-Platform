@@ -1229,10 +1229,13 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
     
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
+      const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
       if(typeof closeSubcategoryFieldOverlay === 'function'){
         closeSubcategoryFieldOverlay();
       }
-      closeAllIconPickers();
+      if(typeof window.closeAllIconPickers === 'function'){
+        window.closeAllIconPickers();
+      }
       
       // Function to load available icons from a folder
       const loadIconsFromFolder = async (folderPath) => {
@@ -1251,6 +1254,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       };
       
       const attachIconPicker = (trigger, container, options = {})=>{
+        const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
         const onSelect = typeof opts.onSelect === 'function' ? opts.onSelect : (()=>{});
@@ -1353,7 +1357,9 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
 
         const openPicker = async ()=>{
           if(popup) return;
-          closeAllIconPickers();
+          if(typeof window.closeAllIconPickers === 'function'){
+            window.closeAllIconPickers();
+          }
           
           // Load icons from folder if configured
           let iconsToShow = [];
@@ -7874,6 +7880,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       resetCategoriesBtn.classList.toggle('active', anyCategoryOff || anySubOff);
     }
     function refreshSubcategoryLogos(){
+      const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
       Object.values(categoryControllers).forEach(ctrl=>{
         if(ctrl && typeof ctrl.refreshLogos === 'function'){
           ctrl.refreshLogos();
