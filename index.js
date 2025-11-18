@@ -2845,15 +2845,17 @@ async function ensureMapboxCssFor(container) {
       console.warn('No saved map view found - using default center. This is expected on first visit.');
       startCenter = [0, 0]; // Center of world map - sensible default
       startZoom = 1.5;
-      // Save this default so it's available next time
-      try{
-        const defaultView = { center: startCenter, zoom: startZoom, bearing: 0 };
-        localStorage.setItem('mapView', JSON.stringify(defaultView));
-      }catch(err){
-        console.error('Failed to save default map view:', err);
-      }
+    }
+    window.startCenter = startCenter;
+    // Save this default so it's available next time
+    try{
+      const defaultView = { center: startCenter, zoom: startZoom, bearing: 0 };
+      localStorage.setItem('mapView', JSON.stringify(defaultView));
+    }catch(err){
+      console.error('Failed to save default map view:', err);
     }
     let lastKnownZoom = startZoom;
+    window.startZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
     startPitch = window.startPitch = initialPitch;

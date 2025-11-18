@@ -1896,6 +1896,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           const subIconHtml = subcategoryIcons[sub] || '';
           const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
+          const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
           if(initialSubIconPath){
             const normalizedInitialSub = applyNormalizeIconPath(initialSubIconPath);
             if(normalizedInitialSub){
@@ -1903,7 +1904,6 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
             }
           }
           if(initialSubIconPath){
-            const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
             const img = document.createElement('img');
             img.src = applyNormalizeIconPath(initialSubIconPath);
             img.alt = '';
@@ -7444,7 +7444,6 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           subMenu.append(subContent);
 
           applySubNameChange();
-      const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
       const initialIconSource = applyNormalizeIconPath(initialSubIconPath) || initialSubIconPath || '';
           if(initialIconSource){
             updateSubIconDisplay(initialIconSource);
@@ -9177,6 +9176,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       };
 
       if(typeof window.updatePostsButtonState === 'function'){
+        const startZoom = window.startZoom || 1.5;
         window.updatePostsButtonState(startZoom);
       }
 
@@ -10956,14 +10956,16 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       if(typeof mapboxgl.setLogLevel === 'function'){
         mapboxgl.setLogLevel('error');
       }
+        const startZoom = window.startZoom || 1.5;
+        const startCenter = window.startCenter || [0, 0];
         map = new mapboxgl.Map({
           container:'map',
           style:'mapbox://styles/mapbox/standard',
           projection:'globe',
           center: startCenter,
           zoom: startZoom,
-          pitch: startPitch,
-          bearing: startBearing,
+          pitch: window.startPitch || 0,
+          bearing: window.startBearing || 0,
           attributionControl:true
         });
         // Add error handler for token/auth errors
@@ -11361,7 +11363,10 @@ if (!map.__pillHooksInstalled) {
       if(fromCurrent){
         requestAnimationFrame(step);
       }else{
+        const LEGACY_DEFAULT_PITCH = 0;
+        const startPitch = window.startPitch;
         const targetPitch = Number.isFinite(startPitch) ? startPitch : LEGACY_DEFAULT_PITCH;
+        const startZoom = window.startZoom || 1.5;
         map.easeTo({center:[0,0], zoom:startZoom, pitch:targetPitch, essential:true});
         map.once('moveend', () => requestAnimationFrame(step));
       }
