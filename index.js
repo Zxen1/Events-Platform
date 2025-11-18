@@ -5046,6 +5046,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return baseNormalizeIconPath(path);
     }
+    window.applyNormalizeIconPath = applyNormalizeIconPath;
     function getCategoryIconPath(category){
       if(!category) return '';
       const lookup = lookupIconPath(categoryIconPaths, category.id, category.name);
@@ -7548,6 +7549,7 @@ function makePosts(){
     let lastLoadedBoundsKey = null;
     window.waitForInitialZoom = waitForInitialZoom;
     let updatePostsButtonState = () => {};
+    window.updatePostsButtonState = updatePostsButtonState;
 
     function boundsToKey(bounds, precision = 2){
       if(!bounds) return '';
@@ -7767,7 +7769,9 @@ function makePosts(){
           lastKnownZoom = current;
         }
       }
-      updatePostsButtonState(lastKnownZoom);
+      if(typeof window.updatePostsButtonState === 'function'){
+        window.updatePostsButtonState(lastKnownZoom);
+      }
       updateLayerVisibility(lastKnownZoom);
       updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
@@ -7820,7 +7824,9 @@ function makePosts(){
         hideResultIndicators();
         return;
       }
-      updatePostsButtonState(zoomLevel);
+      if(typeof window.updatePostsButtonState === 'function'){
+        window.updatePostsButtonState(zoomLevel);
+      }
       if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_PRELOAD_ZOOM){
         postLoadRequested = true;
         if(postsLoaded || (Array.isArray(posts) && posts.length)){ clearLoadedPosts(); }

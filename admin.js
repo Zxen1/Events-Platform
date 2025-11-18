@@ -1503,6 +1503,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           ? (categoryIconLookup.path || '')
           : extractIconSrc(categoryIconHtml);
         if(initialCategoryIconSrc){
+          const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
           const normalizedInitial = applyNormalizeIconPath(initialCategoryIconSrc);
           if(normalizedInitial){
             categoryIcons[c.name] = `<img src="${normalizedInitial}" alt="">`;
@@ -9141,7 +9142,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         }
       }
 
-      updatePostsButtonState = function(currentZoom){
+      window.updatePostsButtonState = function(currentZoom){
         const threshold = MARKER_ZOOM_THRESHOLD;
         let zoomValue = Number.isFinite(currentZoom) ? currentZoom : null;
         if(!Number.isFinite(zoomValue) && map && typeof map.getZoom === 'function'){
