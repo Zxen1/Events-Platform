@@ -4961,6 +4961,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return normalized;
     }
+    window.normalizeIconPathMap = normalizeIconPathMap;
     function lookupIconPath(map, id, name){
       const idKey = toIconIdKey(id);
       if(idKey && Object.prototype.hasOwnProperty.call(map, idKey)){
@@ -7933,7 +7934,7 @@ function makePosts(){
   })();
 
 function closePanel(m){
-  const btnId = panelButtons[m && m.id];
+  const btnId = window.panelButtons && window.panelButtons[m && m.id];
   if(btnId){
     const btn = document.getElementById(btnId);
     btn && btn.setAttribute('aria-pressed','false');

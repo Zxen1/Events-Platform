@@ -1,8 +1,19 @@
+const panelButtons = {
+  filterPanel: 'filterBtn',
+  memberPanel: 'memberBtn',
+  adminPanel: 'adminBtn'
+};
+window.panelButtons = panelButtons;
+
 (function(){
   "use strict";
 
   const $ = window.$ || ((sel, root=document) => root.querySelector(sel));
   const $$ = window.$$ || ((sel, root=document) => Array.from(root.querySelectorAll(sel)));
+
+  // Filter date variables - must be declared early
+  let dateStart = null;
+  let dateEnd = null;
 
   // Categories UI
   const categoryControllers = {};
@@ -7765,6 +7776,7 @@
       });
       assignMapLike(categoryIcons, snapshot.categoryIcons);
       assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
+      const normalizeIconPathMap = window.normalizeIconPathMap || (() => ({}));
       assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
       assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
       const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
@@ -8653,8 +8665,6 @@
     let calendarPopupOpen = false;
     let calendarFirstOpen = true;
     let lastExpiredState = null;
-    let dateStart = null;
-    let dateEnd = null;
     let dateRangeWasCleared = false;
 
     function positionCalendarPopup(){
@@ -14443,12 +14453,6 @@ function openPostModal(id){
       localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
     });
   })();
-  
-const panelButtons = {
-  filterPanel: 'filterBtn',
-  memberPanel: 'memberBtn',
-  adminPanel: 'adminBtn'
-};
 
 // 0577 helpers (safety)
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
@@ -15018,7 +15022,7 @@ function openPanel(m){
     const mc = document.querySelector('.map-controls-map');
     if(mc) mc.style.display = 'none';
   }
-  const btnId = panelButtons[m && m.id];
+  const btnId = window.panelButtons && window.panelButtons[m && m.id];
   if(btnId){
     const btn = document.getElementById(btnId);
     btn && btn.setAttribute('aria-pressed','true');
