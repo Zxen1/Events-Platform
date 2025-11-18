@@ -4974,6 +4974,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return { path: '', found: false };
     }
+    window.lookupIconPath = lookupIconPath;
     function writeIconPath(map, id, name, path){
       const idKey = toIconIdKey(id);
       if(idKey){
@@ -5357,6 +5358,7 @@ function uniqueTitle(seed, cityName, idx){
     const day = String(d.getDate()).padStart(2,'0');
     return `${y}-${m}-${day}`;
   }
+  window.toISODate = toISODate;
 
   function parseISODate(s){
     const [yy, mm, dd] = s.split('-').map(Number);
@@ -8086,10 +8088,10 @@ if(welcomeModalEl){
 
 function requestClosePanel(m){
   if(m){
-    if(m.id === 'adminPanel' && adminPanelChangeManager.handlePanelClose(m)){
+    if(m.id === 'adminPanel' && window.adminPanelChangeManager && window.adminPanelChangeManager.handlePanelClose(m)){
       return;
     }
-    if(m.id === 'memberPanel' && memberPanelChangeManager.handlePanelClose(m)){
+    if(m.id === 'memberPanel' && window.memberPanelChangeManager && window.memberPanelChangeManager.handlePanelClose(m)){
       return;
     }
   }
@@ -8145,10 +8147,10 @@ function handleEsc(){
     return;
   }
   if(top instanceof Element){
-    if(top.id === 'adminPanel' && adminPanelChangeManager.handleEscape(top)){
+    if(top.id === 'adminPanel' && window.adminPanelChangeManager && window.adminPanelChangeManager.handleEscape(top)){
       return;
     }
-    if(top.id === 'memberPanel' && memberPanelChangeManager.handleEscape(top)){
+    if(top.id === 'memberPanel' && window.memberPanelChangeManager && window.memberPanelChangeManager.handleEscape(top)){
       return;
     }
     if(top.id === 'post-modal-container'){

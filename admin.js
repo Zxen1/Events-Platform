@@ -8,6 +8,9 @@ window.panelButtons = panelButtons;
 const panelStack = [];
 window.panelStack = panelStack;
 
+const panelScrollOverlayItems = new Set();
+window.panelScrollOverlayItems = panelScrollOverlayItems;
+
 (function(){
   "use strict";
 
@@ -17,6 +20,8 @@ window.panelStack = panelStack;
   // Filter date variables - must be declared early
   let dateStart = null;
   let dateEnd = null;
+  let expiredWasOn = false;
+  let spinning = false;
 
   // Categories UI
   const categoryControllers = {};
@@ -8952,6 +8957,12 @@ window.panelStack = panelStack;
           }else{
             cell.textContent=dayNum;
             const date=new Date(current.getFullYear(), current.getMonth(), dayNum);
+            const toISODate = window.toISODate || ((d) => {
+              const y = d.getFullYear();
+              const m = String(d.getMonth()+1).padStart(2,'0');
+              const day = String(d.getDate()).padStart(2,'0');
+              return `${y}-${m}-${day}`;
+            });
             cell.dataset.iso = toISODate(date);
             if(date < todayDate) cell.classList.add('past');
             else cell.classList.add('future');
@@ -14561,8 +14572,6 @@ function loadPanelState(m){
   return false;
 }
 
-const panelScrollOverlayItems = new Set();
-
 function updatePanelScrollOverlay(target){
   if(!target || !target.isConnected) return;
   const overlayWidth = target.offsetWidth - target.clientWidth;
@@ -14571,6 +14580,7 @@ function updatePanelScrollOverlay(target){
 }
 
 function registerPanelScrollOverlay(target){
+  const panelScrollOverlayItems = window.panelScrollOverlayItems || new Set();
   if(!target || panelScrollOverlayItems.has(target)) return;
   panelScrollOverlayItems.add(target);
   updatePanelScrollOverlay(target);
@@ -16328,3 +16338,5 @@ const adminPanelChangeManager = (()=>{
   };
 })();
 window.adminPanelModule = adminPanelChangeManager;
+window.adminPanelChangeManager = adminPanelChangeManager;
+window.memberPanelChangeManager = memberPanelChangeManager;
