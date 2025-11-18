@@ -16303,4 +16303,3 @@ const adminPanelChangeManager = (()=>{
   };
 })();
 window.adminPanelModule = adminPanelChangeManager;
-})();

@@ -2,16 +2,27 @@
   "use strict";
   
   // Wait for DOM and dependencies
+  let retryCount = 0;
+  const maxRetries = 200; // 20 seconds max wait
+  
   function init(){
     if(typeof window === "undefined" || typeof document === "undefined"){
-      setTimeout(init, 100);
+      if(retryCount < maxRetries){
+        retryCount++;
+        setTimeout(init, 100);
+        return;
+      }
       return;
     }
     
-    // Check for required dependencies
-    if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
-      console.warn("Member forms: Waiting for dependencies...");
-      setTimeout(init, 100);
+    // Check for required dependencies (including renderForm)
+    if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function" || typeof renderForm !== "function"){
+      if(retryCount < maxRetries){
+        retryCount++;
+        setTimeout(init, 100);
+        return;
+      }
+      console.error("Member forms: Dependencies not available after timeout");
       return;
     }
     
@@ -22,10 +33,17 @@
         ? window.__persistedFormbuilderSnapshotPromise
         : null;
     if(!snapshotPromise){
-      console.warn("Member forms: Waiting for formbuilder snapshot promise...");
-      setTimeout(init, 100);
+      if(retryCount < maxRetries){
+        retryCount++;
+        setTimeout(init, 100);
+        return;
+      }
+      console.error("Member forms: Formbuilder snapshot promise not available after timeout");
       return;
     }
+    
+    // Reset retry count on success
+    retryCount = 0;
     
     const memberCreateSection = document.getElementById('memberTab-create');
     // Mint HttpOnly token for connectors (no secrets in HTML)
