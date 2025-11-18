@@ -3817,6 +3817,7 @@ async function ensureMapboxCssFor(container) {
     const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
+    window.MULTI_POST_MARKER_ICON_ID = MULTI_POST_MARKER_ICON_ID;
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
       function resetBigMapCardTransforms(){
@@ -5012,6 +5013,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ close(); }catch(err){}
       });
     }
+    window.closeAllIconPickers = closeAllIconPickers;
     function closeFieldEditPanels({ exceptPanel = null, exceptButton = null } = {}){
       document.querySelectorAll('.field-edit-panel').forEach(panel => {
         if(panel === exceptPanel) return;
@@ -7963,6 +7965,7 @@ function closePanel(m){
     m.classList.remove('show');
     m.setAttribute('aria-hidden','true');
     localStorage.setItem(`panel-open-${m.id}`,'false');
+    const panelStack = window.panelStack || [];
     const idx = panelStack.indexOf(m);
     if(idx!==-1) panelStack.splice(idx,1);
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);

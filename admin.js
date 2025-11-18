@@ -5,6 +5,9 @@ const panelButtons = {
 };
 window.panelButtons = panelButtons;
 
+const panelStack = [];
+window.panelStack = panelStack;
+
 (function(){
   "use strict";
 
@@ -7780,6 +7783,7 @@ window.panelButtons = panelButtons;
       assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
       assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
       const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
+      const MULTI_POST_MARKER_ICON_ID = window.MULTI_POST_MARKER_ICON_ID || 'multi-post-icon';
       const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
       Object.keys(subcategoryMarkers).forEach(key => {
         if(key !== MULTI_POST_MARKER_ICON_ID){
@@ -12672,6 +12676,7 @@ function openPostModal(id){
       modal.appendChild(wrap);
       hookDetailActions(detail, p);
       container.classList.remove('hidden');
+      const panelStack = window.panelStack || [];
       if(!panelStack.includes(container)) panelStack.push(container);
       bringToTop(container);
       requestAnimationFrame(()=>{
@@ -12698,6 +12703,7 @@ function openPostModal(id){
       const container = document.getElementById('post-modal-container');
       if(!container) return;
       container.classList.add('hidden');
+      const panelStack = window.panelStack || [];
       const idx = panelStack.indexOf(container);
       if(idx!==-1) panelStack.splice(idx,1);
       const modal = container.querySelector('.post-modal');
@@ -14500,8 +14506,9 @@ function getViewportHeight(){
   }
   return Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0 ? __stableViewportHeight : 0;
 }
-const panelStack = [];
 function bringToTop(item){
+  const panelStack = window.panelStack || [];
+  if(!panelStack) return;
   const idx = panelStack.indexOf(item);
   if(idx!==-1) panelStack.splice(idx,1);
   panelStack.push(item);
@@ -14517,6 +14524,7 @@ function registerPopup(p){
   bringToTop(p);
   if(typeof p.on==='function'){
     p.on('close',()=>{
+      const panelStack = window.panelStack || [];
       const i = panelStack.indexOf(p);
       if(i!==-1) panelStack.splice(i,1);
     });
