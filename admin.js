@@ -1,6 +1,9 @@
 (function(){
   "use strict";
 
+  const $ = window.$ || ((sel, root=document) => root.querySelector(sel));
+  const $$ = window.$$ || ((sel, root=document) => Array.from(root.querySelectorAll(sel)));
+
   // Categories UI
   const categoryControllers = {};
     const allSubcategoryKeys = [];

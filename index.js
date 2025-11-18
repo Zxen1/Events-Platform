@@ -2787,6 +2787,17 @@ async function ensureMapboxCssFor(container) {
     }
   }
 
+  function loadHistory(){ 
+    try{ 
+      const historyStr = localStorage.getItem('openHistoryV2');
+      if(!historyStr) return [];
+      return JSON.parse(historyStr);
+    }catch(e){ 
+      console.error('Failed to load history:', e);
+      return [];
+    } 
+  }
+
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
@@ -3595,6 +3606,8 @@ async function ensureMapboxCssFor(container) {
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    window.$ = window.$ || $;
+    window.$$ = window.$$ || $$;
     const clamp = (n, a, b)=> Math.max(a, Math.min(b, n));
     const toRad = d => d * Math.PI / 180;
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
