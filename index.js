@@ -8126,7 +8126,7 @@ function handleDocInteract(e){
       closePanel(welcome);
     }
   }
-  const filterPanel = document.getElementById('filterPanel');
+  const filterPanel = window.filterPanel || document.getElementById('filterPanel');
   const fromPointerDown = !!e.__fromPointerDown;
   if(filterPanel && filterPanel.classList.contains('show')){
     const content = filterPanel.querySelector('.panel-content');
@@ -8153,7 +8153,7 @@ function handleDocInteract(e){
 document.addEventListener('click', handleDocInteract);
 document.addEventListener('pointerdown', (e) => {
   const target = e.target;
-  const filterPanel = document.getElementById('filterPanel');
+  const filterPanel = window.filterPanel || document.getElementById('filterPanel');
   const content = filterPanel ? filterPanel.querySelector('.panel-content') : null;
   pointerStartedInFilterContent = !!(filterPanel && filterPanel.classList.contains('show') && content && content.contains(target));
   requestAnimationFrame(() => handleDocInteract({ target, __fromPointerDown: true }));
@@ -8163,10 +8163,9 @@ document.addEventListener('pointerdown', (e) => {
 (function(){
   const memberBtn = document.getElementById('memberBtn');
   const adminBtn = document.getElementById('adminBtn');
-  const filterBtn = document.getElementById('filterBtn');
   const memberPanel = document.getElementById('memberPanel');
   const adminPanel = document.getElementById('adminPanel');
-  const filterPanel = document.getElementById('filterPanel');
+  const filterPanel = window.filterPanel || document.getElementById('filterPanel');
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
@@ -8180,7 +8179,6 @@ document.addEventListener('pointerdown', (e) => {
       togglePanel(adminPanel);
     });
   }
-  filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const panel = btn.closest('.panel');
@@ -8202,14 +8200,6 @@ document.addEventListener('pointerdown', (e) => {
     });
   });
 
-  document.querySelectorAll('#filterPanel .pin-panel').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const pressed = btn.getAttribute('aria-pressed')==='true';
-      btn.setAttribute('aria-pressed', pressed ? 'false' : 'true');
-      if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
-    });
-  });
 
   document.querySelectorAll('.panel .panel-header').forEach(header=>{
     header.addEventListener('mousedown', e=>{
@@ -8255,10 +8245,6 @@ document.addEventListener('pointerdown', (e) => {
     if(welcomeModal && !localStorage.getItem('welcome-seen')){
       openWelcome();
       localStorage.setItem('welcome-seen','true');
-    }
-    const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') === 'true';
-    if(filterPanel && shouldOpenFilter){
-      openPanel(filterPanel);
     }
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
