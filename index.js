@@ -3451,6 +3451,7 @@ async function ensureMapboxCssFor(container) {
           el.style.pointerEvents = 'auto';
         });
       }
+      window.updateLogoClickState = updateLogoClickState;
       updateLogoClickState();
 
       async function openWelcome(){
@@ -4899,6 +4900,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     function resetVenueAutofillState(field){
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
+    window.resetVenueAutofillState = resetVenueAutofillState;
 
     // Fields now come from backend via field_types table, no hardcoded defaults
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();

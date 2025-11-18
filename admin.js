@@ -22,6 +22,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
   let dateEnd = null;
   let expiredWasOn = false;
   let spinning = false;
+  let spinEnabled = false;
 
   // Categories UI
   const categoryControllers = {};
@@ -2141,6 +2142,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
               }
             }
             if(safeField.type !== 'venue-ticketing'){
+              const resetVenueAutofillState = window.resetVenueAutofillState || (() => {});
               resetVenueAutofillState(safeField);
             }
             return safeField;
@@ -11421,7 +11423,7 @@ if (!map.__pillHooksInstalled) {
       get spinLoadType(){ return spinLoadType; },
       set spinLoadType(v){ spinLoadType = v; updateSpinState(); },
       get spinLogoClick(){ return spinLogoClick; },
-      set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
+      set spinLogoClick(v){ spinLogoClick = v; if(typeof window.updateLogoClickState === 'function') window.updateLogoClickState(); },
       get spinZoomMax(){ return spinZoomMax; },
       set spinZoomMax(v){ spinZoomMax = v; },
       get spinSpeed(){ return spinSpeed; },
@@ -11429,7 +11431,7 @@ if (!map.__pillHooksInstalled) {
       startSpin,
       stopSpin,
       updateSpinState,
-      updateLogoClickState
+      updateLogoClickState: window.updateLogoClickState || (() => {})
     };
 
     // Map layers
