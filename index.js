@@ -2797,6 +2797,7 @@ async function ensureMapboxCssFor(container) {
       return [];
     } 
   }
+  window.loadHistory = loadHistory;
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -3502,6 +3503,7 @@ async function ensureMapboxCssFor(container) {
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = window.selection = window.selection || { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
+    window.viewHistory = viewHistory;
     let hoverPopup = null;
     let postSourceEventsBound = false;
     let touchMarker = null;
@@ -7252,6 +7254,7 @@ function makePosts(){
       }
       return ALL_POSTS_BY_ID instanceof Map ? (ALL_POSTS_BY_ID.get(normalizedId) || null) : null;
     }
+    window.getPostByIdAnywhere = getPostByIdAnywhere;
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
     const markerDataCache = {

@@ -2148,6 +2148,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
             return safeField;
           };
           const buildVenueSessionPreview = (previewField, baseId)=>{
+            const getVenueAutofillState = window.getVenueAutofillState || ((field, venue) => ({ slots: [] }));
             // CRITICAL: Clone options to prevent sharing state between form preview and member forms
             // Each instance needs its own independent copy of the options
             const clonedOptions = Array.isArray(previewField.options) 
@@ -9669,6 +9670,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         spinEnabled = false;
         localStorage.setItem('spinGlobe', 'false');
         stopSpin();
+        const getPostByIdAnywhere = window.getPostByIdAnywhere || (() => null);
         const p = getPostByIdAnywhere(id); if(!p) return;
         activePostId = id;
         selectedVenueKey = null;
@@ -9768,6 +9770,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
               }
               ex.replaceWith(existingCard);
             } else {
+              const getPostByIdAnywhere = window.getPostByIdAnywhere || (() => null);
               const prev = getPostByIdAnywhere(exId);
               if(prev){ ex.replaceWith(card(prev, fromHistory ? false : true)); } else { ex.remove(); }
             }
@@ -9890,9 +9893,9 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         await nextFrame();
 
         // Update history on open (keep newest-first)
-        viewHistory = viewHistory.filter(x=>x.id!==id);
-        viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
-        if(viewHistory.length>100) viewHistory.length=100;
+        window.viewHistory = (window.viewHistory || []).filter(x=>x.id!==id);
+        window.viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
+        if(window.viewHistory.length>100) window.viewHistory.length=100;
         saveHistory();
         if(!fromHistory){
           renderHistoryBoard();
@@ -10128,6 +10131,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         const container = openEl.closest('.post-board, #recentsBoard') || postsWideEl;
         const isHistory = container && container.id === 'recentsBoard';
         const id = openEl.dataset ? openEl.dataset.id : null;
+        const getPostByIdAnywhere = window.getPostByIdAnywhere || (() => null);
         const post = id ? getPostByIdAnywhere(id) : null;
         const detachedColumn = document.querySelector('.post-mode-boards > .post-body');
         if(detachedColumn){
@@ -12521,18 +12525,7 @@ if (!map.__pillHooksInstalled) {
     });
 
     // History board
-    function loadHistory(){ 
-      try{ 
-        const historyStr = localStorage.getItem('openHistoryV2');
-        if(!historyStr) return [];
-        return JSON.parse(historyStr);
-      }catch(e){ 
-        console.error('Failed to load history:', e);
-        // Don't return empty array - show error or return null
-        return null; // Or throw error
-      } 
-    }
-    function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
+    function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(window.viewHistory || [])); }
     function formatLastOpened(ts){
       if(!ts) return '';
       const diff = Date.now() - ts;
@@ -12647,10 +12640,11 @@ if (!map.__pillHooksInstalled) {
     function renderHistoryBoard(){
       if(!recentsBoard) return;
       recentsBoard.innerHTML='';
-      const validHistory = viewHistory.filter(v => getPostByIdAnywhere(v.id));
-      viewHistory = validHistory;
+      const getPostByIdAnywhere = window.getPostByIdAnywhere || (() => null);
+      const validHistory = (window.viewHistory || []).filter(v => getPostByIdAnywhere(v.id));
+      window.viewHistory = validHistory;
       saveHistory();
-      const items = viewHistory.slice(0,100);
+      const items = window.viewHistory.slice(0,100);
       for(const v of items){
         const p = getPostByIdAnywhere(v.id);
         if(!p) continue;
@@ -12683,6 +12677,7 @@ if (!map.__pillHooksInstalled) {
     renderHistoryBoard();
 
 function openPostModal(id){
+      const getPostByIdAnywhere = window.getPostByIdAnywhere || (() => null);
       const p = getPostByIdAnywhere(id);
       if(!p) return;
       activePostId = id;
@@ -12726,9 +12721,9 @@ function openPostModal(id){
           imgArea.style.top = headerEl ? headerEl.offsetHeight + 'px' : '0';
         }
       });
-      viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
-      if(viewHistory.length>100) viewHistory.length=100;
+      window.viewHistory = (window.viewHistory || []).filter(x=>x.id!==id);
+      window.viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
+      if(window.viewHistory.length>100) window.viewHistory.length=100;
       saveHistory(); renderHistoryBoard();
       location.hash = `/post/${p.slug}-${p.created}`;
     }
