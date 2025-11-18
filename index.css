@@ -1682,10 +1682,12 @@ button[aria-expanded="true"] .results-arrow{
 .slider-value-input::-webkit-inner-spin-button,
 .slider-value-input::-webkit-outer-spin-button{
   -webkit-appearance:none;
+  appearance:none;
   margin:0;
 }
 .slider-value-input{
   -moz-appearance:textfield;
+  appearance:textfield;
 }
 .save-changes:disabled,
 .discard-changes{
@@ -5091,10 +5093,12 @@ html, body { cursor: auto !important; }
             #tab-forms .fee-input::-webkit-inner-spin-button,
             #tab-forms .fee-input::-webkit-outer-spin-button{
               -webkit-appearance:none;
+              appearance:none;
               margin:0;
             }
             #tab-forms .fee-input{
               -moz-appearance:textfield;
+              appearance:textfield;
             }
             #tab-forms .subcategory-type-option{
               display:flex;
