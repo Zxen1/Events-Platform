@@ -3608,6 +3608,15 @@ async function ensureMapboxCssFor(container) {
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
     window.$ = window.$ || $;
     window.$$ = window.$$ || $$;
+    function assignMapLike(target, source){
+      if(!target || typeof target !== 'object') return;
+      Object.keys(target).forEach(key => { delete target[key]; });
+      if(source && typeof source === 'object'){
+        Object.keys(source).forEach(key => {
+          target[key] = source[key];
+        });
+      }
+    }
     const clamp = (n, a, b)=> Math.max(a, Math.min(b, n));
     const toRad = d => d * Math.PI / 180;
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
@@ -4783,6 +4792,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return list;
     }
+    window.normalizeVenueSessionOptions = normalizeVenueSessionOptions;
     function cloneVenueSessionTier(tier){
       const base = venueSessionCreateTier();
       if(tier && typeof tier === 'object'){

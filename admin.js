@@ -7715,6 +7715,7 @@
       }
     }
     function captureFormbuilderSnapshot(){
+      const subcategoryMarkers = window.subcategoryMarkers || {};
       return {
         categories: cloneCategoryList(categories),
         categoryIcons: cloneMapLike(categoryIcons),
@@ -7765,6 +7766,7 @@
       assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
       assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
       assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
+      const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
       const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
       Object.keys(subcategoryMarkers).forEach(key => {
         if(key !== MULTI_POST_MARKER_ICON_ID){
@@ -11616,6 +11618,7 @@ if (!map.__pillHooksInstalled) {
         existing.setData(postsData);
         existing.__markerSignature = signature;
       }
+      const subcategoryMarkers = window.subcategoryMarkers || {};
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
@@ -13796,6 +13799,7 @@ function openPostModal(id){
           const selectedLoc = selectedEntry.location;
           const center = [selectedLoc.lng, selectedLoc.lat];
           const subId = slugify(p.subcategory);
+          const subcategoryMarkers = window.subcategoryMarkers || {};
           const markerUrl = subcategoryMarkers[subId];
 
           const assignDetailRef = ()=>{
