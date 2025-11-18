@@ -3061,6 +3061,7 @@ async function ensureMapboxCssFor(container) {
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
+      window.MARKER_ZOOM_THRESHOLD = MARKER_ZOOM_THRESHOLD;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
@@ -4328,6 +4329,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return '';
     }
+    window.resolveFieldTypeDisplayName = resolveFieldTypeDisplayName;
 
     function normalizeFieldTypeOptions(options){
       const list = Array.isArray(options)

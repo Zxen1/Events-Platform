@@ -2077,6 +2077,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
             if(!resolvedFieldTypeName && fieldTypeKey){
               const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
               if(matchingFieldType){
+                const resolveFieldTypeDisplayName = window.resolveFieldTypeDisplayName || ((opt) => opt?.label || opt?.name || opt?.value || '');
                 resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
               }
             }
@@ -9154,7 +9155,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       }
 
       window.updatePostsButtonState = function(currentZoom){
-        const threshold = MARKER_ZOOM_THRESHOLD;
+        const threshold = window.MARKER_ZOOM_THRESHOLD || 8;
         let zoomValue = Number.isFinite(currentZoom) ? currentZoom : null;
         if(!Number.isFinite(zoomValue) && map && typeof map.getZoom === 'function'){
           try{ zoomValue = map.getZoom(); }catch(err){ zoomValue = null; }
