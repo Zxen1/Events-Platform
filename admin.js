@@ -4,6 +4,12 @@
   const $ = window.$ || ((sel, root=document) => root.querySelector(sel));
   const $$ = window.$$ || ((sel, root=document) => Array.from(root.querySelectorAll(sel)));
 
+  const panelButtons = {
+    filterPanel: 'filterBtn',
+    memberPanel: 'memberBtn',
+    adminPanel: 'adminBtn'
+  };
+
   // Categories UI
   const categoryControllers = {};
     const allSubcategoryKeys = [];
@@ -7731,8 +7737,9 @@
     let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
+      const initialFormbuilderSnapshot = window.initialFormbuilderSnapshot;
       const existingFieldTypes = (() => {
-        if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
+        if(initialFormbuilderSnapshot && Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
           return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
         }
         if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
@@ -7845,6 +7852,7 @@
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
       const totalSubs = allSubcategoryKeys.length;
+      const selection = window.selection = window.selection || { cats: new Set(), subs: new Set() };
       const activeSubs = selection.subs instanceof Set ? selection.subs.size : 0;
       const anySubOff = totalSubs > 0 && activeSubs < totalSubs;
       resetCategoriesBtn.classList.toggle('active', anyCategoryOff || anySubOff);
@@ -8304,6 +8312,7 @@
       catsEl.textContent = '';
       Object.keys(categoryControllers).forEach(key=>{ delete categoryControllers[key]; });
       allSubcategoryKeys.length = 0;
+      const selection = window.selection = window.selection || { cats: new Set(), subs: new Set() };
       selection.cats = new Set();
       selection.subs = new Set();
       const seedSubs = true;
@@ -14537,11 +14546,6 @@ function loadPanelState(m){
   }
   return false;
 }
-const panelButtons = {
-  filterPanel: 'filterBtn',
-  memberPanel: 'memberBtn',
-  adminPanel: 'adminBtn'
-};
 
 const panelScrollOverlayItems = new Set();
 

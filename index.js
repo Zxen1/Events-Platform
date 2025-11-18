@@ -3496,7 +3496,7 @@ async function ensureMapboxCssFor(container) {
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
     let filtersInitialized = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
-    let selection = { cats: new Set(), subs: new Set() };
+    let selection = window.selection = window.selection || { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null;
     let postSourceEventsBound = false;
@@ -3622,6 +3622,28 @@ async function ensureMapboxCssFor(container) {
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
+    function getViewportHeight(){
+      const innerHeight = window.innerHeight || 0;
+      const clientHeight = document.documentElement ? document.documentElement.clientHeight : 0;
+      if(window.visualViewport){
+        const viewport = window.visualViewport;
+        const viewportHeight = viewport.height || 0;
+        const offsetTop = typeof viewport.offsetTop === 'number' ? viewport.offsetTop : 0;
+        if(offsetTop > 0){
+          const __stableViewportHeight = window.__stableViewportHeight || 0;
+          if(Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0){
+            return __stableViewportHeight;
+          }
+          return Math.max(innerHeight, clientHeight, viewportHeight, 0);
+        }
+        const candidate = Math.max(innerHeight, clientHeight, viewportHeight, 0);
+        if(Number.isFinite(candidate) && candidate > 0){
+          return candidate;
+        }
+      }
+      return Math.max(innerHeight, clientHeight, 0);
+    }
+    window.getViewportHeight = getViewportHeight;
 
     // Ensure result lists occupy available space between the header and footer
     function adjustListHeight(){
@@ -4568,7 +4590,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       // This should only be used if backend snapshot is not yet loaded
       return normalizeFormbuilderSnapshot(null);
     };
-    const initialFormbuilderSnapshot = getInitialSnapshot();
+    const initialFormbuilderSnapshot = window.initialFormbuilderSnapshot = getInitialSnapshot();
     function sanitizeFieldTypeOptions(options){
       const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
       const sanitized = [];
