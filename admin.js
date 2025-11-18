@@ -1593,6 +1593,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         const previewImg = document.createElement('img');
         previewImg.alt = `${c.name} icon preview`;
         preview.append(previewLabel, previewImg);
+        const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
         const normalizedCategoryIconPath = applyNormalizeIconPath(initialCategoryIconSrc);
         if(normalizedCategoryIconPath){
           previewImg.src = normalizedCategoryIconPath;
@@ -1742,6 +1743,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         let currentCategoryName = c.name || 'Category';
         const getCategoryDisplayName = ()=> getCategoryNameValue() || lastCategoryName || 'Category';
         const updateCategoryIconDisplay = (src)=>{
+          const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
           const displayName = getCategoryDisplayName();
           categoryLogo.innerHTML = '';
           const normalizedSrc = applyNormalizeIconPath(src);
@@ -1901,6 +1903,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
             }
           }
           if(initialSubIconPath){
+            const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
             const img = document.createElement('img');
             img.src = applyNormalizeIconPath(initialSubIconPath);
             img.alt = '';
@@ -6978,6 +6981,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           const getSubNameValue = ()=> subNameInput.value.trim();
           const getSubDisplayName = ()=> getSubNameValue() || lastSubName || defaultSubName;
             const updateSubIconDisplay = (src)=>{
+              const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
               const displayName = getSubDisplayName();
               subLogo.innerHTML = '';
               const normalizedSrc = applyNormalizeIconPath(src);
@@ -7440,6 +7444,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           subMenu.append(subContent);
 
           applySubNameChange();
+      const applyNormalizeIconPath = window.applyNormalizeIconPath || ((path) => path);
       const initialIconSource = applyNormalizeIconPath(initialSubIconPath) || initialSubIconPath || '';
           if(initialIconSource){
             updateSubIconDisplay(initialIconSource);
@@ -9171,7 +9176,9 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         }
       };
 
-      updatePostsButtonState(startZoom);
+      if(typeof window.updatePostsButtonState === 'function'){
+        window.updatePostsButtonState(startZoom);
+      }
 
       // Add click handler for disabled posts button
       if(postsButton){
