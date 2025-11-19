@@ -9403,7 +9403,10 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
             map.resize();
-            updatePostPanel();
+            const updatePostPanelFn = window.updatePostPanel || updatePostPanel;
+            if(typeof updatePostPanelFn === 'function'){
+              updatePostPanelFn();
+            }
             applyFilters();
           }
         }, 0);
@@ -11360,11 +11363,17 @@ if (!map.__pillHooksInstalled) {
         if(spinEnabled){
           startSpin(true);
         }
-        updatePostPanel();
+        const updatePostPanelFn = window.updatePostPanel || updatePostPanel;
+        if(typeof updatePostPanelFn === 'function'){
+          updatePostPanelFn();
+        }
         applyFilters();
         const getZoomFromEventFn = window.getZoomFromEvent || getZoomFromEvent;
         const getZoom = () => typeof getZoomFromEventFn === 'function' ? getZoomFromEventFn() : (map ? map.getZoom() : 0);
-        updateZoomState(getZoom());
+        const updateZoomStateFn = window.updateZoomState || updateZoomState;
+        if(typeof updateZoomStateFn === 'function'){
+          updateZoomStateFn(getZoom());
+        }
         if(!markersLoaded){
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoom();
           if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
@@ -11373,7 +11382,10 @@ if (!map.__pillHooksInstalled) {
             window.__markersLoaded = true;
           }
         }
-        checkLoadPosts();
+        const checkLoadPostsFn = window.checkLoadPosts || checkLoadPosts;
+        if(typeof checkLoadPostsFn === 'function'){
+          checkLoadPostsFn();
+        }
       });
 
       map.on('style.load', ()=>{
@@ -11381,7 +11393,10 @@ if (!map.__pillHooksInstalled) {
         if(typeof setupSeedLayersFn === 'function'){
           setupSeedLayersFn(map);
         }
-        updateLayerVisibility(lastKnownZoom);
+        const updateLayerVisibilityFn = window.updateLayerVisibility || updateLayerVisibility;
+        if(typeof updateLayerVisibilityFn === 'function'){
+          updateLayerVisibilityFn(lastKnownZoom);
+        }
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -11392,15 +11407,23 @@ if (!map.__pillHooksInstalled) {
           if(typeof scheduleCheckLoadPostsFn === 'function'){
             scheduleCheckLoadPostsFn({ zoom: lastKnownZoom, target: map });
           }
-          updatePostPanel();
+          const updatePostPanelFn = window.updatePostPanel || updatePostPanel;
+          if(typeof updatePostPanelFn === 'function'){
+            updatePostPanelFn();
+          }
           updateFilterCounts();
           refreshMarkers();
-          refreshInViewMarkerLabelComposites(map);
+          if(typeof refreshInViewMarkerLabelComposites === 'function'){
+            refreshInViewMarkerLabelComposites(map);
+          }
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
           const bearing = map.getBearing();
-          updateBalloonSourceForZoom(zoom);
+          const updateBalloonSourceForZoomFn = window.updateBalloonSourceForZoom;
+          if(typeof updateBalloonSourceForZoomFn === 'function'){
+            updateBalloonSourceForZoomFn(zoom);
+          }
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         };
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
@@ -14839,6 +14862,16 @@ function openPanel(m){
   
   // Initialize admin panel spin controls with current values
   if(m.id === 'adminPanel'){
+    // Ensure formbuilder is rendered if Forms tab is active
+    setTimeout(() => {
+      const formsTab = document.querySelector('#adminPanel .tab-btn[data-tab="forms"]');
+      const formsPanel = document.getElementById('tab-forms');
+      if(formsTab && formsTab.getAttribute('aria-selected') === 'true' && formsPanel && formsPanel.classList.contains('active')){
+        if(typeof window.renderFormbuilderCats === 'function'){
+          window.renderFormbuilderCats();
+        }
+      }
+    }, 100);
     const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
     const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
     const spinLogoClickCheckbox = document.getElementById('spinLogoClick');

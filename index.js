@@ -1832,6 +1832,8 @@ async function ensureMapboxCssFor(container) {
     });
     lastInViewMarkerLabelSpriteIds = nextIds;
   }
+  // Expose on window for admin.js access
+  window.refreshInViewMarkerLabelComposites = refreshInViewMarkerLabelComposites;
 
   function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
     if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
@@ -3277,6 +3279,8 @@ async function ensureMapboxCssFor(container) {
             lastBalloonBucketKey = bucketKey;
           }catch(err){ console.error(err); }
         }
+        // Expose on window for admin.js access (after function is fully defined)
+        window.updateBalloonSourceForZoom = updateBalloonSourceForZoom;
 
         function resetBalloonSourceState(){
           lastBalloonBucketKey = null;
@@ -7790,6 +7794,8 @@ function makePosts(){
         updateBalloonSourceForZoom(zoomValue);
       }
     }
+    // Expose on window for admin.js access (after function is fully defined)
+    window.updateLayerVisibility = updateLayerVisibility;
 
     function updateZoomState(zoom){
       if(Number.isFinite(zoom)){
@@ -7818,6 +7824,8 @@ function makePosts(){
         }
       }
     }
+    // Expose on window for admin.js access (after function is fully defined)
+    window.updateZoomState = updateZoomState;
 
     function scheduleCheckLoadPosts(event){
       // Expose on window for admin.js access
@@ -7883,6 +7891,8 @@ function makePosts(){
       }
       loadPosts(bounds);
     }
+    // Expose on window for admin.js access (after function is fully defined)
+    window.checkLoadPosts = checkLoadPosts;
 
     const resultsEl = $('#results');
     const postsWideEl = $('.post-board');
