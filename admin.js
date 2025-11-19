@@ -6996,11 +6996,13 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                 subLogo.appendChild(img);
                 subLogo.classList.add('has-icon');
                 subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" alt="">`;
+                const writeIconPath = window.writeIconPath || (() => {});
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, normalizedSrc);
               } else {
                 subLogo.textContent = displayName.charAt(0) || '';
                 subLogo.classList.remove('has-icon');
                 delete subcategoryIcons[currentSubName];
+                const writeIconPath = window.writeIconPath || (() => {});
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, '');
               }
               if(normalizedSrc){
@@ -14478,6 +14480,7 @@ function openPostModal(id){
     }
 
     // applyFilters();
+    const mode = window.mode || 'map';
     setMode(mode);
     if(historyWasActive && mode === 'posts'){
       document.body.classList.add('show-history');
@@ -15054,6 +15057,7 @@ function openPanel(m){
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   m.removeAttribute('inert');
+  window.openPanel = openPanel;
   if(m.id === 'welcome-modal'){
     const mc = document.querySelector('.map-controls-map');
     if(mc) mc.style.display = 'none';

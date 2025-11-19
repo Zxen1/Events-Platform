@@ -2803,6 +2803,7 @@ async function ensureMapboxCssFor(container) {
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = localStorage.getItem('mode') || 'map';
+    window.mode = mode;
     const DEFAULT_SPIN_SPEED = 0.3;
     // Welcome message will be loaded from DB
 
@@ -4993,6 +4994,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         map[nameKey] = path;
       }
     }
+    window.writeIconPath = writeIconPath;
     function renameIconNameKey(map, oldName, newName){
       const oldKey = toIconNameKey(oldName);
       const newKey = toIconNameKey(newName);
@@ -8308,6 +8310,7 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
       if(localStorage.getItem(`panel-open-${m.id}`) === 'true'){
+        const openPanel = window.openPanel || (() => {});
         openPanel(m);
       }
     });
