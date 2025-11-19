@@ -8349,6 +8349,11 @@ document.addEventListener('pointerdown', (e) => {
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
+      
+      // Initialize formbuilder when Forms tab is opened
+      if(btn.dataset.tab === 'forms' && typeof window.renderFormbuilderCats === 'function'){
+        window.renderFormbuilderCats();
+      }
     });
   });
 
@@ -8369,6 +8374,33 @@ document.addEventListener('pointerdown', (e) => {
       }
     });
   });
+
+  // Initialize map on page load
+  (function initializeMapOnLoad(){
+    const initMapMode = () => {
+      const setModeFn = window.setMode;
+      if(typeof setModeFn === 'function'){
+        const currentMode = localStorage.getItem('mode') || 'map';
+        // Only call setMode if we're in map mode to trigger initialization
+        if(currentMode === 'map' && !document.body.classList.contains('mode-map')){
+          setModeFn('map', true); // skipFilters=true to avoid double initialization
+        } else if(currentMode === 'map'){
+          // Already in map mode, but ensure map initializes
+          const startMainMapInit = window.startMainMapInit;
+          if(typeof startMainMapInit === 'function'){
+            startMainMapInit();
+          }
+        }
+      }
+    };
+    
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', initMapMode);
+    } else {
+      // DOM already ready, wait a bit for setMode to be defined
+      setTimeout(initMapMode, 100);
+    }
+  })();
 
   const adminPaypalClientId = document.getElementById('adminPaypalClientId');
   const adminPaypalClientSecret = document.getElementById('adminPaypalClientSecret');

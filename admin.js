@@ -8556,6 +8556,8 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       renderFilterCategories();
       renderFormbuilderCats();
       updateFormbuilderSnapshot();
+      // Expose renderFormbuilderCats on window for external calls
+      window.renderFormbuilderCats = renderFormbuilderCats;
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
         refreshFormbuilderSubcategoryLogos();
@@ -10576,6 +10578,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       });
       return mainMapInitPromise;
     }
+    window.startMainMapInit = startMainMapInit;
 
     function queueMainMapInitAfterInteraction(){
       if(mainMapInitPromise || mapInitTriggered){
