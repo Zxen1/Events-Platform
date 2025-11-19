@@ -10236,6 +10236,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
 
       function setMode(m, skipFilters = false){
         mode = m;
+        window.mode = m;
         document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
         document.body.classList.add('mode-'+m);
         if(m==='map'){
@@ -14480,7 +14481,8 @@ function openPostModal(id){
     }
 
     // applyFilters();
-    const mode = window.mode || 'map';
+    let mode = window.mode || 'map';
+    window.mode = mode;
     setMode(mode);
     if(historyWasActive && mode === 'posts'){
       document.body.classList.add('show-history');
