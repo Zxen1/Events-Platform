@@ -2332,7 +2332,7 @@
           subcategoryMenu.hidden = false;
           subcategoryMenuBtn.setAttribute('aria-expanded', 'true');
           const outsideHandler = (ev) => {
-            if(!ev.target.closest(subcategoryDropdown)){
+            if(!subcategoryDropdown.contains(ev.target)){
               subcategoryMenu.hidden = true;
               subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
               document.removeEventListener('click', outsideHandler);
