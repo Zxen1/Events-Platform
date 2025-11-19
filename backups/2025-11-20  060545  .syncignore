@@ -1,0 +1,20 @@
+# ======================================================
+# ⚙️  .syncignore — Excluded from 2-Way Mirror
+# ======================================================
+# These files and folders stay on the server but do not sync
+# across GitHub ↔ cPanel. Hidden files and folders are auto-excluded.
+# ======================================================
+
+# ⚫ Hidden files and folders
+.*
+
+# 🔒 Server configuration
+.htaccess
+deploy.php
+
+# 🧾 Logs
+error_log
+
+# ======================================================
+# End of exclusions
+# ======================================================
