@@ -9128,9 +9128,17 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
-      const recentsButton = $('#recents-button');
-      const postsButton = $('#posts-button');
-      const mapButton = $('#map-button');
+      let recentsButton = $('#recents-button');
+      let postsButton = $('#posts-button');
+      let mapButton = $('#map-button');
+      
+      // Function to ensure mode toggle buttons are initialized
+      function ensureModeToggleButtons() {
+        if (!recentsButton) recentsButton = $('#recents-button');
+        if (!postsButton) postsButton = $('#posts-button');
+        if (!mapButton) mapButton = $('#map-button');
+        return recentsButton && postsButton && mapButton;
+      }
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
       let userClosedPostBoard = false;
@@ -9398,60 +9406,80 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           }
         }, 0);
 
-      recentsButton && recentsButton.addEventListener('click', ()=>{
-        const isPostsMode = document.body.classList.contains('mode-posts');
-        const historyActive = document.body.classList.contains('show-history');
-        if(isPostsMode && historyActive){
-          userClosedPostBoard = true;
-          setModeFromUser('map');
-          return;
-        }
-        setMode('posts');
-        document.body.classList.add('show-history');
-        renderHistoryBoard();
-        adjustBoards();
-        setTimeout(()=>{
-          if(map && typeof map.resize === 'function'){
-            map.resize();
-            updatePostPanel();
+      // Function to attach mode toggle button event listeners
+      let modeToggleListenersAttached = false;
+      function attachModeToggleListeners() {
+        if (modeToggleListenersAttached) return;
+        if (!ensureModeToggleButtons()) return;
+        modeToggleListenersAttached = true;
+        
+        recentsButton.addEventListener('click', ()=>{
+          const isPostsMode = document.body.classList.contains('mode-posts');
+          const historyActive = document.body.classList.contains('show-history');
+          if(isPostsMode && historyActive){
+            userClosedPostBoard = true;
+            const setModeFromUserFn = window.setModeFromUser || setModeFromUser;
+            if(typeof setModeFromUserFn === 'function') setModeFromUserFn('map');
+            return;
           }
-        }, 300);
-        updateModeToggle();
-      });
-
-      postsButton && postsButton.addEventListener('click', ()=>{
-        const historyActive = document.body.classList.contains('show-history');
-        const isPostsMode = document.body.classList.contains('mode-posts');
-        if(isPostsMode && !historyActive){
-          userClosedPostBoard = true;
-          setModeFromUser('map');
-          return;
-        }
-        document.body.classList.remove('show-history');
-        if(!isPostsMode || historyActive){
-          setMode('posts');
+          const setModeFn = window.setMode || setMode;
+          if(typeof setModeFn === 'function') setModeFn('posts');
+          document.body.classList.add('show-history');
+          if(typeof renderHistoryBoard === 'function') renderHistoryBoard();
+          if(typeof adjustBoards === 'function') adjustBoards();
           setTimeout(()=>{
             if(map && typeof map.resize === 'function'){
               map.resize();
-              updatePostPanel();
+              if(typeof updatePostPanel === 'function') updatePostPanel();
             }
-          }, 0);
-        } else {
-          updateModeToggle();
-        }
-      });
+          }, 300);
+          if(typeof updateModeToggle === 'function') updateModeToggle();
+        });
 
-      mapButton && mapButton.addEventListener('click', ()=>{
-        const isMapMode = document.body.classList.contains('mode-map');
-        if(!isMapMode){
-          userClosedPostBoard = true;
-          setModeFromUser('map');
-        } else if(document.body.classList.contains('show-history')){
+        postsButton.addEventListener('click', ()=>{
+          const historyActive = document.body.classList.contains('show-history');
+          const isPostsMode = document.body.classList.contains('mode-posts');
+          if(isPostsMode && !historyActive){
+            userClosedPostBoard = true;
+            const setModeFromUserFn = window.setModeFromUser || setModeFromUser;
+            if(typeof setModeFromUserFn === 'function') setModeFromUserFn('map');
+            return;
+          }
           document.body.classList.remove('show-history');
-          adjustBoards();
-          updateModeToggle();
-        }
-      });
+          if(!isPostsMode || historyActive){
+            const setModeFn = window.setMode || setMode;
+            if(typeof setModeFn === 'function') setModeFn('posts');
+            setTimeout(()=>{
+              if(map && typeof map.resize === 'function'){
+                map.resize();
+                if(typeof updatePostPanel === 'function') updatePostPanel();
+              }
+            }, 0);
+          } else {
+            if(typeof updateModeToggle === 'function') updateModeToggle();
+          }
+        });
+
+        mapButton.addEventListener('click', ()=>{
+          const isMapMode = document.body.classList.contains('mode-map');
+          if(!isMapMode){
+            userClosedPostBoard = true;
+            const setModeFromUserFn = window.setModeFromUser || setModeFromUser;
+            if(typeof setModeFromUserFn === 'function') setModeFromUserFn('map');
+          } else if(document.body.classList.contains('show-history')){
+            document.body.classList.remove('show-history');
+            if(typeof adjustBoards === 'function') adjustBoards();
+            if(typeof updateModeToggle === 'function') updateModeToggle();
+          }
+        });
+      }
+      
+      // Attach listeners immediately if DOM is ready, otherwise wait
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachModeToggleListeners);
+      } else {
+        attachModeToggleListeners();
+      }
 
     function buildDetail(p, existingCard = null, isRecentsBoard = false){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
@@ -10291,6 +10319,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           modeChangeWasUserInitiated = previous;
         }
       }
+      window.setModeFromUser = setModeFromUser;
 
     // Mapbox
     let mapboxBundlePromise = null;
