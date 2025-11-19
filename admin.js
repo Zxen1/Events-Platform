@@ -14542,6 +14542,7 @@ function openPostModal(id){
       updateFilterCounts();
       refreshMarkers(render);
     }
+    window.applyFilters = applyFilters;
 
     function showNextAd(){
       if(!adPanel || !adPosts.length) return;
@@ -14606,6 +14607,7 @@ function openPostModal(id){
         adPanel.__adListenerBound = true;
       }
     }
+    window.initAdBoard = initAdBoard;
 
     // applyFilters();
     let mode = window.mode || 'map';

@@ -7741,7 +7741,10 @@ function makePosts(){
       }
       const key = boundsToKey(normalized);
       if(postsLoaded && lastLoadedBoundsKey === key){
-        applyFilters();
+        const applyFiltersFn = window.applyFilters;
+        if(typeof applyFiltersFn === 'function'){
+          applyFiltersFn();
+        }
         return;
       }
       const cache = getAllPostsCache();
@@ -7755,9 +7758,20 @@ function makePosts(){
       rebuildVenueIndex();
       invalidateMarkerDataCache();
       resetBalloonSourceState();
-      if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
-      initAdBoard();
-      applyFilters();
+      if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ 
+        const addPostSourceFn = window.addPostSource;
+        if(typeof addPostSourceFn === 'function'){
+          addPostSourceFn();
+        }
+      }
+      const initAdBoardFn = window.initAdBoard;
+      if(typeof initAdBoardFn === 'function'){
+        initAdBoardFn();
+      }
+      const applyFiltersFn = window.applyFilters;
+      if(typeof applyFiltersFn === 'function'){
+        applyFiltersFn();
+      }
       updateLayerVisibility(lastKnownZoom);
     }
 
