@@ -303,7 +303,7 @@ function renderForm(options) {
           optionsMenu.hidden = false;
           menuBtn.setAttribute('aria-expanded', 'true');
           const outsideHandler = (ev) => {
-            if (!ev.target.closest(dropdownWrapper)) {
+            if (dropdownWrapper && !dropdownWrapper.contains(ev.target)) {
               optionsMenu.hidden = true;
               menuBtn.setAttribute('aria-expanded', 'false');
               document.removeEventListener('click', outsideHandler);
@@ -2801,6 +2801,7 @@ async function ensureMapboxCssFor(container) {
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
+    window.MAPBOX_TOKEN = MAPBOX_TOKEN;
 
     let mode = localStorage.getItem('mode') || 'map';
     window.mode = mode;
@@ -3758,6 +3759,7 @@ async function ensureMapboxCssFor(container) {
     window.updateLayoutVars = updateLayoutVars;
 
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
+    window.updatePostPanel = updatePostPanel;
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
     let listLocked = false;

@@ -1065,7 +1065,7 @@
             optionsMenu.hidden = false;
             menuBtn.setAttribute('aria-expanded', 'true');
             const outsideHandler = (ev) => {
-              if(!ev.target.closest(dropdownWrapper)){
+              if(dropdownWrapper && !dropdownWrapper.contains(ev.target)){
                 optionsMenu.hidden = true;
                 menuBtn.setAttribute('aria-expanded', 'false');
                 document.removeEventListener('click', outsideHandler);
@@ -2454,7 +2454,7 @@
           categoryMenu.hidden = false;
           categoryMenuBtn.setAttribute('aria-expanded', 'true');
           const outsideHandler = (ev) => {
-            if(!ev.target.closest(categoryDropdown)){
+            if(categoryDropdown && !categoryDropdown.contains(ev.target)){
               categoryMenu.hidden = true;
               categoryMenuBtn.setAttribute('aria-expanded', 'false');
               document.removeEventListener('click', outsideHandler);

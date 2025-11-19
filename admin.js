@@ -23,6 +23,8 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
   let expiredWasOn = false;
   let spinning = false;
   let spinEnabled = false;
+  let spinLoadStart = false;
+  let spinLoadType = 'everyone';
 
   // Categories UI
   const categoryControllers = {};
@@ -10265,6 +10267,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           if(typeof map.resize === 'function'){
             map.resize();
           }
+          const updatePostPanel = window.updatePostPanel || (() => {});
           updatePostPanel();
         }
         if(m==='posts'){
@@ -10958,6 +10961,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         await ensureMapboxCssFor(document.body);
       }catch(err){}
       // Validate Mapbox token before initialization
+      const MAPBOX_TOKEN = window.MAPBOX_TOKEN || '';
       if(!MAPBOX_TOKEN || typeof MAPBOX_TOKEN !== 'string' || MAPBOX_TOKEN.trim() === ''){
         console.error('Mapbox token is missing or invalid');
         return;
