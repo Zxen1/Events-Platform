@@ -3085,6 +3085,7 @@ async function ensureMapboxCssFor(container) {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      window.MARKER_PRELOAD_ZOOM = MARKER_PRELOAD_ZOOM;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',

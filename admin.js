@@ -25,6 +25,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
   let spinEnabled = false;
   let spinLoadStart = false;
   let spinLoadType = 'everyone';
+  let spinLogoClick = true;
   let historyWasActive = localStorage.getItem('historyActive') === 'true';
   let map = null;
   let ensureMapIcon = null;
@@ -11387,7 +11388,8 @@ if (!map.__pillHooksInstalled) {
         if(!markersLoadedVal){
           const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : getZoom();
           const zoomLevel = Number.isFinite(lastKnownZoomVal) ? lastKnownZoomVal : getZoom();
-          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
+          const MARKER_PRELOAD_ZOOM_VAL = window.MARKER_PRELOAD_ZOOM !== undefined ? window.MARKER_PRELOAD_ZOOM : 7.8;
+          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM_VAL){
             const loadPostMarkersFn = window.loadPostMarkers || loadPostMarkers;
             if(typeof loadPostMarkersFn === 'function'){
               try{ loadPostMarkersFn(); }catch(err){ console.error(err); }
@@ -11473,7 +11475,13 @@ if (!map.__pillHooksInstalled) {
           return;
         }
         const c = map.getCenter();
-        map.setCenter([c.lng + spinSpeed, c.lat]);
+        if(c && Number.isFinite(c.lng) && Number.isFinite(c.lat)){
+          map.setCenter([c.lng + spinSpeed, c.lat]);
+        } else {
+          // Center is invalid, stop spinning
+          stopSpin();
+          return;
+        }
         requestAnimationFrame(step);
       }
       if(fromCurrent){
