@@ -11325,7 +11325,10 @@ if (!map.__pillHooksInstalled) {
         }
         updateZoomState(zoomValue);
         if(!spinning){
-          scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
+          const scheduleCheckLoadPostsFn = window.scheduleCheckLoadPosts || scheduleCheckLoadPosts;
+          if(typeof scheduleCheckLoadPostsFn === 'function'){
+            scheduleCheckLoadPostsFn({ zoom: zoomValue, target: map });
+          }
         }
       });
       map.on('zoomend', ()=>{
@@ -11334,7 +11337,8 @@ if (!map.__pillHooksInstalled) {
         if(!map || typeof map.getZoom !== 'function') return;
         let currentZoom = NaN;
         try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
-        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
+        const MARKER_PRELOAD_ZOOM_VAL = window.MARKER_PRELOAD_ZOOM !== undefined ? window.MARKER_PRELOAD_ZOOM : 7.8;
+        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM_VAL){
           return;
         }
         const loadPostMarkersFn = window.loadPostMarkers || loadPostMarkers;
@@ -11773,7 +11777,8 @@ if (!map.__pillHooksInstalled) {
       }
       addingPostSource = true;
       const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
-      if(map && Number.isFinite(lastKnownZoomVal) && lastKnownZoomVal >= MARKER_SPRITE_ZOOM){
+      const MARKER_SPRITE_ZOOM_VAL = window.MARKER_SPRITE_ZOOM !== undefined ? window.MARKER_SPRITE_ZOOM : 12;
+      if(map && Number.isFinite(lastKnownZoomVal) && lastKnownZoomVal >= MARKER_SPRITE_ZOOM_VAL){
         map.__retainAllMarkerSprites = true;
       }
       try{
