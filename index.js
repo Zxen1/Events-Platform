@@ -5225,6 +5225,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
       return addIcon;
     }
+    window.attachIconLoader = attachIconLoader;
 
     const venueKey = (lng, lat) => toVenueCoordKey(lng, lat);
 
@@ -5809,6 +5810,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
+  window.MAPBOX_VENUE_ENDPOINT = MAPBOX_VENUE_ENDPOINT;
   const MAPBOX_VENUE_CACHE_LIMIT = 40;
   const MAPBOX_VENUE_MIN_QUERY = 2;
   const mapboxVenueCache = new Map();

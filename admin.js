@@ -4017,7 +4017,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                     mapboxgl: window.mapboxgl,
                     marker: false,
                     placeholder: addressPlaceholder,
-                    geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+                    geocodingUrl: window.MAPBOX_VENUE_ENDPOINT,
                     // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
                     types: 'address,poi',
                     reverseGeocode: true,
@@ -6516,7 +6516,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                     mapboxgl: window.mapboxgl,
                     marker: false,
                     placeholder: placeholderValue,
-                    geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+                    geocodingUrl: window.MAPBOX_VENUE_ENDPOINT,
                     types: 'address,poi',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
@@ -11092,7 +11092,7 @@ if (!map.__pillHooksInstalled) {
             patchMapboxStyleArtifacts(map);
           }
         });
-        ensureMapIcon = attachIconLoader(map);
+        ensureMapIcon = window.attachIconLoader(map);
         const pendingStyleImageRequests = new Map();
         const handleStyleImageMissing = (evt) => {
           const imageId = evt && evt.id;
