@@ -11783,7 +11783,7 @@ if (!map.__pillHooksInstalled) {
       }
       try{
       const markerList = window.filtersInitialized && Array.isArray(window.filtered) ? window.filtered : window.posts;
-      const collections = getMarkerCollections(markerList);
+      const collections = window.getMarkerCollections(markerList);
       const { postsData, signature, featureIndex } = collections;
       markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
       const featureCount = Array.isArray(postsData.features) ? postsData.features.length : 0;
@@ -12394,9 +12394,9 @@ if (!map.__pillHooksInstalled) {
         }
         if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
         
-        const { postsData } = getMarkerCollections(arr);
+        const { postsData } = window.getMarkerCollections(arr);
         const boundsForCount = getVisibleMarkerBoundsForCount();
-        const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
+        const markerTotal = boundsForCount ? window.countMarkersForVenue(arr, null, boundsForCount) : window.countMarkersForVenue(arr);
         
         sortedPostList = arr;
         updateResultCount(markerTotal);
@@ -12413,9 +12413,9 @@ if (!map.__pillHooksInstalled) {
       }
       if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
 
-      const { postsData } = getMarkerCollections(arr);
+      const { postsData } = window.getMarkerCollections(arr);
       const boundsForCount = getVisibleMarkerBoundsForCount();
-      const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
+      const markerTotal = boundsForCount ? window.countMarkersForVenue(arr, null, boundsForCount) : window.countMarkersForVenue(arr);
 
       sortedPostList = arr;
       renderedPostCount = 0;
@@ -14525,7 +14525,7 @@ function openPostModal(id){
         adPosts = newAdPosts;
       }
       if(render) renderLists(window.filtered);
-      syncMarkerSources(window.filtered);
+      window.syncMarkerSources(window.filtered);
       const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
       const updateLayerVisibilityFn = window.updateLayerVisibility || updateLayerVisibility;
       if(typeof updateLayerVisibilityFn === 'function'){

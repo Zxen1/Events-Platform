@@ -4236,6 +4236,7 @@ function countMarkersForVenue(postsAtVenue, venueKey, bounds){
     return total + count;
   }, 0);
 }
+window.countMarkersForVenue = countMarkersForVenue;
 
 function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
     const rnd = mulberry32(42);
@@ -7416,6 +7417,7 @@ function makePosts(){
       markerDataCache.featureIndex = buildMarkerFeatureIndex(postsData);
       return { postsData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
     }
+    window.getMarkerCollections = getMarkerCollections;
 
     function prepareMarkerLabelCompositesForPosts(postsData){
       const enforceBudget = () => {
@@ -7597,6 +7599,7 @@ function makePosts(){
       }
       return { updated, signature };
     }
+    window.syncMarkerSources = syncMarkerSources;
 
     let postsLoaded = false;
     window.postsLoaded = postsLoaded;
