@@ -3525,6 +3525,22 @@ async function ensureMapboxCssFor(container) {
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
     window.pendingPostLoad = pendingPostLoad;
     let filtersInitialized = false;
+    // Expose posts, filtered, and filtersInitialized globally for admin.js access
+    Object.defineProperty(window, 'posts', {
+      get: () => posts,
+      set: (val) => { posts = val; },
+      configurable: true
+    });
+    Object.defineProperty(window, 'filtered', {
+      get: () => filtered,
+      set: (val) => { filtered = val; },
+      configurable: true
+    });
+    Object.defineProperty(window, 'filtersInitialized', {
+      get: () => filtersInitialized,
+      set: (val) => { filtersInitialized = val; },
+      configurable: true
+    });
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = window.selection = window.selection || { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -7672,8 +7688,8 @@ function makePosts(){
         window.postsLoaded = postsLoaded;
       }
       lastLoadedBoundsKey = null;
-      posts = [];
-      filtered = [];
+      window.posts = posts = [];
+      window.filtered = filtered = [];
       if(typeof sortedPostList !== 'undefined'){ sortedPostList = []; }
       if(typeof renderedPostCount !== 'undefined'){ renderedPostCount = 0; }
       if(typeof postBatchObserver !== 'undefined' && postBatchObserver){
@@ -7729,7 +7745,7 @@ function makePosts(){
       const nextPosts = Array.isArray(cache)
         ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
         : [];
-      posts = nextPosts;
+      window.posts = posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
       lastLoadedBoundsKey = key;

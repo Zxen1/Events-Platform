@@ -9098,7 +9098,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
       favToTop = !favToTop;
       favSortDirty = favToTop ? false : true;
       favToggle.setAttribute('aria-pressed', favToTop);
-      renderLists(filtered);
+      renderLists(window.filtered);
     });
 
     sortButtons.forEach(btn=>{
@@ -9106,7 +9106,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         currentSort = btn.dataset.sort;
         sortButtons.forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
         updateSortBtnLabel(btn.textContent);
-        renderLists(filtered);
+        renderLists(window.filtered);
       });
     });
 
@@ -9640,7 +9640,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
         if(!postSentinel || !postsWideEl.contains(postSentinel)){
           // Only do a full renderLists if there's no open post
           if(!hasOpenPost){
-            renderLists(filtered);
+            renderLists(window.filtered);
           } else {
             // If there's an open post, just ensure the sentinel exists without clearing everything
             if(!postSentinel || !postsWideEl.contains(postSentinel)){
@@ -11782,7 +11782,7 @@ if (!map.__pillHooksInstalled) {
         map.__retainAllMarkerSprites = true;
       }
       try{
-      const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
+      const markerList = window.filtersInitialized && Array.isArray(window.filtered) ? window.filtered : window.posts;
       const collections = getMarkerCollections(markerList);
       const { postsData, signature, featureIndex } = collections;
       markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
@@ -11943,9 +11943,9 @@ if (!map.__pillHooksInstalled) {
               delete overlayRoot.dataset.venueKey;
             }
 
-            let visibleList = filtersInitialized ? filtered : posts;
+            let visibleList = window.filtersInitialized ? window.filtered : window.posts;
             if(!Array.isArray(visibleList) || visibleList.length === 0){
-              visibleList = Array.isArray(posts) ? posts : [];
+              visibleList = Array.isArray(window.posts) ? window.posts : [];
             }
             const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
               if(!item || item.id === undefined || item.id === null) return '';
@@ -14486,10 +14486,10 @@ function openPostModal(id){
         return;
       }
       if(!postsLoaded) return;
-      const basePosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
-      filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
+      const basePosts = window.posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
+      window.filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
-      const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
+      const filteredMarkers = boundsForCount ? countMarkersForVenue(window.filtered, null, boundsForCount) : countMarkersForVenue(window.filtered);
       const rawTotalMarkers = boundsForCount ? countMarkersForVenue(basePosts, null, boundsForCount) : countMarkersForVenue(basePosts);
       const totalMarkers = Math.max(filteredMarkers, rawTotalMarkers);
       const summary = $('#filterSummary');
@@ -14501,7 +14501,7 @@ function openPostModal(id){
     function refreshMarkers(render = true){
       if(spinning) return;
       if(!postsLoaded) return;
-      const newAdPosts = filtered.filter(p => p.sponsored);
+      const newAdPosts = window.filtered.filter(p => p.sponsored);
       const ids = newAdPosts.map(p => p.id).join(',');
       if(adPanel && ids !== adIdsKey){
         adPanel.innerHTML = '';
@@ -14524,14 +14524,14 @@ function openPostModal(id){
       } else {
         adPosts = newAdPosts;
       }
-      if(render) renderLists(filtered);
-      syncMarkerSources(filtered);
+      if(render) renderLists(window.filtered);
+      syncMarkerSources(window.filtered);
       const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
       const updateLayerVisibilityFn = window.updateLayerVisibility || updateLayerVisibility;
       if(typeof updateLayerVisibilityFn === 'function'){
         updateLayerVisibilityFn(lastKnownZoomVal);
       }
-      filtersInitialized = true;
+      window.filtersInitialized = true;
     }
 
     function applyFilters(render = true){
