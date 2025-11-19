@@ -2860,6 +2860,13 @@ async function ensureMapboxCssFor(container) {
       console.error('Failed to save default map view:', err);
     }
     let lastKnownZoom = startZoom;
+    window.lastKnownZoom = lastKnownZoom;
+    // Keep lastKnownZoom in sync via getter/setter
+    Object.defineProperty(window, 'lastKnownZoom', {
+      get: () => lastKnownZoom,
+      set: (val) => { lastKnownZoom = val; },
+      configurable: true
+    });
     window.startZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
@@ -3065,6 +3072,12 @@ async function ensureMapboxCssFor(container) {
       })();
       let markersLoaded = false;
       window.__markersLoaded = false;
+      // Keep markersLoaded in sync via getter/setter
+      Object.defineProperty(window, 'markersLoaded', {
+        get: () => markersLoaded,
+        set: (val) => { markersLoaded = val; window.__markersLoaded = val; },
+        configurable: true
+      });
       const MARKER_ZOOM_THRESHOLD = 8;
       window.MARKER_ZOOM_THRESHOLD = MARKER_ZOOM_THRESHOLD;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
@@ -7800,10 +7813,12 @@ function makePosts(){
     function updateZoomState(zoom){
       if(Number.isFinite(zoom)){
         lastKnownZoom = zoom;
+        if(window.lastKnownZoom !== undefined) window.lastKnownZoom = zoom;
       } else {
         const current = getZoomFromEvent();
         if(Number.isFinite(current)){
           lastKnownZoom = current;
+          if(window.lastKnownZoom !== undefined) window.lastKnownZoom = current;
         }
       }
       if(typeof window.updatePostsButtonState === 'function'){
@@ -7818,9 +7833,13 @@ function makePosts(){
       if(!markersLoaded){
         const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
         if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
-          try{ loadPostMarkers(); }catch(err){ console.error(err); }
+          const loadPostMarkersFn = window.loadPostMarkers;
+          if(typeof loadPostMarkersFn === 'function'){
+            try{ loadPostMarkersFn(); }catch(err){ console.error(err); }
+          }
           markersLoaded = true;
           window.__markersLoaded = true;
+          if(window.markersLoaded !== undefined) window.markersLoaded = true;
         }
       }
     }

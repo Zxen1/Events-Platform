@@ -11328,15 +11328,23 @@ if (!map.__pillHooksInstalled) {
         }
       });
       map.on('zoomend', ()=>{
-        if(markersLoaded) return;
+        const markersLoadedVal = window.markersLoaded !== undefined ? window.markersLoaded : markersLoaded;
+        if(markersLoadedVal) return;
         if(!map || typeof map.getZoom !== 'function') return;
         let currentZoom = NaN;
         try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
         if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
           return;
         }
-        try{ loadPostMarkers(); }catch(err){ console.error(err); }
-        markersLoaded = true;
+        const loadPostMarkersFn = window.loadPostMarkers || loadPostMarkers;
+        if(typeof loadPostMarkersFn === 'function'){
+          try{ loadPostMarkersFn(); }catch(err){ console.error(err); }
+        }
+        if(window.markersLoaded !== undefined){
+          window.markersLoaded = true;
+        } else {
+          markersLoaded = true;
+        }
         window.__markersLoaded = true;
       });
       map.on('moveend', ()=>{
@@ -11344,7 +11352,8 @@ if (!map.__pillHooksInstalled) {
         if(!spinning){
           const scheduleCheckLoadPostsFn = window.scheduleCheckLoadPosts || scheduleCheckLoadPosts;
           if(typeof scheduleCheckLoadPostsFn === 'function'){
-            scheduleCheckLoadPostsFn({ zoom: lastKnownZoom, target: map });
+            const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
+            scheduleCheckLoadPostsFn({ zoom: lastKnownZoomVal, target: map });
           }
         }
       });
@@ -11374,11 +11383,20 @@ if (!map.__pillHooksInstalled) {
         if(typeof updateZoomStateFn === 'function'){
           updateZoomStateFn(getZoom());
         }
-        if(!markersLoaded){
-          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoom();
+        const markersLoadedVal = window.markersLoaded !== undefined ? window.markersLoaded : markersLoaded;
+        if(!markersLoadedVal){
+          const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : getZoom();
+          const zoomLevel = Number.isFinite(lastKnownZoomVal) ? lastKnownZoomVal : getZoom();
           if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
-            try{ loadPostMarkers(); }catch(err){ console.error(err); }
-            markersLoaded = true;
+            const loadPostMarkersFn = window.loadPostMarkers || loadPostMarkers;
+            if(typeof loadPostMarkersFn === 'function'){
+              try{ loadPostMarkersFn(); }catch(err){ console.error(err); }
+            }
+            if(window.markersLoaded !== undefined){
+              window.markersLoaded = true;
+            } else {
+              markersLoaded = true;
+            }
             window.__markersLoaded = true;
           }
         }
@@ -11395,7 +11413,8 @@ if (!map.__pillHooksInstalled) {
         }
         const updateLayerVisibilityFn = window.updateLayerVisibility || updateLayerVisibility;
         if(typeof updateLayerVisibilityFn === 'function'){
-          updateLayerVisibilityFn(lastKnownZoom);
+          const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
+          updateLayerVisibilityFn(lastKnownZoomVal);
         }
       });
 
@@ -11405,7 +11424,8 @@ if (!map.__pillHooksInstalled) {
           if(suppressNextRefresh) return;
           const scheduleCheckLoadPostsFn = window.scheduleCheckLoadPosts || scheduleCheckLoadPosts;
           if(typeof scheduleCheckLoadPostsFn === 'function'){
-            scheduleCheckLoadPostsFn({ zoom: lastKnownZoom, target: map });
+            const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
+            scheduleCheckLoadPostsFn({ zoom: lastKnownZoomVal, target: map });
           }
           const updatePostPanelFn = window.updatePostPanel || updatePostPanel;
           if(typeof updatePostPanelFn === 'function'){
@@ -11732,6 +11752,8 @@ if (!map.__pillHooksInstalled) {
         console.error('loadPostMarkers failed', err);
       }
     }
+    // Expose on window for index.js access
+    window.loadPostMarkers = loadPostMarkers;
 
     async function addPostSource(){
       if(!map){
@@ -11742,7 +11764,8 @@ if (!map.__pillHooksInstalled) {
         return;
       }
       addingPostSource = true;
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+      const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
+      if(map && Number.isFinite(lastKnownZoomVal) && lastKnownZoomVal >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
       try{
@@ -14426,7 +14449,8 @@ function openPostModal(id){
     }
 
     function getVisibleMarkerBoundsForCount(){
-      let zoomCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : NaN;
+      const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
+      let zoomCandidate = Number.isFinite(lastKnownZoomVal) ? lastKnownZoomVal : NaN;
       if(!Number.isFinite(zoomCandidate) && map && typeof map.getZoom === 'function'){
         try {
           zoomCandidate = map.getZoom();
@@ -14489,7 +14513,11 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
-      updateLayerVisibility(lastKnownZoom);
+      const lastKnownZoomVal = window.lastKnownZoom !== undefined ? window.lastKnownZoom : (map ? map.getZoom() : 0);
+      const updateLayerVisibilityFn = window.updateLayerVisibility || updateLayerVisibility;
+      if(typeof updateLayerVisibilityFn === 'function'){
+        updateLayerVisibilityFn(lastKnownZoomVal);
+      }
       filtersInitialized = true;
     }
 
