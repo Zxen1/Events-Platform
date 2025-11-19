@@ -27,6 +27,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
   let spinLoadType = 'everyone';
   let historyWasActive = localStorage.getItem('historyActive') === 'true';
   let map = null;
+  let ensureMapIcon = null;
 
   // Categories UI
   const categoryControllers = {};
@@ -4022,7 +4023,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                     types: 'address,poi',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
-                    externalGeocoder: externalMapboxVenueGeocoder,
+                    externalGeocoder: window.externalMapboxVenueGeocoder,
                     filter: majorVenueFilter,
                     limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
@@ -6520,7 +6521,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                     types: 'address,poi',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
-                    externalGeocoder: externalMapboxVenueGeocoder,
+                    externalGeocoder: window.externalMapboxVenueGeocoder,
                     filter: majorVenueFilter,
                     limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
@@ -11093,6 +11094,9 @@ if (!map.__pillHooksInstalled) {
           }
         });
         ensureMapIcon = window.attachIconLoader(map);
+        if(typeof window !== 'undefined'){
+          window.ensureMapIcon = ensureMapIcon;
+        }
         const pendingStyleImageRequests = new Map();
         const handleStyleImageMissing = (evt) => {
           const imageId = evt && evt.id;
@@ -11397,8 +11401,8 @@ if (!map.__pillHooksInstalled) {
         adjustBoards();
         updateModeToggle();
       }
-      const shouldLoadPosts = pendingPostLoad;
-      pendingPostLoad = false;
+      const shouldLoadPosts = window.pendingPostLoad;
+      window.pendingPostLoad = false;
       if(shouldLoadPosts){
         scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
         return;

@@ -3448,6 +3448,7 @@ async function ensureMapboxCssFor(container) {
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
+        window.ensureMapIcon = ensureMapIcon;
       function updateLogoClickState(){
         logoEls.forEach(el=>{
           el.style.cursor = 'pointer';
@@ -3501,6 +3502,7 @@ async function ensureMapboxCssFor(container) {
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
+    window.pendingPostLoad = pendingPostLoad;
     let filtersInitialized = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = window.selection = window.selection || { cats: new Set(), subs: new Set() };
@@ -6145,6 +6147,7 @@ function uniqueTitle(seed, cityName, idx){
     const types = normalizeMapboxVenueTypes(contextOptions.types, 'poi');
     return searchMapboxVenues(query, { limit, proximity, language, country, bbox, types });
   }
+  window.externalMapboxVenueGeocoder = externalMapboxVenueGeocoder;
 
   rebuildVenueIndex();
 
@@ -7679,6 +7682,7 @@ function makePosts(){
     function loadPosts(bounds){
       if(spinning){
         pendingPostLoad = true;
+        window.pendingPostLoad = pendingPostLoad;
         return;
       }
       const normalized = normalizeBounds(bounds);
@@ -7850,6 +7854,7 @@ function makePosts(){
       }
       if(spinning){
         pendingPostLoad = true;
+        window.pendingPostLoad = pendingPostLoad;
         hideResultIndicators();
         return;
       }
