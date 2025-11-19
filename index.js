@@ -481,6 +481,10 @@ function renderForm(options) {
     }
   });
 }
+// Expose shared form functions globally
+window.renderForm = renderForm;
+window.getBaseFieldType = getBaseFieldType;
+window.ensureFieldDefaults = ensureFieldDefaults;
 
 // === Message Utility Functions ===
 // Cache for loaded messages

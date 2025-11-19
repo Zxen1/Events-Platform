@@ -1587,7 +1587,12 @@
         memberSnapshotErrorMessage = '';
         // Use shared renderForm function
         const fieldIdCounter = { value: 0 };
-        renderForm({
+        const renderFormFn = window.renderForm || renderForm;
+        if(typeof renderFormFn !== 'function'){
+          console.error('[Member Forms] renderForm function not available');
+          return;
+        }
+        renderFormFn({
           container: formFields,
           fields: fields,
           idPrefix: 'memberForm',
