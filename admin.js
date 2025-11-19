@@ -25,6 +25,8 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
   let spinEnabled = false;
   let spinLoadStart = false;
   let spinLoadType = 'everyone';
+  let historyWasActive = localStorage.getItem('historyActive') === 'true';
+  let map = null;
 
   // Categories UI
   const categoryControllers = {};
@@ -10982,6 +10984,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
           bearing: window.startBearing || 0,
           attributionControl:true
         });
+        window.map = map;
         // Add error handler for token/auth errors
         map.on('error', (e) => {
           if(e && e.error && (e.error.message || '').includes('token') || (e.error.message || '').includes('Unauthorized')){
@@ -14806,9 +14809,9 @@ function openPanel(m){
         spinZoomMaxDisplay.textContent = zoomValue;
       }
       if(spinSpeedSlider && spinSpeedDisplay){
-        const speedValue = window.spinGlobals.spinSpeed || 0.3;
+        const speedValue = Number(window.spinGlobals && window.spinGlobals.spinSpeed) || 0.3;
         spinSpeedSlider.value = speedValue;
-        spinSpeedDisplay.textContent = speedValue.toFixed(1);
+        spinSpeedDisplay.textContent = Number(speedValue).toFixed(1);
       }
     }
     
