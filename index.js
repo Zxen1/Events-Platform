@@ -3445,6 +3445,8 @@ async function ensureMapboxCssFor(container) {
             updateLayerVisibility(lastKnownZoom);
           }
         }
+        // Expose on window for admin.js access (after function is fully defined)
+        window.setupSeedLayers = setupSeedLayers;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
@@ -6047,6 +6049,8 @@ function uniqueTitle(seed, cityName, idx){
     }
     return false;
   }
+  // Expose on window for admin.js access
+  window.majorVenueFilter = majorVenueFilter;
 
   function normalizeMapboxVenueTypes(value, fallback='poi'){
     const rawList = Array.isArray(value)
@@ -7563,6 +7567,12 @@ function makePosts(){
     window.postsLoaded = postsLoaded;
     let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
     let initialZoomStarted = false;
+    // Expose on window for admin.js access - use getter/setter to keep in sync
+    Object.defineProperty(window, 'initialZoomStarted', {
+      get: () => initialZoomStarted,
+      set: (val) => { initialZoomStarted = val; },
+      configurable: true
+    });
     let postLoadRequested = false;
     let lastLoadedBoundsKey = null;
     window.waitForInitialZoom = waitForInitialZoom;
@@ -7730,6 +7740,8 @@ function makePosts(){
       }
       return NaN;
     }
+    // Expose on window for admin.js access (after function is fully defined)
+    window.getZoomFromEvent = getZoomFromEvent;
 
     function setLayerVisibility(id, visible){
       if(!map || typeof map.getLayer !== 'function') return;
@@ -7808,6 +7820,8 @@ function makePosts(){
     }
 
     function scheduleCheckLoadPosts(event){
+      // Expose on window for admin.js access
+      window.scheduleCheckLoadPosts = scheduleCheckLoadPosts;
       pendingZoomEvent = event || { zoom: lastKnownZoom, target: map };
       if(pendingZoomCheckToken !== null) return;
       const scheduler = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb)=> setTimeout(cb, 0);
@@ -7818,6 +7832,8 @@ function makePosts(){
         checkLoadPosts(evt);
       });
     }
+    // Expose on window for admin.js access (after function is fully defined)
+    window.scheduleCheckLoadPosts = scheduleCheckLoadPosts;
 
     function checkLoadPosts(event){
       if(!map) return;

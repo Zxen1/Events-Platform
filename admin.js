@@ -4024,7 +4024,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
                     externalGeocoder: window.externalMapboxVenueGeocoder,
-                    filter: majorVenueFilter,
+                    filter: window.majorVenueFilter || majorVenueFilter,
                     limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
                   };
@@ -6522,7 +6522,7 @@ window.panelScrollOverlayItems = panelScrollOverlayItems;
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
                     externalGeocoder: window.externalMapboxVenueGeocoder,
-                    filter: majorVenueFilter,
+                    filter: window.majorVenueFilter || majorVenueFilter,
                     limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
                   };
@@ -11299,19 +11299,25 @@ if (!map.__pillHooksInstalled) {
         }
       map.on('zoomstart', ()=>{
         if(waitForInitialZoom){
-          initialZoomStarted = true;
+          if(typeof window.initialZoomStarted !== 'undefined'){
+            window.initialZoomStarted = true;
+          }
         }
       });
       map.on('zoom', (e)=>{
-        const zoomValue = getZoomFromEvent(e);
+        const getZoomFromEventFn = window.getZoomFromEvent || getZoomFromEvent;
+        const zoomValue = typeof getZoomFromEventFn === 'function' ? getZoomFromEventFn(e) : (map ? map.getZoom() : 0);
         if(waitForInitialZoom){
+          const initialZoomStarted = typeof window.initialZoomStarted !== 'undefined' ? window.initialZoomStarted : false;
           if(!initialZoomStarted){
             updateZoomState(zoomValue);
             return;
           }
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
-          initialZoomStarted = false;
+          if(typeof window.initialZoomStarted !== 'undefined'){
+            window.initialZoomStarted = false;
+          }
         }
         updateZoomState(zoomValue);
         if(!spinning){
@@ -11333,7 +11339,10 @@ if (!map.__pillHooksInstalled) {
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
         if(!spinning){
-          scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+          const scheduleCheckLoadPostsFn = window.scheduleCheckLoadPosts || scheduleCheckLoadPosts;
+          if(typeof scheduleCheckLoadPostsFn === 'function'){
+            scheduleCheckLoadPostsFn({ zoom: lastKnownZoom, target: map });
+          }
         }
       });
       addControls();
@@ -11342,7 +11351,10 @@ if (!map.__pillHooksInstalled) {
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
-        setupSeedLayers(map);
+        const setupSeedLayersFn = window.setupSeedLayers || setupSeedLayers;
+        if(typeof setupSeedLayersFn === 'function'){
+          setupSeedLayersFn(map);
+        }
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
@@ -11350,9 +11362,11 @@ if (!map.__pillHooksInstalled) {
         }
         updatePostPanel();
         applyFilters();
-        updateZoomState(getZoomFromEvent());
+        const getZoomFromEventFn = window.getZoomFromEvent || getZoomFromEvent;
+        const getZoom = () => typeof getZoomFromEventFn === 'function' ? getZoomFromEventFn() : (map ? map.getZoom() : 0);
+        updateZoomState(getZoom());
         if(!markersLoaded){
-          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoom();
           if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
             try{ loadPostMarkers(); }catch(err){ console.error(err); }
             markersLoaded = true;
@@ -11363,7 +11377,10 @@ if (!map.__pillHooksInstalled) {
       });
 
       map.on('style.load', ()=>{
-        setupSeedLayers(map);
+        const setupSeedLayersFn = window.setupSeedLayers || setupSeedLayers;
+        if(typeof setupSeedLayersFn === 'function'){
+          setupSeedLayersFn(map);
+        }
         updateLayerVisibility(lastKnownZoom);
       });
 
@@ -11371,7 +11388,10 @@ if (!map.__pillHooksInstalled) {
         let suppressNextRefresh = false;
         const refreshMapView = () => {
           if(suppressNextRefresh) return;
-          scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+          const scheduleCheckLoadPostsFn = window.scheduleCheckLoadPosts || scheduleCheckLoadPosts;
+          if(typeof scheduleCheckLoadPostsFn === 'function'){
+            scheduleCheckLoadPostsFn({ zoom: lastKnownZoom, target: map });
+          }
           updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
