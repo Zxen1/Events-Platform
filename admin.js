@@ -11785,7 +11785,7 @@ if (!map.__pillHooksInstalled) {
       const markerList = window.filtersInitialized && Array.isArray(window.filtered) ? window.filtered : window.posts;
       const collections = window.getMarkerCollections(markerList);
       const { postsData, signature, featureIndex } = collections;
-      markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
+      window.markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
       const featureCount = Array.isArray(postsData.features) ? postsData.features.length : 0;
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));

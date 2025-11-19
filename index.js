@@ -3550,6 +3550,12 @@ async function ensureMapboxCssFor(container) {
     let touchMarker = null;
     let activePostId = null;
     let markerFeatureIndex = new Map();
+    // Expose markerFeatureIndex globally for admin.js access
+    Object.defineProperty(window, 'markerFeatureIndex', {
+      get: () => markerFeatureIndex,
+      set: (val) => { markerFeatureIndex = val; },
+      configurable: true
+    });
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
     const hoverHighlightedPostIds = new Set();
@@ -3606,7 +3612,7 @@ async function ensureMapboxCssFor(container) {
       };
       normalized.forEach(target => {
         if(!target || !target.id) return;
-        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(target.id) : null;
+        const entries = window.markerFeatureIndex instanceof Map ? window.markerFeatureIndex.get(target.id) : null;
         if(!entries || !entries.length) return;
         entries.forEach(entry => {
           if(!entry) return;
@@ -7556,7 +7562,7 @@ function makePosts(){
       const { force = false } = options;
       const collections = getMarkerCollections(list);
       const { postsData, signature, featureIndex } = collections;
-      markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
+      window.markerFeatureIndex = markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
       let preparationPromise = null;
       let preparationErrorLogged = false;
       const ensurePreparationPromise = () => {
