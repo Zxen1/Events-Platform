@@ -13299,12 +13299,12 @@ function makePosts(){
               const fieldTypeKey = field.fieldTypeKey || field.key || '';
               let baseType = '';
               if(isUserFormContext){
-                // For user forms: Use fieldTypeKey/key as PRIMARY source (same logic as buildMemberCreateField)
+                // For user forms: Use fieldTypeKey/key as PRIMARY source (EXACT same logic as buildMemberCreateField)
                 if(fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown'){
                   baseType = fieldTypeKey;
                 } else {
-                  // Use fieldTypeKey if available, otherwise use field.type (already normalized by ensureFieldDefaultsForMember)
-                  baseType = fieldTypeKey || getBaseFieldType(field.type) || field.type || 'text-box';
+                  // Use fieldTypeKey if available, otherwise use field.type (ensureFieldDefaultsForMember already normalized it)
+                  baseType = fieldTypeKey || field.type || 'text-box';
                 }
               } else {
                 // For form preview: use field.type (which ensureFieldDefaults has normalized)
@@ -13328,7 +13328,7 @@ function makePosts(){
                 const textareaId = `${baseId}-input`;
                 textarea.id = textareaId;
                 if(baseType === 'description'){
-                  textarea.classList.add('form-description');
+                  textarea.classList.add('form-preview-description');
                 }
                 control = textarea;
               } else if(baseType === 'dropdown'){
@@ -13337,7 +13337,7 @@ function makePosts(){
                 dropdownWrapper.className = 'options-dropdown';
                 const menuBtn = document.createElement('button');
                 menuBtn.type = 'button';
-                menuBtn.className = 'form-select';
+                menuBtn.className = 'form-preview-select';
                 menuBtn.setAttribute('aria-haspopup', 'true');
                 menuBtn.setAttribute('aria-expanded', 'false');
                 const selectId = `${baseId}-input`;
@@ -13406,16 +13406,16 @@ function makePosts(){
                 dropdownWrapper.appendChild(menuBtn);
                 dropdownWrapper.appendChild(optionsMenu);
                 control = dropdownWrapper;
-              } else if(baseType === 'radio'){
+              } else if(baseType === 'radio' || fieldTypeKey === 'radio'){
                 const options = Array.isArray(field.options) ? field.options : [];
                 const radioGroup = document.createElement('div');
-                radioGroup.className = 'form-radio-group';
+                radioGroup.className = 'form-preview-radio-group';
                 wrapper.classList.add('form-preview-field--radio-toggle');
                 const groupName = `${baseId}-radio`;
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
                     const radioLabel = document.createElement('label');
-                    radioLabel.className = 'form-radio-option';
+                    radioLabel.className = 'form-preview-radio-option';
                     const radio = document.createElement('input');
                     radio.type = 'radio';
                     radio.name = groupName;
@@ -13449,7 +13449,7 @@ function makePosts(){
                   });
                 } else {
                   const placeholderOption = document.createElement('label');
-                  placeholderOption.className = 'form-radio-option';
+                  placeholderOption.className = 'form-preview-radio-option';
                   const radio = document.createElement('input');
                   radio.type = 'radio';
                   radio.tabIndex = -1;
