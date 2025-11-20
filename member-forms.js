@@ -3387,9 +3387,29 @@
         optionBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           const categoryName = c.name;
-          categoryMenuBtn.textContent = categoryName;
-          categoryMenuBtn.dataset.value = categoryName;
+          // Clear existing content and add icon + text
+          categoryMenuBtn.innerHTML = '';
+          if(iconPath && typeof iconPath === 'string' && iconPath.trim()){
+            let normalizedPath = iconPath.trim();
+            if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
+              try{
+                normalizedPath = window.normalizeIconPath(normalizedPath) || normalizedPath;
+              }catch(_e){}
+            }
+            if(normalizedPath){
+              const btnIconImg = document.createElement('img');
+              btnIconImg.src = normalizedPath;
+              btnIconImg.className = 'formpicker-category-icon';
+              btnIconImg.alt = '';
+              categoryMenuBtn.appendChild(btnIconImg);
+            }
+          }
+          const btnTextSpan = document.createElement('span');
+          btnTextSpan.textContent = categoryName;
+          categoryMenuBtn.appendChild(btnTextSpan);
           categoryMenuBtn.appendChild(categoryArrow);
+          categoryMenuBtn.dataset.value = categoryName;
+          categoryMenuBtn.dataset.icon = iconPath || '';
           categoryMenu.hidden = true;
           categoryMenuBtn.setAttribute('aria-expanded', 'false');
           selectedCategory = categoryName;
@@ -3449,9 +3469,29 @@
                 subOptionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const subcategoryName = s;
-                  subcategoryMenuBtn.textContent = subcategoryName;
-                  subcategoryMenuBtn.dataset.value = subcategoryName;
+                  // Clear existing content and add icon + text
+                  subcategoryMenuBtn.innerHTML = '';
+                  if(subIconPath && typeof subIconPath === 'string' && subIconPath.trim()){
+                    let normalizedSubPath = subIconPath.trim();
+                    if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
+                      try{
+                        normalizedSubPath = window.normalizeIconPath(normalizedSubPath) || normalizedSubPath;
+                      }catch(_e){}
+                    }
+                    if(normalizedSubPath){
+                      const btnSubIconImg = document.createElement('img');
+                      btnSubIconImg.src = normalizedSubPath;
+                      btnSubIconImg.className = 'formpicker-subcategory-icon';
+                      btnSubIconImg.alt = '';
+                      subcategoryMenuBtn.appendChild(btnSubIconImg);
+                    }
+                  }
+                  const btnSubTextSpan = document.createElement('span');
+                  btnSubTextSpan.textContent = subcategoryName;
+                  subcategoryMenuBtn.appendChild(btnSubTextSpan);
                   subcategoryMenuBtn.appendChild(subcategoryArrow);
+                  subcategoryMenuBtn.dataset.value = subcategoryName;
+                  subcategoryMenuBtn.dataset.icon = subIconPath || '';
                   subcategoryMenu.hidden = true;
                   subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
                   selectedSubcategory = subcategoryName;
@@ -3461,9 +3501,13 @@
                 subcategoryMenu.appendChild(subOptionBtn);
               });
               
-              subcategoryMenuBtn.textContent = 'Select a subcategory';
-              subcategoryMenuBtn.dataset.value = '';
+              subcategoryMenuBtn.innerHTML = '';
+              const resetSubTextSpan = document.createElement('span');
+              resetSubTextSpan.textContent = 'Select a subcategory';
+              subcategoryMenuBtn.appendChild(resetSubTextSpan);
               subcategoryMenuBtn.appendChild(subcategoryArrow);
+              subcategoryMenuBtn.dataset.value = '';
+              subcategoryMenuBtn.dataset.icon = '';
               subcategoryWrapper.hidden = false;
             } else {
               subcategoryWrapper.hidden = true;
