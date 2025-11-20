@@ -23415,6 +23415,8 @@ const adminPanelChangeManager = (()=>{
 
   function updateDirty(){
     if(applying) return;
+    // Don't mark as dirty until saved state is initialized
+    if(!savedStateInitialized) return;
     ensureElements();
     const current = serializeState();
     setDirty(!stateEquals(current, savedState));
