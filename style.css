@@ -3537,6 +3537,8 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.2);
   color:#fff;
   border:1px solid rgba(255,255,255,0.1);
+  position:relative;
+  z-index:1;
 }
 
 .formpicker-dropdowns .options-menu{
@@ -3551,7 +3553,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid rgba(255,255,255,0.1);
   border-radius:8px;
   color:#fff;
-  z-index:6;
+  z-index:10;
 }
 
 .formpicker-dropdowns .options-menu .menu-option{
