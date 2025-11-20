@@ -419,7 +419,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (isset($row['listing_days'])) {
             $result['listing_days'] = $row['listing_days'];
         }
-        if (isset($hasFieldTypeEdits) && $hasFieldTypeEdits && isset($row['field_type_edits'])) {
+        if ($hasFieldTypeEdits && isset($row['field_type_edits'])) {
             $editsJson = $row['field_type_edits'];
             if (is_string($editsJson) && $editsJson !== '') {
                 $decoded = json_decode($editsJson, true);
@@ -822,7 +822,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
 
         // Load field_type_edits JSON if available
         $fieldTypeEdits = [];
-        if (isset($hasFieldTypeEdits) && $hasFieldTypeEdits && isset($sub['field_type_edits']) && is_array($sub['field_type_edits'])) {
+        if ($hasFieldTypeEdits && isset($sub['field_type_edits']) && is_array($sub['field_type_edits'])) {
             $fieldTypeEdits = $sub['field_type_edits'];
         }
         

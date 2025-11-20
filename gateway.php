@@ -7,8 +7,8 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['ac
 $baseDir = __DIR__;
 
 $candidateDirs = [
-  $baseDir . '/home/funmapco/connectors',  // Connectors folder from GitHub repo structure
-  $baseDir . '/../connectors'   // Fallback: relative path (if connectors is one level up)
+  $baseDir . '/../connectors',
+  $baseDir . '/home/funmapco/connectors'
 ];
 
 $connectorDir = null;
