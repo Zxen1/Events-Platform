@@ -1769,13 +1769,322 @@
       });
     }
     
-    // Member form rendering now uses shared form rendering function
-    // The old renderFormPreviewForMember function has been deleted
-    // Forms are now rendered using the same code as admin form preview
+    // Helper function to ensure field defaults (similar to ensureFieldDefaults in index.js)
+    function ensureFieldDefaultsForMember(field){
+      const safeField = field && typeof field === 'object' ? field : {};
+      if(typeof safeField.name !== 'string'){
+        safeField.name = '';
+      } else if(!safeField.name.trim()){
+        safeField.name = '';
+      }
+      if(typeof safeField.type !== 'string'){
+        safeField.type = '';
+      } else {
+        const originalType = safeField.type;
+        const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
+                                 (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
+        if(isDescriptionType){
+          const normalizedType = getBaseFieldType(originalType);
+          if(normalizedType === 'description' || normalizedType === 'text-area'){
+            safeField.type = normalizedType;
+          } else if(originalType === 'description' || originalType === 'text-area'){
+            safeField.type = originalType;
+          } else {
+            safeField.type = originalType.includes('description') ? 'description' : 'text-area';
+          }
+        } else {
+          const normalizedType = getBaseFieldType(safeField.type);
+          if(normalizedType){
+            safeField.type = normalizedType;
+          }
+        }
+      }
+      if(!safeField.key && safeField.fieldTypeKey){
+        safeField.key = safeField.fieldTypeKey;
+      }
+      if(!safeField.fieldTypeKey && safeField.key){
+        safeField.fieldTypeKey = safeField.key;
+      }
+      if(typeof safeField.placeholder !== 'string'){
+        safeField.placeholder = '';
+      }
+      if(typeof safeField.required !== 'boolean'){
+        safeField.required = false;
+      }
+      if(!Array.isArray(safeField.options)){
+        safeField.options = [];
+      }
+      return safeField;
+    }
+
+    // Render forms for member area - uses same logic as admin form preview but adapted for member forms
     function renderFormPreviewForMember(fields){
-      // This function will be replaced to use shared form rendering from index.js
-      // For now, this is a placeholder that prevents errors
-      console.error('renderFormPreviewForMember should not be called - member forms should use shared rendering');
+      if(!formFields) return;
+      
+      if(!fields || fields.length === 0){
+        const empty = document.createElement('p');
+        empty.className = 'form-preview-empty';
+        empty.textContent = 'No fields added yet.';
+        formFields.appendChild(empty);
+        return;
+      }
+      
+      fields.forEach((fieldData, previewIndex) => {
+        const previewField = ensureFieldDefaultsForMember(fieldData);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'panel-field form-preview-field';
+        const baseId = `memberForm-field-${++fieldIdCounter}`;
+        const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+        const labelEl = document.createElement('span');
+        labelEl.className = 'subcategory-form-label';
+        labelEl.textContent = labelText;
+        const labelId = `${baseId}-label`;
+        labelEl.id = labelId;
+        let control = null;
+        
+        const baseType = getBaseFieldType(previewField.type);
+        const isDescription = baseType === 'description' || baseType === 'text-area' || 
+                            previewField.type === 'description' || previewField.type === 'text-area' ||
+                            (typeof previewField.type === 'string' && (previewField.type.includes('description') || previewField.type.includes('text-area')));
+        
+        if(isDescription){
+          const textarea = document.createElement('textarea');
+          textarea.rows = 5;
+          textarea.placeholder = previewField.placeholder || '';
+          textarea.className = 'form-preview-textarea';
+          textarea.style.resize = 'vertical';
+          const textareaId = `${baseId}-input`;
+          textarea.id = textareaId;
+          if(baseType === 'description' || previewField.type === 'description' || (typeof previewField.type === 'string' && previewField.type.includes('description'))){
+            textarea.classList.add('form-preview-description');
+          }
+          if(previewField.required) textarea.required = true;
+          textarea.addEventListener('input', () => { try{ updatePostButtonState(); }catch(_e){} });
+          control = textarea;
+        } else if(baseType === 'dropdown'){
+          wrapper.classList.add('form-preview-field--dropdown');
+          const dropdownWrapper = document.createElement('div');
+          dropdownWrapper.className = 'options-dropdown';
+          const menuBtn = document.createElement('button');
+          menuBtn.type = 'button';
+          menuBtn.className = 'form-preview-select';
+          menuBtn.setAttribute('aria-haspopup', 'true');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          const selectId = `${baseId}-input`;
+          menuBtn.id = selectId;
+          if(previewField.required) menuBtn.setAttribute('data-required', 'true');
+          const menuId = `${selectId}-menu`;
+          menuBtn.setAttribute('aria-controls', menuId);
+          const options = Array.isArray(previewField.options) ? previewField.options : [];
+          const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
+          menuBtn.textContent = defaultText;
+          const arrow = document.createElement('span');
+          arrow.className = 'dropdown-arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          menuBtn.appendChild(arrow);
+          const optionsMenu = document.createElement('div');
+          optionsMenu.className = 'options-menu';
+          optionsMenu.id = menuId;
+          optionsMenu.hidden = true;
+          if(options.length){
+            options.forEach((optionValue, optionIndex) => {
+              const optionBtn = document.createElement('button');
+              optionBtn.type = 'button';
+              optionBtn.className = 'menu-option';
+              const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+              optionBtn.textContent = stringValue.trim() || '';
+              optionBtn.dataset.value = stringValue;
+              optionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuBtn.textContent = stringValue.trim() || 'Select an option';
+                optionsMenu.hidden = true;
+                menuBtn.setAttribute('aria-expanded', 'false');
+                try{ updatePostButtonState(); }catch(_e){}
+              });
+              optionsMenu.appendChild(optionBtn);
+            });
+          } else {
+            const placeholderBtn = document.createElement('button');
+            placeholderBtn.type = 'button';
+            placeholderBtn.className = 'menu-option';
+            placeholderBtn.textContent = 'Select an option';
+            placeholderBtn.disabled = true;
+            optionsMenu.appendChild(placeholderBtn);
+          }
+          menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = !optionsMenu.hasAttribute('hidden');
+            if(open){
+              optionsMenu.hidden = true;
+              menuBtn.setAttribute('aria-expanded', 'false');
+            } else {
+              optionsMenu.hidden = false;
+              menuBtn.setAttribute('aria-expanded', 'true');
+              const outsideHandler = (ev) => {
+                if(!ev.target.closest(dropdownWrapper)){
+                  optionsMenu.hidden = true;
+                  menuBtn.setAttribute('aria-expanded', 'false');
+                  document.removeEventListener('click', outsideHandler);
+                }
+              };
+              setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+            }
+          });
+          optionsMenu.addEventListener('click', (e) => e.stopPropagation());
+          dropdownWrapper.appendChild(menuBtn);
+          dropdownWrapper.appendChild(optionsMenu);
+          control = dropdownWrapper;
+        } else if(baseType === 'radio'){
+          const options = Array.isArray(previewField.options) ? previewField.options : [];
+          const radioGroup = document.createElement('div');
+          radioGroup.className = 'form-preview-radio-group';
+          wrapper.classList.add('form-preview-field--radio-toggle');
+          const groupName = `${baseId}-radio`;
+          if(options.length){
+            options.forEach((optionValue, optionIndex) => {
+              const radioLabel = document.createElement('label');
+              radioLabel.className = 'form-preview-radio-option';
+              const radio = document.createElement('input');
+              radio.type = 'radio';
+              radio.name = groupName;
+              const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+              radio.value = stringValue;
+              if(previewField.required) radio.required = true;
+              radio.addEventListener('change', () => { try{ updatePostButtonState(); }catch(_e){} });
+              const radioText = document.createElement('span');
+              radioText.textContent = stringValue.trim() || '';
+              radioLabel.append(radio, radioText);
+              radioGroup.appendChild(radioLabel);
+            });
+          } else {
+            const placeholderOption = document.createElement('label');
+            placeholderOption.className = 'form-preview-radio-option';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            placeholderOption.append(radio, document.createTextNode('Option'));
+            radioGroup.appendChild(placeholderOption);
+          }
+          control = radioGroup;
+        } else if(baseType === 'venue-ticketing'){
+          wrapper.classList.add('form-preview-field--venues-sessions-pricing');
+          if(typeof window.buildVenueSessionPreview === 'function'){
+            control = window.buildVenueSessionPreview(previewField, baseId);
+          }
+          if(control && previewField.required){
+            control.setAttribute('aria-required','true');
+          }
+        } else if(baseType === 'variant-pricing'){
+          // Variant pricing is complex - for now, create a simple placeholder
+          wrapper.classList.add('form-preview-field--variant-pricing');
+          const editor = document.createElement('div');
+          editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+          editor.textContent = 'Variant pricing editor - full implementation needed';
+          control = editor;
+        } else if(baseType === 'website-url' || baseType === 'tickets-url'){
+          wrapper.classList.add('form-preview-field--url');
+          const urlWrapper = document.createElement('div');
+          urlWrapper.className = 'form-preview-url-wrapper';
+          const urlInput = document.createElement('input');
+          urlInput.type = 'text';
+          urlInput.className = 'form-preview-url-input';
+          const urlInputId = `${baseId}-input`;
+          urlInput.id = urlInputId;
+          const placeholderValue = previewField.placeholder && /\.[A-Za-z]{2,}/.test(previewField.placeholder)
+            ? previewField.placeholder
+            : 'https://example.com';
+          urlInput.placeholder = placeholderValue;
+          urlInput.dataset.urlType = baseType === 'website-url' ? 'website' : 'tickets';
+          urlInput.autocomplete = 'url';
+          urlInput.inputMode = 'url';
+          if(previewField.required) urlInput.required = true;
+          urlInput.addEventListener('blur', () => { try{ updatePostButtonState(); }catch(_e){} });
+          urlInput.addEventListener('input', () => { try{ updatePostButtonState(); }catch(_e){} });
+          urlWrapper.appendChild(urlInput);
+          control = urlWrapper;
+        } else if(baseType === 'images'){
+          wrapper.classList.add('form-preview-field--images');
+          const imageWrapper = document.createElement('div');
+          imageWrapper.className = 'form-preview-images';
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          const fileInputId = `${baseId}-input`;
+          fileInput.id = fileInputId;
+          fileInput.accept = 'image/*';
+          fileInput.multiple = true;
+          fileInput.dataset.imagesField = 'true';
+          fileInput.dataset.maxImages = '10';
+          const previewId = `${baseId}-previews`;
+          const messageId = `${baseId}-message`;
+          fileInput.dataset.imagePreviewTarget = previewId;
+          fileInput.dataset.imageMessageTarget = messageId;
+          if(previewField.required) fileInput.required = true;
+          const hint = document.createElement('div');
+          hint.className = 'form-preview-image-hint';
+          hint.textContent = 'Upload up to 10 images.';
+          const message = document.createElement('div');
+          message.className = 'form-preview-image-message';
+          message.id = messageId;
+          message.hidden = true;
+          const previewGrid = document.createElement('div');
+          previewGrid.className = 'form-preview-image-previews';
+          previewGrid.id = previewId;
+          imageWrapper.append(fileInput, hint, message, previewGrid);
+          handleImagePreview(fileInput);
+          control = imageWrapper;
+        } else if(baseType === 'location'){
+          // Location field is complex - simplified version for now
+          wrapper.classList.add('form-preview-field--location');
+          const locationWrapper = document.createElement('div');
+          locationWrapper.className = 'location-field-wrapper';
+          const addressInput = document.createElement('input');
+          addressInput.type = 'text';
+          addressInput.className = 'address_line-fallback';
+          addressInput.placeholder = previewField.placeholder || 'Search for a location';
+          addressInput.id = `${baseId}-location-address`;
+          if(previewField.required) addressInput.required = true;
+          addressInput.addEventListener('input', () => { try{ updatePostButtonState(); }catch(_e){} });
+          locationWrapper.appendChild(addressInput);
+          control = locationWrapper;
+        } else {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = previewField.placeholder || '';
+          const inputId = `${baseId}-input`;
+          input.id = inputId;
+          if(baseType === 'title'){
+            input.classList.add('form-preview-title-input');
+          }
+          if(previewField.required) input.required = true;
+          input.addEventListener('input', () => { try{ updatePostButtonState(); }catch(_e){} });
+          control = input;
+        }
+        
+        if(control){
+          if(control instanceof HTMLElement){
+            control.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            if(labelId){
+              control.setAttribute('aria-labelledby', labelId);
+            }
+          }
+        }
+        if(previewField.required){
+          wrapper.classList.add('form-preview-field--required');
+          labelEl.appendChild(document.createTextNode(' '));
+          const asterisk = document.createElement('span');
+          asterisk.className = 'required-asterisk';
+          asterisk.textContent = '*';
+          labelEl.appendChild(asterisk);
+        }
+        
+        const header = document.createElement('div');
+        header.className = 'form-preview-field-header';
+        header.style.position = 'relative';
+        header.appendChild(labelEl);
+        
+        wrapper.append(header, control);
+        formFields.appendChild(wrapper);
+        currentCreateFields.push({ field: previewField, element: wrapper });
+      });
     }
 
     async function handleMemberCreatePost(event){
