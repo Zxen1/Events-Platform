@@ -13274,7 +13274,11 @@ function makePosts(){
               return;
             }
             targetFields.forEach((fieldData, fieldIndex)=>{
-              const field = ensureFieldDefaults(fieldData);
+              // Use member-specific field defaults if available (for proper fieldTypeKey handling)
+              const ensureDefaults = (typeof window !== 'undefined' && typeof window.ensureFieldDefaultsForMember === 'function') 
+                ? window.ensureFieldDefaultsForMember 
+                : ensureFieldDefaults;
+              const field = ensureDefaults(fieldData);
               const wrapper = document.createElement('div');
               wrapper.className = 'panel-field form-field';
               const baseId = `${targetFormId}-field-${shouldIncrementCounter ? ++formFieldIdCounter : ++targetFieldIdCounter}`;
@@ -13285,7 +13289,14 @@ function makePosts(){
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
               let control = null;
-              const baseType = getBaseFieldType(field.type);
+              // Use fieldTypeKey/key as PRIMARY source for field type identification (same as buildMemberCreateField)
+              const fieldTypeKey = field.fieldTypeKey || field.key || '';
+              let baseType = '';
+              if(fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown'){
+                baseType = fieldTypeKey;
+              } else {
+                baseType = fieldTypeKey || getBaseFieldType(field.type) || 'text-box';
+              }
               if(baseType === 'text-area' || baseType === 'description'){
                 const textarea = document.createElement('textarea');
                 textarea.rows = 5;
@@ -13307,7 +13318,7 @@ function makePosts(){
                   textarea.classList.add('form-description');
                 }
                 control = textarea;
-              } else if(field.type === 'dropdown'){
+              } else if(baseType === 'dropdown'){
                 wrapper.classList.add('form-field--dropdown');
                 const dropdownWrapper = document.createElement('div');
                 dropdownWrapper.className = 'options-dropdown';
@@ -13382,7 +13393,7 @@ function makePosts(){
                 dropdownWrapper.appendChild(menuBtn);
                 dropdownWrapper.appendChild(optionsMenu);
                 control = dropdownWrapper;
-              } else if(field.type === 'radio'){
+              } else if(baseType === 'radio'){
                 const options = Array.isArray(field.options) ? field.options : [];
                 const radioGroup = document.createElement('div');
                 radioGroup.className = 'form-radio-group';
@@ -13434,10 +13445,10 @@ function makePosts(){
                   radioGroup.appendChild(placeholderOption);
                 }
                 control = radioGroup;
-              } else if(field.type === 'venue-ticketing'){
+              } else if(baseType === 'venue-ticketing'){
                 wrapper.classList.add('form-field--venues-sessions-pricing');
                 control = buildVenueSessionPreview(field, baseId);
-              } else if(field.type === 'variant-pricing'){
+              } else if(baseType === 'variant-pricing'){
                 wrapper.classList.add('form-field--variant-pricing');
                 const editor = document.createElement('div');
                 editor.className = 'form-variant-pricing variant-pricing-options-editor';
@@ -13846,7 +13857,7 @@ function makePosts(){
                 renderVersionEditor();
                 editor.setAttribute('aria-required', field.required ? 'true' : 'false');
                 control = editor;
-              } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+              } else if(baseType === 'website-url' || baseType === 'tickets-url'){
                 wrapper.classList.add('form-field--url');
                 const urlWrapper = document.createElement('div');
                 urlWrapper.className = 'form-url-wrapper';
@@ -13859,7 +13870,7 @@ function makePosts(){
                   ? field.placeholder
                   : 'https://example.com';
                 urlInput.placeholder = placeholderValue;
-                urlInput.dataset.urlType = field.type === 'website-url' ? 'website' : 'tickets';
+                urlInput.dataset.urlType = baseType === 'website-url' ? 'website' : 'tickets';
                 urlInput.dataset.urlMessage = 'Please enter a valid URL with a dot and letters after it.';
                 const linkId = `${baseId}-link`;
                 urlInput.dataset.urlLinkId = linkId;
@@ -13879,7 +13890,7 @@ function makePosts(){
                 urlMessage.textContent = 'Link disabled until a valid URL is entered.';
                 urlWrapper.append(urlInput, urlLink, urlMessage);
                 control = urlWrapper;
-              } else if(field.type === 'images'){
+              } else if(baseType === 'images'){
                 wrapper.classList.add('form-field--images');
                 const imageWrapper = document.createElement('div');
                 imageWrapper.className = 'form-images';
@@ -13907,7 +13918,7 @@ function makePosts(){
                 imagePreviewsGrid.id = imagePreviewsId;
                 imageWrapper.append(fileInput, hint, message, imagePreviewsGrid);
                 control = imageWrapper;
-              } else if(field.type === 'location'){
+              } else if(baseType === 'location'){
                 wrapper.classList.add('form-field--location');
                 const ensureLocationState = ()=>{
                   if(!field.location || typeof field.location !== 'object'){

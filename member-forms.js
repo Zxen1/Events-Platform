@@ -1579,6 +1579,16 @@
               currentCreateFields.push({ field: field, element: wrapper });
             }
           });
+        } else {
+          // Fallback: use old buildMemberCreateField if renderForm not available
+          console.warn('[Member Forms] window.renderForm not available, using fallback');
+          fields.forEach((fieldData, index) => {
+            const fieldElement = buildMemberCreateField(fieldData, index);
+            if(fieldElement){
+              formFields.appendChild(fieldElement);
+              currentCreateFields.push({ field: fieldData, element: fieldElement });
+            }
+          });
         }
       }
       if(emptyState){
@@ -1683,6 +1693,10 @@
     }
     
     function ensureFieldDefaultsForMember(field){
+      // Expose for use by shared renderForm
+      if(typeof window !== 'undefined'){
+        window.ensureFieldDefaultsForMember = ensureFieldDefaultsForMember;
+      }
       const safeField = field && typeof field === 'object' ? field : {};
       if(typeof safeField.name !== 'string'){
         safeField.name = '';
