@@ -9615,26 +9615,26 @@ function makePosts(){
             }
             return safeField;
           };
-          const buildVenueSessionPreview = (previewField, baseId)=>{
+          const buildVenueSessionPreview = (field, baseId)=>{
             // CRITICAL: Clone options to prevent sharing state between form preview and member forms
             // Each instance needs its own independent copy of the options
-            const clonedOptions = Array.isArray(previewField.options) 
-              ? previewField.options.map(venue => cloneVenueSessionVenue(venue))
+            const clonedOptions = Array.isArray(field.options) 
+              ? field.options.map(venue => cloneVenueSessionVenue(venue))
               : [];
             // Create a local field copy to work with, so we don't mutate the original
             const localField = {
-              ...previewField,
+              ...field,
               options: clonedOptions.length > 0 ? clonedOptions : [venueSessionCreateVenue()]
             };
             
             const editor = document.createElement('div');
             editor.className = 'venue-session-editor';
-            editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            editor.setAttribute('aria-required', field.required ? 'true' : 'false');
             
             // Detect if we're in member form context (needs stopPropagation to prevent form closure)
             const isMemberForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
-            // Detect if we're in formbuilder (needs to sync back to previewField.options)
-            const isFormbuilder = !isMemberForm && baseId && (baseId.includes('formPreview') || baseId.includes('formbuilder'));
+            // Detect if we're in formbuilder (needs to sync back to field.options)
+            const isFormbuilder = !isMemberForm && baseId && (baseId.includes('formId') || baseId.includes('formbuilder'));
             
             // For member forms, prevent clicks from bubbling up to prevent form closure
             // BUT allow buttons and geocoder events to propagate so they work
@@ -9720,21 +9720,21 @@ function makePosts(){
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
-              // Work with localField.options, not previewField.options
+              // Work with localField.options, not field.options
               localField.options = normalizeVenueSessionOptions(localField.options);
               if(!Array.isArray(localField.options) || localField.options.length === 0){
                 localField.options = [venueSessionCreateVenue()];
               }
-              // Only sync back to previewField.options if we're in formbuilder (not member forms)
+              // Only sync back to field.options if we're in formbuilder (not member forms)
               if(isFormbuilder){
-                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
+                field.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
               }
             };
             
-            // Sync function to update previewField.options from localField.options (only for formbuilder)
-            const syncToPreviewField = ()=>{
+            // Sync function to update field.options from localField.options (only for formbuilder)
+            const syncToField = ()=>{
               if(isFormbuilder){
-                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
+                field.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
               }
             };
 
@@ -10014,7 +10014,7 @@ function makePosts(){
             };
 
             const ensureSlot = (venue, index)=>{
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(!Array.isArray(state.slots)){
                 state.slots = [];
               }
@@ -10033,7 +10033,7 @@ function makePosts(){
             };
 
             const resetSlotIfEmpty = (venue, index)=>{
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(!state || !Array.isArray(state.slots) || !state.slots[index]) return;
               const allEmpty = venue.sessions.every(sess => {
                 const t = sess.times[index];
@@ -10047,7 +10047,7 @@ function makePosts(){
             };
 
             const isSessionMirrorLocked = venue => {
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(typeof state.sessionMirrorLocked !== 'boolean'){
                 state.sessionMirrorLocked = false;
               }
@@ -10055,7 +10055,7 @@ function makePosts(){
             };
 
             const lockSessionMirror = venue => {
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(state.sessionMirrorLocked === true) return;
               state.sessionMirrorLocked = true;
               if(Array.isArray(state.slots)){
@@ -10188,7 +10188,7 @@ function makePosts(){
               if(!session) return;
               cloneSessionTimesFromFirst(venue, session);
               if(isSessionMirrorLocked(venue)) return;
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               const slots = Array.isArray(state.slots) ? state.slots : [];
               for(let i = 0; i < slots.length; i++){
                 const slot = slots[i];
@@ -10250,7 +10250,7 @@ function makePosts(){
                 });
                 maxTimes = Math.max(maxTimes, session.times.length);
               });
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(!Array.isArray(state.slots)) state.slots = [];
               while(state.slots.length < maxTimes){
                 state.slots.push({ value: '', locked: false, source: null });
@@ -10281,7 +10281,7 @@ function makePosts(){
 
             const addVenue = (afterIndex)=>{
               ensureOptions();
-              const venues = previewField.options;
+              const venues = field.options;
               const newVenue = venueSessionCreateVenue();
               let defaultCurrency = '';
               if(Array.isArray(venues) && venues.length > 0){
@@ -10308,11 +10308,11 @@ function makePosts(){
               ensureOptions();
               if(localField.options.length <= 1) return;
               const removed = localField.options.splice(index, 1)[0];
-              // Sync back to previewField if in formbuilder
+              // Sync back to field if in formbuilder
               if(isFormbuilder){
-                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
+                field.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
               }
-              const state = VENUE_TIME_AUTOFILL_STATE.get(previewField);
+              const state = VENUE_TIME_AUTOFILL_STATE.get(field);
               if(state && removed){
                 try{ state.delete(removed); }catch(err){}
               }
@@ -10421,11 +10421,11 @@ function makePosts(){
               newTime.displayOrder = Number.isFinite(Number(timeIndex)) ? Number(timeIndex) + 2 : 2;
               lockSessionMirror(venue);
               sessions.splice(sessionIndex + 1, 0, newSession);
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(Array.isArray(state.slots) && state.slots.length > 1){
                 state.slots.length = 1;
               }
-              const sessionExistsInOptions = sessionObj => previewField.options.some(v => Array.isArray(v?.sessions) && v.sessions.includes(sessionObj));
+              const sessionExistsInOptions = sessionObj => field.options.some(v => Array.isArray(v?.sessions) && v.sessions.includes(sessionObj));
               openSessions.clear();
               previouslyOpenSessions.forEach(sessionObj => {
                 if(sessionExistsInOptions(sessionObj)){
@@ -10444,7 +10444,7 @@ function makePosts(){
               if(!session) return;
               const times = Array.isArray(session.times) ? session.times : [];
               if(times.length <= 1){
-                const state = getVenueAutofillState(previewField, venue);
+                const state = getVenueAutofillState(field, venue);
                 if(Array.isArray(state.slots) && state.slots.length > 1){
                   state.slots.length = 1;
                 }
@@ -10476,7 +10476,7 @@ function makePosts(){
                   }
                 });
               }
-              const state = getVenueAutofillState(previewField, venue);
+              const state = getVenueAutofillState(field, venue);
               if(Array.isArray(state.slots) && state.slots.length > timeIndex){
                 state.slots.splice(timeIndex, 1);
               }
@@ -11315,14 +11315,14 @@ function makePosts(){
                   if(updateName && featureName){
                     venue.name = featureName;
                     venueNameInput.value = featureName;
-                    syncToPreviewField();
+                    syncToField();
                   }
                   if(placeName){
                     venue.address = placeName;
                     if(geocoderInputRef){
                       geocoderInputRef.value = placeName;
                     }
-                    syncToPreviewField();
+                    syncToField();
                   }
                   if(center){
                     venue.location = {
@@ -11345,7 +11345,7 @@ function makePosts(){
                 venueNameInput.addEventListener('input', ()=>{
                   const value = venueNameInput.value || '';
                   venue.name = value;
-                  syncToPreviewField();
+                  syncToField();
                   notifyFormbuilderChange();
                   if(nameSearchTimeout){
                     clearTimeout(nameSearchTimeout);
@@ -11528,8 +11528,8 @@ function makePosts(){
                     };
                     setGeocoderActive(false);
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
-                    if(geocoderRoot && !geocoderRoot.__formPreviewGeocoderBound){
-                      geocoderRoot.__formPreviewGeocoderBound = true;
+                    if(geocoderRoot && !geocoderRoot.__formGeocoderBound){
+                      geocoderRoot.__formGeocoderBound = true;
                       // For member forms, set high z-index to ensure geocoder is visible above other elements
                       if(isMemberForm){
                         geocoderRoot.style.zIndex = '1000001';
@@ -11619,7 +11619,7 @@ function makePosts(){
                       const nextValue = geocoderInput.value || '';
                       if(venue.address !== nextValue){
                         venue.address = nextValue;
-                        syncToPreviewField();
+                        syncToField();
                         notifyFormbuilderChange();
                       }
                     });
@@ -12510,40 +12510,40 @@ function makePosts(){
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
-          const formPreviewBtn = document.createElement('button');
-          formPreviewBtn.type = 'button';
-          formPreviewBtn.className = 'form-preview-btn';
-          formPreviewBtn.setAttribute('aria-expanded', 'false');
-          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
-          const formPreviewLabel = document.createElement('span');
-          formPreviewLabel.textContent = 'Form Preview';
-          const formPreviewArrow = document.createElement('span');
-          formPreviewArrow.className = 'dropdown-arrow';
-          formPreviewArrow.setAttribute('aria-hidden', 'true');
-          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
+          const formBtn = document.createElement('button');
+          formBtn.type = 'button';
+          formBtn.className = 'form-btn';
+          formBtn.setAttribute('aria-expanded', 'false');
+          formBtn.setAttribute('aria-label', `Preview ${sub} form`);
+          const formLabel = document.createElement('span');
+          formLabel.textContent = 'Form Preview';
+          const formArrow = document.createElement('span');
+          formArrow.className = 'dropdown-arrow';
+          formArrow.setAttribute('aria-hidden', 'true');
+          formBtn.append(formLabel, formArrow);
 
-          const formPreviewContainer = document.createElement('div');
-          formPreviewContainer.className = 'form-preview-container';
-          formPreviewContainer.hidden = true;
-          const formPreviewFields = document.createElement('div');
-          formPreviewFields.className = 'form-preview-fields';
-          formPreviewContainer.appendChild(formPreviewFields);
-          const formPreviewId = `${subContentId}Preview`;
-          formPreviewContainer.id = formPreviewId;
-          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
+          const formContainer = document.createElement('div');
+          formContainer.className = 'form-container';
+          formContainer.hidden = true;
+          const formFields = document.createElement('div');
+          formFields.className = 'form-fields';
+          formContainer.appendChild(formFields);
+          const formId = `${subContentId}Form`;
+          formContainer.id = formId;
+          formBtn.setAttribute('aria-controls', formId);
 
           // Expose buildVenueSessionPreview for use in member forms
           window.buildVenueSessionPreview = buildVenueSessionPreview;
 
-          fieldsSection.append(fieldsList, addFieldBtn, formPreviewBtn, formPreviewContainer);
+          fieldsSection.append(fieldsList, addFieldBtn, formBtn, formContainer);
 
-          formPreviewBtn.addEventListener('click', ()=>{
-            const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
+          formBtn.addEventListener('click', ()=>{
+            const expanded = formBtn.getAttribute('aria-expanded') === 'true';
             const nextExpanded = !expanded;
-            formPreviewBtn.setAttribute('aria-expanded', String(nextExpanded));
-            formPreviewContainer.hidden = !nextExpanded;
+            formBtn.setAttribute('aria-expanded', String(nextExpanded));
+            formContainer.hidden = !nextExpanded;
             if(nextExpanded){
-              renderFormPreview();
+              renderForm();
             }
           });
 
@@ -12693,7 +12693,7 @@ function makePosts(){
                 
                 notifyFormbuilderChange();
                 updateFieldEditorsByType();
-                renderFormPreview();
+                renderForm();
                 runSummaryUpdater();
               });
               
@@ -12812,7 +12812,7 @@ function makePosts(){
               if(next === !!safeField.required) return;
               safeField.required = next;
               notifyFormbuilderChange();
-              renderFormPreview();
+              renderForm();
               runSummaryUpdater();
             };
 
@@ -12904,7 +12904,7 @@ function makePosts(){
                   safeField.options[optionIndex] = optionInput.value;
                   optionRow._optionValue = optionInput.value;
                   notifyFormbuilderChange();
-                  renderFormPreview();
+                  renderForm();
                 });
 
                 const actions = document.createElement('div');
@@ -12921,7 +12921,7 @@ function makePosts(){
                   safeField.options.splice(optionIndex + 1, 0, '');
                   notifyFormbuilderChange();
                   renderDropdownOptions(optionIndex + 1);
-                  renderFormPreview();
+                  renderForm();
                 });
 
                 const removeOptionBtn = document.createElement('button');
@@ -12940,7 +12940,7 @@ function makePosts(){
                   notifyFormbuilderChange();
                   const nextFocus = Math.min(optionIndex, Math.max(safeField.options.length - 1, 0));
                   renderDropdownOptions(nextFocus);
-                  renderFormPreview();
+                  renderForm();
                 });
 
                 actions.append(addOptionBtn, removeOptionBtn);
@@ -13023,7 +13023,7 @@ function makePosts(){
               }
               notifyFormbuilderChange();
               renderDropdownOptions();
-              renderFormPreview();
+              renderForm();
             });
 
             const updateFieldEditorsByType = ()=>{
@@ -13116,7 +13116,7 @@ function makePosts(){
                 safeField.name = newName;
                 // Only update preview and summary, don't trigger formbuilder change event
                 // which causes member forms to refresh
-                renderFormPreview();
+                renderForm();
                 runSummaryUpdater();
               }
             });
@@ -13245,39 +13245,47 @@ function makePosts(){
             };
           };
 
-          let formPreviewFieldIdCounter = 0;
-          function renderFormPreview(){
-            formPreviewFields.innerHTML = '';
+          let formFieldIdCounter = 0;
+          function renderForm(options = {}){
+            const targetFormFields = options.formFields || formFields;
+            const targetFormId = options.formId || formId;
+            const targetFields = options.fields || fields;
+            const categoryName = options.categoryName || (c && c.name) || '';
+            const subcategoryName = options.subcategoryName || sub || '';
+            let targetFieldIdCounter = options.fieldIdCounter !== undefined ? options.fieldIdCounter : formFieldIdCounter;
+            const shouldIncrementCounter = options.fieldIdCounter === undefined;
+            
+            targetFormFields.innerHTML = '';
             
             const categorySubcategoryLabel = document.createElement('div');
-            categorySubcategoryLabel.className = 'form-preview-category-label';
-            categorySubcategoryLabel.textContent = `${c.name} > ${sub}`;
+            categorySubcategoryLabel.className = 'form-category-label';
+            categorySubcategoryLabel.textContent = categoryName && subcategoryName ? `${categoryName} > ${subcategoryName}` : subcategoryName || categoryName || '';
             categorySubcategoryLabel.style.marginBottom = '12px';
             categorySubcategoryLabel.style.fontSize = '14px';
             categorySubcategoryLabel.style.fontWeight = '600';
             categorySubcategoryLabel.style.color = 'var(--button-text)';
-            formPreviewFields.appendChild(categorySubcategoryLabel);
+            targetFormFields.appendChild(categorySubcategoryLabel);
             
-            if(!fields.length){
+            if(!targetFields.length){
               const empty = document.createElement('p');
-              empty.className = 'form-preview-empty';
+              empty.className = 'form-empty';
               empty.textContent = 'No fields added yet.';
-              formPreviewFields.appendChild(empty);
+              targetFormFields.appendChild(empty);
               return;
             }
-            fields.forEach((fieldData, previewIndex)=>{
-              const previewField = ensureFieldDefaults(fieldData);
+            targetFields.forEach((fieldData, fieldIndex)=>{
+              const field = ensureFieldDefaults(fieldData);
               const wrapper = document.createElement('div');
-              wrapper.className = 'panel-field form-preview-field';
-              const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
-              const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              wrapper.className = 'panel-field form-field';
+              const baseId = `${targetFormId}-field-${shouldIncrementCounter ? ++formFieldIdCounter : ++targetFieldIdCounter}`;
+              const labelText = field.name.trim() || `Field ${fieldIndex + 1}`;
               const labelEl = document.createElement('span');
               labelEl.className = 'subcategory-form-label';
               labelEl.textContent = labelText;
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
               let control = null;
-              const baseType = getBaseFieldType(previewField.type);
+              const baseType = getBaseFieldType(field.type);
               if(baseType === 'text-area' || baseType === 'description'){
                 const textarea = document.createElement('textarea');
                 textarea.rows = 5;
@@ -13290,29 +13298,29 @@ function makePosts(){
                 textarea.addEventListener('input', (e) => {
                   e.stopPropagation();
                 });
-                textarea.placeholder = previewField.placeholder || '';
-                textarea.className = 'form-preview-textarea';
+                textarea.placeholder = field.placeholder || '';
+                textarea.className = 'form-textarea';
                 textarea.style.resize = 'vertical';
                 const textareaId = `${baseId}-input`;
                 textarea.id = textareaId;
                 if(baseType === 'description'){
-                  textarea.classList.add('form-preview-description');
+                  textarea.classList.add('form-description');
                 }
                 control = textarea;
-              } else if(previewField.type === 'dropdown'){
-                wrapper.classList.add('form-preview-field--dropdown');
+              } else if(field.type === 'dropdown'){
+                wrapper.classList.add('form-field--dropdown');
                 const dropdownWrapper = document.createElement('div');
                 dropdownWrapper.className = 'options-dropdown';
                 const menuBtn = document.createElement('button');
                 menuBtn.type = 'button';
-                menuBtn.className = 'form-preview-select';
+                menuBtn.className = 'form-select';
                 menuBtn.setAttribute('aria-haspopup', 'true');
                 menuBtn.setAttribute('aria-expanded', 'false');
                 const selectId = `${baseId}-input`;
                 menuBtn.id = selectId;
                 const menuId = `${selectId}-menu`;
                 menuBtn.setAttribute('aria-controls', menuId);
-                const options = Array.isArray(previewField.options) ? previewField.options : [];
+                const options = Array.isArray(field.options) ? field.options : [];
                 const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
                 menuBtn.textContent = defaultText;
                 const arrow = document.createElement('span');
@@ -13374,16 +13382,16 @@ function makePosts(){
                 dropdownWrapper.appendChild(menuBtn);
                 dropdownWrapper.appendChild(optionsMenu);
                 control = dropdownWrapper;
-              } else if(previewField.type === 'radio'){
-                const options = Array.isArray(previewField.options) ? previewField.options : [];
+              } else if(field.type === 'radio'){
+                const options = Array.isArray(field.options) ? field.options : [];
                 const radioGroup = document.createElement('div');
-                radioGroup.className = 'form-preview-radio-group';
-                wrapper.classList.add('form-preview-field--radio-toggle');
+                radioGroup.className = 'form-radio-group';
+                wrapper.classList.add('form-field--radio-toggle');
                 const groupName = `${baseId}-radio`;
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
                     const radioLabel = document.createElement('label');
-                    radioLabel.className = 'form-preview-radio-option';
+                    radioLabel.className = 'form-radio-option';
                     const radio = document.createElement('input');
                     radio.type = 'radio';
                     radio.name = groupName;
@@ -13417,7 +13425,7 @@ function makePosts(){
                   });
                 } else {
                   const placeholderOption = document.createElement('label');
-                  placeholderOption.className = 'form-preview-radio-option';
+                  placeholderOption.className = 'form-radio-option';
                   const radio = document.createElement('input');
                   radio.type = 'radio';
                   radio.tabIndex = -1;
@@ -13426,13 +13434,13 @@ function makePosts(){
                   radioGroup.appendChild(placeholderOption);
                 }
                 control = radioGroup;
-              } else if(previewField.type === 'venue-ticketing'){
-                wrapper.classList.add('form-preview-field--venues-sessions-pricing');
-                control = buildVenueSessionPreview(previewField, baseId);
-              } else if(previewField.type === 'variant-pricing'){
-                wrapper.classList.add('form-preview-field--variant-pricing');
+              } else if(field.type === 'venue-ticketing'){
+                wrapper.classList.add('form-field--venues-sessions-pricing');
+                control = buildVenueSessionPreview(field, baseId);
+              } else if(field.type === 'variant-pricing'){
+                wrapper.classList.add('form-field--variant-pricing');
                 const editor = document.createElement('div');
-                editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+                editor.className = 'form-variant-pricing variant-pricing-options-editor';
                 const versionList = document.createElement('div');
                 versionList.className = 'variant-pricing-options-list';
                 editor.appendChild(versionList);
@@ -13440,10 +13448,10 @@ function makePosts(){
                 const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
 
                 const normalizeOptions = ()=>{
-                  if(!Array.isArray(previewField.options)){
-                    previewField.options = [];
+                  if(!Array.isArray(field.options)){
+                    field.options = [];
                   }
-                  previewField.options = previewField.options.map(opt => {
+                  field.options = field.options.map(opt => {
                     if(opt && typeof opt === 'object'){
                       return {
                         version: typeof opt.version === 'string' ? opt.version : '',
@@ -13454,8 +13462,8 @@ function makePosts(){
                     const str = typeof opt === 'string' ? opt : String(opt ?? '');
                     return { version: str, currency: '', price: '' };
                   });
-                  if(previewField.options.length === 0){
-                    previewField.options.push(createEmptyOption());
+                  if(field.options.length === 0){
+                    field.options.push(createEmptyOption());
                   }
                 };
 
@@ -13502,7 +13510,7 @@ function makePosts(){
                       currencyAlertTimeout = 0;
                     }, 1500);
                   };
-                  previewField.options.forEach((optionValue, optionIndex)=>{
+                  field.options.forEach((optionValue, optionIndex)=>{
                     const optionRow = document.createElement('div');
                     optionRow.className = 'variant-pricing-option';
                     optionRow.dataset.optionIndex = String(optionIndex);
@@ -13521,7 +13529,7 @@ function makePosts(){
                     }
                     versionInput.value = optionValue.version || '';
                     versionInput.addEventListener('input', ()=>{
-                      previewField.options[optionIndex].version = versionInput.value;
+                      field.options[optionIndex].version = versionInput.value;
                       notifyFormbuilderChange();
                     });
                     topRow.appendChild(versionInput);
@@ -13560,8 +13568,8 @@ function makePosts(){
                       currencyMenuBtn.dataset.value = '';
                       currencyMenu.hidden = true;
                       currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                      const previousCurrency = previewField.options[optionIndex].currency || '';
-                      previewField.options[optionIndex].currency = '';
+                      const previousCurrency = field.options[optionIndex].currency || '';
+                      field.options[optionIndex].currency = '';
                       const priceCleared = updatePriceState();
                       if(previousCurrency !== '' || priceCleared){
                         notifyFormbuilderChange();
@@ -13581,8 +13589,8 @@ function makePosts(){
                         currencyMenuBtn.dataset.value = code;
                         currencyMenu.hidden = true;
                         currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                        const previousCurrency = previewField.options[optionIndex].currency || '';
-                        previewField.options[optionIndex].currency = code;
+                        const previousCurrency = field.options[optionIndex].currency || '';
+                        field.options[optionIndex].currency = code;
                         const priceCleared = updatePriceState();
                         if(isCurrencySelected()){
                           commitPriceValue();
@@ -13658,8 +13666,8 @@ function makePosts(){
                     const initialPriceValue = sanitizePriceValue(optionValue.price || '');
                     const formattedInitialPrice = formatPriceValue(initialPriceValue);
                     priceInput.value = formattedInitialPrice;
-                    if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
-                      previewField.options[optionIndex].price = formattedInitialPrice;
+                    if(formattedInitialPrice !== (field.options[optionIndex].price || '')){
+                      field.options[optionIndex].price = formattedInitialPrice;
                     }
                     const clearPriceValue = ()=>{
                       let changed = false;
@@ -13667,11 +13675,11 @@ function makePosts(){
                         priceInput.value = '';
                         changed = true;
                       }
-                      if(previewField.options[optionIndex].price !== ''){
-                        previewField.options[optionIndex].price = '';
+                      if(field.options[optionIndex].price !== ''){
+                        field.options[optionIndex].price = '';
                         changed = true;
-                      } else if(typeof previewField.options[optionIndex].price !== 'string'){
-                        previewField.options[optionIndex].price = '';
+                      } else if(typeof field.options[optionIndex].price !== 'string'){
+                        field.options[optionIndex].price = '';
                       }
                       return changed;
                     };
@@ -13744,9 +13752,9 @@ function makePosts(){
                           }
                         }
                       }
-                      const previous = previewField.options[optionIndex].price || '';
+                      const previous = field.options[optionIndex].price || '';
                       if(previous !== formatted){
-                        previewField.options[optionIndex].price = formatted;
+                        field.options[optionIndex].price = formatted;
                         notifyFormbuilderChange();
                       }
                     };
@@ -13783,7 +13791,7 @@ function makePosts(){
                     addBtn.textContent = '+';
                     addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
                     addBtn.addEventListener('click', ()=>{
-                      previewField.options.splice(optionIndex + 1, 0, createEmptyOption());
+                      field.options.splice(optionIndex + 1, 0, createEmptyOption());
                       notifyFormbuilderChange();
                       renderVersionEditor(optionIndex + 1);
                     });
@@ -13793,15 +13801,15 @@ function makePosts(){
                     removeBtn.className = 'dropdown-option-remove';
                     removeBtn.textContent = '-';
                     removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
-                    removeBtn.disabled = previewField.options.length <= 1;
+                    removeBtn.disabled = field.options.length <= 1;
                     removeBtn.addEventListener('click', ()=>{
-                      if(previewField.options.length <= 1){
-                        previewField.options[0] = createEmptyOption();
+                      if(field.options.length <= 1){
+                        field.options[0] = createEmptyOption();
                       } else {
-                        previewField.options.splice(optionIndex, 1);
+                        field.options.splice(optionIndex, 1);
                       }
                       notifyFormbuilderChange();
-                      const nextFocus = Math.min(optionIndex, Math.max(previewField.options.length - 1, 0));
+                      const nextFocus = Math.min(optionIndex, Math.max(field.options.length - 1, 0));
                       renderVersionEditor(nextFocus);
                     });
 
@@ -13836,22 +13844,22 @@ function makePosts(){
                 };
 
                 renderVersionEditor();
-                editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+                editor.setAttribute('aria-required', field.required ? 'true' : 'false');
                 control = editor;
-              } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
-                wrapper.classList.add('form-preview-field--url');
+              } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+                wrapper.classList.add('form-field--url');
                 const urlWrapper = document.createElement('div');
-                urlWrapper.className = 'form-preview-url-wrapper';
+                urlWrapper.className = 'form-url-wrapper';
                 const urlInput = document.createElement('input');
                 urlInput.type = 'text';
-                urlInput.className = 'form-preview-url-input';
+                urlInput.className = 'form-url-input';
                 const urlInputId = `${baseId}-input`;
                 urlInput.id = urlInputId;
-                const placeholderValue = previewField.placeholder && /\.[A-Za-z]{2,}/.test(previewField.placeholder)
-                  ? previewField.placeholder
+                const placeholderValue = field.placeholder && /\.[A-Za-z]{2,}/.test(field.placeholder)
+                  ? field.placeholder
                   : 'https://example.com';
                 urlInput.placeholder = placeholderValue;
-                urlInput.dataset.urlType = previewField.type === 'website-url' ? 'website' : 'tickets';
+                urlInput.dataset.urlType = field.type === 'website-url' ? 'website' : 'tickets';
                 urlInput.dataset.urlMessage = 'Please enter a valid URL with a dot and letters after it.';
                 const linkId = `${baseId}-link`;
                 urlInput.dataset.urlLinkId = linkId;
@@ -13862,19 +13870,19 @@ function makePosts(){
                 urlLink.href = '#';
                 urlLink.target = '_blank';
                 urlLink.rel = 'noopener noreferrer';
-                urlLink.className = 'form-preview-url-link';
+                urlLink.className = 'form-url-link';
                 urlLink.textContent = 'Open link';
                 urlLink.setAttribute('aria-disabled','true');
                 urlLink.tabIndex = -1;
                 const urlMessage = document.createElement('div');
-                urlMessage.className = 'form-preview-url-message';
+                urlMessage.className = 'form-url-message';
                 urlMessage.textContent = 'Link disabled until a valid URL is entered.';
                 urlWrapper.append(urlInput, urlLink, urlMessage);
                 control = urlWrapper;
-              } else if(previewField.type === 'images'){
-                wrapper.classList.add('form-preview-field--images');
+              } else if(field.type === 'images'){
+                wrapper.classList.add('form-field--images');
                 const imageWrapper = document.createElement('div');
-                imageWrapper.className = 'form-preview-images';
+                imageWrapper.className = 'form-images';
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 const fileInputId = `${baseId}-input`;
@@ -13883,33 +13891,33 @@ function makePosts(){
                 fileInput.multiple = true;
                 fileInput.dataset.imagesField = 'true';
                 fileInput.dataset.maxImages = '10';
-                const previewId = `${baseId}-previews`;
+                const imagePreviewsId = `${baseId}-previews`;
                 const messageId = `${baseId}-message`;
-                fileInput.dataset.imagePreviewTarget = previewId;
+                fileInput.dataset.imagePreviewTarget = imagePreviewsId;
                 fileInput.dataset.imageMessageTarget = messageId;
                 const hint = document.createElement('div');
-                hint.className = 'form-preview-image-hint';
+                hint.className = 'form-image-hint';
                 hint.textContent = 'Upload up to 10 images.';
                 const message = document.createElement('div');
-                message.className = 'form-preview-image-message';
+                message.className = 'form-image-message';
                 message.id = messageId;
                 message.hidden = true;
-                const previewGrid = document.createElement('div');
-                previewGrid.className = 'form-preview-image-previews';
-                previewGrid.id = previewId;
-                imageWrapper.append(fileInput, hint, message, previewGrid);
+                const imagePreviewsGrid = document.createElement('div');
+                imagePreviewsGrid.className = 'form-image-previews';
+                imagePreviewsGrid.id = imagePreviewsId;
+                imageWrapper.append(fileInput, hint, message, imagePreviewsGrid);
                 control = imageWrapper;
-              } else if(previewField.type === 'location'){
-                wrapper.classList.add('form-preview-field--location');
+              } else if(field.type === 'location'){
+                wrapper.classList.add('form-field--location');
                 const ensureLocationState = ()=>{
-                  if(!previewField.location || typeof previewField.location !== 'object'){
-                    previewField.location = { address: '', latitude: '', longitude: '' };
+                  if(!field.location || typeof field.location !== 'object'){
+                    field.location = { address: '', latitude: '', longitude: '' };
                   } else {
-                    if(typeof previewField.location.address !== 'string') previewField.location.address = '';
-                    if(typeof previewField.location.latitude !== 'string') previewField.location.latitude = '';
-                    if(typeof previewField.location.longitude !== 'string') previewField.location.longitude = '';
+                    if(typeof field.location.address !== 'string') field.location.address = '';
+                    if(typeof field.location.latitude !== 'string') field.location.latitude = '';
+                    if(typeof field.location.longitude !== 'string') field.location.longitude = '';
                   }
-                  return previewField.location;
+                  return field.location;
                 };
                 const locationState = ensureLocationState();
                 const locationWrapper = document.createElement('div');
@@ -13932,8 +13940,8 @@ function makePosts(){
                 longitudeInput.dataset.locationLongitude = 'true';
                 longitudeInput.value = locationState.longitude || '';
                 locationWrapper.append(latitudeInput, longitudeInput);
-                const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
-                  ? previewField.placeholder
+                const placeholderValue = (field.placeholder && field.placeholder.trim())
+                  ? field.placeholder
                   : 'Search for a location';
                 const syncCoordinateInputs = ()=>{
                   latitudeInput.value = locationState.latitude || '';
@@ -13961,7 +13969,7 @@ function makePosts(){
                   fallback.setAttribute('aria-label', placeholderValue);
                   fallback.dataset.locationAddress = 'true';
                   fallback.value = locationState.address || '';
-                  if(previewField.required) fallback.required = true;
+                  if(field.required) fallback.required = true;
                   fallback.addEventListener('input', ()=>{
                     locationState.address = fallback.value;
                     notifyFormbuilderChange();
@@ -14040,8 +14048,8 @@ function makePosts(){
                     };
                     setGeocoderActive(false);
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
-                    if(geocoderRoot && !geocoderRoot.__formPreviewGeocoderBound){
-                      geocoderRoot.__formPreviewGeocoderBound = true;
+                    if(geocoderRoot && !geocoderRoot.__formGeocoderBound){
+                      geocoderRoot.__formGeocoderBound = true;
                       const handleFocusIn = ()=> setGeocoderActive(true);
                       const handleFocusOut = event => {
                         const nextTarget = event && event.relatedTarget;
@@ -14059,18 +14067,18 @@ function makePosts(){
                       scheduleRetry();
                       return;
                     }
-                    if(geocoderInput.__formPreviewLocationBound){
+                    if(geocoderInput.__formLocationBound){
                       addressInput = geocoderInput;
                       applyAddressLabel(geocoderInput);
                       return;
                     }
-                    geocoderInput.__formPreviewLocationBound = true;
+                    geocoderInput.__formLocationBound = true;
                     geocoderInput.placeholder = placeholderValue;
                     geocoderInput.setAttribute('aria-label', placeholderValue);
                     geocoderInput.id = addressInputId;
                     geocoderInput.dataset.locationAddress = 'true';
                     geocoderInput.value = locationState.address || '';
-                    if(previewField.required) geocoderInput.required = true;
+                    if(field.required) geocoderInput.required = true;
                     addressInput = geocoderInput;
                     applyAddressLabel(geocoderInput);
                     geocoderInput.addEventListener('blur', ()=>{
@@ -14133,13 +14141,13 @@ function makePosts(){
               } else {
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.placeholder = previewField.placeholder || '';
+                input.placeholder = field.placeholder || '';
                 input.readOnly = false;
                 input.tabIndex = 0;
                 const inputId = `${baseId}-input`;
                 input.id = inputId;
-                if(previewField.type === 'title'){
-                  input.classList.add('form-preview-title-input');
+                if(field.type === 'title'){
+                  input.classList.add('form-title-input');
                 }
                 // Make editable but prevent any form submission or member form linking
                 input.addEventListener('change', (e) => {
@@ -14152,13 +14160,13 @@ function makePosts(){
               }
               if(control){
                 if(control instanceof HTMLElement){
-                  control.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+                  control.setAttribute('aria-required', field.required ? 'true' : 'false');
                   if(labelId){
                     control.setAttribute('aria-labelledby', labelId);
                   }
                 }
-              if(previewField.required){
-                wrapper.classList.add('form-preview-field--required');
+              if(field.required){
+                wrapper.classList.add('form-field--required');
                 labelEl.appendChild(document.createTextNode(' '));
                 const asterisk = document.createElement('span');
                 asterisk.className = 'required-asterisk';
@@ -14166,37 +14174,37 @@ function makePosts(){
                 labelEl.appendChild(asterisk);
               }
               const header = document.createElement('div');
-              header.className = 'form-preview-field-header';
+              header.className = 'form-field-header';
               header.style.position = 'relative';
               header.appendChild(labelEl);
 
-              const previewFieldEditUI = createFieldEditUI(previewField, {
+              const fieldEditUI = createFieldEditUI(field, {
                 hostElement: wrapper,
                 attachDropdownToPanel: true
               });
 
-              if(previewFieldEditUI && typeof previewFieldEditUI.setDeleteHandler === 'function'){
-                const sourceRow = previewField.__rowEl instanceof Element ? previewField.__rowEl : null;
+              if(fieldEditUI && typeof fieldEditUI.setDeleteHandler === 'function'){
+                const sourceRow = field.__rowEl instanceof Element ? field.__rowEl : null;
                 const rowDeleteHandler = sourceRow && typeof sourceRow.__deleteHandler === 'function'
                   ? sourceRow.__deleteHandler
                   : null;
-                const deleteHandler = rowDeleteHandler || (typeof previewField.__handleDeleteField === 'function'
-                  ? previewField.__handleDeleteField
+                const deleteHandler = rowDeleteHandler || (typeof field.__handleDeleteField === 'function'
+                  ? field.__handleDeleteField
                   : null);
-                previewFieldEditUI.setDeleteHandler(deleteHandler);
+                fieldEditUI.setDeleteHandler(deleteHandler);
               }
 
-              previewFieldEditUI.setSummaryUpdater(()=>{
-                const displayName = (typeof previewField.name === 'string' && previewField.name.trim())
-                  ? previewField.name.trim()
+              fieldEditUI.setSummaryUpdater(()=>{
+                const displayName = (typeof field.name === 'string' && field.name.trim())
+                  ? field.name.trim()
                   : labelText;
-                previewFieldEditUI.editBtn.setAttribute('aria-label', `Edit ${displayName || 'field'} settings`);
+                fieldEditUI.editBtn.setAttribute('aria-label', `Edit ${displayName || 'field'} settings`);
               });
-              previewFieldEditUI.runSummaryUpdater();
+              fieldEditUI.runSummaryUpdater();
 
-              header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel);
+              header.append(fieldEditUI.editBtn, fieldEditUI.editPanel);
 
-              const handlePreviewHeaderClick = event => {
+              const handleFormHeaderClick = event => {
                 if(event.defaultPrevented) return;
                 const origin = event.target;
                 if(!origin) return;
@@ -14205,23 +14213,30 @@ function makePosts(){
                 if(origin.closest('.field-edit-panel')) return;
                 event.stopPropagation();
                 document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-                  if(panel !== previewFieldEditUI.editPanel){
+                  if(panel !== fieldEditUI.editPanel){
                     panel.hidden = true;
                   }
                 });
-                closeFieldEditPanels({ exceptPanel: previewFieldEditUI.editPanel, exceptButton: previewFieldEditUI.editBtn });
-                previewFieldEditUI.openEditPanel();
+                closeFieldEditPanels({ exceptPanel: fieldEditUI.editPanel, exceptButton: fieldEditUI.editBtn });
+                fieldEditUI.openEditPanel();
               };
 
-              header.addEventListener('click', handlePreviewHeaderClick);
+              header.addEventListener('click', handleFormHeaderClick);
               wrapper.append(header, control);
-              formPreviewFields.appendChild(wrapper);
+              targetFormFields.appendChild(wrapper);
+              
+              if(options.onFieldRendered){
+                options.onFieldRendered(wrapper, field);
+              }
             }
             });
           }
+          
+          // Expose renderForm for use by member forms
+          window.renderForm = renderForm;
 
           if(fieldsContainerState){
-            fieldsContainerState.onFieldsReordered = renderFormPreview;
+            fieldsContainerState.onFieldsReordered = renderForm;
           }
 
           const createFieldRow = (field)=>{
@@ -14332,7 +14347,7 @@ function makePosts(){
               setDeleteHandler(null);
               notifyFormbuilderChange();
               syncFieldOrderFromDom(fieldsList, fields);
-              renderFormPreview();
+              renderForm();
               
               // Update formbuilder state manager snapshot after field deletion
               if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
@@ -14440,10 +14455,10 @@ function makePosts(){
                 fieldRow.focus();
               }
             });
-            renderFormPreview();
+            renderForm();
           });
 
-          renderFormPreview();
+          renderForm();
 
           const defaultSubName = sub || 'Subcategory';
           let currentSubName = defaultSubName;
@@ -14500,7 +14515,7 @@ function makePosts(){
           const categoryDisplayName = getCategoryDisplayName();
           deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
-            formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
+            formBtn.setAttribute('aria-label', `Preview ${displayName} form`);
             if(!subLogo.querySelector('img')){
               subLogo.textContent = displayName.charAt(0) || '';
               subLogo.classList.remove('has-icon');
