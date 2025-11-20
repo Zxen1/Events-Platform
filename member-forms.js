@@ -3360,6 +3360,14 @@
         optionBtn.className = 'menu-option';
         // Get icon path from categoryIconPaths map (from database)
         const iconPath = categoryIconPaths[c.name];
+        console.log('[Member Forms] Category icon lookup:', {
+          categoryName: c.name,
+          iconPath: iconPath,
+          iconPathType: typeof iconPath,
+          hasIconPath: !!iconPath,
+          iconPathTrimmed: iconPath ? iconPath.trim() : '',
+          allKeys: Object.keys(categoryIconPaths)
+        });
         if(iconPath && typeof iconPath === 'string' && iconPath.trim()){
           // Normalize icon path like formbuilder does
           let normalizedPath = iconPath.trim();
@@ -3407,6 +3415,13 @@
                 // Get icon path from subcategoryIconPaths map
                 // Note: subcategories are just strings (names), so we use the map
                 const subIconPath = subcategoryIconPaths[s];
+                console.log('[Member Forms] Subcategory icon lookup:', {
+                  subcategoryName: s,
+                  subIconPath: subIconPath,
+                  subIconPathType: typeof subIconPath,
+                  hasSubIconPath: !!subIconPath,
+                  subIconPathTrimmed: subIconPath ? subIconPath.trim() : ''
+                });
                 if(subIconPath && typeof subIconPath === 'string' && subIconPath.trim()){
                   // Normalize icon path like formbuilder does
                   let normalizedSubPath = subIconPath.trim();
