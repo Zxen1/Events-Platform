@@ -3374,6 +3374,7 @@
               
               subcategoryMenuBtn.textContent = 'Select a subcategory';
               subcategoryMenuBtn.dataset.value = '';
+              subcategoryMenuBtn.appendChild(subcategoryArrow);
               subcategoryWrapper.hidden = false;
             } else {
               subcategoryWrapper.hidden = true;
