@@ -7612,7 +7612,12 @@ function makePosts(){
     window.syncMarkerSources = syncMarkerSources;
 
     let postsLoaded = false;
-    window.postsLoaded = postsLoaded;
+    // Expose postsLoaded globally for admin.js access
+    Object.defineProperty(window, 'postsLoaded', {
+      get: () => postsLoaded,
+      set: (val) => { postsLoaded = val; },
+      configurable: true
+    });
     let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
     let initialZoomStarted = false;
     // Expose on window for admin.js access - use getter/setter to keep in sync
@@ -7762,8 +7767,7 @@ function makePosts(){
         ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
         : [];
       window.posts = posts = nextPosts;
-      postsLoaded = true;
-      window.postsLoaded = postsLoaded;
+      window.postsLoaded = postsLoaded = true;
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
       invalidateMarkerDataCache();

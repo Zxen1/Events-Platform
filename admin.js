@@ -12378,7 +12378,7 @@ if (!map.__pillHooksInstalled) {
     }
     window.addPostSource = addPostSource;
     function renderLists(list){
-      if(spinning || !postsLoaded) return;
+      if(spinning || !window.postsLoaded) return;
       
       // If there's an open post, skip the full re-render to avoid flashing/reloading cards
       const existingOpenPost = postsWideEl.querySelector('.open-post');
@@ -14485,7 +14485,7 @@ function openPostModal(id){
         updateResetBtn();
         return;
       }
-      if(!postsLoaded) return;
+      if(!window.postsLoaded) return;
       const basePosts = window.posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
       window.filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
@@ -14500,7 +14500,7 @@ function openPostModal(id){
 
     function refreshMarkers(render = true){
       if(spinning) return;
-      if(!postsLoaded) return;
+      if(!window.postsLoaded) return;
       const newAdPosts = window.filtered.filter(p => p.sponsored);
       const ids = newAdPosts.map(p => p.id).join(',');
       if(adPanel && ids !== adIdsKey){

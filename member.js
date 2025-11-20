@@ -1585,21 +1585,7 @@
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
-        // Use shared renderForm function
-        const fieldIdCounter = { value: 0 };
-        const renderFormFn = window.renderForm || renderForm;
-        if(typeof renderFormFn !== 'function'){
-          console.error('[Member Forms] renderForm function not available');
-          return;
-        }
-        renderFormFn({
-          container: formFields,
-          fields: fields,
-          idPrefix: 'memberForm',
-          categoryName: selectedCategory,
-          subcategoryName: selectedSubcategory,
-          fieldIdCounter: fieldIdCounter
-        });
+        renderFormPreviewForMember(fields);
       }
       if(emptyState){
         emptyState.hidden = true;
@@ -1862,8 +1848,996 @@
       });
     }
     
-    // renderFormPreviewForMember function deleted (~1000 lines) - now using shared renderForm from index.js
-    // The function body has been completely removed. All form rendering now uses the shared renderForm() function.
+    function renderFormPreviewForMember(fields){
+      formFields.innerHTML = '';
+      
+      const subcategoryTitle = document.createElement('div');
+      subcategoryTitle.className = 'member-form-subcategory-title';
+      subcategoryTitle.textContent = selectedSubcategory || '';
+      subcategoryTitle.style.marginBottom = '16px';
+      subcategoryTitle.style.fontSize = '18px';
+      subcategoryTitle.style.fontWeight = '700';
+      subcategoryTitle.style.color = 'var(--button-text)';
+      formFields.appendChild(subcategoryTitle);
+      
+      if(!fields || fields.length === 0){
+        const empty = document.createElement('p');
+        empty.className = 'form-preview-empty';
+        empty.textContent = 'No fields added yet.';
+        formFields.appendChild(empty);
+        return;
+      }
+      fields.forEach((fieldData, previewIndex) => {
+        const previewField = ensureFieldDefaultsForMember(fieldData);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'panel-field form-preview-field';
+        const baseId = `memberForm-field-${++fieldIdCounter}`;
+        const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+        const labelEl = document.createElement('span');
+        labelEl.className = 'subcategory-form-label';
+        labelEl.textContent = labelText;
+        const labelId = `${baseId}-label`;
+        labelEl.id = labelId;
+        let control = null;
+        
+        const baseType = (window.getBaseFieldType || getBaseFieldType)(previewField.type);
+        // Check both baseType and original type for description/text-area
+        const isDescription = baseType === 'description' || baseType === 'text-area' || 
+                            previewField.type === 'description' || previewField.type === 'text-area' ||
+                            (typeof previewField.type === 'string' && (previewField.type.includes('description') || previewField.type.includes('text-area')));
+        if(isDescription){
+          const textarea = document.createElement('textarea');
+          textarea.rows = 5;
+          textarea.placeholder = previewField.placeholder || '';
+          textarea.className = 'form-preview-textarea';
+          textarea.style.resize = 'vertical';
+          const textareaId = `${baseId}-input`;
+          textarea.id = textareaId;
+          if(baseType === 'description' || previewField.type === 'description' || (typeof previewField.type === 'string' && previewField.type.includes('description'))){
+            textarea.classList.add('form-preview-description');
+          }
+          if(previewField.required) textarea.required = true;
+          control = textarea;
+        } else if(baseType === 'dropdown'){
+          wrapper.classList.add('form-preview-field--dropdown');
+          const dropdownWrapper = document.createElement('div');
+          dropdownWrapper.className = 'options-dropdown';
+          const menuBtn = document.createElement('button');
+          menuBtn.type = 'button';
+          menuBtn.className = 'form-preview-select';
+          menuBtn.setAttribute('aria-haspopup', 'true');
+          menuBtn.setAttribute('aria-expanded', 'false');
+          const selectId = `${baseId}-input`;
+          menuBtn.id = selectId;
+          if(previewField.required) menuBtn.setAttribute('data-required', 'true');
+          const menuId = `${selectId}-menu`;
+          menuBtn.setAttribute('aria-controls', menuId);
+          const options = Array.isArray(previewField.options) ? previewField.options : [];
+          const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
+          menuBtn.textContent = defaultText;
+          const arrow = document.createElement('span');
+          arrow.className = 'dropdown-arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          menuBtn.appendChild(arrow);
+          const optionsMenu = document.createElement('div');
+          optionsMenu.className = 'options-menu';
+          optionsMenu.id = menuId;
+          optionsMenu.hidden = true;
+          if(options.length){
+            options.forEach((optionValue, optionIndex) => {
+              const optionBtn = document.createElement('button');
+              optionBtn.type = 'button';
+              optionBtn.className = 'menu-option';
+              const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+              optionBtn.textContent = stringValue.trim() || '';
+              optionBtn.dataset.value = stringValue;
+              optionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuBtn.textContent = stringValue.trim() || 'Select an option';
+                optionsMenu.hidden = true;
+                menuBtn.setAttribute('aria-expanded', 'false');
+              });
+              optionsMenu.appendChild(optionBtn);
+            });
+          } else {
+            const placeholderBtn = document.createElement('button');
+            placeholderBtn.type = 'button';
+            placeholderBtn.className = 'menu-option';
+            placeholderBtn.textContent = 'Select an option';
+            placeholderBtn.disabled = true;
+            optionsMenu.appendChild(placeholderBtn);
+          }
+          menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = !optionsMenu.hasAttribute('hidden');
+            if(open){
+              optionsMenu.hidden = true;
+              menuBtn.setAttribute('aria-expanded', 'false');
+            } else {
+              optionsMenu.hidden = false;
+              menuBtn.setAttribute('aria-expanded', 'true');
+              const outsideHandler = (ev) => {
+                if(!ev.target.closest(dropdownWrapper)){
+                  optionsMenu.hidden = true;
+                  menuBtn.setAttribute('aria-expanded', 'false');
+                  document.removeEventListener('click', outsideHandler);
+                }
+              };
+              setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+            }
+          });
+          optionsMenu.addEventListener('click', (e) => e.stopPropagation());
+          dropdownWrapper.appendChild(menuBtn);
+          dropdownWrapper.appendChild(optionsMenu);
+          control = dropdownWrapper;
+        } else {
+          // Use fieldTypeKey/key as fallback for field type identification
+          const fieldTypeKey = previewField.fieldTypeKey || previewField.key || '';
+          if(fieldTypeKey === 'radio' || baseType === 'radio'){
+            const options = Array.isArray(previewField.options) ? previewField.options : [];
+            const radioGroup = document.createElement('div');
+            radioGroup.className = 'form-preview-radio-group';
+            wrapper.classList.add('form-preview-field--radio-toggle');
+            const groupName = `${baseId}-radio`;
+            if(options.length){
+              options.forEach((optionValue, optionIndex) => {
+                const radioLabel = document.createElement('label');
+                radioLabel.className = 'form-preview-radio-option';
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = groupName;
+                const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+                radio.value = stringValue;
+                // Use the actual option value, don't fall back to "Option X"
+                const radioText = document.createElement('span');
+                radioText.textContent = stringValue.trim() || '';
+                radioLabel.append(radio, radioText);
+                radioGroup.appendChild(radioLabel);
+              });
+            } else {
+              const placeholderOption = document.createElement('label');
+              placeholderOption.className = 'form-preview-radio-option';
+              const radio = document.createElement('input');
+              radio.type = 'radio';
+              placeholderOption.append(radio, document.createTextNode('Option'));
+              radioGroup.appendChild(placeholderOption);
+            }
+            control = radioGroup;
+          } else if(baseType === 'venue-ticketing'){
+            wrapper.classList.add('form-preview-field--venues-sessions-pricing');
+            // Use the same builder as admin form preview for identical structure
+            if(typeof window.buildVenueSessionPreview === 'function'){
+              control = window.buildVenueSessionPreview(previewField, baseId);
+            } else {
+              // Fallback if not available yet
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'venue-ticketing-error';
+              errorDiv.textContent = 'Venue ticketing field type is not available. Please refresh the page.';
+              errorDiv.style.color = 'red';
+              errorDiv.style.padding = '10px';
+              control = errorDiv;
+            }
+            if(control && previewField.required){
+              control.setAttribute('aria-required','true');
+            }
+          } else if(baseType === 'variant-pricing'){
+          wrapper.classList.add('form-preview-field--variant-pricing');
+          // Use exact same logic as admin form preview for identical structure
+          const editor = document.createElement('div');
+          editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+          const versionList = document.createElement('div');
+          versionList.className = 'variant-pricing-options-list';
+          editor.appendChild(versionList);
+
+          const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
+
+          const normalizeOptions = ()=>{
+            if(!Array.isArray(previewField.options)){
+              previewField.options = [];
+            }
+            previewField.options = previewField.options.map(opt => {
+              if(opt && typeof opt === 'object'){
+                return {
+                  version: typeof opt.version === 'string' ? opt.version : '',
+                  currency: typeof opt.currency === 'string' ? opt.currency : '',
+                  price: typeof opt.price === 'string' ? opt.price : ''
+                };
+              }
+              const str = typeof opt === 'string' ? opt : String(opt ?? '');
+              return { version: str, currency: '', price: '' };
+            });
+            if(previewField.options.length === 0){
+              previewField.options.push(createEmptyOption());
+            }
+          };
+
+          // Make notifyFormbuilderChange optional for member forms
+          const safeNotifyFormbuilderChange = typeof window !== 'undefined' && typeof window.notifyFormbuilderChange === 'function' 
+            ? window.notifyFormbuilderChange 
+            : (()=>{});
+
+          const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
+            normalizeOptions();
+            versionList.innerHTML = '';
+            let firstId = null;
+            const currencyAlertMessage = 'Please select a currency before entering a price.';
+            let lastCurrencyAlertAt = 0;
+            let currencyAlertHandle = null;
+            let currencyAlertTimeout = 0;
+            const showCurrencyAlert = target => {
+              const candidate = (target && typeof target.getBoundingClientRect === 'function')
+                ? target
+                : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+                  ? document.activeElement
+                  : null);
+              const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+              if(!inputEl) return;
+              const now = Date.now();
+              if(now - lastCurrencyAlertAt < 400){
+                if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
+                  currencyAlertHandle.reposition();
+                }
+                return;
+              }
+              lastCurrencyAlertAt = now;
+              if(currencyAlertTimeout){
+                clearTimeout(currencyAlertTimeout);
+                currencyAlertTimeout = 0;
+              }
+              if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
+                currencyAlertHandle.remove();
+                currencyAlertHandle = null;
+              }
+              const showCopyStyleMessageFn = typeof window !== 'undefined' && typeof window.showCopyStyleMessage === 'function' ? window.showCopyStyleMessage : (() => null);
+              const handle = showCopyStyleMessageFn(currencyAlertMessage, inputEl);
+              if(!handle) return;
+              currencyAlertHandle = handle;
+              currencyAlertTimeout = window.setTimeout(()=>{
+                handle.remove();
+                if(currencyAlertHandle === handle){
+                  currencyAlertHandle = null;
+                }
+                currencyAlertTimeout = 0;
+              }, 1500);
+            };
+            previewField.options.forEach((optionValue, optionIndex)=>{
+              const optionRow = document.createElement('div');
+              optionRow.className = 'variant-pricing-option';
+              optionRow.dataset.optionIndex = String(optionIndex);
+
+              const topRow = document.createElement('div');
+              topRow.className = 'variant-pricing-row variant-pricing-row--top';
+
+              const versionInput = document.createElement('input');
+              versionInput.type = 'text';
+              versionInput.className = 'variant-pricing-name';
+              versionInput.placeholder = 'Version Name';
+              const versionInputId = `${baseId}-version-${optionIndex}`;
+              versionInput.id = versionInputId;
+              if(optionIndex === 0){
+                firstId = versionInputId;
+              }
+              versionInput.value = optionValue.version || '';
+              versionInput.addEventListener('input', ()=>{
+                previewField.options[optionIndex].version = versionInput.value;
+                safeNotifyFormbuilderChange();
+              });
+              topRow.appendChild(versionInput);
+
+              const bottomRow = document.createElement('div');
+              bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
+
+              const currencyWrapper = document.createElement('div');
+              currencyWrapper.className = 'options-dropdown';
+              const currencyMenuBtn = document.createElement('button');
+              currencyMenuBtn.type = 'button';
+              currencyMenuBtn.className = 'variant-pricing-currency';
+              currencyMenuBtn.setAttribute('aria-haspopup', 'true');
+              currencyMenuBtn.setAttribute('aria-expanded', 'false');
+              const currencyMenuId = `${baseId}-currency-${optionIndex}-menu`;
+              currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
+              const currencyArrow = document.createElement('span');
+              currencyArrow.className = 'dropdown-arrow';
+              currencyArrow.setAttribute('aria-hidden', 'true');
+              currencyMenuBtn.appendChild(currencyArrow);
+              const currencyMenu = document.createElement('div');
+              currencyMenu.className = 'options-menu';
+              currencyMenu.id = currencyMenuId;
+              currencyMenu.hidden = true;
+              const placeholderBtn = document.createElement('button');
+              placeholderBtn.type = 'button';
+              placeholderBtn.className = 'menu-option';
+              placeholderBtn.textContent = 'Currency';
+              placeholderBtn.dataset.value = '';
+              placeholderBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currencyMenuBtn.textContent = 'Currency';
+                currencyMenuBtn.dataset.value = '';
+                currencyMenu.hidden = true;
+                currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                const previousCurrency = previewField.options[optionIndex].currency || '';
+                previewField.options[optionIndex].currency = '';
+                const priceCleared = updatePriceState();
+                if(previousCurrency !== '' || priceCleared){
+                  safeNotifyFormbuilderChange();
+                }
+              });
+              currencyMenu.appendChild(placeholderBtn);
+              const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+              currencyOptions.forEach(code => {
+                const optionBtn = document.createElement('button');
+                optionBtn.type = 'button';
+                optionBtn.className = 'menu-option';
+                optionBtn.textContent = code;
+                optionBtn.dataset.value = code;
+                optionBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  currencyMenuBtn.textContent = code;
+                  currencyMenuBtn.dataset.value = code;
+                  currencyMenu.hidden = true;
+                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                  const previousCurrency = previewField.options[optionIndex].currency || '';
+                  previewField.options[optionIndex].currency = code;
+                  const priceCleared = updatePriceState();
+                  if(isCurrencySelected()){
+                    commitPriceValue();
+                  }
+                  if(previousCurrency !== code || priceCleared){
+                    safeNotifyFormbuilderChange();
+                  }
+                });
+                currencyMenu.appendChild(optionBtn);
+              });
+              currencyMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = !currencyMenu.hasAttribute('hidden');
+                if(open){
+                  currencyMenu.hidden = true;
+                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                } else {
+                  currencyMenu.hidden = false;
+                  currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                  const outsideHandler = (ev) => {
+                    if(!ev.target.closest(currencyWrapper)){
+                      currencyMenu.hidden = true;
+                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      document.removeEventListener('click', outsideHandler);
+                    }
+                  };
+                  setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+                }
+              });
+              currencyMenu.addEventListener('click', (e) => e.stopPropagation());
+              currencyWrapper.appendChild(currencyMenuBtn);
+              currencyWrapper.appendChild(currencyMenu);
+              const currencySelect = currencyMenuBtn; // Keep reference for isCurrencySelected
+              const isCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
+              // Set initial value
+              if(optionValue.currency && optionValue.currency.trim()){
+                currencyMenuBtn.textContent = optionValue.currency;
+                currencyMenuBtn.dataset.value = optionValue.currency;
+              } else {
+                currencyMenuBtn.textContent = 'Currency';
+                currencyMenuBtn.dataset.value = '';
+              }
+
+              const priceInput = document.createElement('input');
+              priceInput.type = 'text';
+              priceInput.inputMode = 'decimal';
+              priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
+              priceInput.className = 'variant-pricing-price';
+              priceInput.placeholder = '0.00';
+              const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
+              const formatPriceValue = value => {
+                const trimmed = (value || '').trim();
+                if(trimmed === '') return '';
+                let normalized = trimmed.replace(/,/g, '.');
+                if(normalized === '.') return '0.00';
+                if(normalized.startsWith('.')){
+                  normalized = `0${normalized}`;
+                }
+                const dotIndex = normalized.indexOf('.');
+                if(dotIndex === -1){
+                  return `${normalized}.00`;
+                }
+                let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
+                if(integerPart === ''){
+                  integerPart = '0';
+                }
+                let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
+                if(decimalPart.length === 0){
+                  decimalPart = '00';
+                } else if(decimalPart.length === 1){
+                  decimalPart = `${decimalPart}0`;
+                } else {
+                  decimalPart = decimalPart.slice(0, 2);
+                }
+                return `${integerPart}.${decimalPart}`;
+              };
+              const initialPriceValue = sanitizePriceValue(optionValue.price || '');
+              const formattedInitialPrice = formatPriceValue(initialPriceValue);
+              priceInput.value = formattedInitialPrice;
+              if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
+                previewField.options[optionIndex].price = formattedInitialPrice;
+              }
+              const clearPriceValue = ()=>{
+                let changed = false;
+                if(priceInput.value !== ''){
+                  priceInput.value = '';
+                  changed = true;
+                }
+                if(previewField.options[optionIndex].price !== ''){
+                  previewField.options[optionIndex].price = '';
+                  changed = true;
+                } else if(typeof previewField.options[optionIndex].price !== 'string'){
+                  previewField.options[optionIndex].price = '';
+                }
+                return changed;
+              };
+              const updatePriceState = ()=>{
+                if(isCurrencySelected()){
+                  priceInput.readOnly = false;
+                  priceInput.classList.remove('is-awaiting-currency');
+                  priceInput.removeAttribute('aria-disabled');
+                  return false;
+                }
+                priceInput.readOnly = true;
+                priceInput.classList.add('is-awaiting-currency');
+                priceInput.setAttribute('aria-disabled', 'true');
+                return clearPriceValue();
+              };
+              const blockPriceAccess = event => {
+                if(isCurrencySelected()) return false;
+                if(event && event.type === 'pointerdown' && event.button !== 0) return false;
+                if(event && typeof event.preventDefault === 'function'){
+                  event.preventDefault();
+                }
+                if(event && typeof event.stopPropagation === 'function'){
+                  event.stopPropagation();
+                }
+                if(typeof priceInput.blur === 'function'){
+                  requestAnimationFrame(()=>{
+                    try{ priceInput.blur(); }catch(err){}
+                  });
+                }
+                showCurrencyAlert(priceInput);
+                return true;
+              };
+              // Currency change is handled in the menu option click handlers above
+
+              const commitPriceValue = event => {
+                if(!isCurrencySelected()){
+                  if(clearPriceValue()){
+                    safeNotifyFormbuilderChange();
+                  }
+                  return;
+                }
+                const rawValue = priceInput.value;
+                const sanitized = sanitizePriceValue(rawValue);
+                if(rawValue !== sanitized){
+                  priceInput.value = sanitized;
+                }
+                const formatted = formatPriceValue(sanitized);
+                if(priceInput.value !== formatted){
+                  priceInput.value = formatted;
+                }
+                if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
+                  if(formatted === ''){
+                    priceInput.setSelectionRange(0, 0);
+                  } else if(!/[.,]/.test(sanitized)){ 
+                    const dotIndex = formatted.indexOf('.');
+                    const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
+                    priceInput.setSelectionRange(caretPos, caretPos);
+                  } else {
+                    const dotIndex = formatted.indexOf('.');
+                    if(dotIndex === -1){
+                      priceInput.setSelectionRange(formatted.length, formatted.length);
+                    } else {
+                      const decimals = sanitized.split(/[.,]/)[1] || '';
+                      if(decimals.length === 0){
+                        priceInput.setSelectionRange(dotIndex + 1, formatted.length);
+                      } else {
+                        const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
+                        priceInput.setSelectionRange(caretPos, caretPos);
+                      }
+                    }
+                  }
+                }
+                const previous = previewField.options[optionIndex].price || '';
+                if(previous !== formatted){
+                  previewField.options[optionIndex].price = formatted;
+                  safeNotifyFormbuilderChange();
+                }
+              };
+              priceInput.addEventListener('beforeinput', event => {
+                if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
+                  event.preventDefault();
+                }
+              });
+              priceInput.addEventListener('pointerdown', event => {
+                blockPriceAccess(event);
+              });
+              priceInput.addEventListener('focus', event => {
+                blockPriceAccess(event);
+              });
+              priceInput.addEventListener('keydown', event => {
+                if(event.key === 'Tab' || event.key === 'Shift') return;
+                if(blockPriceAccess(event)) return;
+              });
+              priceInput.addEventListener('input', commitPriceValue);
+              priceInput.addEventListener('change', commitPriceValue);
+              const initialCleared = updatePriceState();
+              if(isCurrencySelected()){
+                commitPriceValue();
+              } else if(initialCleared){
+                safeNotifyFormbuilderChange();
+              }
+
+              const actions = document.createElement('div');
+              actions.className = 'dropdown-option-actions variant-pricing-option-actions';
+
+              const addBtn = document.createElement('button');
+              addBtn.type = 'button';
+              addBtn.className = 'dropdown-option-add';
+              addBtn.textContent = '+';
+              addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
+              addBtn.addEventListener('click', ()=>{
+                previewField.options.splice(optionIndex + 1, 0, createEmptyOption());
+                safeNotifyFormbuilderChange();
+                renderVersionEditor(optionIndex + 1);
+              });
+
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'dropdown-option-remove';
+              removeBtn.textContent = '-';
+              removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
+              removeBtn.disabled = previewField.options.length <= 1;
+              removeBtn.addEventListener('click', ()=>{
+                if(previewField.options.length <= 1){
+                  previewField.options[0] = createEmptyOption();
+                } else {
+                  previewField.options.splice(optionIndex, 1);
+                }
+                safeNotifyFormbuilderChange();
+                const nextFocus = Math.min(optionIndex, Math.max(previewField.options.length - 1, 0));
+                renderVersionEditor(nextFocus);
+              });
+
+              actions.append(addBtn, removeBtn);
+              bottomRow.append(currencyWrapper, priceInput, actions);
+
+              optionRow.append(topRow, bottomRow);
+              versionList.appendChild(optionRow);
+            });
+
+            if(focusIndex !== null){
+              requestAnimationFrame(()=>{
+                const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
+                if(!targetRow) return;
+                let focusEl = null;
+                if(focusTarget === 'price'){
+                  focusEl = targetRow.querySelector('.variant-pricing-price');
+                } else if(focusTarget === 'currency'){
+                  focusEl = targetRow.querySelector('button.variant-pricing-currency');
+                }
+                if(!focusEl){
+                  focusEl = targetRow.querySelector('.variant-pricing-name');
+                }
+                if(focusEl && typeof focusEl.focus === 'function'){
+                  try{ focusEl.focus({ preventScroll: true }); }
+                  catch(err){
+                    try{ focusEl.focus(); }catch(e){}
+                  }
+                }
+              });
+            }
+          };
+
+          renderVersionEditor();
+          editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+          control = editor;
+        } else if(baseType === 'website-url' || baseType === 'tickets-url'){
+          wrapper.classList.add('form-preview-field--url');
+          const urlWrapper = document.createElement('div');
+          urlWrapper.className = 'form-preview-url-wrapper';
+          const urlInput = document.createElement('input');
+          urlInput.type = 'text';
+          urlInput.className = 'form-preview-url-input';
+          const urlInputId = `${baseId}-input`;
+          urlInput.id = urlInputId;
+          const placeholderValue = previewField.placeholder && /\.[A-Za-z]{2,}/.test(previewField.placeholder)
+            ? previewField.placeholder
+            : 'https://example.com';
+          urlInput.placeholder = placeholderValue;
+          urlInput.dataset.urlType = baseType === 'website-url' ? 'website' : 'tickets';
+          urlInput.autocomplete = 'url';
+          urlInput.inputMode = 'url';
+          if(previewField.required) urlInput.required = true;
+          // Normalize and validate on input/blur to keep submit state accurate
+          const normalizeUrl = () => {
+            const raw = (urlInput.value || '').trim();
+            if(!raw) return;
+            const withScheme = raw.includes('://') ? raw : ('https://' + raw);
+            try{
+              const parsed = new URL(withScheme);
+              if(urlInput.value !== parsed.href){ urlInput.value = parsed.href; }
+            }catch(_e){ /* ignore here; validation will catch */ }
+          };
+          urlInput.addEventListener('blur', () => { normalizeUrl(); try{ updatePostButtonState(); }catch(_e){} });
+          urlInput.addEventListener('input', () => { try{ updatePostButtonState(); }catch(_e){} });
+          urlWrapper.appendChild(urlInput);
+          control = urlWrapper;
+        } else if(baseType === 'images'){
+          wrapper.classList.add('form-preview-field--images');
+          const imageWrapper = document.createElement('div');
+          imageWrapper.className = 'form-preview-images';
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          const fileInputId = `${baseId}-input`;
+          fileInput.id = fileInputId;
+          fileInput.accept = 'image/*';
+          fileInput.multiple = true;
+          fileInput.dataset.imagesField = 'true';
+          fileInput.dataset.maxImages = '10';
+          const previewId = `${baseId}-previews`;
+          const messageId = `${baseId}-message`;
+          fileInput.dataset.imagePreviewTarget = previewId;
+          fileInput.dataset.imageMessageTarget = messageId;
+          if(previewField.required) fileInput.required = true;
+          const hint = document.createElement('div');
+          hint.className = 'form-preview-image-hint';
+          hint.textContent = 'Upload up to 10 images.';
+          const message = document.createElement('div');
+          message.className = 'form-preview-image-message';
+          message.id = messageId;
+          message.hidden = true;
+          const previewGrid = document.createElement('div');
+          previewGrid.className = 'form-preview-image-previews';
+          previewGrid.id = previewId;
+          imageWrapper.append(fileInput, hint, message, previewGrid);
+          handleImagePreview(fileInput);
+          control = imageWrapper;
+        } else if(baseType === 'location'){
+          wrapper.classList.add('form-preview-field--location');
+          const ensureLocationState = () => {
+            if(!previewField.location || typeof previewField.location !== 'object'){
+              previewField.location = { address: '', latitude: '', longitude: '' };
+            } else {
+              if(typeof previewField.location.address !== 'string') previewField.location.address = '';
+              if(typeof previewField.location.latitude !== 'string') previewField.location.latitude = '';
+              if(typeof previewField.location.longitude !== 'string') previewField.location.longitude = '';
+            }
+            return previewField.location;
+          };
+          const locationState = ensureLocationState();
+          const locationWrapper = document.createElement('div');
+          locationWrapper.className = 'location-field-wrapper';
+          locationWrapper.setAttribute('role', 'group');
+          const addressRow = document.createElement('div');
+          addressRow.className = 'venue-line address_line-line';
+          const geocoderContainer = document.createElement('div');
+          geocoderContainer.className = 'address_line-geocoder-container';
+          const addressInputId = `${baseId}-location-address`;
+          geocoderContainer.id = `${baseId}-location-geocoder`;
+          addressRow.appendChild(geocoderContainer);
+          locationWrapper.appendChild(addressRow);
+          const latitudeInput = document.createElement('input');
+          latitudeInput.type = 'hidden';
+          latitudeInput.dataset.locationLatitude = 'true';
+          latitudeInput.value = locationState.latitude || '';
+          latitudeInput.id = `${baseId}-location-latitude`;
+          latitudeInput.addEventListener('input', ()=>{ locationState.latitude = latitudeInput.value; });
+          const longitudeInput = document.createElement('input');
+          longitudeInput.type = 'hidden';
+          longitudeInput.dataset.locationLongitude = 'true';
+          longitudeInput.value = locationState.longitude || '';
+          longitudeInput.id = `${baseId}-location-longitude`;
+          longitudeInput.addEventListener('input', ()=>{ locationState.longitude = longitudeInput.value; });
+          locationWrapper.append(latitudeInput, longitudeInput);
+          const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
+            ? previewField.placeholder
+            : 'Search for a location';
+          const syncCoordinateInputs = () => {
+            latitudeInput.value = locationState.latitude || '';
+            longitudeInput.value = locationState.longitude || '';
+          };
+          syncCoordinateInputs();
+          const formatCoord = value => {
+            const num = Number(value);
+            return Number.isFinite(num) ? num.toFixed(6) : '';
+          };
+          const applyAddressLabel = input => {
+            if(input){
+              input.setAttribute('aria-labelledby', labelId);
+            }
+            return input;
+          };
+          const createFallbackAddressInput = () => {
+            geocoderContainer.innerHTML = '';
+            geocoderContainer.classList.remove('is-geocoder-active');
+            const fallback = document.createElement('input');
+            fallback.type = 'text';
+            fallback.id = addressInputId;
+            fallback.className = 'address_line-fallback';
+            fallback.placeholder = placeholderValue;
+            fallback.setAttribute('aria-label', placeholderValue);
+            fallback.dataset.locationAddress = 'true';
+            fallback.value = locationState.address || '';
+            if(previewField.required) fallback.required = true;
+            fallback.addEventListener('input', () => {
+              locationState.address = fallback.value;
+            });
+            geocoderContainer.appendChild(fallback);
+            addressInput = fallback;
+            applyAddressLabel(fallback);
+            return fallback;
+          };
+          const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+          let addressInput = null;
+          if(mapboxReady){
+            // Ensure localVenueGeocoder is accessible - it's defined at top level but may not be in scope
+            const safeLocalVenueGeocoder = typeof window.localVenueGeocoder !== 'undefined' 
+              ? window.localVenueGeocoder 
+              : (typeof window.searchLocalVenues === 'function'
+                  ? ((query) => window.searchLocalVenues(query))
+                  : null);
+            const safeExternalGeocoder = typeof window.externalMapboxVenueGeocoder !== 'undefined'
+              ? window.externalMapboxVenueGeocoder
+              : null;
+            const safeFilter = typeof window.majorVenueFilter !== 'undefined'
+              ? window.majorVenueFilter
+              : null;
+            const geocoderOptions = {
+              accessToken: window.mapboxgl.accessToken,
+              mapboxgl: window.mapboxgl,
+              marker: false,
+              placeholder: placeholderValue,
+              geocodingUrl: (typeof window !== 'undefined' && typeof window.MAPBOX_VENUE_ENDPOINT !== 'undefined') ? window.MAPBOX_VENUE_ENDPOINT : 'https://api.mapbox.com/geocoding/v5/mapbox.places/',
+              types: 'address,poi',
+              reverseGeocode: true,
+              localGeocoder: safeLocalVenueGeocoder,
+              externalGeocoder: safeExternalGeocoder,
+              filter: safeFilter,
+              limit: 7,
+              language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+            };
+            const geocoder = new MapboxGeocoder(geocoderOptions);
+            const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+              ? window.requestAnimationFrame.bind(window)
+              : (cb) => setTimeout(cb, 16);
+            let attempts = 0;
+            const maxAttempts = 20;
+            let geocoderMounted = false;
+            let fallbackActivated = false;
+            const attachGeocoder = () => {
+              if(fallbackActivated){
+                return;
+              }
+              const scheduleRetry = () => {
+                attempts += 1;
+                if(attempts > maxAttempts){
+                  addressInput = createFallbackAddressInput();
+                  fallbackActivated = true;
+                  return false;
+                }
+                schedule(attachGeocoder);
+                return true;
+              };
+              if(!geocoderContainer.isConnected){
+                scheduleRetry();
+                return;
+              }
+              if(!geocoderMounted){
+                try{
+                  geocoder.addTo(geocoderContainer);
+                  geocoderMounted = true;
+                }catch(err){
+                  addressInput = createFallbackAddressInput();
+                  fallbackActivated = true;
+                  return;
+                }
+              }
+              const setGeocoderActive = isActive => {
+                const active = !!isActive;
+                geocoderContainer.classList.toggle('is-geocoder-active', active);
+              };
+              setGeocoderActive(false);
+              const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
+              if(geocoderRoot && !geocoderRoot.__memberFormGeocoderBound){
+                geocoderRoot.__memberFormGeocoderBound = true;
+                // Set z-index for member panel geocoder
+                geocoderRoot.style.zIndex = '1000001';
+                const suggestions = geocoderRoot.querySelector('.suggestions');
+                if(suggestions){
+                  suggestions.style.zIndex = '1000002';
+                }
+                const handleFocusIn = () => setGeocoderActive(true);
+                const handleFocusOut = event => {
+                  const nextTarget = event && event.relatedTarget;
+                  if(!nextTarget || !geocoderRoot.contains(nextTarget)){
+                    setGeocoderActive(false);
+                  }
+                };
+                const handlePointerDown = (e) => {
+                  setGeocoderActive(true);
+                  // CRITICAL: Prevent form closure when clicking on geocoder
+                  if(e){
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                  }
+                };
+                geocoderRoot.addEventListener('focusin', handleFocusIn);
+                geocoderRoot.addEventListener('focusout', handleFocusOut);
+                geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+                // CRITICAL: Prevent form closure when clicking on geocoder suggestions
+                geocoderRoot.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
+                }, true);
+                // Also handle suggestions wrapper if it exists
+                const suggestionsWrapper = geocoderRoot.querySelector('.suggestions-wrapper');
+                if(suggestionsWrapper){
+                  suggestionsWrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                  }, true);
+                  suggestionsWrapper.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                  }, true);
+                }
+              }
+              const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+              if(!geocoderInput){
+                scheduleRetry();
+                return;
+              }
+              if(geocoderInput.__memberFormLocationBound){
+                addressInput = geocoderInput;
+                applyAddressLabel(geocoderInput);
+                return;
+              }
+              geocoderInput.__memberFormLocationBound = true;
+              geocoderInput.placeholder = placeholderValue;
+              geocoderInput.setAttribute('aria-label', placeholderValue);
+              geocoderInput.id = addressInputId;
+              geocoderInput.dataset.locationAddress = 'true';
+              geocoderInput.value = locationState.address || '';
+              if(previewField.required) geocoderInput.required = true;
+              addressInput = geocoderInput;
+              applyAddressLabel(geocoderInput);
+              geocoderInput.addEventListener('blur', () => {
+                const nextValue = geocoderInput.value || '';
+                if(locationState.address !== nextValue){
+                  locationState.address = nextValue;
+                }
+              });
+              // Keep address in sync as user types (and on draft restore)
+              geocoderInput.addEventListener('input', () => {
+                locationState.address = geocoderInput.value || '';
+                try{ updatePostButtonState(); }catch(_e){}
+              });
+              // Prevent Enter key from submitting form when in geocoder
+              geocoderInput.addEventListener('keydown', (e)=>{
+                if(e.key === 'Enter'){
+                  e.stopPropagation();
+                  // Don't preventDefault - let geocoder handle it
+                }
+              });
+              geocoder.on('result', event => {
+                // CRITICAL: Stop propagation to prevent form closure when selecting geocoder result
+                if(event && event.originalEvent){
+                  event.originalEvent.stopPropagation();
+                  event.originalEvent.stopImmediatePropagation();
+                }
+                const result = event && event.result;
+                if(result){
+                  const clone = (typeof window !== 'undefined' && typeof window.cloneGeocoderFeature === 'function')
+                    ? window.cloneGeocoderFeature(result)
+                    : (function(f){
+                        try { return JSON.parse(JSON.stringify(f)); } catch(e){ return { ...f }; }
+                      })(result);
+                  const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
+                  if(placeName){
+                    locationState.address = placeName;
+                    geocoderInput.value = placeName;
+                  } else {
+                    locationState.address = geocoderInput.value || '';
+                  }
+                  const center = (typeof window !== 'undefined' && typeof window.getMapboxVenueFeatureCenter === 'function')
+                    ? window.getMapboxVenueFeatureCenter(clone)
+                    : (Array.isArray(clone.center) && clone.center.length === 2
+                        ? clone.center
+                        : ((clone && clone.geometry && Array.isArray(clone.geometry.coordinates)) ? clone.geometry.coordinates : null));
+                  if(center && center.length >= 2){
+                    const [lng, lat] = center;
+                    locationState.longitude = formatCoord(lng);
+                    locationState.latitude = formatCoord(lat);
+                  }
+                  syncCoordinateInputs();
+                }
+                setGeocoderActive(false);
+              });
+              geocoder.on('clear', () => {
+                locationState.address = '';
+                locationState.latitude = '';
+                locationState.longitude = '';
+                geocoderInput.value = '';
+                syncCoordinateInputs();
+                setGeocoderActive(false);
+              });
+              geocoder.on('error', () => setGeocoderActive(false));
+              return geocoderInput;
+            };
+            attachGeocoder();
+          } else {
+            addressInput = createFallbackAddressInput();
+          }
+          if(addressInput){
+            addressInput.setAttribute('aria-labelledby', labelId);
+          }
+          control = locationWrapper;
+        } else {
+          // Check if it's actually a description field that wasn't caught earlier
+          const isDescriptionField = baseType === 'description' || baseType === 'text-area' || 
+                                     previewField.type === 'description' || previewField.type === 'text-area' ||
+                                     (typeof previewField.type === 'string' && (previewField.type.includes('description') || previewField.type.includes('text-area')));
+          
+          if(isDescriptionField){
+            const textarea = document.createElement('textarea');
+            const textareaId = `${baseId}-input`;
+            textarea.id = textareaId;
+            textarea.rows = baseType === 'description' ? 6 : 4;
+            textarea.placeholder = previewField.placeholder || '';
+            textarea.className = 'form-preview-textarea';
+            if(baseType === 'description' || previewField.type === 'description' || (typeof previewField.type === 'string' && previewField.type.includes('description'))){
+              textarea.classList.add('form-preview-description');
+            }
+            if(previewField.required) textarea.required = true;
+            control = textarea;
+          } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = previewField.placeholder || '';
+            const inputId = `${baseId}-input`;
+            input.id = inputId;
+            if(baseType === 'title'){
+              input.classList.add('form-preview-title-input');
+            }
+            if(previewField.required) input.required = true;
+            control = input;
+          }
+        }
+        }
+        
+        if(control){
+          if(control instanceof HTMLElement){
+            control.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            if(labelId){
+              control.setAttribute('aria-labelledby', labelId);
+            }
+          }
+        }
+        if(previewField.required){
+          wrapper.classList.add('form-preview-field--required');
+          labelEl.appendChild(document.createTextNode(' '));
+          const asterisk = document.createElement('span');
+          asterisk.className = 'required-asterisk';
+          asterisk.textContent = '*';
+          labelEl.appendChild(asterisk);
+        }
+        
+        const header = document.createElement('div');
+        header.className = 'form-preview-field-header';
+        header.style.position = 'relative';
+        header.appendChild(labelEl);
+        
+        wrapper.append(header, control);
+        formFields.appendChild(wrapper);
+        currentCreateFields.push({ field: previewField, element: wrapper });
+      });
+    }
 
     async function handleMemberCreatePost(event){
       if(event && typeof event.preventDefault === 'function'){
