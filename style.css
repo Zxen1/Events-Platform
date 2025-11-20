@@ -3582,6 +3582,19 @@ button[aria-expanded="true"] .results-arrow{
   object-fit:contain;
 }
 
+/* Icons on menu buttons (selected state) */
+.formpicker-dropdowns .options-dropdown > button .formpicker-category-icon,
+.formpicker-dropdowns .options-dropdown > button .formpicker-subcategory-icon,
+.formpicker-dropdowns .form-preview-select .formpicker-category-icon,
+.formpicker-dropdowns .form-preview-select .formpicker-subcategory-icon{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  object-fit:contain;
+  padding:10px;
+  box-sizing:content-box;
+}
+
 .formpicker-dropdowns .options-menu .menu-option:hover{
   background:rgba(255,255,255,0.1);
 }
