@@ -3571,6 +3571,15 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   align-items:center;
   padding:0 12px;
+  gap:10px;
+}
+
+.formpicker-dropdowns .options-menu .menu-option .formpicker-category-icon,
+.formpicker-dropdowns .options-menu .menu-option .formpicker-subcategory-icon{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  object-fit:contain;
 }
 
 .formpicker-dropdowns .options-menu .menu-option:hover{

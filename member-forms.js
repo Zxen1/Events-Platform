@@ -3330,9 +3330,19 @@
         const optionBtn = document.createElement('button');
         optionBtn.type = 'button';
         optionBtn.className = 'menu-option';
-        optionBtn.textContent = c.name;
+        const iconUrl = categoryIcons[c.name] || '';
+        if(iconUrl){
+          const iconImg = document.createElement('img');
+          iconImg.src = iconUrl;
+          iconImg.className = 'formpicker-category-icon';
+          iconImg.alt = '';
+          optionBtn.appendChild(iconImg);
+        }
+        const textSpan = document.createElement('span');
+        textSpan.textContent = c.name;
+        optionBtn.appendChild(textSpan);
         optionBtn.dataset.value = c.name;
-        optionBtn.dataset.icon = categoryIcons[c.name] || '';
+        optionBtn.dataset.icon = iconUrl;
         optionBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           const categoryName = c.name;
@@ -3354,9 +3364,19 @@
                 const subOptionBtn = document.createElement('button');
                 subOptionBtn.type = 'button';
                 subOptionBtn.className = 'menu-option';
-                subOptionBtn.textContent = s;
+                const subIconUrl = subcategoryIcons[s] || '';
+                if(subIconUrl){
+                  const subIconImg = document.createElement('img');
+                  subIconImg.src = subIconUrl;
+                  subIconImg.className = 'formpicker-subcategory-icon';
+                  subIconImg.alt = '';
+                  subOptionBtn.appendChild(subIconImg);
+                }
+                const subTextSpan = document.createElement('span');
+                subTextSpan.textContent = s;
+                subOptionBtn.appendChild(subTextSpan);
                 subOptionBtn.dataset.value = s;
-                subOptionBtn.dataset.icon = subcategoryIcons[s] || '';
+                subOptionBtn.dataset.icon = subIconUrl;
                 subOptionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const subcategoryName = s;
