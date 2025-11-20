@@ -9632,13 +9632,13 @@ function makePosts(){
             editor.setAttribute('aria-required', field.required ? 'true' : 'false');
             
             // Detect if we're in member form context (needs stopPropagation to prevent form closure)
-            const isMemberForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
+            const isUserForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
             // Detect if we're in formbuilder (needs to sync back to field.options)
-            const isFormbuilder = !isMemberForm && baseId && (baseId.includes('formId') || baseId.includes('formbuilder'));
+            const isFormbuilder = !isUserForm && baseId && (baseId.includes('formId') || baseId.includes('formbuilder'));
             
             // For member forms, prevent clicks from bubbling up to prevent form closure
             // BUT allow buttons and geocoder events to propagate so they work
-            if(isMemberForm){
+            if(isUserForm){
               const shouldStopPropagation = (e) => {
                 const target = e.target;
                 // Don't stop propagation for geocoder elements - they need events to work
@@ -9687,8 +9687,8 @@ function makePosts(){
             const venueList = document.createElement('div');
             venueList.className = 'venue-session-venues';
             
-            // Also stop propagation on venue list for member forms (but allow buttons)
-            if(isMemberForm){
+            // Also stop propagation on venue list for user forms (but allow buttons)
+            if(isUserForm){
               venueList.addEventListener('click', (e)=>{
                 const target = e.target;
                 if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
@@ -9725,7 +9725,7 @@ function makePosts(){
               if(!Array.isArray(localField.options) || localField.options.length === 0){
                 localField.options = [venueSessionCreateVenue()];
               }
-              // Only sync back to field.options if we're in formbuilder (not member forms)
+              // Only sync back to field.options if we're in formbuilder (not user forms)
               if(isFormbuilder){
                 field.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
               }
@@ -11530,8 +11530,8 @@ function makePosts(){
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
                     if(geocoderRoot && !geocoderRoot.__formGeocoderBound){
                       geocoderRoot.__formGeocoderBound = true;
-                      // For member forms, set high z-index to ensure geocoder is visible above other elements
-                      if(isMemberForm){
+                      // For user forms, set high z-index to ensure geocoder is visible above other elements
+                      if(isUserForm){
                         geocoderRoot.style.zIndex = '1000001';
                         geocoderRoot.style.position = 'relative';
                         const suggestions = geocoderRoot.querySelector('.suggestions');
@@ -11552,7 +11552,7 @@ function makePosts(){
                       const handlePointerDown = (e) => {
                         setGeocoderActive(true);
                         // For member forms, prevent form closure
-                        if(isMemberForm && e){
+                        if(isUserForm && e){
                           e.stopPropagation();
                           e.stopImmediatePropagation();
                         }
@@ -11561,7 +11561,7 @@ function makePosts(){
                       geocoderRoot.addEventListener('focusout', handleFocusOut);
                       geocoderRoot.addEventListener('pointerdown', handlePointerDown);
                       // For member forms, prevent form closure when clicking geocoder suggestions
-                      if(isMemberForm){
+                      if(isUserForm){
                         geocoderRoot.addEventListener('click', (e) => {
                           e.stopPropagation();
                           e.stopImmediatePropagation();
@@ -11624,7 +11624,7 @@ function makePosts(){
                       }
                     });
                     // For member forms, prevent form closure when interacting with geocoder input
-                    if(isMemberForm){
+                    if(isUserForm){
                       geocoderInput.addEventListener('click', (e) => {
                         e.stopPropagation();
                         e.stopImmediatePropagation();
@@ -11641,7 +11641,7 @@ function makePosts(){
                     geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
                       // For member forms, stop propagation to prevent form closure
-                      if(isMemberForm && event && event.originalEvent){
+                      if(isUserForm && event && event.originalEvent){
                         event.originalEvent.stopPropagation();
                         event.originalEvent.stopImmediatePropagation();
                       }
@@ -13254,11 +13254,14 @@ function makePosts(){
             const subcategoryName = options.subcategoryName || sub || '';
             let targetFieldIdCounter = options.fieldIdCounter !== undefined ? options.fieldIdCounter : formFieldIdCounter;
             const shouldIncrementCounter = options.fieldIdCounter === undefined;
+            // Detect if this is a user-submitted form context (not form preview)
+            // If options were explicitly passed, it's a user form; otherwise it's form preview
+            const isUserFormContext = options.formFields !== undefined || options.formId !== undefined || options.fields !== undefined;
             
             targetFormFields.innerHTML = '';
             
             const categorySubcategoryLabel = document.createElement('div');
-            categorySubcategoryLabel.className = 'form-category-label';
+            categorySubcategoryLabel.className = 'form-preview-category-label';
             categorySubcategoryLabel.textContent = categoryName && subcategoryName ? `${categoryName} > ${subcategoryName}` : subcategoryName || categoryName || '';
             categorySubcategoryLabel.style.marginBottom = '12px';
             categorySubcategoryLabel.style.fontSize = '14px';
@@ -13268,19 +13271,20 @@ function makePosts(){
             
             if(!targetFields.length){
               const empty = document.createElement('p');
-              empty.className = 'form-empty';
+              empty.className = 'form-preview-empty';
               empty.textContent = 'No fields added yet.';
               targetFormFields.appendChild(empty);
               return;
             }
             targetFields.forEach((fieldData, fieldIndex)=>{
-              // Use member-specific field defaults if available (for proper fieldTypeKey handling)
-              const ensureDefaults = (typeof window !== 'undefined' && typeof window.ensureFieldDefaultsForMember === 'function') 
+              // Use user-specific field defaults if available (for proper fieldTypeKey handling)
+              // Use user-specific defaults only for user forms, not form preview
+              const ensureDefaults = (isUserFormContext && typeof window !== 'undefined' && typeof window.ensureFieldDefaultsForMember === 'function') 
                 ? window.ensureFieldDefaultsForMember 
                 : ensureFieldDefaults;
               const field = ensureDefaults(fieldData);
               const wrapper = document.createElement('div');
-              wrapper.className = 'panel-field form-field';
+              wrapper.className = 'panel-field form-preview-field';
               const baseId = `${targetFormId}-field-${shouldIncrementCounter ? ++formFieldIdCounter : ++targetFieldIdCounter}`;
               const labelText = field.name.trim() || `Field ${fieldIndex + 1}`;
               const labelEl = document.createElement('span');
@@ -13289,13 +13293,18 @@ function makePosts(){
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
               let control = null;
-              // Use fieldTypeKey/key as PRIMARY source for field type identification (same as buildMemberCreateField)
+              // Use fieldTypeKey/key as PRIMARY source for field type identification (for user forms)
+              // For form preview, fall back to field.type if fieldTypeKey is not available
               const fieldTypeKey = field.fieldTypeKey || field.key || '';
               let baseType = '';
-              if(fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown'){
+              if(fieldTypeKey && (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown')){
                 baseType = fieldTypeKey;
-              } else {
+              } else if(fieldTypeKey && isUserFormContext){
+                // For user forms, prefer fieldTypeKey if available
                 baseType = fieldTypeKey || getBaseFieldType(field.type) || 'text-box';
+              } else {
+                // For form preview, use field.type (which ensureFieldDefaults has normalized)
+                baseType = getBaseFieldType(field.type) || 'text-box';
               }
               if(baseType === 'text-area' || baseType === 'description'){
                 const textarea = document.createElement('textarea');
@@ -13310,7 +13319,7 @@ function makePosts(){
                   e.stopPropagation();
                 });
                 textarea.placeholder = field.placeholder || '';
-                textarea.className = 'form-textarea';
+                textarea.className = 'form-preview-textarea';
                 textarea.style.resize = 'vertical';
                 const textareaId = `${baseId}-input`;
                 textarea.id = textareaId;
@@ -13319,7 +13328,7 @@ function makePosts(){
                 }
                 control = textarea;
               } else if(baseType === 'dropdown'){
-                wrapper.classList.add('form-field--dropdown');
+                wrapper.classList.add('form-preview-field--dropdown');
                 const dropdownWrapper = document.createElement('div');
                 dropdownWrapper.className = 'options-dropdown';
                 const menuBtn = document.createElement('button');
@@ -13397,7 +13406,7 @@ function makePosts(){
                 const options = Array.isArray(field.options) ? field.options : [];
                 const radioGroup = document.createElement('div');
                 radioGroup.className = 'form-radio-group';
-                wrapper.classList.add('form-field--radio-toggle');
+                wrapper.classList.add('form-preview-field--radio-toggle');
                 const groupName = `${baseId}-radio`;
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
@@ -13446,10 +13455,10 @@ function makePosts(){
                 }
                 control = radioGroup;
               } else if(baseType === 'venue-ticketing'){
-                wrapper.classList.add('form-field--venues-sessions-pricing');
+                wrapper.classList.add('form-preview-field--venues-sessions-pricing');
                 control = buildVenueSessionPreview(field, baseId);
               } else if(baseType === 'variant-pricing'){
-                wrapper.classList.add('form-field--variant-pricing');
+                wrapper.classList.add('form-preview-field--variant-pricing');
                 const editor = document.createElement('div');
                 editor.className = 'form-variant-pricing variant-pricing-options-editor';
                 const versionList = document.createElement('div');
@@ -13858,12 +13867,12 @@ function makePosts(){
                 editor.setAttribute('aria-required', field.required ? 'true' : 'false');
                 control = editor;
               } else if(baseType === 'website-url' || baseType === 'tickets-url'){
-                wrapper.classList.add('form-field--url');
+                wrapper.classList.add('form-preview-field--url');
                 const urlWrapper = document.createElement('div');
-                urlWrapper.className = 'form-url-wrapper';
+                urlWrapper.className = 'form-preview-url-wrapper';
                 const urlInput = document.createElement('input');
                 urlInput.type = 'text';
-                urlInput.className = 'form-url-input';
+                urlInput.className = 'form-preview-url-input';
                 const urlInputId = `${baseId}-input`;
                 urlInput.id = urlInputId;
                 const placeholderValue = field.placeholder && /\.[A-Za-z]{2,}/.test(field.placeholder)
@@ -13891,9 +13900,9 @@ function makePosts(){
                 urlWrapper.append(urlInput, urlLink, urlMessage);
                 control = urlWrapper;
               } else if(baseType === 'images'){
-                wrapper.classList.add('form-field--images');
+                wrapper.classList.add('form-preview-field--images');
                 const imageWrapper = document.createElement('div');
-                imageWrapper.className = 'form-images';
+                imageWrapper.className = 'form-preview-images';
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 const fileInputId = `${baseId}-input`;
@@ -13919,7 +13928,7 @@ function makePosts(){
                 imageWrapper.append(fileInput, hint, message, imagePreviewsGrid);
                 control = imageWrapper;
               } else if(baseType === 'location'){
-                wrapper.classList.add('form-field--location');
+                wrapper.classList.add('form-preview-field--location');
                 const ensureLocationState = ()=>{
                   if(!field.location || typeof field.location !== 'object'){
                     field.location = { address: '', latitude: '', longitude: '' };
@@ -14158,7 +14167,7 @@ function makePosts(){
                 const inputId = `${baseId}-input`;
                 input.id = inputId;
                 if(field.type === 'title'){
-                  input.classList.add('form-title-input');
+                  input.classList.add('form-preview-title-input');
                 }
                 // Make editable but prevent any form submission or member form linking
                 input.addEventListener('change', (e) => {
@@ -14177,7 +14186,7 @@ function makePosts(){
                   }
                 }
               if(field.required){
-                wrapper.classList.add('form-field--required');
+                wrapper.classList.add('form-preview-field--required');
                 labelEl.appendChild(document.createTextNode(' '));
                 const asterisk = document.createElement('span');
                 asterisk.className = 'required-asterisk';
