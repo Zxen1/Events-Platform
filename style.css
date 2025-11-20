@@ -3461,6 +3461,57 @@ button[aria-expanded="true"] .results-arrow{
   cursor:default;
 }
 
+/* Make formpicker full width */
+.formpicker-container{
+  width:100%;
+  max-width:100%;
+  margin-left:0;
+  margin-right:0;
+}
+
+.formpicker-dropdowns{
+  width:100%;
+  max-width:100%;
+}
+
+/* Ensure category and subcategory dropdowns follow local styles */
+.formpicker-dropdowns .form-preview-field{
+  width:100%;
+  max-width:100%;
+}
+
+.formpicker-dropdowns .options-dropdown{
+  width:100%;
+}
+
+.formpicker-dropdowns .options-dropdown > button,
+.formpicker-dropdowns .form-preview-select{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.formpicker-dropdowns .options-menu{
+  width:100%;
+  box-sizing:border-box;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  color:#fff;
+}
+
+.formpicker-dropdowns .options-menu .menu-option{
+  width:100%;
+  background:transparent;
+  color:#fff;
+  border:1px solid transparent;
+  text-align:left;
+}
+
+.formpicker-dropdowns .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.1);
+}
+
 .reset-box{
   margin:0;
 }
