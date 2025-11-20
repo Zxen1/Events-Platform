@@ -3482,6 +3482,8 @@ button[aria-expanded="true"] .results-arrow{
 
 .formpicker-dropdowns .options-dropdown{
   width:100%;
+  position:relative;
+  z-index:calc(var(--layer-menu) + 1);
 }
 
 .formpicker-dropdowns .options-dropdown > button,
@@ -3493,11 +3495,18 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .formpicker-dropdowns .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
   width:100%;
   box-sizing:border-box;
   background:rgba(0,0,0,0.2);
   border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
   color:#fff;
+  z-index:calc(var(--layer-menu) + 1);
 }
 
 .formpicker-dropdowns .options-menu .menu-option{
@@ -3505,6 +3514,7 @@ button[aria-expanded="true"] .results-arrow{
   background:transparent;
   color:#fff;
   border:1px solid transparent;
+  border-radius:8px;
   text-align:left;
 }
 
