@@ -1540,13 +1540,13 @@
       }
       
       if(!selectedCategory || !selectedSubcategory){
-        // Don't close form if venue editor exists
-        const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
-        if(!hasVenueEditor){
-          renderEmptyState();
-          if(formWrapper) formWrapper.hidden = true;
-          if(postButton) postButton.disabled = true;
-        }
+        // No form if either category or subcategory is not selected
+        renderEmptyState();
+        if(formWrapper) formWrapper.hidden = true;
+        if(formFields) formFields.innerHTML = '';
+        if(postButton) postButton.disabled = true;
+        if(postButton) postButton.hidden = true;
+        if(postActions) postActions.hidden = true;
         return;
       }
       // Don't clear form if user is actively typing in venue editor
