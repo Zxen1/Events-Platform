@@ -3257,12 +3257,19 @@
       const categoryIconPaths = memberSnapshot.categoryIconPaths;
       const subcategoryIconPaths = memberSnapshot.subcategoryIconPaths;
       
-      // Debug: log icon path counts
+      // Debug: log icon path counts and sample paths
       const categoryIconCount = Object.keys(categoryIconPaths).length;
       const subcategoryIconCount = Object.keys(subcategoryIconPaths).length;
-      if(categoryIconCount > 0 || subcategoryIconCount > 0){
-        console.log('[Member Forms] Icon paths loaded:', { categoryIconCount, subcategoryIconCount });
-      }
+      const categoryNames = sortedCategories.map(c => c.name);
+      console.log('[Member Forms] Icon paths loaded:', { 
+        categoryIconCount, 
+        subcategoryIconCount,
+        categoryNames: categoryNames,
+        categoryIconPathKeys: Object.keys(categoryIconPaths),
+        subcategoryIconPathKeys: Object.keys(subcategoryIconPaths),
+        firstCategory: sortedCategories[0]?.name,
+        firstCategoryPath: sortedCategories[0] ? categoryIconPaths[sortedCategories[0].name] : undefined
+      });
       
       // Create container for dropdowns
       const dropdownsContainer = document.createElement('div');
@@ -3354,11 +3361,22 @@
         // Get icon path from categoryIconPaths map (from database)
         const iconPath = categoryIconPaths[c.name];
         if(iconPath && typeof iconPath === 'string' && iconPath.trim()){
-          const iconImg = document.createElement('img');
-          iconImg.src = iconPath.trim();
-          iconImg.className = 'formpicker-category-icon';
-          iconImg.alt = '';
-          optionBtn.appendChild(iconImg);
+          // Normalize icon path like formbuilder does
+          let normalizedPath = iconPath.trim();
+          if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
+            try{
+              normalizedPath = window.normalizeIconPath(normalizedPath) || normalizedPath;
+            }catch(e){
+              console.warn('[Member Forms] Error normalizing icon path:', e);
+            }
+          }
+          if(normalizedPath){
+            const iconImg = document.createElement('img');
+            iconImg.src = normalizedPath;
+            iconImg.className = 'formpicker-category-icon';
+            iconImg.alt = '';
+            optionBtn.appendChild(iconImg);
+          }
         }
         const textSpan = document.createElement('span');
         textSpan.textContent = c.name;
@@ -3390,11 +3408,22 @@
                 // Note: subcategories are just strings (names), so we use the map
                 const subIconPath = subcategoryIconPaths[s];
                 if(subIconPath && typeof subIconPath === 'string' && subIconPath.trim()){
-                  const subIconImg = document.createElement('img');
-                  subIconImg.src = subIconPath.trim();
-                  subIconImg.className = 'formpicker-subcategory-icon';
-                  subIconImg.alt = '';
-                  subOptionBtn.appendChild(subIconImg);
+                  // Normalize icon path like formbuilder does
+                  let normalizedSubPath = subIconPath.trim();
+                  if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
+                    try{
+                      normalizedSubPath = window.normalizeIconPath(normalizedSubPath) || normalizedSubPath;
+                    }catch(e){
+                      console.warn('[Member Forms] Error normalizing subcategory icon path:', e);
+                    }
+                  }
+                  if(normalizedSubPath){
+                    const subIconImg = document.createElement('img');
+                    subIconImg.src = normalizedSubPath;
+                    subIconImg.className = 'formpicker-subcategory-icon';
+                    subIconImg.alt = '';
+                    subOptionBtn.appendChild(subIconImg);
+                  }
                 }
                 const subTextSpan = document.createElement('span');
                 subTextSpan.textContent = s;
