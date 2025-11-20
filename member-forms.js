@@ -3284,25 +3284,6 @@
       subcategoryMenu.id = subcategoryMenuId;
       subcategoryMenu.hidden = true;
       
-      subcategoryMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const open = !subcategoryMenu.hasAttribute('hidden');
-        if(open){
-          subcategoryMenu.hidden = true;
-          subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
-        } else {
-          subcategoryMenu.hidden = false;
-          subcategoryMenuBtn.setAttribute('aria-expanded', 'true');
-          const outsideHandler = (ev) => {
-            if(!subcategoryDropdown.contains(ev.target)){
-              subcategoryMenu.hidden = true;
-              subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
-              document.removeEventListener('click', outsideHandler);
-            }
-          };
-          setTimeout(() => document.addEventListener('click', outsideHandler), 0);
-        }
-      });
       subcategoryMenu.addEventListener('click', (e) => e.stopPropagation());
       subcategoryDropdown.appendChild(subcategoryMenuBtn);
       subcategoryDropdown.appendChild(subcategoryMenu);
@@ -3413,12 +3394,16 @@
           categoryMenu.hidden = true;
           categoryMenuBtn.setAttribute('aria-expanded', 'false');
         } else {
+          // Close other menu before opening this one
+          closeAllMenus();
           categoryMenu.hidden = false;
           categoryMenuBtn.setAttribute('aria-expanded', 'true');
           const outsideHandler = (ev) => {
-            if(!categoryDropdown.contains(ev.target)){
-              categoryMenu.hidden = true;
-              categoryMenuBtn.setAttribute('aria-expanded', 'false');
+            // Close if clicking outside both dropdowns or on another menu button
+            const clickedCategoryBtn = ev.target === categoryMenuBtn || categoryMenuBtn.contains(ev.target);
+            const clickedSubcategoryBtn = ev.target === subcategoryMenuBtn || subcategoryMenuBtn.contains(ev.target);
+            if(!categoryDropdown.contains(ev.target) && !clickedCategoryBtn && !clickedSubcategoryBtn){
+              closeAllMenus();
               document.removeEventListener('click', outsideHandler);
             }
           };
@@ -3428,6 +3413,39 @@
       categoryMenu.addEventListener('click', (e) => e.stopPropagation());
       categoryDropdown.appendChild(categoryMenuBtn);
       categoryDropdown.appendChild(categoryMenu);
+      
+      // Function to close all menus (defined after both menus are created)
+      const closeAllMenus = () => {
+        categoryMenu.hidden = true;
+        categoryMenuBtn.setAttribute('aria-expanded', 'false');
+        subcategoryMenu.hidden = true;
+        subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+      };
+      
+      // Register the subcategory button handler (after closeAllMenus is defined)
+      subcategoryMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !subcategoryMenu.hasAttribute('hidden');
+        if(open){
+          subcategoryMenu.hidden = true;
+          subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          // Close other menu before opening this one
+          closeAllMenus();
+          subcategoryMenu.hidden = false;
+          subcategoryMenuBtn.setAttribute('aria-expanded', 'true');
+          const outsideHandler = (ev) => {
+            // Close if clicking outside both dropdowns or on another menu button
+            const clickedCategoryBtn = ev.target === categoryMenuBtn || categoryMenuBtn.contains(ev.target);
+            const clickedSubcategoryBtn = ev.target === subcategoryMenuBtn || subcategoryMenuBtn.contains(ev.target);
+            if(!subcategoryDropdown.contains(ev.target) && !clickedCategoryBtn && !clickedSubcategoryBtn){
+              closeAllMenus();
+              document.removeEventListener('click', outsideHandler);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', outsideHandler), 0);
+        }
+      });
       
       categoryWrapper.appendChild(categoryLabel);
       categoryWrapper.appendChild(categoryDropdown);

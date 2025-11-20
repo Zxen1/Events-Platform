@@ -3502,7 +3502,7 @@ button[aria-expanded="true"] .results-arrow{
   right:0;
   width:100%;
   box-sizing:border-box;
-  background:rgba(0,0,0,0.2);
+  background:#222222;
   border:1px solid rgba(255,255,255,0.1);
   border-radius:8px;
   color:#fff;
@@ -3516,6 +3516,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid transparent;
   border-radius:8px;
   text-align:left;
+  justify-content:flex-start;
 }
 
 .formpicker-dropdowns .options-menu .menu-option:hover{
