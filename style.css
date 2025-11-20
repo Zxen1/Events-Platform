@@ -1,3 +1,44 @@
+/*
+ * Z-INDEX REFERENCE LIST
+ * ======================
+ * Maximum z-index: 100 (--layer-devtools)
+ * 
+ * CSS Variables (defined in :root):
+ *   --layer-devtools: 100    (developer tools, always on top)
+ *   --layer-modal: 90         (welcome modal, full-screen modals)
+ *   --layer-image-modal: 88   (lightbox/image modal)
+ *   --layer-dialog: 86        (confirmations/dialogs/toasts)
+ *   --layer-menu: 84          (menus, dropdowns, tooltips, pickers)
+ *   --layer-panel: 60         (member/admin/filter panels)
+ *   --layer-header: 40        (headers/nav)
+ *   --layer-card: 30          (floating cards above content)
+ *   --layer-content: 20       (primary content)
+ *   --layer-base: 0           (map/base)
+ * 
+ * Direct z-index values found in style.css:
+ *   100: (--layer-devtools) - developer tools
+ *   100: specific elements (check line 9233, 9285)
+ *   90: (--layer-modal) - modals
+ *   88: (--layer-image-modal) - image modals
+ *   86: (--layer-dialog) - dialogs
+ *   6: formpicker dropdown menus (within panel context)
+ *   5: formpicker dropdown containers (within panel context)
+ *   84: (--layer-menu) - standard menus
+ *   80: var(--forms-layer-popover) - form popovers
+ *   60: (--layer-panel) - panels
+ *   40: (--layer-header) - headers
+ *   30: (--layer-card) - cards
+ *   20: (--layer-content) - content
+ *   10: panel resizers, various overlays
+ *   5: mapmarker-overlay, various elements
+ *   3: various elements
+ *   2: post-cards, various elements
+ *   1: header-buttons, various elements
+ *   0: base layer, various elements
+ *   -1: some background elements
+ *   auto: some elements
+ */
+
 /* Extracted from <styleid="hotfixes"> */
 /* Hand cursor for DOM-based Mapbox markers */
     .mapboxgl-marker,
@@ -3480,10 +3521,14 @@ button[aria-expanded="true"] .results-arrow{
   max-width:100%;
 }
 
+.formpicker-dropdowns .form-preview-field-label{
+  text-align:left;
+}
+
 .formpicker-dropdowns .options-dropdown{
   width:100%;
   position:relative;
-  z-index:calc(var(--layer-menu) + 1);
+  z-index:5;
 }
 
 .formpicker-dropdowns .options-dropdown > button,
@@ -3506,7 +3551,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid rgba(255,255,255,0.1);
   border-radius:8px;
   color:#fff;
-  z-index:calc(var(--layer-menu) + 1);
+  z-index:6;
 }
 
 .formpicker-dropdowns .options-menu .menu-option{
