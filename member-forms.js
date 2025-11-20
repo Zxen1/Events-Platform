@@ -3257,19 +3257,7 @@
       const categoryIconPaths = memberSnapshot.categoryIconPaths;
       const subcategoryIconPaths = memberSnapshot.subcategoryIconPaths;
       
-      // Debug: log icon path counts and sample paths
-      const categoryIconCount = Object.keys(categoryIconPaths).length;
-      const subcategoryIconCount = Object.keys(subcategoryIconPaths).length;
-      const categoryNames = sortedCategories.map(c => c.name);
-      console.log('[Member Forms] Icon paths loaded:', { 
-        categoryIconCount, 
-        subcategoryIconCount,
-        categoryNames: categoryNames,
-        categoryIconPathKeys: Object.keys(categoryIconPaths),
-        subcategoryIconPathKeys: Object.keys(subcategoryIconPaths),
-        firstCategory: sortedCategories[0]?.name,
-        firstCategoryPath: sortedCategories[0] ? categoryIconPaths[sortedCategories[0].name] : undefined
-      });
+      // Icon paths are normalized by normalizeIconPathMap which transforms keys to "name:${name.toLowerCase()}" format
       
       // Create container for dropdowns
       const dropdownsContainer = document.createElement('div');
@@ -3358,16 +3346,21 @@
         const optionBtn = document.createElement('button');
         optionBtn.type = 'button';
         optionBtn.className = 'menu-option';
-        // Get icon path from categoryIconPaths map (from database)
-        const iconPath = categoryIconPaths[c.name];
-        console.log('[Member Forms] Category icon lookup:', {
-          categoryName: c.name,
-          iconPath: iconPath,
-          iconPathType: typeof iconPath,
-          hasIconPath: !!iconPath,
-          iconPathTrimmed: iconPath ? iconPath.trim() : '',
-          allKeys: Object.keys(categoryIconPaths)
-        });
+        // Get icon path using the same method as formbuilder (lookupIconPath logic)
+        // Try id:${id} first, then name:${name.toLowerCase()}
+        let iconPath = '';
+        if(c.id !== null && c.id !== undefined && Number.isInteger(c.id)){
+          const idKey = `id:${c.id}`;
+          if(categoryIconPaths[idKey]){
+            iconPath = categoryIconPaths[idKey];
+          }
+        }
+        if(!iconPath && c.name){
+          const nameKey = `name:${c.name.toLowerCase()}`;
+          if(categoryIconPaths[nameKey]){
+            iconPath = categoryIconPaths[nameKey];
+          }
+        }
         if(iconPath && typeof iconPath === 'string' && iconPath.trim()){
           // Normalize icon path like formbuilder does
           let normalizedPath = iconPath.trim();
@@ -3412,16 +3405,24 @@
                 const subOptionBtn = document.createElement('button');
                 subOptionBtn.type = 'button';
                 subOptionBtn.className = 'menu-option';
-                // Get icon path from subcategoryIconPaths map
-                // Note: subcategories are just strings (names), so we use the map
-                const subIconPath = subcategoryIconPaths[s];
-                console.log('[Member Forms] Subcategory icon lookup:', {
-                  subcategoryName: s,
-                  subIconPath: subIconPath,
-                  subIconPathType: typeof subIconPath,
-                  hasSubIconPath: !!subIconPath,
-                  subIconPathTrimmed: subIconPath ? subIconPath.trim() : ''
-                });
+                // Get icon path using the same method as formbuilder (lookupIconPath logic)
+                // Try id:${id} first, then name:${name.toLowerCase()}
+                let subIconPath = '';
+                const subId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, s)
+                  ? category.subIds[s]
+                  : null;
+                if(subId !== null && subId !== undefined && Number.isInteger(subId)){
+                  const idKey = `id:${subId}`;
+                  if(subcategoryIconPaths[idKey]){
+                    subIconPath = subcategoryIconPaths[idKey];
+                  }
+                }
+                if(!subIconPath && s){
+                  const nameKey = `name:${s.toLowerCase()}`;
+                  if(subcategoryIconPaths[nameKey]){
+                    subIconPath = subcategoryIconPaths[nameKey];
+                  }
+                }
                 if(subIconPath && typeof subIconPath === 'string' && subIconPath.trim()){
                   // Normalize icon path like formbuilder does
                   let normalizedSubPath = subIconPath.trim();
