@@ -9632,7 +9632,8 @@ function makePosts(){
             editor.setAttribute('aria-required', field.required ? 'true' : 'false');
             
             // Detect if we're in member form context (needs stopPropagation to prevent form closure)
-            const isUserForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
+            // Detect user forms: if baseId contains 'form-field-' (from formId='form') or old member form IDs
+            const isUserForm = baseId && (baseId.startsWith('form-field-') || baseId.includes('memberForm') || baseId.includes('memberCreate'));
             // Detect if we're in formbuilder (needs to sync back to field.options)
             const isFormbuilder = !isUserForm && baseId && (baseId.includes('formId') || baseId.includes('formbuilder'));
             
@@ -13293,17 +13294,20 @@ function makePosts(){
               const labelId = `${baseId}-label`;
               labelEl.id = labelId;
               let control = null;
-              // Use fieldTypeKey/key as PRIMARY source for field type identification (for user forms)
-              // For form preview, fall back to field.type if fieldTypeKey is not available
+              // Use fieldTypeKey/key as PRIMARY source for field type identification (same as buildMemberCreateField)
+              // For form preview, use field.type (which ensureFieldDefaults has normalized)
               const fieldTypeKey = field.fieldTypeKey || field.key || '';
               let baseType = '';
-              if(fieldTypeKey && (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown')){
-                baseType = fieldTypeKey;
-              } else if(fieldTypeKey && isUserFormContext){
-                // For user forms, prefer fieldTypeKey if available
-                baseType = fieldTypeKey || getBaseFieldType(field.type) || 'text-box';
+              if(isUserFormContext){
+                // For user forms: Use fieldTypeKey/key as PRIMARY source (same logic as buildMemberCreateField)
+                if(fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown'){
+                  baseType = fieldTypeKey;
+                } else {
+                  // Use fieldTypeKey if available, otherwise use field.type (already normalized by ensureFieldDefaultsForMember)
+                  baseType = fieldTypeKey || getBaseFieldType(field.type) || field.type || 'text-box';
+                }
               } else {
-                // For form preview, use field.type (which ensureFieldDefaults has normalized)
+                // For form preview: use field.type (which ensureFieldDefaults has normalized)
                 baseType = getBaseFieldType(field.type) || 'text-box';
               }
               if(baseType === 'text-area' || baseType === 'description'){
@@ -14194,7 +14198,7 @@ function makePosts(){
                 labelEl.appendChild(asterisk);
               }
               const header = document.createElement('div');
-              header.className = 'form-field-header';
+              header.className = 'form-preview-field-header';
               header.style.position = 'relative';
               header.appendChild(labelEl);
 

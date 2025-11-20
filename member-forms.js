@@ -1570,7 +1570,7 @@
         if(typeof window.renderForm === 'function'){
           window.renderForm({
             formFields: formFields,
-            formId: 'memberForm',
+            formId: 'form',
             fields: fields,
             categoryName: selectedCategory,
             subcategoryName: selectedSubcategory,
