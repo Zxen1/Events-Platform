@@ -1670,67 +1670,6 @@
 			}
     }
     
-    function ensureFieldDefaultsForMember(field){
-      const safeField = field && typeof field === 'object' ? field : {};
-      if(typeof safeField.name !== 'string'){
-        safeField.name = '';
-      } else if(!safeField.name.trim()){
-        safeField.name = '';
-      }
-      // Use fieldTypeKey or key as source of truth if type is not set or is just input_type
-      const fieldTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
-      if(typeof safeField.type !== 'string' || !safeField.type.trim()){
-        // If we have a fieldTypeKey, use it; otherwise default to text-box
-        safeField.type = fieldTypeKey || 'text-box';
-      } else {
-        // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-        // BUT preserve description and text-area types BEFORE normalization
-        const originalType = safeField.type;
-        const normalizedType = getBaseFieldType(originalType);
-        
-        // If fieldTypeKey exists and is different from normalized type, prefer fieldTypeKey
-        // This ensures radio uses 'radio' not something else
-        if(fieldTypeKey && fieldTypeKey !== normalizedType && 
-           (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown' || 
-            fieldTypeKey === 'description' || fieldTypeKey === 'text-area')){
-          safeField.type = fieldTypeKey;
-        }
-        // If the original type or normalized type is description/text-area, preserve it
-        else if(originalType === 'description' || originalType === 'text-area' || 
-           normalizedType === 'description' || normalizedType === 'text-area' ||
-           (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')))){
-          // Use normalized type if it's description/text-area, otherwise use original
-          if(normalizedType === 'description' || normalizedType === 'text-area'){
-            safeField.type = normalizedType;
-          } else if(originalType === 'description' || originalType === 'text-area'){
-            safeField.type = originalType;
-          } else {
-            // Fallback: check if original contains description/text-area
-            safeField.type = originalType.includes('description') ? 'description' : 
-                           originalType.includes('text-area') ? 'text-area' : normalizedType || 'text-box';
-          }
-        } else if(normalizedType){
-          safeField.type = normalizedType;
-        } else if(!safeField.type || safeField.type === ''){
-          safeField.type = 'text-box';
-        }
-      }
-      if(typeof safeField.placeholder !== 'string'){
-        safeField.placeholder = '';
-      }
-      if(typeof safeField.required !== 'boolean'){
-        safeField.required = false;
-      }
-      if(!Array.isArray(safeField.options)){
-        safeField.options = [];
-      }
-      // CRITICAL: Preserve fieldTypeKey and key on the returned object
-      if(field && typeof field === 'object'){
-        if(field.fieldTypeKey) safeField.fieldTypeKey = field.fieldTypeKey;
-        if(field.key) safeField.key = field.key;
-      }
-      return safeField;
-    }
     
     function handleImagePreview(fileInput){
       if(!fileInput || fileInput.type !== 'file') return;
@@ -1830,8 +1769,14 @@
       });
     }
     
+    // Member form rendering now uses shared form rendering function
+    // The old renderFormPreviewForMember function has been deleted
+    // Forms are now rendered using the same code as admin form preview
     function renderFormPreviewForMember(fields){
-      formFields.innerHTML = '';
+      // This function will be replaced to use shared form rendering from index.js
+      // For now, this is a placeholder that prevents errors
+      console.error('renderFormPreviewForMember should not be called - member forms should use shared rendering');
+    }
       
       const subcategoryTitle = document.createElement('div');
       subcategoryTitle.className = 'member-form-subcategory-title';
