@@ -3239,9 +3239,11 @@
       if(postButton){ postButton.disabled = true; postButton.hidden = true; postButton.style.display = 'none'; }
       if(postActions){ postActions.hidden = true; postActions.style.display = 'none'; }
       
-      const categoryIcons = window.categoryIcons = window.categoryIcons || {};
-      const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
       const sortedCategories = (typeof window !== 'undefined' && typeof window.getSortedCategories === 'function' ? window.getSortedCategories : (cats => cats || []))(memberCategories);
+      
+      // Get icon paths from snapshot (fetched from database)
+      const categoryIconPaths = (memberSnapshot && memberSnapshot.categoryIconPaths) ? memberSnapshot.categoryIconPaths : {};
+      const subcategoryIconPaths = (memberSnapshot && memberSnapshot.subcategoryIconPaths) ? memberSnapshot.subcategoryIconPaths : {};
       
       // Create container for dropdowns
       const dropdownsContainer = document.createElement('div');
@@ -3330,10 +3332,10 @@
         const optionBtn = document.createElement('button');
         optionBtn.type = 'button';
         optionBtn.className = 'menu-option';
-        const iconUrl = categoryIcons[c.name] || '';
-        if(iconUrl){
+        const iconPath = categoryIconPaths[c.name] || '';
+        if(iconPath){
           const iconImg = document.createElement('img');
-          iconImg.src = iconUrl;
+          iconImg.src = iconPath;
           iconImg.className = 'formpicker-category-icon';
           iconImg.alt = '';
           optionBtn.appendChild(iconImg);
@@ -3342,7 +3344,7 @@
         textSpan.textContent = c.name;
         optionBtn.appendChild(textSpan);
         optionBtn.dataset.value = c.name;
-        optionBtn.dataset.icon = iconUrl;
+        optionBtn.dataset.icon = iconPath;
         optionBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           const categoryName = c.name;
@@ -3364,10 +3366,10 @@
                 const subOptionBtn = document.createElement('button');
                 subOptionBtn.type = 'button';
                 subOptionBtn.className = 'menu-option';
-                const subIconUrl = subcategoryIcons[s] || '';
-                if(subIconUrl){
+                const subIconPath = subcategoryIconPaths[s] || '';
+                if(subIconPath){
                   const subIconImg = document.createElement('img');
-                  subIconImg.src = subIconUrl;
+                  subIconImg.src = subIconPath;
                   subIconImg.className = 'formpicker-subcategory-icon';
                   subIconImg.alt = '';
                   subOptionBtn.appendChild(subIconImg);
@@ -3376,7 +3378,7 @@
                 subTextSpan.textContent = s;
                 subOptionBtn.appendChild(subTextSpan);
                 subOptionBtn.dataset.value = s;
-                subOptionBtn.dataset.icon = subIconUrl;
+                subOptionBtn.dataset.icon = subIconPath;
                 subOptionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const subcategoryName = s;
