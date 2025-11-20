@@ -3242,8 +3242,12 @@
       const sortedCategories = (typeof window !== 'undefined' && typeof window.getSortedCategories === 'function' ? window.getSortedCategories : (cats => cats || []))(memberCategories);
       
       // Get icon paths from snapshot (fetched from database)
-      const categoryIconPaths = (memberSnapshot && memberSnapshot.categoryIconPaths) ? memberSnapshot.categoryIconPaths : {};
-      const subcategoryIconPaths = (memberSnapshot && memberSnapshot.subcategoryIconPaths) ? memberSnapshot.subcategoryIconPaths : {};
+      if(!memberSnapshot || !memberSnapshot.categoryIconPaths || !memberSnapshot.subcategoryIconPaths){
+        console.error('[Member Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths');
+        return;
+      }
+      const categoryIconPaths = memberSnapshot.categoryIconPaths;
+      const subcategoryIconPaths = memberSnapshot.subcategoryIconPaths;
       
       // Create container for dropdowns
       const dropdownsContainer = document.createElement('div');
@@ -3332,6 +3336,7 @@
         const optionBtn = document.createElement('button');
         optionBtn.type = 'button';
         optionBtn.className = 'menu-option';
+        // Get icon path from categoryIconPaths map (from database)
         const iconPath = categoryIconPaths[c.name] || '';
         if(iconPath){
           const iconImg = document.createElement('img');
@@ -3366,6 +3371,8 @@
                 const subOptionBtn = document.createElement('button');
                 subOptionBtn.type = 'button';
                 subOptionBtn.className = 'menu-option';
+                // Get icon path from subcategoryIconPaths map
+                // Note: subcategories are just strings (names), so we use the map
                 const subIconPath = subcategoryIconPaths[s] || '';
                 if(subIconPath){
                   const subIconImg = document.createElement('img');
