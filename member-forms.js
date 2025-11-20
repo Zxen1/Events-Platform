@@ -3242,12 +3242,27 @@
       const sortedCategories = (typeof window !== 'undefined' && typeof window.getSortedCategories === 'function' ? window.getSortedCategories : (cats => cats || []))(memberCategories);
       
       // Get icon paths from snapshot (fetched from database)
-      if(!memberSnapshot || !memberSnapshot.categoryIconPaths || !memberSnapshot.subcategoryIconPaths){
-        console.error('[Member Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths');
+      if(!memberSnapshot){
+        console.error('[Member Forms] memberSnapshot is null or undefined');
+        return;
+      }
+      if(typeof memberSnapshot.categoryIconPaths !== 'object' || typeof memberSnapshot.subcategoryIconPaths !== 'object'){
+        console.error('[Member Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths', {
+          hasCategoryIconPaths: typeof memberSnapshot.categoryIconPaths,
+          hasSubcategoryIconPaths: typeof memberSnapshot.subcategoryIconPaths,
+          snapshotKeys: Object.keys(memberSnapshot || {})
+        });
         return;
       }
       const categoryIconPaths = memberSnapshot.categoryIconPaths;
       const subcategoryIconPaths = memberSnapshot.subcategoryIconPaths;
+      
+      // Debug: log icon path counts
+      const categoryIconCount = Object.keys(categoryIconPaths).length;
+      const subcategoryIconCount = Object.keys(subcategoryIconPaths).length;
+      if(categoryIconCount > 0 || subcategoryIconCount > 0){
+        console.log('[Member Forms] Icon paths loaded:', { categoryIconCount, subcategoryIconCount });
+      }
       
       // Create container for dropdowns
       const dropdownsContainer = document.createElement('div');
@@ -3337,10 +3352,10 @@
         optionBtn.type = 'button';
         optionBtn.className = 'menu-option';
         // Get icon path from categoryIconPaths map (from database)
-        const iconPath = categoryIconPaths[c.name] || '';
-        if(iconPath){
+        const iconPath = categoryIconPaths[c.name];
+        if(iconPath && typeof iconPath === 'string' && iconPath.trim()){
           const iconImg = document.createElement('img');
-          iconImg.src = iconPath;
+          iconImg.src = iconPath.trim();
           iconImg.className = 'formpicker-category-icon';
           iconImg.alt = '';
           optionBtn.appendChild(iconImg);
@@ -3373,10 +3388,10 @@
                 subOptionBtn.className = 'menu-option';
                 // Get icon path from subcategoryIconPaths map
                 // Note: subcategories are just strings (names), so we use the map
-                const subIconPath = subcategoryIconPaths[s] || '';
-                if(subIconPath){
+                const subIconPath = subcategoryIconPaths[s];
+                if(subIconPath && typeof subIconPath === 'string' && subIconPath.trim()){
                   const subIconImg = document.createElement('img');
-                  subIconImg.src = subIconPath;
+                  subIconImg.src = subIconPath.trim();
                   subIconImg.className = 'formpicker-subcategory-icon';
                   subIconImg.alt = '';
                   subOptionBtn.appendChild(subIconImg);
@@ -3385,7 +3400,7 @@
                 subTextSpan.textContent = s;
                 subOptionBtn.appendChild(subTextSpan);
                 subOptionBtn.dataset.value = s;
-                subOptionBtn.dataset.icon = subIconPath;
+                subOptionBtn.dataset.icon = subIconPath || '';
                 subOptionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const subcategoryName = s;
