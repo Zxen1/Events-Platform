@@ -8987,7 +8987,7 @@ function makePosts(){
               optionsMenu.hidden = false;
               menuBtn.setAttribute('aria-expanded', 'true');
               const outsideHandler = (ev) => {
-                if(!ev.target.closest(dropdownWrapper)){
+                if(!dropdownWrapper.contains(ev.target)){
                   optionsMenu.hidden = true;
                   menuBtn.setAttribute('aria-expanded', 'false');
                   document.removeEventListener('click', outsideHandler);
@@ -9246,7 +9246,7 @@ function makePosts(){
                   currencyMenu.hidden = false;
                   currencyMenuBtn.setAttribute('aria-expanded', 'true');
                   const outsideHandler = (ev) => {
-                    if(!ev.target.closest(currencyWrapper)){
+                    if(!currencyWrapper.contains(ev.target)){
                       currencyMenu.hidden = true;
                       currencyMenuBtn.setAttribute('aria-expanded', 'false');
                       document.removeEventListener('click', outsideHandler);
@@ -13227,7 +13227,7 @@ function makePosts(){
                               currencyMenu.hidden = false;
                               currencyMenuBtn.setAttribute('aria-expanded', 'true');
                               const outsideHandler = (ev) => {
-                                if(!ev.target.closest(currencyWrapper)){
+                                if(!currencyWrapper.contains(ev.target)){
                                   currencyMenu.hidden = true;
                                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
                                   document.removeEventListener('click', outsideHandler);
@@ -13760,7 +13760,7 @@ function makePosts(){
                 fieldTypeMenu.hidden = false;
                 fieldTypeMenuBtn.setAttribute('aria-expanded', 'true');
                 const outsideHandler = (ev) => {
-                  if(!ev.target.closest(fieldTypeWrapper)){
+                  if(!fieldTypeWrapper.contains(ev.target)){
                     fieldTypeMenu.hidden = true;
                     fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
                     document.removeEventListener('click', outsideHandler);
