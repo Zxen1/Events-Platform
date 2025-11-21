@@ -5954,6 +5954,10 @@ button[aria-expanded="true"] .results-arrow{
   margin: 0;
 }
 
+.formpicker-container .filter-category-menu .filter-category-trigger .label{
+  text-align:left;
+}
+
 .formpicker-container .filter-category-menu .category-logo{
   flex:0 0 24px;
   width:24px;
@@ -5972,6 +5976,7 @@ button[aria-expanded="true"] .results-arrow{
   font-weight:400;
   letter-spacing:.2px;
   flex:1;
+  text-align:left;
 }
 
 .formpicker-container .filter-category-menu .cat-switch{
@@ -6079,6 +6084,7 @@ button[aria-expanded="true"] .results-arrow{
 .formpicker-container .filter-category-menu .options-menu button .subcategory-label{
   flex:1;
   text-align:left;
+  justify-content:flex-start;
 }
 
 .formpicker-container .filter-category-menu .options-menu button .subcategory-switch{
@@ -6113,7 +6119,9 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"]{
+  background:rgba(0,0,0,0.2);
   color:var(--muted);
+  border-color:transparent;
 }
 
 .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
@@ -10145,6 +10153,7 @@ html, body { cursor: auto; }
             #memberPanel .member-create-fields .session-date-input{
               background:#2e3a72;
               color:var(--button-text);
+              border-color:#2e3a72;
             }
             #tab-forms .session-time-input,
             #memberPanel .member-create-fields .session-time-input{
@@ -11069,7 +11078,8 @@ html, body { cursor: auto; }
               max-width:none;
             }
             #tab-forms .form-container .form-field,
-            #memberPanel .member-create-fields .form-field{
+            #memberPanel .member-create-fields .form-field,
+            #memberPanel .member-create-fields .form-preview-field{
               padding-top:0;
               padding-bottom:0;
               margin:0;
@@ -11079,7 +11089,8 @@ html, body { cursor: auto; }
             #tab-forms .form-container .panel-field .subcategory-form-label,
             #memberPanel .member-create-fields .panel-field label,
             #memberPanel .member-create-fields .panel-field .subcategory-form-button,
-            #memberPanel .member-create-fields .panel-field .subcategory-form-label{
+            #memberPanel .member-create-fields .panel-field .subcategory-form-label,
+            #memberPanel .member-create-fields .form-preview-field label{
               font-weight:600;
             }
             #tab-forms .form-container .panel-field .subcategory-form-button,
@@ -11140,7 +11151,8 @@ html, body { cursor: auto; }
               font-size:inherit;
             }
             #tab-forms .form-container .panel-field input,
-            #memberPanel .member-create-fields .panel-field input{
+            #memberPanel .member-create-fields .panel-field input,
+            #memberPanel .member-create-fields .form-preview-field input{
               border:1px solid var(--border);
               border-radius:8px;
               background:rgba(0,0,0,0.35);
@@ -11153,7 +11165,9 @@ html, body { cursor: auto; }
             #tab-forms .form-container .panel-field select,
             #tab-forms .form-container .panel-field textarea,
             #memberPanel .member-create-fields .panel-field select,
-            #memberPanel .member-create-fields .panel-field textarea{
+            #memberPanel .member-create-fields .panel-field textarea,
+            #memberPanel .member-create-fields .form-preview-field select,
+            #memberPanel .member-create-fields .form-preview-field textarea{
               border:1px solid var(--border);
               border-radius:8px;
               background:rgba(0,0,0,0.35);
@@ -11162,7 +11176,8 @@ html, body { cursor: auto; }
               width:100%;
             }
             #tab-forms .form-container .panel-field textarea,
-            #memberPanel .member-create-fields .panel-field textarea{
+            #memberPanel .member-create-fields .panel-field textarea,
+            #memberPanel .member-create-fields .form-preview-field textarea{
               resize:vertical;
               min-height:120px;
               padding:8px 12px;
@@ -11170,7 +11185,9 @@ html, body { cursor: auto; }
             #tab-forms .form-container .panel-field select,
             #tab-forms .form-container .form-field--dropdown .form-select,
             #memberPanel .member-create-fields .panel-field select,
-            #memberPanel .member-create-fields .form-field--dropdown .form-select{
+            #memberPanel .member-create-fields .form-field--dropdown .form-select,
+            #memberPanel .member-create-fields .form-preview-field select,
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
               height:36px;
               padding:0 30px 0 12px;
               width:100%;
@@ -11182,14 +11199,17 @@ html, body { cursor: auto; }
             #tab-forms .form-container .panel-field select:focus,
             #tab-forms .form-container .form-field--dropdown .form-select:focus,
             #memberPanel .member-create-fields .panel-field select:focus,
-            #memberPanel .member-create-fields .form-field--dropdown .form-select:focus{
+            #memberPanel .member-create-fields .form-field--dropdown .form-select:focus,
+            #memberPanel .member-create-fields .form-preview-field select:focus,
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select:focus{
               border-color:var(--btn-hover, #2e3a72);
               outline:none;
               width:100%;
               box-sizing:border-box;
             }
             #tab-forms .form-container .form-field--dropdown,
-            #memberPanel .member-create-fields .form-field--dropdown{
+            #memberPanel .member-create-fields .form-field--dropdown,
+            #memberPanel .member-create-fields .form-preview-field--dropdown{
               position:relative;
               width:100%;
               box-sizing:border-box;
