@@ -255,12 +255,12 @@ body input::placeholder,
 body textarea::placeholder{
   color: var(--placeholder-text);
   font-size: inherit;
-}
+    }
 
-@keyframes logo-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+    @keyframes logo-rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
 
 
 /* ========================================
@@ -1288,7 +1288,7 @@ body textarea::placeholder{
   height: 40px;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
-  overflow: hidden;
+    overflow: hidden;
 }
 
 .mode-toggle button{
@@ -1302,7 +1302,7 @@ body textarea::placeholder{
   height: 100%;
   border-radius: 0;
   min-width: 0;
-  display: flex;
+    display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
@@ -1325,10 +1325,10 @@ body textarea::placeholder{
 .results-arrow,
 .dropdown-arrow{
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-style: solid;
-  border-width: 0 2px 2px 0;
+  border-width: 0 1.5px 1.5px 0;
   border-color: currentColor;
   color: inherit;
   transition: transform .3s;
@@ -1368,8 +1368,8 @@ body textarea::placeholder{
 .header textarea,
 .header select{
   caret-color: auto;
-  -webkit-user-select: text;
-  user-select: text;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 /* ========== MAP AREA SECTION ========== */
@@ -4629,11 +4629,6 @@ button[aria-expanded="true"] .results-arrow{
   flex-wrap:wrap;
   gap:12px;
 }
-#memberPanel .member-create-selects button,
-#memberPanel .member-create-selects select{
-  text-align:left;
-  justify-content:flex-start;
-}
 #memberPanel .member-create-field{
   margin:0;
 }
@@ -6461,16 +6456,19 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:0;
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
+  box-sizing:border-box;
 }
 
 .post-board .post-card{
   width:100%;
   max-width:100%;
+  box-sizing:border-box;
 }
 
 .post-board .open-post{
   width:100%;
   max-width:100%;
+  box-sizing:border-box;
 }
 
 .recents-board .recents-card{
@@ -7101,6 +7099,12 @@ body.filters-active #filterBtn{
   max-width:100%;
   box-sizing:border-box;
 }
+
+#memberPanel .member-create-fields .options-menu .menu-option,
+#memberPanel .member-create-fields .options-menu button{
+  text-align:left;
+  justify-content:flex-start;
+}
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .options-menu .menu-option{ text-align:left; justify-content:flex-start; }
@@ -7352,7 +7356,7 @@ body.filters-active #filterBtn{
   background-color:#ffffff;
   color:#000000;
 }
-#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button,
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
 #memberPanel .map-control-row .mapboxgl-ctrl-compass button{
   background-color:#ffffff;
   box-shadow:none;
@@ -7588,10 +7592,8 @@ body.filters-active #filterBtn{
   overflow-y:overlay;
   overflow-x:hidden;
   padding:0;
-  padding-right:0;
   margin:0;
   scrollbar-gutter:stable;
-  box-sizing:border-box;
 }
 @supports (scrollbar-gutter: stable){
   .post-board .posts,
@@ -8230,7 +8232,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index: calc(var(--layer-menu) + 1);
+  z-index: var(--layer-menu);
 }
 .open-post .post-venue-menu,
 .open-post .session-menu{
@@ -9551,14 +9553,14 @@ html, body { cursor: auto; }
             #tab-forms .subcategory-hide-toggle-row{
               margin:0;
             }
-#tab-forms .category-form-menu .filter-category-trigger{
-  min-width:0;
-  background:transparent;
-  border-color:transparent;
-  color:var(--button-text);
+            #tab-forms .category-form-menu .filter-category-trigger{
+              min-width:0;
+              background:transparent;
+              border-color:transparent;
+              color:var(--button-text);
   text-align:left;
   justify-content:flex-start;
-}
+            }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
             }
@@ -10874,10 +10876,10 @@ html, body { cursor: auto; }
               right:10px;
               transform:translateY(-50%) rotate(45deg);
               display:inline-block;
-              width:8px;
-              height:8px;
+              width:6px;
+              height:6px;
               border-style:solid;
-              border-width:0 2px 2px 0;
+              border-width:0 1.5px 1.5px 0;
               border-color:currentColor;
               color:inherit;
               pointer-events:none;
@@ -11174,6 +11176,8 @@ html, body { cursor: auto; }
               width:100%;
               box-sizing:border-box;
               max-width:100%;
+              text-align:left;
+              justify-content:flex-start;
             }
             #tab-forms .form-container .panel-field select:focus,
             #tab-forms .form-container .form-field--dropdown .form-select:focus,
