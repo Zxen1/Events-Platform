@@ -24,7 +24,7 @@
   
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="mode-map" style="padding-bottom:var(--footer-h);">
+<body class="mode-map">
   <div id="headerLoadingOverlay" class="header-loading-overlay" role="status" aria-live="polite">
     <span class="header-loading-text">
       Loading<span class="header-loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
@@ -34,7 +34,7 @@
     <div class="logo" aria-label="Site logo">
       <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </div>
-    <div id="headerTimecode" class="header-timecode" aria-live="polite" style="position:absolute;left:50%;transform:translateX(-50%);top:8px;font-weight:600;"></div>
+    <div id="headerTimecode" class="header-timecode" aria-live="polite"></div>
     <nav class="view-toggle" aria-label="Primary">
       <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
@@ -42,7 +42,7 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <span id="resultCount" aria-live="polite" style="display:none"></span>
+        <span id="resultCount" aria-live="polite"></span>
       </button>
       <div class="mode-toggle">
         <button id="recents-button" aria-pressed="false" aria-label="Recents">
@@ -106,18 +106,18 @@
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
-    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board" data-side="left" aria-hidden="true" style="display:none;">
+    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board" data-side="left" aria-hidden="true">
     </section>
-    <section class="post-board" aria-label="Post Board" data-side="left" aria-hidden="true" style="display:none;">
+    <section class="post-board" aria-label="Post Board" data-side="left" aria-hidden="true">
     </section>
-    <section class="ad-board" aria-label="Ad Board" data-side="right" aria-hidden="true" style="display:none;">
+    <section class="ad-board" aria-label="Ad Board" data-side="right" aria-hidden="true">
       <div class="ad-panel">
       </div>
     </section>
   </div>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;">
+    <div class="panel-content">
       <div class="panel-header">
         <div id="filterSummary" class="filter-summary"></div>
       </div>
@@ -142,7 +142,7 @@
             <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
             <div id="optionsMenu" class="options-menu" hidden>
               <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-              <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+              <div class="sort-options" role="group" aria-label="Sort order">
                 <button class="sort-option" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
                 <button class="sort-option" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
                 <button class="sort-option" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
@@ -190,7 +190,7 @@
   </div>
 
   <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="right:0;">
+    <div class="panel-content">
       <div class="panel-header">
         <div class="header-top">
           <h2>Members</h2>
@@ -262,7 +262,7 @@
   </div>
 
   <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
+    <div class="panel-content">
       <div class="panel-header">
         <div class="header-top">
           <h2 class="title">Admin</h2>
