@@ -8707,6 +8707,138 @@ function makePosts(){
       });
     };
     
+    function ensureFieldDefaults(field){
+      const safeField = field && typeof field === 'object' ? field : {};
+      if(typeof safeField.name !== 'string'){
+        safeField.name = '';
+      } else if(!safeField.name.trim()){
+        safeField.name = '';
+      }
+      if(typeof safeField.type !== 'string'){
+        safeField.type = '';
+      } else {
+        // Preserve description and text-area types BEFORE normalization
+        const originalType = safeField.type;
+        const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
+                                 (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
+        
+        if(isDescriptionType){
+          // Normalize but preserve description/text-area
+          const normalizedType = getBaseFieldType(originalType);
+          if(normalizedType === 'description' || normalizedType === 'text-area'){
+            safeField.type = normalizedType;
+          } else if(originalType === 'description' || originalType === 'text-area'){
+            safeField.type = originalType;
+          } else {
+            // Extract description/text-area from the type string
+            safeField.type = originalType.includes('description') ? 'description' : 'text-area';
+          }
+        } else {
+          // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+          const normalizedType = getBaseFieldType(safeField.type);
+          if(normalizedType){
+            safeField.type = normalizedType;
+          }
+        }
+      }
+      // Ensure key and fieldTypeKey sync with each other if one is missing
+      if(!safeField.key && safeField.fieldTypeKey){
+        safeField.key = safeField.fieldTypeKey;
+      }
+      if(!safeField.fieldTypeKey && safeField.key){
+        safeField.fieldTypeKey = safeField.key;
+      }
+      // For brand new fields, default to first field type in list
+      // Don't default to first field type - let user select
+      // Only set defaults if field type is explicitly provided
+      if(!safeField.key && !safeField.fieldTypeKey){
+        // Leave unset - user must select from dropdown
+      } else if(safeField.fieldTypeKey && !safeField.key){
+        safeField.key = safeField.fieldTypeKey;
+      } else if(safeField.key && !safeField.fieldTypeKey){
+        safeField.fieldTypeKey = safeField.key;
+      }
+      
+      // Only auto-name if field type is explicitly set (not defaulted)
+        if(!safeField.name){
+          safeField.name = '';
+        }
+        if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+        const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+        const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
+        const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
+        let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
+        if(!resolvedFieldTypeName && fieldTypeKey){
+          const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+          if(matchingFieldType){
+            resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
+          }
+        }
+        resolvedFieldTypeName = resolvedFieldTypeName || '';
+        safeField.field_type_name = resolvedFieldTypeName;
+        safeField.fieldTypeName = resolvedFieldTypeName;
+      // Only auto-name if field type is set AND field doesn't already have a custom name
+      // For editable fields, preserve existing custom names
+      if(fieldTypeKey && resolvedFieldTypeName){
+        const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+        const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+        // Only auto-name if not editable OR if name is empty
+        if(!isEditable || !safeField.name || safeField.name.trim() === ''){
+          safeField.name = resolvedFieldTypeName;
+        }
+      }
+        if(fieldTypeKey === 'location'){
+          if(!safeField.placeholder || !safeField.placeholder.trim()){
+            safeField.placeholder = 'Search for a location';
+          }
+          const loc = safeField.location && typeof safeField.location === 'object' ? safeField.location : {};
+          const address = typeof loc.address === 'string' ? loc.address : '';
+          const latitude = typeof loc.latitude === 'string' ? loc.latitude : '';
+          const longitude = typeof loc.longitude === 'string' ? loc.longitude : '';
+          safeField.location = { address, latitude, longitude };
+        } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
+          delete safeField.location;
+        }
+        const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
+        safeField.required = hasRequiredProp ? !!safeField.required : false;
+        if(!Array.isArray(safeField.options)){
+          safeField.options = [];
+        }
+        if(fieldTypeKey === 'venue-ticketing'){
+          safeField.options = normalizeVenueSessionOptions(safeField.options);
+        } else if(fieldTypeKey === 'variant-pricing'){
+          safeField.options = safeField.options.map(opt => {
+            if(opt && typeof opt === 'object'){
+              return {
+                version: typeof opt.version === 'string' ? opt.version : '',
+                currency: typeof opt.currency === 'string' ? opt.currency : '',
+                price: typeof opt.price === 'string' ? opt.price : ''
+              };
+            }
+            const str = typeof opt === 'string' ? opt : String(opt ?? '');
+            return { version: str, currency: '', price: '' };
+          });
+          if(safeField.options.length === 0){
+            safeField.options.push({ version: '', currency: '', price: '' });
+          }
+        } else {
+          safeField.options = safeField.options.map(opt => {
+            if(typeof opt === 'string') return opt;
+            if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
+              return opt.version;
+            }
+            return String(opt ?? '');
+          });
+          if((safeField.type === 'dropdown' || safeField.type === 'radio') && safeField.options.length === 0){
+            safeField.options.push('', '', '');
+          }
+        }
+        if(safeField.type !== 'venue-ticketing'){
+          resetVenueAutofillState(safeField);
+        }
+        return safeField;
+    }
+
     function renderForm(options = {}){
       if (!options.formFields || !options.formId || !options.fields) {
         console.error('renderForm: Missing required options (formFields, formId, fields)');
@@ -10516,137 +10648,7 @@ function makePosts(){
           // Text will be loaded from DB
           addFieldBtn.setAttribute('aria-label', `Add field to ${sub}`);
 
-          const ensureFieldDefaults = (field)=>{
-            const safeField = field && typeof field === 'object' ? field : {};
-            if(typeof safeField.name !== 'string'){
-              safeField.name = '';
-            } else if(!safeField.name.trim()){
-              safeField.name = '';
-          }
-          if(typeof safeField.type !== 'string'){
-            safeField.type = '';
-          } else {
-            // Preserve description and text-area types BEFORE normalization
-            const originalType = safeField.type;
-            const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
-                                     (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
-            
-            if(isDescriptionType){
-              // Normalize but preserve description/text-area
-              const normalizedType = getBaseFieldType(originalType);
-              if(normalizedType === 'description' || normalizedType === 'text-area'){
-                safeField.type = normalizedType;
-              } else if(originalType === 'description' || originalType === 'text-area'){
-                safeField.type = originalType;
-              } else {
-                // Extract description/text-area from the type string
-                safeField.type = originalType.includes('description') ? 'description' : 'text-area';
-              }
-            } else {
-              // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-              const normalizedType = getBaseFieldType(safeField.type);
-              if(normalizedType){
-                safeField.type = normalizedType;
-              }
-            }
-          }
-          // Ensure key and fieldTypeKey sync with each other if one is missing
-          if(!safeField.key && safeField.fieldTypeKey){
-            safeField.key = safeField.fieldTypeKey;
-          }
-          if(!safeField.fieldTypeKey && safeField.key){
-            safeField.fieldTypeKey = safeField.key;
-          }
-          // For brand new fields, default to first field type in list
-          // Don't default to first field type - let user select
-          // Only set defaults if field type is explicitly provided
-          if(!safeField.key && !safeField.fieldTypeKey){
-            // Leave unset - user must select from dropdown
-          } else if(safeField.fieldTypeKey && !safeField.key){
-            safeField.key = safeField.fieldTypeKey;
-          } else if(safeField.key && !safeField.fieldTypeKey){
-            safeField.fieldTypeKey = safeField.key;
-          }
-          
-          // Only auto-name if field type is explicitly set (not defaulted)
-            if(!safeField.name){
-              safeField.name = '';
-            }
-            if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-            const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
-            const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
-            const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-            let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
-            if(!resolvedFieldTypeName && fieldTypeKey){
-              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-              if(matchingFieldType){
-                resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
-              }
-            }
-            resolvedFieldTypeName = resolvedFieldTypeName || '';
-            safeField.field_type_name = resolvedFieldTypeName;
-            safeField.fieldTypeName = resolvedFieldTypeName;
-          // Only auto-name if field type is set AND field doesn't already have a custom name
-          // For editable fields, preserve existing custom names
-          if(fieldTypeKey && resolvedFieldTypeName){
-            const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-            const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
-            // Only auto-name if not editable OR if name is empty
-            if(!isEditable || !safeField.name || safeField.name.trim() === ''){
-              safeField.name = resolvedFieldTypeName;
-            }
-          }
-            if(fieldTypeKey === 'location'){
-              if(!safeField.placeholder || !safeField.placeholder.trim()){
-                safeField.placeholder = 'Search for a location';
-              }
-              const loc = safeField.location && typeof safeField.location === 'object' ? safeField.location : {};
-              const address = typeof loc.address === 'string' ? loc.address : '';
-              const latitude = typeof loc.latitude === 'string' ? loc.latitude : '';
-              const longitude = typeof loc.longitude === 'string' ? loc.longitude : '';
-              safeField.location = { address, latitude, longitude };
-            } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
-              delete safeField.location;
-            }
-            const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-            safeField.required = hasRequiredProp ? !!safeField.required : false;
-            if(!Array.isArray(safeField.options)){
-              safeField.options = [];
-            }
-            if(fieldTypeKey === 'venue-ticketing'){
-              safeField.options = normalizeVenueSessionOptions(safeField.options);
-            } else if(fieldTypeKey === 'variant-pricing'){
-              safeField.options = safeField.options.map(opt => {
-                if(opt && typeof opt === 'object'){
-                  return {
-                    version: typeof opt.version === 'string' ? opt.version : '',
-                    currency: typeof opt.currency === 'string' ? opt.currency : '',
-                    price: typeof opt.price === 'string' ? opt.price : ''
-                  };
-                }
-                const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                return { version: str, currency: '', price: '' };
-              });
-              if(safeField.options.length === 0){
-                safeField.options.push({ version: '', currency: '', price: '' });
-              }
-            } else {
-              safeField.options = safeField.options.map(opt => {
-                if(typeof opt === 'string') return opt;
-                if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
-                  return opt.version;
-                }
-                return String(opt ?? '');
-              });
-              if((safeField.type === 'dropdown' || safeField.type === 'radio') && safeField.options.length === 0){
-                safeField.options.push('', '', '');
-              }
-            }
-            if(safeField.type !== 'venue-ticketing'){
-              resetVenueAutofillState(safeField);
-            }
-            return safeField;
-          };
+          // ensureFieldDefaults is now defined at module scope, use it directly
           const buildVenueSessionPreview = (previewField, baseId)=>{
             // CRITICAL: Clone options to prevent sharing state between form preview and member forms
             // Each instance needs its own independent copy of the options
