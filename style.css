@@ -1978,10 +1978,7 @@ button[aria-expanded="true"] .results-arrow{
 #memberPanel .member-create-fields{
   display:flex;
   flex-direction:column;
-  gap:16px;
-}
-#memberPanel .member-create-fields .panel-field{
-  max-width:100%;
+  gap:0;
 }
 #memberPanel .member-create-checkout{
   display:flex;
@@ -7225,17 +7222,20 @@ html, body { cursor: auto !important; }
             #tab-forms .form-btn[aria-expanded="true"] .dropdown-arrow{
               transform:rotate(-135deg);
             }
-            #tab-forms .form-field--venues-sessions-pricing .venue-session-editor{
+            #tab-forms .form-field--venues-sessions-pricing .venue-session-editor,
+            #memberPanel .member-create-fields .form-field--venues-sessions-pricing .venue-session-editor{
               display:flex;
               flex-direction:column;
               gap:16px;
             }
-            #tab-forms .venue-session-venues{
+            #tab-forms .venue-session-venues,
+            #memberPanel .member-create-fields .venue-session-venues{
               display:flex;
               flex-direction:column;
               gap:16px;
             }
-            #tab-forms .venue-card{
+            #tab-forms .venue-card,
+            #memberPanel .member-create-fields .venue-card{
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
@@ -7244,14 +7244,20 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .venue-card > *{
+            #tab-forms .venue-card > *,
+            #memberPanel .member-create-fields .venue-card > *{
               width:100%;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row,
             #tab-forms .session-time-row,
             #tab-forms .session-pricing-card,
-            #tab-forms .tier-row{
+            #tab-forms .tier-row,
+            #memberPanel .member-create-fields .venue-line,
+            #memberPanel .member-create-fields .session-date-row,
+            #memberPanel .member-create-fields .session-time-row,
+            #memberPanel .member-create-fields .session-pricing-card,
+            #memberPanel .member-create-fields .tier-row{
               display:grid;
               grid-template-columns:minmax(0, 1fr) auto;
               justify-items:start;
@@ -7260,28 +7266,39 @@ html, body { cursor: auto !important; }
               row-gap:12px;
               width:100%;
             }
-            #tab-forms .address_line-line{
+            #tab-forms .address_line-line,
+            #memberPanel .member-create-fields .address_line-line{
               grid-template-columns:1fr;
               justify-items:stretch;
               align-items:stretch;
             }
-            #tab-forms .address_line-line > *{
+            #tab-forms .address_line-line > *,
+            #memberPanel .member-create-fields .address_line-line > *{
               width:100%;
               min-width:0;
             }
             #tab-forms .venue-line,
-            #tab-forms .session-date-row{
+            #tab-forms .session-date-row,
+            #memberPanel .member-create-fields .venue-line,
+            #memberPanel .member-create-fields .session-date-row{
               position:relative;
             }
             #tab-forms .address_line-geocoder-container.is-geocoder-active,
-            #tab-forms .session-date-row.has-open-session-picker{
+            #tab-forms .session-date-row.has-open-session-picker,
+            #memberPanel .member-create-fields .address_line-geocoder-container.is-geocoder-active,
+            #memberPanel .member-create-fields .session-date-row.has-open-session-picker{
               z-index:var(--forms-layer-overlay);
             }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
             #tab-forms .session-time-actions,
             #tab-forms .version-actions,
-            #tab-forms .tier-actions{
+            #tab-forms .tier-actions,
+            #memberPanel .member-create-fields .venue-line-actions,
+            #memberPanel .member-create-fields .session-date-actions,
+            #memberPanel .member-create-fields .session-time-actions,
+            #memberPanel .member-create-fields .version-actions,
+            #memberPanel .member-create-fields .tier-actions{
               margin-left:0;
               display:flex;
               gap:4px;
@@ -7293,7 +7310,11 @@ html, body { cursor: auto !important; }
             #tab-forms .session-time-input,
             #tab-forms .seating_area-input,
             #tab-forms .pricing_tier-input,
-            #tab-forms .session-price-input{
+            #tab-forms .session-price-input,
+            #memberPanel .member-create-fields .session-time-input,
+            #memberPanel .member-create-fields .seating_area-input,
+            #memberPanel .member-create-fields .pricing_tier-input,
+            #memberPanel .member-create-fields .session-price-input{
               width:100%;
               height:36px;
               border-radius:8px;
@@ -7304,25 +7325,31 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
             }
             #tab-forms .venue-name-input,
-            #tab-forms .session-date-input{
+            #tab-forms .session-date-input,
+            #memberPanel .member-create-fields .venue-name-input,
+            #memberPanel .member-create-fields .session-date-input{
               background:#2e3a72 !important;
               color:var(--button-text);
             }
-            #tab-forms .session-time-input{
+            #tab-forms .session-time-input,
+            #memberPanel .member-create-fields .session-time-input{
               background:rgba(0,0,0,0.35);
               color:var(--input-text);
             }
-            #tab-forms .session-date-input-wrapper{
+            #tab-forms .session-date-input-wrapper,
+            #memberPanel .member-create-fields .session-date-input-wrapper{
               position:relative;
               display:flex;
               align-items:center;
               width:100%;
             }
-            #tab-forms .session-date-input{
+            #tab-forms .session-date-input,
+            #memberPanel .member-create-fields .session-date-input{
               padding-right:36px;
               text-align:left;
             }
-            #tab-forms .session-date-dropdown-indicator{
+            #tab-forms .session-date-dropdown-indicator,
+            #memberPanel .member-create-fields .session-date-dropdown-indicator{
               position:absolute;
               top:50%;
               right:12px;
@@ -7334,29 +7361,38 @@ html, body { cursor: auto !important; }
               color:var(--button-text);
               transition:transform 0.3s ease;
             }
-            #tab-forms .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
+            #tab-forms .session-date-input-wrapper.is-open .session-date-dropdown-indicator,
+            #memberPanel .member-create-fields .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
               transform:translateY(-50%) rotate(180deg);
             }
-            #tab-forms .session-time-input{
+            #tab-forms .session-time-input,
+            #memberPanel .member-create-fields .session-time-input{
               font-variant-numeric:tabular-nums;
             }
-            #tab-forms .session-time-input.is-invalid{
+            #tab-forms .session-time-input.is-invalid,
+            #memberPanel .member-create-fields .session-time-input.is-invalid{
               border-color:#b83030;
               box-shadow:0 0 0 1px #b83030;
             }
             #tab-forms .address_line-geocoder-container,
-            #tab-forms .address_line-fallback{
+            #tab-forms .address_line-fallback,
+            #memberPanel .member-create-fields .address_line-geocoder-container,
+            #memberPanel .member-create-fields .address_line-fallback{
               position:relative;
             }
-            #tab-forms .address_line-geocoder-container{
+            #tab-forms .address_line-geocoder-container,
+            #memberPanel .member-create-fields .address_line-geocoder-container{
               z-index:var(--forms-layer-stacked);
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl{
               width:100%;
               min-width:0;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
               box-shadow:none;
               border-radius:8px;
               border:1px solid var(--border);
@@ -7365,7 +7401,8 @@ html, body { cursor: auto !important; }
               position:relative;
               z-index:var(--forms-layer-overlay);
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
               line-height:36px;
               padding:0 12px;
@@ -7374,34 +7411,43 @@ html, body { cursor: auto !important; }
               font-size:inherit;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
               display:none;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
               background:transparent;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
               display:none;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
               z-index:var(--forms-layer-popover);
             }
-            #tab-forms .form-field--location .location-field-wrapper{
+            #tab-forms .form-field--location .location-field-wrapper,
+            #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
               display:flex;
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .location-field-coordinates{
+            #tab-forms .location-field-coordinates,
+            #memberPanel .member-create-fields .location-field-coordinates{
               display:grid;
               grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
               gap:8px;
             }
-            #tab-forms .session-list{
+            #tab-forms .session-list,
+            #memberPanel .member-create-fields .session-list{
               display:flex;
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .session-card{
+            #tab-forms .session-card,
+            #memberPanel .member-create-fields .session-card{
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
@@ -7411,39 +7457,46 @@ html, body { cursor: auto !important; }
               gap:12px;
               position:relative;
             }
-            #tab-forms .session-date-input{
+            #tab-forms .session-date-input,
+            #memberPanel .member-create-fields .session-date-input{
               cursor:pointer;
             }
-            #tab-forms .session-times{
+            #tab-forms .session-times,
+            #memberPanel .member-create-fields .session-times{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .session-time-row{
+            #tab-forms .session-time-row,
+            #memberPanel .member-create-fields .session-time-row{
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.25);
               padding:0;
             }
-            #tab-forms .seating_area-list{
+            #tab-forms .seating_area-list,
+            #memberPanel .member-create-fields .seating_area-list{
               display:flex;
               flex-direction:column;
               gap:10px;
               width:100%;
             }
-            #tab-forms .session-pricing-card{
+            #tab-forms .session-pricing-card,
+            #memberPanel .member-create-fields .session-pricing-card{
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.2);
               padding:0;
             }
-            #tab-forms .pricing_tier-list{
+            #tab-forms .pricing_tier-list,
+            #memberPanel .member-create-fields .pricing_tier-list{
               display:flex;
               flex-direction:column;
               gap:8px;
               width:100%;
             }
-            #tab-forms .tier-price-row{
+            #tab-forms .tier-price-row,
+            #memberPanel .member-create-fields .tier-price-row{
               display:grid;
               grid-template-columns:minmax(110px, auto) 1fr;
               align-items:center;
@@ -7451,10 +7504,14 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .session-time-row .seating_area-list,
             #tab-forms .session-pricing-card .pricing_tier-list,
-            #tab-forms .tier-row .tier-price-row{
+            #tab-forms .tier-row .tier-price-row,
+            #memberPanel .member-create-fields .session-time-row .seating_area-list,
+            #memberPanel .member-create-fields .session-pricing-card .pricing_tier-list,
+            #memberPanel .member-create-fields .tier-row .tier-price-row{
               grid-column:1 / -1;
             }
-            #tab-forms .same-pricing-row{
+            #tab-forms .same-pricing-row,
+            #memberPanel .member-create-fields .same-pricing-row{
               grid-column:1 / -1;
               display:flex;
               flex-wrap:wrap;
@@ -7463,24 +7520,29 @@ html, body { cursor: auto !important; }
               padding:0 12px 12px;
               box-sizing:border-box;
             }
-            #tab-forms .same-pricing-label{
+            #tab-forms .same-pricing-label,
+            #memberPanel .member-create-fields .same-pricing-label{
               font-weight:600;
             }
-            #tab-forms .same-pricing-options{
+            #tab-forms .same-pricing-options,
+            #memberPanel .member-create-fields .same-pricing-options{
               display:flex;
               gap:16px;
               align-items:center;
             }
-            #tab-forms .same-pricing-options label{
+            #tab-forms .same-pricing-options label,
+            #memberPanel .member-create-fields .same-pricing-options label{
               display:flex;
               align-items:center;
               gap:6px;
               cursor:pointer;
             }
-            #tab-forms .session-time-row.has-same-pricing{
+            #tab-forms .session-time-row.has-same-pricing,
+            #memberPanel .member-create-fields .session-time-row.has-same-pricing{
               padding-bottom:0;
             }
-            #tab-forms .session-currency-select{
+            #tab-forms .session-currency-select,
+            #memberPanel .member-create-fields .session-currency-select{
               height:36px;
               border-radius:8px;
               border:1px solid var(--border);
@@ -7492,57 +7554,77 @@ html, body { cursor: auto !important; }
             #tab-forms .session-date-row > *:first-child,
             #tab-forms .session-time-row > *:first-child,
             #tab-forms .session-pricing-card > *:first-child,
-            #tab-forms .tier-row > *:first-child{
+            #tab-forms .tier-row > *:first-child,
+            #memberPanel .member-create-fields .venue-line > *:first-child,
+            #memberPanel .member-create-fields .session-date-row > *:first-child,
+            #memberPanel .member-create-fields .session-time-row > *:first-child,
+            #memberPanel .member-create-fields .session-pricing-card > *:first-child,
+            #memberPanel .member-create-fields .tier-row > *:first-child{
               min-width:0;
               width:100%;
             }
-            #tab-forms .tier-price-row > *{
+            #tab-forms .tier-price-row > *,
+            #memberPanel .member-create-fields .tier-price-row > *{
               min-width:0;
               width:100%;
             }
             #tab-forms .seating_area-label,
-            #tab-forms .pricing_tier-label{
+            #tab-forms .pricing_tier-label,
+            #memberPanel .member-create-fields .seating_area-label,
+            #memberPanel .member-create-fields .pricing_tier-label{
               display:block;
               margin-bottom:4px;
               font-size:12px;
               font-weight:600;
             }
             #tab-forms .session-pricing-card .seating_area-label,
-            #tab-forms .tier-row .pricing_tier-label{
+            #tab-forms .tier-row .pricing_tier-label,
+            #memberPanel .member-create-fields .session-pricing-card .seating_area-label,
+            #memberPanel .member-create-fields .tier-row .pricing_tier-label{
               grid-column:1 / -1;
             }
-            #tab-forms .session-pricing-card .seating_area-input{
+            #tab-forms .session-pricing-card .seating_area-input,
+            #memberPanel .member-create-fields .session-pricing-card .seating_area-input{
               grid-column:1 / 2;
               grid-row:2;
             }
-            #tab-forms .session-pricing-card .version-actions{
+            #tab-forms .session-pricing-card .version-actions,
+            #memberPanel .member-create-fields .session-pricing-card .version-actions{
               grid-column:2 / 3;
               grid-row:2;
             }
-            #tab-forms .tier-row .pricing_tier-input{
+            #tab-forms .tier-row .pricing_tier-input,
+            #memberPanel .member-create-fields .tier-row .pricing_tier-input{
               grid-column:1 / 2;
               grid-row:2;
             }
-            #tab-forms .tier-row .tier-actions{
+            #tab-forms .tier-row .tier-actions,
+            #memberPanel .member-create-fields .tier-row .tier-actions{
               grid-column:2 / 3;
               grid-row:2;
             }
             #tab-forms .session-pricing-card .version-actions,
-            #tab-forms .tier-row .tier-actions{
+            #tab-forms .tier-row .tier-actions,
+            #memberPanel .member-create-fields .session-pricing-card .version-actions,
+            #memberPanel .member-create-fields .tier-row .tier-actions{
               align-self:start;
               justify-self:end;
             }
-            #tab-forms .session-details{
+            #tab-forms .session-details,
+            #memberPanel .member-create-fields .session-details{
               display:flex;
               flex-direction:column;
               gap:12px;
               width:100%;
             }
-            #tab-forms .session-details[hidden]{
+            #tab-forms .session-details[hidden],
+            #memberPanel .member-create-fields .session-details[hidden]{
               display:none;
             }
             #tab-forms .session-time-row .seating_area-list,
-            #tab-forms .tier-row .tier-price-row{
+            #tab-forms .tier-row .tier-price-row,
+            #memberPanel .member-create-fields .session-time-row .seating_area-list,
+            #memberPanel .member-create-fields .tier-row .tier-price-row{
               width:100%;
             }
             #tab-forms .session-date-picker{
@@ -7897,24 +7979,29 @@ html, body { cursor: auto !important; }
               background:#d13c3c;
               border-color:#d13c3c;
             }
-            #tab-forms .variant-pricing-options-editor{
+            #tab-forms .variant-pricing-options-editor,
+            #memberPanel .member-create-fields .variant-pricing-options-editor{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .variant-pricing-options-editor[hidden]{
+            #tab-forms .variant-pricing-options-editor[hidden],
+            #memberPanel .member-create-fields .variant-pricing-options-editor[hidden]{
               display:none !important;
             }
-            #tab-forms .variant-pricing-options-label{
+            #tab-forms .variant-pricing-options-label,
+            #memberPanel .member-create-fields .variant-pricing-options-label{
               font-size:14px;
               font-weight:600;
             }
-            #tab-forms .variant-pricing-options-list{
+            #tab-forms .variant-pricing-options-list,
+            #memberPanel .member-create-fields .variant-pricing-options-list{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .variant-pricing-option{
+            #tab-forms .variant-pricing-option,
+            #memberPanel .member-create-fields .variant-pricing-option{
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -7922,22 +8009,26 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               background:rgba(0,0,0,0.2);
             }
-            #tab-forms .variant-pricing-row{
+            #tab-forms .variant-pricing-row,
+            #memberPanel .member-create-fields .variant-pricing-row{
               display:flex;
               gap:8px;
               align-items:center;
               position:relative;
             }
-            #tab-forms .variant-pricing-row--top input{
+            #tab-forms .variant-pricing-row--top input,
+            #memberPanel .member-create-fields .variant-pricing-row--top input{
               width:100%;
             }
-            #tab-forms .variant-pricing-row--bottom{
+            #tab-forms .variant-pricing-row--bottom,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom{
               display:grid;
               grid-template-columns:minmax(110px, auto) 1fr auto;
               gap:8px;
               align-items:center;
             }
-            #tab-forms .variant-pricing-row--bottom .options-dropdown{
+            #tab-forms .variant-pricing-row--bottom .options-dropdown,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:visible;
               width:100%;
@@ -7945,7 +8036,8 @@ html, body { cursor: auto !important; }
               min-width:0;
               box-sizing:border-box;
             }
-            #tab-forms .variant-pricing-currency{
+            #tab-forms .variant-pricing-currency,
+            #memberPanel .member-create-fields .variant-pricing-currency{
               width:100%;
               max-width:100%;
               min-width:0;
@@ -7955,7 +8047,8 @@ html, body { cursor: auto !important; }
               padding-right:30px;
               display:block;
             }
-            #tab-forms .variant-pricing-currency .dropdown-arrow{
+            #tab-forms .variant-pricing-currency .dropdown-arrow,
+            #memberPanel .member-create-fields .variant-pricing-currency .dropdown-arrow{
               position:absolute;
               top:50%;
               right:10px;
@@ -7969,29 +8062,35 @@ html, body { cursor: auto !important; }
               color:inherit;
               pointer-events:none;
             }
-            #tab-forms .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+            #tab-forms .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow,
+            #memberPanel .member-create-fields .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
               transform:translateY(-50%) rotate(-135deg);
             }
-            #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu{
+            #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu{
               width:100%;
               min-width:100%;
               max-width:100%;
               box-sizing:border-box;
             }
-            #tab-forms .variant-pricing-price{
+            #tab-forms .variant-pricing-price,
+            #memberPanel .member-create-fields .variant-pricing-price{
               width:100%;
             }
-            #tab-forms .variant-pricing-price.is-awaiting-currency{
+            #tab-forms .variant-pricing-price.is-awaiting-currency,
+            #memberPanel .member-create-fields .variant-pricing-price.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .session-price-input.is-awaiting-currency{
+            #tab-forms .session-price-input.is-awaiting-currency,
+            #memberPanel .member-create-fields .session-price-input.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .variant-pricing-option-actions{
+            #tab-forms .variant-pricing-option-actions,
+            #memberPanel .member-create-fields .variant-pricing-option-actions{
               display:flex;
               gap:6px;
               justify-content:flex-end;
@@ -8116,7 +8215,8 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .form-container{
+            #tab-forms .form-container,
+            #memberPanel .member-create-fields{
               border:none;
               border-radius:0;
               background:none;
@@ -8138,25 +8238,32 @@ html, body { cursor: auto !important; }
               font-size:14px;
               color:var(--muted);
             }
-            #tab-forms .form-container .panel-field{
+            #tab-forms .form-container .panel-field,
+            #memberPanel .member-create-fields .panel-field{
               background:none;
               padding:0;
               border-radius:0;
               border:none;
               max-width:none;
             }
-            #tab-forms .form-container .form-field{
+            #tab-forms .form-container .form-field,
+            #memberPanel .member-create-fields .form-field{
               padding-top:0;
               padding-bottom:0;
               margin:0;
             }
             #tab-forms .form-container .panel-field label,
             #tab-forms .form-container .panel-field .subcategory-form-button,
-            #tab-forms .form-container .panel-field .subcategory-form-label{
+            #tab-forms .form-container .panel-field .subcategory-form-label,
+            #memberPanel .member-create-fields .panel-field label,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-button,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-label{
               font-weight:600;
             }
             #tab-forms .form-container .panel-field .subcategory-form-button,
-            #tab-forms .form-container .panel-field .subcategory-form-label{
+            #tab-forms .form-container .panel-field .subcategory-form-label,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-button,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-label{
               border:none;
               background:none;
               color:inherit;
@@ -8170,13 +8277,16 @@ html, body { cursor: auto !important; }
               width:100%;
               justify-content:flex-start;
             }
-            #tab-forms .form-container .panel-field .subcategory-form-button{
+            #tab-forms .form-container .panel-field .subcategory-form-button,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-button{
               cursor:pointer;
             }
-            #tab-forms .form-container .panel-field .subcategory-form-label{
+            #tab-forms .form-container .panel-field .subcategory-form-label,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-label{
               cursor:default;
             }
-            #tab-forms .form-field-header{
+            #tab-forms .form-field-header,
+            #memberPanel .member-create-fields .form-field-header{
               display:flex;
               align-items:center;
               gap:8px;
@@ -8184,7 +8294,9 @@ html, body { cursor: auto !important; }
               padding-top:10px;
             }
             #tab-forms .form-field-header .subcategory-form-button,
-            #tab-forms .form-field-header .subcategory-form-label{
+            #tab-forms .form-field-header .subcategory-form-label,
+            #memberPanel .member-create-fields .form-field-header .subcategory-form-button,
+            #memberPanel .member-create-fields .form-field-header .subcategory-form-label{
               flex:1 1 auto;
               min-width:0;
             }
@@ -8194,25 +8306,32 @@ html, body { cursor: auto !important; }
             #tab-forms .form-field-header .delete-field-btn{
               flex:0 0 auto;
             }
-            #tab-forms .form-container .panel-field .subcategory-form-button:focus-visible{
+            #tab-forms .form-container .panel-field .subcategory-form-button:focus-visible,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-button:focus-visible{
               outline:2px solid var(--btn-hover, #2e3a72);
               outline-offset:2px;
             }
             #tab-forms .form-container .panel-field .subcategory-form-button .required-asterisk,
-            #tab-forms .form-container .panel-field .subcategory-form-label .required-asterisk{
+            #tab-forms .form-container .panel-field .subcategory-form-label .required-asterisk,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-button .required-asterisk,
+            #memberPanel .member-create-fields .panel-field .subcategory-form-label .required-asterisk{
               font-size:inherit;
             }
-            #tab-forms .form-container .panel-field input{
+            #tab-forms .form-container .panel-field input,
+            #memberPanel .member-create-fields .panel-field input{
               border:1px solid var(--border);
               border-radius:8px;
               background:rgba(0,0,0,0.35);
               color:var(--button-text);
             }
-            #tab-forms .form-container .panel-field input[readonly]{
+            #tab-forms .form-container .panel-field input[readonly],
+            #memberPanel .member-create-fields .panel-field input[readonly]{
               cursor:default;
             }
             #tab-forms .form-container .panel-field select,
-            #tab-forms .form-container .panel-field textarea{
+            #tab-forms .form-container .panel-field textarea,
+            #memberPanel .member-create-fields .panel-field select,
+            #memberPanel .member-create-fields .panel-field textarea{
               border:1px solid var(--border);
               border-radius:8px;
               background:rgba(0,0,0,0.35);
@@ -8220,13 +8339,16 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
               width:100%;
             }
-            #tab-forms .form-container .panel-field textarea{
+            #tab-forms .form-container .panel-field textarea,
+            #memberPanel .member-create-fields .panel-field textarea{
               resize:vertical;
               min-height:120px;
               padding:8px 12px;
             }
             #tab-forms .form-container .panel-field select,
-            #tab-forms .form-container .form-field--dropdown .form-select{
+            #tab-forms .form-container .form-field--dropdown .form-select,
+            #memberPanel .member-create-fields .panel-field select,
+            #memberPanel .member-create-fields .form-field--dropdown .form-select{
               height:36px;
               padding:0 30px 0 12px;
               width:100%;
@@ -8234,30 +8356,36 @@ html, body { cursor: auto !important; }
               max-width:100%;
             }
             #tab-forms .form-container .panel-field select:focus,
-            #tab-forms .form-container .form-field--dropdown .form-select:focus{
+            #tab-forms .form-container .form-field--dropdown .form-select:focus,
+            #memberPanel .member-create-fields .panel-field select:focus,
+            #memberPanel .member-create-fields .form-field--dropdown .form-select:focus{
               border-color:var(--btn-hover, #2e3a72);
               outline:none;
               width:100%;
               box-sizing:border-box;
             }
-            #tab-forms .form-container .form-field--dropdown{
+            #tab-forms .form-container .form-field--dropdown,
+            #memberPanel .member-create-fields .form-field--dropdown{
               position:relative;
               width:100%;
               box-sizing:border-box;
             }
-            #tab-forms .form-container .form-field--radio-toggle{
+            #tab-forms .form-container .form-field--radio-toggle,
+            #memberPanel .member-create-fields .form-field--radio-toggle{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #tab-forms .form-container .form-radio-group{
+            #tab-forms .form-container .form-radio-group,
+            #memberPanel .member-create-fields .form-radio-group{
               display:flex;
               flex-direction:column;
               gap:6px;
               align-items:flex-start;
               width:100%;
             }
-            #tab-forms .form-container .form-radio-option{
+            #tab-forms .form-container .form-radio-option,
+            #memberPanel .member-create-fields .form-radio-option{
               display:flex;
               align-items:center;
               justify-content:flex-start;
@@ -8269,7 +8397,8 @@ html, body { cursor: auto !important; }
               padding:0;
               margin:0;
             }
-            #tab-forms .form-container .form-radio-option input[type="radio"]{
+            #tab-forms .form-container .form-radio-option input[type="radio"],
+            #memberPanel .member-create-fields .form-radio-option input[type="radio"]{
               flex-shrink:0;
               margin:0;
               padding:0;
@@ -8277,60 +8406,72 @@ html, body { cursor: auto !important; }
               width:auto;
               height:auto;
             }
-            #tab-forms .form-container .form-radio-option span{
+            #tab-forms .form-container .form-radio-option span,
+            #memberPanel .member-create-fields .form-radio-option span{
               flex:0 1 auto;
               margin:0;
               padding:0;
             }
-            #tab-forms .form-field--url .form-url-wrapper{
+            #tab-forms .form-field--url .form-url-wrapper,
+            #memberPanel .member-create-fields .form-field--url .form-url-wrapper{
               display:flex;
               flex-direction:column;
               gap:6px;
             }
-            #tab-forms .form-url-input{
+            #tab-forms .form-url-input,
+            #memberPanel .member-create-fields .form-url-input{
               width:100%;
               height:36px;
               padding:0 12px;
               box-sizing:border-box;
             }
-            #tab-forms .form-url-link{
+            #tab-forms .form-url-link,
+            #memberPanel .member-create-fields .form-url-link{
               align-self:flex-start;
               color:var(--link-color, #8ab4ff);
               font-weight:600;
               text-decoration:underline;
               transition:opacity .2s ease;
             }
-            #tab-forms .form-url-link[aria-disabled="true"]{
+            #tab-forms .form-url-link[aria-disabled="true"],
+            #memberPanel .member-create-fields .form-url-link[aria-disabled="true"]{
               opacity:0.4;
               pointer-events:none;
               cursor:default;
             }
-            #tab-forms .form-url-message{
+            #tab-forms .form-url-message,
+            #memberPanel .member-create-fields .form-url-message{
               font-size:12px;
               color:rgba(255,255,255,0.7);
             }
-            #tab-forms .form-field--images .form-images{
+            #tab-forms .form-field--images .form-images,
+            #memberPanel .member-create-fields .form-field--images .form-images{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #tab-forms .form-field--images input[type="file"]{
+            #tab-forms .form-field--images input[type="file"],
+            #memberPanel .member-create-fields .form-field--images input[type="file"]{
               color:inherit;
             }
-            #tab-forms .form-image-hint{
+            #tab-forms .form-image-hint,
+            #memberPanel .member-create-fields .form-image-hint{
               font-size:12px;
               color:rgba(255,255,255,0.7);
             }
-            #tab-forms .form-image-message{
+            #tab-forms .form-image-message,
+            #memberPanel .member-create-fields .form-image-message{
               font-size:12px;
               color:#ffb347;
             }
-            #tab-forms .form-image-previews{
+            #tab-forms .form-image-previews,
+            #memberPanel .member-create-fields .form-image-previews{
               display:grid;
               grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
               gap:8px;
             }
-            #tab-forms .form-image-thumb{
+            #tab-forms .form-image-thumb,
+            #memberPanel .member-create-fields .form-image-thumb{
               position:relative;
               padding-top:100%;
               border-radius:8px;
@@ -8339,7 +8480,8 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.25);
               cursor:grab;
             }
-            #tab-forms .form-image-thumb.is-dragging{
+            #tab-forms .form-image-thumb.is-dragging,
+            #memberPanel .member-create-fields .form-image-thumb.is-dragging{
               opacity:0.7;
               cursor:grabbing;
             }
@@ -8740,160 +8882,6 @@ html, body { cursor: auto !important; }
             }
             /* ============= End Messages Tab Styles ============= */
             
-            #memberPanel .member-create-fields{
-              display:flex;
-              flex-direction:column;
-              gap:0;
-            }
-            #memberPanel .member-create-fields .form-field{
-              background:none;
-              padding:0;
-              border-radius:0;
-              border:none;
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-              padding-top:0;
-              padding-bottom:0;
-              margin:0;
-            }
-            #memberPanel .member-create-fields .form-field label{
-              font-weight:600;
-            }
-            #memberPanel .member-create-fields .form-field-header{
-              display:flex;
-              align-items:center;
-              gap:8px;
-              margin:0;
-              padding-top:10px;
-            }
-            #memberPanel .member-create-fields .form-field input,
-            #memberPanel .member-create-fields .form-field select,
-            #memberPanel .member-create-fields .form-field textarea{
-              border:1px solid var(--border);
-              border-radius:8px;
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              box-sizing:border-box;
-              width:100%;
-            }
-            #memberPanel .member-create-fields .form-field textarea{
-              resize:vertical;
-              min-height:120px;
-              padding:8px 12px;
-            }
-            #memberPanel .member-create-fields .form-field--radio-toggle{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-radio-group{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-              align-items:flex-start;
-              width:100%;
-            }
-            #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .location-field-coordinates{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .form-radio-option{
-              display:flex;
-              align-items:center;
-              justify-content:flex-start;
-              gap:10px;
-              font-size:14px;
-              cursor:pointer;
-              width:100%;
-              text-align:left;
-              padding:0;
-              margin:0;
-            }
-            #memberPanel .member-create-fields .form-radio-option input[type="radio"]{
-              flex-shrink:0;
-              margin:0;
-              padding:0;
-              cursor:pointer;
-              width:auto;
-              height:auto;
-            }
-            #memberPanel .member-create-fields .form-radio-option span{
-              flex:0 1 auto;
-              margin:0;
-              padding:0;
-            }
-            #memberPanel .member-create-fields .form-field--url .form-url-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-            }
-            #memberPanel .member-create-fields .form-field--images .form-images{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-image-previews{
-              display:grid;
-              grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-image-thumb{
-              position:relative;
-              padding-top:100%;
-              border-radius:8px;
-              overflow:hidden;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.25);
-            }
-            #memberPanel .member-create-fields .form-image-thumb img{
-              position:absolute;
-              inset:0;
-              width:100%;
-              height:100%;
-              object-fit:cover;
-            }
-            #memberPanel .member-create-fields .form-variant-pricing{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-options-list{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-option{
-              border:1px solid var(--border);
-              border-radius:8px;
-              padding:10px 12px;
-              background:rgba(0,0,0,0.25);
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-              position:relative;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row--bottom{
-              flex-direction:row;
-              align-items:center;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-option-actions{
-              display:flex;
-              justify-content:flex-end;
-              gap:8px;
-            }
             #tab-forms .form-field--variant-pricing .form-variant-pricing{
               display:flex;
               flex-direction:column;
