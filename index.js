@@ -8931,7 +8931,7 @@ function makePosts(){
           dropdownWrapper.className = 'options-dropdown';
           const menuBtn = document.createElement('button');
           menuBtn.type = 'button';
-          menuBtn.className = 'btn form-select';
+          menuBtn.className = 'form-select';
           menuBtn.setAttribute('aria-haspopup', 'true');
           menuBtn.setAttribute('aria-expanded', 'false');
           const selectId = `${baseId}-input`;
@@ -8947,14 +8947,14 @@ function makePosts(){
           arrow.setAttribute('aria-hidden', 'true');
           menuBtn.appendChild(arrow);
           const optionsMenu = document.createElement('div');
-          optionsMenu.className = 'options-menu dropdown-menu';
+          optionsMenu.className = 'options-menu';
           optionsMenu.id = menuId;
           optionsMenu.hidden = true;
           if(options.length){
             options.forEach((optionValue, optionIndex)=>{
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
-              optionBtn.className = 'btn dropdown-menu-item menu-option';
+              optionBtn.className = 'menu-option';
               const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
               optionBtn.textContent = stringValue.trim() || '';
               optionBtn.dataset.value = stringValue;
@@ -8972,7 +8972,7 @@ function makePosts(){
           } else {
             const placeholderBtn = document.createElement('button');
             placeholderBtn.type = 'button';
-            placeholderBtn.className = 'btn dropdown-menu-item menu-option';
+            placeholderBtn.className = 'menu-option';
             placeholderBtn.textContent = 'Select an option';
             placeholderBtn.disabled = true;
             optionsMenu.appendChild(placeholderBtn);
@@ -9013,10 +9013,9 @@ function makePosts(){
           if(options.length){
             options.forEach((optionValue, optionIndex)=>{
               const radioLabel = document.createElement('label');
-              radioLabel.className = 'form-radio-label form-radio-option';
+              radioLabel.className = 'form-radio-option';
               const radio = document.createElement('input');
               radio.type = 'radio';
-              radio.className = 'form-radio';
               radio.name = groupName;
               const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
               radio.value = stringValue;
@@ -9048,10 +9047,9 @@ function makePosts(){
             });
           } else {
             const placeholderOption = document.createElement('label');
-            placeholderOption.className = 'form-radio-label form-radio-option';
+            placeholderOption.className = 'form-radio-option';
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.className = 'form-radio';
             radio.tabIndex = -1;
             radio.disabled = true;
             placeholderOption.append(radio, document.createTextNode('Option'));
@@ -9157,7 +9155,7 @@ function makePosts(){
 
               const versionInput = document.createElement('input');
               versionInput.type = 'text';
-              versionInput.className = 'form-input variant-pricing-name';
+              versionInput.className = 'variant-pricing-name';
               versionInput.placeholder = 'Version Name';
               const versionInputId = `${baseId}-version-${optionIndex}`;
               versionInput.id = versionInputId;
@@ -9178,7 +9176,7 @@ function makePosts(){
               currencyWrapper.className = 'options-dropdown';
               const currencyMenuBtn = document.createElement('button');
               currencyMenuBtn.type = 'button';
-              currencyMenuBtn.className = 'btn variant-pricing-currency';
+              currencyMenuBtn.className = 'variant-pricing-currency';
               currencyMenuBtn.setAttribute('aria-haspopup', 'true');
               currencyMenuBtn.setAttribute('aria-expanded', 'false');
               const currencyMenuId = `variant-currency-${baseId}-${optionIndex}`;
@@ -9191,12 +9189,12 @@ function makePosts(){
               currencyArrow.setAttribute('aria-hidden', 'true');
               currencyMenuBtn.appendChild(currencyArrow);
               const currencyMenu = document.createElement('div');
-              currencyMenu.className = 'options-menu dropdown-menu';
+              currencyMenu.className = 'options-menu';
               currencyMenu.id = currencyMenuId;
               currencyMenu.hidden = true;
               const placeholderBtn = document.createElement('button');
               placeholderBtn.type = 'button';
-              placeholderBtn.className = 'btn dropdown-menu-item menu-option';
+              placeholderBtn.className = 'menu-option';
               placeholderBtn.textContent = 'Currency';
               placeholderBtn.dataset.value = '';
               placeholderBtn.addEventListener('click', (e) => {
@@ -9217,7 +9215,7 @@ function makePosts(){
               currencyOptions.forEach(code => {
                 const optionBtn = document.createElement('button');
                 optionBtn.type = 'button';
-                optionBtn.className = 'btn dropdown-menu-item menu-option';
+                optionBtn.className = 'menu-option';
                 optionBtn.textContent = code;
                 optionBtn.dataset.value = code;
                 optionBtn.addEventListener('click', (e) => {
@@ -9271,7 +9269,7 @@ function makePosts(){
               priceInput.type = 'text';
               priceInput.inputMode = 'decimal';
               priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
-              priceInput.className = 'form-input variant-pricing-price';
+              priceInput.className = 'variant-pricing-price';
               priceInput.placeholder = '0.00';
               const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
               const formatPriceValue = value => {
@@ -9423,7 +9421,7 @@ function makePosts(){
 
               const addBtn = document.createElement('button');
               addBtn.type = 'button';
-              addBtn.className = 'btn dropdown-option-add';
+              addBtn.className = 'dropdown-option-add';
               addBtn.textContent = '+';
               addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
               addBtn.addEventListener('click', ()=>{
@@ -9434,7 +9432,7 @@ function makePosts(){
 
               const removeBtn = document.createElement('button');
               removeBtn.type = 'button';
-              removeBtn.className = 'btn dropdown-option-remove';
+              removeBtn.className = 'dropdown-option-remove';
               removeBtn.textContent = '-';
               removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
               removeBtn.disabled = field.options.length <= 1;
@@ -9488,7 +9486,7 @@ function makePosts(){
           urlWrapper.className = 'form-url-wrapper';
           const urlInput = document.createElement('input');
           urlInput.type = 'text';
-          urlInput.className = 'form-input form-url-input';
+          urlInput.className = 'form-url-input';
           const urlInputId = `${baseId}-input`;
           urlInput.id = urlInputId;
           const placeholderValue = field.placeholder && /\.[A-Za-z]{2,}/.test(field.placeholder)
@@ -9600,7 +9598,7 @@ function makePosts(){
             const fallback = document.createElement('input');
             fallback.type = 'text';
             fallback.id = addressInputId;
-            fallback.className = 'form-input address_line-fallback';
+            fallback.className = 'address_line-fallback';
             fallback.placeholder = placeholderValue;
             fallback.setAttribute('aria-label', placeholderValue);
             fallback.dataset.locationAddress = 'true';
@@ -9775,7 +9773,6 @@ function makePosts(){
         } else {
           const input = document.createElement('input');
           input.type = 'text';
-          input.className = 'form-input';
           input.placeholder = field.placeholder || '';
           input.readOnly = false;
           input.tabIndex = 0;

@@ -688,7 +688,7 @@
         topRow.className = 'variant-pricing-row variant-pricing-row--top';
         const versionInput = document.createElement('input');
         versionInput.type = 'text';
-        versionInput.className = 'form-input variant-pricing-name form-preview-variant-pricing-name';
+        versionInput.className = 'variant-pricing-name form-preview-variant-pricing-name';
         versionInput.placeholder = 'Version Name';
         versionInput.value = option.version || '';
         versionInput.addEventListener('input', ()=>{ option.version = versionInput.value; });
@@ -700,7 +700,7 @@
         currencyWrapper.className = 'options-dropdown';
         const currencyMenuBtn = document.createElement('button');
         currencyMenuBtn.type = 'button';
-        currencyMenuBtn.className = 'btn variant-pricing-currency';
+        currencyMenuBtn.className = 'variant-pricing-currency';
         currencyMenuBtn.setAttribute('aria-haspopup', 'true');
         currencyMenuBtn.setAttribute('aria-expanded', 'false');
         const currencyMenuId = `member-variant-currency-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -713,12 +713,12 @@
         currencyArrow.setAttribute('aria-hidden', 'true');
         currencyMenuBtn.appendChild(currencyArrow);
         const currencyMenu = document.createElement('div');
-        currencyMenu.className = 'options-menu dropdown-menu';
+        currencyMenu.className = 'options-menu';
         currencyMenu.id = currencyMenuId;
         currencyMenu.hidden = true;
         const placeholderBtn = document.createElement('button');
         placeholderBtn.type = 'button';
-        placeholderBtn.className = 'btn dropdown-menu-item menu-option';
+        placeholderBtn.className = 'menu-option';
         placeholderBtn.textContent = 'Currency';
         placeholderBtn.dataset.value = '';
         placeholderBtn.addEventListener('click', (e) => {
@@ -735,7 +735,7 @@
         availableCurrencyCodes.forEach(code => {
           const optionBtn = document.createElement('button');
           optionBtn.type = 'button';
-          optionBtn.className = 'btn dropdown-menu-item menu-option';
+          optionBtn.className = 'menu-option';
           optionBtn.textContent = code;
           optionBtn.dataset.value = code;
           optionBtn.addEventListener('click', (e) => {
@@ -777,7 +777,7 @@
         currencyWrapper.appendChild(currencyMenu);
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
-        priceInput.className = 'form-input variant-pricing-price form-preview-variant-pricing-price';
+        priceInput.className = 'variant-pricing-price form-preview-variant-pricing-price';
         priceInput.placeholder = '0.00';
         priceInput.value = option.price || '';
         priceInput.addEventListener('blur', ()=>{
@@ -791,7 +791,7 @@
         actions.className = 'variant-pricing-option-actions';
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.className = 'btn btn-secondary member-create-secondary-btn';
+        removeBtn.className = 'member-create-secondary-btn';
         removeBtn.textContent = 'Remove';
         removeBtn.addEventListener('click', ()=>{
           if(options.length <= 1){
@@ -819,7 +819,7 @@
 
       const addBtn = document.createElement('button');
       addBtn.type = 'button';
-      addBtn.className = 'btn btn-secondary member-create-secondary-btn';
+      addBtn.className = 'member-create-secondary-btn';
       addBtn.textContent = 'Add Version';
       addBtn.addEventListener('click', ()=>{
         const option = { version: '', currency: '', price: '' };
@@ -1804,7 +1804,7 @@
       subcategoryDropdown.className = 'options-dropdown';
       const subcategoryMenuBtn = document.createElement('button');
       subcategoryMenuBtn.type = 'button';
-      subcategoryMenuBtn.className = 'btn form-preview-select';
+      subcategoryMenuBtn.className = 'form-preview-select';
       subcategoryMenuBtn.id = 'memberFormpickerSubcategory';
       subcategoryMenuBtn.setAttribute('aria-haspopup', 'true');
       subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
@@ -1817,7 +1817,7 @@
       subcategoryArrow.setAttribute('aria-hidden', 'true');
       subcategoryMenuBtn.appendChild(subcategoryArrow);
       const subcategoryMenu = document.createElement('div');
-      subcategoryMenu.className = 'options-menu dropdown-menu';
+      subcategoryMenu.className = 'options-menu';
       subcategoryMenu.id = subcategoryMenuId;
       subcategoryMenu.hidden = true;
       
@@ -1844,7 +1844,7 @@
       categoryDropdown.className = 'options-dropdown';
       const categoryMenuBtn = document.createElement('button');
       categoryMenuBtn.type = 'button';
-      categoryMenuBtn.className = 'btn form-preview-select';
+      categoryMenuBtn.className = 'form-preview-select';
       categoryMenuBtn.id = 'memberFormpickerCategory';
       categoryMenuBtn.setAttribute('aria-haspopup', 'true');
       categoryMenuBtn.setAttribute('aria-expanded', 'false');
@@ -1857,7 +1857,7 @@
       categoryArrow.setAttribute('aria-hidden', 'true');
       categoryMenuBtn.appendChild(categoryArrow);
       const categoryMenu = document.createElement('div');
-      categoryMenu.className = 'options-menu dropdown-menu';
+      categoryMenu.className = 'options-menu';
       categoryMenu.id = categoryMenuId;
       categoryMenu.hidden = true;
       
@@ -1866,7 +1866,7 @@
         if(!c || typeof c.name !== 'string') return;
         const optionBtn = document.createElement('button');
         optionBtn.type = 'button';
-        optionBtn.className = 'btn dropdown-menu-item menu-option';
+        optionBtn.className = 'menu-option';
         // Get icon path using the same method as formbuilder (lookupIconPath logic)
         // Try id:${id} first, then name:${name.toLowerCase()}
         let iconPath = '';
@@ -1945,7 +1945,7 @@
               category.subs.forEach(s => {
                 const subOptionBtn = document.createElement('button');
                 subOptionBtn.type = 'button';
-                subOptionBtn.className = 'btn dropdown-menu-item menu-option';
+                subOptionBtn.className = 'menu-option';
                 // Get icon path using the same method as formbuilder (lookupIconPath logic)
                 // Try id:${id} first, then name:${name.toLowerCase()}
                 let subIconPath = '';
