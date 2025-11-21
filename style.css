@@ -1006,15 +1006,22 @@ html,body{
     font-weight: bold;
   }
 
-/* Global button/input styles removed - use .btn, .form-input classes instead */
-/* Only keep wysiwyg as it's already class-based */
+/* Global styles for non-form contexts - forms use classes instead */
+/* ========================================
+   SECTION-BASED STYLE SYSTEM
+   ========================================
+   All element styles are scoped to sections.
+   No global element styles - everything is section-specific.
+   ======================================== */
+
+/* Keep wysiwyg global as it's class-based */
 .wysiwyg{
   caret-color: auto;
   -webkit-user-select: text;
   user-select: text;
 }
 
-/* Links keep global styles as they're not form components */
+/* Links keep global styles */
 a{
   color: var(--primary);
 }
@@ -1027,7 +1034,12 @@ a:active{
   color: var(--active);
 }
 
-/* Placeholder styles - keep for form-input class */
+/* Placeholder styles */
+input::placeholder,
+textarea::placeholder{
+  color: var(--placeholder-text);
+  font-size: inherit;
+}
 .form-input::placeholder,
 .form-textarea::placeholder{
   color: var(--placeholder-text);
@@ -1042,6 +1054,623 @@ a:active{
   font-size: inherit;
 }
 
+/* ========================================
+   SECTION-BASED STYLE BLOCKS
+   ======================================== */
+
+/* ========== HEADER SECTION ========== */
+.header button:not([class*="mapboxgl-"]),
+.header [role="button"]:not([class*="mapboxgl-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: 40px;
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+  border-radius:8px;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.header button:not([class*="mapboxgl-"]):hover,
+.header [role="button"]:not([class*="mapboxgl-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.header button:not([class*="mapboxgl-"]):active,
+.header [role="button"]:not([class*="mapboxgl-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.header button:not([class*="mapboxgl-"])[aria-pressed="true"],
+.header [role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
+.header button:not([class*="mapboxgl-"])[aria-current="page"],
+.header [role="button"]:not([class*="mapboxgl-"])[aria-current="page"],
+.header button:not([class*="mapboxgl-"])[aria-selected="true"],
+.header [role="button"]:not([class*="mapboxgl-"])[aria-selected="true"],
+.header button:not([class*="mapboxgl-"]).selected,
+.header [role="button"]:not([class*="mapboxgl-"]).selected,
+.header button:not([class*="mapboxgl-"]).on,
+.header [role="button"]:not([class*="mapboxgl-"]).on{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.header button:not([class*="mapboxgl-"]):focus-visible,
+.header [role="button"]:not([class*="mapboxgl-"]):focus-visible{
+  outline:2px solid #ffffff;
+  outline-offset:2px;
+}
+
+.header button:not([class*="mapboxgl-"]):disabled,
+.header [role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"],
+.header button:not([class*="mapboxgl-"]).disabled,
+.header [role="button"]:not([class*="mapboxgl-"]).disabled{
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.header-buttons button:not([class*="mapboxgl-"]){
+  width:40px;
+}
+
+.view-toggle button:not([class*="mapboxgl-"]),
+.mode-toggle button:not([class*="mapboxgl-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+.view-toggle button:not([class*="mapboxgl-"]):hover,
+.mode-toggle button:not([class*="mapboxgl-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.view-toggle button:not([class*="mapboxgl-"]):active,
+.mode-toggle button:not([class*="mapboxgl-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.view-toggle button:not([class*="mapboxgl-"])[aria-pressed="true"],
+.mode-toggle button:not([class*="mapboxgl-"])[aria-pressed="true"],
+.view-toggle button:not([class*="mapboxgl-"])[aria-selected="true"],
+.mode-toggle button:not([class*="mapboxgl-"])[aria-selected="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* ========== MAP AREA SECTION ========== */
+.map-area button:not([class*="mapboxgl-"]),
+.map-area [role="button"]:not([class*="mapboxgl-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+.map-area button:not([class*="mapboxgl-"]):hover,
+.map-area [role="button"]:not([class*="mapboxgl-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.map-area button:not([class*="mapboxgl-"]):active,
+.map-area [role="button"]:not([class*="mapboxgl-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.map-control-row button:not([class*="mapboxgl-"]){
+  /* Map controls inherit from .map-area */
+}
+
+/* ========== POST BOARDS SECTION ========== */
+.post-board button:not([class*="mapboxgl-"]),
+.post-board [role="button"]:not([class*="mapboxgl-"]),
+.recents-board button:not([class*="mapboxgl-"]),
+.recents-board [role="button"]:not([class*="mapboxgl-"]),
+.ad-board button:not([class*="mapboxgl-"]),
+.ad-board [role="button"]:not([class*="mapboxgl-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+.post-board button:not([class*="mapboxgl-"]):hover,
+.post-board [role="button"]:not([class*="mapboxgl-"]):hover,
+.recents-board button:not([class*="mapboxgl-"]):hover,
+.recents-board [role="button"]:not([class*="mapboxgl-"]):hover,
+.ad-board button:not([class*="mapboxgl-"]):hover,
+.ad-board [role="button"]:not([class*="mapboxgl-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.post-board button:not([class*="mapboxgl-"]):active,
+.post-board [role="button"]:not([class*="mapboxgl-"]):active,
+.recents-board button:not([class*="mapboxgl-"]):active,
+.recents-board [role="button"]:not([class*="mapboxgl-"]):active,
+.ad-board button:not([class*="mapboxgl-"]):active,
+.ad-board [role="button"]:not([class*="mapboxgl-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.post-board button:not([class*="mapboxgl-"])[aria-pressed="true"],
+.post-board [role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
+.post-board button:not([class*="mapboxgl-"])[aria-selected="true"],
+.post-board [role="button"]:not([class*="mapboxgl-"])[aria-selected="true"],
+.post-board button:not([class*="mapboxgl-"]).selected,
+.post-board [role="button"]:not([class*="mapboxgl-"]).selected,
+.post-board button:not([class*="mapboxgl-"]).on,
+.post-board [role="button"]:not([class*="mapboxgl-"]).on{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.post-board input:not([class*="form-"]):not([class*="mapboxgl-"]),
+.post-board textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+.post-board select:not([class*="form-"]):not([class*="mapboxgl-"]),
+.recents-board input:not([class*="form-"]):not([class*="mapboxgl-"]),
+.recents-board textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+.recents-board select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+}
+
+.post-board input[type="checkbox"]:not([class*="form-"]),
+.recents-board input[type="checkbox"]:not([class*="form-"]){
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: 8px;
+}
+
+/* ========== POSTS SECTION ========== */
+.post-body button:not([class*="mapboxgl-"]),
+.post-body [role="button"]:not([class*="mapboxgl-"]),
+.open-post button:not([class*="mapboxgl-"]),
+.open-post [role="button"]:not([class*="mapboxgl-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+.post-body button:not([class*="mapboxgl-"]):hover,
+.post-body [role="button"]:not([class*="mapboxgl-"]):hover,
+.open-post button:not([class*="mapboxgl-"]):hover,
+.open-post [role="button"]:not([class*="mapboxgl-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.post-body button:not([class*="mapboxgl-"]):active,
+.post-body [role="button"]:not([class*="mapboxgl-"]):active,
+.open-post button:not([class*="mapboxgl-"]):active,
+.open-post [role="button"]:not([class*="mapboxgl-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.post-body button:not([class*="mapboxgl-"])[aria-pressed="true"],
+.post-body [role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
+.post-body button:not([class*="mapboxgl-"])[aria-selected="true"],
+.post-body [role="button"]:not([class*="mapboxgl-"])[aria-selected="true"],
+.open-post button:not([class*="mapboxgl-"])[aria-pressed="true"],
+.open-post [role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
+.open-post button:not([class*="mapboxgl-"])[aria-selected="true"],
+.open-post [role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.post-body input:not([class*="form-"]):not([class*="mapboxgl-"]),
+.post-body textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+.post-body select:not([class*="form-"]):not([class*="mapboxgl-"]),
+.open-post input:not([class*="form-"]):not([class*="mapboxgl-"]),
+.open-post textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+.open-post select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+}
+
+/* ========== FILTER PANEL SECTION ========== */
+#filterPanel button:not([class*="mapboxgl-"]),
+#filterPanel [role="button"]:not([class*="mapboxgl-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+#filterPanel button:not([class*="mapboxgl-"]):hover,
+#filterPanel [role="button"]:not([class*="mapboxgl-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+#filterPanel button:not([class*="mapboxgl-"]):active,
+#filterPanel [role="button"]:not([class*="mapboxgl-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+#filterPanel button:not([class*="mapboxgl-"])[aria-pressed="true"],
+#filterPanel [role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
+#filterPanel button:not([class*="mapboxgl-"])[aria-selected="true"],
+#filterPanel [role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+#filterPanel input:not([class*="form-"]):not([class*="mapboxgl-"]),
+#filterPanel textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+#filterPanel select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+
+#filterPanel input::placeholder,
+#filterPanel textarea::placeholder{
+  color: var(--filter-placeholder-text);
+  font-size: inherit;
+}
+
+#filterPanel select:not([class*="form-"]) option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+#filterPanel select:not([class*="form-"]) option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+#filterPanel select:not([class*="form-"]) option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+
+/* ========== ADMIN PANEL SECTION ========== */
+#adminPanel button:not([class*="mapboxgl-"]):not([class*="form-"]),
+#adminPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]){
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  font-size: 13px;
+  padding: 0 10px;
+  height:35px;
+  line-height:35px;
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+#adminPanel button:not([class*="mapboxgl-"]):not([class*="form-"]):hover,
+#adminPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+#adminPanel button:not([class*="mapboxgl-"]):not([class*="form-"]):active,
+#adminPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+#adminPanel button:not([class*="mapboxgl-"]):not([class*="form-"])[aria-pressed="true"],
+#adminPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"])[aria-pressed="true"],
+#adminPanel button:not([class*="mapboxgl-"]):not([class*="form-"])[aria-selected="true"],
+#adminPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"])[aria-selected="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+#adminPanel input:not([class*="form-"]):not([class*="mapboxgl-"]),
+#adminPanel textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+#adminPanel select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+
+#adminPanel select:not([class*="form-"]) option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+#adminPanel select:not([class*="form-"]) option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+#adminPanel select:not([class*="form-"]) option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+
+/* Admin Panel Tabs */
+#tab-settings button:not([class*="mapboxgl-"]):not([class*="form-"]),
+#tab-settings input:not([class*="form-"]):not([class*="mapboxgl-"]),
+#tab-settings select:not([class*="form-"]):not([class*="mapboxgl-"]),
+#tab-settings textarea:not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* Inherit from #adminPanel */
+}
+
+#tab-map button:not([class*="mapboxgl-"]):not([class*="form-"]),
+#tab-map input:not([class*="form-"]):not([class*="mapboxgl-"]),
+#tab-map select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* Inherit from #adminPanel */
+}
+
+#tab-messages button:not([class*="mapboxgl-"]):not([class*="form-"]),
+#tab-messages input:not([class*="form-"]):not([class*="mapboxgl-"]),
+#tab-messages select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* Inherit from #adminPanel */
+}
+
+/* ========== MEMBER PANEL SECTION ========== */
+#memberPanel button:not([class*="mapboxgl-"]):not([class*="form-"]),
+#memberPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]){
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+#memberPanel button:not([class*="mapboxgl-"]):not([class*="form-"]):hover,
+#memberPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+#memberPanel button:not([class*="mapboxgl-"]):not([class*="form-"]):active,
+#memberPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+#memberPanel button:not([class*="mapboxgl-"]):not([class*="form-"])[aria-pressed="true"],
+#memberPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"])[aria-pressed="true"],
+#memberPanel button:not([class*="mapboxgl-"]):not([class*="form-"])[aria-selected="true"],
+#memberPanel [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"])[aria-selected="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+#memberPanel input:not([class*="form-"]):not([class*="mapboxgl-"]),
+#memberPanel textarea:not([class*="form-"]):not([class*="mapboxgl-"]),
+#memberPanel select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+
+#memberPanel select:not([class*="form-"]) option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+#memberPanel select:not([class*="form-"]) option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+#memberPanel select:not([class*="form-"]) option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+
+.member-tab-panel button:not([class*="mapboxgl-"]):not([class*="form-"]),
+.member-tab-panel input:not([class*="form-"]):not([class*="mapboxgl-"]),
+.member-tab-panel select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* Inherit from #memberPanel */
+}
+
+.member-auth-panel input:not([class*="form-"]):not([class*="mapboxgl-"]),
+.member-auth-panel button:not([class*="mapboxgl-"]):not([class*="form-"]){
+  /* Inherit from #memberPanel */
+}
+
+/* ========== FORMPICKER SECTION ========== */
+.formpicker-container button:not([class*="mapboxgl-"]):not([class*="form-"]),
+.formpicker-container [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]){
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+.formpicker-container button:not([class*="mapboxgl-"]):not([class*="form-"]):hover,
+.formpicker-container [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]):hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.formpicker-container button:not([class*="mapboxgl-"]):not([class*="form-"]):active,
+.formpicker-container [role="button"]:not([class*="mapboxgl-"]):not([class*="form-"]):active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.formpicker-dropdowns button:not([class*="mapboxgl-"]):not([class*="form-"]),
+.formpicker-dropdowns select:not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* Inherit from .formpicker-container */
+}
+
+.formpicker-dropdowns select:not([class*="form-"]) option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+.formpicker-dropdowns select:not([class*="form-"]) option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+.formpicker-dropdowns select:not([class*="form-"]) option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+
+/* ========== FORMS (COMPLETELY ISOLATED) ========== */
+/* Forms use class-based styles ONLY - no inheritance from sections */
+/* Form elements in forms MUST have classes (.btn, .form-input, etc.) */
+/* If they don't have classes, they get NO styles (no inheritance) */
+/* Form Preview in Formbuilder - COMPLETELY ISOLATED */
+#tab-forms .form-container button:not(.btn):not([class*="mapboxgl-"]),
+#tab-forms .form-container input:not(.form-input):not([class*="form-"]):not([class*="mapboxgl-"]),
+#tab-forms .form-container select:not(.form-select):not([class*="form-"]):not([class*="mapboxgl-"]),
+#tab-forms .form-container textarea:not(.form-textarea):not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* No styles - forms must use classes */
+}
+
+/* Member Forms - COMPLETELY ISOLATED */
+.member-create-fields button:not(.btn):not([class*="mapboxgl-"]),
+.member-create-fields input:not(.form-input):not([class*="form-"]):not([class*="mapboxgl-"]),
+.member-create-fields select:not(.form-select):not([class*="form-"]):not([class*="mapboxgl-"]),
+.member-create-fields textarea:not(.form-textarea):not([class*="form-"]):not([class*="mapboxgl-"]){
+  /* No styles - forms must use classes */
+}
+
+/* ========== COMMON STYLES ========== */
 .field label{
   color: var(--panel-label-color);
   font-size: var(--panel-label-size);
@@ -1053,7 +1682,32 @@ a:active{
   font-size: var(--panel-title-size);
 }
 
-/* Global select styles removed - use .form-select class instead */
+/* Links keep global styles */
+a{
+  color: var(--primary);
+}
+
+a:hover{
+  color: var(--accent);
+}
+
+a:active{
+  color: var(--active);
+}
+
+/* Placeholder styles */
+input::placeholder,
+textarea::placeholder{
+  color: var(--placeholder-text);
+  font-size: inherit;
+}
+.form-input::placeholder,
+.form-textarea::placeholder{
+  color: var(--placeholder-text);
+  font-size: inherit;
+}
+
+/* Select styles moved to section blocks below */
 .venue-select{
   color: var(--dropdown-venue-text);
   padding-right:32px;
@@ -1090,22 +1744,7 @@ select.venue-select,
 }
 /* Global select option styles removed - use .form-select class instead */
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="search"],
-input[type="tel"],
-input[type="url"],
-textarea,
-select:not(.form-select){
-  height: var(--control-h);
-  border-radius: 8px;
-}
-input[type="checkbox"]{
-  width: var(--control-h);
-  height: var(--control-h);
-  border-radius: 8px;
-}
+/* Input/textarea/select base styles moved to section blocks below */
 
   .header{
     height: calc(var(--header-h) + var(--safe-top));
@@ -1589,7 +2228,17 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.2);
   border: none;
 }
-/* Panel button overrides removed - use .btn classes instead */
+/* Panel button styles - but forms use .btn classes instead */
+#adminPanel button:not(.btn):not([class*="form-"]),
+#memberPanel button:not(.btn):not([class*="form-"]){
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+#adminPanel button:not(.btn):not([class*="form-"]){
+  height:35px;
+  line-height:35px;
+}
 #adminPanel input[type="color"]{
   width:35px;
   height:35px;
@@ -4597,7 +5246,35 @@ body.filters-active #filterBtn{
 .options-dropdown .variant-pricing-currency,
 .options-dropdown .field-type-select,
 .options-dropdown .session-currency-select{ text-align:left; }
+/* Global .options-menu opens upward by default - but form dropdowns override this */
 .options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; right:0; width:100%; min-width:100%; max-width:100%; box-sizing:border-box; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
+
+/* Form dropdowns open DOWNWARD - must override global .options-menu */
+/* Higher specificity selectors to override global .options-menu */
+.dropdown-menu,
+.options-menu.dropdown-menu,
+.form-field--dropdown .options-menu,
+.options-dropdown .options-menu.dropdown-menu,
+.variant-pricing-currency + .options-menu,
+.variant-pricing-row--bottom .options-dropdown .options-menu,
+#tab-forms .form-container .form-field--dropdown .options-menu,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu,
+#tab-forms .form-container .options-dropdown .options-menu,
+#memberPanel .member-create-fields .options-dropdown .options-menu,
+#tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu,
+#memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu,
+#tab-forms .variant-pricing-currency + .options-menu,
+#memberPanel .member-create-fields .variant-pricing-currency + .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+}
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .options-menu .menu-option{ text-align:left; justify-content:flex-start; }
@@ -8807,7 +9484,8 @@ html, body { cursor: auto !important; }
             .form-image-remove span{
               pointer-events:none;
             }
-            #tab-forms .form-image-thumb img{
+            #tab-forms .form-image-thumb img,
+            #memberPanel .member-create-fields .form-image-thumb img{
               position:absolute;
               inset:0;
               width:100%;
