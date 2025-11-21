@@ -85,6 +85,429 @@
     }
 
 
+/* ========================================
+   CLASS-BASED COMPONENT SYSTEM
+   ========================================
+   All components must explicitly use classes.
+   No global element styles - opt-in only.
+   ======================================== */
+
+/* ========== BUTTONS ========== */
+.btn {
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.btn:hover {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.btn:active {
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn.disabled {
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn:disabled:hover,
+.btn.disabled:hover {
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+}
+
+/* Button variants */
+.btn-primary {
+  background: var(--btn);
+  border-color: var(--btn);
+}
+
+.btn-secondary {
+  background: rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.btn-selected,
+.btn[aria-pressed="true"],
+.btn[aria-current="page"],
+.btn[aria-selected="true"],
+.btn.selected,
+.btn.on {
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.btn-selected:hover,
+.btn[aria-pressed="true"]:hover,
+.btn[aria-current="page"]:hover,
+.btn[aria-selected="true"]:hover,
+.btn.selected:hover,
+.btn.on:hover {
+  background: var(--button-selected-hover, var(--btn-selected-hover));
+  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+.btn-selected:active,
+.btn[aria-pressed="true"]:active,
+.btn[aria-current="page"]:active,
+.btn[aria-selected="true"]:active,
+.btn.selected:active,
+.btn.on:active {
+  background: var(--button-selected-active, var(--btn-selected-active));
+  border-color: var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active)));
+  color: var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+/* Button sizes */
+.btn-sm {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.btn-lg {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+/* Role button support */
+[role="button"].btn {
+  /* Same as .btn */
+}
+
+/* ========== FORM INPUTS ========== */
+.form-input {
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--dropdown-bg, rgba(0,0,0,0.2));
+  color: var(--dropdown-text, #fff);
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  transition: border-color .2s, background .2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--btn-hover, #2e3a72);
+  background: var(--dropdown-bg, rgba(0,0,0,0.25));
+}
+
+.form-input:disabled,
+.form-input[readonly] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(0,0,0,0.1);
+}
+
+.form-input::placeholder {
+  color: var(--placeholder-text);
+  font-size: inherit;
+}
+
+/* Input types */
+.form-input[type="color"] {
+  height: 40px;
+  padding: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ========== FORM TEXTAREA ========== */
+.form-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--dropdown-bg, rgba(0,0,0,0.2));
+  color: var(--dropdown-text, #fff);
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  transition: border-color .2s, background .2s;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--btn-hover, #2e3a72);
+  background: var(--dropdown-bg, rgba(0,0,0,0.25));
+}
+
+.form-textarea:disabled,
+.form-textarea[readonly] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(0,0,0,0.1);
+}
+
+.form-textarea::placeholder {
+  color: var(--placeholder-text);
+  font-size: inherit;
+}
+
+/* ========== FORM SELECT ========== */
+.form-select {
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--dropdown-radius, 8px);
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--btn-hover, #2e3a72);
+  background: var(--dropdown-bg);
+}
+
+.form-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(0,0,0,0.1);
+}
+
+/* Select option styles */
+.form-select option {
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+
+.form-select option:checked {
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+
+/* Select wrapper for custom arrow */
+.form-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.form-select-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-style: solid;
+  border-width: 0 2px 2px 0;
+  border-color: var(--button-text, #ffffff);
+  transform: translateY(-50%) rotate(45deg);
+  transition: transform .3s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.form-select-wrapper:has(.form-select:focus)::after {
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+/* ========== DROPDOWN MENUS ========== */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  border: 1px solid var(--border);
+  border-radius: var(--dropdown-radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: var(--layer-menu);
+  overflow-y: auto;
+  max-height: min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
+}
+
+.dropdown-menu[hidden] {
+  display: none;
+}
+
+.dropdown-menu-item {
+  text-align: left;
+  justify-content: flex-start;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--dropdown-radius, 8px);
+  padding: 8px 12px;
+  color: var(--dropdown-text);
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown-menu-item:hover {
+  background: var(--dropdown-hover-bg, rgba(0,0,0,0.2));
+  border-color: var(--border);
+}
+
+.dropdown-menu-item[aria-selected="true"],
+.dropdown-menu-item.selected {
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+  border-color: var(--border-active);
+}
+
+/* Dropdown opens upward variant */
+.dropdown-menu.dropdown-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+/* Legacy support - keep .options-menu as alias */
+.options-menu {
+  /* Use .dropdown-menu class instead, but keep this for backward compatibility */
+  position: absolute;
+  top: calc(100% + 4px);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  border: 1px solid var(--border);
+  border-radius: var(--dropdown-radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: var(--layer-menu);
+}
+
+.options-menu[hidden] {
+  display: none;
+}
+
+/* ========== LABELS ========== */
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--panel-label-color, var(--button-text));
+  margin-bottom: 6px;
+}
+
+.form-label-required::after {
+  content: ' *';
+  color: var(--active, #ff6b6b);
+}
+
+/* ========== FORM FIELDS ========== */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ========== CHECKBOXES & RADIOS ========== */
+.form-checkbox,
+.form-radio {
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: 8px;
+  cursor: pointer;
+  accent-color: var(--btn-selected);
+}
+
+.form-checkbox-label,
+.form-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ========== UTILITY CLASSES ========== */
+.text-input {
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Keep wysiwyg as-is since it's already class-based */
+.wysiwyg {
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Extracted from <style> */
 .big-map-card{
       position: relative;
@@ -583,91 +1006,15 @@ html,body{
     font-weight: bold;
   }
 
-input,
-textarea,
+/* Global button/input styles removed - use .btn, .form-input classes instead */
+/* Only keep wysiwyg as it's already class-based */
 .wysiwyg{
   caret-color: auto;
   -webkit-user-select: text;
   user-select: text;
 }
 
-button:not([class*="mapboxgl-"]),
-[role="button"]:not([class*="mapboxgl-"]){
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  color: var(--button-text);
-  font-size: 13px;
-  padding: 0 10px;
-  height: var(--control-h);
-  min-width: 35px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  cursor: pointer;
-  transition: background .2s,border-color .2s,color .2s,transform .05s;
-}
-
-button:not([class*="mapboxgl-"]):hover,
-[role="button"]:not([class*="mapboxgl-"]):hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
-button:not([class*="mapboxgl-"]):active,
-[role="button"]:not([class*="mapboxgl-"]):active{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
-  color: var(--button-active-text);
-}
-
-button:not([class*="mapboxgl-"])[aria-pressed="true"],
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
-button:not([class*="mapboxgl-"])[aria-current="page"],
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"],
-button:not([class*="mapboxgl-"])[aria-selected="true"],
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"],
-button:not([class*="mapboxgl-"]).selected,
-[role="button"]:not([class*="mapboxgl-"]).selected,
-button:not([class*="mapboxgl-"]).on,
-[role="button"]:not([class*="mapboxgl-"]).on{
-  background: var(--button-selected-bg, var(--btn-selected));
-  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected))) !important;
-  color: var(--button-selected-text, var(--button-active-text)) !important;
-}
-
-button:not([class*="mapboxgl-"])[aria-pressed="true"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"]:hover,
-button:not([class*="mapboxgl-"])[aria-current="page"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"]:hover,
-button:not([class*="mapboxgl-"])[aria-selected="true"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]:hover,
-button:not([class*="mapboxgl-"]).selected:hover,
-[role="button"]:not([class*="mapboxgl-"]).selected:hover,
-button:not([class*="mapboxgl-"]).on:hover,
-[role="button"]:not([class*="mapboxgl-"]).on:hover{
-  background: var(--button-selected-hover, var(--btn-selected-hover));
-  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover))) !important;
-  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text))) !important;
-}
-
-button:not([class*="mapboxgl-"])[aria-pressed="true"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"]:active,
-button:not([class*="mapboxgl-"])[aria-current="page"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"]:active,
-button:not([class*="mapboxgl-"])[aria-selected="true"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]:active,
-button:not([class*="mapboxgl-"]).selected:active,
-[role="button"]:not([class*="mapboxgl-"]).selected:active,
-button:not([class*="mapboxgl-"]).on:active,
-[role="button"]:not([class*="mapboxgl-"]).on:active{
-  background: var(--button-selected-active, var(--btn-selected-active));
-  border-color: var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active))) !important;
-  color: var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text))) !important;
-}
-
+/* Links keep global styles as they're not form components */
 a{
   color: var(--primary);
 }
@@ -679,38 +1026,10 @@ a:hover{
 a:active{
   color: var(--active);
 }
-button:not([class*="mapboxgl-"]):active,
-[role="button"]:not([class*="mapboxgl-"]):active{
-  transform: scale(0.97);
-}
-button:not([class*="mapboxgl-"]):focus-visible,
-[role="button"]:not([class*="mapboxgl-"]):focus-visible{
-  outline:2px solid #ffffff;
-  outline-offset:2px;
-}
 
-button:not([class*="mapboxgl-"]):disabled,
-[role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"],
-button:not([class*="mapboxgl-"]).disabled,
-[role="button"]:not([class*="mapboxgl-"]).disabled{
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-button:not([class*="mapboxgl-"]):disabled:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"]:hover,
-button:not([class*="mapboxgl-"]).disabled:hover,
-[role="button"]:not([class*="mapboxgl-"]).disabled:hover{
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-}
-
-input::placeholder,
-textarea::placeholder{
+/* Placeholder styles - keep for form-input class */
+.form-input::placeholder,
+.form-textarea::placeholder{
   color: var(--placeholder-text);
   font-size: inherit;
 }
@@ -734,11 +1053,7 @@ textarea::placeholder{
   font-size: var(--panel-title-size);
 }
 
-select:not(.form-select){
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-  border-radius: var(--dropdown-radius);
-}
+/* Global select styles removed - use .form-select class instead */
 .venue-select{
   color: var(--dropdown-venue-text);
   padding-right:32px;
@@ -773,18 +1088,7 @@ select.venue-select,
 *:has(.venue-select:focus)::after{
   transform:translateY(-50%) rotate(-135deg);
 }
-select option{
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-}
-select option:checked{
-  background: var(--dropdown-selected-bg);
-  color: var(--dropdown-selected-text);
-}
-select option:hover{
-  background: var(--dropdown-hover-bg);
-  color: var(--dropdown-hover-text);
-}
+/* Global select option styles removed - use .form-select class instead */
 
 input[type="text"],
 input[type="email"],
@@ -1285,16 +1589,7 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.2);
   border: none;
 }
-#adminPanel button,
-#memberPanel button{
-  background:rgba(0,0,0,0.2);
-  color:#fff;
-  border:1px solid rgba(255,255,255,0.1);
-}
-#adminPanel button{
-  height:35px;
-  line-height:35px;
-}
+/* Panel button overrides removed - use .btn classes instead */
 #adminPanel input[type="color"]{
   width:35px;
   height:35px;

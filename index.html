@@ -213,16 +213,16 @@
             </div>
             <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
               <label for="memberLoginEmail" data-message-key="msg_member_label_email">Email</label>
-              <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
+              <input type="email" id="memberLoginEmail" name="loginEmail" class="form-input" autocomplete="email" />
               <label for="memberLoginPassword" data-message-key="msg_member_label_password">Password</label>
-              <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
-              <button type="submit" class="primary-action member-auth-submit" data-action="login" data-message-key="msg_member_btn_log_in">Log In</button>
+              <input type="password" id="memberLoginPassword" name="loginPassword" class="form-input" autocomplete="current-password" />
+              <button type="submit" class="btn btn-primary primary-action member-auth-submit" data-action="login" data-message-key="msg_member_btn_log_in">Log In</button>
             </section>
             <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
               <label for="memberRegisterName" data-message-key="msg_member_label_display_name">Display Name</label>
-              <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
+              <input type="text" id="memberRegisterName" name="registerName" class="form-input" autocomplete="name" />
               <label for="memberRegisterEmail" data-message-key="msg_member_label_email">Email</label>
-              <input type="email" id="memberRegisterEmail" name="registerEmail" autocomplete="email" />
+              <input type="email" id="memberRegisterEmail" name="registerEmail" class="form-input" autocomplete="email" />
               <label for="memberRegisterPassword" data-message-key="msg_member_label_password">Password</label>
               <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
               <label for="memberRegisterAvatar" data-message-key="msg_member_label_avatar_url">Avatar URL</label>
@@ -253,7 +253,7 @@
             <div id="memberCreateFormFields" class="member-create-fields" role="group" aria-live="polite"></div>
           </div>
           <div class="member-create-actions" id="memberCreateActions" hidden>
-            <button type="submit" id="memberCreatePostBtn" class="primary-action" hidden disabled data-message-key="msg_member_post_listing">Post Listing</button>
+            <button type="submit" id="memberCreatePostBtn" class="btn btn-primary primary-action" hidden disabled data-message-key="msg_member_post_listing">Post Listing</button>
           </div>
         </section>
         <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
