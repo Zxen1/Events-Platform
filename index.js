@@ -19792,7 +19792,8 @@ if (!map.__pillHooksInstalled) {
             marker.addTo(map);
             marker.__fixedLngLat = fixedLngLat;
             window.__overCard = false;
-            registerPopup(marker);
+            // Big map card is NOT a Mapbox popup - it's just a DOM element that appears over the small card
+            // No registerPopup - completely independent of Mapbox popup system
             return marker;
           } finally {
             if(overlayVenueKey){
