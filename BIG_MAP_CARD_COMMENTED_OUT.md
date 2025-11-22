@@ -1,6 +1,6 @@
-# Big Map Card Code - Commented Out Documentation
+# Big Map Card and Small Map Card Hover Code - Commented Out Documentation
 
-This document lists all the code that was commented out related to the big map card functionality.
+This document lists all the code that was commented out related to the big map card functionality and small map card hover effects.
 
 ## JavaScript (index.js)
 
@@ -104,4 +104,76 @@ This document lists all the code that was commented out related to the big map c
 - Only the small map card is now functional
 - No big map card appears on hover or click
 - Small map card has no hover effects
+
+## Additional Changes - Small Map Card Hover Highlight
+
+### Lines 3518-3577: toggleSmallMapCardHoverHighlight Function
+**Location:** Function that adds/removes highlight class on hover
+
+**Commented out:**
+- Entire `toggleSmallMapCardHoverHighlight` function
+- Logic for adding/removing `is-pill-highlight` class
+- Logic for calling `setSmallMapCardPillImage` to change pill image on hover
+- Logic for managing `hoverHighlightedPostIds` Set
+- Logic for updating big map card highlight (also commented)
+
+### Lines 20194-20197: Hover Event Listeners on Post Cards
+**Location:** Inside post card rendering function
+
+**Commented out:**
+- `handleHoverHighlight` function that calls `toggleSmallMapCardHoverHighlight`
+- `mouseenter` event listener that triggers highlight
+- `mouseleave` event listener that removes highlight
+
+### Lines 20209 and 20219: Document-Level Hover Handlers
+**Location:** Global document event listeners
+
+**Commented out:**
+- `document.addEventListener('mouseover')` that calls `toggleSmallMapCardHoverHighlight(id, true)`
+- `document.addEventListener('mouseout')` that calls `toggleSmallMapCardHoverHighlight(id, false)`
+
+### Line 19612-19613: Marker Pill Visibility
+**Location:** Inside marker creation function
+
+**Changed from:**
+```javascript
+markerPill.style.opacity = '0.9';
+markerPill.style.visibility = 'visible';
+```
+
+**Changed to:**
+```javascript
+markerPill.style.opacity = '0';
+markerPill.style.visibility = 'hidden';
+```
+
+**Reason:** The markerPill image was appearing as a second card on top of the small map card
+
+### Line 19747: Duplicate Append (Fixed)
+**Location:** Inside commented big map card code block
+
+**Issue:** Line was inside comment block but comment syntax was broken, causing it to potentially execute
+
+**Fixed:** Properly commented out with `/* overlayRoot.append(markerContainer, cardRoot); */`
+
+## Summary of All Changes
+
+**Total lines affected:**
+- **JavaScript:** ~200+ lines commented out across multiple locations
+- **CSS:** ~100+ lines commented out across multiple rule blocks
+
+**Key changes:**
+1. Big map card element is no longer created in JavaScript
+2. Only small map card is appended to overlay
+3. All big map card CSS rules are commented out
+4. Small map card hover highlight function completely disabled
+5. All hover event listeners for small map card highlight disabled
+6. Marker pill image hidden (was appearing as duplicate card)
+7. Fixed comment syntax error that could have caused duplicate appends
+
+**Result:**
+- Only the small map card is now functional
+- No big map card appears on hover or click
+- Small map card has no hover effects (no color change, no size change, no duplicate cards)
+- No duplicate markerContainer elements
 
