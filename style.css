@@ -8,7 +8,7 @@
  *   --layer-modal: 90         (welcome modal, full-screen modals)
  *   --layer-image-modal: 88   (lightbox/image modal)
  *   --layer-dialog: 86        (confirmations/dialogs/toasts)
- *   --layer-menu: 84          (menus, dropdowns, tooltips, pickers)
+ *   --layer-menu: 85          (menus, dropdowns, tooltips, pickers)
  *   --layer-panel: 60         (member/admin/filter panels)
  *   --layer-header: 40        (headers/nav)
  *   --layer-card: 30          (floating cards above content)
@@ -21,7 +21,7 @@
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
  *   86: (--layer-dialog) - dialogs
- *   84: (--layer-menu) - standard menus
+ *   85: (--layer-menu) - standard menus, dropdowns, currency menus
  *   66: formpicker dropdown menus
  *   65: formpicker dropdown buttons
  *   80: var(--forms-layer-popover) - form popovers
@@ -68,7 +68,7 @@
       --layer-modal: 90;        /* welcome modal, full-screen modals */
       --layer-image-modal: 88;  /* lightbox/image modal */
       --layer-dialog: 86;       /* confirmations/dialogs/toasts */
-      --layer-menu: 84;         /* menus, dropdowns, tooltips, pickers */
+      --layer-menu: 85;         /* menus, dropdowns, tooltips, pickers, currency menus */
       --layer-panel: 60;        /* member/admin/filter panels */
       --layer-header: 40;       /* headers/nav */
       --layer-card: 30;         /* floating cards above content */
