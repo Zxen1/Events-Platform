@@ -13196,7 +13196,6 @@ function makePosts(){
                               markAutoChange();
                             }
                           });
-                          const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
                           if(!existingCurrency){
                             currencyMenu.appendChild(placeholderBtn);
                           }
