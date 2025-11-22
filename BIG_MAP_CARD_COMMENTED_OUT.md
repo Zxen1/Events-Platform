@@ -132,6 +132,20 @@ This document lists all the code that was commented out related to the big map c
 - `document.addEventListener('mouseover')` that calls `toggleSmallMapCardHoverHighlight(id, true)`
 - `document.addEventListener('mouseout')` that calls `toggleSmallMapCardHoverHighlight(id, false)`
 
+### Lines 3624-3627: updateSelectedMarkerRing - Remove Highlight Class
+**Location:** Inside `updateSelectedMarkerRing` function
+
+**Commented out:**
+- Code that removes `markerHighlightClass` from small map cards
+- Code that calls `setSmallMapCardPillImage(el, false)` to reset pill image
+
+### Lines 3683-3686: updateSelectedMarkerRing - Add Highlight Class
+**Location:** Inside `updateSelectedMarkerRing` function
+
+**Commented out:**
+- Code that adds `markerHighlightClass` to small map cards
+- Code that calls `setSmallMapCardPillImage(el, true)` to change pill image
+
 ### Line 19612-19613: Marker Pill Visibility
 **Location:** Inside marker creation function
 

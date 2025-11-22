@@ -3621,10 +3621,12 @@ async function ensureMapboxCssFor(container) {
         restoreAttr(el);
         restoreHighlightBackground(el);
       });
+      /* SMALL MAP CARD HOVER HIGHLIGHT - COMMENTED OUT
       document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
         setSmallMapCardPillImage(el, false);
         el.classList.remove(markerHighlightClass);
       });
+      */
 
       const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
         ? hoverPopup.getElement()
@@ -3680,10 +3682,12 @@ async function ensureMapboxCssFor(container) {
           if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
             return;
           }
+          /* SMALL MAP CARD HOVER HIGHLIGHT - COMMENTED OUT
           overlay.querySelectorAll('.small-map-card').forEach(el => {
             setSmallMapCardPillImage(el, true);
             el.classList.add(markerHighlightClass);
           });
+          */
           overlay.querySelectorAll('.big-map-card').forEach(el => {
             el.classList.add(highlightClass);
           });
