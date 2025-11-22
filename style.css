@@ -103,6 +103,7 @@
       /* Mapbox positions this element - it updates transform to move marker on map */
       /* Both small and big cards are children, so they move with this element */
     }
+    /* BIG MAP CARD CODE - COMMENTED OUT
     .mapmarker-overlay > .big-map-card{
       position: absolute;
       left: 0;
@@ -128,11 +129,12 @@
       opacity: 1;
       visibility: visible;
     }
+    END BIG MAP CARD CODE */
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
       z-index: var(--layer-card);
     }
-    .big-map-card img,
+    /* .big-map-card img, */
     .small-map-card img{ display:block; }
     .map-card-pill{
       position: absolute;
@@ -219,6 +221,7 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
+    /* BIG MAP CARD CODE - COMMENTED OUT
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
     }
@@ -226,6 +229,7 @@
       background-color: #2e3a72;
       transition: none;
     }
+    END BIG MAP CARD CODE */
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }
@@ -365,6 +369,7 @@
       margin-top: 0;
       color: #d0d0d0;
     }
+    /* BIG MAP CARD CODE - COMMENTED OUT
     .big-map-card--list{
       position: relative;
       width: 100%;
@@ -402,6 +407,7 @@
     .big-map-card--list .map-card-venue{
       white-space: nowrap;
     }
+    END BIG MAP CARD CODE */
 
 
 /* Extracted from <styleid="mapboxgl-critical-css"> */

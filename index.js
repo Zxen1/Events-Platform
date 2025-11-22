@@ -19660,6 +19660,7 @@ if (!map.__pillHooksInstalled) {
 
             markerContainer.append(markerPill, markerIcon, markerLabel);
 
+            /* BIG MAP CARD CODE - COMMENTED OUT
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
             if(isMultiVenue){
@@ -19775,6 +19776,9 @@ if (!map.__pillHooksInstalled) {
                 try{ ev.stopPropagation(); }catch(err){}
               }, { capture: true });
             });
+            END BIG MAP CARD CODE */
+
+            overlayRoot.append(markerContainer);
             const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
             if(typeof marker.setZIndexOffset === 'function'){
               try{ marker.setZIndexOffset(20000); }catch(e){}
