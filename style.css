@@ -97,8 +97,6 @@
       pointer-events: auto;
       touch-action: none;
       border-radius: 999px;
-      backface-visibility: hidden;
-      transform-style: preserve-3d;
     }
     .mapmarker-overlay{
       position: relative;
@@ -116,8 +114,6 @@
       left: 0;
       top: 0;
       transform: translate3d(-30px, -30px, 0);
-      backface-visibility: hidden;
-      transform-style: preserve-3d;
       pointer-events: auto;
       z-index: var(--layer-card);
     }
