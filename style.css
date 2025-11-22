@@ -110,7 +110,6 @@
       border-radius: 999px;
       box-shadow: none;
       z-index: 5;
-      contain: layout style paint;
     }
     .mapmarker-overlay > .big-map-card{
       position: absolute;
