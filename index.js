@@ -9214,7 +9214,10 @@ function makePosts(){
                   safeNotifyFormbuilderChange();
                 }
               });
-              currencyMenu.appendChild(placeholderBtn);
+              const existingCurrency = optionValue.currency || '';
+              if(!existingCurrency){
+                currencyMenu.appendChild(placeholderBtn);
+              }
               const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
               currencyOptions.forEach(code => {
                 const optionBtn = document.createElement('button');
@@ -9238,6 +9241,10 @@ function makePosts(){
                   }
                   if(previousCurrency !== code || priceCleared){
                     safeNotifyFormbuilderChange();
+                  }
+                  const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
+                  if(placeholder){
+                    placeholder.remove();
                   }
                 });
                 currencyMenu.appendChild(optionBtn);
@@ -13190,7 +13197,10 @@ function makePosts(){
                               markAutoChange();
                             }
                           });
-                          currencyMenu.appendChild(placeholderBtn);
+                          const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
+                          if(!existingCurrency){
+                            currencyMenu.appendChild(placeholderBtn);
+                          }
                           const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
                           currencyOptions.forEach(code => {
                             const optionBtn = document.createElement('button');
@@ -13219,6 +13229,10 @@ function makePosts(){
                               }
                               if(previousCurrency !== nextCurrency || priceCleared || propagated){
                                 markAutoChange();
+                              }
+                              const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
+                              if(placeholder){
+                                placeholder.remove();
                               }
                             });
                             currencyMenu.appendChild(optionBtn);

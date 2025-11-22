@@ -4349,16 +4349,34 @@ body.hide-ads .ad-board{
 #tab-forms .form-container .form-field--dropdown .options-menu,
 #memberPanel .member-create-fields .form-field--dropdown .options-menu{
   position:absolute;
-  bottom:calc(100% + 4px);
+  top:calc(100% + 4px);
+  bottom:auto;
   left:0;
   right:0;
-  top:auto;
   width:100%;
   min-width:100%;
   max-width:100%;
   box-sizing:border-box;
   z-index:var(--layer-menu);
   margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+}
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option:disabled,
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option.field-type-disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option:disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option.field-type-disabled{
+  opacity:0.5;
+  font-style:italic;
+  cursor:not-allowed;
 }
 #tab-forms .form-container .form-field--radio-toggle,
 #memberPanel .member-create-fields .form-field--radio-toggle{
@@ -8210,9 +8228,19 @@ html, body { cursor: auto !important; }
             #tab-forms .field-type-select-wrapper .options-menu{
               background:#222222;
               border:1px solid rgba(255,255,255,1);
+              border-radius:8px;
+              padding:10px;
             }
             #tab-forms .field-type-select-wrapper .options-menu .menu-option{
-              background:transparent;
+              background:rgba(0,0,0,0.2);
+              border:none;
+              border-radius:0;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option:disabled,
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option.field-type-disabled{
+              opacity:0.5;
+              font-style:italic;
+              cursor:not-allowed;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
@@ -8448,7 +8476,8 @@ html, body { cursor: auto !important; }
             #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu,
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu{
               position:absolute;
-              bottom:calc(100% + 4px);
+              top:calc(100% + 4px);
+              bottom:auto;
               left:0;
               right:0;
               width:100%;
@@ -8457,7 +8486,16 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
               z-index:var(--layer-menu);
               margin:0;
-              top:auto;
+              background:#222222;
+              border:1px solid rgba(255,255,255,1);
+              border-radius:8px;
+              padding:10px;
+            }
+            #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu .menu-option,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu .menu-option{
+              background:rgba(0,0,0,0.2);
+              border:none;
+              border-radius:0;
             }
             #tab-forms .variant-pricing-price,
             #memberPanel .member-create-fields .variant-pricing-price{
