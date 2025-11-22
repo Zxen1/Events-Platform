@@ -112,7 +112,7 @@
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.88);
+      background: #2e3a72;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -222,8 +222,7 @@
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
     }
-    .big-map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .big-map-card--popup{
+    .big-map-card--popup.is-map-highlight{
       background-color: #2e3a72;
       transition: none;
     }
@@ -247,6 +246,9 @@
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: var(--layer-header);
+      /* Isolate from parent background changes to prevent flickering */
+      isolation: isolate;
+      will-change: auto;
     }
     .big-multi-post-map-card .map-card-thumb{
       border-radius: 12px;
