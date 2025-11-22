@@ -90,14 +90,6 @@
 
 
 /* Extracted from <style> */
-.big-map-card{
-      position: relative;
-      width: 225px;
-      height: 60px;
-      pointer-events: auto;
-      touch-action: none;
-      border-radius: 999px;
-    }
     .mapmarker-overlay{
       position: relative;
       width: 0;
@@ -125,6 +117,7 @@
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
       z-index: var(--layer-card);
+      /* Match small-map-card exactly - no will-change, no isolation, no extra transforms */
     }
     .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;
