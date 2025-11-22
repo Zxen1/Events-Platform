@@ -19790,6 +19790,33 @@ if (!map.__pillHooksInstalled) {
             else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
             else if(eventLngLat){ marker.setLngLat(eventLngLat); }
             marker.addTo(map);
+            // Prevent Mapbox from updating transforms - lock both overlay and card
+            const lockTransforms = () => {
+              // Mapbox updates the overlayRoot transform, but we want it fixed
+              // The card should also stay fixed
+              const card = overlayRoot.querySelector('.big-map-card');
+              if(card && card.style){
+                card.style.transform = 'translate3d(-30px, -30px, 0)';
+              }
+            };
+            // Lock continuously to override Mapbox updates
+            let lockFrame = null;
+            const startLocking = () => {
+              if(lockFrame) return;
+              const lockLoop = () => {
+                lockTransforms();
+                lockFrame = requestAnimationFrame(lockLoop);
+              };
+              lockFrame = requestAnimationFrame(lockLoop);
+            };
+            const stopLocking = () => {
+              if(lockFrame){
+                cancelAnimationFrame(lockFrame);
+                lockFrame = null;
+              }
+            };
+            startLocking();
+            registerOverlayCleanup(overlayRoot, stopLocking);
             marker.__fixedLngLat = fixedLngLat;
             window.__overCard = false;
             registerPopup(marker);
