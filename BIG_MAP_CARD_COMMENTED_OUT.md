@@ -16,8 +16,8 @@ This document lists all the code that was commented out related to the big map c
 - `cardRoot.append(pillImg, thumbImg, labelEl)`
 - `overlayRoot.append(markerContainer, cardRoot)` - changed to just `overlayRoot.append(markerContainer)`
 - `overlayRoot.classList.add('is-card-visible')`
-- `handleOverlayClick` function for opening posts when big card is clicked
-- Event listeners on `cardRoot` for click, pointerdown, mousedown, touchstart
+- `handleOverlayClick` function for opening posts when big card is clicked (lines 19784-19803)
+- Event listeners on `cardRoot` for click, pointerdown, mousedown, touchstart (lines 19804-19814)
 
 **Active code after commenting:**
 - Line 19781: `overlayRoot.append(markerContainer);` (only small card is appended now)

@@ -19781,7 +19781,7 @@ if (!map.__pillHooksInstalled) {
             /* overlayRoot.append(markerContainer, cardRoot); */
             /* overlayRoot.classList.add('is-card-visible'); */
 
-            const handleOverlayClick = (ev)=>{
+            /* const handleOverlayClick = (ev)=>{
               ev.preventDefault();
               ev.stopPropagation();
               const pid = overlayRoot.dataset.id;
@@ -19811,7 +19811,7 @@ if (!map.__pillHooksInstalled) {
                 }
                 try{ ev.stopPropagation(); }catch(err){}
               }, { capture: true });
-            });
+            }); */
             /* END BIG MAP CARD CODE */
 
             overlayRoot.append(markerContainer);
