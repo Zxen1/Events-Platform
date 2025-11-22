@@ -24264,7 +24264,10 @@ document.addEventListener('pointerdown', (e) => {
       togglePanel(adminPanel);
     });
   }
-  filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
+  filterBtn && filterBtn.addEventListener('click', ()=> {
+    closeWelcomeModalIfOpen();
+    togglePanel(filterPanel);
+  });
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const panel = btn.closest('.panel');

@@ -4324,6 +4324,10 @@ body.hide-ads .ad-board{
   width:100%;
   box-sizing:border-box;
   max-width:100%;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
 }
 #tab-forms .form-container .panel-field select:focus,
 #tab-forms .form-container .form-field--dropdown .form-select:focus,
@@ -8381,6 +8385,7 @@ html, body { cursor: auto !important; }
               max-width:100%;
               min-width:0;
               box-sizing:border-box;
+              flex:0 0 auto;
             }
             #tab-forms .variant-pricing-currency,
             #memberPanel .member-create-fields .variant-pricing-currency{
@@ -8392,6 +8397,7 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
               padding-right:30px;
               display:block;
+              flex-shrink:0;
             }
             #tab-forms .variant-pricing-currency .dropdown-arrow,
             #memberPanel .member-create-fields .variant-pricing-currency .dropdown-arrow{
