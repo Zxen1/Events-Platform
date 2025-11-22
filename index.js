@@ -8960,7 +8960,9 @@ function makePosts(){
               optionBtn.dataset.value = stringValue;
               optionBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const arrow = menuBtn.querySelector('.dropdown-arrow');
                 menuBtn.textContent = stringValue.trim() || 'Select an option';
+                if(arrow) menuBtn.appendChild(arrow);
                 optionsMenu.hidden = true;
                 menuBtn.setAttribute('aria-expanded', 'false');
                 if(typeof window.updatePostButtonState === 'function'){
@@ -9199,7 +9201,9 @@ function makePosts(){
               placeholderBtn.dataset.value = '';
               placeholderBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
                 currencyMenuBtn.textContent = 'Currency';
+                if(arrow) currencyMenuBtn.appendChild(arrow);
                 currencyMenuBtn.dataset.value = '';
                 currencyMenu.hidden = true;
                 currencyMenuBtn.setAttribute('aria-expanded', 'false');
@@ -9220,7 +9224,9 @@ function makePosts(){
                 optionBtn.dataset.value = code;
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
+                  const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
                   currencyMenuBtn.textContent = code;
+                  if(arrow) currencyMenuBtn.appendChild(arrow);
                   currencyMenuBtn.dataset.value = code;
                   currencyMenu.hidden = true;
                   currencyMenuBtn.setAttribute('aria-expanded', 'false');

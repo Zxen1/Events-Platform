@@ -4328,6 +4328,7 @@ body.hide-ads .ad-board{
   display:flex;
   align-items:center;
   justify-content:flex-start;
+  position:relative;
 }
 #tab-forms .form-container .panel-field select:focus,
 #tab-forms .form-container .form-field--dropdown .form-select:focus,
@@ -4343,6 +4344,21 @@ body.hide-ads .ad-board{
   position:relative;
   width:100%;
   box-sizing:border-box;
+  isolation:isolate;
+}
+#tab-forms .form-container .form-field--dropdown .options-menu,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu{
+  position:absolute;
+  bottom:calc(100% + 4px);
+  left:0;
+  right:0;
+  top:auto;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
 }
 #tab-forms .form-container .form-field--radio-toggle,
 #memberPanel .member-create-fields .form-field--radio-toggle{
@@ -8183,10 +8199,20 @@ html, body { cursor: auto !important; }
               min-width:0;
               box-sizing:border-box;
               text-align:left;
+              display:flex;
+              align-items:center;
+              justify-content:flex-start;
             }
             #tab-forms .field-type-select-wrapper .options-menu .menu-option{
               text-align:left;
               justify-content:flex-start;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu{
+              background:#222222;
+              border:1px solid rgba(255,255,255,1);
+            }
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option{
+              background:transparent;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
