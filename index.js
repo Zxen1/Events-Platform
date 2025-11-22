@@ -3394,13 +3394,6 @@ async function ensureMapboxCssFor(container) {
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
-      function resetBigMapCardTransforms(){
-        document.querySelectorAll('.big-map-card').forEach(card => {
-          card.style.transform = 'none';
-        });
-      }
-      resetBigMapCardTransforms();
-      document.addEventListener('DOMContentLoaded', resetBigMapCardTransforms);
 
     function registerOverlayCleanup(overlayEl, fn){
       if(!overlayEl || typeof fn !== 'function') return;
@@ -19753,7 +19746,6 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.append(markerContainer, cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
-            resetBigMapCardTransforms();
 
             const handleOverlayClick = (ev)=>{
               ev.preventDefault();

@@ -97,7 +97,6 @@
       pointer-events: auto;
       touch-action: none;
       border-radius: 999px;
-      transform: translateZ(0);
     }
     .mapmarker-overlay{
       position: relative;
@@ -114,7 +113,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate3d(-30px, -30px, 0) translateZ(0);
+      transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       z-index: var(--layer-card);
     }
@@ -157,7 +156,6 @@
       gap: 6px;
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
-      transition: background-color 0.2s ease;
     }
     .small-multi-post-map-card{
       gap: 5px;
@@ -220,7 +218,6 @@
     .big-map-card--popup.is-map-highlight,
     .mapmarker-overlay:hover .big-map-card--popup{
       background-color: #2e3a72;
-      transition: background-color 0.15s ease;
     }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
@@ -230,6 +227,7 @@
     }
     .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
+      transition: none;
     }
     .map-card-thumb{
       position: absolute;
@@ -241,7 +239,6 @@
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: var(--layer-header);
-      transform: translateZ(0);
     }
     .big-multi-post-map-card .map-card-thumb{
       border-radius: 12px;
