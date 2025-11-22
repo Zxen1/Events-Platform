@@ -1,30 +1,34 @@
 /*
  * Z-INDEX REFERENCE LIST
  * ======================
+ * 
+ * PERMANENT RULE: All z-index values on this site must NOT exceed 100.
+ * All z-index values (including CSS variables and direct values) must be
+ * documented in this reference list. When adding new z-index values, update
+ * this list immediately.
+ * 
  * Maximum z-index: 100 (--layer-devtools)
  * 
  * CSS Variables (defined in :root):
  *   --layer-devtools: 100    (developer tools, always on top)
  *   --layer-modal: 90         (welcome modal, full-screen modals)
- *   --layer-image-modal: 88   (lightbox/image modal)
- *   --layer-dialog: 86        (confirmations/dialogs/toasts)
- *   --layer-menu: 85          (menus, dropdowns, tooltips, pickers)
+ *   --layer-image-modal: 88  (lightbox/image modal)
+ *   --layer-dialog: 86        (confirmations/dialogs/toasts, unsaved changes dialogs)
+ *   --layer-menu: 85          (menus, dropdowns, tooltips, pickers, currency menus)
  *   --layer-panel: 60         (member/admin/filter panels)
  *   --layer-header: 40        (headers/nav)
  *   --layer-card: 30          (floating cards above content)
- *   --layer-content: 20       (primary content)
+ *   --layer-content: 20        (primary content)
  *   --layer-base: 0           (map/base)
  * 
  * Direct z-index values found in style.css:
- *   100: (--layer-devtools) - developer tools
- *   100: specific elements (check line 9233, 9285)
+ *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
- *   86: (--layer-dialog) - dialogs
+ *   86: (--layer-dialog) - dialogs, unsaved changes prompts (#adminUnsavedPrompt, #memberUnsavedPrompt)
  *   85: (--layer-menu) - standard menus, dropdowns, currency menus
  *   66: formpicker dropdown menus
  *   65: formpicker dropdown buttons
- *   80: var(--forms-layer-popover) - form popovers
  *   60: (--layer-panel) - panels
  *   40: (--layer-header) - headers
  *   30: (--layer-card) - cards
@@ -33,7 +37,7 @@
  *   5: mapmarker-overlay, various elements
  *   3: various elements
  *   2: post-cards, various elements
- *   1: header-buttons, various elements
+ *   1: form labels, form field headers, variant pricing labels, header-buttons
  *   0: base layer, various elements
  *   -1: some background elements
  *   auto: some elements
@@ -90,10 +94,7 @@
       position: relative;
       width: 225px;
       height: 60px;
-      transform: translate3d(0, 0, 0);
-      will-change: transform;
       pointer-events: auto;
-      isolation: isolate;
       touch-action: none;
       border-radius: 999px;
     }
@@ -101,21 +102,19 @@
       position: relative;
       width: 0;
       height: 0;
-      transform: translateZ(0);
       pointer-events: none;
-      isolation: isolate;
       touch-action: none;
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
       z-index: 5;
-      will-change: transform;
     }
     .mapmarker-overlay > .big-map-card{
       position: absolute;
       left: 0;
       top: 0;
       transform: translate3d(-30px, -30px, 0);
+      will-change: transform;
       pointer-events: auto;
       z-index: var(--layer-card);
     }
@@ -4348,7 +4347,6 @@ body.hide-ads .ad-board{
   position:relative;
   width:100%;
   box-sizing:border-box;
-  isolation:isolate;
 }
 #tab-forms .form-container .form-field--dropdown .options-menu,
 #memberPanel .member-create-fields .form-field--dropdown .options-menu{
@@ -8446,7 +8444,6 @@ html, body { cursor: auto !important; }
               min-width:0;
               box-sizing:border-box;
               flex:0 0 auto;
-              isolation:isolate;
             }
             #tab-forms .variant-pricing-currency,
             #memberPanel .member-create-fields .variant-pricing-currency{
