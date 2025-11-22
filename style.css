@@ -8386,6 +8386,7 @@ html, body { cursor: auto !important; }
               min-width:0;
               box-sizing:border-box;
               flex:0 0 auto;
+              isolation:isolate;
             }
             #tab-forms .variant-pricing-currency,
             #memberPanel .member-create-fields .variant-pricing-currency{
@@ -8420,10 +8421,17 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu,
             #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu{
+              position:absolute;
+              bottom:calc(100% + 4px);
+              left:0;
+              right:0;
               width:100%;
               min-width:100%;
               max-width:100%;
               box-sizing:border-box;
+              z-index:var(--layer-menu);
+              margin:0;
+              top:auto;
             }
             #tab-forms .variant-pricing-price,
             #memberPanel .member-create-fields .variant-pricing-price{
