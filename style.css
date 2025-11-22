@@ -97,9 +97,6 @@
       pointer-events: auto;
       touch-action: none;
       border-radius: 999px;
-      display: flex;
-      align-items: center;
-      box-sizing: border-box;
     }
     .mapmarker-overlay{
       position: relative;
@@ -111,17 +108,23 @@
       border-radius: 999px;
       box-shadow: none;
       z-index: 5;
-      transform: translateZ(0);
     }
     .mapmarker-overlay > .big-map-card{
       position: absolute;
       left: 0;
       top: 0;
+      width: 225px;
+      height: 60px;
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
-      z-index: var(--layer-card);
       border-radius: 999px;
+      background: rgba(0, 0, 0, 0.88);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px 5px 5px;
       box-sizing: border-box;
+      z-index: var(--layer-card);
     }
     .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;

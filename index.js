@@ -19667,9 +19667,8 @@ if (!map.__pillHooksInstalled) {
             }
             cardRoot.dataset.id = overlayId;
             cardRoot.setAttribute('aria-hidden', 'true');
-            cardRoot.style.pointerEvents = 'auto';
-            cardRoot.style.userSelect = 'none';
-            // Match small map card approach - no inline transforms or will-change
+            // Match small map card approach - no inline styles, let CSS handle everything
+            // The card is positioned absolutely within the overlay, which Mapbox positions
 
             const pillImg = new Image();
             try{ pillImg.decoding = 'async'; }catch(e){}
@@ -19746,7 +19745,7 @@ if (!map.__pillHooksInstalled) {
             cardRoot.append(pillImg, thumbImg, labelEl);
             overlayRoot.append(markerContainer, cardRoot);
             overlayRoot.classList.add('is-card-visible');
-            overlayRoot.style.pointerEvents = '';
+            // Match small map card - no inline style manipulation, CSS handles everything
 
             const handleOverlayClick = (ev)=>{
               ev.preventDefault();
