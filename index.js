@@ -3515,7 +3515,6 @@ async function ensureMapboxCssFor(container) {
       return Array.from(matches);
     }
 
-    /* SMALL MAP CARD HOVER HIGHLIGHT - COMMENTED OUT
     function toggleSmallMapCardHoverHighlight(postId, shouldHighlight){
       if(postId === undefined || postId === null) return;
       const idStr = String(postId);
@@ -3575,7 +3574,6 @@ async function ensureMapboxCssFor(container) {
         updateSelectedMarkerRing();
       }
     }
-    END SMALL MAP CARD HOVER HIGHLIGHT */
 
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
@@ -3621,12 +3619,10 @@ async function ensureMapboxCssFor(container) {
         restoreAttr(el);
         restoreHighlightBackground(el);
       });
-      /* SMALL MAP CARD HOVER HIGHLIGHT - COMMENTED OUT
       document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
         setSmallMapCardPillImage(el, false);
         el.classList.remove(markerHighlightClass);
       });
-      */
 
       const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
         ? hoverPopup.getElement()
@@ -3682,12 +3678,10 @@ async function ensureMapboxCssFor(container) {
           if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
             return;
           }
-          /* SMALL MAP CARD HOVER HIGHLIGHT - COMMENTED OUT
           overlay.querySelectorAll('.small-map-card').forEach(el => {
             setSmallMapCardPillImage(el, true);
             el.classList.add(markerHighlightClass);
           });
-          */
           overlay.querySelectorAll('.big-map-card').forEach(el => {
             el.classList.add(highlightClass);
           });
@@ -19613,8 +19607,8 @@ if (!map.__pillHooksInstalled) {
             markerPill.dataset.highlightSrc = 'assets/icons-30/150x40-pill-2f3b73.webp';
             markerPill.className = 'mapmarker-pill';
             markerPill.loading = 'eager';
-            markerPill.style.opacity = '0';
-            markerPill.style.visibility = 'hidden';
+            markerPill.style.opacity = '0.9';
+            markerPill.style.visibility = 'visible';
             markerPill.draggable = false;
             requestAnimationFrame(() => {
               if(typeof markerPill.decode === 'function'){
@@ -19666,41 +19660,6 @@ if (!map.__pillHooksInstalled) {
 
             markerContainer.append(markerPill, markerIcon, markerLabel);
 
-            const handleSmallCardClick = (ev)=>{
-              ev.preventDefault();
-              ev.stopPropagation();
-              const pid = overlayRoot.dataset.id;
-              if(!pid) return;
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                      try{ closePanel(filterPanel); }catch(err){}
-                    }
-                    // CASE 3: MAP MARKER CLICKED (small card) - SCROLL TO TOP
-                    // Parameters: (id, fromHistory=false, fromMap=true, originEl=null)
-                    fn(pid, false, true, null);
-                  }catch(err){ console.error(err); }
-                });
-              });
-            };
-            markerContainer.addEventListener('click', handleSmallCardClick, { capture: true });
-            ['pointerdown','mousedown','touchstart'].forEach(type => {
-              markerContainer.addEventListener(type, (ev)=>{
-                const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
-                const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
-                if(!isTouchLike){
-                  try{ ev.preventDefault(); }catch(err){}
-                }
-                try{ ev.stopPropagation(); }catch(err){}
-              }, { capture: true });
-            });
-            markerContainer.style.pointerEvents = 'auto';
-            markerContainer.style.cursor = 'pointer';
-
-            /* BIG MAP CARD CODE - COMMENTED OUT
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
             if(isMultiVenue){
@@ -19782,10 +19741,10 @@ if (!map.__pillHooksInstalled) {
             }
 
             cardRoot.append(pillImg, thumbImg, labelEl);
-            /* overlayRoot.append(markerContainer, cardRoot); */
-            /* overlayRoot.classList.add('is-card-visible'); */
+            overlayRoot.append(markerContainer, cardRoot);
+            overlayRoot.classList.add('is-card-visible');
 
-            /* const handleOverlayClick = (ev)=>{
+            const handleOverlayClick = (ev)=>{
               ev.preventDefault();
               ev.stopPropagation();
               const pid = overlayRoot.dataset.id;
@@ -19815,10 +19774,7 @@ if (!map.__pillHooksInstalled) {
                 }
                 try{ ev.stopPropagation(); }catch(err){}
               }, { capture: true });
-            }); */
-            /* END BIG MAP CARD CODE */
-
-            overlayRoot.append(markerContainer);
+            });
             const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
             if(typeof marker.setZIndexOffset === 'function'){
               try{ marker.setZIndexOffset(20000); }catch(e){}
@@ -20230,12 +20186,10 @@ if (!map.__pillHooksInstalled) {
         renderHistoryBoard();
       });
 
-      /* SMALL MAP CARD HOVER HIGHLIGHT - COMMENTED OUT
       const handleHoverHighlight = (state)=> toggleSmallMapCardHoverHighlight(p.id, state);
 
       el.addEventListener('mouseenter', ()=> handleHoverHighlight(true));
       el.addEventListener('mouseleave', ()=> handleHoverHighlight(false));
-      */
       el.dataset.hoverHighlightBound = '1';
       return el;
     }
@@ -20247,7 +20201,7 @@ if (!map.__pillHooksInstalled) {
       if(related && cardEl.contains(related)) return;
       const id = cardEl.dataset ? cardEl.dataset.id : null;
       if(!id) return;
-      /* toggleSmallMapCardHoverHighlight(id, true); */
+      toggleSmallMapCardHoverHighlight(id, true);
     });
 
     document.addEventListener('mouseout', event => {
@@ -20257,7 +20211,7 @@ if (!map.__pillHooksInstalled) {
       if(related && cardEl.contains(related)) return;
       const id = cardEl.dataset ? cardEl.dataset.id : null;
       if(!id) return;
-      /* toggleSmallMapCardHoverHighlight(id, false); */
+      toggleSmallMapCardHoverHighlight(id, false);
     });
 
     // History board

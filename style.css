@@ -103,7 +103,6 @@
       /* Mapbox positions this element - it updates transform to move marker on map */
       /* Both small and big cards are children, so they move with this element */
     }
-    /* BIG MAP CARD CODE - COMMENTED OUT
     .mapmarker-overlay > .big-map-card{
       position: absolute;
       left: 0;
@@ -113,7 +112,7 @@
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       border-radius: 999px;
-      background: #2e3a72;
+      background: rgba(0, 0, 0, 0.88);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -121,14 +120,19 @@
       box-sizing: border-box;
       z-index: var(--layer-card);
     }
-    END BIG MAP CARD CODE */
-    /* BIG MAP CARD CODE - COMMENTED OUT
+    .mapmarker-overlay.is-card-visible > .small-map-card{
+      opacity: 0;
+      visibility: hidden;
+    }
+    .mapmarker-overlay.is-card-visible > .big-map-card{
+      opacity: 1;
+      visibility: visible;
+    }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
       z-index: var(--layer-card);
     }
-    END BIG MAP CARD CODE */
-    /* .big-map-card img, */
+    .big-map-card img,
     .small-map-card img{ display:block; }
     .map-card-pill{
       position: absolute;
@@ -151,8 +155,7 @@
       width: 150px;
       height: 40px;
       transform: translate3d(-20px, -20px, 0);
-      pointer-events: auto;
-      cursor: pointer;
+      pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
       display: flex;
@@ -216,27 +219,24 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    /* BIG MAP CARD CODE - COMMENTED OUT
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
     }
-    .big-map-card--popup.is-map-highlight{
+    .big-map-card--popup.is-map-highlight,
+    .mapmarker-overlay:hover .big-map-card--popup{
       background-color: #2e3a72;
       transition: none;
     }
-    END BIG MAP CARD CODE */
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }
     .small-map-card.is-pill-highlight{
       background-color: #2e3a72;
     }
-    /* Hover effect removed - was causing issues
     .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
       transition: none;
     }
-    */
     .map-card-thumb{
       position: absolute;
       left: 5px;
@@ -247,9 +247,6 @@
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: var(--layer-header);
-      /* Isolate from parent background changes to prevent flickering */
-      isolation: isolate;
-      will-change: auto;
     }
     .big-multi-post-map-card .map-card-thumb{
       border-radius: 12px;
@@ -366,7 +363,6 @@
       margin-top: 0;
       color: #d0d0d0;
     }
-    /* BIG MAP CARD CODE - COMMENTED OUT
     .big-map-card--list{
       position: relative;
       width: 100%;
@@ -404,7 +400,6 @@
     .big-map-card--list .map-card-venue{
       white-space: nowrap;
     }
-    END BIG MAP CARD CODE */
 
 
 /* Extracted from <styleid="mapboxgl-critical-css"> */
