@@ -97,6 +97,9 @@
       pointer-events: auto;
       touch-action: none;
       border-radius: 999px;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
     }
     .mapmarker-overlay{
       position: relative;
@@ -117,6 +120,8 @@
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       z-index: var(--layer-card);
+      border-radius: 999px;
+      box-sizing: border-box;
     }
     .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;

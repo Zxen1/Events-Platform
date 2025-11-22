@@ -19669,6 +19669,7 @@ if (!map.__pillHooksInstalled) {
             cardRoot.setAttribute('aria-hidden', 'true');
             cardRoot.style.pointerEvents = 'auto';
             cardRoot.style.userSelect = 'none';
+            // Match small map card approach - no inline transforms or will-change
 
             const pillImg = new Image();
             try{ pillImg.decoding = 'async'; }catch(e){}
