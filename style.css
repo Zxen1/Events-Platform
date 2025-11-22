@@ -121,19 +121,13 @@
       box-sizing: border-box;
       z-index: var(--layer-card);
     }
-    .mapmarker-overlay.is-card-visible > .small-map-card{
-      opacity: 0;
-      visibility: hidden;
-    }
-    .mapmarker-overlay.is-card-visible > .big-map-card{
-      opacity: 1;
-      visibility: visible;
-    }
     END BIG MAP CARD CODE */
+    /* BIG MAP CARD CODE - COMMENTED OUT
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
       z-index: var(--layer-card);
     }
+    END BIG MAP CARD CODE */
     /* .big-map-card img, */
     .small-map-card img{ display:block; }
     .map-card-pill{
@@ -236,10 +230,12 @@
     .small-map-card.is-pill-highlight{
       background-color: #2e3a72;
     }
+    /* Hover effect removed - was causing issues
     .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
       transition: none;
     }
+    */
     .map-card-thumb{
       position: absolute;
       left: 5px;
