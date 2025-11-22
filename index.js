@@ -9214,7 +9214,6 @@ function makePosts(){
                   safeNotifyFormbuilderChange();
                 }
               });
-              const existingCurrency = optionValue.currency || '';
               if(!existingCurrency){
                 currencyMenu.appendChild(placeholderBtn);
               }
