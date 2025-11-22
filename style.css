@@ -151,7 +151,8 @@
       width: 150px;
       height: 40px;
       transform: translate3d(-20px, -20px, 0);
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
       display: flex;
