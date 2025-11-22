@@ -103,29 +103,28 @@
       /* Mapbox positions this element - it updates transform to move marker on map */
       /* Both small and big cards are children, so they move with this element */
     }
-    .small-map-card > .big-map-card{
+    /* Small card transforms into big card on hover - elements created on hover, not preloaded */
+    .small-map-card .map-card-thumb,
+    .small-map-card .map-card-label{
+      opacity: 0;
+      visibility: hidden;
       position: absolute;
-      left: 0;
-      top: 0;
+    }
+    .mapmarker-overlay:hover > .small-map-card{
       width: 225px;
       height: 60px;
-      transform: translate3d(-10px, -10px, 0);
-      pointer-events: auto;
-      border-radius: 999px;
+      transform: translate3d(-30px, -30px, 0);
       background: rgba(0, 0, 0, 0.88);
-      display: flex;
-      align-items: center;
-      gap: 6px;
       padding: 5px 10px 5px 5px;
-      box-sizing: border-box;
-      z-index: var(--layer-card);
-      /* Big card is just a styled overlay on small card - positioned relative to small card, not Mapbox */
+      transition: none;
     }
-    .mapmarker-overlay.is-card-visible > .small-map-card{
+    .mapmarker-overlay:hover > .small-map-card .mapmarker,
+    .mapmarker-overlay:hover > .small-map-card .mapmarker-label{
       opacity: 0;
       visibility: hidden;
     }
-    .mapmarker-overlay.is-card-visible > .small-map-card > .big-map-card{
+    .mapmarker-overlay:hover > .small-map-card .map-card-thumb,
+    .mapmarker-overlay:hover > .small-map-card .map-card-label{
       opacity: 1;
       visibility: visible;
     }
@@ -224,7 +223,7 @@
       background-color: rgba(0, 0, 0, 0.88);
     }
     .big-map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .small-map-card > .big-map-card--popup{
+    .mapmarker-overlay:hover .big-map-card--popup{
       background-color: #2e3a72;
       transition: none;
     }
