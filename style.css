@@ -100,14 +100,16 @@
       border-radius: 999px;
       box-shadow: none;
       z-index: 5;
+      /* Mapbox positions this element - it updates transform to move marker on map */
+      /* Both small and big cards are children, so they move with this element */
     }
-    .mapmarker-overlay > .big-map-card{
+    .small-map-card > .big-map-card{
       position: absolute;
       left: 0;
       top: 0;
       width: 225px;
       height: 60px;
-      transform: translate3d(-30px, -30px, 0);
+      transform: translate3d(-10px, -10px, 0);
       pointer-events: auto;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.88);
@@ -117,7 +119,7 @@
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
       z-index: var(--layer-card);
-      /* Match small-map-card exactly - no will-change, no isolation, no extra transforms */
+      /* Big card is just a styled overlay on small card - positioned relative to small card, not Mapbox */
     }
     .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;

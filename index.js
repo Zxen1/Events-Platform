@@ -19743,7 +19743,9 @@ if (!map.__pillHooksInstalled) {
             }
 
             cardRoot.append(pillImg, thumbImg, labelEl);
-            overlayRoot.append(markerContainer, cardRoot);
+            // Big card is just a styled overlay on the small card - append to small card, not overlayRoot
+            markerContainer.appendChild(cardRoot);
+            overlayRoot.append(markerContainer);
             overlayRoot.classList.add('is-card-visible');
             // Match small map card - no inline style manipulation, CSS handles everything
 
