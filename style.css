@@ -116,6 +116,7 @@
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       z-index: var(--layer-card);
+      will-change: auto;
     }
     .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;
@@ -239,6 +240,8 @@
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: var(--layer-header);
+      transform: none;
+      will-change: auto;
     }
     .big-multi-post-map-card .map-card-thumb{
       border-radius: 12px;

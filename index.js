@@ -19790,16 +19790,57 @@ if (!map.__pillHooksInstalled) {
             else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
             else if(eventLngLat){ marker.setLngLat(eventLngLat); }
             marker.addTo(map);
-            // Prevent Mapbox from updating transforms - lock both overlay and card
+            // Prevent Mapbox from updating transforms - lock the card transform
+            // Mapbox needs to update the overlayRoot transform to position the marker,
+            // but we can lock the card's transform to prevent shaking
+            const card = overlayRoot.querySelector('.big-map-card');
+            const thumb = overlayRoot.querySelector('.map-card-thumb');
+            
+            // Set initial locked transforms
+            if(card && card.style){
+              card.style.transform = 'translate3d(-30px, -30px, 0)';
+              card.style.willChange = 'auto';
+            }
+            if(thumb && thumb.style){
+              thumb.style.transform = 'none';
+              thumb.style.willChange = 'auto';
+            }
+            
+            // Lock transforms continuously to override Mapbox updates
+            // Use a MutationObserver to catch any style changes Mapbox makes
             const lockTransforms = () => {
-              // Mapbox updates the overlayRoot transform, but we want it fixed
-              // The card should also stay fixed
-              const card = overlayRoot.querySelector('.big-map-card');
               if(card && card.style){
-                card.style.transform = 'translate3d(-30px, -30px, 0)';
+                // Force the card transform to stay fixed - check if it changed
+                const currentTransform = card.style.transform || '';
+                if(currentTransform !== 'translate3d(-30px, -30px, 0)'){
+                  card.style.transform = 'translate3d(-30px, -30px, 0)';
+                }
+                if(card.style.willChange !== 'auto'){
+                  card.style.willChange = 'auto';
+                }
+              }
+              if(thumb && thumb.style){
+                if(thumb.style.transform !== 'none' && thumb.style.transform !== ''){
+                  thumb.style.transform = 'none';
+                }
+                if(thumb.style.willChange !== 'auto'){
+                  thumb.style.willChange = 'auto';
+                }
               }
             };
-            // Lock continuously to override Mapbox updates
+            
+            // Use MutationObserver to watch for style attribute changes
+            const observer = new MutationObserver(() => {
+              lockTransforms();
+            });
+            if(card){
+              observer.observe(card, { attributes: true, attributeFilter: ['style'] });
+            }
+            if(thumb){
+              observer.observe(thumb, { attributes: true, attributeFilter: ['style'] });
+            }
+            
+            // Also lock continuously via requestAnimationFrame as backup
             let lockFrame = null;
             const startLocking = () => {
               if(lockFrame) return;
@@ -19813,6 +19854,9 @@ if (!map.__pillHooksInstalled) {
               if(lockFrame){
                 cancelAnimationFrame(lockFrame);
                 lockFrame = null;
+              }
+              if(observer){
+                observer.disconnect();
               }
             };
             startLocking();
