@@ -4229,6 +4229,8 @@ body.hide-ads .ad-board{
 #memberPanel .member-create-fields .panel-field .subcategory-form-button,
 #memberPanel .member-create-fields .panel-field .subcategory-form-label{
   font-weight:600;
+  position:relative;
+  z-index:1;
 }
 #tab-forms .form-container .panel-field .subcategory-form-button,
 #tab-forms .form-container .panel-field .subcategory-form-label,
@@ -4262,6 +4264,8 @@ body.hide-ads .ad-board{
   gap:8px;
   margin:0;
   padding-top:10px;
+  position:relative;
+  z-index:1;
 }
 #tab-forms .form-field-header .subcategory-form-button,
 #tab-forms .form-field-header .subcategory-form-label,
@@ -8397,6 +8401,8 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .variant-pricing-options-label{
               font-size:14px;
               font-weight:600;
+              position:relative;
+              z-index:1;
             }
             #tab-forms .variant-pricing-options-list,
             #memberPanel .member-create-fields .variant-pricing-options-list{

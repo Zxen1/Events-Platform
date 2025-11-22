@@ -9255,6 +9255,45 @@ function makePosts(){
                   currencyMenu.hidden = true;
                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
                 } else {
+                  // Ensure currency options are populated when menu opens
+                  const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
+                  if(existingOptions.length === 0){
+                    const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                    currencyOptions.forEach(code => {
+                      // Check if option already exists
+                      const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
+                      if(!existing){
+                        const optionBtn = document.createElement('button');
+                        optionBtn.type = 'button';
+                        optionBtn.className = 'menu-option';
+                        optionBtn.textContent = code;
+                        optionBtn.dataset.value = code;
+                        optionBtn.addEventListener('click', (e) => {
+                          e.stopPropagation();
+                          const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
+                          currencyMenuBtn.textContent = code;
+                          if(arrow) currencyMenuBtn.appendChild(arrow);
+                          currencyMenuBtn.dataset.value = code;
+                          currencyMenu.hidden = true;
+                          currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                          const previousCurrency = field.options[optionIndex].currency || '';
+                          field.options[optionIndex].currency = code;
+                          const priceCleared = updatePriceState();
+                          if(isCurrencySelected()){
+                            commitPriceValue();
+                          }
+                          if(previousCurrency !== code || priceCleared){
+                            safeNotifyFormbuilderChange();
+                          }
+                          const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
+                          if(placeholder){
+                            placeholder.remove();
+                          }
+                        });
+                        currencyMenu.appendChild(optionBtn);
+                      }
+                    });
+                  }
                   currencyMenu.hidden = false;
                   currencyMenuBtn.setAttribute('aria-expanded', 'true');
                   const outsideHandler = (ev) => {
@@ -13242,6 +13281,50 @@ function makePosts(){
                               currencyMenu.hidden = true;
                               currencyMenuBtn.setAttribute('aria-expanded', 'false');
                             } else {
+                              // Ensure currency options are populated when menu opens
+                              const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
+                              if(existingOptions.length === 0){
+                                const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                                currencyOptions.forEach(code => {
+                                  // Check if option already exists
+                                  const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
+                                  if(!existing){
+                                    const optionBtn = document.createElement('button');
+                                    optionBtn.type = 'button';
+                                    optionBtn.className = 'menu-option';
+                                    optionBtn.textContent = code;
+                                    optionBtn.dataset.value = code;
+                                    optionBtn.addEventListener('click', (e) => {
+                                      e.stopPropagation();
+                                      currencyMenuBtn.textContent = code;
+                                      currencyMenuBtn.dataset.value = code;
+                                      currencyMenuBtn.appendChild(currencyArrow);
+                                      currencyMenu.hidden = true;
+                                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                                      const nextCurrency = code.trim();
+                                      const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
+                                      tier.currency = nextCurrency;
+                                      const shouldClearPrice = nextCurrency === '';
+                                      const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
+                                      const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
+                                        sourceTier: tier,
+                                        clearPrices: shouldClearPrice
+                                      });
+                                      if(sessionIndex > 0 && previousCurrency !== nextCurrency){
+                                        lockSessionMirror(venue);
+                                      }
+                                      if(previousCurrency !== nextCurrency || priceCleared || propagated){
+                                        markAutoChange();
+                                      }
+                                      const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
+                                      if(placeholder){
+                                        placeholder.remove();
+                                      }
+                                    });
+                                    currencyMenu.appendChild(optionBtn);
+                                  }
+                                });
+                              }
                               currencyMenu.hidden = false;
                               currencyMenuBtn.setAttribute('aria-expanded', 'true');
                               const outsideHandler = (ev) => {
