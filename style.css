@@ -125,6 +125,10 @@
       opacity: 0;
       visibility: hidden;
     }
+    .mapmarker-overlay.is-card-visible > .small-map-card > .big-map-card{
+      opacity: 1;
+      visibility: visible;
+    }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
       z-index: var(--layer-card);
@@ -220,7 +224,7 @@
       background-color: rgba(0, 0, 0, 0.88);
     }
     .big-map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .big-map-card--popup{
+    .mapmarker-overlay:hover .small-map-card > .big-map-card--popup{
       background-color: #2e3a72;
       transition: none;
     }
