@@ -26,7 +26,7 @@
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
  *   86: (--layer-dialog) - dialogs, unsaved changes prompts (#adminUnsavedPrompt, #memberUnsavedPrompt)
- *   85: (--layer-menu) - standard menus, dropdowns, currency menus
+ *   85: (--layer-menu) - standard menus, dropdowns, currency menus, field-type-select menus
  *   66: formpicker dropdown menus
  *   65: formpicker dropdown buttons
  *   60: (--layer-panel) - panels
@@ -114,7 +114,6 @@
       left: 0;
       top: 0;
       transform: translate3d(-30px, -30px, 0);
-      will-change: transform;
       pointer-events: auto;
       z-index: var(--layer-card);
     }
@@ -216,7 +215,6 @@
     }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
-      transition: background-color 0.2s ease;
     }
     .big-map-card--popup.is-map-highlight,
     .mapmarker-overlay:hover .big-map-card--popup{
@@ -8208,6 +8206,7 @@ html, body { cursor: auto !important; }
               min-width:100%;
               max-width:100%;
               box-sizing:border-box;
+              z-index:var(--layer-menu);
             }
             #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
               flex:1 1 auto;
