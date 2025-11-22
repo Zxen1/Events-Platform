@@ -19662,6 +19662,40 @@ if (!map.__pillHooksInstalled) {
 
             markerContainer.append(markerPill, markerIcon, markerLabel);
 
+            const handleSmallCardClick = (ev)=>{
+              ev.preventDefault();
+              ev.stopPropagation();
+              const pid = overlayRoot.dataset.id;
+              if(!pid) return;
+              callWhenDefined('openPost', (fn)=>{
+                requestAnimationFrame(() => {
+                  try{
+                    touchMarker = null;
+                    stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
+                    // CASE 3: MAP MARKER CLICKED (small card) - SCROLL TO TOP
+                    // Parameters: (id, fromHistory=false, fromMap=true, originEl=null)
+                    fn(pid, false, true, null);
+                  }catch(err){ console.error(err); }
+                });
+              });
+            };
+            markerContainer.addEventListener('click', handleSmallCardClick, { capture: true });
+            ['pointerdown','mousedown','touchstart'].forEach(type => {
+              markerContainer.addEventListener(type, (ev)=>{
+                const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
+                const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
+                if(!isTouchLike){
+                  try{ ev.preventDefault(); }catch(err){}
+                }
+                try{ ev.stopPropagation(); }catch(err){}
+              }, { capture: true });
+            });
+            markerContainer.style.pointerEvents = 'auto';
+            markerContainer.style.cursor = 'pointer';
+
             /* BIG MAP CARD CODE - COMMENTED OUT
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
