@@ -3222,7 +3222,7 @@ let __notifyMapOnInteraction = null;
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    const MARKER_INTERACTIVE_LAYERS = VISIBLE_MARKER_LABEL_LAYERS.slice();
+    const MARKER_INTERACTIVE_LAYERS = ['marker-icon', ...VISIBLE_MARKER_LABEL_LAYERS];
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -19095,7 +19095,9 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
+      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
@@ -19164,6 +19166,18 @@ function makePosts(){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
         }
       });
+      
+      function updateMapCardLayerOpacity(displayMode){
+        if(!map) return;
+        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
+        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+        const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+        if(map.getLayer('marker-label')){
+          try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
+        }
+      }
+      window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
+      
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
 
