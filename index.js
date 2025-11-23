@@ -1006,15 +1006,18 @@ async function ensureMapboxCssFor(container) {
 // ============================================================================
 // MAP MARKERS & MAP CARDS SYSTEM
 // ============================================================================
-// All code related to map markers (pills) and small map cards is organized here.
+// All code related to map markers (icons), marker clustering (balloons), and map cards (pills) is organized here.
+// Note: Markers are icons centered over lat/lng coordinates. Pills are map card backgrounds.
+// Balloons are clustering icons used at low zoom levels.
 // Sections:
 // 1. Constants & Configuration (lines ~1005-1202)
 // 2. Text Measurement & Formatting Helpers (lines ~1022-1183)
-// 3. Pill Image System (lines ~1387-1547)
-// 4. Composite Sprite System (lines ~1549-1920)
-// 5. Small Map Card DOM Functions (lines ~3219-3447)
-// 6. Marker Data Building & Collections (lines ~3448-6663)
-// 7. Map Source Integration (lines ~19001+)
+// 3. Map Card System (lines ~1387-1547) - Map card background images (pills)
+// 4. Composite Sprite System (lines ~1549-1920) - Composite sprites for map cards
+// 5. Marker Clustering (Balloons) (lines ~2546-2912) - Balloon icons that cluster nearby markers
+// 6. Small Map Card DOM Functions (lines ~3219-3447)
+// 7. Marker Data Building & Collections (lines ~3448-6663)
+// 8. Map Source Integration (lines ~19001+)
 // ============================================================================
 
   const markerIconSize = 1;
@@ -1209,8 +1212,8 @@ async function ensureMapboxCssFor(container) {
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000). Generating a composite sprite
   // for every single marker label without a cap quickly exhausts that budget,
-  // which in turn causes Mapbox to render the fallback pill without any icon
-  // or text. Each composite registers both a base pill and its accent variant,
+  // which in turn causes Mapbox to render the fallback map card background (pill) without any icon
+  // or text. Each composite registers both a base map card background and its accent variant,
   // so cap the composites to keep the total image count comfortably below the
   // platform ceiling.
   const MARKER_LABEL_COMPOSITE_LIMIT = 900;
@@ -1400,7 +1403,7 @@ async function ensureMapboxCssFor(container) {
     });
   }
 
-  // --- Section 3: Pill Image System ---
+  // --- Section 3: Map Card System ---
   function loadMarkerLabelImage(url){
     return new Promise((resolve, reject) => {
       if(!url){
@@ -1423,10 +1426,10 @@ async function ensureMapboxCssFor(container) {
     });
   }
 
-  // UNIFIED PILL SYSTEM: Provides pill images for both single and multi-venue markers
+  // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds) for both single and multi-venue map cards
   // Single-venue: Uses these images directly via ensureMarkerLabelPillSprites()
   // Multi-venue: These images are composited with icons/text by createMarkerLabelCompositeTextures()
-  // to create unique sprites for each multi-venue marker (marker-label-composite-{spriteId})
+  // to create unique sprites for each multi-venue map card (marker-label-composite-{spriteId})
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
@@ -1778,8 +1781,8 @@ async function ensureMapboxCssFor(container) {
     }
     const targetMap = mapInstance || map;
     if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
-      // UNIFIED: Both single and multi-venue use System 2 (ensureMarkerLabelPillSprites)
-      // Multi-venue composites are built separately in createMarkerLabelCompositeTextures
+      // UNIFIED: Both single and multi-venue map cards use System 2 (ensureMarkerLabelPillSprites)
+      // Multi-venue map card composites are built separately in createMarkerLabelCompositeTextures
       const sprites = await ensureMarkerLabelPillSprites();
       if(!sprites){
         return {
@@ -2543,7 +2546,10 @@ async function ensureMapboxCssFor(container) {
       const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
-        const BALLOON_SOURCE_ID = 'post-balloon-source';
+
+      // --- Section 5: Marker Clustering (Balloons) ---
+      // Balloon icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
+      const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
