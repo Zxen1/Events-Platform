@@ -19282,8 +19282,15 @@ function makePosts(){
         // Note: Layer may not exist yet if called before initializeMarkerIconLayer() runs
         if(map.getLayer('marker-icon')){
           try{ 
-            // Force opacity to 1 regardless of display mode
-            map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+            // Force opacity to 1 as a FIXED VALUE, not an expression
+            // This breaks any link to map card opacity expressions
+            const currentOpacity = map.getPaintProperty('marker-icon', 'icon-opacity');
+            // If it's an array (expression), we need to replace it with a fixed value
+            if(Array.isArray(currentOpacity)){
+              map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+            } else if(currentOpacity !== 1){
+              map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+            }
             // Also ensure visibility is set
             map.setLayoutProperty('marker-icon', 'visibility', 'visible');
             map.setLayoutProperty('marker-icon', 'icon-size', 1);
@@ -19306,15 +19313,16 @@ function makePosts(){
             const currentOpacity = map.getPaintProperty('marker-icon', 'icon-opacity');
             const currentVisibility = map.getLayoutProperty('marker-icon', 'visibility');
             const currentIconSize = map.getLayoutProperty('marker-icon', 'icon-size');
-            // If any property is wrong, force them all to correct values (marker-icon is "god" and must always be visible)
-            if(currentOpacity !== 1 || currentVisibility !== 'visible' || currentIconSize !== 1){
+            // If opacity is an expression (array) or not 1, force it to fixed value 1
+            // This breaks any link to map card opacity expressions
+            if(Array.isArray(currentOpacity) || currentOpacity !== 1){
               map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-              if(currentVisibility !== 'visible'){
-                map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-              }
-              if(currentIconSize !== 1){
-                map.setLayoutProperty('marker-icon', 'icon-size', 1);
-              }
+            }
+            if(currentVisibility !== 'visible'){
+              map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+            }
+            if(currentIconSize !== 1){
+              map.setLayoutProperty('marker-icon', 'icon-size', 1);
             }
           }catch(e){}
         }
