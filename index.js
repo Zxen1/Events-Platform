@@ -1023,13 +1023,15 @@ let __notifyMapOnInteraction = null;
 
   const markerIconSize = 1;
   const markerIconBaseSizePx = 30;
-  const markerLabelBackgroundWidthPx = 150;
-  const markerLabelBackgroundHeightPx = 40;
+  const basePillWidthPx = 150;
+  const basePillHeightPx = 40;
+  let accentPillWidthPx = null;
+  let accentPillHeightPx = null;
   const markerLabelTextGapPx = 5;
   const markerLabelMarkerInsetPx = 5;
   const markerLabelTextRightPaddingPx = 5;
   const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
-  const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
+  const markerLabelTextAreaWidthPx = Math.max(0, basePillWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
   const markerLabelBgTranslatePx = 0;
@@ -1447,10 +1449,18 @@ let __notifyMapOnInteraction = null;
     return markerLabelPillImagePromise;
   }
 
-  function computeMarkerLabelCanvasDimensions(sourceImage){
-    const canvasWidth = 150;
-    const canvasHeight = 40;
-    const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
+  function computeMarkerLabelCanvasDimensions(sourceImage, isAccent = false){
+    if(isAccent){
+      const width = accentPillWidthPx !== null ? accentPillWidthPx : (sourceImage && (sourceImage.naturalWidth || sourceImage.width) ? (sourceImage.naturalWidth || sourceImage.width) : basePillWidthPx);
+      const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
+      const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
+      const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
+      const pixelRatio = canvasWidth / basePillWidthPx;
+      return { canvasWidth, canvasHeight, pixelRatio };
+    }
+    const canvasWidth = basePillWidthPx;
+    const canvasHeight = basePillHeightPx;
+    const pixelRatio = canvasWidth / basePillWidthPx;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
@@ -1471,11 +1481,11 @@ let __notifyMapOnInteraction = null;
     ctx.restore();
   }
 
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
     if(!sourceImage){
       return null;
     }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
@@ -1527,8 +1537,8 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
+    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
     markerLabelPillSpriteCache = {
       base: baseSprite,
       highlight: accentSprite
@@ -1562,7 +1572,8 @@ let __notifyMapOnInteraction = null;
         iconImg = null;
       }
     }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg, false);
+    const accentDims = pillAccentImg ? computeMarkerLabelCanvasDimensions(pillAccentImg, true) : { canvasWidth, canvasHeight, pixelRatio };
     let deviceScale = 1;
     try{
       const ratio = window.devicePixelRatio;
@@ -1631,20 +1642,23 @@ let __notifyMapOnInteraction = null;
         ctx.shadowColor = 'transparent';
       }
     };
-    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1) => {
+    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1, useAccentDimensions = false) => {
       if(!backgroundImage){
         return null;
       }
+      const width = useAccentDimensions ? scaledAccentCanvasWidth : scaledCanvasWidth;
+      const height = useAccentDimensions ? scaledAccentCanvasHeight : scaledCanvasHeight;
+      const pixelRatio = useAccentDimensions ? scaledAccentPixelRatio : scaledPixelRatio;
       const canvas = document.createElement('canvas');
-      canvas.width = scaledCanvasWidth;
-      canvas.height = scaledCanvasHeight;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
       if(!ctx){
         return null;
       }
-      ctx.clearRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      ctx.clearRect(0, 0, width, height);
       try{
-        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, width, height);
       }catch(err){
         console.error(err);
       }
@@ -1652,14 +1666,62 @@ let __notifyMapOnInteraction = null;
         ctx.globalCompositeOperation = 'source-atop';
         ctx.globalAlpha = tintAlpha;
         ctx.fillStyle = tintColor;
-        ctx.fillRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
       }
-      drawForeground(ctx);
+      if(useAccentDimensions){
+        const drawAccentForeground = (ctx) => {
+          if(!ctx){
+            return;
+          }
+          try{
+            ctx.imageSmoothingEnabled = true;
+            if('imageSmoothingQuality' in ctx){
+              ctx.imageSmoothingQuality = 'high';
+            }
+          }catch(err){}
+          if(iconImg){
+            const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledAccentPixelRatio;
+            const destX = Math.round(markerLabelMarkerInsetPx * scaledAccentPixelRatio);
+            const destY = Math.round((height - iconSizePx) / 2);
+            drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
+          }
+          if(labelLines.length){
+            const fontSizePx = markerLabelTextSize * scaledAccentPixelRatio;
+            const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledAccentPixelRatio);
+            const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
+            let textY = Math.round((height - totalHeight) / 2);
+            if(!Number.isFinite(textY) || textY < 0){
+              textY = 0;
+            }
+            const textX = Math.round(markerLabelTextPaddingPx * scaledAccentPixelRatio);
+            ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left';
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 2 * scaledAccentPixelRatio;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 1 * scaledAccentPixelRatio;
+            labelLines.forEach(line => {
+              ctx.fillStyle = line.color;
+              try{
+                ctx.fillText(line.text, textX, textY);
+              }catch(err){
+                console.error(err);
+              }
+              textY += fontSizePx + lineGapPx;
+            });
+            ctx.shadowColor = 'transparent';
+          }
+        };
+        drawAccentForeground(ctx);
+      } else {
+        drawForeground(ctx);
+      }
       let imageData = null;
       try{
-        imageData = ctx.getImageData(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        imageData = ctx.getImageData(0, 0, width, height);
       }catch(err){
         console.error(err);
         imageData = null;
@@ -1669,13 +1731,13 @@ let __notifyMapOnInteraction = null;
       }
       return {
         image: imageData,
-        options: { pixelRatio: Number.isFinite(scaledPixelRatio) && scaledPixelRatio > 0 ? scaledPixelRatio : 1 }
+        options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
       };
     };
-    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, false);
     let accentComposite = null;
     if(pillAccentImg){
-      accentComposite = buildComposite(pillAccentImg, null, 1);
+      accentComposite = buildComposite(pillAccentImg, null, 1, true);
     }
     if(!baseComposite){
       return null;
@@ -2492,6 +2554,7 @@ let __notifyMapOnInteraction = null;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       const MARKER_LAYER_IDS = [
         'hover-fill',
+        'marker-icon',
         'marker-label',
         'marker-label-highlight'
       ];
@@ -18952,6 +19015,62 @@ function makePosts(){
       }
       await prepareMarkerLabelCompositesForPosts(postsData);
       updateMapFeatureHighlights(lastHighlightedPostIds);
+      
+      const markerIconFilter = ['all',
+        ['!',['has','point_count']],
+        ['has','title']
+      ];
+      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+        ['case',
+          ['==', ['var','iconId'], ''],
+          MULTI_POST_MARKER_ICON_ID,
+          ['var','iconId']
+        ]
+      ];
+      
+      const markerIconLayerId = 'marker-icon';
+      let markerIconLayerExists = !!map.getLayer(markerIconLayerId);
+      if(!markerIconLayerExists){
+        try{
+          map.addLayer({
+            id: markerIconLayerId,
+            type:'symbol',
+            source:'posts',
+            filter: markerIconFilter,
+            minzoom: MARKER_MIN_ZOOM,
+            layout:{
+              'icon-image': markerIconImageExpression,
+              'icon-size': 1,
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'center',
+              'icon-pitch-alignment': 'viewport',
+              'symbol-z-order': 'viewport-y',
+              'symbol-sort-key': 1000
+            },
+            paint:{
+              'icon-opacity': 1
+            }
+          });
+          markerIconLayerExists = !!map.getLayer(markerIconLayerId);
+        }catch(e){
+          markerIconLayerExists = !!map.getLayer(markerIconLayerId);
+        }
+      }
+      if(markerIconLayerExists){
+        try{ map.setFilter(markerIconLayerId, markerIconFilter); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'icon-image', markerIconImageExpression); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'icon-allow-overlap', true); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'icon-ignore-placement', true); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'icon-anchor','center'); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'icon-pitch-alignment','viewport'); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'symbol-z-order','viewport-y'); }catch(e){}
+        try{ map.setLayoutProperty(markerIconLayerId,'symbol-sort-key', 1000); }catch(e){}
+        try{ map.setPaintProperty(markerIconLayerId,'icon-opacity', 1); }catch(e){}
+        try{ map.setLayerZoomRange(markerIconLayerId, MARKER_MIN_ZOOM, 24); }catch(e){}
+      }
+      
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
         ['has','title']
