@@ -126,6 +126,14 @@
       gap: 6px;
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
+      transition: width 0.3s cubic-bezier(0.22, 0.61, 0.36, 1), height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: width, height, transform;
+    }
+    .small-map-card.is-expanded{
+      width: 225px;
+      height: 60px;
+      transform: translate3d(-30px, -30px, 0);
+      padding: 5px 10px 5px 5px;
     }
     .small-multi-post-map-card{
       gap: 5px;
@@ -182,15 +190,107 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
+    .small-map-card .mapmarker-pill{
+      width: 225px;
+      height: 60px;
+      transform: scale(0.6667);
+      transform-origin: top left;
+    }
+    .small-map-card.is-expanded .mapmarker-pill{
+      width: 225px;
+      height: 60px;
+      transform: none;
+    }
+    .small-map-card-thumb{
+      position: absolute;
+      left: 5px;
+      top: 5px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      z-index: 2;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease, width 0.3s cubic-bezier(0.22, 0.61, 0.36, 1), height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+      pointer-events: none;
+    }
+    .mapmarker-overlay:hover .small-map-card-thumb{
+      opacity: 1;
+      visibility: visible;
+    }
+    .small-map-card.is-expanded .small-map-card-thumb{
+      width: 50px;
+      height: 50px;
+      opacity: 1;
+      visibility: visible;
+    }
+    .small-map-card.is-expanded .mapmarker{
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+      height: 0;
+    }
+    .small-map-card-label-expanded{
+      position: absolute;
+      left: 60px;
+      top: 5px;
+      width: calc(100% - 65px);
+      height: 50px;
+      padding: 0 5px 0 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.2;
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .small-map-card.is-expanded .small-map-card-label-expanded{
+      display: flex;
+    }
+    .small-map-card.is-expanded .mapmarker-label{
+      display: none;
+    }
+    .small-map-card-title{
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      width: 100%;
+    }
+    .small-map-card-title-line{
+      width: 100%;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 400;
+    }
+    .small-map-card-venue{
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 1.2;
+      opacity: 0.9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      margin-top: 0;
+      color: #d0d0d0;
+    }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
-    }
-    .small-map-card.is-pill-highlight{
-      background-color: #2e3a72;
-    }
-    .mapmarker-overlay:hover .small-map-card{
-      background-color: #2e3a72;
-      transition: none;
     }
     .mapmarker-label{
       position: relative;
