@@ -2474,6 +2474,7 @@ async function ensureMapboxCssFor(container) {
           spinZoomMax = 4,
           spinSpeed = 0.3,
           spinEnabled = false,
+          mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
       // Load admin settings from database
@@ -2492,6 +2493,7 @@ async function ensureMapboxCssFor(container) {
               spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
               spinZoomMax = data.settings.spin_zoom_max || 4;
               spinSpeed = data.settings.spin_speed || 0.3;
+              mapCardDisplay = data.settings.map_card_display || 'hover_only';
               
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
@@ -2558,6 +2560,38 @@ async function ensureMapboxCssFor(container) {
                 spinSpeedSlider.value = spinSpeed;
                 spinSpeedDisplay.textContent = spinSpeed.toFixed(1);
               }
+              
+              // Initialize map card display radios
+              const mapCardDisplayRadios = document.querySelectorAll('input[name="mapCardDisplay"]');
+              if(mapCardDisplayRadios.length){
+                mapCardDisplayRadios.forEach(radio => {
+                  radio.checked = (radio.value === mapCardDisplay);
+                });
+              }
+              
+              // Apply map card display setting
+              document.body.setAttribute('data-map-card-display', mapCardDisplay);
+              
+              // Add change listeners for map card display radios
+              mapCardDisplayRadios.forEach(radio => {
+                radio.addEventListener('change', async () => {
+                  if(radio.checked){
+                    mapCardDisplay = radio.value;
+                    document.body.setAttribute('data-map-card-display', mapCardDisplay);
+                    
+                    // Auto-save to database
+                    try {
+                      await fetch('/gateway.php?action=save-admin-settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ map_card_display: mapCardDisplay })
+                      });
+                    } catch (e) {
+                      console.error('Failed to save map card display setting:', e);
+                    }
+                  }
+                });
+              });
               
               // Initialize icon folder input
               const iconFolderInput = document.getElementById('adminIconFolder');
