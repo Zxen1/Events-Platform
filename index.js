@@ -19391,6 +19391,22 @@ if (!map.__pillHooksInstalled) {
               multiCount: helperMultiCount,
               trigger: 'click'
             });
+          } else {
+            const p = posts.find(x=>x.id===id);
+            if(p){
+              callWhenDefined('openPost', (fn)=>{
+                requestAnimationFrame(() => {
+                  try{
+                    touchMarker = null;
+                    stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
+                    fn(id, false, true, null);
+                  }catch(err){ console.error(err); }
+                });
+              });
+            }
           }
         };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
@@ -19398,10 +19414,12 @@ if (!map.__pillHooksInstalled) {
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
         const targetEl = originalTarget && typeof originalTarget.closest === 'function'
-          ? originalTarget.closest('.mapmarker-overlay')
+          ? originalTarget.closest('.mapmarker-overlay, .small-map-card')
           : null;
         if(targetEl){
-          const smallMapCard = targetEl.querySelector('.small-map-card');
+          const smallMapCard = targetEl.classList.contains('small-map-card') 
+            ? targetEl 
+            : targetEl.querySelector('.small-map-card');
           if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
             const pid = smallMapCard.dataset.id;
             callWhenDefined('openPost', (fn)=>{
@@ -19427,6 +19445,16 @@ if (!map.__pillHooksInstalled) {
       });
 
       updateSelectedMarkerRing();
+
+      // Set pointer cursor when hovering over markers
+      MARKER_INTERACTIVE_LAYERS.forEach(layer => {
+        map.on('mouseenter', layer, () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', layer, () => {
+          map.getCanvas().style.cursor = 'grab';
+        });
+      });
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
         postSourceEventsBound = true;
