@@ -19250,18 +19250,14 @@ function makePosts(){
         }
         // Ensure marker-icon layer always has opacity 1 (never affected by map card display mode)
         // This is critical - marker-icon is "god" and must always be visible
-        const markerIconLayer = map.getLayer('marker-icon');
-        if(markerIconLayer){
+        // Note: Layer may not exist yet if called before initializeMarkerIconLayer() runs
+        if(map.getLayer('marker-icon')){
           try{ 
             // Force opacity to 1 regardless of display mode
             map.setPaintProperty('marker-icon', 'icon-opacity', 1);
           }catch(e){
-            console.error('Failed to set marker-icon opacity:', e);
+            // Silently fail - layer might not be ready yet
           }
-        } else {
-          // Layer doesn't exist yet - this is OK, it will be created later
-          // But log for debugging
-          console.warn('marker-icon layer not found when updating opacity');
         }
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
