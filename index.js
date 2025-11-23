@@ -19196,7 +19196,7 @@ function makePosts(){
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0.7]; // TEST: Set to 0.7 to see if marker-icon is linked
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0.5 : 1; // TEST: Set to 0.5 to see if marker-icon is linked
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
