@@ -2739,9 +2739,13 @@ async function ensureMapboxCssFor(container) {
                   alwaysModeObserver.disconnect();
                   alwaysModeObserver = null;
                 }
-                alwaysModeMapHandlers.forEach(({event, handler}) => {
+                alwaysModeMapHandlers.forEach(({event, handler, layer}) => {
                   if(map && map.off){
-                    map.off(event, handler);
+                    if(layer){
+                      map.off(event, layer, handler);
+                    } else {
+                      map.off(event, handler);
+                    }
                   }
                 });
                 alwaysModeMapHandlers = [];
@@ -2753,9 +2757,52 @@ async function ensureMapboxCssFor(container) {
                     card.remove();
                   });
                   
-                  // Create named handlers for hover mode
+                  // Mapbox layer hover handlers (same system as click handlers)
+                  if(map && typeof MARKER_INTERACTIVE_LAYERS !== 'undefined' && Array.isArray(MARKER_INTERACTIVE_LAYERS)){
+                    MARKER_INTERACTIVE_LAYERS.forEach(layer => {
+                      const layerMouseEnter = (e) => {
+                        const f = e.features && e.features[0];
+                        if(!f) return;
+                        const props = f.properties || {};
+                        const id = props.id;
+                        if(!id) return;
+                        
+                        const overlays = typeof findMarkerOverlaysById === 'function' ? findMarkerOverlaysById(id) : [];
+                        const post = findPostById(id);
+                        if(post && overlays.length){
+                          overlays.forEach(overlay => {
+                            if(!overlay.querySelector('.small-map-card')){
+                              createSmallMapCard(overlay, post);
+                            }
+                          });
+                        }
+                      };
+                      
+                      const layerMouseLeave = (e) => {
+                        const f = e.features && e.features[0];
+                        if(!f) return;
+                        const props = f.properties || {};
+                        const id = props.id;
+                        if(!id) return;
+                        
+                        const overlays = typeof findMarkerOverlaysById === 'function' ? findMarkerOverlaysById(id) : [];
+                        overlays.forEach(overlay => {
+                          const card = overlay.querySelector('.small-map-card');
+                          if(card){
+                            card.remove();
+                          }
+                        });
+                      };
+                      
+                      map.on('mouseenter', layer, layerMouseEnter);
+                      map.on('mouseleave', layer, layerMouseLeave);
+                      alwaysModeMapHandlers.push({event: 'mouseenter', handler: layerMouseEnter, layer: layer});
+                      alwaysModeMapHandlers.push({event: 'mouseleave', handler: layerMouseLeave, layer: layer});
+                    });
+                  }
+                  
+                  // DOM hover handlers for existing small map cards and post cards
                   hoverEnterHandler = (e) => {
-                    // Check if target is a DOM element (not Mapbox canvas, etc.)
                     if(!e.target || !(e.target instanceof Element) || typeof e.target.closest !== 'function') return;
                     const target = e.target;
                     const overlay = target.closest('.mapmarker-overlay');
@@ -2765,10 +2812,8 @@ async function ensureMapboxCssFor(container) {
                       const cardId = overlay.dataset && overlay.dataset.id;
                       if(cardId){
                         const post = findPostById(cardId);
-                        if(post){
+                        if(post && !overlay.querySelector('.small-map-card')){
                           createSmallMapCard(overlay, post);
-                        } else {
-                          console.warn('Map card hover: post not found for ID', cardId, 'posts available:', posts && posts.length);
                         }
                       }
                     } else if(postCard){
@@ -2778,17 +2823,16 @@ async function ensureMapboxCssFor(container) {
                         const post = findPostById(cardId);
                         if(post){
                           overlays.forEach(overlay => {
-                            createSmallMapCard(overlay, post);
+                            if(!overlay.querySelector('.small-map-card')){
+                              createSmallMapCard(overlay, post);
+                            }
                           });
-                        } else {
-                          console.warn('Map card hover: post not found for ID', cardId, 'posts available:', posts && posts.length);
                         }
                       }
                     }
                   };
                   
                   hoverLeaveHandler = (e) => {
-                    // Check if target is a DOM element (not Mapbox canvas, etc.)
                     if(!e.target || !(e.target instanceof Element) || typeof e.target.closest !== 'function') return;
                     const target = e.target;
                     const overlay = target.closest('.mapmarker-overlay');
