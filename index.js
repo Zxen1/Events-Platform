@@ -821,7 +821,10 @@ if (typeof slugify !== 'function') {
         return;
       }
       map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
-    }catch(e){ /* silent */ }
+    }catch(e){
+      console.error('Failed to add pill images to map:', e);
+      throw e;
+    }
   }
 
   function tintImage(sourceImage, color, alpha = 1){
@@ -939,7 +942,10 @@ if (typeof slugify !== 'function') {
       }
       pendingMaps.add(map);
       ensureImage();
-    }catch(e){ /* silent */ }
+    }catch(e){
+      console.error('Failed to add or replace pill:', e);
+      throw e;
+    }
   }
 
   window.__addOrReplacePill150x40 = addOrReplacePill;
@@ -1842,18 +1848,17 @@ async function ensureMapboxCssFor(container) {
     if(pillAccentImg){
       accentComposite = buildComposite(pillAccentImg, null, 1);
     }
-    if(!accentComposite){
-      accentComposite = buildComposite(pillImg, '#2f3b73', 1);
-    }
     if(!baseComposite){
       return null;
     }
-    const highlightComposite = accentComposite || baseComposite;
+    if(!accentComposite){
+      return null;
+    }
     const nextMeta = Object.assign({}, meta || {}, {
       image: baseComposite.image,
       options: baseComposite.options,
-      highlightImage: highlightComposite ? highlightComposite.image : null,
-      highlightOptions: (highlightComposite && highlightComposite.options) || baseComposite.options
+      highlightImage: accentComposite.image,
+      highlightOptions: accentComposite.options
     });
     markerLabelCompositeStore.set(labelSpriteId, nextMeta);
     return {
@@ -1872,8 +1877,8 @@ async function ensureMapboxCssFor(container) {
       return {
         base: { image: existing.image, options: existing.options || {} },
         highlight: {
-          image: existing.highlightImage || existing.image,
-          options: existing.highlightOptions || existing.options || {}
+          image: existing.highlightImage,
+          options: existing.highlightOptions || {}
         },
         meta: existing
       };
@@ -1889,8 +1894,8 @@ async function ensureMapboxCssFor(container) {
         return {
           base: { image: refreshed.image, options: refreshed.options || {} },
           highlight: {
-            image: refreshed.highlightImage || refreshed.image,
-            options: refreshed.highlightOptions || refreshed.options || {}
+            image: refreshed.highlightImage,
+            options: refreshed.highlightOptions || {}
           },
           meta: refreshed
         };
@@ -1924,7 +1929,16 @@ async function ensureMapboxCssFor(container) {
           options: { pixelRatio: 1 }
         };
       }
-      return id === MARKER_LABEL_BG_ID ? sprites.base : (sprites.highlight || sprites.base);
+      if(id === MARKER_LABEL_BG_ID){
+        if(!sprites.base){
+          return null;
+        }
+        return sprites.base;
+      }
+      if(!sprites.highlight){
+        return null;
+      }
+      return sprites.highlight;
     }
     if(id && id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
       const isAccent = id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
@@ -2042,7 +2056,7 @@ async function ensureMapboxCssFor(container) {
       mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
       markerLabelCompositePlaceholderIds.delete(compositeId);
       if(highlightComposite && highlightComposite.image){
-        mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
+        mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || {});
         markerLabelCompositePlaceholderIds.delete(highlightId);
       }
       const updatedMeta = markerLabelCompositeStore.get(labelSpriteId) || meta;
