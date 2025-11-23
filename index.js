@@ -793,7 +793,7 @@ if (typeof slugify !== 'function') {
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
   const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40-pill-70.webp';
-  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-2f3b73.webp';
+  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/225x60-pill-2f3b73.webp';
   let cachedImages = null;
   let loadingTask = null;
   const pendingMaps = new Set();
@@ -825,8 +825,11 @@ if (typeof slugify !== 'function') {
       return null;
     }
     try{
-      const width = sourceImage.naturalWidth || sourceImage.width || 150;
-      const height = sourceImage.naturalHeight || sourceImage.height || 40;
+      const width = sourceImage.naturalWidth || sourceImage.width;
+      const height = sourceImage.naturalHeight || sourceImage.height;
+      if(!width || !height){
+        return null;
+      }
       const canvas = document.createElement('canvas');
       canvas.width = Math.max(1, Math.round(width));
       canvas.height = Math.max(1, Math.round(height));

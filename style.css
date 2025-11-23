@@ -114,8 +114,8 @@
       position: absolute;
       left: 0;
       top: 0;
-      width: 150px;
-      height: 40px;
+      width: 225px;
+      height: 60px;
       transform: translate3d(-20px, -20px, 0);
       pointer-events: auto;
       cursor: pointer;
@@ -173,8 +173,8 @@
       position: absolute;
       left: 0;
       top: 0;
-      width: 150px;
-      height: 40px;
+      width: 225px;
+      height: 60px;
       object-fit: contain;
       pointer-events: none;
       opacity: 0;
@@ -183,9 +183,6 @@
       z-index: 0;
     }
     .open-post .post-card.is-map-highlight{
-      background-color: #2e3a72;
-    }
-    .small-map-card.is-pill-highlight{
       background-color: #2e3a72;
     }
     .mapmarker-overlay:hover .small-map-card{
