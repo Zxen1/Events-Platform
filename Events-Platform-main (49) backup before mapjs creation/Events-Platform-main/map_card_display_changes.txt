@@ -1,0 +1,160 @@
+MAP CARD DISPLAY FEATURE - CHANGES APPROVED
+============================================
+
+1. Z-INDEX VALUES UPDATED
+   - map = 0
+   - default small map card pill = 1
+   - hover/big map card pill = 2
+   - mapmarker icon = 3
+   - mapcard thumbnail = 4
+   - small map card label = 5
+   - big map card label = 6 (future feature)
+   - Updated z-index reference table in style.css
+
+2. HOVER PILL IMAGE
+   - Changed from 150x40-pill-2f3b73.webp to 225x60-pill-#2f3b73.webp
+   - Scales to 150x40 using transform: scale(0.6667)
+   - Replaces default pill on hover
+   - Preloaded once globally (not per card) for instant hover with no delay
+   - Seamless color change with identical sizing (no flicker)
+
+3. THUMBNAIL ON HOVER
+   - Thumbnail loads on hover
+   - Replaces mapmarker icon only after thumbnail has fully loaded (no flicker)
+   - Thumbnail: 30px × 30px, circular (border-radius: 50%), matches mapmarker position exactly
+   - Uses object-fit: cover to fill circle properly
+
+4. HOVER_ONLY MODE
+   - No map cards preloaded
+   - Default pill never seen (small map cards only load when post or mapmarker is hovered/tapped)
+   - Cards removed on mouseleave
+   - Pill and label only created on hover
+
+5. ALWAYS MODE
+   - Small map cards preloaded for visible markers only (not entire world)
+   - Cards created for markers in visible map area
+   - Updates when map moves/zooms (new markers become visible)
+
+6. REAL-TIME MODE SWITCHING
+   - When admin switches between hover_only and always modes:
+     * Immediately loads/unloads cards as required
+     * Saves setting to database automatically
+     * Changes visible immediately without page reload
+
+7. CODE CLEANUP
+   - Removed all "expanded" references (feature not yet implemented)
+   - Removed CSS rules for .is-expanded and .small-map-card-label-expanded
+
+FILES MODIFIED:
+- index.js: Added map card display logic, hover handlers, thumbnail loading
+- style.css: Updated z-index values and reference table, removed expanded references
+
+IMPORTANT NOTES:
+=================
+
+SMALL MAP CARD CODE LOCATION:
+- All small map card modifications are easy to find by locating where the pill image is fetched/created
+- The pill image is created at: index.js, line 2589
+- The function that creates small map cards is: createSmallMapCard() starting at index.js, line 2579
+- This function creates the pill, marker icon, thumbnail, and label - all small map card components
+
+MAPBOX ELEMENTS:
+- Mapbox controls all marker elements on the map - they are NOT standard DOM elements
+- The code works with existing .mapmarker-overlay elements that Mapbox creates
+- The code does NOT create or position overlays - it only adds .small-map-card content inside existing overlays
+- Never try to create or position Mapbox marker elements - work with what Mapbox provides
+
+================================================================================
+CRITICAL: HOVER FUNCTIONALITY NOT WORKING - TASK INCOMPLETE
+================================================================================
+
+STATUS: Hover handlers for map markers are NOT working. This task should take 5 minutes.
+
+WHAT WORKS:
+- Click handlers on map markers work perfectly (see line ~19820 in index.js)
+- Small map cards can be created (function exists around line 2579)
+- Admin setting for "Map Card Display" exists and saves to database
+- Map markers are clickable and open posts
+
+WHAT'S MISSING:
+- Hover handlers need to be added in the SAME place where click handlers are attached
+- Use the EXACT SAME pattern as click handlers: map.on('mouseenter', layer, handler)
+- In hover_only mode, create small map cards on mouseenter, remove on mouseleave
+
+CORRECT APPROACH (5 MINUTES):
+1. Go to where click handlers are attached (around line 19820 in addPostSource function)
+2. Right after the cursor handlers (lines 19858-19865), add hover handlers
+3. Use MARKER_INTERACTIVE_LAYERS.forEach() just like the click handlers do
+4. Get marker ID from e.features[0].properties.id (same as click handler)
+5. Check if mapCardDisplay === 'hover_only' before attaching handlers
+6. Use findMarkerOverlaysById() and findPostById() functions that already exist
+7. Use createSmallMapCard() function that already exists
+8. That's it. Should be ~20 lines of code.
+
+HOW THE PREVIOUS AGENT FAILED (20+ HOURS WASTED):
+1. Tried to attach handlers in loadAdminSettings() - WRONG PLACE, runs before map is ready
+2. Tried to use document-level event listeners - WRONG, Mapbox layers need map.on() events
+3. Made functions global unnecessarily - NOT NEEDED, functions are already in scope
+4. Overcomplicated with setup functions, cleanup, multiple attempts - UNNECESSARY
+5. Created massive file replacement attempts that would have deleted 26,000+ lines
+6. Ignored the working click handler pattern that was right there to copy
+
+KEY LESSON: 
+Look at the WORKING click handlers at line ~19820. Copy that exact pattern. 
+Add mouseenter/mouseleave instead of click. Done. 5 minutes.
+
+================================================================================
+REDUNDANT CODE DISCOVERED AND REMOVED
+================================================================================
+
+DATE: Current session
+STATUS: All redundant code removed - had ZERO visible effect on website
+
+FINDING: Two separate pill image systems existed, but only one actually works.
+
+1. WORKING SYSTEM (Mapbox Sprite System):
+   - Location: index.js lines 791-939
+   - Function: addOrReplacePill() - registered as window.__addOrReplacePill150x40
+   - Purpose: Adds pill images to Mapbox GL as sprites for rendering on map canvas
+   - Used by: Mapbox symbol layers (marker-label and marker-label-highlight)
+   - Constants: PILL_BASE_IMAGE_URL, PILL_ACCENT_IMAGE_URL
+   - This is the ONLY system that actually affects the visible pill on the map
+
+2. REDUNDANT SYSTEM (DOM img Element System) - DELETED:
+   - Location: index.js lines 3386-3434 (now removed)
+   - Constants: SMALL_MAP_CARD_PILL_DEFAULT_SRC, SMALL_MAP_CARD_PILL_HOVER_SRC
+   - Function: setSmallMapCardPillImage(cardEl, highlighted)
+   - Purpose: Attempted to change <img> src attributes in DOM elements
+   - Called from: toggleSmallMapCardHoverHighlight(), updateSelectedMarkerRing()
+   - RESULT: Had ZERO visible effect - changing these values did nothing
+   - ACTION: Completely removed all related code
+
+CODE REMOVED:
+- Constants: SMALL_MAP_CARD_PILL_DEFAULT_SRC, SMALL_MAP_CARD_PILL_HOVER_SRC
+- Function: setSmallMapCardPillImage() (entire function, ~22 lines)
+- Function calls: 5 locations where setSmallMapCardPillImage() was called
+  * toggleSmallMapCardHoverHighlight() - 3 calls removed
+  * updateSelectedMarkerRing() - 2 calls removed
+
+3. REDUNDANT CSS - DELETED:
+   - Location: style.css (removed)
+   - Rule: .small-map-card.is-pill-highlight { background-color: #2e3a72; }
+   - Reason: Pill image replacement handles color change, CSS was redundant
+   - ACTION: Removed CSS rule
+
+KEY DISCOVERY:
+The small map cards use Mapbox sprite rendering, NOT DOM img elements.
+The DOM img system was attempting to manipulate elements that don't exist or
+aren't used for rendering. The actual pill rendering happens through Mapbox's
+sprite system which uses the PILL_ACCENT_IMAGE_URL constant.
+
+IMPORTANT:
+- Only the Mapbox sprite system (lines 791-939) controls pill appearance
+- PILL_ACCENT_IMAGE_URL is the constant that controls the highlighted pill
+- Changed from 150x40-pill-2f3b73.webp to 225x60-pill-2f3b73.webp
+- CSS dimensions updated to match: 225px × 60px (was 150px × 40px)
+
+LESSON LEARNED:
+When code has zero visible effect, it's likely redundant or broken.
+Always test changes to confirm they actually work before assuming they're correct.
+
