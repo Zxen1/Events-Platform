@@ -793,7 +793,7 @@ if (typeof slugify !== 'function') {
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
   const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40-pill-70.webp';
-  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/225x60-pill-2f3b73.webp';
+  const PILL_ACCENT_IMAGE_URL = 'funmap-logo-big.png';
   let cachedImages = null;
   let loadingTask = null;
   const pendingMaps = new Set();
@@ -1560,7 +1560,7 @@ async function ensureMapboxCssFor(container) {
       return markerLabelPillImagePromise;
     }
     const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/icons-30/225x60-pill-2f3b73.webp';
+    const accentUrl = 'funmap-logo-big.png';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl).catch(() => null)
