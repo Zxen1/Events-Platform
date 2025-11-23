@@ -1002,6 +1002,21 @@ async function ensureMapboxCssFor(container) {
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+// ============================================================================
+// MAP MARKERS & MAP CARDS SYSTEM
+// ============================================================================
+// All code related to map markers (pills) and small map cards is organized here.
+// Sections:
+// 1. Constants & Configuration (lines ~1005-1202)
+// 2. Text Measurement & Formatting Helpers (lines ~1022-1183)
+// 3. Pill Image System (lines ~1387-1547)
+// 4. Composite Sprite System (lines ~1549-1920)
+// 5. Small Map Card DOM Functions (lines ~3219-3447)
+// 6. Marker Data Building & Collections (lines ~3448-6663)
+// 7. Map Source Integration (lines ~19001+)
+// ============================================================================
+
   const markerIconSize = 1;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
@@ -1019,6 +1034,7 @@ async function ensureMapboxCssFor(container) {
   let markerLabelMeasureContext = null;
   const markerLabelCompositePlaceholderIds = new Set();
 
+  // --- Section 2: Text Measurement & Formatting Helpers ---
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
       return markerLabelMeasureContext;
@@ -1384,6 +1400,7 @@ async function ensureMapboxCssFor(container) {
     });
   }
 
+  // --- Section 3: Pill Image System ---
   function loadMarkerLabelImage(url){
     return new Promise((resolve, reject) => {
       if(!url){
@@ -1546,6 +1563,7 @@ async function ensureMapboxCssFor(container) {
     return markerLabelPillSpriteCache;
   }
 
+  // --- Section 4: Composite Sprite System ---
   function markerLabelCompositeId(spriteId){
     return `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
   }
@@ -3216,6 +3234,7 @@ async function ensureMapboxCssFor(container) {
       });
     }
 
+    // --- Section 5: Small Map Card DOM Functions ---
     function enforceSmallMultiMapCardIcon(img, overlayEl){
       if(!img) return;
       const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
@@ -3445,6 +3464,7 @@ async function ensureMapboxCssFor(container) {
       return hash.toString(36);
     }
 
+// --- Section 6: Marker Data Building & Collections ---
 function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   if(!Array.isArray(postsAtVenue) || !postsAtVenue.length){
     return 0;
@@ -18998,6 +19018,7 @@ function makePosts(){
     let addingPostSource = false;
     let pendingAddPostSource = false;
 
+    // --- Section 7: Map Source Integration ---
     function loadPostMarkers(){
       try{
         addPostSource();
