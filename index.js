@@ -3383,8 +3383,6 @@ async function ensureMapboxCssFor(container) {
     }
 
 
-    const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
-    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
@@ -3408,29 +3406,6 @@ async function ensureMapboxCssFor(container) {
       fns.forEach(fn => {
         try{ fn(); }catch(err){}
       });
-    }
-
-    function setSmallMapCardPillImage(cardEl, highlighted){
-      if(!cardEl) return;
-      const pillImg = cardEl.querySelector('.mapmarker-pill, .map-card-pill')
-        || cardEl.querySelector('img[src*="150x40-pill" i]');
-      if(!pillImg) return;
-      if(!pillImg.dataset.defaultSrc){
-        const currentSrc = pillImg.getAttribute('src') || '';
-        pillImg.dataset.defaultSrc = currentSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC;
-      }
-      if(!pillImg.dataset.highlightSrc){
-        pillImg.dataset.highlightSrc = SMALL_MAP_CARD_PILL_HOVER_SRC;
-      }
-      const targetSrc = highlighted
-        ? (pillImg.dataset.highlightSrc || SMALL_MAP_CARD_PILL_HOVER_SRC)
-        : (pillImg.dataset.defaultSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC);
-      if((pillImg.getAttribute('src') || '') !== targetSrc){
-        pillImg.setAttribute('src', targetSrc);
-      }
-      if(pillImg.getAttribute('srcset')){
-        pillImg.removeAttribute('srcset');
-      }
     }
 
     function enforceSmallMultiMapCardIcon(img, overlayEl){
@@ -3536,15 +3511,11 @@ async function ensureMapboxCssFor(container) {
             if(!cardEl.classList.contains(highlightClass)){
               cardEl.classList.add(highlightClass);
             }
-            setSmallMapCardPillImage(cardEl, true);
           } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
             const prev = cardEl.dataset.hoverPrevHighlight === '1';
             delete cardEl.dataset.hoverPrevHighlight;
             if(!prev){
               cardEl.classList.remove(highlightClass);
-              setSmallMapCardPillImage(cardEl, false);
-            } else {
-              setSmallMapCardPillImage(cardEl, true);
             }
           }
         });
@@ -3599,7 +3570,6 @@ async function ensureMapboxCssFor(container) {
         restoreHighlightBackground(el);
       });
       document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
-        setSmallMapCardPillImage(el, false);
         el.classList.remove(markerHighlightClass);
       });
 
@@ -3646,7 +3616,6 @@ async function ensureMapboxCssFor(container) {
             return;
           }
           overlay.querySelectorAll('.small-map-card').forEach(el => {
-            setSmallMapCardPillImage(el, true);
             el.classList.add(markerHighlightClass);
           });
         });
