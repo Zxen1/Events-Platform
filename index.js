@@ -1025,8 +1025,6 @@ let __notifyMapOnInteraction = null;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
-  const markerLabelAccentWidthPx = 477;
-  const markerLabelAccentHeightPx = 214;
   const markerLabelTextGapPx = 5;
   const markerLabelMarkerInsetPx = 5;
   const markerLabelTextRightPaddingPx = 5;
@@ -1434,10 +1432,6 @@ let __notifyMapOnInteraction = null;
   // Multi-venue: These images are composited with icons/text by createMarkerLabelCompositeTextures()
   // to create unique sprites for each multi-venue map card (marker-label-composite-{spriteId})
   async function ensureMarkerLabelPillImage(){
-    const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'hover_only';
-    if(mapCardDisplay !== 'always' && mapCardDisplay !== 'hover_only'){
-      return null;
-    }
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
@@ -1466,22 +1460,16 @@ let __notifyMapOnInteraction = null;
     return markerLabelPillImagePromise;
   }
 
-  function computeMarkerLabelCanvasDimensions(sourceImage, explicitWidth, explicitHeight, baseWidth){
-    if(!sourceImage){
-      throw new Error('computeMarkerLabelCanvasDimensions: sourceImage is required');
-    }
-    if(explicitWidth === undefined || explicitWidth === null || !Number.isFinite(explicitWidth) || explicitWidth <= 0){
-      throw new Error('computeMarkerLabelCanvasDimensions: explicitWidth must be a positive number');
-    }
-    if(explicitHeight === undefined || explicitHeight === null || !Number.isFinite(explicitHeight) || explicitHeight <= 0){
-      throw new Error('computeMarkerLabelCanvasDimensions: explicitHeight must be a positive number');
-    }
-    if(baseWidth === undefined || baseWidth === null || !Number.isFinite(baseWidth) || baseWidth <= 0){
-      throw new Error('computeMarkerLabelCanvasDimensions: baseWidth must be a positive number');
-    }
-    const canvasWidth = Math.round(explicitWidth);
-    const canvasHeight = Math.round(explicitHeight);
-    const pixelRatio = canvasWidth / baseWidth;
+  function computeMarkerLabelCanvasDimensions(sourceImage){
+    const rawWidth = sourceImage && (sourceImage.naturalWidth || sourceImage.width)
+      ? (sourceImage.naturalWidth || sourceImage.width)
+      : markerLabelBackgroundWidthPx;
+    const rawHeight = sourceImage && (sourceImage.naturalHeight || sourceImage.height)
+      ? (sourceImage.naturalHeight || sourceImage.height)
+      : markerLabelBackgroundHeightPx;
+    const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
+    const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
+    const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
@@ -1502,11 +1490,11 @@ let __notifyMapOnInteraction = null;
     ctx.restore();
   }
 
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha, explicitWidth, explicitHeight, baseWidth){
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
     if(!sourceImage){
       return null;
     }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, explicitWidth, explicitHeight, baseWidth);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage);
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
@@ -1564,11 +1552,11 @@ let __notifyMapOnInteraction = null;
     if(!assets.highlight){
       return null;
     }
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx, markerLabelBackgroundWidthPx);
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
     if(!baseSprite){
       return null;
     }
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, markerLabelAccentWidthPx, markerLabelAccentHeightPx, markerLabelBackgroundWidthPx);
+    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
     if(!accentSprite){
       return null;
     }
@@ -1594,8 +1582,18 @@ let __notifyMapOnInteraction = null;
     }
     const pillImg = pillAssets.base;
     const pillAccentImg = pillAssets.highlight;
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg, markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx, markerLabelBackgroundWidthPx);
-    const accentDims = pillAccentImg ? computeMarkerLabelCanvasDimensions(pillAccentImg, markerLabelAccentWidthPx, markerLabelAccentHeightPx, markerLabelBackgroundWidthPx) : null;
+    const markerSources = window.subcategoryMarkers || {};
+    const iconUrl = meta && meta.iconId ? markerSources[meta.iconId] : null;
+    let iconImg = null;
+    if(iconUrl){
+      try{
+        iconImg = await loadMarkerLabelImage(iconUrl);
+      }catch(err){
+        console.error(err);
+        iconImg = null;
+      }
+    }
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg);
     let deviceScale = 1;
     try{
       const ratio = window.devicePixelRatio;
@@ -1610,10 +1608,7 @@ let __notifyMapOnInteraction = null;
     }
     const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
     const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
-    const scaledAccentCanvasWidth = accentDims ? Math.max(1, Math.round(accentDims.canvasWidth * deviceScale)) : scaledCanvasWidth;
-    const scaledAccentCanvasHeight = accentDims ? Math.max(1, Math.round(accentDims.canvasHeight * deviceScale)) : scaledCanvasHeight;
     const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
-    const scaledAccentPixelRatio = accentDims ? (Number.isFinite(accentDims.pixelRatio) && accentDims.pixelRatio > 0 ? accentDims.pixelRatio : 1) * deviceScale : scaledPixelRatio;
     const labelLines = [];
     const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
     const line2 = (meta && meta.labelLine2 ? meta.labelLine2 : '').trim();
@@ -1623,45 +1618,79 @@ let __notifyMapOnInteraction = null;
     if(line2){
       labelLines.push({ text: line2, color: meta && meta.isMulti ? '#d0d0d0' : '#ffffff' });
     }
-    const buildComposite = (backgroundImage, tintColor, tintAlpha, compositeWidth, compositeHeight, pixelRatioForText, pixelRatioForOptions) => {
-      if(!backgroundImage) return null;
-      const canvas = document.createElement('canvas');
-      canvas.width = compositeWidth;
-      canvas.height = compositeHeight;
-      const ctx = canvas.getContext('2d');
-      if(!ctx) return null;
-      ctx.clearRect(0, 0, compositeWidth, compositeHeight);
-      drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, compositeWidth, compositeHeight);
-      if(tintColor){
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.globalAlpha = tintAlpha;
-        ctx.fillStyle = tintColor;
-        ctx.fillRect(0, 0, compositeWidth, compositeHeight);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
+    const drawForeground = (ctx) => {
+      if(!ctx){
+        return;
+      }
+      try{
+        ctx.imageSmoothingEnabled = true;
+        if('imageSmoothingQuality' in ctx){
+          ctx.imageSmoothingQuality = 'high';
+        }
+      }catch(err){}
+      if(iconImg){
+        const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledPixelRatio;
+        const destX = Math.round(markerLabelMarkerInsetPx * scaledPixelRatio);
+        const destY = Math.round((scaledCanvasHeight - iconSizePx) / 2);
+        drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
       }
       if(labelLines.length){
-        const fontSizePx = markerLabelTextSize * pixelRatioForText;
-        const lineGapPx = (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatioForText;
-        const totalHeight = labelLines.length * fontSizePx + (labelLines.length - 1) * lineGapPx;
-        let textY = Math.round((compositeHeight - totalHeight) / 2);
-        const textX = Math.round(markerLabelTextPaddingPx * pixelRatioForText);
+        const fontSizePx = markerLabelTextSize * scaledPixelRatio;
+        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledPixelRatio);
+        const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
+        let textY = Math.round((scaledCanvasHeight - totalHeight) / 2);
+        if(!Number.isFinite(textY) || textY < 0){
+          textY = 0;
+        }
+        const textX = Math.round(markerLabelTextPaddingPx * scaledPixelRatio);
         ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
         ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 2 * pixelRatioForText;
-        ctx.shadowOffsetY = 1 * pixelRatioForText;
+        ctx.shadowBlur = 2 * scaledPixelRatio;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 1 * scaledPixelRatio;
         labelLines.forEach(line => {
           ctx.fillStyle = line.color;
-          ctx.fillText(line.text, textX, textY);
+          try{
+            ctx.fillText(line.text, textX, textY);
+          }catch(err){
+            console.error(err);
+          }
           textY += fontSizePx + lineGapPx;
         });
         ctx.shadowColor = 'transparent';
       }
+    };
+    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1) => {
+      if(!backgroundImage){
+        return null;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = scaledCanvasWidth;
+      canvas.height = scaledCanvasHeight;
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      try{
+        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      }catch(err){
+        console.error(err);
+      }
+      if(tintColor){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = tintAlpha;
+        ctx.fillStyle = tintColor;
+        ctx.fillRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      drawForeground(ctx);
       let imageData = null;
       try{
-        imageData = ctx.getImageData(0, 0, compositeWidth, compositeHeight);
+        imageData = ctx.getImageData(0, 0, scaledCanvasWidth, scaledCanvasHeight);
       }catch(err){
         console.error(err);
         imageData = null;
@@ -1671,11 +1700,14 @@ let __notifyMapOnInteraction = null;
       }
       return {
         image: imageData,
-        options: { pixelRatio: Number.isFinite(pixelRatioForOptions) && pixelRatioForOptions > 0 ? pixelRatioForOptions : 1 }
+        options: { pixelRatio: Number.isFinite(scaledPixelRatio) && scaledPixelRatio > 0 ? scaledPixelRatio : 1 }
       };
     };
-    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, scaledCanvasWidth, scaledCanvasHeight, scaledPixelRatio, scaledPixelRatio);
-    const accentComposite = pillAccentImg && accentDims ? buildComposite(pillAccentImg, null, 1, scaledAccentCanvasWidth, scaledAccentCanvasHeight, scaledAccentPixelRatio, scaledAccentPixelRatio) : null;
+    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+    let accentComposite = null;
+    if(pillAccentImg){
+      accentComposite = buildComposite(pillAccentImg, null, 1);
+    }
     if(!baseComposite){
       return null;
     }
@@ -18991,19 +19023,16 @@ function makePosts(){
         ]
       ];
 
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'hover_only';
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const markerLabelBaseOpacity = mapCardDisplay === 'always' 
-        ? ['case', highlightedStateExpression, 0, 1]
-        : 0;
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 800, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconAnchor: [markerLabelBackgroundWidthPx / 2, markerLabelBackgroundHeightPx / 2] },
-        { id:'marker-label-highlight', source:'posts', sortKey: 801, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconAnchor: [markerLabelAccentWidthPx / 2, markerLabelAccentHeightPx / 2] }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconAnchor }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
@@ -19019,7 +19048,7 @@ function makePosts(){
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': iconAnchor,
+                'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -19043,7 +19072,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor', iconAnchor); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
