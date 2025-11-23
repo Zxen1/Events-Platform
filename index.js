@@ -3566,22 +3566,16 @@ async function ensureMapboxCssFor(container) {
         el.classList.remove(markerHighlightClass);
       });
 
-      const overlayId = '';
-      const overlayMultiIds = [];
       let fallbackId = '';
-      if(!overlayId){
-        if(activePostId !== undefined && activePostId !== null){
-          fallbackId = String(activePostId);
-        } else {
-          const openEl = document.querySelector('.post-board .open-post[data-id]');
-          fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
-        }
+      if(activePostId !== undefined && activePostId !== null){
+        fallbackId = String(activePostId);
+      } else {
+        const openEl = document.querySelector('.post-board .open-post[data-id]');
+        fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
       }
       const hoverHighlightList = Array.from(hoverHighlightedPostIds);
       const idsToHighlight = Array.from(new Set([
-        overlayId,
         fallbackId,
-        ...(overlayMultiIds || []),
         ...hoverHighlightList
       ].filter(Boolean)));
       if(!idsToHighlight.length){
@@ -3597,7 +3591,6 @@ async function ensureMapboxCssFor(container) {
         el.setAttribute('aria-selected', 'true');
         applyHighlightBackground(el);
       };
-      const overlayVenueKey = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.venueKey || '').trim() : '';
       const globalVenueKey = typeof selectedVenueKey === 'string' && selectedVenueKey ? String(selectedVenueKey).trim() : '';
       const highlightTargets = [];
       const targetSeen = new Set();
@@ -3607,9 +3600,7 @@ async function ensureMapboxCssFor(container) {
         const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
         applyHighlight(listCard);
         // Don't highlight open post cards - they should maintain their #1f2750 background
-        const preferredVenue = (overlayId && strId === overlayId && overlayVenueKey)
-          ? overlayVenueKey
-          : globalVenueKey;
+        const preferredVenue = globalVenueKey;
         const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
         const overlays = findMarkerOverlaysById(strId);
         overlays.forEach(overlay => {
