@@ -811,14 +811,16 @@ if (typeof slugify !== 'function') {
       if(map.hasImage(ACCENT_ID)){
         try{ map.removeImage(ACCENT_ID); }catch(e){}
       }
-      const baseImage = cachedImages.base || cachedImages.accent;
-      if(baseImage){
-        map.addImage(PILL_ID, baseImage, { pixelRatio: 1 });
+      const baseImage = cachedImages.base;
+      if(!baseImage){
+        return;
       }
-      const accentImage = cachedImages.accent || cachedImages.base;
-      if(accentImage){
-        map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
+      map.addImage(PILL_ID, baseImage, { pixelRatio: 1 });
+      const accentImage = cachedImages.accent;
+      if(!accentImage){
+        return;
       }
+      map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
     }catch(e){ /* silent */ }
   }
 
