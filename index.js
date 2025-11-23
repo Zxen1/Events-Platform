@@ -2755,8 +2755,9 @@ async function ensureMapboxCssFor(container) {
                   
                   // Create named handlers for hover mode
                   hoverEnterHandler = (e) => {
-                    const target = e.target && typeof e.target.closest === 'function' ? e.target : null;
-                    if(!target) return;
+                    // Check if target is a DOM element (not Mapbox canvas, etc.)
+                    if(!e.target || !(e.target instanceof Element) || typeof e.target.closest !== 'function') return;
+                    const target = e.target;
                     const overlay = target.closest('.mapmarker-overlay');
                     const postCard = target.closest('.post-card, .recents-card');
                     
@@ -2787,8 +2788,9 @@ async function ensureMapboxCssFor(container) {
                   };
                   
                   hoverLeaveHandler = (e) => {
-                    const target = e.target && typeof e.target.closest === 'function' ? e.target : null;
-                    if(!target) return;
+                    // Check if target is a DOM element (not Mapbox canvas, etc.)
+                    if(!e.target || !(e.target instanceof Element) || typeof e.target.closest !== 'function') return;
+                    const target = e.target;
                     const overlay = target.closest('.mapmarker-overlay');
                     const postCard = target.closest('.post-card, .recents-card');
                     
