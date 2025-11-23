@@ -192,16 +192,16 @@
       background-color: #2e3a72;
       transition: none;
     }
-    /* Hide small map cards when hover_only mode is active (unless highlighted/clicked/hovered) */
-    body[data-map-card-display="hover_only"] .mapmarker-overlay:not(:hover) .small-map-card:not(.is-pill-highlight):not(.is-expanded){
+    /* Hide small map cards when hover_only mode is active (unless highlighted/active/hovered) */
+    body[data-map-card-display="hover_only"] .mapmarker-overlay:not(:hover) .small-map-card:not(.is-pill-highlight):not(.is-active-post){
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
     }
-    /* Ensure cards are visible when hovered, highlighted, or expanded in hover_only mode */
+    /* Ensure cards are visible when hovered, highlighted, or active in hover_only mode */
     body[data-map-card-display="hover_only"] .mapmarker-overlay:hover .small-map-card,
     body[data-map-card-display="hover_only"] .small-map-card.is-pill-highlight,
-    body[data-map-card-display="hover_only"] .small-map-card.is-expanded{
+    body[data-map-card-display="hover_only"] .small-map-card.is-active-post{
       opacity: 1;
       visibility: visible;
       pointer-events: auto;

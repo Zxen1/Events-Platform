@@ -2575,12 +2575,151 @@ async function ensureMapboxCssFor(container) {
               // Apply map card display setting
               document.body.setAttribute('data-map-card-display', mapCardDisplay);
               
+              // Function to create a small map card on demand
+              function createSmallMapCard(overlay, post){
+                if(!overlay || !post) return null;
+                let card = overlay.querySelector('.small-map-card');
+                if(card) return card; // Already exists
+                
+                card = document.createElement('div');
+                card.className = 'small-map-card';
+                card.dataset.id = String(post.id);
+                
+                // Create pill image
+                const pill = document.createElement('img');
+                pill.className = 'mapmarker-pill';
+                pill.src = SMALL_MAP_CARD_PILL_DEFAULT_SRC;
+                pill.style.width = '225px';
+                pill.style.height = '60px';
+                pill.style.transform = 'scale(0.6667)';
+                pill.style.transformOrigin = 'top left';
+                pill.style.position = 'absolute';
+                pill.style.left = '0';
+                pill.style.top = '0';
+                pill.style.objectFit = 'contain';
+                pill.style.pointerEvents = 'none';
+                card.appendChild(pill);
+                
+                // Create marker icon (will be set by existing code)
+                const marker = document.createElement('img');
+                marker.className = 'mapmarker';
+                marker.style.position = 'relative';
+                marker.style.width = '30px';
+                marker.style.height = '30px';
+                marker.style.pointerEvents = 'none';
+                card.appendChild(marker);
+                
+                // Create label
+                const label = document.createElement('div');
+                label.className = 'mapmarker-label';
+                const labelLines = getMarkerLabelLines(post);
+                if(labelLines.line1){
+                  const line1 = document.createElement('div');
+                  line1.className = 'mapmarker-label-line';
+                  line1.textContent = labelLines.line1;
+                  label.appendChild(line1);
+                }
+                if(labelLines.line2){
+                  const line2 = document.createElement('div');
+                  line2.className = 'mapmarker-label-line';
+                  line2.textContent = labelLines.line2;
+                  label.appendChild(line2);
+                }
+                card.appendChild(label);
+                
+                overlay.appendChild(card);
+                return card;
+              }
+              
+              // Handle map card display modes
+              if(mapCardDisplay === 'hover_only'){
+                // Remove existing cards when switching to hover_only
+                document.querySelectorAll('.small-map-card').forEach(card => {
+                  card.remove();
+                });
+                
+                // Create cards on hover (mapmarker or post card)
+                document.addEventListener('mouseenter', (e) => {
+                  const overlay = e.target.closest('.mapmarker-overlay');
+                  const postCard = e.target.closest('.post-card, .recents-card');
+                  
+                  if(overlay){
+                    const cardId = overlay.dataset && overlay.dataset.id;
+                    if(cardId){
+                      const post = posts && posts.find ? posts.find(x => String(x.id) === cardId) : null;
+                      if(post){
+                        createSmallMapCard(overlay, post);
+                      }
+                    }
+                  } else if(postCard){
+                    const cardId = postCard.dataset && postCard.dataset.id;
+                    if(cardId){
+                      const overlays = findMarkerOverlaysById(cardId);
+                      overlays.forEach(overlay => {
+                        const post = posts && posts.find ? posts.find(x => String(x.id) === cardId) : null;
+                        if(post){
+                          createSmallMapCard(overlay, post);
+                        }
+                      });
+                    }
+                  }
+                }, true);
+              } else if(mapCardDisplay === 'always'){
+                // Create cards for all existing overlays
+                const createCardsForAllOverlays = () => {
+                  document.querySelectorAll('.mapmarker-overlay').forEach(overlay => {
+                    const cardId = overlay.dataset && overlay.dataset.id;
+                    if(cardId){
+                      const post = posts && posts.find ? posts.find(x => String(x.id) === cardId) : null;
+                      if(post && !overlay.querySelector('.small-map-card')){
+                        createSmallMapCard(overlay, post);
+                      }
+                    }
+                  });
+                };
+                
+                // Create cards immediately if posts are loaded
+                if(posts && Array.isArray(posts) && posts.length){
+                  createCardsForAllOverlays();
+                }
+                
+                // Also create cards when new overlays are added
+                if(typeof MutationObserver !== 'undefined'){
+                  const observer = new MutationObserver(() => {
+                    if(mapCardDisplay === 'always'){
+                      createCardsForAllOverlays();
+                    }
+                  });
+                  observer.observe(document.body, { childList: true, subtree: true });
+                }
+              }
+              
               // Add change listeners for map card display radios
               mapCardDisplayRadios.forEach(radio => {
                 radio.addEventListener('change', async () => {
                   if(radio.checked){
-                    mapCardDisplay = radio.value;
+                    const newMode = radio.value;
+                    mapCardDisplay = newMode;
                     document.body.setAttribute('data-map-card-display', mapCardDisplay);
+                    
+                    // Handle mode switching
+                    if(newMode === 'hover_only'){
+                      // Remove all existing cards
+                      document.querySelectorAll('.small-map-card').forEach(card => {
+                        card.remove();
+                      });
+                    } else if(newMode === 'always'){
+                      // Create cards for all existing overlays
+                      document.querySelectorAll('.mapmarker-overlay').forEach(overlay => {
+                        const cardId = overlay.dataset && overlay.dataset.id;
+                        if(cardId){
+                          const post = posts && posts.find ? posts.find(x => String(x.id) === cardId) : null;
+                          if(post && !overlay.querySelector('.small-map-card')){
+                            createSmallMapCard(overlay, post);
+                          }
+                        }
+                      });
+                    }
                     
                     // Auto-save to database
                     try {
@@ -2595,6 +2734,7 @@ async function ensureMapboxCssFor(container) {
                   }
                 });
               });
+              
               
               // Initialize icon folder input
               const iconFolderInput = document.getElementById('adminIconFolder');
@@ -17277,6 +17417,16 @@ function makePosts(){
         activePostId = id;
         selectedVenueKey = null;
         updateSelectedMarkerRing();
+        
+        // Mark active post's map card
+        document.querySelectorAll('.small-map-card').forEach(card => {
+          const cardId = card.dataset && card.dataset.id;
+          if(cardId && String(cardId) === String(id)){
+            card.classList.add('is-active-post');
+          } else {
+            card.classList.remove('is-active-post');
+          }
+        });
 
         if(!fromHistory){
           if(document.body.classList.contains('show-history')){
@@ -17758,6 +17908,11 @@ function makePosts(){
         }
         activePostId = null;
         selectedVenueKey = null;
+        
+        // Remove active post marker from all map cards
+        document.querySelectorAll('.small-map-card.is-active-post').forEach(card => {
+          card.classList.remove('is-active-post');
+        });
         updateSelectedMarkerRing();
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
