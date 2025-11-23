@@ -2721,8 +2721,10 @@ async function ensureMapboxCssFor(container) {
                 
                 // Create small map cards (pill + label) on hover
                 document.addEventListener('mouseenter', (e) => {
-                  const overlay = e.target.closest('.mapmarker-overlay');
-                  const postCard = e.target.closest('.post-card, .recents-card');
+                  const target = e.target && typeof e.target.closest === 'function' ? e.target : null;
+                  if(!target) return;
+                  const overlay = target.closest('.mapmarker-overlay');
+                  const postCard = target.closest('.post-card, .recents-card');
                   
                   if(overlay){
                     const cardId = overlay.dataset && overlay.dataset.id;
@@ -2748,8 +2750,10 @@ async function ensureMapboxCssFor(container) {
                 
                 // Remove small map cards (pill + label) on mouseleave
                 document.addEventListener('mouseleave', (e) => {
-                  const overlay = e.target.closest('.mapmarker-overlay');
-                  const postCard = e.target.closest('.post-card, .recents-card');
+                  const target = e.target && typeof e.target.closest === 'function' ? e.target : null;
+                  if(!target) return;
+                  const overlay = target.closest('.mapmarker-overlay');
+                  const postCard = target.closest('.post-card, .recents-card');
                   
                   if(overlay){
                     const card = overlay.querySelector('.small-map-card');
@@ -3636,7 +3640,7 @@ async function ensureMapboxCssFor(container) {
 
 
     const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
-    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/225x60-pill-#2f3b73.webp';
+    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/225x60-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
