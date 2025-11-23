@@ -1560,7 +1560,7 @@ async function ensureMapboxCssFor(container) {
       return markerLabelPillImagePromise;
     }
     const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
+    const accentUrl = 'assets/icons-30/225x60-pill-2f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl).catch(() => null)
