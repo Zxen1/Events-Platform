@@ -89,6 +89,35 @@
     }
 
 
+/* ============================================================================
+   MAP CARDS - MAPBOX SPRITE SYSTEM
+   ============================================================================
+   
+   IMPORTANT: Map cards (pills) are controlled by Mapbox GL sprite system, NOT DOM img elements.
+   
+   HOW IT WORKS:
+   - Pill images are added to Mapbox as sprites using map.addImage()
+   - Mapbox renders pills directly on the map canvas using symbol layers
+   - The actual pill rendering happens in JavaScript, not CSS
+   
+   TO MODIFY PILL IMAGES:
+   1. Go to index.js, line ~791 (pill provider section)
+   2. Update PILL_BASE_IMAGE_URL for default pill (currently: 150x40-pill-70.webp)
+   3. Update PILL_ACCENT_IMAGE_URL for highlighted/clicked pill (currently: 225x60-pill-2f3b73.webp)
+   4. Update CSS dimensions below to match your image size:
+     - .small-map-card width/height (currently: 225px × 60px)
+     - .mapmarker-pill width/height (currently: 225px × 60px)
+   
+   NOTE: The .mapmarker-pill CSS class is for positioning only - the actual image
+   comes from Mapbox sprites. Changing CSS won't change the pill image itself.
+   
+   REDUNDANT CODE WARNING:
+   - Do NOT try to use DOM img elements or setSmallMapCardPillImage() - this was removed
+   - Only the Mapbox sprite system (index.js lines 791-939) controls pill appearance
+   - See map_card_display_changes.txt for full details on redundant code removal
+   
+   ============================================================================ */
+
 /* Extracted from <style> */
     .mapmarker-overlay{
       position: relative;

@@ -103,3 +103,58 @@ KEY LESSON:
 Look at the WORKING click handlers at line ~19820. Copy that exact pattern. 
 Add mouseenter/mouseleave instead of click. Done. 5 minutes.
 
+================================================================================
+REDUNDANT CODE DISCOVERED AND REMOVED
+================================================================================
+
+DATE: Current session
+STATUS: All redundant code removed - had ZERO visible effect on website
+
+FINDING: Two separate pill image systems existed, but only one actually works.
+
+1. WORKING SYSTEM (Mapbox Sprite System):
+   - Location: index.js lines 791-939
+   - Function: addOrReplacePill() - registered as window.__addOrReplacePill150x40
+   - Purpose: Adds pill images to Mapbox GL as sprites for rendering on map canvas
+   - Used by: Mapbox symbol layers (marker-label and marker-label-highlight)
+   - Constants: PILL_BASE_IMAGE_URL, PILL_ACCENT_IMAGE_URL
+   - This is the ONLY system that actually affects the visible pill on the map
+
+2. REDUNDANT SYSTEM (DOM img Element System) - DELETED:
+   - Location: index.js lines 3386-3434 (now removed)
+   - Constants: SMALL_MAP_CARD_PILL_DEFAULT_SRC, SMALL_MAP_CARD_PILL_HOVER_SRC
+   - Function: setSmallMapCardPillImage(cardEl, highlighted)
+   - Purpose: Attempted to change <img> src attributes in DOM elements
+   - Called from: toggleSmallMapCardHoverHighlight(), updateSelectedMarkerRing()
+   - RESULT: Had ZERO visible effect - changing these values did nothing
+   - ACTION: Completely removed all related code
+
+CODE REMOVED:
+- Constants: SMALL_MAP_CARD_PILL_DEFAULT_SRC, SMALL_MAP_CARD_PILL_HOVER_SRC
+- Function: setSmallMapCardPillImage() (entire function, ~22 lines)
+- Function calls: 5 locations where setSmallMapCardPillImage() was called
+  * toggleSmallMapCardHoverHighlight() - 3 calls removed
+  * updateSelectedMarkerRing() - 2 calls removed
+
+3. REDUNDANT CSS - DELETED:
+   - Location: style.css (removed)
+   - Rule: .small-map-card.is-pill-highlight { background-color: #2e3a72; }
+   - Reason: Pill image replacement handles color change, CSS was redundant
+   - ACTION: Removed CSS rule
+
+KEY DISCOVERY:
+The small map cards use Mapbox sprite rendering, NOT DOM img elements.
+The DOM img system was attempting to manipulate elements that don't exist or
+aren't used for rendering. The actual pill rendering happens through Mapbox's
+sprite system which uses the PILL_ACCENT_IMAGE_URL constant.
+
+IMPORTANT:
+- Only the Mapbox sprite system (lines 791-939) controls pill appearance
+- PILL_ACCENT_IMAGE_URL is the constant that controls the highlighted pill
+- Changed from 150x40-pill-2f3b73.webp to 225x60-pill-2f3b73.webp
+- CSS dimensions updated to match: 225px × 60px (was 150px × 40px)
+
+LESSON LEARNED:
+When code has zero visible effect, it's likely redundant or broken.
+Always test changes to confirm they actually work before assuming they're correct.
+
