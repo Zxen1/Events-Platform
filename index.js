@@ -1833,24 +1833,44 @@ let __notifyMapOnInteraction = null;
       }
       const meta = markerLabelCompositeStore.get(spriteId);
       if(!meta){
-        return null;
+        const placeholderSize = isAccent ? (accentPillWidthPx !== null ? accentPillWidthPx : basePillWidthPx) : basePillWidthPx;
+        const placeholderHeight = isAccent ? (accentPillHeightPx !== null ? accentPillHeightPx : basePillHeightPx) : basePillHeightPx;
+        markerLabelCompositePlaceholderIds.add(id);
+        return {
+          image: createTransparentPlaceholder(placeholderSize, placeholderHeight),
+          options: { pixelRatio: 1 }
+        };
       }
       const assets = await ensureMarkerLabelCompositeAssets(targetMap, spriteId, meta);
       const updatedMeta = markerLabelCompositeStore.get(spriteId) || assets.meta || meta;
       if(isAccent){
         const image = updatedMeta && (updatedMeta.highlightImage || updatedMeta.image);
-        return {
-          image,
-          options: updatedMeta.highlightOptions || updatedMeta.options || {}
-        };
+        if(image){
+          if(markerLabelCompositePlaceholderIds.has(id)){
+            markerLabelCompositePlaceholderIds.delete(id);
+          }
+          return {
+            image,
+            options: updatedMeta.highlightOptions || updatedMeta.options || {}
+          };
+        }
       }
       if(updatedMeta && updatedMeta.image){
+        if(markerLabelCompositePlaceholderIds.has(id)){
+          markerLabelCompositePlaceholderIds.delete(id);
+        }
         return {
           image: updatedMeta.image,
           options: updatedMeta.options || {}
         };
       }
-      return null;
+      const placeholderSize = isAccent ? (accentPillWidthPx !== null ? accentPillWidthPx : basePillWidthPx) : basePillWidthPx;
+      const placeholderHeight = isAccent ? (accentPillHeightPx !== null ? accentPillHeightPx : basePillHeightPx) : basePillHeightPx;
+      markerLabelCompositePlaceholderIds.add(id);
+      return {
+        image: createTransparentPlaceholder(placeholderSize, placeholderHeight),
+        options: { pixelRatio: 1 }
+      };
     }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
