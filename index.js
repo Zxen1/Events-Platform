@@ -19380,8 +19380,12 @@ function makePosts(){
         updateSelectedMarkerRing();
       };
 
-      // Add hover handlers for marker-label layers
-      MARKER_INTERACTIVE_LAYERS.forEach(layer => {
+      // Add hover handlers - only for base map card area (marker-icon and marker-label, NOT accent)
+      // If base card is hidden (hover_only), only marker-icon triggers hover
+      const baseHoverLayers = mapCardDisplay === 'hover_only' 
+        ? ['marker-icon'] 
+        : ['marker-icon', 'marker-label'];
+      baseHoverLayers.forEach(layer => {
         map.on('mouseenter', layer, handleMarkerHover);
         map.on('mouseleave', layer, handleMarkerHoverEnd);
       });
