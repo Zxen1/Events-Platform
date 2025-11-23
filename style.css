@@ -289,6 +289,15 @@
       margin-top: 0;
       color: #d0d0d0;
     }
+    .marker-hover-overlay,
+    .marker-expanded-overlay{
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .marker-expanded-overlay{
+      z-index: 1001;
+    }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }

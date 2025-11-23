@@ -3471,21 +3471,30 @@ async function ensureMapboxCssFor(container) {
 
     function updateExpandedMapCards(){
       const currentOpenId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
-      document.querySelectorAll('.small-map-card').forEach(card => {
-        const cardId = card.dataset && card.dataset.id ? String(card.dataset.id) : '';
-        if(cardId && cardId === currentOpenId){
-          if(!card.classList.contains('is-expanded')){
-            const post = posts.find(x => String(x.id) === cardId);
-            if(post){
+      markerExpandedOverlays.forEach((overlay, id) => {
+        if(id === currentOpenId){
+          const post = posts.find(x => String(x.id) === id);
+          if(post && post.location){
+            const point = map.project([post.location.lng, post.location.lat]);
+            overlay.style.left = `${point.x}px`;
+            overlay.style.top = `${point.y}px`;
+            overlay.style.display = 'block';
+            const card = overlay.querySelector('.small-map-card');
+            if(card && !card.classList.contains('is-expanded')){
               expandSmallMapCard(card, post);
             }
           }
         } else {
-          if(card.classList.contains('is-expanded')){
-            collapseSmallMapCard(card);
-          }
+          hideMarkerExpandedOverlay(id);
         }
       });
+      if(currentOpenId){
+        const post = posts.find(x => String(x.id) === currentOpenId);
+        if(post && post.location){
+          const point = map.project([post.location.lng, post.location.lat]);
+          showMarkerExpandedOverlay(currentOpenId, post, point.x, point.y);
+        }
+      }
     }
 
     function setupSmallMapCardHoverThumbnail(cardEl, post){
@@ -3506,6 +3515,151 @@ async function ensureMapboxCssFor(container) {
       if(thumbImg.src !== thumbSrc){
         thumbImg.src = thumbSrc;
       }
+    }
+
+    const markerHoverOverlays = new Map();
+    const markerExpandedOverlays = new Map();
+
+    function showMarkerHoverOverlay(id, post, x, y){
+      if(!id || !post || !map || !mapEl) return;
+      const strId = String(id);
+      let overlay = markerHoverOverlays.get(strId);
+      const mapRect = mapEl.getBoundingClientRect();
+      const absoluteX = mapRect.left + x;
+      const absoluteY = mapRect.top + y;
+      
+      if(!overlay){
+        overlay = document.createElement('div');
+        overlay.className = 'marker-hover-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '1000';
+        document.body.appendChild(overlay);
+        markerHoverOverlays.set(strId, overlay);
+      }
+      overlay.style.left = `${absoluteX}px`;
+      overlay.style.top = `${absoluteY}px`;
+      overlay.style.transform = 'translate(-20px, -20px)';
+      overlay.style.display = 'block';
+      
+      let card = overlay.querySelector('.small-map-card');
+      if(!card){
+        card = document.createElement('div');
+        card.className = 'small-map-card';
+        card.dataset.id = strId;
+        overlay.appendChild(card);
+        
+        const pill = document.createElement('img');
+        pill.className = 'mapmarker-pill';
+        pill.src = SMALL_MAP_CARD_PILL_HOVER_SRC;
+        pill.style.width = '150px';
+        pill.style.height = '40px';
+        pill.style.objectFit = 'contain';
+        pill.style.position = 'absolute';
+        pill.style.left = '0';
+        pill.style.top = '0';
+        pill.style.width = '225px';
+        pill.style.height = '60px';
+        pill.style.transform = 'scale(0.6667)';
+        pill.style.transformOrigin = 'top left';
+        card.appendChild(pill);
+        
+        const thumb = document.createElement('img');
+        thumb.className = 'small-map-card-thumb';
+        thumb.src = thumbUrl(post);
+        thumb.style.width = '30px';
+        thumb.style.height = '30px';
+        thumb.style.borderRadius = '50%';
+        thumb.style.objectFit = 'cover';
+        thumb.style.boxShadow = '0 2px 6px rgba(0,0,0,0.35)';
+        thumb.style.position = 'absolute';
+        thumb.style.left = '5px';
+        thumb.style.top = '5px';
+        thumb.style.zIndex = '2';
+        thumb.style.opacity = '1';
+        thumb.style.visibility = 'visible';
+        card.appendChild(thumb);
+      }
+      setupSmallMapCardHoverThumbnail(card, post);
+    }
+
+    function hideMarkerHoverOverlay(id){
+      if(!id) return;
+      const strId = String(id);
+      const overlay = markerHoverOverlays.get(strId);
+      if(overlay){
+        overlay.style.display = 'none';
+      }
+    }
+
+    function showMarkerExpandedOverlay(id, post, x, y){
+      if(!id || !post || !map || !mapEl) return;
+      const strId = String(id);
+      hideMarkerHoverOverlay(id);
+      
+      let overlay = markerExpandedOverlays.get(strId);
+      const mapRect = mapEl.getBoundingClientRect();
+      const absoluteX = mapRect.left + x;
+      const absoluteY = mapRect.top + y;
+      
+      if(!overlay){
+        overlay = document.createElement('div');
+        overlay.className = 'marker-expanded-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '1001';
+        document.body.appendChild(overlay);
+        markerExpandedOverlays.set(strId, overlay);
+      }
+      overlay.style.left = `${absoluteX}px`;
+      overlay.style.top = `${absoluteY}px`;
+      overlay.style.transform = 'translate(-30px, -30px)';
+      overlay.style.display = 'block';
+      
+      let card = overlay.querySelector('.small-map-card');
+      if(!card){
+        card = document.createElement('div');
+        card.className = 'small-map-card is-expanded';
+        card.dataset.id = strId;
+        overlay.appendChild(card);
+      } else {
+        card.classList.add('is-expanded');
+      }
+      expandSmallMapCard(card, post);
+    }
+
+    function hideMarkerExpandedOverlay(id){
+      if(!id) return;
+      const strId = String(id);
+      const overlay = markerExpandedOverlays.get(strId);
+      if(overlay){
+        overlay.style.display = 'none';
+        const card = overlay.querySelector('.small-map-card');
+        if(card){
+          card.classList.remove('is-expanded');
+        }
+      }
+    }
+
+    function updateMarkerOverlayPositions(){
+      if(!map || !mapEl) return;
+      const mapRect = mapEl.getBoundingClientRect();
+      markerHoverOverlays.forEach((overlay, id) => {
+        if(overlay.style.display === 'none') return;
+        const post = posts.find(x => String(x.id) === id);
+        if(!post || !post.location) return;
+        const point = map.project([post.location.lng, post.location.lat]);
+        overlay.style.left = `${mapRect.left + point.x}px`;
+        overlay.style.top = `${mapRect.top + point.y}px`;
+      });
+      markerExpandedOverlays.forEach((overlay, id) => {
+        if(overlay.style.display === 'none') return;
+        const post = posts.find(x => String(x.id) === id);
+        if(!post || !post.location) return;
+        const point = map.project([post.location.lng, post.location.lat]);
+        overlay.style.left = `${mapRect.left + point.x}px`;
+        overlay.style.top = `${mapRect.top + point.y}px`;
+      });
     }
 
     function enforceSmallMultiMapCardIcon(img, overlayEl){
@@ -17436,13 +17590,7 @@ function makePosts(){
             const exId = ex.dataset && ex.dataset.id;
             // Collapse expanded map cards for the previous post
             if(exId){
-              const overlays = findMarkerOverlaysById(String(exId));
-              overlays.forEach(overlay => {
-                const card = overlay.querySelector('.small-map-card');
-                if(card){
-                  collapseSmallMapCard(card);
-                }
-              });
+              hideMarkerExpandedOverlay(exId);
             }
             // Preserve the existing card from the open post instead of creating a new one
             const existingCard = ex.querySelector('.post-card, .recents-card');
@@ -19019,6 +19167,7 @@ if (!map.__pillHooksInstalled) {
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         };
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
+        ['move','zoom','rotate','pitch'].forEach(ev => map.on(ev, updateMarkerOverlayPositions));
         map.on('dragend', clearMapGeocoder);
         map.on('click', clearMapGeocoder);
         map.on('touchstart', () => requestAnimationFrame(blurAllGeocoderInputs));
@@ -19475,16 +19624,11 @@ if (!map.__pillHooksInstalled) {
             activePostId = id;
             selectedVenueKey = venueKey;
             updateSelectedMarkerRing();
-            const overlays = findMarkerOverlaysById(String(id));
-            overlays.forEach(overlay => {
-              const card = overlay.querySelector('.small-map-card');
-              if(card){
-                const post = posts.find(x => String(x.id) === String(id));
-                if(post){
-                  expandSmallMapCard(card, post);
-                }
-              }
-            });
+            const p = posts.find(x => x.id === id);
+            if(p && p.location){
+              const point = map.project([p.location.lng, p.location.lat]);
+              showMarkerExpandedOverlay(id, p, point.x, point.y);
+            }
           }
           const coords = f.geometry && f.geometry.coordinates;
           const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
@@ -19495,14 +19639,9 @@ if (!map.__pillHooksInstalled) {
           if(touchClick){
             touchMarker = id;
             const p = posts.find(x=>x.id===id);
-            if(p){
-              const overlays = findMarkerOverlaysById(String(id));
-              overlays.forEach(overlay => {
-                const card = overlay.querySelector('.small-map-card');
-                if(card){
-                  expandSmallMapCard(card, p);
-                }
-              });
+            if(p && p.location){
+              const point = map.project([p.location.lng, p.location.lat]);
+              showMarkerExpandedOverlay(id, p, point.x, point.y);
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
                   try{
@@ -19533,14 +19672,9 @@ if (!map.__pillHooksInstalled) {
             });
           } else {
             const p = posts.find(x=>x.id===id);
-            if(p){
-              const overlays = findMarkerOverlaysById(String(id));
-              overlays.forEach(overlay => {
-                const card = overlay.querySelector('.small-map-card');
-                if(card){
-                  expandSmallMapCard(card, p);
-                }
-              });
+            if(p && p.location){
+              const point = map.project([p.location.lng, p.location.lat]);
+              showMarkerExpandedOverlay(id, p, point.x, point.y);
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
                   try{
@@ -19597,13 +19731,28 @@ if (!map.__pillHooksInstalled) {
 
       updateSelectedMarkerRing();
 
-      // Set pointer cursor when hovering over markers
+      // Set pointer cursor when hovering over markers and handle hover effects
+      const hoveredMarkerId = { current: null };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => {
-        map.on('mouseenter', layer, () => {
+        map.on('mouseenter', layer, (e) => {
           map.getCanvas().style.cursor = 'pointer';
+          const f = e.features && e.features[0];
+          if(f && f.properties && f.properties.id !== undefined){
+            const id = f.properties.id;
+            hoveredMarkerId.current = id;
+            const post = posts.find(x => x.id === id);
+            if(post){
+              const point = map.project(e.lngLat);
+              showMarkerHoverOverlay(id, post, point.x, point.y);
+            }
+          }
         });
         map.on('mouseleave', layer, () => {
           map.getCanvas().style.cursor = 'grab';
+          if(hoveredMarkerId.current !== null){
+            hideMarkerHoverOverlay(hoveredMarkerId.current);
+            hoveredMarkerId.current = null;
+          }
         });
       });
 
