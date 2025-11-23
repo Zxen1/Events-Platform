@@ -212,16 +212,6 @@
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }
-    .mapmarker-overlay:hover .small-map-card{
-      background-color: #2e3a72;
-      transition: none;
-    }
-    /* Hide small map cards when hover_only mode is active (unless highlighted/clicked/hovered) */
-    body[data-map-card-display="hover_only"] .mapmarker-overlay:not(:hover):not(:has(.small-map-card.is-pill-highlight)):not(:has(.small-map-card.is-expanded)) .small-map-card{
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
     .mapmarker-label{
       position: relative;
       left: auto;

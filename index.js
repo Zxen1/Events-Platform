@@ -824,9 +824,40 @@ let __notifyMapOnInteraction = null;
 
 // Extracted from <script>
 
+  async function ensureMapboxCssFor(container) {
+    const ver = (window.MAPBOX_VERSION || "v3.15.0").replace(/^v/,'v');
+    const cssHref = `https://api.mapbox.com/mapbox-gl-js/${ver}/mapbox-gl.css`;
+
+    const doc = (container && container.ownerDocument) || document;
+    const root = container && container.getRootNode && container.getRootNode();
+
+    // For Shadow DOM maps, inject right into the shadow root
+    if (root && root.host && typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot) {
+      if (!root.querySelector('style[data-mapbox-gl]')) {
+        const s = document.createElement('style');
+        s.setAttribute('data-mapbox-gl','');
+        s.textContent = `@import url('${cssHref}');`;
+        root.prepend(s);
+      }
+      return;
+    }
+
+    // Normal document (or iframe document)
+    let link = doc.getElementById('mapbox-gl-css');
+    if (!link) {
+      link = doc.createElement('link');
+      link.id = 'mapbox-gl-css';
+      link.rel = 'stylesheet';
+      link.href = cssHref;
+      doc.head.appendChild(link);
+    }
+    if (link.sheet) return;
+    await new Promise(res => link.addEventListener('load', res, { once: true }));
+  }
+
   (async () => {
     try {
-      await window.MapModule.ensureMapboxCssFor(document.body);
+      await ensureMapboxCssFor(document.body);
     } catch(e){}
   })();
 
@@ -17622,7 +17653,7 @@ function makePosts(){
             if(settled){
               return;
             }
-            Promise.resolve(window.MapModule.ensureMapboxCssFor(document.body))
+            Promise.resolve(ensureMapboxCssFor(document.body))
               .catch(()=>{})
               .then(() => {
                 if(settled){
@@ -18238,7 +18269,7 @@ function makePosts(){
         return;
       }
       try{
-        await window.MapModule.ensureMapboxCssFor(document.body);
+        await ensureMapboxCssFor(document.body);
       }catch(err){}
       // Validate Mapbox token before initialization
       if(!MAPBOX_TOKEN || typeof MAPBOX_TOKEN !== 'string' || MAPBOX_TOKEN.trim() === ''){
