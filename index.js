@@ -1025,6 +1025,8 @@ let __notifyMapOnInteraction = null;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
+  const markerLabelAccentWidthPx = 477;
+  const markerLabelAccentHeightPx = 214;
   const markerLabelTextGapPx = 5;
   const markerLabelMarkerInsetPx = 5;
   const markerLabelTextRightPaddingPx = 5;
@@ -1460,16 +1462,22 @@ let __notifyMapOnInteraction = null;
     return markerLabelPillImagePromise;
   }
 
-  function computeMarkerLabelCanvasDimensions(sourceImage){
-    const rawWidth = sourceImage && (sourceImage.naturalWidth || sourceImage.width)
-      ? (sourceImage.naturalWidth || sourceImage.width)
-      : markerLabelBackgroundWidthPx;
-    const rawHeight = sourceImage && (sourceImage.naturalHeight || sourceImage.height)
-      ? (sourceImage.naturalHeight || sourceImage.height)
-      : markerLabelBackgroundHeightPx;
-    const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
-    const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
-    const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
+  function computeMarkerLabelCanvasDimensions(sourceImage, explicitWidth, explicitHeight, baseWidth){
+    if(!sourceImage){
+      throw new Error('computeMarkerLabelCanvasDimensions: sourceImage is required');
+    }
+    if(explicitWidth === undefined || explicitWidth === null || !Number.isFinite(explicitWidth) || explicitWidth <= 0){
+      throw new Error('computeMarkerLabelCanvasDimensions: explicitWidth must be a positive number');
+    }
+    if(explicitHeight === undefined || explicitHeight === null || !Number.isFinite(explicitHeight) || explicitHeight <= 0){
+      throw new Error('computeMarkerLabelCanvasDimensions: explicitHeight must be a positive number');
+    }
+    if(baseWidth === undefined || baseWidth === null || !Number.isFinite(baseWidth) || baseWidth <= 0){
+      throw new Error('computeMarkerLabelCanvasDimensions: baseWidth must be a positive number');
+    }
+    const canvasWidth = Math.round(explicitWidth);
+    const canvasHeight = Math.round(explicitHeight);
+    const pixelRatio = canvasWidth / baseWidth;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
@@ -1490,11 +1498,11 @@ let __notifyMapOnInteraction = null;
     ctx.restore();
   }
 
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha, explicitWidth, explicitHeight, baseWidth){
     if(!sourceImage){
       return null;
     }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, explicitWidth, explicitHeight, baseWidth);
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
@@ -1552,11 +1560,11 @@ let __notifyMapOnInteraction = null;
     if(!assets.highlight){
       return null;
     }
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx, markerLabelBackgroundWidthPx);
     if(!baseSprite){
       return null;
     }
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
+    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, markerLabelAccentWidthPx, markerLabelAccentHeightPx, markerLabelBackgroundWidthPx);
     if(!accentSprite){
       return null;
     }
@@ -1593,7 +1601,8 @@ let __notifyMapOnInteraction = null;
         iconImg = null;
       }
     }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg, markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx, markerLabelBackgroundWidthPx);
+    const accentDims = pillAccentImg ? computeMarkerLabelCanvasDimensions(pillAccentImg, markerLabelAccentWidthPx, markerLabelAccentHeightPx, markerLabelBackgroundWidthPx) : null;
     let deviceScale = 1;
     try{
       const ratio = window.devicePixelRatio;
@@ -1608,6 +1617,8 @@ let __notifyMapOnInteraction = null;
     }
     const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
     const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
+    const scaledAccentCanvasWidth = accentDims ? Math.max(1, Math.round(accentDims.canvasWidth * deviceScale)) : scaledCanvasWidth;
+    const scaledAccentCanvasHeight = accentDims ? Math.max(1, Math.round(accentDims.canvasHeight * deviceScale)) : scaledCanvasHeight;
     const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
     const labelLines = [];
     const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
@@ -1662,20 +1673,20 @@ let __notifyMapOnInteraction = null;
         ctx.shadowColor = 'transparent';
       }
     };
-    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1) => {
+    const buildComposite = (backgroundImage, tintColor, tintAlpha, compositeWidth, compositeHeight) => {
       if(!backgroundImage){
         return null;
       }
       const canvas = document.createElement('canvas');
-      canvas.width = scaledCanvasWidth;
-      canvas.height = scaledCanvasHeight;
+      canvas.width = compositeWidth;
+      canvas.height = compositeHeight;
       const ctx = canvas.getContext('2d');
       if(!ctx){
         return null;
       }
-      ctx.clearRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      ctx.clearRect(0, 0, compositeWidth, compositeHeight);
       try{
-        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, compositeWidth, compositeHeight);
       }catch(err){
         console.error(err);
       }
@@ -1683,14 +1694,14 @@ let __notifyMapOnInteraction = null;
         ctx.globalCompositeOperation = 'source-atop';
         ctx.globalAlpha = tintAlpha;
         ctx.fillStyle = tintColor;
-        ctx.fillRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        ctx.fillRect(0, 0, compositeWidth, compositeHeight);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
       }
       drawForeground(ctx);
       let imageData = null;
       try{
-        imageData = ctx.getImageData(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        imageData = ctx.getImageData(0, 0, compositeWidth, compositeHeight);
       }catch(err){
         console.error(err);
         imageData = null;
@@ -1703,10 +1714,10 @@ let __notifyMapOnInteraction = null;
         options: { pixelRatio: Number.isFinite(scaledPixelRatio) && scaledPixelRatio > 0 ? scaledPixelRatio : 1 }
       };
     };
-    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, scaledCanvasWidth, scaledCanvasHeight);
     let accentComposite = null;
-    if(pillAccentImg){
-      accentComposite = buildComposite(pillAccentImg, null, 1);
+    if(pillAccentImg && accentDims){
+      accentComposite = buildComposite(pillAccentImg, null, 1, scaledAccentCanvasWidth, scaledAccentCanvasHeight);
     }
     if(!baseComposite){
       return null;
