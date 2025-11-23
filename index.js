@@ -7070,7 +7070,18 @@ function makePosts(){
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
-        MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
+        // Exclude marker-icon from visibility changes - it's "god" and must always be visible
+        MARKER_LAYER_IDS.forEach(id => {
+          if(id !== 'marker-icon'){
+            setLayerVisibility(id, shouldShowMarkers);
+          }
+        });
+        // CRITICAL: Ensure marker-icon is always visible regardless of zoom level
+        if(map && map.getLayer('marker-icon')){
+          try{
+            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+          }catch(e){}
+        }
         markerLayersVisible = shouldShowMarkers;
       }
       if(balloonLayersVisible !== shouldShowBalloons){
@@ -18498,7 +18509,8 @@ function makePosts(){
                   'icon-anchor': 'center',
                   'icon-pitch-alignment': 'viewport',
                   'symbol-z-order': 'viewport-y',
-                  'symbol-sort-key': 1000
+                  'symbol-sort-key': 1000,
+                  'visibility': 'visible'
                 },
                 paint:{
                   'icon-opacity': 1
@@ -18509,6 +18521,8 @@ function makePosts(){
               // This layer is "god" and must always be visible regardless of map card display mode
               try{
                 map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+                map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+                map.setLayoutProperty('marker-icon', 'icon-size', 1);
               }catch(e){}
               // Also call updateMapCardLayerOpacity to ensure it stays at 1
               if(typeof window.updateMapCardLayerOpacity === 'function'){
@@ -18521,6 +18535,8 @@ function makePosts(){
                 // CRITICAL: Force marker-icon layer opacity to 1 immediately
                 try{
                   map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+                  map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+                  map.setLayoutProperty('marker-icon', 'icon-size', 1);
                 }catch(e){}
                 // Also call updateMapCardLayerOpacity to ensure it stays at 1
                 if(typeof window.updateMapCardLayerOpacity === 'function'){
@@ -19182,7 +19198,7 @@ function makePosts(){
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
+      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0.5 : 1; // TEST: Set to 0.5 to see if marker-icon is linked
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
@@ -19255,7 +19271,7 @@ function makePosts(){
       
       function updateMapCardLayerOpacity(displayMode){
         if(!map) return;
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
+        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0.5 : 1; // TEST: Set to 0.5 to see if marker-icon is linked
         const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
         const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
         if(map.getLayer('marker-label')){
@@ -19268,6 +19284,9 @@ function makePosts(){
           try{ 
             // Force opacity to 1 regardless of display mode
             map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+            // Also ensure visibility is set
+            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+            map.setLayoutProperty('marker-icon', 'icon-size', 1);
           }catch(e){
             // Silently fail - layer might not be ready yet
           }
@@ -19285,9 +19304,17 @@ function makePosts(){
         if(map && map.getLayer('marker-icon')){
           try{
             const currentOpacity = map.getPaintProperty('marker-icon', 'icon-opacity');
-            // If opacity is not 1, force it to 1 (marker-icon is "god" and must always be visible)
-            if(currentOpacity !== 1){
+            const currentVisibility = map.getLayoutProperty('marker-icon', 'visibility');
+            const currentIconSize = map.getLayoutProperty('marker-icon', 'icon-size');
+            // If any property is wrong, force them all to correct values (marker-icon is "god" and must always be visible)
+            if(currentOpacity !== 1 || currentVisibility !== 'visible' || currentIconSize !== 1){
               map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+              if(currentVisibility !== 'visible'){
+                map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+              }
+              if(currentIconSize !== 1){
+                map.setLayoutProperty('marker-icon', 'icon-size', 1);
+              }
             }
           }catch(e){}
         }
