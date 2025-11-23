@@ -1406,8 +1406,9 @@ async function ensureMapboxCssFor(container) {
     });
   }
 
-  // MULTI-VENUE POSTS: Provides pill images as building blocks for composite sprites
-  // These images are composited with icons/text by createMarkerLabelCompositeTextures()
+  // UNIFIED PILL SYSTEM: Provides pill images for both single and multi-venue markers
+  // Single-venue: Uses these images directly via ensureMarkerLabelPillSprites()
+  // Multi-venue: These images are composited with icons/text by createMarkerLabelCompositeTextures()
   // to create unique sprites for each multi-venue marker (marker-label-composite-{spriteId})
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
@@ -1700,7 +1701,7 @@ async function ensureMapboxCssFor(container) {
     markerLabelCompositeStore.set(labelSpriteId, nextMeta);
     return {
       base: baseComposite,
-      highlight: highlightComposite,
+      highlight: accentComposite,
       meta: nextMeta
     };
   }
