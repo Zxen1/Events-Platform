@@ -793,7 +793,7 @@ if (typeof slugify !== 'function') {
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
   const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40-pill-70.webp';
-  const PILL_ACCENT_IMAGE_URL = 'funmap-logo-big.png';
+  const PILL_ACCENT_IMAGE_URL = 'assets/funmap-logo-big.png';
   let cachedImages = null;
   let loadingTask = null;
   const pendingMaps = new Set();
@@ -864,13 +864,19 @@ if (typeof slugify !== 'function') {
       cachedImages = null;
       return;
     }
-    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
-    let highlight = null;
-    if(accentImage){
-      highlight = tintImage(accentImage, null, 1) || accentImage;
+    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9);
+    if(!tintedBase){
+      cachedImages = null;
+      return;
     }
+    if(!accentImage){
+      cachedImages = null;
+      return;
+    }
+    const highlight = tintImage(accentImage, null, 1);
     if(!highlight){
-      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
+      cachedImages = null;
+      return;
     }
     cachedImages = { base: tintedBase, accent: highlight };
   }
@@ -912,8 +918,6 @@ if (typeof slugify !== 'function') {
           pendingMaps.forEach((map) => applyImageToMap(map));
         }
       }
-    }).catch(() => {
-      cachedImages = null;
     }).finally(() => {
       pendingMaps.clear();
       loadingTask = null;
@@ -1560,18 +1564,18 @@ async function ensureMapboxCssFor(container) {
       return markerLabelPillImagePromise;
     }
     const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'funmap-logo-big.png';
+    const accentUrl = 'assets/funmap-logo-big.png';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl).catch(() => null)
+      loadMarkerLabelImage(accentUrl)
     ]).then(([baseImg, accentImg]) => {
       if(!baseImg){
         return null;
       }
+      if(!accentImg){
+        return null;
+      }
       return { base: baseImg, highlight: accentImg };
-    }).catch(err => {
-      console.error(err);
-      return null;
     });
     markerLabelPillImagePromise = promise;
     promise.then(result => {
@@ -1673,20 +1677,20 @@ async function ensureMapboxCssFor(container) {
     if(!assets || !assets.base){
       return null;
     }
+    if(!assets.highlight){
+      return null;
+    }
     const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
-    let accentSprite = null;
-    if(assets.highlight){
-      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
-    }
-    if(!accentSprite){
-      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1);
-    }
     if(!baseSprite){
+      return null;
+    }
+    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
+    if(!accentSprite){
       return null;
     }
     markerLabelPillSpriteCache = {
       base: baseSprite,
-      highlight: accentSprite || baseSprite
+      highlight: accentSprite
     };
     return markerLabelPillSpriteCache;
   }
