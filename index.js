@@ -19080,19 +19080,6 @@ function makePosts(){
           markerIconLayerExists = !!map.getLayer(markerIconLayerId);
         }
       }
-      if(markerIconLayerExists){
-        try{ map.setFilter(markerIconLayerId, markerIconFilter); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'icon-image', markerIconImageExpression); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'icon-size', 1); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'icon-allow-overlap', true); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'icon-anchor','center'); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'symbol-z-order','viewport-y'); }catch(e){}
-        try{ map.setLayoutProperty(markerIconLayerId,'symbol-sort-key', 1000); }catch(e){}
-        try{ map.setPaintProperty(markerIconLayerId,'icon-opacity', 1); }catch(e){}
-        try{ map.setLayerZoomRange(markerIconLayerId, MARKER_MIN_ZOOM, 24); }catch(e){}
-      }
       
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
