@@ -2477,6 +2477,9 @@ async function ensureMapboxCssFor(container) {
           mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
+      // Set initial map card display state
+      document.body.setAttribute('data-map-card-display', mapCardDisplay);
+      
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
