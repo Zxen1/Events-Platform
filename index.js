@@ -2982,6 +2982,7 @@ let __notifyMapOnInteraction = null;
     let markerFeatureIndex = new Map();
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
+    let hoveredPostIds = [];
     function updateMapFeatureHighlights(targets){
       const input = Array.isArray(targets) ? targets : [targets];
       const seen = new Set();
@@ -3344,7 +3345,8 @@ let __notifyMapOnInteraction = null;
         fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
       }
       const idsToHighlight = Array.from(new Set([
-        fallbackId
+        fallbackId,
+        ...hoveredPostIds.map(entry => entry.id)
       ].filter(Boolean)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
@@ -3370,6 +3372,17 @@ let __notifyMapOnInteraction = null;
         // Don't highlight open post cards - they should maintain their #1f2750 background
         const preferredVenue = globalVenueKey;
         const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
+        const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
+        if(!targetSeen.has(dedupeKey)){
+          targetSeen.add(dedupeKey);
+          highlightTargets.push({ id: strId, venueKey: normalizedVenue || null });
+        }
+      });
+      // Also include hovered posts with their venue keys
+      hoveredPostIds.forEach(entry => {
+        if(!entry || !entry.id) return;
+        const strId = String(entry.id);
+        const normalizedVenue = entry.venueKey ? String(entry.venueKey).trim() : '';
         const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
         if(!targetSeen.has(dedupeKey)){
           targetSeen.add(dedupeKey);
@@ -19099,6 +19112,53 @@ function makePosts(){
           }
           const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiVenue ? 2 : 0);
           const isMultiPost = helperMultiCount > 1;
+          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
+          
+          if(touchClick){
+            // Two-tap system: first tap shows accent pill, second tap opens post
+            if(touchMarker === id){
+              // Second tap on same marker - open the post
+              touchMarker = null;
+              hoveredPostIds = [];
+              if(id !== undefined && id !== null){
+                activePostId = id;
+                selectedVenueKey = venueKey;
+                updateSelectedMarkerRing();
+              }
+              const p = posts.find(x=>x.id===id);
+              if(p){
+                callWhenDefined('openPost', (fn)=>{
+                  requestAnimationFrame(() => {
+                    try{
+                      stopSpin();
+                      if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                        try{ closePanel(filterPanel); }catch(err){}
+                      }
+                      fn(id, false, true, null);
+                    }catch(err){ console.error(err); }
+                  });
+                });
+              }
+              if(isMultiPost){
+                autoOpenPostBoardForMultiPost({
+                  multiIds: normalizedMultiIds,
+                  multiCount: helperMultiCount,
+                  trigger: 'touch'
+                });
+              }
+              return;
+            } else {
+              // First tap - show accent pill, don't open
+              touchMarker = id;
+              if(id !== undefined && id !== null){
+                hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+                updateSelectedMarkerRing();
+              }
+              return;
+            }
+          }
+          
+          // Non-touch: open immediately
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
@@ -19109,33 +19169,6 @@ function makePosts(){
           const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const targetLngLat = baseLngLat || (e ? e.lngLat : null);
-          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
-          if(touchClick){
-            touchMarker = id;
-            const p = posts.find(x=>x.id===id);
-            if(p){
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                      try{ closePanel(filterPanel); }catch(err){}
-                    }
-                    fn(id, false, true, null);
-                  }catch(err){ console.error(err); }
-                });
-              });
-            }
-            if(isMultiPost){
-              autoOpenPostBoardForMultiPost({
-                multiIds: normalizedMultiIds,
-                multiCount: helperMultiCount,
-                trigger: 'touch'
-              });
-            }
-            return;
-          }
           if(isMultiPost){
             autoOpenPostBoardForMultiPost({
               multiIds: normalizedMultiIds,
@@ -19192,6 +19225,15 @@ function makePosts(){
         if(!feats.length){
           updateSelectedMarkerRing();
           touchMarker = null;
+          hoveredPostIds = [];
+          updateSelectedMarkerRing();
+        } else {
+          const clickedMarkerLabel = feats.some(f => MARKER_INTERACTIVE_LAYERS.includes(f.layer && f.layer.id));
+          if(!clickedMarkerLabel){
+            touchMarker = null;
+            hoveredPostIds = [];
+            updateSelectedMarkerRing();
+          }
         }
       });
 
@@ -19206,6 +19248,31 @@ function makePosts(){
           map.getCanvas().style.cursor = 'grab';
         });
       });
+
+      // Handle hover/tap to show accent pill
+      const handleMarkerHover = (e) => {
+        const f = e.features && e.features[0];
+        if(!f) return;
+        const props = f.properties || {};
+        const id = props.id;
+        const venueKey = props.venueKey || null;
+        if(id !== undefined && id !== null){
+          hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+          updateSelectedMarkerRing();
+        }
+      };
+
+      const handleMarkerHoverEnd = (e) => {
+        hoveredPostIds = [];
+        updateSelectedMarkerRing();
+      };
+
+      // Add hover handlers for marker-label layers
+      MARKER_INTERACTIVE_LAYERS.forEach(layer => {
+        map.on('mouseenter', layer, handleMarkerHover);
+        map.on('mouseleave', layer, handleMarkerHoverEnd);
+      });
+
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
         postSourceEventsBound = true;
