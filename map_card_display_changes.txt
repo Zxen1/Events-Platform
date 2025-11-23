@@ -1,0 +1,66 @@
+MAP CARD DISPLAY FEATURE - CHANGES APPROVED
+============================================
+
+1. Z-INDEX VALUES UPDATED
+   - map = 0
+   - default small map card pill = 1
+   - hover/big map card pill = 2
+   - mapmarker icon = 3
+   - mapcard thumbnail = 4
+   - small map card label = 5
+   - big map card label = 6 (future feature)
+   - Updated z-index reference table in style.css
+
+2. HOVER PILL IMAGE
+   - Changed from 150x40-pill-2f3b73.webp to 225x60-pill-#2f3b73.webp
+   - Scales to 150x40 using transform: scale(0.6667)
+   - Replaces default pill on hover
+   - Preloaded once globally (not per card) for instant hover with no delay
+   - Seamless color change with identical sizing (no flicker)
+
+3. THUMBNAIL ON HOVER
+   - Thumbnail loads on hover
+   - Replaces mapmarker icon only after thumbnail has fully loaded (no flicker)
+   - Thumbnail: 30px × 30px, circular (border-radius: 50%), matches mapmarker position exactly
+   - Uses object-fit: cover to fill circle properly
+
+4. HOVER_ONLY MODE
+   - No map cards preloaded
+   - Default pill never seen (small map cards only load when post or mapmarker is hovered/tapped)
+   - Cards removed on mouseleave
+   - Pill and label only created on hover
+
+5. ALWAYS MODE
+   - Small map cards preloaded for visible markers only (not entire world)
+   - Cards created for markers in visible map area
+   - Updates when map moves/zooms (new markers become visible)
+
+6. REAL-TIME MODE SWITCHING
+   - When admin switches between hover_only and always modes:
+     * Immediately loads/unloads cards as required
+     * Saves setting to database automatically
+     * Changes visible immediately without page reload
+
+7. CODE CLEANUP
+   - Removed all "expanded" references (feature not yet implemented)
+   - Removed CSS rules for .is-expanded and .small-map-card-label-expanded
+
+FILES MODIFIED:
+- index.js: Added map card display logic, hover handlers, thumbnail loading
+- style.css: Updated z-index values and reference table, removed expanded references
+
+IMPORTANT NOTES:
+=================
+
+SMALL MAP CARD CODE LOCATION:
+- All small map card modifications are easy to find by locating where the pill image is fetched/created
+- The pill image is created at: index.js, line 2589
+- The function that creates small map cards is: createSmallMapCard() starting at index.js, line 2579
+- This function creates the pill, marker icon, thumbnail, and label - all small map card components
+
+MAPBOX ELEMENTS:
+- Mapbox controls all marker elements on the map - they are NOT standard DOM elements
+- The code works with existing .mapmarker-overlay elements that Mapbox creates
+- The code does NOT create or position overlays - it only adds .small-map-card content inside existing overlays
+- Never try to create or position Mapbox marker elements - work with what Mapbox provides
+

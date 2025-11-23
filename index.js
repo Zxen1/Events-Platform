@@ -2589,6 +2589,8 @@ async function ensureMapboxCssFor(container) {
                 const pill = document.createElement('img');
                 pill.className = 'mapmarker-pill';
                 pill.src = SMALL_MAP_CARD_PILL_DEFAULT_SRC;
+                pill.dataset.defaultSrc = SMALL_MAP_CARD_PILL_DEFAULT_SRC;
+                pill.dataset.hoverSrc = SMALL_MAP_CARD_PILL_HOVER_SRC;
                 pill.style.width = '225px';
                 pill.style.height = '60px';
                 pill.style.transform = 'scale(0.6667)';
@@ -2600,14 +2602,93 @@ async function ensureMapboxCssFor(container) {
                 pill.style.pointerEvents = 'none';
                 card.appendChild(pill);
                 
-                // Create marker icon (will be set by existing code)
-                const marker = document.createElement('img');
-                marker.className = 'mapmarker';
-                marker.style.position = 'relative';
-                marker.style.width = '30px';
-                marker.style.height = '30px';
-                marker.style.pointerEvents = 'none';
+                // Reuse existing mapmarker icon if it exists, otherwise create it
+                let marker = overlay.querySelector('.mapmarker');
+                if(!marker){
+                  marker = document.createElement('img');
+                  marker.className = 'mapmarker';
+                  marker.style.position = 'relative';
+                  marker.style.width = '30px';
+                  marker.style.height = '30px';
+                  marker.style.pointerEvents = 'none';
+                }
                 card.appendChild(marker);
+                
+                // Create thumbnail element (hidden initially) - matches mapmarker position exactly
+                const thumb = document.createElement('img');
+                thumb.className = 'small-map-card-thumb';
+                thumb.style.position = 'relative';
+                thumb.style.left = 'auto';
+                thumb.style.top = 'auto';
+                thumb.style.width = '30px';
+                thumb.style.height = '30px';
+                thumb.style.objectFit = 'cover';
+                thumb.style.borderRadius = '50%';
+                thumb.style.pointerEvents = 'none';
+                thumb.style.flex = '0 0 30px';
+                thumb.style.display = 'none';
+                thumb.style.opacity = '0';
+                card.appendChild(thumb);
+                
+                // Handle hover to switch to hover pill image and replace icon with thumbnail
+                const handleCardHover = (e) => {
+                  // Switch pill to hover image (globally preloaded, so instant switch)
+                  const pillImg = card.querySelector('.mapmarker-pill');
+                  if(pillImg && pillImg.dataset.hoverSrc){
+                    if(hoverPillImageLoaded){
+                      // Hover image already loaded globally - instant seamless switch
+                      pillImg.src = pillImg.dataset.hoverSrc;
+                    } else {
+                      // Fallback: if global preload not done yet, wait for it
+                      if(hoverPillPreload.complete){
+                        hoverPillImageLoaded = true;
+                        pillImg.src = pillImg.dataset.hoverSrc;
+                      } else {
+                        hoverPillPreload.onload = () => {
+                          hoverPillImageLoaded = true;
+                          pillImg.src = pillImg.dataset.hoverSrc;
+                        };
+                      }
+                    }
+                    // Ensure identical sizing (already set, but maintain consistency)
+                    pillImg.style.width = '225px';
+                    pillImg.style.height = '60px';
+                    pillImg.style.transform = 'scale(0.6667)';
+                  }
+                  
+                  // Load thumbnail and replace icon after it loads (same approach as pill)
+                  if(!thumb.src){
+                    const thumbSrc = thumbUrl(post);
+                    thumb.src = thumbSrc;
+                    thumb.onload = () => {
+                      // Only replace icon after thumbnail has loaded (no downtime)
+                      marker.style.display = 'none';
+                      thumb.style.display = 'block';
+                      thumb.style.opacity = '1';
+                    };
+                  } else {
+                    // Thumbnail already loaded, show it immediately
+                    marker.style.display = 'none';
+                    thumb.style.display = 'block';
+                    thumb.style.opacity = '1';
+                  }
+                };
+                const handleCardLeave = (e) => {
+                  // Switch pill back to default
+                  const pillImg = card.querySelector('.mapmarker-pill');
+                  if(pillImg && pillImg.dataset.defaultSrc){
+                    pillImg.src = pillImg.dataset.defaultSrc;
+                  }
+                  
+                  // Show icon again, hide thumbnail
+                  marker.style.display = 'block';
+                  thumb.style.display = 'none';
+                  thumb.style.opacity = '0';
+                };
+                card.addEventListener('mouseenter', handleCardHover);
+                overlay.addEventListener('mouseenter', handleCardHover);
+                card.addEventListener('mouseleave', handleCardLeave);
+                overlay.addEventListener('mouseleave', handleCardLeave);
                 
                 // Create label
                 const label = document.createElement('div');
@@ -2633,12 +2714,12 @@ async function ensureMapboxCssFor(container) {
               
               // Handle map card display modes
               if(mapCardDisplay === 'hover_only'){
-                // Remove existing cards when switching to hover_only
+                // Remove existing small map cards (pill + label) when switching to hover_only
                 document.querySelectorAll('.small-map-card').forEach(card => {
                   card.remove();
                 });
                 
-                // Create cards on hover (mapmarker or post card)
+                // Create small map cards (pill + label) on hover
                 document.addEventListener('mouseenter', (e) => {
                   const overlay = e.target.closest('.mapmarker-overlay');
                   const postCard = e.target.closest('.post-card, .recents-card');
@@ -2664,9 +2745,34 @@ async function ensureMapboxCssFor(container) {
                     }
                   }
                 }, true);
+                
+                // Remove small map cards (pill + label) on mouseleave
+                document.addEventListener('mouseleave', (e) => {
+                  const overlay = e.target.closest('.mapmarker-overlay');
+                  const postCard = e.target.closest('.post-card, .recents-card');
+                  
+                  if(overlay){
+                    const card = overlay.querySelector('.small-map-card');
+                    if(card){
+                      card.remove();
+                    }
+                  } else if(postCard){
+                    const cardId = postCard.dataset && postCard.dataset.id;
+                    if(cardId){
+                      const overlays = findMarkerOverlaysById(cardId);
+                      overlays.forEach(overlay => {
+                        const card = overlay.querySelector('.small-map-card');
+                        if(card){
+                          card.remove();
+                        }
+                      });
+                    }
+                  }
+                }, true);
               } else if(mapCardDisplay === 'always'){
-                // Create cards for all existing overlays
-                const createCardsForAllOverlays = () => {
+                // Create cards for visible overlays only
+                const createCardsForVisibleOverlays = () => {
+                  if(!map || mapCardDisplay !== 'always') return;
                   document.querySelectorAll('.mapmarker-overlay').forEach(overlay => {
                     const cardId = overlay.dataset && overlay.dataset.id;
                     if(cardId){
@@ -2680,14 +2786,20 @@ async function ensureMapboxCssFor(container) {
                 
                 // Create cards immediately if posts are loaded
                 if(posts && Array.isArray(posts) && posts.length){
-                  createCardsForAllOverlays();
+                  createCardsForVisibleOverlays();
+                }
+                
+                // Create cards when map moves/zooms (new markers become visible)
+                if(map){
+                  map.on('moveend', createCardsForVisibleOverlays);
+                  map.on('zoomend', createCardsForVisibleOverlays);
                 }
                 
                 // Also create cards when new overlays are added
                 if(typeof MutationObserver !== 'undefined'){
                   const observer = new MutationObserver(() => {
                     if(mapCardDisplay === 'always'){
-                      createCardsForAllOverlays();
+                      createCardsForVisibleOverlays();
                     }
                   });
                   observer.observe(document.body, { childList: true, subtree: true });
@@ -2702,14 +2814,14 @@ async function ensureMapboxCssFor(container) {
                     mapCardDisplay = newMode;
                     document.body.setAttribute('data-map-card-display', mapCardDisplay);
                     
-                    // Handle mode switching
+                    // Handle mode switching in real-time
                     if(newMode === 'hover_only'){
-                      // Remove all existing cards
+                      // Remove all existing small map cards
                       document.querySelectorAll('.small-map-card').forEach(card => {
                         card.remove();
                       });
                     } else if(newMode === 'always'){
-                      // Create cards for all existing overlays
+                      // Create cards for visible overlays
                       document.querySelectorAll('.mapmarker-overlay').forEach(overlay => {
                         const cardId = overlay.dataset && overlay.dataset.id;
                         if(cardId){
@@ -3524,10 +3636,18 @@ async function ensureMapboxCssFor(container) {
 
 
     const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
-    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
+    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/225x60-pill-#2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
+    
+    // Preload hover pill image once for entire website (all cards use the same image)
+    let hoverPillImageLoaded = false;
+    const hoverPillPreload = new Image();
+    hoverPillPreload.src = SMALL_MAP_CARD_PILL_HOVER_SRC;
+    hoverPillPreload.onload = () => {
+      hoverPillImageLoaded = true;
+    };
 
 
     function registerOverlayCleanup(overlayEl, fn){

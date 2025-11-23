@@ -34,11 +34,13 @@
  *   30: (--layer-card) - cards
  *   20: (--layer-content) - content
  *   10: panel resizers, various overlays
- *   5: mapmarker-overlay, various elements
- *   3: various elements
- *   2: post-cards, various elements
- *   1: form labels, form field headers, variant pricing labels, header-buttons
- *   0: base layer, various elements
+ *   6: big map card label (future feature)
+ *   5: small map card label (.mapmarker-label)
+ *   4: mapcard thumbnail (.small-map-card-thumb)
+ *   3: mapmarker icon (.mapmarker)
+ *   2: hover map card pill (.mapmarker-pill on hover)
+ *   1: default small map card pill (.mapmarker-pill default)
+ *   0: map/base layer
  *   -1: some background elements
  *   auto: some elements
  */
@@ -99,8 +101,9 @@
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
-      z-index: 5;
+      /* No z-index to avoid stacking context - children use absolute z-index values */
       /* Mapbox positions this element - it updates transform to move marker on map */
+      /* z-index values: pill=5, marker=6, label=7 (absolute, readable) */
     }
     .mapmarker-overlay:has(.small-map-card){
       pointer-events: auto;
@@ -161,7 +164,7 @@
       width: 30px;
       height: 30px;
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
       flex: 0 0 30px;
     }
     .map--midzoom-markers .mapmarker{
@@ -180,7 +183,14 @@
       opacity: 0;
       visibility: hidden;
       mix-blend-mode: normal;
-      z-index: 0;
+      z-index: 1;
+    }
+    .small-map-card:hover .mapmarker-pill,
+    .mapmarker-overlay:hover .mapmarker-pill{
+      z-index: 2;
+    }
+    .small-map-card-thumb{
+      z-index: 4;
     }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
@@ -218,7 +228,7 @@
       gap: 1px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
       white-space: normal;
-      z-index: 3;
+      z-index: 5;
       text-align: left;
       flex: 1 1 auto;
       min-width: 0;
