@@ -2477,9 +2477,6 @@ async function ensureMapboxCssFor(container) {
           mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
-      // Set initial map card display state
-      document.body.setAttribute('data-map-card-display', mapCardDisplay);
-      
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
@@ -2575,354 +2572,12 @@ async function ensureMapboxCssFor(container) {
               // Apply map card display setting
               document.body.setAttribute('data-map-card-display', mapCardDisplay);
               
-              // Function to create a small map card on demand
-              function createSmallMapCard(overlay, post){
-                if(!overlay || !post) return null;
-                let card = overlay.querySelector('.small-map-card');
-                if(card) return card; // Already exists
-                
-                card = document.createElement('div');
-                card.className = 'small-map-card';
-                card.dataset.id = String(post.id);
-                
-                // Create pill image
-                const pill = document.createElement('img');
-                pill.className = 'mapmarker-pill';
-                pill.src = SMALL_MAP_CARD_PILL_DEFAULT_SRC;
-                pill.dataset.defaultSrc = SMALL_MAP_CARD_PILL_DEFAULT_SRC;
-                pill.dataset.hoverSrc = SMALL_MAP_CARD_PILL_HOVER_SRC;
-                pill.style.width = '225px';
-                pill.style.height = '60px';
-                pill.style.transform = 'scale(0.6667)';
-                pill.style.transformOrigin = 'top left';
-                pill.style.position = 'absolute';
-                pill.style.left = '0';
-                pill.style.top = '0';
-                pill.style.objectFit = 'contain';
-                pill.style.pointerEvents = 'none';
-                card.appendChild(pill);
-                
-                // Reuse existing mapmarker icon if it exists, otherwise create it
-                let marker = overlay.querySelector('.mapmarker');
-                if(!marker){
-                  marker = document.createElement('img');
-                  marker.className = 'mapmarker';
-                  marker.style.position = 'relative';
-                  marker.style.width = '30px';
-                  marker.style.height = '30px';
-                  marker.style.pointerEvents = 'none';
-                }
-                card.appendChild(marker);
-                
-                // Create thumbnail element (hidden initially) - matches mapmarker position exactly
-                const thumb = document.createElement('img');
-                thumb.className = 'small-map-card-thumb';
-                thumb.style.position = 'relative';
-                thumb.style.left = 'auto';
-                thumb.style.top = 'auto';
-                thumb.style.width = '30px';
-                thumb.style.height = '30px';
-                thumb.style.objectFit = 'cover';
-                thumb.style.borderRadius = '50%';
-                thumb.style.pointerEvents = 'none';
-                thumb.style.flex = '0 0 30px';
-                thumb.style.display = 'none';
-                thumb.style.opacity = '0';
-                card.appendChild(thumb);
-                
-                // Handle hover to switch to hover pill image and replace icon with thumbnail
-                const handleCardHover = (e) => {
-                  // Switch pill to hover image (globally preloaded, so instant switch)
-                  const pillImg = card.querySelector('.mapmarker-pill');
-                  if(pillImg && pillImg.dataset.hoverSrc){
-                    if(hoverPillImageLoaded){
-                      // Hover image already loaded globally - instant seamless switch
-                      pillImg.src = pillImg.dataset.hoverSrc;
-                    } else {
-                      // Fallback: if global preload not done yet, wait for it
-                      if(hoverPillPreload.complete){
-                        hoverPillImageLoaded = true;
-                        pillImg.src = pillImg.dataset.hoverSrc;
-                      } else {
-                        hoverPillPreload.onload = () => {
-                          hoverPillImageLoaded = true;
-                          pillImg.src = pillImg.dataset.hoverSrc;
-                        };
-                      }
-                    }
-                    // Ensure identical sizing (already set, but maintain consistency)
-                    pillImg.style.width = '225px';
-                    pillImg.style.height = '60px';
-                    pillImg.style.transform = 'scale(0.6667)';
-                  }
-                  
-                  // Load thumbnail and replace icon after it loads (same approach as pill)
-                  if(!thumb.src){
-                    const thumbSrc = thumbUrl(post);
-                    thumb.src = thumbSrc;
-                    thumb.onload = () => {
-                      // Only replace icon after thumbnail has loaded (no downtime)
-                      marker.style.display = 'none';
-                      thumb.style.display = 'block';
-                      thumb.style.opacity = '1';
-                    };
-                  } else {
-                    // Thumbnail already loaded, show it immediately
-                    marker.style.display = 'none';
-                    thumb.style.display = 'block';
-                    thumb.style.opacity = '1';
-                  }
-                };
-                const handleCardLeave = (e) => {
-                  // Switch pill back to default
-                  const pillImg = card.querySelector('.mapmarker-pill');
-                  if(pillImg && pillImg.dataset.defaultSrc){
-                    pillImg.src = pillImg.dataset.defaultSrc;
-                  }
-                  
-                  // Show icon again, hide thumbnail
-                  marker.style.display = 'block';
-                  thumb.style.display = 'none';
-                  thumb.style.opacity = '0';
-                };
-                card.addEventListener('mouseenter', handleCardHover);
-                overlay.addEventListener('mouseenter', handleCardHover);
-                card.addEventListener('mouseleave', handleCardLeave);
-                overlay.addEventListener('mouseleave', handleCardLeave);
-                
-                // Create label
-                const label = document.createElement('div');
-                label.className = 'mapmarker-label';
-                const labelLines = getMarkerLabelLines(post);
-                if(labelLines.line1){
-                  const line1 = document.createElement('div');
-                  line1.className = 'mapmarker-label-line';
-                  line1.textContent = labelLines.line1;
-                  label.appendChild(line1);
-                }
-                if(labelLines.line2){
-                  const line2 = document.createElement('div');
-                  line2.className = 'mapmarker-label-line';
-                  line2.textContent = labelLines.line2;
-                  label.appendChild(line2);
-                }
-                card.appendChild(label);
-                
-                overlay.appendChild(card);
-                return card;
-              }
-              
-              // Helper function to find post by ID
-              function findPostById(id){
-                if(!posts || !Array.isArray(posts)) return null;
-                return posts.find(x => String(x.id) === String(id)) || null;
-              }
-              
-              // Set up map card display mode handling
-              // This will be called after settings load and when mode changes
-              let hoverEnterHandler = null;
-              let hoverLeaveHandler = null;
-              let alwaysModeObserver = null;
-              let alwaysModeMapHandlers = [];
-              
-              function setupMapCardDisplayMode(){
-                // Clean up old handlers
-                if(hoverEnterHandler){
-                  document.removeEventListener('mouseenter', hoverEnterHandler, true);
-                  hoverEnterHandler = null;
-                }
-                if(hoverLeaveHandler){
-                  document.removeEventListener('mouseleave', hoverLeaveHandler, true);
-                  hoverLeaveHandler = null;
-                }
-                if(alwaysModeObserver){
-                  alwaysModeObserver.disconnect();
-                  alwaysModeObserver = null;
-                }
-                alwaysModeMapHandlers.forEach(({event, handler, layer}) => {
-                  if(map && map.off){
-                    if(layer){
-                      map.off(event, layer, handler);
-                    } else {
-                      map.off(event, handler);
-                    }
-                  }
-                });
-                alwaysModeMapHandlers = [];
-                
-                // Set up new mode
-                if(mapCardDisplay === 'hover_only'){
-                  // Remove existing small map cards
-                  document.querySelectorAll('.small-map-card').forEach(card => {
-                    card.remove();
-                  });
-                  
-                  // Mapbox layer hover handlers (same system as click handlers)
-                  if(map && typeof MARKER_INTERACTIVE_LAYERS !== 'undefined' && Array.isArray(MARKER_INTERACTIVE_LAYERS)){
-                    MARKER_INTERACTIVE_LAYERS.forEach(layer => {
-                      const layerMouseEnter = (e) => {
-                        const f = e.features && e.features[0];
-                        if(!f) return;
-                        const props = f.properties || {};
-                        const id = props.id;
-                        if(!id) return;
-                        
-                        const overlays = typeof findMarkerOverlaysById === 'function' ? findMarkerOverlaysById(id) : [];
-                        const post = findPostById(id);
-                        if(post && overlays.length){
-                          overlays.forEach(overlay => {
-                            if(!overlay.querySelector('.small-map-card')){
-                              createSmallMapCard(overlay, post);
-                            }
-                          });
-                        }
-                      };
-                      
-                      const layerMouseLeave = (e) => {
-                        const f = e.features && e.features[0];
-                        if(!f) return;
-                        const props = f.properties || {};
-                        const id = props.id;
-                        if(!id) return;
-                        
-                        const overlays = typeof findMarkerOverlaysById === 'function' ? findMarkerOverlaysById(id) : [];
-                        overlays.forEach(overlay => {
-                          const card = overlay.querySelector('.small-map-card');
-                          if(card){
-                            card.remove();
-                          }
-                        });
-                      };
-                      
-                      map.on('mouseenter', layer, layerMouseEnter);
-                      map.on('mouseleave', layer, layerMouseLeave);
-                      alwaysModeMapHandlers.push({event: 'mouseenter', handler: layerMouseEnter, layer: layer});
-                      alwaysModeMapHandlers.push({event: 'mouseleave', handler: layerMouseLeave, layer: layer});
-                    });
-                  }
-                  
-                  // DOM hover handlers for existing small map cards and post cards
-                  hoverEnterHandler = (e) => {
-                    if(!e.target || !(e.target instanceof Element) || typeof e.target.closest !== 'function') return;
-                    const target = e.target;
-                    const overlay = target.closest('.mapmarker-overlay');
-                    const postCard = target.closest('.post-card, .recents-card');
-                    
-                    if(overlay){
-                      const cardId = overlay.dataset && overlay.dataset.id;
-                      if(cardId){
-                        const post = findPostById(cardId);
-                        if(post && !overlay.querySelector('.small-map-card')){
-                          createSmallMapCard(overlay, post);
-                        }
-                      }
-                    } else if(postCard){
-                      const cardId = postCard.dataset && postCard.dataset.id;
-                      if(cardId && typeof findMarkerOverlaysById === 'function'){
-                        const overlays = findMarkerOverlaysById(cardId);
-                        const post = findPostById(cardId);
-                        if(post){
-                          overlays.forEach(overlay => {
-                            if(!overlay.querySelector('.small-map-card')){
-                              createSmallMapCard(overlay, post);
-                            }
-                          });
-                        }
-                      }
-                    }
-                  };
-                  
-                  hoverLeaveHandler = (e) => {
-                    if(!e.target || !(e.target instanceof Element) || typeof e.target.closest !== 'function') return;
-                    const target = e.target;
-                    const overlay = target.closest('.mapmarker-overlay');
-                    const postCard = target.closest('.post-card, .recents-card');
-                    
-                    if(overlay){
-                      const card = overlay.querySelector('.small-map-card');
-                      if(card){
-                        card.remove();
-                      }
-                    } else if(postCard){
-                      const cardId = postCard.dataset && postCard.dataset.id;
-                      if(cardId && typeof findMarkerOverlaysById === 'function'){
-                        const overlays = findMarkerOverlaysById(cardId);
-                        overlays.forEach(overlay => {
-                          const card = overlay.querySelector('.small-map-card');
-                          if(card){
-                            card.remove();
-                          }
-                        });
-                      }
-                    }
-                  };
-                  
-                  document.addEventListener('mouseenter', hoverEnterHandler, true);
-                  document.addEventListener('mouseleave', hoverLeaveHandler, true);
-                  
-                } else if(mapCardDisplay === 'always'){
-                  // Create cards for visible overlays only
-                  const createCardsForVisibleOverlays = () => {
-                    if(!map || mapCardDisplay !== 'always') return;
-                    document.querySelectorAll('.mapmarker-overlay').forEach(overlay => {
-                      const cardId = overlay.dataset && overlay.dataset.id;
-                      if(cardId){
-                        const post = findPostById(cardId);
-                        if(post && !overlay.querySelector('.small-map-card')){
-                          createSmallMapCard(overlay, post);
-                        }
-                      }
-                    });
-                  };
-                  
-                  // Create cards immediately if posts are loaded
-                  createCardsForVisibleOverlays();
-                  
-                  // Create cards when map moves/zooms (new markers become visible)
-                  if(map && map.on){
-                    const moveendHandler = createCardsForVisibleOverlays;
-                    const zoomendHandler = createCardsForVisibleOverlays;
-                    map.on('moveend', moveendHandler);
-                    map.on('zoomend', zoomendHandler);
-                    alwaysModeMapHandlers.push({event: 'moveend', handler: moveendHandler});
-                    alwaysModeMapHandlers.push({event: 'zoomend', handler: zoomendHandler});
-                  }
-                  
-                  // Also create cards when new overlays are added
-                  if(typeof MutationObserver !== 'undefined'){
-                    alwaysModeObserver = new MutationObserver(() => {
-                      if(mapCardDisplay === 'always'){
-                        createCardsForVisibleOverlays();
-                      }
-                    });
-                    alwaysModeObserver.observe(document.body, { childList: true, subtree: true });
-                  }
-                }
-              }
-              
-              // Store setup function globally so it can be called after map/posts are ready
-              window.setupMapCardDisplayMode = setupMapCardDisplayMode;
-              
-              // Set up initial mode (will be called again after map loads if needed)
-              setupMapCardDisplayMode();
-              
-              // Re-setup after a short delay to ensure map and posts are ready
-              setTimeout(() => {
-                if(typeof setupMapCardDisplayMode === 'function'){
-                  setupMapCardDisplayMode();
-                }
-              }, 1000);
-              
               // Add change listeners for map card display radios
               mapCardDisplayRadios.forEach(radio => {
                 radio.addEventListener('change', async () => {
                   if(radio.checked){
-                    const newMode = radio.value;
-                    mapCardDisplay = newMode;
+                    mapCardDisplay = radio.value;
                     document.body.setAttribute('data-map-card-display', mapCardDisplay);
-                    
-                    // Re-setup mode handling
-                    setupMapCardDisplayMode();
                     
                     // Auto-save to database
                     try {
@@ -2937,7 +2592,6 @@ async function ensureMapboxCssFor(container) {
                   }
                 });
               });
-              
               
               // Initialize icon folder input
               const iconFolderInput = document.getElementById('adminIconFolder');
@@ -3727,18 +3381,10 @@ async function ensureMapboxCssFor(container) {
 
 
     const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
-    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/225x60-pill-2f3b73.webp';
+    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
-    
-    // Preload hover pill image once for entire website (all cards use the same image)
-    let hoverPillImageLoaded = false;
-    const hoverPillPreload = new Image();
-    hoverPillPreload.src = SMALL_MAP_CARD_PILL_HOVER_SRC;
-    hoverPillPreload.onload = () => {
-      hoverPillImageLoaded = true;
-    };
 
 
     function registerOverlayCleanup(overlayEl, fn){
@@ -7566,11 +7212,6 @@ function makePosts(){
       initAdBoard();
       applyFilters();
       updateLayerVisibility(lastKnownZoom);
-      
-      // Re-setup map card display mode after posts are loaded
-      if(typeof window.setupMapCardDisplayMode === 'function'){
-        window.setupMapCardDisplayMode();
-      }
     }
 
     let markerLayersVisible = false;
@@ -17633,16 +17274,6 @@ function makePosts(){
         activePostId = id;
         selectedVenueKey = null;
         updateSelectedMarkerRing();
-        
-        // Mark active post's map card
-        document.querySelectorAll('.small-map-card').forEach(card => {
-          const cardId = card.dataset && card.dataset.id;
-          if(cardId && String(cardId) === String(id)){
-            card.classList.add('is-active-post');
-          } else {
-            card.classList.remove('is-active-post');
-          }
-        });
 
         if(!fromHistory){
           if(document.body.classList.contains('show-history')){
@@ -18124,11 +17755,6 @@ function makePosts(){
         }
         activePostId = null;
         selectedVenueKey = null;
-        
-        // Remove active post marker from all map cards
-        document.querySelectorAll('.small-map-card.is-active-post').forEach(card => {
-          card.classList.remove('is-active-post');
-        });
         updateSelectedMarkerRing();
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();

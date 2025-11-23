@@ -34,13 +34,11 @@
  *   30: (--layer-card) - cards
  *   20: (--layer-content) - content
  *   10: panel resizers, various overlays
- *   6: small map card label (.mapmarker-label)
- *   5: mapcard thumbnail (.small-map-card-thumb)
- *   4: mapmarker icon (.mapmarker)
- *   3: hover map card pill (.mapmarker-pill on hover)
- *   2: default small map card pill (.mapmarker-pill default)
- *   1: mapmarker overlay container (.mapmarker-overlay)
- *   0: map/base layer
+ *   5: mapmarker-overlay, various elements
+ *   3: various elements
+ *   2: post-cards, various elements
+ *   1: form labels, form field headers, variant pricing labels, header-buttons
+ *   0: base layer, various elements
  *   -1: some background elements
  *   auto: some elements
  */
@@ -101,9 +99,8 @@
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
-      z-index: 1;
+      z-index: 5;
       /* Mapbox positions this element - it updates transform to move marker on map */
-      /* z-index values: overlay=1, pill=2/3, marker=4, thumb=5, label=6 */
     }
     .mapmarker-overlay:has(.small-map-card){
       pointer-events: auto;
@@ -164,7 +161,7 @@
       width: 30px;
       height: 30px;
       pointer-events: none;
-      z-index: 4;
+      z-index: 2;
       flex: 0 0 30px;
     }
     .map--midzoom-markers .mapmarker{
@@ -183,14 +180,7 @@
       opacity: 0;
       visibility: hidden;
       mix-blend-mode: normal;
-      z-index: 2;
-    }
-    .small-map-card:hover .mapmarker-pill,
-    .mapmarker-overlay:hover .mapmarker-pill{
-      z-index: 3;
-    }
-    .small-map-card-thumb{
-      z-index: 5;
+      z-index: 0;
     }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
@@ -202,19 +192,11 @@
       background-color: #2e3a72;
       transition: none;
     }
-    /* Hide small map cards when hover_only mode is active (unless highlighted/active/hovered) */
-    body[data-map-card-display="hover_only"] .mapmarker-overlay:not(:hover) .small-map-card:not(.is-pill-highlight):not(.is-active-post){
+    /* Hide small map cards when hover_only mode is active (unless highlighted/clicked/hovered) */
+    body[data-map-card-display="hover_only"] .mapmarker-overlay:not(:hover):not(:has(.small-map-card.is-pill-highlight)):not(:has(.small-map-card.is-expanded)) .small-map-card{
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-    }
-    /* Ensure cards are visible when hovered, highlighted, or active in hover_only mode */
-    body[data-map-card-display="hover_only"] .mapmarker-overlay:hover .small-map-card,
-    body[data-map-card-display="hover_only"] .small-map-card.is-pill-highlight,
-    body[data-map-card-display="hover_only"] .small-map-card.is-active-post{
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
     }
     .mapmarker-label{
       position: relative;
@@ -228,7 +210,7 @@
       gap: 1px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
       white-space: normal;
-      z-index: 6;
+      z-index: 3;
       text-align: left;
       flex: 1 1 auto;
       min-width: 0;
