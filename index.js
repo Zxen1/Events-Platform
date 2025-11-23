@@ -2448,6 +2448,35 @@ let __notifyMapOnInteraction = null;
                     mapCardDisplay = radio.value;
                     document.body.setAttribute('data-map-card-display', mapCardDisplay);
                     
+                    // Update map immediately (no reload required)
+                    if(typeof window.updateMapCardLayerOpacity === 'function'){
+                      window.updateMapCardLayerOpacity(mapCardDisplay);
+                    }
+                    
+                    // Update hover handlers to match new display mode
+                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
+                    if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
+                      // Remove old hover handlers from all possible layers
+                      const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
+                      allPossibleLayers.forEach(layer => {
+                        try {
+                          mapInstance.off('mouseenter', layer, window.handleMarkerHover);
+                          mapInstance.off('mouseleave', layer, window.handleMarkerHoverEnd);
+                        } catch(e) {}
+                      });
+                      
+                      // Add hover handlers for correct layers based on new display mode
+                      const baseHoverLayers = mapCardDisplay === 'hover_only' 
+                        ? ['marker-icon'] 
+                        : ['marker-icon', 'marker-label'];
+                      baseHoverLayers.forEach(layer => {
+                        try {
+                          mapInstance.on('mouseenter', layer, window.handleMarkerHover);
+                          mapInstance.on('mouseleave', layer, window.handleMarkerHoverEnd);
+                        } catch(e) {}
+                      });
+                    }
+                    
                     // Auto-save to database
                     try {
                       await fetch('/gateway.php?action=save-admin-settings', {
@@ -19206,6 +19235,8 @@ function makePosts(){
         }
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
+      window.getMapInstance = () => map; // Expose map instance getter
+      window.getMapInstance = () => map; // Expose map instance getter
       
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
@@ -19379,6 +19410,10 @@ function makePosts(){
         hoveredPostIds = [];
         updateSelectedMarkerRing();
       };
+      
+      // Expose hover handlers globally so they can be updated when mapCardDisplay changes
+      window.handleMarkerHover = handleMarkerHover;
+      window.handleMarkerHoverEnd = handleMarkerHoverEnd;
 
       // Add hover handlers - only for base map card area (marker-icon and marker-label, NOT accent)
       // If base card is hidden (hover_only), only marker-icon triggers hover
