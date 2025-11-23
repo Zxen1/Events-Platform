@@ -3521,24 +3521,23 @@ async function ensureMapboxCssFor(container) {
     const markerExpandedOverlays = new Map();
 
     function showMarkerHoverOverlay(id, post, x, y){
-      if(!id || !post || !map || !mapEl) return;
+      if(!id || !post || !map) return;
+      const canvasContainer = map.getCanvasContainer();
+      if(!canvasContainer) return;
       const strId = String(id);
       let overlay = markerHoverOverlays.get(strId);
-      const mapRect = mapEl.getBoundingClientRect();
-      const absoluteX = mapRect.left + x;
-      const absoluteY = mapRect.top + y;
       
       if(!overlay){
         overlay = document.createElement('div');
         overlay.className = 'marker-hover-overlay';
-        overlay.style.position = 'fixed';
+        overlay.style.position = 'absolute';
         overlay.style.pointerEvents = 'none';
         overlay.style.zIndex = '1000';
-        document.body.appendChild(overlay);
+        canvasContainer.appendChild(overlay);
         markerHoverOverlays.set(strId, overlay);
       }
-      overlay.style.left = `${absoluteX}px`;
-      overlay.style.top = `${absoluteY}px`;
+      overlay.style.left = `${x}px`;
+      overlay.style.top = `${y}px`;
       overlay.style.transform = 'translate(-20px, -20px)';
       overlay.style.display = 'block';
       
@@ -3593,26 +3592,25 @@ async function ensureMapboxCssFor(container) {
     }
 
     function showMarkerExpandedOverlay(id, post, x, y){
-      if(!id || !post || !map || !mapEl) return;
+      if(!id || !post || !map) return;
+      const canvasContainer = map.getCanvasContainer();
+      if(!canvasContainer) return;
       const strId = String(id);
       hideMarkerHoverOverlay(id);
       
       let overlay = markerExpandedOverlays.get(strId);
-      const mapRect = mapEl.getBoundingClientRect();
-      const absoluteX = mapRect.left + x;
-      const absoluteY = mapRect.top + y;
       
       if(!overlay){
         overlay = document.createElement('div');
         overlay.className = 'marker-expanded-overlay';
-        overlay.style.position = 'fixed';
+        overlay.style.position = 'absolute';
         overlay.style.pointerEvents = 'none';
         overlay.style.zIndex = '1001';
-        document.body.appendChild(overlay);
+        canvasContainer.appendChild(overlay);
         markerExpandedOverlays.set(strId, overlay);
       }
-      overlay.style.left = `${absoluteX}px`;
-      overlay.style.top = `${absoluteY}px`;
+      overlay.style.left = `${x}px`;
+      overlay.style.top = `${y}px`;
       overlay.style.transform = 'translate(-30px, -30px)';
       overlay.style.display = 'block';
       
@@ -3642,23 +3640,24 @@ async function ensureMapboxCssFor(container) {
     }
 
     function updateMarkerOverlayPositions(){
-      if(!map || !mapEl) return;
-      const mapRect = mapEl.getBoundingClientRect();
+      if(!map) return;
+      const canvasContainer = map.getCanvasContainer();
+      if(!canvasContainer) return;
       markerHoverOverlays.forEach((overlay, id) => {
         if(overlay.style.display === 'none') return;
         const post = posts.find(x => String(x.id) === id);
         if(!post || !post.location) return;
         const point = map.project([post.location.lng, post.location.lat]);
-        overlay.style.left = `${mapRect.left + point.x}px`;
-        overlay.style.top = `${mapRect.top + point.y}px`;
+        overlay.style.left = `${point.x}px`;
+        overlay.style.top = `${point.y}px`;
       });
       markerExpandedOverlays.forEach((overlay, id) => {
         if(overlay.style.display === 'none') return;
         const post = posts.find(x => String(x.id) === id);
         if(!post || !post.location) return;
         const point = map.project([post.location.lng, post.location.lat]);
-        overlay.style.left = `${mapRect.left + point.x}px`;
-        overlay.style.top = `${mapRect.top + point.y}px`;
+        overlay.style.left = `${point.x}px`;
+        overlay.style.top = `${point.y}px`;
       });
     }
 
