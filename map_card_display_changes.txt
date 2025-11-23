@@ -64,3 +64,42 @@ MAPBOX ELEMENTS:
 - The code does NOT create or position overlays - it only adds .small-map-card content inside existing overlays
 - Never try to create or position Mapbox marker elements - work with what Mapbox provides
 
+================================================================================
+CRITICAL: HOVER FUNCTIONALITY NOT WORKING - TASK INCOMPLETE
+================================================================================
+
+STATUS: Hover handlers for map markers are NOT working. This task should take 5 minutes.
+
+WHAT WORKS:
+- Click handlers on map markers work perfectly (see line ~19820 in index.js)
+- Small map cards can be created (function exists around line 2579)
+- Admin setting for "Map Card Display" exists and saves to database
+- Map markers are clickable and open posts
+
+WHAT'S MISSING:
+- Hover handlers need to be added in the SAME place where click handlers are attached
+- Use the EXACT SAME pattern as click handlers: map.on('mouseenter', layer, handler)
+- In hover_only mode, create small map cards on mouseenter, remove on mouseleave
+
+CORRECT APPROACH (5 MINUTES):
+1. Go to where click handlers are attached (around line 19820 in addPostSource function)
+2. Right after the cursor handlers (lines 19858-19865), add hover handlers
+3. Use MARKER_INTERACTIVE_LAYERS.forEach() just like the click handlers do
+4. Get marker ID from e.features[0].properties.id (same as click handler)
+5. Check if mapCardDisplay === 'hover_only' before attaching handlers
+6. Use findMarkerOverlaysById() and findPostById() functions that already exist
+7. Use createSmallMapCard() function that already exists
+8. That's it. Should be ~20 lines of code.
+
+HOW THE PREVIOUS AGENT FAILED (20+ HOURS WASTED):
+1. Tried to attach handlers in loadAdminSettings() - WRONG PLACE, runs before map is ready
+2. Tried to use document-level event listeners - WRONG, Mapbox layers need map.on() events
+3. Made functions global unnecessarily - NOT NEEDED, functions are already in scope
+4. Overcomplicated with setup functions, cleanup, multiple attempts - UNNECESSARY
+5. Created massive file replacement attempts that would have deleted 26,000+ lines
+6. Ignored the working click handler pattern that was right there to copy
+
+KEY LESSON: 
+Look at the WORKING click handlers at line ~19820. Copy that exact pattern. 
+Add mouseenter/mouseleave instead of click. Done. 5 minutes.
+
