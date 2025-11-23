@@ -101,53 +101,8 @@
       box-shadow: none;
       z-index: 5;
       /* Mapbox positions this element - it updates transform to move marker on map */
-      /* Both small and big cards are children, so they move with this element */
     }
-    .mapmarker-overlay > .big-map-card{
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 225px;
-      height: 60px;
-      transform: translate3d(-30px, -30px, 0);
-      pointer-events: auto;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.88);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px 5px 5px;
-      box-sizing: border-box;
-      z-index: var(--layer-card);
-    }
-    .mapmarker-overlay.is-card-visible > .small-map-card{
-      opacity: 0;
-      visibility: hidden;
-    }
-    .mapmarker-overlay.is-card-visible > .big-map-card{
-      opacity: 1;
-      visibility: visible;
-    }
-    .mapmarker-overlay.is-card-visible{
-      pointer-events: auto;
-      z-index: var(--layer-card);
-    }
-    .big-map-card img,
     .small-map-card img{ display:block; }
-    .map-card-pill{
-      position: absolute;
-      inset: auto;
-      left: 5px;
-      top: 5px;
-      right: 5px;
-      bottom: 5px;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
     .small-map-card{
       position: absolute;
       left: 0;
@@ -155,7 +110,8 @@
       width: 150px;
       height: 40px;
       transform: translate3d(-20px, -20px, 0);
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
       display: flex;
@@ -219,14 +175,6 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    .big-map-card--popup{
-      background-color: rgba(0, 0, 0, 0.88);
-    }
-    .big-map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .big-map-card--popup{
-      background-color: #2e3a72;
-      transition: none;
-    }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }
@@ -237,48 +185,6 @@
       background-color: #2e3a72;
       transition: none;
     }
-    .map-card-thumb{
-      position: absolute;
-      left: 5px;
-      top: 5px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-      z-index: var(--layer-header);
-    }
-    .big-multi-post-map-card .map-card-thumb{
-      border-radius: 12px;
-      object-fit: contain;
-      background: transparent;
-      box-shadow: none;
-    }
-    .map-card-label,
-    .mapmarker-label{
-      position: absolute;
-      left: 60px;
-      top: 5px;
-      width: calc(100% - 65px);
-      height: 50px;
-      padding: 0 5px 0 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.2;
-      white-space: normal;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-      z-index: 1;
-      pointer-events: auto;
-    }
-
     .mapmarker-label{
       position: relative;
       left: auto;
@@ -329,77 +235,6 @@
       transform: scale(1.1);
     }
 
-    .map-card-label{
-      justify-content: center;
-    }
-
-    .map-card-title{
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      width: 100%;
-    }
-
-    .map-card-title-line{
-      width: 100%;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      line-height: 1.2;
-      font-weight: 400;
-    }
-
-    .map-card-venue{
-      font-weight: 400;
-      font-size: 12px;
-      line-height: 1.2;
-      opacity: 0.9;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      margin-top: 0;
-      color: #d0d0d0;
-    }
-    .big-map-card--list{
-      position: relative;
-      width: 100%;
-      height: auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transform: none;
-      background: none;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .big-map-card--list .map-card-thumb{
-      position: static;
-      width: 64px;
-      height: 64px;
-      border-radius: 8px;
-      box-shadow: none;
-      flex: 0 0 64px;
-    }
-    .big-map-card--list .map-card-label{
-      position: static;
-      width: auto;
-      height: auto;
-      padding: 0;
-      gap: 4px;
-      text-shadow: none;
-    }
-    .big-map-card--list .map-card-title{
-      white-space: normal;
-    }
-    .big-map-card--list .map-card-title-line{
-      white-space: normal;
-    }
-    .big-map-card--list .map-card-venue{
-      white-space: nowrap;
-    }
 
 
 /* Extracted from <styleid="mapboxgl-critical-css"> */
@@ -6781,35 +6616,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   z-index:-1;
 }
 
-.big-map-card--popup,
-.big-map-card--list{
-  pointer-events: auto;
-  cursor: pointer;
-}
-.big-map-card--popup{
-  display: block;
-}
-
-.map-card-list{
-  max-height: 360px;
-  overflow-y: auto;
-  overflow-y: overlay;
-  overflow-x: hidden;
-  padding: 2px 6px 2px 2px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.map-card-list-item{
-  padding: 5px;
-  border-radius: 8px;
-  cursor: pointer;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
 .mapboxgl-popup,
 .mapboxgl-popup-content{
   border-radius:8px !important;
@@ -6819,10 +6625,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   background: var(--popup-bg) !important;
   color: var(--popup-text) !important;
   overflow:hidden;
-}
-
-.mapboxgl-popup.big-map-card .mapboxgl-popup-content{
-  overflow: visible;
 }
 
 .mapboxgl-popup-close-button{
