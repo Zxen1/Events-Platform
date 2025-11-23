@@ -1674,15 +1674,17 @@ let __notifyMapOnInteraction = null;
         options: { pixelRatio: Number.isFinite(pixelRatioForOptions) && pixelRatioForOptions > 0 ? pixelRatioForOptions : 1 }
       };
     };
-    const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'hover_only';
-    const baseComposite = mapCardDisplay === 'always' ? buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, scaledCanvasWidth, scaledCanvasHeight, scaledPixelRatio, scaledPixelRatio) : null;
+    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, scaledCanvasWidth, scaledCanvasHeight, scaledPixelRatio, scaledPixelRatio);
     const accentComposite = pillAccentImg && accentDims ? buildComposite(pillAccentImg, null, 1, scaledAccentCanvasWidth, scaledAccentCanvasHeight, scaledAccentPixelRatio, scaledAccentPixelRatio) : null;
+    if(!baseComposite){
+      return null;
+    }
     if(!accentComposite){
       return null;
     }
     const nextMeta = Object.assign({}, meta || {}, {
-      image: baseComposite ? baseComposite.image : null,
-      options: baseComposite ? baseComposite.options : {},
+      image: baseComposite.image,
+      options: baseComposite.options,
       highlightImage: accentComposite.image,
       highlightOptions: accentComposite.options
     });
@@ -1699,9 +1701,9 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const existing = markerLabelCompositeStore.get(labelSpriteId);
-    if(existing && existing.highlightImage){
+    if(existing && existing.image){
       return {
-        base: existing.image ? { image: existing.image, options: existing.options || {} } : null,
+        base: { image: existing.image, options: existing.options || {} },
         highlight: {
           image: existing.highlightImage,
           options: existing.highlightOptions || {}
@@ -1716,9 +1718,9 @@ let __notifyMapOnInteraction = null;
         console.error(err);
       }
       const refreshed = markerLabelCompositeStore.get(labelSpriteId);
-      if(refreshed && refreshed.highlightImage){
+      if(refreshed && refreshed.image){
         return {
-          base: refreshed.image ? { image: refreshed.image, options: refreshed.options || {} } : null,
+          base: { image: refreshed.image, options: refreshed.options || {} },
           highlight: {
             image: refreshed.highlightImage,
             options: refreshed.highlightOptions || {}
@@ -1733,7 +1735,7 @@ let __notifyMapOnInteraction = null;
     markerLabelCompositePending.set(labelSpriteId, task);
     try{
       const generated = await task;
-      if(!generated || !generated.highlight){
+      if(!generated || !generated.base){
         return null;
       }
       return generated;
