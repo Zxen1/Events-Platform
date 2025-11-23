@@ -2766,6 +2766,8 @@ async function ensureMapboxCssFor(container) {
                         const post = findPostById(cardId);
                         if(post){
                           createSmallMapCard(overlay, post);
+                        } else {
+                          console.warn('Map card hover: post not found for ID', cardId, 'posts available:', posts && posts.length);
                         }
                       }
                     } else if(postCard){
@@ -2777,6 +2779,8 @@ async function ensureMapboxCssFor(container) {
                           overlays.forEach(overlay => {
                             createSmallMapCard(overlay, post);
                           });
+                        } else {
+                          console.warn('Map card hover: post not found for ID', cardId, 'posts available:', posts && posts.length);
                         }
                       }
                     }
@@ -2850,8 +2854,18 @@ async function ensureMapboxCssFor(container) {
                 }
               }
               
+              // Store setup function globally so it can be called after map/posts are ready
+              window.setupMapCardDisplayMode = setupMapCardDisplayMode;
+              
               // Set up initial mode (will be called again after map loads if needed)
               setupMapCardDisplayMode();
+              
+              // Re-setup after a short delay to ensure map and posts are ready
+              setTimeout(() => {
+                if(typeof setupMapCardDisplayMode === 'function'){
+                  setupMapCardDisplayMode();
+                }
+              }, 1000);
               
               // Add change listeners for map card display radios
               mapCardDisplayRadios.forEach(radio => {
@@ -7506,6 +7520,11 @@ function makePosts(){
       initAdBoard();
       applyFilters();
       updateLayerVisibility(lastKnownZoom);
+      
+      // Re-setup map card display mode after posts are loaded
+      if(typeof window.setupMapCardDisplayMode === 'function'){
+        window.setupMapCardDisplayMode();
+      }
     }
 
     let markerLayersVisible = false;
