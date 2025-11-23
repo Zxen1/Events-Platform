@@ -1441,34 +1441,15 @@ let __notifyMapOnInteraction = null;
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl)
     ]).then(([baseImg, accentImg]) => {
-      if(!baseImg){
-        return null;
-      }
-      if(!accentImg){
-        return null;
-      }
       return { base: baseImg, highlight: accentImg };
     });
     markerLabelPillImagePromise = promise;
-    promise.then(result => {
-      if(!result){
-        markerLabelPillImagePromise = null;
-      }
-    }).catch(() => {
-      markerLabelPillImagePromise = null;
-    });
     return markerLabelPillImagePromise;
   }
 
   function computeMarkerLabelCanvasDimensions(sourceImage){
-    const rawWidth = sourceImage && (sourceImage.naturalWidth || sourceImage.width)
-      ? (sourceImage.naturalWidth || sourceImage.width)
-      : markerLabelBackgroundWidthPx;
-    const rawHeight = sourceImage && (sourceImage.naturalHeight || sourceImage.height)
-      ? (sourceImage.naturalHeight || sourceImage.height)
-      : markerLabelBackgroundHeightPx;
-    const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
-    const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
+    const canvasWidth = 150;
+    const canvasHeight = 40;
     const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
@@ -1546,20 +1527,8 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    if(!assets || !assets.base){
-      return null;
-    }
-    if(!assets.highlight){
-      return null;
-    }
     const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
-    if(!baseSprite){
-      return null;
-    }
     const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
-    if(!accentSprite){
-      return null;
-    }
     markerLabelPillSpriteCache = {
       base: baseSprite,
       highlight: accentSprite
@@ -1785,20 +1754,8 @@ let __notifyMapOnInteraction = null;
       // UNIFIED: Both single and multi-venue map cards use System 2 (ensureMarkerLabelPillSprites)
       // Multi-venue map card composites are built separately in createMarkerLabelCompositeTextures
       const sprites = await ensureMarkerLabelPillSprites();
-      if(!sprites){
-        return {
-          image: createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx),
-          options: { pixelRatio: 1 }
-        };
-      }
       if(id === MARKER_LABEL_BG_ID){
-        if(!sprites.base){
-          return null;
-        }
         return sprites.base;
-      }
-      if(!sprites.highlight){
-        return null;
       }
       return sprites.highlight;
     }
@@ -1814,15 +1771,9 @@ let __notifyMapOnInteraction = null;
         return null;
       }
       const assets = await ensureMarkerLabelCompositeAssets(targetMap, spriteId, meta);
-      if(!assets || !assets.base){
-        return null;
-      }
       const updatedMeta = markerLabelCompositeStore.get(spriteId) || assets.meta || meta;
       if(isAccent){
         const image = updatedMeta && (updatedMeta.highlightImage || updatedMeta.image);
-        if(!image){
-          return null;
-        }
         return {
           image,
           options: updatedMeta.highlightOptions || updatedMeta.options || {}
@@ -19048,7 +18999,7 @@ function makePosts(){
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'left',
+                'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -19072,7 +19023,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
