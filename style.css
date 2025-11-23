@@ -102,6 +102,13 @@
       z-index: 5;
       /* Mapbox positions this element - it updates transform to move marker on map */
     }
+    .mapmarker-overlay:has(.small-map-card){
+      pointer-events: auto;
+    }
+    .mapmarker-overlay .small-map-card{
+      pointer-events: auto;
+      cursor: pointer;
+    }
     .small-map-card img{ display:block; }
     .small-map-card{
       position: absolute;

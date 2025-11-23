@@ -19695,6 +19695,22 @@ if (!map.__pillHooksInstalled) {
       return el;
     }
 
+    // Enable pointer events on overlays containing small map cards
+    (function enableSmallMapCardPointerEvents(){
+      const enableOverlay = (overlay) => {
+        if(overlay && overlay.querySelector && overlay.querySelector('.small-map-card')){
+          overlay.style.pointerEvents = 'auto';
+        }
+      };
+      document.querySelectorAll('.mapmarker-overlay').forEach(enableOverlay);
+      if(typeof MutationObserver !== 'undefined'){
+        const observer = new MutationObserver(() => {
+          document.querySelectorAll('.mapmarker-overlay').forEach(enableOverlay);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    })();
+
     document.addEventListener('click', (ev)=>{
       const smallMapCard = ev.target.closest('.small-map-card');
       if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
