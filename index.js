@@ -18505,13 +18505,28 @@ function makePosts(){
                 }
               });
               markerIconLayerInitialized = true;
+              // Ensure marker-icon layer is visible after creation
+              if(typeof window.updateMapCardLayerOpacity === 'function'){
+                const currentDisplayMode = document.body.getAttribute('data-map-card-display') || 'always';
+                window.updateMapCardLayerOpacity(currentDisplayMode);
+              }
             }catch(e){
               if(map.getLayer(markerIconLayerId)){
                 markerIconLayerInitialized = true;
+                // Ensure marker-icon layer is visible after creation
+                if(typeof window.updateMapCardLayerOpacity === 'function'){
+                  const currentDisplayMode = document.body.getAttribute('data-map-card-display') || 'always';
+                  window.updateMapCardLayerOpacity(currentDisplayMode);
+                }
               }
             }
           } else {
             markerIconLayerInitialized = true;
+            // Ensure marker-icon layer is visible if it already exists
+            if(typeof window.updateMapCardLayerOpacity === 'function'){
+              const currentDisplayMode = document.body.getAttribute('data-map-card-display') || 'always';
+              window.updateMapCardLayerOpacity(currentDisplayMode);
+            }
           }
         };
         whenStyleReady(map, () => {
@@ -19234,8 +19249,19 @@ function makePosts(){
           try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
         }
         // Ensure marker-icon layer always has opacity 1 (never affected by map card display mode)
-        if(map.getLayer('marker-icon')){
-          try{ map.setPaintProperty('marker-icon', 'icon-opacity', 1); }catch(e){}
+        // This is critical - marker-icon is "god" and must always be visible
+        const markerIconLayer = map.getLayer('marker-icon');
+        if(markerIconLayer){
+          try{ 
+            // Force opacity to 1 regardless of display mode
+            map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+          }catch(e){
+            console.error('Failed to set marker-icon opacity:', e);
+          }
+        } else {
+          // Layer doesn't exist yet - this is OK, it will be created later
+          // But log for debugging
+          console.warn('marker-icon layer not found when updating opacity');
         }
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
@@ -19243,6 +19269,15 @@ function makePosts(){
       
       // Call on initial load to ensure marker-icon opacity is set correctly
       updateMapCardLayerOpacity(mapCardDisplay);
+      
+      // Double-check marker-icon layer is visible after a short delay (in case it's created later)
+      setTimeout(() => {
+        if(map && map.getLayer('marker-icon')){
+          try{
+            map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+          }catch(e){}
+        }
+      }, 100);
       
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
