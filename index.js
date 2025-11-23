@@ -2951,7 +2951,6 @@ let __notifyMapOnInteraction = null;
     let markerFeatureIndex = new Map();
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
-    const hoverHighlightedPostIds = new Set();
     function updateMapFeatureHighlights(targets){
       const input = Array.isArray(targets) ? targets : [targets];
       const seen = new Set();
@@ -3261,76 +3260,9 @@ let __notifyMapOnInteraction = null;
       return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
     }
 
-    function getOverlayMultiIds(overlay){
-      if(!overlay || !overlay.dataset) return [];
-      const raw = overlay.dataset.multiIds || '';
-      if(!raw) return [];
-      return raw.split(',').map(id => id.trim()).filter(Boolean);
-    }
-
-    function findMarkerOverlaysById(id){
-      if(id === undefined || id === null) return [];
-      const strId = String(id);
-      const matches = new Set();
-      const escaped = escapeAttrValue(strId);
-      if(typeof document !== 'undefined' && document.querySelectorAll){
-        try{
-          document.querySelectorAll(`.mapmarker-overlay[data-id="${escaped}"]`).forEach(el => matches.add(el));
-        }catch(err){ /* ignore selector issues */ }
-        document.querySelectorAll('.mapmarker-overlay[data-multi-ids]').forEach(el => {
-          if(matches.has(el)) return;
-          const multiIds = getOverlayMultiIds(el);
-          if(multiIds.includes(strId)){
-            matches.add(el);
-          }
-        });
-      }
-      return Array.from(matches);
-    }
-
-    function toggleSmallMapCardHoverHighlight(postId, shouldHighlight){
-      if(postId === undefined || postId === null) return;
-      const idStr = String(postId);
-      const highlightClass = 'is-pill-highlight';
-      const mapHighlightClass = 'is-map-highlight';
-      let highlightChanged = false;
-      if(shouldHighlight){
-        if(!hoverHighlightedPostIds.has(idStr)){
-          hoverHighlightedPostIds.add(idStr);
-          highlightChanged = true;
-        }
-      } else {
-        if(hoverHighlightedPostIds.delete(idStr)){
-          highlightChanged = true;
-        }
-      }
-      const overlays = findMarkerOverlaysById(postId);
-      overlays.forEach(overlay => {
-        overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
-          if(shouldHighlight){
-            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
-              cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(highlightClass) ? '1' : '0';
-            }
-            if(!cardEl.classList.contains(highlightClass)){
-              cardEl.classList.add(highlightClass);
-            }
-          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
-            const prev = cardEl.dataset.hoverPrevHighlight === '1';
-            delete cardEl.dataset.hoverPrevHighlight;
-            if(!prev){
-              cardEl.classList.remove(highlightClass);
-            }
-          }
-        });
-      });
-      if(highlightChanged || shouldHighlight){
-        updateSelectedMarkerRing();
-      }
-    }
 
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
-      const markerHighlightClass = 'is-pill-highlight';
       const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && el.classList.contains('post-card'));
       const restoreHighlightBackground = (el)=>{
         if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
@@ -3372,9 +3304,6 @@ let __notifyMapOnInteraction = null;
         restoreAttr(el);
         restoreHighlightBackground(el);
       });
-      document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
-        el.classList.remove(markerHighlightClass);
-      });
 
       let fallbackId = '';
       if(activePostId !== undefined && activePostId !== null){
@@ -3383,10 +3312,8 @@ let __notifyMapOnInteraction = null;
         const openEl = document.querySelector('.post-board .open-post[data-id]');
         fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
       }
-      const hoverHighlightList = Array.from(hoverHighlightedPostIds);
       const idsToHighlight = Array.from(new Set([
-        fallbackId,
-        ...hoverHighlightList
+        fallbackId
       ].filter(Boolean)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
@@ -3412,16 +3339,6 @@ let __notifyMapOnInteraction = null;
         // Don't highlight open post cards - they should maintain their #1f2750 background
         const preferredVenue = globalVenueKey;
         const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
-        const overlays = findMarkerOverlaysById(strId);
-        overlays.forEach(overlay => {
-          const overlayKey = overlay && overlay.dataset ? String(overlay.dataset.venueKey || '').trim() : '';
-          if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
-            return;
-          }
-          overlay.querySelectorAll('.small-map-card').forEach(el => {
-            el.classList.add(markerHighlightClass);
-          });
-        });
         const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
         if(!targetSeen.has(dedupeKey)){
           targetSeen.add(dedupeKey);
@@ -19518,70 +19435,10 @@ function makePosts(){
         renderHistoryBoard();
       });
 
-      const handleHoverHighlight = (state)=> toggleSmallMapCardHoverHighlight(p.id, state);
-
-      el.addEventListener('mouseenter', ()=> handleHoverHighlight(true));
-      el.addEventListener('mouseleave', ()=> handleHoverHighlight(false));
       el.dataset.hoverHighlightBound = '1';
       return el;
     }
 
-    // Enable pointer events on overlays containing small map cards
-    (function enableSmallMapCardPointerEvents(){
-      const enableOverlay = (overlay) => {
-        if(overlay && overlay.querySelector && overlay.querySelector('.small-map-card')){
-          overlay.style.pointerEvents = 'auto';
-        }
-      };
-      document.querySelectorAll('.mapmarker-overlay').forEach(enableOverlay);
-      if(typeof MutationObserver !== 'undefined'){
-        const observer = new MutationObserver(() => {
-          document.querySelectorAll('.mapmarker-overlay').forEach(enableOverlay);
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-      }
-    })();
-
-    document.addEventListener('click', (ev)=>{
-      const smallMapCard = ev.target.closest('.small-map-card');
-      if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
-        ev.preventDefault();
-        ev.stopPropagation();
-        const pid = smallMapCard.dataset.id;
-        callWhenDefined('openPost', (fn)=>{
-          requestAnimationFrame(() => {
-            try{
-              touchMarker = null;
-              stopSpin();
-              if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                try{ closePanel(filterPanel); }catch(err){}
-              }
-              fn(pid, false, true, null);
-            }catch(err){ console.error(err); }
-          });
-        });
-      }
-    }, { capture: true });
-
-    document.addEventListener('mouseover', event => {
-      const cardEl = event.target.closest('.post-card, .recents-card');
-      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
-      const related = event.relatedTarget;
-      if(related && cardEl.contains(related)) return;
-      const id = cardEl.dataset ? cardEl.dataset.id : null;
-      if(!id) return;
-      toggleSmallMapCardHoverHighlight(id, true);
-    });
-
-    document.addEventListener('mouseout', event => {
-      const cardEl = event.target.closest('.post-card, .recents-card');
-      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
-      const related = event.relatedTarget;
-      if(related && cardEl.contains(related)) return;
-      const id = cardEl.dataset ? cardEl.dataset.id : null;
-      if(!id) return;
-      toggleSmallMapCardHoverHighlight(id, false);
-    });
 
     // History board
     function loadHistory(){ 
