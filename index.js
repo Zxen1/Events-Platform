@@ -789,6 +789,8 @@ if (typeof slugify !== 'function') {
 
 // Extracted from <script>
 // === 150x40 pill provider (sprite id: marker-label-bg) ===
+// SINGLE-VENUE POSTS: Provides direct Mapbox sprites for simple single-venue markers
+// When labelSpriteId is empty, Mapbox uses these sprites directly (marker-label-bg and marker-label-bg--accent)
 (function(){
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
@@ -1559,12 +1561,15 @@ async function ensureMapboxCssFor(container) {
     });
   }
 
+  // MULTI-VENUE POSTS: Provides pill images as building blocks for composite sprites
+  // These images are composited with icons/text by createMarkerLabelCompositeTextures()
+  // to create unique sprites for each multi-venue marker (marker-label-composite-{spriteId})
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
     const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/funmap-logo-big.png';
+    const accentUrl = 'assets/icons-30/225x60-pill-2f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl)
