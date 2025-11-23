@@ -19233,10 +19233,16 @@ function makePosts(){
         if(map.getLayer('marker-label')){
           try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
         }
+        // Ensure marker-icon layer always has opacity 1 (never affected by map card display mode)
+        if(map.getLayer('marker-icon')){
+          try{ map.setPaintProperty('marker-icon', 'icon-opacity', 1); }catch(e){}
+        }
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
       window.getMapInstance = () => map; // Expose map instance getter
-      window.getMapInstance = () => map; // Expose map instance getter
+      
+      // Call on initial load to ensure marker-icon opacity is set correctly
+      updateMapCardLayerOpacity(mapCardDisplay);
       
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
