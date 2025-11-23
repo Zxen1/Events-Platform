@@ -3189,7 +3189,7 @@ async function ensureMapboxCssFor(container) {
 
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
-    // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
+    // === 0528 helpers: contextmenu list (robust positioning + locking) ===
     let listLocked = false;
     function lockMap(lock){
       listLocked = lock;
@@ -16546,13 +16546,13 @@ function makePosts(){
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
       let userClosedPostBoard = false;
-      const WIDE_SCREEN_CLUSTER_MIN_WIDTH = 1200;
+      const WIDE_SCREEN_MULTI_POST_MIN_WIDTH = 1200;
 
       function isWideScreenPostBoard(){
-        return window.innerWidth >= WIDE_SCREEN_CLUSTER_MIN_WIDTH;
+        return window.innerWidth >= WIDE_SCREEN_MULTI_POST_MIN_WIDTH;
       }
 
-      function autoOpenPostBoardForCluster({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
+      function autoOpenPostBoardForMultiPost({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
         if(trigger !== 'click' && trigger !== 'touch') return;
         if(userClosedPostBoard) return;
         if(!isWideScreenPostBoard()) return;
@@ -18987,7 +18987,7 @@ function makePosts(){
         if(Array.isArray(result)){
           result.forEach(feature => { 
             if(feature) {
-              // Prevent nested clusters - check if cluster feature with same coordinates already exists
+              // Prevent duplicate multi-post features - check if feature with same coordinates already exists
               const existing = features.find(f => 
                 f && f.geometry && feature.geometry &&
                 Array.isArray(f.geometry.coordinates) && Array.isArray(feature.geometry.coordinates) &&
@@ -19174,7 +19174,7 @@ function makePosts(){
             normalizedMultiCount = normalizedMultiIds.length;
           }
           const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiVenue ? 2 : 0);
-          const isMultiCluster = helperMultiCount > 1;
+          const isMultiPost = helperMultiCount > 1;
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
@@ -19203,8 +19203,8 @@ function makePosts(){
                 });
               });
             }
-            if(isMultiCluster){
-              autoOpenPostBoardForCluster({
+            if(isMultiPost){
+              autoOpenPostBoardForMultiPost({
                 multiIds: normalizedMultiIds,
                 multiCount: helperMultiCount,
                 trigger: 'touch'
@@ -19212,8 +19212,8 @@ function makePosts(){
             }
             return;
           }
-          if(isMultiCluster){
-            autoOpenPostBoardForCluster({
+          if(isMultiPost){
+            autoOpenPostBoardForMultiPost({
               multiIds: normalizedMultiIds,
               multiCount: helperMultiCount,
               trigger: 'click'
