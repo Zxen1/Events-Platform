@@ -1434,6 +1434,10 @@ let __notifyMapOnInteraction = null;
   // Multi-venue: These images are composited with icons/text by createMarkerLabelCompositeTextures()
   // to create unique sprites for each multi-venue map card (marker-label-composite-{spriteId})
   async function ensureMarkerLabelPillImage(){
+    const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'hover_only';
+    if(mapCardDisplay !== 'always' && mapCardDisplay !== 'hover_only'){
+      return null;
+    }
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
@@ -1590,17 +1594,6 @@ let __notifyMapOnInteraction = null;
     }
     const pillImg = pillAssets.base;
     const pillAccentImg = pillAssets.highlight;
-    const markerSources = window.subcategoryMarkers || {};
-    const iconUrl = meta && meta.iconId ? markerSources[meta.iconId] : null;
-    let iconImg = null;
-    if(iconUrl){
-      try{
-        iconImg = await loadMarkerLabelImage(iconUrl);
-      }catch(err){
-        console.error(err);
-        iconImg = null;
-      }
-    }
     const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg, markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx, markerLabelBackgroundWidthPx);
     const accentDims = pillAccentImg ? computeMarkerLabelCanvasDimensions(pillAccentImg, markerLabelAccentWidthPx, markerLabelAccentHeightPx, markerLabelBackgroundWidthPx) : null;
     let deviceScale = 1;
@@ -1620,6 +1613,7 @@ let __notifyMapOnInteraction = null;
     const scaledAccentCanvasWidth = accentDims ? Math.max(1, Math.round(accentDims.canvasWidth * deviceScale)) : scaledCanvasWidth;
     const scaledAccentCanvasHeight = accentDims ? Math.max(1, Math.round(accentDims.canvasHeight * deviceScale)) : scaledCanvasHeight;
     const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
+    const scaledAccentPixelRatio = accentDims ? (Number.isFinite(accentDims.pixelRatio) && accentDims.pixelRatio > 0 ? accentDims.pixelRatio : 1) * deviceScale : scaledPixelRatio;
     const labelLines = [];
     const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
     const line2 = (meta && meta.labelLine2 ? meta.labelLine2 : '').trim();
@@ -1629,67 +1623,15 @@ let __notifyMapOnInteraction = null;
     if(line2){
       labelLines.push({ text: line2, color: meta && meta.isMulti ? '#d0d0d0' : '#ffffff' });
     }
-    const drawForeground = (ctx) => {
-      if(!ctx){
-        return;
-      }
-      try{
-        ctx.imageSmoothingEnabled = true;
-        if('imageSmoothingQuality' in ctx){
-          ctx.imageSmoothingQuality = 'high';
-        }
-      }catch(err){}
-      if(iconImg){
-        const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledPixelRatio;
-        const destX = Math.round(markerLabelMarkerInsetPx * scaledPixelRatio);
-        const destY = Math.round((scaledCanvasHeight - iconSizePx) / 2);
-        drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
-      }
-      if(labelLines.length){
-        const fontSizePx = markerLabelTextSize * scaledPixelRatio;
-        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledPixelRatio);
-        const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-        let textY = Math.round((scaledCanvasHeight - totalHeight) / 2);
-        if(!Number.isFinite(textY) || textY < 0){
-          textY = 0;
-        }
-        const textX = Math.round(markerLabelTextPaddingPx * scaledPixelRatio);
-        ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
-        ctx.textBaseline = 'top';
-        ctx.textAlign = 'left';
-        ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 2 * scaledPixelRatio;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 1 * scaledPixelRatio;
-        labelLines.forEach(line => {
-          ctx.fillStyle = line.color;
-          try{
-            ctx.fillText(line.text, textX, textY);
-          }catch(err){
-            console.error(err);
-          }
-          textY += fontSizePx + lineGapPx;
-        });
-        ctx.shadowColor = 'transparent';
-      }
-    };
-    const buildComposite = (backgroundImage, tintColor, tintAlpha, compositeWidth, compositeHeight) => {
-      if(!backgroundImage){
-        return null;
-      }
+    const buildComposite = (backgroundImage, tintColor, tintAlpha, compositeWidth, compositeHeight, pixelRatioForText, pixelRatioForOptions) => {
+      if(!backgroundImage) return null;
       const canvas = document.createElement('canvas');
       canvas.width = compositeWidth;
       canvas.height = compositeHeight;
       const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
+      if(!ctx) return null;
       ctx.clearRect(0, 0, compositeWidth, compositeHeight);
-      try{
-        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, compositeWidth, compositeHeight);
-      }catch(err){
-        console.error(err);
-      }
+      drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, compositeWidth, compositeHeight);
       if(tintColor){
         ctx.globalCompositeOperation = 'source-atop';
         ctx.globalAlpha = tintAlpha;
@@ -1698,7 +1640,25 @@ let __notifyMapOnInteraction = null;
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
       }
-      drawForeground(ctx);
+      if(labelLines.length){
+        const fontSizePx = markerLabelTextSize * pixelRatioForText;
+        const lineGapPx = (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatioForText;
+        const totalHeight = labelLines.length * fontSizePx + (labelLines.length - 1) * lineGapPx;
+        let textY = Math.round((compositeHeight - totalHeight) / 2);
+        const textX = Math.round(markerLabelTextPaddingPx * pixelRatioForText);
+        ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 2 * pixelRatioForText;
+        ctx.shadowOffsetY = 1 * pixelRatioForText;
+        labelLines.forEach(line => {
+          ctx.fillStyle = line.color;
+          ctx.fillText(line.text, textX, textY);
+          textY += fontSizePx + lineGapPx;
+        });
+        ctx.shadowColor = 'transparent';
+      }
       let imageData = null;
       try{
         imageData = ctx.getImageData(0, 0, compositeWidth, compositeHeight);
@@ -1711,23 +1671,18 @@ let __notifyMapOnInteraction = null;
       }
       return {
         image: imageData,
-        options: { pixelRatio: Number.isFinite(scaledPixelRatio) && scaledPixelRatio > 0 ? scaledPixelRatio : 1 }
+        options: { pixelRatio: Number.isFinite(pixelRatioForOptions) && pixelRatioForOptions > 0 ? pixelRatioForOptions : 1 }
       };
     };
-    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, scaledCanvasWidth, scaledCanvasHeight);
-    let accentComposite = null;
-    if(pillAccentImg && accentDims){
-      accentComposite = buildComposite(pillAccentImg, null, 1, scaledAccentCanvasWidth, scaledAccentCanvasHeight);
-    }
-    if(!baseComposite){
-      return null;
-    }
+    const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'hover_only';
+    const baseComposite = mapCardDisplay === 'always' ? buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, scaledCanvasWidth, scaledCanvasHeight, scaledPixelRatio, scaledPixelRatio) : null;
+    const accentComposite = pillAccentImg && accentDims ? buildComposite(pillAccentImg, null, 1, scaledAccentCanvasWidth, scaledAccentCanvasHeight, scaledAccentPixelRatio, scaledAccentPixelRatio) : null;
     if(!accentComposite){
       return null;
     }
     const nextMeta = Object.assign({}, meta || {}, {
-      image: baseComposite.image,
-      options: baseComposite.options,
+      image: baseComposite ? baseComposite.image : null,
+      options: baseComposite ? baseComposite.options : {},
       highlightImage: accentComposite.image,
       highlightOptions: accentComposite.options
     });
@@ -1744,9 +1699,9 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const existing = markerLabelCompositeStore.get(labelSpriteId);
-    if(existing && existing.image){
+    if(existing && existing.highlightImage){
       return {
-        base: { image: existing.image, options: existing.options || {} },
+        base: existing.image ? { image: existing.image, options: existing.options || {} } : null,
         highlight: {
           image: existing.highlightImage,
           options: existing.highlightOptions || {}
@@ -1761,9 +1716,9 @@ let __notifyMapOnInteraction = null;
         console.error(err);
       }
       const refreshed = markerLabelCompositeStore.get(labelSpriteId);
-      if(refreshed && refreshed.image){
+      if(refreshed && refreshed.highlightImage){
         return {
-          base: { image: refreshed.image, options: refreshed.options || {} },
+          base: refreshed.image ? { image: refreshed.image, options: refreshed.options || {} } : null,
           highlight: {
             image: refreshed.highlightImage,
             options: refreshed.highlightOptions || {}
@@ -1778,7 +1733,7 @@ let __notifyMapOnInteraction = null;
     markerLabelCompositePending.set(labelSpriteId, task);
     try{
       const generated = await task;
-      if(!generated || !generated.base){
+      if(!generated || !generated.highlight){
         return null;
       }
       return generated;
@@ -19034,16 +18989,19 @@ function makePosts(){
         ]
       ];
 
+      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'hover_only';
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
+      const markerLabelBaseOpacity = mapCardDisplay === 'always' 
+        ? ['case', highlightedStateExpression, 0, 1]
+        : 0;
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 800, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconAnchor: [markerLabelBackgroundWidthPx / 2, markerLabelBackgroundHeightPx / 2] },
+        { id:'marker-label-highlight', source:'posts', sortKey: 801, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconAnchor: [markerLabelAccentWidthPx / 2, markerLabelAccentHeightPx / 2] }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconAnchor }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
@@ -19059,7 +19017,7 @@ function makePosts(){
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'left',
+                'icon-anchor': iconAnchor,
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -19083,7 +19041,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor', iconAnchor); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
