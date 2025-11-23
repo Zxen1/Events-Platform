@@ -18435,6 +18435,67 @@ function makePosts(){
         };
         whenStyleReady(map, applyStyleAdjustments);
         map.on('style.load', applyStyleAdjustments);
+        
+        let markerIconLayerInitialized = false;
+        const initializeMarkerIconLayer = () => {
+          if(markerIconLayerInitialized || !map || !map.getSource('posts')){
+            return;
+          }
+          const markerIconFilter = ['all',
+            ['!',['has','point_count']],
+            ['has','title']
+          ];
+          const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+            ['case',
+              ['==', ['var','iconId'], ''],
+              MULTI_POST_MARKER_ICON_ID,
+              ['var','iconId']
+            ]
+          ];
+          const markerIconLayerId = 'marker-icon';
+          if(!map.getLayer(markerIconLayerId)){
+            try{
+              map.addLayer({
+                id: markerIconLayerId,
+                type:'symbol',
+                source:'posts',
+                filter: markerIconFilter,
+                minzoom: MARKER_ZOOM_THRESHOLD,
+                layout:{
+                  'icon-image': markerIconImageExpression,
+                  'icon-size': 1,
+                  'icon-allow-overlap': true,
+                  'icon-ignore-placement': true,
+                  'icon-anchor': 'center',
+                  'icon-pitch-alignment': 'viewport',
+                  'symbol-z-order': 'viewport-y',
+                  'symbol-sort-key': 1000
+                },
+                paint:{
+                  'icon-opacity': 1
+                }
+              });
+              markerIconLayerInitialized = true;
+            }catch(e){
+              if(map.getLayer(markerIconLayerId)){
+                markerIconLayerInitialized = true;
+              }
+            }
+          } else {
+            markerIconLayerInitialized = true;
+          }
+        };
+        whenStyleReady(map, () => {
+          if(map.getSource('posts')){
+            initializeMarkerIconLayer();
+          } else {
+            map.once('sourcedata', () => {
+              if(map.getSource('posts')){
+                initializeMarkerIconLayer();
+              }
+            });
+          }
+        });
         map.on('styledata', () => {
           try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
@@ -19039,53 +19100,6 @@ function makePosts(){
       await prepareMarkerLabelCompositesForPosts(postsData);
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
-      if(!map.__markerIconLayerCreated){
-        const markerIconFilter = ['all',
-          ['!',['has','point_count']],
-          ['has','title']
-        ];
-        const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-          ['case',
-            ['==', ['var','iconId'], ''],
-            MULTI_POST_MARKER_ICON_ID,
-            ['var','iconId']
-          ]
-        ];
-        
-        const markerIconLayerId = 'marker-icon';
-        if(!map.getLayer(markerIconLayerId)){
-          try{
-            map.addLayer({
-              id: markerIconLayerId,
-              type:'symbol',
-              source:'posts',
-              filter: markerIconFilter,
-              minzoom: MARKER_MIN_ZOOM,
-              layout:{
-                'icon-image': markerIconImageExpression,
-                'icon-size': 1,
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-anchor': 'center',
-                'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
-                'symbol-sort-key': 1000
-              },
-              paint:{
-                'icon-opacity': 1
-              }
-            });
-            map.__markerIconLayerCreated = true;
-          }catch(e){
-            if(map.getLayer(markerIconLayerId)){
-              map.__markerIconLayerCreated = true;
-            }
-          }
-        } else {
-          map.__markerIconLayerCreated = true;
-        }
-      }
-      
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
         ['has','title']
@@ -19116,8 +19130,8 @@ function makePosts(){
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 500, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 501, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19135,7 +19149,7 @@ function makePosts(){
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'center',
+                'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -19159,7 +19173,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
