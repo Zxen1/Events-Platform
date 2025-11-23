@@ -1455,12 +1455,12 @@ let __notifyMapOnInteraction = null;
       const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
       const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
       const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
-      const pixelRatio = canvasWidth / basePillWidthPx;
+      const pixelRatio = 1;
       return { canvasWidth, canvasHeight, pixelRatio };
     }
     const canvasWidth = basePillWidthPx;
     const canvasHeight = basePillHeightPx;
-    const pixelRatio = canvasWidth / basePillWidthPx;
+    const pixelRatio = 1;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
