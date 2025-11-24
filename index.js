@@ -24445,7 +24445,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function apply(){
     if(!opacityInput || !opacityVal) return;
     
-    const opacity = parseFloat(opacityInput.value) || 0;
+    const opacity = opacityInput.value;
     const shadowMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
     const isPostMode = document.body.classList.contains('mode-posts');
     
@@ -24454,11 +24454,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalOpacity = shouldShowShadow ? opacity : 0;
     
     root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
-    root.style.setProperty('--post-mode-bg-opacity', String(finalOpacity));
+    root.style.setProperty('--post-mode-bg-opacity', finalOpacity);
     opacityVal.textContent = Number(opacity).toFixed(2);
-    
-    // Debug: log to verify shadow is being applied
-    console.log('Map shadow applied:', { opacity, shadowMode, isPostMode, shouldShowShadow, finalOpacity });
   }
   
   // Make apply function globally accessible
@@ -24555,8 +24552,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update display and shadow in real-time on slider input
     opacityInput.addEventListener('input', () => {
-      opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
       apply(); // Update shadow in real-time
+      opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
     });
     
     // Auto-save on slider change
