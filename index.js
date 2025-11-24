@@ -2477,6 +2477,23 @@ let __notifyMapOnInteraction = null;
                       });
                     }
                     
+                    // Update click and cursor handlers to match new display mode
+                    if(typeof window.attachClickHandlers === 'function'){
+                      window.attachClickHandlers();
+                    }
+                    if(typeof window.attachCursorHandlers === 'function'){
+                      window.attachCursorHandlers();
+                    }
+                    
+                    // Ensure marker-icon is visible (critical - it's "god")
+                    if(mapInstance && mapInstance.getLayer('marker-icon')){
+                      try {
+                        mapInstance.setPaintProperty('marker-icon', 'icon-opacity', 1);
+                        mapInstance.setLayoutProperty('marker-icon', 'visibility', 'visible');
+                        mapInstance.setLayoutProperty('marker-icon', 'icon-size', 1);
+                      } catch(e) {}
+                    }
+                    
                     // Auto-save to database
                     try {
                       await fetch('/gateway.php?action=save-admin-settings', {
@@ -3274,7 +3291,16 @@ let __notifyMapOnInteraction = null;
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    const MARKER_INTERACTIVE_LAYERS = ['marker-icon', ...VISIBLE_MARKER_LABEL_LAYERS];
+    // Get interactive layers based on map card display mode
+    // In hover_only mode, only marker-icon is clickable (map cards are hidden)
+    // In always mode, marker-icon and map card layers are clickable
+    const getMarkerInteractiveLayers = () => {
+      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+      if(mapCardDisplay === 'hover_only'){
+        return ['marker-icon']; // Only marker-icon is clickable when cards are hidden
+      }
+      return ['marker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
+    };
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -19432,7 +19458,25 @@ function makePosts(){
             }
           }
         };
-      MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
+      // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
+      const attachClickHandlers = () => {
+        // Remove old handlers from all possible layers
+        const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
+        allPossibleLayers.forEach(layer => {
+          try {
+            map.off('click', layer, handleMarkerClick);
+          } catch(e) {}
+        });
+        // Add handlers to current interactive layers
+        getMarkerInteractiveLayers().forEach(layer => {
+          try {
+            map.on('click', layer, handleMarkerClick);
+          } catch(e) {}
+        });
+      };
+      attachClickHandlers();
+      // Expose globally so handlers can be updated when mapCardDisplay changes
+      window.attachClickHandlers = attachClickHandlers;
 
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
@@ -19467,7 +19511,7 @@ function makePosts(){
           hoveredPostIds = [];
           updateSelectedMarkerRing();
         } else {
-          const clickedMarkerLabel = feats.some(f => MARKER_INTERACTIVE_LAYERS.includes(f.layer && f.layer.id));
+          const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
           if(!clickedMarkerLabel){
             touchMarker = null;
             hoveredPostIds = [];
@@ -19478,15 +19522,31 @@ function makePosts(){
 
       updateSelectedMarkerRing();
 
-      // Set pointer cursor when hovering over markers
-      MARKER_INTERACTIVE_LAYERS.forEach(layer => {
-        map.on('mouseenter', layer, () => {
-          map.getCanvas().style.cursor = 'pointer';
+      // Set pointer cursor when hovering over markers (dynamic based on mapCardDisplay)
+      const attachCursorHandlers = () => {
+        // Remove old handlers from all possible layers
+        const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
+        allPossibleLayers.forEach(layer => {
+          try {
+            map.off('mouseenter', layer);
+            map.off('mouseleave', layer);
+          } catch(e) {}
         });
-        map.on('mouseleave', layer, () => {
-          map.getCanvas().style.cursor = 'grab';
+        // Add handlers to current interactive layers
+        getMarkerInteractiveLayers().forEach(layer => {
+          try {
+            map.on('mouseenter', layer, () => {
+              map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', layer, () => {
+              map.getCanvas().style.cursor = 'grab';
+            });
+          } catch(e) {}
         });
-      });
+      };
+      attachCursorHandlers();
+      // Expose globally so handlers can be updated when mapCardDisplay changes
+      window.attachCursorHandlers = attachCursorHandlers;
 
       // Handle hover/tap to show accent pill
       const handleMarkerHover = (e) => {
