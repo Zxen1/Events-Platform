@@ -94,6 +94,11 @@
         const thumbUrl = window.thumbUrl || (() => null);
         const thumbnailUrl = post && thumbUrl ? thumbUrl(post) : null;
         
+        // Debug: log if thumbnail is missing
+        if(!thumbnailUrl && post){
+          console.log('[Map Markers] No thumbnail URL for post:', postId, 'thumbUrl available:', typeof thumbUrl === 'function', 'post:', post);
+        }
+        
         // Store marker data
         const markerData = {
           element: markerEl,
@@ -118,7 +123,10 @@
     
     // Function to load thumbnail and replace icon (only after load completes)
     const loadThumbnailForMarker = async (markerData) => {
-      if(!markerData.thumbnailUrl) return;
+      if(!markerData.thumbnailUrl) {
+        console.log('[Map Markers] No thumbnail URL for marker:', markerData.postId);
+        return;
+      }
       
       if(markerData.thumbnailLoaded){
         // Already loaded, just show it
@@ -133,10 +141,12 @@
           markerData.thumbnailImg = img;
           // Only replace background after image is fully loaded
           markerData.element.style.backgroundImage = `url(${markerData.thumbnailUrl})`;
+          console.log('[Map Markers] Thumbnail loaded for post:', markerData.postId);
           resolve();
         };
-        img.onerror = () => {
+        img.onerror = (err) => {
           // If thumbnail fails to load, keep icon
+          console.warn('[Map Markers] Failed to load thumbnail for post:', markerData.postId, 'URL:', markerData.thumbnailUrl, err);
           resolve();
         };
         img.src = markerData.thumbnailUrl;
