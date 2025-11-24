@@ -24453,6 +24453,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const shouldShowShadow = shadowMode === 'always' || (shadowMode === 'post_mode_only' && isPostMode);
     const finalOpacity = shouldShowShadow ? opacity : 0;
     
+    // Show/hide the shadow element based on mode
+    const shadowElement = document.querySelector('.post-mode-background');
+    if(shadowElement){
+      if(shadowMode === 'always'){
+        shadowElement.style.display = 'block';
+      } else if(shadowMode === 'post_mode_only'){
+        // Let CSS handle it (it shows in .mode-posts via CSS rule)
+        shadowElement.style.display = '';
+      } else {
+        shadowElement.style.display = 'none';
+      }
+    }
+    
     root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
     root.style.setProperty('--post-mode-bg-opacity', finalOpacity);
     opacityVal.textContent = Number(opacity).toFixed(2);
