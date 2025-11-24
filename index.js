@@ -7048,6 +7048,24 @@ function makePosts(){
         }
         ensurePreparationPromise().catch(()=>{});
         updateMapFeatureHighlights(lastHighlightedPostIds);
+        
+        // Update DOM markers when source data changes (filters applied)
+        if(typeof window.initDomMarkers === 'function' && map && postsData){
+          try{
+            // Get options from window or use defaults (same as addPostSource)
+            const minZoom = (typeof window.MARKER_ZOOM_THRESHOLD !== 'undefined') ? window.MARKER_ZOOM_THRESHOLD : 8;
+            const multiPostIconId = (typeof window.MULTI_POST_MARKER_ICON_ID !== 'undefined') ? window.MULTI_POST_MARKER_ICON_ID : 'multi-post-icon';
+            const subcategoryMarkersForMarkers = window.subcategoryMarkers || {};
+            
+            window.initDomMarkers(map, postsData, {
+              minZoom: minZoom,
+              multiPostIconId: multiPostIconId,
+              subcategoryMarkers: subcategoryMarkersForMarkers
+            });
+          }catch(err){
+            console.error('Failed to update DOM markers:', err);
+          }
+        }
       }
       return { updated, signature };
     }

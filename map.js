@@ -275,22 +275,36 @@
     
     // Batch position updates to prevent flicker during zoom/move
     let positionUpdateScheduled = false;
+    let rafId = null;
+    
     const updateDomMarkerPositions = () => {
       if(!map || !domMarkersContainer) return;
       
+      // If already scheduled, skip
       if(positionUpdateScheduled) return;
+      
       positionUpdateScheduled = true;
       
-      requestAnimationFrame(() => {
+      // Cancel any pending RAF
+      if(rafId !== null){
+        cancelAnimationFrame(rafId);
+      }
+      
+      rafId = requestAnimationFrame(() => {
         positionUpdateScheduled = false;
+        rafId = null;
+        
         if(!map || !domMarkersContainer) return;
         
         const currentZoom = isZoomLevelValid();
         
+        // Batch DOM updates
         domMarkers.forEach((marker, featureId) => {
           try{
             const point = map.project([marker.lng, marker.lat]);
             if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
+              // Use left/top with will-change for performance
+              // CSS transform: translate(-50%, -50%) handles centering
               marker.element.style.left = point.x + 'px';
               marker.element.style.top = point.y + 'px';
             }
