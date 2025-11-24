@@ -19613,166 +19613,18 @@ function makePosts(){
       */
       
       // ============================================================================
-      // DOM-BASED MAP MARKERS
+      // DOM-BASED MAP MARKERS - Initialized via map.js
       // ============================================================================
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Create container for DOM markers
-      const mapContainer = document.getElementById('map');
-      if(!mapContainer) return;
-      
-      let domMarkersContainer = document.getElementById('dom-markers-container');
-      if(!domMarkersContainer){
-        domMarkersContainer = document.createElement('div');
-        domMarkersContainer.id = 'dom-markers-container';
-        domMarkersContainer.style.position = 'absolute';
-        domMarkersContainer.style.top = '0';
-        domMarkersContainer.style.left = '0';
-        domMarkersContainer.style.width = '100%';
-        domMarkersContainer.style.height = '100%';
-        domMarkersContainer.style.pointerEvents = 'none';
-        domMarkersContainer.style.zIndex = '15';
-        mapContainer.appendChild(domMarkersContainer);
+      // Initialize DOM markers if function is available
+      if(typeof window.initDomMarkers === 'function'){
+        window.initDomMarkers(map, postsData, {
+          minZoom: MARKER_ZOOM_THRESHOLD,
+          multiPostIconId: MULTI_POST_MARKER_ICON_ID,
+          subcategoryMarkers: subcategoryMarkers
+        });
       }
-      
-      // Clear existing markers
-      domMarkersContainer.innerHTML = '';
-      
-      // Store markers for position updates
-      const domMarkers = new Map();
-      
-      // Create DOM marker for each feature
-      postsData.features.forEach(feature => {
-        if(!feature || !feature.geometry || !feature.geometry.coordinates || !feature.properties) return;
-        if(feature.properties.point_count) return; // Skip cluster points
-        
-        const [lng, lat] = feature.geometry.coordinates;
-        if(!Number.isFinite(lng) || !Number.isFinite(lat)) return;
-        
-        const props = feature.properties;
-        const featureId = props.featureId || props.id || '';
-        
-        // Create marker element
-        const markerEl = document.createElement('div');
-        markerEl.className = 'dom-map-marker';
-        markerEl.dataset.featureId = featureId;
-        markerEl.dataset.postId = props.id || '';
-        markerEl.style.position = 'absolute';
-        markerEl.style.width = '30px';
-        markerEl.style.height = '30px';
-        markerEl.style.zIndex = '15';
-        markerEl.style.pointerEvents = 'auto';
-        markerEl.style.cursor = 'pointer';
-        markerEl.style.transform = 'translate(-50%, -50%)';
-        // Get icon URL - use subcategory icon or fallback to multi-post icon
-        const iconId = props.sub || MULTI_POST_MARKER_ICON_ID;
-        const iconUrl = subcategoryMarkers[iconId] || subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || '';
-        if(iconUrl){
-          markerEl.style.backgroundImage = `url(${iconUrl})`;
-          markerEl.style.backgroundSize = 'contain';
-          markerEl.style.backgroundRepeat = 'no-repeat';
-          markerEl.style.backgroundPosition = 'center';
-        } else {
-          // Fallback: create a simple colored circle if no icon available
-          markerEl.style.backgroundColor = '#2f3b73';
-          markerEl.style.borderRadius = '50%';
-          markerEl.style.border = '2px solid #ffffff';
-        }
-        
-        // Store marker data
-        domMarkers.set(featureId, {
-          element: markerEl,
-          lng,
-          lat,
-          props
-        });
-        
-        domMarkersContainer.appendChild(markerEl);
-      });
-      
-      // Function to update marker positions
-      const updateDomMarkerPositions = () => {
-        if(!map || !domMarkersContainer) return;
-        
-        domMarkers.forEach((marker, featureId) => {
-          try{
-            const point = map.project([marker.lng, marker.lat]);
-            if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
-              marker.element.style.left = point.x + 'px';
-              marker.element.style.top = point.y + 'px';
-            }
-          }catch(e){}
-        });
-      };
-      
-      // Update positions on map events
-      map.on('move', updateDomMarkerPositions);
-      map.on('zoom', updateDomMarkerPositions);
-      map.on('pitch', updateDomMarkerPositions);
-      map.on('rotate', updateDomMarkerPositions);
-      
-      // Initial position update
-      updateDomMarkerPositions();
-      
-      // Click/tap handlers
-      let touchMarkerId = null;
-      let touchMarkerTimeout = null;
-      
-      domMarkers.forEach((marker, featureId) => {
-        const props = marker.props;
-        const postId = props.id;
-        
-        // Single click/tap - show accent pill and label (placeholder for now)
-        marker.element.addEventListener('click', (e) => {
-          e.stopPropagation();
-          
-          if(isTouchDevice){
-            // Touch device - two-tap system
-            if(touchMarkerId === featureId){
-              // Second tap - open post
-              clearTimeout(touchMarkerTimeout);
-              touchMarkerId = null;
-              // TODO: Open post here
-              console.log('Double tap - open post:', postId);
-            } else {
-              // First tap - show accent pill and label
-              touchMarkerId = featureId;
-              clearTimeout(touchMarkerTimeout);
-              touchMarkerTimeout = setTimeout(() => {
-                touchMarkerId = null;
-              }, 1000);
-              // TODO: Show accent pill and label here
-              console.log('Single tap - show accent pill and label:', postId);
-            }
-          } else {
-            // Mouse - hover shows accent pill and label
-            // TODO: Show accent pill and label on hover
-            console.log('Click - show accent pill and label:', postId);
-          }
-        });
-        
-        // Double click - open post
-        marker.element.addEventListener('dblclick', (e) => {
-          e.stopPropagation();
-          // TODO: Open post here
-          console.log('Double click - open post:', postId);
-        });
-        
-        // Hover handlers
-        marker.element.addEventListener('mouseenter', (e) => {
-          // TODO: Show accent pill and label
-          console.log('Hover - show accent pill and label:', postId);
-        });
-        
-        marker.element.addEventListener('mouseleave', (e) => {
-          // TODO: Hide accent pill and label
-          console.log('Mouse leave - hide accent pill and label:', postId);
-        });
-      });
-      
-      // Store markers globally for cleanup
-      window.domMarkers = domMarkers;
-      window.updateDomMarkerPositions = updateDomMarkerPositions;
       if(!postSourceEventsBound){
         // ============================================================================
         // SPRITE LAYER CLICK HANDLERS COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
