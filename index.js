@@ -1632,12 +1632,12 @@ let __notifyMapOnInteraction = null;
       const scaledTextLeftOffset = markerLabelTextLeftOffsetPx * deviceScale;
       const leftSide = Math.abs(scaledPillLeftOffset) + pillWidth; // scaled offset + pill width
       const rightSide = scaledTextLeftOffset + labelWidth; // scaled offset + label width
-      const canvasWidth = leftSide + rightSide;
-      const canvasHeight = Math.max(pillHeight, labelHeight);
+      const canvasWidth = 150; // EXACTLY 150px as ordered
+      const canvasHeight = 40; // EXACTLY 40px as ordered
       const centerX = leftSide; // Anchor point (lat/lng) at center
       
       const canvas = document.createElement('canvas');
-      // Set canvas to actual scaled pixel dimensions for real size rendering
+      // Set canvas to exact 150x40px dimensions
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
       const ctx = canvas.getContext('2d');
@@ -19881,23 +19881,28 @@ function makePosts(){
           if(!targetFeature){
             for(const f of features){
               if(f.layer && f.layer.id === 'marker-label'){
-                // Verify we're in the pill area (left side of composite, not label text area)
-                // Pill is roughly 150px wide, positioned about 20px left of center
-                // Check if cursor is within pill bounds relative to feature center
+                // Verify we're in the pill area (exact 150x40px area, not label text area)
+                // Pill is 150px wide x 40px high, positioned 20px left of center
                 const featureCenter = f.geometry && f.geometry.coordinates ? 
                   map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]) : null;
                 if(featureCenter){
                   const dx = point.x - featureCenter.x;
-                  // Pill is roughly from -170px to -20px from center (150px wide, 20px left offset)
-                  // Add some tolerance for the pill area
-                  if(dx >= -200 && dx <= 0){
+                  const dy = point.y - featureCenter.y;
+                  
+                  // Pill bounds: 150px wide (from -20px to +130px from center), 40px high (from -20px to +20px from center)
+                  const pillLeft = -20;
+                  const pillRight = 130; // -20 + 150
+                  const pillTop = -20;
+                  const pillBottom = 20; // -20 + 40
+                  
+                  // Only accept if cursor is within the exact 150x40 pill area
+                  if(dx >= pillLeft && dx <= pillRight && dy >= pillTop && dy <= pillBottom){
                     targetFeature = f;
                     break;
                   }
                 } else {
-                  // No geometry info, assume it's the pill area
-                  targetFeature = f;
-                  break;
+                  // No geometry info, skip (can't verify pill area)
+                  continue;
                 }
               }
             }
@@ -19941,16 +19946,7 @@ function makePosts(){
         const f = e.features && e.features[0];
         if(!f) return;
         
-        // If hovering on marker-label, verify we're in the pill area (not label text area)
-        if(e.layer && e.layer.id === 'marker-label' && e.point && f.geometry && f.geometry.coordinates){
-          const featureCenter = map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]);
-          const dx = e.point.x - featureCenter.x;
-          // Pill is roughly from -170px to -20px from center (150px wide, 20px left offset)
-          // Only trigger if cursor is in pill area (left side), not label text area (right side)
-          if(dx < -200 || dx > 0){
-            return; // Not in pill area, ignore
-          }
-        }
+        // marker-label sprite is now exactly 150x40px pill only - no coordinate filtering needed
         
         const props = f.properties || {};
         const id = props.id;
