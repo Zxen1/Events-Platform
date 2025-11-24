@@ -3033,6 +3033,40 @@ let __notifyMapOnInteraction = null;
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
     let hoveredPostIds = [];
+    // Function to update icon-size for marker-label-highlight layer based on click/open state
+    function updateMarkerLabelHighlightIconSize(){
+      if(!map || typeof map.setFeatureState !== 'function') return;
+      
+      const openPostEl = document.querySelector('.open-post[data-id]');
+      const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
+      const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
+      const expandedPostId = openPostId || clickedPostId;
+      
+      // Reset all features to not expanded
+      highlightedFeatureKeys.forEach(entry => {
+        try{ 
+          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
+        }catch(err){}
+      });
+      
+      // Set expanded state for clicked/open post
+      if(expandedPostId){
+        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
+        if(entries && entries.length){
+          entries.forEach(entry => {
+            if(!entry) return;
+            const source = entry.source || 'posts';
+            const featureId = entry.id;
+            if(featureId !== undefined && featureId !== null){
+              try{ 
+                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true }); 
+              }catch(err){}
+            }
+          });
+        }
+      }
+    }
+    
     function updateMapFeatureHighlights(targets){
       const input = Array.isArray(targets) ? targets : [targets];
       const seen = new Set();
@@ -3122,6 +3156,9 @@ let __notifyMapOnInteraction = null;
         catch(err){}
       });
       highlightedFeatureKeys = nextEntries;
+      
+      // Update icon-size based on click/open state
+      updateMarkerLabelHighlightIconSize();
       if(highlightSpriteIds.size){
         highlightSpriteIds.forEach(spriteId => {
           touchMarkerLabelCompositeMeta(spriteId, { updateTimestamp: true });
@@ -17288,6 +17325,13 @@ function makePosts(){
             window.updateMapCardStates();
           });
         }
+        
+        // Update icon-size for expanded state
+        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
+          requestAnimationFrame(() => {
+            updateMarkerLabelHighlightIconSize();
+          });
+        }
 
         await nextFrame();
 
@@ -17567,6 +17611,11 @@ function makePosts(){
         // Update mapcard states when post closes
         if(typeof window.updateMapCardStates === 'function'){
           window.updateMapCardStates();
+        }
+        
+        // Update icon-size when post closes
+        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
+          updateMarkerLabelHighlightIconSize();
         }
       }
 
@@ -19241,12 +19290,22 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      // Icon size expression: scale to 0.6667 (150/225) when hovered but not clicked/open, full size (1.0) when clicked/open
+      // Use feature-state 'isExpanded' to control size per feature
+      const markerLabelHighlightIconSizeExpression = [
+        'case',
+        ['boolean', ['feature-state', 'isExpanded'], false],
+        1.0,  // Full size when expanded (clicked/open)
+        0.6667  // Hover size (150/225) when just hovered
+      ];
+      
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconSize: markerLabelHighlightIconSizeExpression }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
+        const finalIconSize = iconSize !== undefined ? iconSize : 1;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -19259,7 +19318,7 @@ function makePosts(){
               maxzoom: 24,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': 1,
+                'icon-size': finalIconSize,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -19283,7 +19342,7 @@ function makePosts(){
         }
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
@@ -19413,16 +19472,20 @@ function makePosts(){
           const isMultiPost = helperMultiCount > 1;
           const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
           
-          // Add clicked state to mapcard
-          if(id !== undefined && id !== null){
-            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-            if(mapCard){
-              document.querySelectorAll('.small-map-card').forEach(card => {
-                card.classList.remove('is-clicked');
-              });
-              mapCard.classList.add('is-clicked');
+            // Add clicked state to mapcard and update icon-size
+            if(id !== undefined && id !== null){
+              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+              if(mapCard){
+                document.querySelectorAll('.small-map-card').forEach(card => {
+                  card.classList.remove('is-clicked');
+                });
+                mapCard.classList.add('is-clicked');
+              }
+              // Update icon-size for expanded state
+              if(typeof updateMarkerLabelHighlightIconSize === 'function'){
+                updateMarkerLabelHighlightIconSize();
+              }
             }
-          }
           
           if(touchClick){
             // Two-tap system: first tap shows accent pill, second tap opens post
@@ -19642,6 +19705,19 @@ function makePosts(){
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
+        
+        // In hover_only mode, only allow hover on marker-icon layer
+        // The handler is already attached only to marker-icon in hover_only mode,
+        // but add extra safety check
+        const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+        if(mapCardDisplay === 'hover_only'){
+          // In hover_only mode, we only attach handlers to marker-icon, so this should be safe
+          // But verify the layer if available
+          if(e.layer && e.layer.id && e.layer.id !== 'marker-icon'){
+            return; // Don't trigger hover on non-icon layers in hover_only mode
+          }
+        }
+        
         if(id !== undefined && id !== null){
           hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
           updateSelectedMarkerRing();
@@ -19666,6 +19742,43 @@ function makePosts(){
         map.on('mouseenter', layer, handleMarkerHover);
         map.on('mouseleave', layer, handleMarkerHoverEnd);
       });
+      
+      // Add DOM hover handlers for small-map-card elements (only in always mode, in hover_only they're created on hover)
+      // These handlers ensure hover only triggers on the small-map-card itself, not the entire map area
+      if(mapCardDisplay === 'always'){
+        const handleSmallMapCardHover = (e) => {
+          // Only trigger if hovering directly on small-map-card or its children
+          const card = e.target.closest('.small-map-card');
+          if(!card || !card.dataset || !card.dataset.id) return;
+          
+          // Don't trigger if hovering on mapmarker icon (that's handled by Mapbox layer)
+          if(e.target.closest('.mapmarker')) return;
+          
+          const id = card.dataset.id;
+          const venueKey = card.dataset.venueKey || null;
+          if(id){
+            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+            updateSelectedMarkerRing();
+          }
+        };
+        
+        const handleSmallMapCardHoverEnd = (e) => {
+          // Only clear if we're not moving to another small-map-card or mapmarker
+          const relatedTarget = e.relatedTarget;
+          if(!relatedTarget || (!relatedTarget.closest('.small-map-card') && !relatedTarget.closest('.mapmarker'))){
+            hoveredPostIds = [];
+            updateSelectedMarkerRing();
+          }
+        };
+        
+        // Use event delegation on map container for dynamically created cards
+        // Use capture phase to catch events before they bubble
+        const mapContainer = map.getContainer();
+        if(mapContainer){
+          mapContainer.addEventListener('mouseenter', handleSmallMapCardHover, true);
+          mapContainer.addEventListener('mouseleave', handleSmallMapCardHoverEnd, true);
+        }
+      }
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
