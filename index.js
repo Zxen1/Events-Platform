@@ -19284,24 +19284,27 @@ function makePosts(){
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
+      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Icon size expression: scale to 0.6667 (150/225) when hovered but not clicked/open, full size (1.0) when clicked/open
       // Use feature-state 'isExpanded' to control size per feature
+      // The expression checks isExpanded first (clicked/open = full size), then defaults to hover size
       const markerLabelHighlightIconSizeExpression = [
         'case',
         ['boolean', ['feature-state', 'isExpanded'], false],
-        1.0,  // Full size when expanded (clicked/open)
-        0.6667  // Hover size (150/225) when just hovered
+        1.0,  // Full size (225x60) when expanded (clicked/open)
+        0.6667  // Hover size (150x40) when just hovered (isHighlighted true, isExpanded false)
       ];
       
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconSize: markerLabelHighlightIconSizeExpression }
+        { id:'marker-label-highlight', source:'posts', sortKey: 6, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconSize: markerLabelHighlightIconSizeExpression }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19353,6 +19356,15 @@ function makePosts(){
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
+        
+        // Ensure highlight layer is above base layer for proper rendering
+        // moveLayer without second param moves to top, or we can move it after marker-label
+        if(id === 'marker-label-highlight'){
+          try{
+            // Move highlight layer to top of symbol layers
+            map.moveLayer('marker-label-highlight');
+          }catch(e){}
+        }
       });
       // Create marker-icon layer (sprites are already loaded above)
       const markerIconFilter = ['all',
