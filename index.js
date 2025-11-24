@@ -22198,7 +22198,8 @@ function openPanel(m){
           display.style.display = '';
           input.remove();
           if(slider) slider.value = newValue;
-          // Don't update window.spinGlobals - settings will be applied on next page load
+          if(slider === spinZoomMaxSlider && window.spinGlobals) window.spinGlobals.spinZoomMax = newValue;
+          if(slider === spinSpeedSlider && window.spinGlobals) window.spinGlobals.spinSpeed = newValue;
           autoSaveMapSettings();
         };
         
@@ -22230,7 +22231,10 @@ function openPanel(m){
         spinZoomMaxDisplay.textContent = spinZoomMaxSlider.value;
       });
       spinZoomMaxSlider.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - settings will be applied on next page load
+        const zoomValue = parseInt(spinZoomMaxSlider.value, 10);
+        if(!isNaN(zoomValue) && window.spinGlobals){
+          window.spinGlobals.spinZoomMax = zoomValue;
+        }
         autoSaveMapSettings();
       });
     }
@@ -22242,7 +22246,10 @@ function openPanel(m){
         spinSpeedDisplay.textContent = parseFloat(spinSpeedSlider.value).toFixed(1);
       });
       spinSpeedSlider.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - settings will be applied on next page load
+        const speedValue = parseFloat(spinSpeedSlider.value);
+        if(!isNaN(speedValue) && window.spinGlobals){
+          window.spinGlobals.spinSpeed = speedValue;
+        }
         autoSaveMapSettings();
       });
     }
@@ -22251,16 +22258,14 @@ function openPanel(m){
     if(spinLoadStartCheckbox && !spinLoadStartCheckbox.dataset.autoSaveAdded){
       spinLoadStartCheckbox.dataset.autoSaveAdded = 'true';
       spinLoadStartCheckbox.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - that triggers the spin animation
-        // Settings will be applied on next page load
+        if(window.spinGlobals) window.spinGlobals.spinLoadStart = spinLoadStartCheckbox.checked;
         autoSaveMapSettings();
       });
     }
     if(spinLogoClickCheckbox && !spinLogoClickCheckbox.dataset.autoSaveAdded){
       spinLogoClickCheckbox.dataset.autoSaveAdded = 'true';
       spinLogoClickCheckbox.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - that triggers the spin animation
-        // Settings will be applied on next page load
+        if(window.spinGlobals) window.spinGlobals.spinLogoClick = spinLogoClickCheckbox.checked;
         autoSaveMapSettings();
       });
     }
@@ -22268,8 +22273,7 @@ function openPanel(m){
       if(radio.dataset.autoSaveAdded) return;
       radio.dataset.autoSaveAdded = 'true';
       radio.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - that triggers the spin animation
-        // Settings will be applied on next page load
+        if(radio.checked && window.spinGlobals) window.spinGlobals.spinLoadType = radio.value;
         autoSaveMapSettings();
       });
     });
@@ -22413,7 +22417,7 @@ const memberPanelChangeManager = (()=>{
 
   function ensureElements(){
     panel = document.getElementById('memberPanel');
-    form = panel ? panel.querySelector('.panel-body') : null;
+    form = document.getElementById('memberForm');
     if(panel){
       saveButton = panel.querySelector('.save-changes');
       discardButton = panel.querySelector('.discard-changes');
@@ -23122,7 +23126,7 @@ const adminPanelChangeManager = (()=>{
 
   function ensureElements(){
     panel = document.getElementById('adminPanel');
-    form = panel ? panel.querySelector('.panel-body') : null;
+    form = document.getElementById('adminForm');
     if(panel){
       saveButton = panel.querySelector('.save-changes');
       discardButton = panel.querySelector('.discard-changes');
@@ -26035,8 +26039,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setup(){
-    const memberPanel = document.getElementById('memberPanel');
-    form = memberPanel ? memberPanel.querySelector('.panel-body') : null;
+    form = document.getElementById('memberForm');
     if(!form) return;
     container = form.querySelector('.member-auth');
     if(!container) return;
