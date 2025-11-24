@@ -1617,8 +1617,10 @@ let __notifyMapOnInteraction = null;
       // Canvas: anchor at center (lat/lng)
       // Left side: 100px + pill width
       // Right side: 100px + label width
-      const leftSide = Math.abs(markerLabelPillLeftOffsetPx) + pillWidth; // 100 + pill width
-      const rightSide = markerLabelTextLeftOffsetPx + labelWidth; // 100 + label width
+      const scaledPillLeftOffset = markerLabelPillLeftOffsetPx * deviceScale;
+      const scaledTextLeftOffset = markerLabelTextLeftOffsetPx * deviceScale;
+      const leftSide = Math.abs(scaledPillLeftOffset) + pillWidth; // scaled offset + pill width
+      const rightSide = scaledTextLeftOffset + labelWidth; // scaled offset + label width
       const canvasWidth = leftSide + rightSide;
       const canvasHeight = Math.max(pillHeight, labelHeight);
       const centerX = leftSide; // Anchor point (lat/lng) at center
@@ -1632,8 +1634,8 @@ let __notifyMapOnInteraction = null;
       }
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       
-      // Draw pill: left edge at centerX - 100 (100px left of anchor)
-      const pillX = centerX + markerLabelPillLeftOffsetPx; // centerX - 100
+      // Draw pill: left edge at centerX - scaled offset
+      const pillX = centerX + scaledPillLeftOffset;
       const pillY = Math.round((canvasHeight - pillHeight) / 2);
       try{
         drawMarkerLabelComposite(ctx, backgroundImage, pillX, pillY, pillWidth, pillHeight);
@@ -1658,7 +1660,7 @@ let __notifyMapOnInteraction = null;
         if(!Number.isFinite(textY) || textY < 0){
           textY = 0;
         }
-        const textX = centerX + markerLabelTextLeftOffsetPx; // centerX + 100
+        const textX = centerX + scaledTextLeftOffset;
         try{
           ctx.imageSmoothingEnabled = true;
           if('imageSmoothingQuality' in ctx){
@@ -19067,14 +19069,27 @@ function makePosts(){
           try{
             const img = await loadMarkerLabelImage(iconUrl);
             if(img){
+              let deviceScale = 1;
+              try{
+                const ratio = window.devicePixelRatio;
+                if(Number.isFinite(ratio) && ratio > 0){
+                  deviceScale = ratio;
+                }
+              }catch(err){
+                deviceScale = 1;
+              }
+              if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+                deviceScale = 1;
+              }
+              const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
               const canvas = document.createElement('canvas');
-              canvas.width = img.width || 30;
-              canvas.height = img.height || 30;
+              canvas.width = iconSize;
+              canvas.height = iconSize;
               const ctx = canvas.getContext('2d');
               if(ctx){
-                ctx.drawImage(img, 0, 0);
+                ctx.drawImage(img, 0, 0, iconSize, iconSize);
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                map.addImage(iconId, imageData, { pixelRatio: 1 });
+                map.addImage(iconId, imageData, { pixelRatio: deviceScale });
               }
             }
           }catch(e){}
