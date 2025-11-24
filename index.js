@@ -1710,7 +1710,7 @@ let __notifyMapOnInteraction = null;
       }
       return {
         image: imageData,
-        options: { pixelRatio: 1 } // Canvas is already at scaled size, use 1 so Mapbox renders at actual size
+        options: { pixelRatio: deviceScale } // Canvas is at scaled size, use deviceScale so Mapbox renders at correct size
       };
     };
     const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, false);
