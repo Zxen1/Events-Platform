@@ -23340,15 +23340,17 @@ const adminPanelChangeManager = (()=>{
           console.warn('Failed to persist hydrated admin formbuilder snapshot', err);
         }
       }
+      // Set savedStateInitialized to true AFTER refreshSavedState completes
+      // This ensures saved state is ready before change detection can mark form as dirty
+      if(formWasFound){
+        savedStateInitialized = true;
+      }
     })()
     .catch(err => {
       console.warn('Failed to initialize admin saved state', err);
     })
     .finally(()=>{
       savedStateInitializationPromise = null;
-      if(formWasFound){
-        savedStateInitialized = true;
-      }
     });
     return savedStateInitializationPromise;
   }
