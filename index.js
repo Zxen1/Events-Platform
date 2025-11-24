@@ -1221,6 +1221,8 @@ let __notifyMapOnInteraction = null;
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
   const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
   const VISIBLE_MARKER_LABEL_LAYERS = ['marker-label', 'marker-label-highlight'];
+  // Only base layer should be clickable - highlight is for visual feedback only
+  const CLICKABLE_MARKER_LABEL_LAYERS = ['marker-label'];
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   let lastInViewMarkerLabelSpriteIds = new Set();
@@ -3303,7 +3305,8 @@ let __notifyMapOnInteraction = null;
       if(mapCardDisplay === 'hover_only'){
         return ['marker-icon']; // Only marker-icon is clickable when cards are hidden
       }
-      return ['marker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
+      // Only base layer is clickable - highlight layer is visual only to prevent large clickable area
+      return ['marker-icon', ...CLICKABLE_MARKER_LABEL_LAYERS];
     };
     window.__overCard = window.__overCard || false;
 
@@ -19294,7 +19297,7 @@ function makePosts(){
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconSize: 0.6667 }
+        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
