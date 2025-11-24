@@ -2547,7 +2547,7 @@ let __notifyMapOnInteraction = null;
                       window.updateMapCardLayerOpacity(mapCardDisplay);
                     }
                     
-                    // Update hover handlers - always use marker-icon only for precise hover zone
+                    // Update hover handlers - use marker-icon and marker-label (pill area)
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
                       // Remove old hover handlers from all possible layers
@@ -2556,13 +2556,20 @@ let __notifyMapOnInteraction = null;
                         try {
                           mapInstance.off('mouseenter', layer, window.handleMarkerHover);
                           mapInstance.off('mouseleave', layer, window.handleMarkerHoverEnd);
+                          mapInstance.off('mousemove', layer, window.handleMapMouseMove);
                         } catch(e) {}
                       });
                       
-                      // Always use marker-icon only for precise hover zone (avoids huge composite sprite)
+                      // Use marker-icon and marker-label for hover (marker-label includes pill area)
                       try {
                         mapInstance.on('mouseenter', 'marker-icon', window.handleMarkerHover);
                         mapInstance.on('mouseleave', 'marker-icon', window.handleMarkerHoverEnd);
+                        mapInstance.on('mouseenter', 'marker-label', window.handleMarkerHover);
+                        mapInstance.on('mouseleave', 'marker-label', window.handleMarkerHoverEnd);
+                        if(typeof window.handleMapMouseMove === 'function'){
+                          mapInstance.on('mousemove', 'marker-icon', window.handleMapMouseMove);
+                          mapInstance.on('mousemove', 'marker-label', window.handleMapMouseMove);
+                        }
                       } catch(e) {}
                     }
                     
@@ -19856,28 +19863,63 @@ function makePosts(){
           hoverCheckTimeout = null;
         }
         
-        // Query what's under the cursor
+        // Query what's under the cursor - check both marker-icon and marker-label (pill area)
         const features = map.queryRenderedFeatures(point, {
-          layers: ['marker-icon']
+          layers: ['marker-icon', 'marker-label']
         });
         
         if(features.length > 0){
-          const f = features[0];
-          const props = f.properties || {};
-          const id = props.id;
-          const venueKey = props.venueKey || null;
+          // Check marker-icon first (most precise), then marker-label (pill area)
+          let targetFeature = null;
+          for(const f of features){
+            if(f.layer && f.layer.id === 'marker-icon'){
+              targetFeature = f;
+              break;
+            }
+          }
+          // If no marker-icon, check if we're over marker-label (pill area)
+          if(!targetFeature){
+            for(const f of features){
+              if(f.layer && f.layer.id === 'marker-label'){
+                // Verify we're in the pill area (left side of composite, not label text area)
+                // Pill is roughly 150px wide, positioned about 20px left of center
+                // Check if cursor is within pill bounds relative to feature center
+                const featureCenter = f.geometry && f.geometry.coordinates ? 
+                  map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]) : null;
+                if(featureCenter){
+                  const dx = point.x - featureCenter.x;
+                  // Pill is roughly from -170px to -20px from center (150px wide, 20px left offset)
+                  // Add some tolerance for the pill area
+                  if(dx >= -200 && dx <= 0){
+                    targetFeature = f;
+                    break;
+                  }
+                } else {
+                  // No geometry info, assume it's the pill area
+                  targetFeature = f;
+                  break;
+                }
+              }
+            }
+          }
           
-          if(id !== undefined && id !== null && String(id) !== currentHoveredId){
-            currentHoveredId = String(id);
-            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-            updateSelectedMarkerRing();
+          if(targetFeature){
+            const props = targetFeature.properties || {};
+            const id = props.id;
+            const venueKey = props.venueKey || null;
+            
+            if(id !== undefined && id !== null && String(id) !== currentHoveredId){
+              currentHoveredId = String(id);
+              hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+              updateSelectedMarkerRing();
+            }
           }
         } else {
           // Not over any marker - clear hover after a short delay
           hoverCheckTimeout = setTimeout(() => {
             // Double-check we're still not over a marker
             const recheckFeatures = map.queryRenderedFeatures(point, {
-              layers: ['marker-icon']
+              layers: ['marker-icon', 'marker-label']
             });
             if(recheckFeatures.length === 0){
               currentHoveredId = null;
@@ -19898,6 +19940,18 @@ function makePosts(){
         
         const f = e.features && e.features[0];
         if(!f) return;
+        
+        // If hovering on marker-label, verify we're in the pill area (not label text area)
+        if(e.layer && e.layer.id === 'marker-label' && e.point && f.geometry && f.geometry.coordinates){
+          const featureCenter = map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]);
+          const dx = e.point.x - featureCenter.x;
+          // Pill is roughly from -170px to -20px from center (150px wide, 20px left offset)
+          // Only trigger if cursor is in pill area (left side), not label text area (right side)
+          if(dx < -200 || dx > 0){
+            return; // Not in pill area, ignore
+          }
+        }
+        
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
@@ -19934,15 +19988,18 @@ function makePosts(){
       // Expose hover handlers globally so they can be updated when mapCardDisplay changes
       window.handleMarkerHover = handleMarkerHover;
       window.handleMarkerHoverEnd = handleMarkerHoverEnd;
+      window.handleMapMouseMove = handleMapMouseMove;
 
-      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
-      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
-      // marker-label composite sprite is huge (500px+) and causes 200px+ hover zones on each side
-      // Using only marker-icon ensures hover works reliably and precisely
+      // Add hover handlers - marker-icon for icon, marker-label for pill area
+      // marker-icon is a small icon (30px) - precise hover zone
+      // marker-label includes pill area - we check if cursor is in pill portion (not label text)
       map.on('mouseenter', 'marker-icon', handleMarkerHover);
       map.on('mouseleave', 'marker-icon', handleMarkerHoverEnd);
+      map.on('mouseenter', 'marker-label', handleMarkerHover);
+      map.on('mouseleave', 'marker-label', handleMarkerHoverEnd);
       // Track mousemove to catch smooth transitions between markers
       map.on('mousemove', 'marker-icon', handleMapMouseMove);
+      map.on('mousemove', 'marker-label', handleMapMouseMove);
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
