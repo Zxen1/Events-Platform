@@ -15796,7 +15796,7 @@ function makePosts(){
             });
             
             // Click outside or blur to switch back to display mode
-            textArea.addEventListener('blur', async () => {
+            textArea.addEventListener('blur', () => {
               // Update display with current textarea value before hiding
               messageTextDisplay.innerHTML = textArea.value;
               
@@ -15806,38 +15806,6 @@ function makePosts(){
                 // Mark admin panel as dirty
                 if(typeof window.adminPanelModule?.markDirty === 'function'){
                   window.adminPanelModule.markDirty();
-                }
-                
-                // Auto-save welcome message immediately
-                if(message.message_key === 'msg_welcome_body' || message.message_key === 'msg_welcome_title'){
-                  try {
-                    const saveResponse = await fetch('/gateway.php?action=save-admin-settings', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ 
-                        messages: [{
-                          id: parseInt(textArea.dataset.messageId),
-                          message_text: textArea.value
-                        }]
-                      })
-                    });
-                    
-                    if(saveResponse.ok){
-                      const saveResult = await saveResponse.json();
-                      if(saveResult.success){
-                        // Update originalValue to current value (now saved)
-                        textArea.dataset.originalValue = textArea.value;
-                        messageItem.classList.remove('modified');
-                        console.log('Welcome message auto-saved successfully');
-                      } else {
-                        console.error('Failed to auto-save welcome message:', saveResult.message || 'Unknown error');
-                      }
-                    } else {
-                      console.error('Failed to auto-save welcome message - HTTP status:', saveResponse.status);
-                    }
-                  } catch(error){
-                    console.error('Error auto-saving welcome message:', error);
-                  }
                 }
               } else {
                 messageItem.classList.remove('modified');
@@ -22617,6 +22585,94 @@ function openPanel(m){
       });
       adminIconFolderInput.addEventListener('change', ()=>{
         autoSaveMapSettings();
+      });
+    }
+    
+    // Initialize and auto-save welcome message editor
+    const welcomeMessageEditor = document.getElementById('welcomeMessageEditor');
+    const welcomeMessageTextarea = document.getElementById('welcomeMessage');
+    if(welcomeMessageEditor && !welcomeMessageEditor.dataset.autoSaveAdded){
+      welcomeMessageEditor.dataset.autoSaveAdded = 'true';
+      
+      // Load welcome message from settings
+      (async function initWelcomeMessage(){
+        try {
+          const response = await fetch('/gateway.php?action=get-admin-settings', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+          });
+          if(response.ok){
+            const data = await response.json();
+            if(data.success && data.settings && data.settings.welcome_message){
+              try {
+                const welcomeContent = JSON.parse(data.settings.welcome_message);
+                welcomeMessageEditor.innerHTML = welcomeContent;
+                if(welcomeMessageTextarea) welcomeMessageTextarea.value = welcomeContent;
+              } catch(e){
+                // If not JSON, use as string
+                welcomeMessageEditor.innerHTML = data.settings.welcome_message;
+                if(welcomeMessageTextarea) welcomeMessageTextarea.value = data.settings.welcome_message;
+              }
+            } else {
+              // Load from messages as fallback
+              const welcomeBody = await getMessage('msg_welcome_body', {}, false);
+              if(welcomeBody){
+                welcomeMessageEditor.innerHTML = welcomeBody;
+                if(welcomeMessageTextarea) welcomeMessageTextarea.value = welcomeBody;
+              }
+            }
+          }
+        } catch(error){
+          console.error('Error loading welcome message:', error);
+        }
+      })();
+      
+      // Auto-save function - saves to admin_settings.welcome_message
+      async function saveWelcomeMessage(content){
+        try {
+          const saveResponse = await fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              welcome_message: JSON.stringify(content)
+            })
+          });
+          
+          if(saveResponse.ok){
+            const saveResult = await saveResponse.json();
+            if(saveResult.success){
+              console.log('Welcome message auto-saved successfully');
+              return true;
+            } else {
+              console.error('Failed to auto-save welcome message:', saveResult.message || 'Unknown error');
+            }
+          } else {
+            const errorText = await saveResponse.text();
+            console.error('Failed to auto-save welcome message - HTTP status:', saveResponse.status, errorText);
+          }
+        } catch(error){
+          console.error('Error auto-saving welcome message:', error);
+        }
+        return false;
+      }
+      
+      // Auto-save on blur
+      welcomeMessageEditor.addEventListener('blur', async ()=>{
+        const content = welcomeMessageEditor.innerHTML;
+        if(welcomeMessageTextarea) welcomeMessageTextarea.value = content;
+        await saveWelcomeMessage(content);
+      });
+      
+      // Also save on input (debounced)
+      let saveTimeout;
+      welcomeMessageEditor.addEventListener('input', ()=>{
+        const content = welcomeMessageEditor.innerHTML;
+        if(welcomeMessageTextarea) welcomeMessageTextarea.value = content;
+        
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(async ()=>{
+          await saveWelcomeMessage(content);
+        }, 2000); // 2 second debounce
       });
     }
   }
