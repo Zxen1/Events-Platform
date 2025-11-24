@@ -1185,6 +1185,32 @@ button[aria-expanded="true"] .results-arrow{
   height:35px;
   line-height:35px;
 }
+.refresh-map-cards-btn{
+  width:100%;
+  padding:8px 12px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:14px;
+}
+.refresh-map-cards-btn:hover:not(:disabled){
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+.refresh-map-cards-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+.refresh-map-cards-btn span{
+  font-size:16px;
+}
 #adminPanel input[type="color"]{
   width:35px;
   height:35px;
