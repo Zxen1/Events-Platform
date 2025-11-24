@@ -1576,17 +1576,17 @@ let __notifyMapOnInteraction = null;
     // No icon references - icons are standalone layer
     const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg, false);
     const accentDims = pillAccentImg ? computeMarkerLabelCanvasDimensions(pillAccentImg, true) : { canvasWidth, canvasHeight, pixelRatio };
-    let deviceScale = 1;
+    let deviceScale = 2;
     try{
       const ratio = window.devicePixelRatio;
       if(Number.isFinite(ratio) && ratio > 0){
         deviceScale = ratio;
       }
     }catch(err){
-      deviceScale = 1;
+      deviceScale = 2;
     }
     if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-      deviceScale = 1;
+      deviceScale = 2;
     }
     const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
     const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
@@ -19305,17 +19305,17 @@ function makePosts(){
           try{
             const img = await loadMarkerLabelImage(iconUrl);
             if(img){
-              let deviceScale = 1;
+              let deviceScale = 2;
               try{
                 const ratio = window.devicePixelRatio;
                 if(Number.isFinite(ratio) && ratio > 0){
                   deviceScale = ratio;
                 }
               }catch(err){
-                deviceScale = 1;
+                deviceScale = 2;
               }
               if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-                deviceScale = 1;
+                deviceScale = 2;
               }
               const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
               const canvas = document.createElement('canvas');
