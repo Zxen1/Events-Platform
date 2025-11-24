@@ -143,6 +143,13 @@
       });
     };
     
+    // Function to animate marker size
+    const animateMarkerSize = (markerData, targetSize) => {
+      if(!markerData || !markerData.element) return;
+      markerData.element.style.width = targetSize + 'px';
+      markerData.element.style.height = targetSize + 'px';
+    };
+    
     // Function to update marker appearance based on state
     const updateMarkerAppearance = (markerData) => {
       if(!markerData || !markerData.element) return;
@@ -221,13 +228,6 @@
     
     // Start observing post changes
     observePostChanges();
-    
-    // Function to animate marker size
-    const animateMarkerSize = (markerData, targetSize) => {
-      if(!markerData || !markerData.element) return;
-      markerData.element.style.width = targetSize + 'px';
-      markerData.element.style.height = targetSize + 'px';
-    };
     
     // Function to open post
     const openPostFromMarker = (postId) => {
