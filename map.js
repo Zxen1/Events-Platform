@@ -30,8 +30,14 @@
       mapContainer.appendChild(domMarkersContainer);
     }
     
-    // Clear existing markers
+    // Clear existing markers and remove old event listeners
     domMarkersContainer.innerHTML = '';
+    if(window._domMarkerMapListeners){
+      window._domMarkerMapListeners.forEach(({ event, handler }) => {
+        try{ map.off(event, handler); }catch(e){}
+      });
+      window._domMarkerMapListeners = [];
+    }
     
     // Store markers for position updates
     const domMarkers = new Map();
@@ -86,15 +92,19 @@
           markerEl.classList.add('no-icon');
         }
         
-        // Get thumbnail URL - thumbUrl accepts either post object or post ID string
-        const thumbUrl = window.thumbUrl || (() => null);
-        const thumbnailUrl = postId && thumbUrl ? thumbUrl(postId) : null;
-        
-        // Debug: log if thumbnail is missing
-        if(!thumbnailUrl && postId){
-          console.log('[Map Markers] No thumbnail URL for post:', postId, 
-            'thumbUrl available:', typeof thumbUrl === 'function');
+        // Check if this is a multi-post venue marker
+        const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+        const multiCountFromProps = Number(props.multiCount);
+        let normalizedMultiCount = Number.isFinite(multiCountFromProps) && multiCountFromProps > 0 ? multiCountFromProps : 0;
+        if(!normalizedMultiCount){
+          normalizedMultiCount = rawMultiIds.length;
         }
+        const helperMultiCount = Math.max(rawMultiIds.length, normalizedMultiCount, props.isMultiVenue ? 2 : 0);
+        const isMultiPost = helperMultiCount > 1;
+        
+        // Get thumbnail URL - only for single-post markers (not multi-post venues)
+        const thumbUrl = window.thumbUrl || (() => null);
+        const thumbnailUrl = !isMultiPost && postId && thumbUrl ? thumbUrl(postId) : null;
         
         // Store marker data
         const markerData = {
@@ -263,33 +273,51 @@
       });
     };
     
-    // Function to update marker positions
+    // Batch position updates to prevent flicker during zoom/move
+    let positionUpdateScheduled = false;
     const updateDomMarkerPositions = () => {
       if(!map || !domMarkersContainer) return;
       
-      const currentZoom = isZoomLevelValid();
+      if(positionUpdateScheduled) return;
+      positionUpdateScheduled = true;
       
-      domMarkers.forEach((marker, featureId) => {
-        try{
-          const point = map.project([marker.lng, marker.lat]);
-          if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
-            marker.element.style.left = point.x + 'px';
-            marker.element.style.top = point.y + 'px';
-          }
-          // Update visibility based on zoom
-          marker.element.style.display = currentZoom ? 'block' : 'none';
-        }catch(e){}
+      requestAnimationFrame(() => {
+        positionUpdateScheduled = false;
+        if(!map || !domMarkersContainer) return;
+        
+        const currentZoom = isZoomLevelValid();
+        
+        domMarkers.forEach((marker, featureId) => {
+          try{
+            const point = map.project([marker.lng, marker.lat]);
+            if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
+              marker.element.style.left = point.x + 'px';
+              marker.element.style.top = point.y + 'px';
+            }
+            // Update visibility based on zoom
+            marker.element.style.display = currentZoom ? 'block' : 'none';
+          }catch(e){}
+        });
       });
     };
     
+    // Store event listeners for cleanup
+    if(!window._domMarkerMapListeners){
+      window._domMarkerMapListeners = [];
+    }
+    const addMapListener = (event, handler) => {
+      map.on(event, handler);
+      window._domMarkerMapListeners.push({ event, handler });
+    };
+    
     // Update positions on map events
-    map.on('move', updateDomMarkerPositions);
-    map.on('zoom', () => {
+    addMapListener('move', updateDomMarkerPositions);
+    addMapListener('zoom', () => {
       updateDomMarkerPositions();
       updateMarkerVisibility();
     });
-    map.on('pitch', updateDomMarkerPositions);
-    map.on('rotate', updateDomMarkerPositions);
+    addMapListener('pitch', updateDomMarkerPositions);
+    addMapListener('rotate', updateDomMarkerPositions);
     
     // Initial position and visibility update
     updateDomMarkerPositions();
