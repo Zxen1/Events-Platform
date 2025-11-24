@@ -19843,7 +19843,15 @@ function makePosts(){
       // Handle hover/tap to show accent pill
       // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
       // Only uses marker-icon layer for precise hover zone (avoids huge composite sprite hit area)
+      let hoverTimeout = null;
+      
       const handleMarkerHover = (e) => {
+        // Cancel any pending hover clear - we're entering a new marker
+        if(hoverTimeout){
+          clearTimeout(hoverTimeout);
+          hoverTimeout = null;
+        }
+        
         const f = e.features && e.features[0];
         if(!f) return;
         const props = f.properties || {};
@@ -19857,8 +19865,34 @@ function makePosts(){
       };
 
       const handleMarkerHoverEnd = (e) => {
-        hoveredPostIds = [];
-        updateSelectedMarkerRing();
+        // Don't clear hover immediately - delay to allow smooth transition to next marker
+        // This prevents flicker when sliding from one marker to another
+        const point = e.point;
+        hoverTimeout = setTimeout(() => {
+          // Check if we're now over another marker at this point
+          if(point){
+            const features = map.queryRenderedFeatures(point, {
+              layers: ['marker-icon']
+            });
+            
+            // If we're over another marker, don't clear hover (handleMarkerHover will set it)
+            if(features.length > 0){
+              const f = features[0];
+              const props = f.properties || {};
+              const id = props.id;
+              if(id !== undefined && id !== null){
+                // We're over a different marker, let handleMarkerHover handle it
+                hoverTimeout = null;
+                return;
+              }
+            }
+          }
+          
+          // Not over any marker, clear hover
+          hoveredPostIds = [];
+          updateSelectedMarkerRing();
+          hoverTimeout = null;
+        }, 30); // Short delay to catch transitions between markers
       };
       
       // Expose hover handlers globally so they can be updated when mapCardDisplay changes
