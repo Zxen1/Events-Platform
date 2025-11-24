@@ -19113,8 +19113,8 @@ function makePosts(){
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 500, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 501, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19195,7 +19195,7 @@ function makePosts(){
               'icon-anchor': 'center',
               'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': 1000,
+              'symbol-sort-key': 10,
               'visibility': 'visible'
             },
             paint:{
@@ -19218,6 +19218,12 @@ function makePosts(){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
+      // Move marker-icon layer to top (above map cards)
+      if(map.getLayer('marker-icon')){
+        try{ 
+          map.moveLayer('marker-icon');
+        }catch(e){}
+      }
       [
         ['marker-label','icon-opacity-transition'],
         ['marker-label-highlight','icon-opacity-transition']
@@ -19248,11 +19254,13 @@ function makePosts(){
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Ensure marker-icon layer is visible after map card setup
+      // Ensure marker-icon layer is visible and on top after map card setup
       if(map.getLayer('marker-icon')){
         try{
           map.setLayoutProperty('marker-icon', 'visibility', 'visible');
           map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+          map.setLayoutProperty('marker-icon', 'symbol-sort-key', 10);
+          map.moveLayer('marker-icon'); // Move to top
         }catch(e){}
       }
       
