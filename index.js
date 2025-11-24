@@ -1626,6 +1626,7 @@ let __notifyMapOnInteraction = null;
       const centerX = leftSide; // Anchor point (lat/lng) at center
       
       const canvas = document.createElement('canvas');
+      // Set canvas to actual scaled pixel dimensions for real size rendering
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
       const ctx = canvas.getContext('2d');
@@ -1698,7 +1699,7 @@ let __notifyMapOnInteraction = null;
       }
       return {
         image: imageData,
-        options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
+        options: { pixelRatio: 1 } // Canvas is already at scaled size, use 1 so Mapbox renders at actual size
       };
     };
     const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9, false);
