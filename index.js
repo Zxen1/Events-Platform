@@ -18495,13 +18495,27 @@ function makePosts(){
                 }
               });
               markerIconLayerInitialized = true;
+              // Explicitly ensure visibility and opacity
+              try{
+                map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
+                map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+              }catch(e){}
             }catch(e){
               if(map.getLayer(markerIconLayerId)){
                 markerIconLayerInitialized = true;
+                try{
+                  map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
+                  map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+                }catch(e2){}
               }
             }
           } else {
             markerIconLayerInitialized = true;
+            // Ensure existing layer is visible
+            try{
+              map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
+              map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+            }catch(e){}
           }
         };
         whenStyleReady(map, () => {
@@ -19219,12 +19233,26 @@ function makePosts(){
         if(map.getLayer('marker-label')){
           try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
         }
+        // Ensure marker-icon is always visible at 100% opacity
+        if(map.getLayer('marker-icon')){
+          try{ 
+            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+            map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+          }catch(e){}
+        }
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
       window.getMapInstance = () => map; // Expose map instance getter
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
+      // Ensure marker-icon layer is visible after map card setup
+      if(map.getLayer('marker-icon')){
+        try{
+          map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+          map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+        }catch(e){}
+      }
       
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
