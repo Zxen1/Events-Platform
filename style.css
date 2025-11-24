@@ -154,18 +154,6 @@
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
       z-index: 1;
-      transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease;
-    }
-    .small-map-card:hover:not(.is-clicked):not(.is-post-open){
-      width: 150px;
-      height: 40px;
-      transform: translate3d(-75px, -50%, 0);
-    }
-    .small-map-card.is-clicked,
-    .small-map-card.is-post-open{
-      width: 225px;
-      height: 60px;
-      transform: translate3d(-90px, -50%, 0);
     }
     .small-multi-post-map-card{
       gap: 5px;
@@ -221,16 +209,6 @@
       visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
-      transition: width 0.3s ease, height 0.3s ease;
-    }
-    .small-map-card:hover:not(.is-clicked):not(.is-post-open) .mapmarker-pill{
-      width: 150px;
-      height: 40px;
-    }
-    .small-map-card.is-clicked .mapmarker-pill,
-    .small-map-card.is-post-open .mapmarker-pill{
-      width: 225px;
-      height: 60px;
     }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
