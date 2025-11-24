@@ -1630,14 +1630,15 @@ let __notifyMapOnInteraction = null;
       // Right side: 100px + label width
       const scaledPillLeftOffset = markerLabelPillLeftOffsetPx * deviceScale;
       const scaledTextLeftOffset = markerLabelTextLeftOffsetPx * deviceScale;
-      const leftSide = Math.abs(scaledPillLeftOffset) + pillWidth; // scaled offset + pill width
-      const rightSide = scaledTextLeftOffset + labelWidth; // scaled offset + label width
-      const canvasWidth = 150; // EXACTLY 150px as ordered
-      const canvasHeight = 40; // EXACTLY 40px as ordered
-      const centerX = 75; // Anchor point at center of 150px width
+      // Canvas: EXACTLY 225x60px as ordered
+      const canvasWidth = 225;
+      const canvasHeight = 60;
+      // Anchor point: 30px from left, vertically centered (30px from top)
+      const centerX = 30;
+      const centerY = 30;
       
       const canvas = document.createElement('canvas');
-      // Set canvas to exact 150x40px dimensions
+      // Set canvas to exact 225x60px dimensions
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
       const ctx = canvas.getContext('2d');
@@ -1646,10 +1647,10 @@ let __notifyMapOnInteraction = null;
       }
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       
-      // Draw pill: positioned to fit within 150x40px canvas
-      // Anchor is at center (75px), pill is 150px wide, so position at 0 to fill canvas
-      const pillX = 0;
-      const pillY = Math.round((canvasHeight - pillHeight) / 2);
+      // Draw pill: positioned relative to anchor at (30, 30)
+      // Pill is 150px wide, positioned 20px left of anchor, so: 30 - 20 = 10px from left
+      const pillX = centerX + scaledPillLeftOffset; // 30 + (-20) = 10px
+      const pillY = Math.round((canvasHeight - pillHeight) / 2); // Vertically centered
       try{
         drawMarkerLabelComposite(ctx, backgroundImage, pillX, pillY, pillWidth, pillHeight);
       }catch(err){
@@ -1664,7 +1665,7 @@ let __notifyMapOnInteraction = null;
         ctx.globalCompositeOperation = 'source-over';
       }
       
-      // Draw label: positioned within 150x40px canvas (over pill if needed)
+      // Draw label: positioned to right of pill within 225px canvas
       if(labelLines.length){
         const fontSizePx = markerLabelTextSize * pixelRatio;
         const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
@@ -1673,8 +1674,7 @@ let __notifyMapOnInteraction = null;
         if(!Number.isFinite(textY) || textY < 0){
           textY = 0;
         }
-        // Position label text within the 150px canvas width
-        const textX = 10; // Small padding from left edge
+        const textX = centerX + scaledTextLeftOffset; // 30 + 20 = 50px from left
         try{
           ctx.imageSmoothingEnabled = true;
           if('imageSmoothingQuality' in ctx){
@@ -19891,11 +19891,11 @@ function makePosts(){
                   const dx = point.x - featureCenter.x;
                   const dy = point.y - featureCenter.y;
                   
-                  // Pill bounds: 150px wide (from -20px to +130px from center), 40px high (from -20px to +20px from center)
+                  // Pill bounds: 150px wide (from -20px to +130px from lat/lng center), 40px high (vertically centered)
                   const pillLeft = -20;
                   const pillRight = 130; // -20 + 150
-                  const pillTop = -20;
-                  const pillBottom = 20; // -20 + 40
+                  const pillTop = -20; // 40px height / 2
+                  const pillBottom = 20; // 40px height / 2
                   
                   // Only accept if cursor is within the exact 150x40 pill area
                   if(dx >= pillLeft && dx <= pillRight && dy >= pillTop && dy <= pillBottom){
@@ -19948,7 +19948,24 @@ function makePosts(){
         const f = e.features && e.features[0];
         if(!f) return;
         
-        // marker-label sprite is now exactly 150x40px pill only - no coordinate filtering needed
+        // If hovering on marker-label, verify we're in the 150x40px pill area only (not label text area)
+        // Pill is 150px wide x 40px high, positioned 20px left of center
+        if(e.layer && e.layer.id === 'marker-label' && e.point && f.geometry && f.geometry.coordinates){
+          const featureCenter = map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]);
+          const dx = e.point.x - featureCenter.x;
+          const dy = e.point.y - featureCenter.y;
+          
+          // Pill bounds: 150px wide (from -20px to +130px from center), 40px high (from -20px to +20px from center)
+          const pillLeft = -20;
+          const pillRight = 130; // -20 + 150
+          const pillTop = -20;
+          const pillBottom = 20; // -20 + 40
+          
+          // Only trigger if cursor is within the exact 150x40px pill area
+          if(dx < pillLeft || dx > pillRight || dy < pillTop || dy > pillBottom){
+            return; // Not in pill area, ignore
+          }
+        }
         
         const props = f.properties || {};
         const id = props.id;
