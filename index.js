@@ -1646,8 +1646,9 @@ let __notifyMapOnInteraction = null;
       }
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       
-      // Draw pill: left edge at centerX - scaled offset
-      const pillX = centerX + scaledPillLeftOffset;
+      // Draw pill: positioned to fit within 150x40px canvas
+      // Anchor is at center (75px), pill is 150px wide, so position at 0 to fill canvas
+      const pillX = 0;
       const pillY = Math.round((canvasHeight - pillHeight) / 2);
       try{
         drawMarkerLabelComposite(ctx, backgroundImage, pillX, pillY, pillWidth, pillHeight);
@@ -1663,7 +1664,7 @@ let __notifyMapOnInteraction = null;
         ctx.globalCompositeOperation = 'source-over';
       }
       
-      // Draw label: left edge at centerX + 100 (100px right of anchor)
+      // Draw label: positioned within 150x40px canvas (over pill if needed)
       if(labelLines.length){
         const fontSizePx = markerLabelTextSize * pixelRatio;
         const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
@@ -1672,7 +1673,8 @@ let __notifyMapOnInteraction = null;
         if(!Number.isFinite(textY) || textY < 0){
           textY = 0;
         }
-        const textX = centerX + scaledTextLeftOffset;
+        // Position label text within the 150px canvas width
+        const textX = 10; // Small padding from left edge
         try{
           ctx.imageSmoothingEnabled = true;
           if('imageSmoothingQuality' in ctx){
