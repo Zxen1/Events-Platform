@@ -23722,10 +23722,19 @@ const adminAuthManager = (()=>{
 
   function updateUI(){
     if(adminBtn){
-      // Always show admin button
+      // Always show admin button (temporarily - for development)
       adminBtn.hidden = false;
       adminBtn.style.display = 'flex';
       adminBtn.setAttribute('aria-hidden', 'false');
+      
+      // Original authentication-based visibility (commented out for now):
+      // const isVisible = !!authenticated;
+      // adminBtn.hidden = !isVisible;
+      // adminBtn.style.display = isVisible ? 'flex' : 'none';
+      // adminBtn.setAttribute('aria-hidden', (!isVisible).toString());
+      // if(!isVisible){
+      //   adminBtn.setAttribute('aria-pressed','false');
+      // }
     }
   }
 
@@ -23958,7 +23967,15 @@ document.addEventListener('pointerdown', (e) => {
   }
   if(adminBtn && adminPanel){
     adminBtn.addEventListener('click', ()=>{
+      // Temporarily bypass authentication (for development)
       togglePanel(adminPanel);
+      
+      // Original authentication check (commented out for now):
+      // if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+      //   window.adminAuthManager.ensureAuthenticated();
+      //   return;
+      // }
+      // togglePanel(adminPanel);
     });
   }
   filterBtn && filterBtn.addEventListener('click', ()=> {
