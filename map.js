@@ -103,7 +103,6 @@
           lat,
           props,
           postId,
-          post,
           originalIconUrl,
           thumbnailUrl,
           thumbnailLoaded: false,
