@@ -19313,9 +19313,18 @@ function makePosts(){
             } else if(currentOpacity !== 1){
               map.setPaintProperty('marker-icon', 'icon-opacity', 1);
             }
-            // Also ensure visibility is set
+            // Also ensure visibility, anchor, and translate are set correctly
             map.setLayoutProperty('marker-icon', 'visibility', 'visible');
             map.setLayoutProperty('marker-icon', 'icon-size', 1);
+            map.setLayoutProperty('marker-icon', 'icon-anchor', 'center');
+            // Ensure icon-translate is not set (or is [0,0]) to keep icon centered on lat/lng
+            const currentTranslate = map.getPaintProperty('marker-icon', 'icon-translate');
+            if(currentTranslate !== undefined && currentTranslate !== null){
+              const translateArray = Array.isArray(currentTranslate) ? currentTranslate : [currentTranslate];
+              if(translateArray.length > 0 && (translateArray[0] !== 0 || (translateArray[1] !== undefined && translateArray[1] !== 0))){
+                map.setPaintProperty('marker-icon', 'icon-translate', [0, 0]);
+              }
+            }
           }catch(e){
             // Silently fail - layer might not be ready yet
           }
@@ -19327,33 +19336,6 @@ function makePosts(){
       // Call on initial load to ensure marker-icon opacity is set correctly
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Periodically ensure marker-icon layer opacity stays at 1
-      const ensureMarkerIconVisible = () => {
-        if(map && map.getLayer('marker-icon')){
-          try{
-            const currentOpacity = map.getPaintProperty('marker-icon', 'icon-opacity');
-            const currentVisibility = map.getLayoutProperty('marker-icon', 'visibility');
-            const currentIconSize = map.getLayoutProperty('marker-icon', 'icon-size');
-            // If opacity is an expression (array) or not 1, force it to fixed value 1
-            // This breaks any link to map card opacity expressions
-            if(Array.isArray(currentOpacity) || currentOpacity !== 1){
-              map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-            }
-            if(currentVisibility !== 'visible'){
-              map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-            }
-            if(currentIconSize !== 1){
-              map.setLayoutProperty('marker-icon', 'icon-size', 1);
-            }
-          }catch(e){}
-        }
-      };
-      
-      // Check immediately and then periodically to catch any code that tries to hide it
-      setTimeout(ensureMarkerIconVisible, 100);
-      setTimeout(ensureMarkerIconVisible, 500);
-      setTimeout(ensureMarkerIconVisible, 1000);
-      setInterval(ensureMarkerIconVisible, 2000); // Check every 2 seconds
       
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
