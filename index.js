@@ -19196,9 +19196,9 @@ function makePosts(){
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 0.5, 0]; // TEST: Set to 0.5 when highlighted to see if marker-icon is linked
+      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0.5 : 1; // TEST: Set to 0.5 to see if marker-icon is linked
+      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
@@ -19271,7 +19271,7 @@ function makePosts(){
       
       function updateMapCardLayerOpacity(displayMode){
         if(!map) return;
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0.5 : 1; // TEST: Set to 0.5 to see if marker-icon is linked
+        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
         const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
         const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
         if(map.getLayer('marker-label')){
