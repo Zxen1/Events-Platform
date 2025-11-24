@@ -2387,6 +2387,15 @@ let __notifyMapOnInteraction = null;
                 }
               });
               
+              // Update document title with site name and tagline
+              if(data.settings.site_name){
+                let pageTitle = data.settings.site_name;
+                if(data.settings.site_tagline){
+                  pageTitle += ' - ' + data.settings.site_tagline;
+                }
+                document.title = pageTitle;
+              }
+              
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
               spinEnabled = shouldSpin;
