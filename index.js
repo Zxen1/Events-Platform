@@ -2547,7 +2547,7 @@ let __notifyMapOnInteraction = null;
                       window.updateMapCardLayerOpacity(mapCardDisplay);
                     }
                     
-                    // Update hover handlers to match new display mode
+                    // Update hover handlers - always use marker-icon only for precise hover zone
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
                       // Remove old hover handlers from all possible layers
@@ -2559,16 +2559,11 @@ let __notifyMapOnInteraction = null;
                         } catch(e) {}
                       });
                       
-                      // Add hover handlers for correct layers based on new display mode
-                      const baseHoverLayers = mapCardDisplay === 'hover_only' 
-                        ? ['marker-icon'] 
-                        : ['marker-icon', 'marker-label'];
-                      baseHoverLayers.forEach(layer => {
-                        try {
-                          mapInstance.on('mouseenter', layer, window.handleMarkerHover);
-                          mapInstance.on('mouseleave', layer, window.handleMarkerHoverEnd);
-                        } catch(e) {}
-                      });
+                      // Always use marker-icon only for precise hover zone (avoids huge composite sprite)
+                      try {
+                        mapInstance.on('mouseenter', 'marker-icon', window.handleMarkerHover);
+                        mapInstance.on('mouseleave', 'marker-icon', window.handleMarkerHoverEnd);
+                      } catch(e) {}
                     }
                     
                     // Update click and cursor handlers to match new display mode
@@ -19847,24 +19842,13 @@ function makePosts(){
 
       // Handle hover/tap to show accent pill
       // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
+      // Only uses marker-icon layer for precise hover zone (avoids huge composite sprite hit area)
       const handleMarkerHover = (e) => {
         const f = e.features && e.features[0];
         if(!f) return;
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
-        
-        // In hover_only mode, only allow hover on marker-icon layer
-        // The handler is already attached only to marker-icon in hover_only mode,
-        // but add extra safety check
-        const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-        if(mapCardDisplay === 'hover_only'){
-          // In hover_only mode, we only attach handlers to marker-icon, so this should be safe
-          // But verify the layer if available
-          if(e.layer && e.layer.id && e.layer.id !== 'marker-icon'){
-            return; // Don't trigger hover on non-icon layers in hover_only mode
-          }
-        }
         
         if(id !== undefined && id !== null){
           hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
@@ -19881,16 +19865,12 @@ function makePosts(){
       window.handleMarkerHover = handleMarkerHover;
       window.handleMarkerHoverEnd = handleMarkerHoverEnd;
 
-      // Add hover handlers - only for base map card area (marker-icon and marker-label, NOT accent)
-      // If base card is hidden (hover_only), only marker-icon triggers hover
-      // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
-      const baseHoverLayers = mapCardDisplay === 'hover_only' 
-        ? ['marker-icon'] 
-        : ['marker-icon', 'marker-label'];
-      baseHoverLayers.forEach(layer => {
-        map.on('mouseenter', layer, handleMarkerHover);
-        map.on('mouseleave', layer, handleMarkerHoverEnd);
-      });
+      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
+      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
+      // marker-label composite sprite is huge (500px+) and causes 200px+ hover zones on each side
+      // Using only marker-icon ensures hover works reliably and precisely
+      map.on('mouseenter', 'marker-icon', handleMarkerHover);
+      map.on('mouseleave', 'marker-icon', handleMarkerHoverEnd);
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
