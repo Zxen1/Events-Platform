@@ -15796,7 +15796,7 @@ function makePosts(){
             });
             
             // Click outside or blur to switch back to display mode
-            textArea.addEventListener('blur', () => {
+            textArea.addEventListener('blur', async () => {
               // Update display with current textarea value before hiding
               messageTextDisplay.innerHTML = textArea.value;
               
@@ -15806,6 +15806,38 @@ function makePosts(){
                 // Mark admin panel as dirty
                 if(typeof window.adminPanelModule?.markDirty === 'function'){
                   window.adminPanelModule.markDirty();
+                }
+                
+                // Auto-save welcome message immediately
+                if(message.message_key === 'msg_welcome_body' || message.message_key === 'msg_welcome_title'){
+                  try {
+                    const saveResponse = await fetch('/gateway.php?action=save-admin-settings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        messages: [{
+                          id: parseInt(textArea.dataset.messageId),
+                          message_text: textArea.value
+                        }]
+                      })
+                    });
+                    
+                    if(saveResponse.ok){
+                      const saveResult = await saveResponse.json();
+                      if(saveResult.success){
+                        // Update originalValue to current value (now saved)
+                        textArea.dataset.originalValue = textArea.value;
+                        messageItem.classList.remove('modified');
+                        console.log('Welcome message auto-saved successfully');
+                      } else {
+                        console.error('Failed to auto-save welcome message:', saveResult.message || 'Unknown error');
+                      }
+                    } else {
+                      console.error('Failed to auto-save welcome message - HTTP status:', saveResponse.status);
+                    }
+                  } catch(error){
+                    console.error('Error auto-saving welcome message:', error);
+                  }
                 }
               } else {
                 messageItem.classList.remove('modified');
