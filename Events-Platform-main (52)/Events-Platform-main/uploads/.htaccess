@@ -1,0 +1,22 @@
+# Security: prevent script execution and directory listing in uploads
+Options -Indexes
+
+<FilesMatch "\.(php|phtml|php[0-9]*|phar|pl|py|jsp|asp|aspx|cgi)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+
+# Do not treat anything here as CGI
+<IfModule mod_cgi.c>
+  RemoveHandler .cgi .pl .py
+</IfModule>
+
+# Allow common image types to be served normally
+<FilesMatch "\.(?:jpe?g|png|gif|webp|bmp|svg)$">
+  Require all granted
+</FilesMatch>
+
+

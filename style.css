@@ -2082,6 +2082,9 @@ button[aria-expanded="true"] .results-arrow{
   gap:20px;
   margin-left:20px;
 }
+#map_shadow_container .spin-type-toggles{
+  margin-left:0;
+}
 .spin-type-option{
   display:flex;
   align-items:center;
