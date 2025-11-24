@@ -22613,13 +22613,6 @@ function openPanel(m){
                 welcomeMessageEditor.innerHTML = data.settings.welcome_message;
                 if(welcomeMessageTextarea) welcomeMessageTextarea.value = data.settings.welcome_message;
               }
-            } else {
-              // Load from messages as fallback
-              const welcomeBody = await getMessage('msg_welcome_body', {}, false);
-              if(welcomeBody){
-                welcomeMessageEditor.innerHTML = welcomeBody;
-                if(welcomeMessageTextarea) welcomeMessageTextarea.value = welcomeBody;
-              }
             }
           }
         } catch(error){
