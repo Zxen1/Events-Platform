@@ -2393,6 +2393,17 @@ let __notifyMapOnInteraction = null;
               // Store welcome_enabled setting
               if(data.settings.welcome_enabled !== undefined){
                 localStorage.setItem('welcome_enabled', data.settings.welcome_enabled ? 'true' : 'false');
+                
+                // If welcome is enabled and user hasn't seen it, show it now
+                if(data.settings.welcome_enabled && !localStorage.getItem('welcome-seen')){
+                  const welcomeModal = document.getElementById('welcome-modal');
+                  if(welcomeModal && typeof window.openWelcome === 'function'){
+                    setTimeout(() => {
+                      window.openWelcome();
+                      localStorage.setItem('welcome-seen','true');
+                    }, 500); // Small delay to ensure page is ready
+                  }
+                }
               }
               
               // Store message category names and icons
@@ -24349,12 +24360,8 @@ document.addEventListener('pointerdown', (e) => {
         openPanel(m);
       }
     });
-    // Check welcome_enabled setting before showing welcome modal
-    const welcomeEnabled = localStorage.getItem('welcome_enabled') !== 'false';
-    if(welcomeModal && welcomeEnabled && !localStorage.getItem('welcome-seen')){
-      openWelcome();
-      localStorage.setItem('welcome-seen','true');
-    }
+    // Welcome modal will be shown after settings load (see loadAdminSettings function)
+    // This ensures it always respects the database setting, even after localStorage is cleared
     const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') === 'true';
     if(filterPanel && shouldOpenFilter){
       openPanel(filterPanel);
