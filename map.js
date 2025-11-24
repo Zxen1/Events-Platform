@@ -68,10 +68,6 @@
         const featureId = props.featureId || props.id || '';
         const postId = props.id;
         
-        // Get post data for thumbnail
-        const getPostByIdAnywhere = window.getPostByIdAnywhere || (() => null);
-        const post = getPostByIdAnywhere(postId);
-        
         // Create marker element
         const markerEl = document.createElement('div');
         markerEl.className = 'dom-map-marker';
@@ -90,13 +86,14 @@
           markerEl.classList.add('no-icon');
         }
         
-        // Get thumbnail URL
+        // Get thumbnail URL - thumbUrl accepts either post object or post ID string
         const thumbUrl = window.thumbUrl || (() => null);
-        const thumbnailUrl = post && thumbUrl ? thumbUrl(post) : null;
+        const thumbnailUrl = postId && thumbUrl ? thumbUrl(postId) : null;
         
         // Debug: log if thumbnail is missing
-        if(!thumbnailUrl && post){
-          console.log('[Map Markers] No thumbnail URL for post:', postId, 'thumbUrl available:', typeof thumbUrl === 'function', 'post:', post);
+        if(!thumbnailUrl && postId){
+          console.log('[Map Markers] No thumbnail URL for post:', postId, 
+            'thumbUrl available:', typeof thumbUrl === 'function');
         }
         
         // Store marker data
