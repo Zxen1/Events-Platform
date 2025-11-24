@@ -1450,7 +1450,7 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillImagePromise;
     }
     const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/Calendar Screenshot.png';
+    const accentUrl = 'assets/icons-30/225x60-pill-2f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl)
@@ -17281,6 +17281,13 @@ function makePosts(){
             updateStickyImages();
           }
         }
+        
+        // Update mapcard states after post opens
+        if(typeof window.updateMapCardStates === 'function'){
+          requestAnimationFrame(() => {
+            window.updateMapCardStates();
+          });
+        }
 
         await nextFrame();
 
@@ -17556,6 +17563,11 @@ function makePosts(){
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
+        
+        // Update mapcard states when post closes
+        if(typeof window.updateMapCardStates === 'function'){
+          window.updateMapCardStates();
+        }
       }
 
       window.openPost = openPost;
@@ -17573,6 +17585,16 @@ function makePosts(){
             e.preventDefault();
             const id = cardEl.getAttribute('data-id');
             if(!id) return;
+            
+            // Add clicked state to corresponding mapcard
+            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+            if(mapCard){
+              document.querySelectorAll('.small-map-card').forEach(card => {
+                card.classList.remove('is-clicked');
+              });
+              mapCard.classList.add('is-clicked');
+            }
+            
             callWhenDefined('openPost', (fn)=>{
               requestAnimationFrame(() => {
                 try{
@@ -17596,6 +17618,16 @@ function makePosts(){
             const id = cardEl.getAttribute('data-id');
             if(id){
               e.preventDefault();
+              
+              // Add clicked state to corresponding mapcard
+              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+              if(mapCard){
+                document.querySelectorAll('.small-map-card').forEach(card => {
+                  card.classList.remove('is-clicked');
+                });
+                mapCard.classList.add('is-clicked');
+              }
+              
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
                   try{
@@ -19381,6 +19413,17 @@ function makePosts(){
           const isMultiPost = helperMultiCount > 1;
           const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
           
+          // Add clicked state to mapcard
+          if(id !== undefined && id !== null){
+            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+            if(mapCard){
+              document.querySelectorAll('.small-map-card').forEach(card => {
+                card.classList.remove('is-clicked');
+              });
+              mapCard.classList.add('is-clicked');
+            }
+          }
+          
           if(touchClick){
             // Two-tap system: first tap shows accent pill, second tap opens post
             if(touchMarker === id){
@@ -19480,6 +19523,28 @@ function makePosts(){
       // Expose globally so handlers can be updated when mapCardDisplay changes
       window.attachClickHandlers = attachClickHandlers;
 
+      // Function to update mapcard click and post-open states
+      function updateMapCardStates(){
+        const openPostEl = document.querySelector('.open-post[data-id]');
+        const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
+        
+        // Remove all click and post-open states
+        document.querySelectorAll('.small-map-card').forEach(card => {
+          card.classList.remove('is-clicked', 'is-post-open');
+        });
+        
+        // Add post-open state to mapcard if post is open
+        if(openPostId){
+          const mapCard = document.querySelector(`.small-map-card[data-id="${openPostId}"]`);
+          if(mapCard){
+            mapCard.classList.add('is-post-open');
+          }
+        }
+      }
+      
+      // Expose globally
+      window.updateMapCardStates = updateMapCardStates;
+      
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
         const targetEl = originalTarget && typeof originalTarget.closest === 'function'
@@ -19491,6 +19556,13 @@ function makePosts(){
             : targetEl.querySelector('.small-map-card');
           if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
             const pid = smallMapCard.dataset.id;
+            
+            // Add clicked state
+            document.querySelectorAll('.small-map-card').forEach(card => {
+              card.classList.remove('is-clicked');
+            });
+            smallMapCard.classList.add('is-clicked');
+            
             callWhenDefined('openPost', (fn)=>{
               requestAnimationFrame(() => {
                 try{
@@ -19508,16 +19580,26 @@ function makePosts(){
         }
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
+          // Clicked elsewhere - remove click states
+          document.querySelectorAll('.small-map-card').forEach(card => {
+            card.classList.remove('is-clicked');
+          });
           updateSelectedMarkerRing();
           touchMarker = null;
           hoveredPostIds = [];
           updateSelectedMarkerRing();
+          updateMapCardStates();
         } else {
           const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
           if(!clickedMarkerLabel){
+            // Clicked elsewhere - remove click states
+            document.querySelectorAll('.small-map-card').forEach(card => {
+              card.classList.remove('is-clicked');
+            });
             touchMarker = null;
             hoveredPostIds = [];
             updateSelectedMarkerRing();
+            updateMapCardStates();
           }
         }
       });
