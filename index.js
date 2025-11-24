@@ -2604,9 +2604,9 @@ let __notifyMapOnInteraction = null;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      // Map card layers only - marker-icon is completely separate and not included here
       const MARKER_LAYER_IDS = [
         'hover-fill',
-        'marker-icon',
         'marker-label',
         'marker-label-highlight'
       ];
@@ -7070,11 +7070,9 @@ function makePosts(){
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
-        // Exclude marker-icon from visibility changes - it's "god" and must always be visible
+        // marker-icon is completely separate and not in MARKER_LAYER_IDS - it's always visible
         MARKER_LAYER_IDS.forEach(id => {
-          if(id !== 'marker-icon'){
-            setLayerVisibility(id, shouldShowMarkers);
-          }
+          setLayerVisibility(id, shouldShowMarkers);
         });
         // CRITICAL: Ensure marker-icon is always visible regardless of zoom level
         if(map && map.getLayer('marker-icon')){
@@ -19255,8 +19253,9 @@ function makePosts(){
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
+      // marker-icon is completely separate and not in ALL_MARKER_LAYER_IDS
       ALL_MARKER_LAYER_IDS.forEach(id=>{
-        if(id !== 'marker-icon' && map.getLayer(id)){
+        if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
