@@ -1472,7 +1472,7 @@ let __notifyMapOnInteraction = null;
     }
     const canvasWidth = basePillWidthPx;
     const canvasHeight = basePillHeightPx;
-    const pixelRatio = 2;
+    const pixelRatio = 1;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
