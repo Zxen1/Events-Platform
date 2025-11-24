@@ -19846,6 +19846,7 @@ function makePosts(){
       window.attachCursorHandlers = attachCursorHandlers;
 
       // Handle hover/tap to show accent pill
+      // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
       const handleMarkerHover = (e) => {
         const f = e.features && e.features[0];
         if(!f) return;
@@ -19882,6 +19883,7 @@ function makePosts(){
 
       // Add hover handlers - only for base map card area (marker-icon and marker-label, NOT accent)
       // If base card is hidden (hover_only), only marker-icon triggers hover
+      // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
       const baseHoverLayers = mapCardDisplay === 'hover_only' 
         ? ['marker-icon'] 
         : ['marker-icon', 'marker-label'];
@@ -19889,43 +19891,6 @@ function makePosts(){
         map.on('mouseenter', layer, handleMarkerHover);
         map.on('mouseleave', layer, handleMarkerHoverEnd);
       });
-      
-      // Add DOM hover handlers for small-map-card elements (only in always mode, in hover_only they're created on hover)
-      // These handlers ensure hover only triggers on the small-map-card itself, not the entire map area
-      if(mapCardDisplay === 'always'){
-        const handleSmallMapCardHover = (e) => {
-          // Only trigger if hovering directly on small-map-card or its children
-          const card = e.target.closest('.small-map-card');
-          if(!card || !card.dataset || !card.dataset.id) return;
-          
-          // Don't trigger if hovering on mapmarker icon (that's handled by Mapbox layer)
-          if(e.target.closest('.mapmarker')) return;
-          
-          const id = card.dataset.id;
-          const venueKey = card.dataset.venueKey || null;
-          if(id){
-            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-            updateSelectedMarkerRing();
-          }
-        };
-        
-        const handleSmallMapCardHoverEnd = (e) => {
-          // Only clear if we're not moving to another small-map-card or mapmarker
-          const relatedTarget = e.relatedTarget;
-          if(!relatedTarget || (!relatedTarget.closest('.small-map-card') && !relatedTarget.closest('.mapmarker'))){
-            hoveredPostIds = [];
-            updateSelectedMarkerRing();
-          }
-        };
-        
-        // Use event delegation on map container for dynamically created cards
-        // Use capture phase to catch events before they bubble
-        const mapContainer = map.getContainer();
-        if(mapContainer){
-          mapContainer.addEventListener('mouseenter', handleSmallMapCardHover, true);
-          mapContainer.addEventListener('mouseleave', handleSmallMapCardHoverEnd, true);
-        }
-      }
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
