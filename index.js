@@ -22198,8 +22198,7 @@ function openPanel(m){
           display.style.display = '';
           input.remove();
           if(slider) slider.value = newValue;
-          if(slider === spinZoomMaxSlider && window.spinGlobals) window.spinGlobals.spinZoomMax = newValue;
-          if(slider === spinSpeedSlider && window.spinGlobals) window.spinGlobals.spinSpeed = newValue;
+          // Don't update window.spinGlobals - settings will be applied on next page load
           autoSaveMapSettings();
         };
         
@@ -22231,10 +22230,7 @@ function openPanel(m){
         spinZoomMaxDisplay.textContent = spinZoomMaxSlider.value;
       });
       spinZoomMaxSlider.addEventListener('change', ()=>{
-        const zoomValue = parseInt(spinZoomMaxSlider.value, 10);
-        if(!isNaN(zoomValue) && window.spinGlobals){
-          window.spinGlobals.spinZoomMax = zoomValue;
-        }
+        // Don't update window.spinGlobals - settings will be applied on next page load
         autoSaveMapSettings();
       });
     }
@@ -22246,10 +22242,7 @@ function openPanel(m){
         spinSpeedDisplay.textContent = parseFloat(spinSpeedSlider.value).toFixed(1);
       });
       spinSpeedSlider.addEventListener('change', ()=>{
-        const speedValue = parseFloat(spinSpeedSlider.value);
-        if(!isNaN(speedValue) && window.spinGlobals){
-          window.spinGlobals.spinSpeed = speedValue;
-        }
+        // Don't update window.spinGlobals - settings will be applied on next page load
         autoSaveMapSettings();
       });
     }
@@ -22258,14 +22251,16 @@ function openPanel(m){
     if(spinLoadStartCheckbox && !spinLoadStartCheckbox.dataset.autoSaveAdded){
       spinLoadStartCheckbox.dataset.autoSaveAdded = 'true';
       spinLoadStartCheckbox.addEventListener('change', ()=>{
-        if(window.spinGlobals) window.spinGlobals.spinLoadStart = spinLoadStartCheckbox.checked;
+        // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
         autoSaveMapSettings();
       });
     }
     if(spinLogoClickCheckbox && !spinLogoClickCheckbox.dataset.autoSaveAdded){
       spinLogoClickCheckbox.dataset.autoSaveAdded = 'true';
       spinLogoClickCheckbox.addEventListener('change', ()=>{
-        if(window.spinGlobals) window.spinGlobals.spinLogoClick = spinLogoClickCheckbox.checked;
+        // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
         autoSaveMapSettings();
       });
     }
@@ -22273,7 +22268,8 @@ function openPanel(m){
       if(radio.dataset.autoSaveAdded) return;
       radio.dataset.autoSaveAdded = 'true';
       radio.addEventListener('change', ()=>{
-        if(radio.checked && window.spinGlobals) window.spinGlobals.spinLoadType = radio.value;
+        // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
         autoSaveMapSettings();
       });
     });
@@ -22417,7 +22413,7 @@ const memberPanelChangeManager = (()=>{
 
   function ensureElements(){
     panel = document.getElementById('memberPanel');
-    form = document.getElementById('memberForm');
+    form = panel ? panel.querySelector('.panel-body') : null;
     if(panel){
       saveButton = panel.querySelector('.save-changes');
       discardButton = panel.querySelector('.discard-changes');
@@ -23126,7 +23122,7 @@ const adminPanelChangeManager = (()=>{
 
   function ensureElements(){
     panel = document.getElementById('adminPanel');
-    form = document.getElementById('adminForm');
+    form = panel ? panel.querySelector('.panel-body') : null;
     if(panel){
       saveButton = panel.querySelector('.save-changes');
       discardButton = panel.querySelector('.discard-changes');
@@ -23340,17 +23336,15 @@ const adminPanelChangeManager = (()=>{
           console.warn('Failed to persist hydrated admin formbuilder snapshot', err);
         }
       }
-      // Set savedStateInitialized to true AFTER refreshSavedState completes
-      // This ensures saved state is ready before change detection can mark form as dirty
-      if(formWasFound){
-        savedStateInitialized = true;
-      }
     })()
     .catch(err => {
       console.warn('Failed to initialize admin saved state', err);
     })
     .finally(()=>{
       savedStateInitializationPromise = null;
+      if(formWasFound){
+        savedStateInitialized = true;
+      }
     });
     return savedStateInitializationPromise;
   }
@@ -26041,7 +26035,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setup(){
-    form = document.getElementById('memberForm');
+    const memberPanel = document.getElementById('memberPanel');
+    form = memberPanel ? memberPanel.querySelector('.panel-body') : null;
     if(!form) return;
     container = form.querySelector('.member-auth');
     if(!container) return;
