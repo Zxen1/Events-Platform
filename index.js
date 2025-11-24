@@ -2643,7 +2643,9 @@ let __notifyMapOnInteraction = null;
               
               // Initialize console filter checkbox
               const consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
-              if(consoleFilterCheckbox){
+              if(consoleFilterCheckbox && !consoleFilterCheckbox.dataset.autoSaveAdded){
+                consoleFilterCheckbox.dataset.autoSaveAdded = 'true';
+                
                 // Track if we're programmatically setting the checkbox (to avoid triggering change event)
                 let isSettingProgrammatically = false;
                 const savedState = localStorage.getItem('enableConsoleFilter') === 'true';
@@ -2651,20 +2653,65 @@ let __notifyMapOnInteraction = null;
                 consoleFilterCheckbox.checked = savedState;
                 isSettingProgrammatically = false;
                 
+                // Store original console.warn to restore when disabling
+                const originalConsoleWarn = console.warn;
+                let consoleFilterActive = false;
+                
+                // Function to enable console filter
+                function enableConsoleFilter(){
+                  if(consoleFilterActive) return;
+                  
+                  const suppressedWarnings = [
+                    /featureNamespace.*selector/i,
+                    /cutoff.*disabled.*terrain/i,
+                    /Image "marker-label-composite.*could not be loaded/i,
+                  ];
+                  
+                  console.warn = function(...args) {
+                    const message = args.join(' ');
+                    if(!suppressedWarnings.some(pattern => pattern.test(message))){
+                      originalConsoleWarn.apply(console, args);
+                    }
+                  };
+                  
+                  consoleFilterActive = true;
+                  console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
+                    'Suppressing', suppressedWarnings.length, 'warning patterns.');
+                }
+                
+                // Function to disable console filter
+                function disableConsoleFilter(){
+                  if(!consoleFilterActive) return;
+                  console.warn = originalConsoleWarn;
+                  consoleFilterActive = false;
+                  console.log('%c[Console Filter Disabled]', 'color: #ff9900; font-weight: bold;');
+                }
+                
+                // Enable filter if it was enabled on page load
+                if(savedState){
+                  enableConsoleFilter();
+                }
+                
                 consoleFilterCheckbox.addEventListener('change', async (event) => {
                   // Skip if this change was programmatic
                   if(isSettingProgrammatically){
                     return;
                   }
                   
-                  // Only show prompt for user-initiated events (not programmatic changes)
-                  // event.isTrusted is false for programmatic changes
+                  // Only process user-initiated events (not programmatic changes)
                   if(event.isTrusted === false){
                     return;
                   }
                   
                   const enabled = consoleFilterCheckbox.checked;
                   localStorage.setItem('enableConsoleFilter', enabled ? 'true' : 'false');
+                  
+                  // Enable/disable filter immediately
+                  if(enabled){
+                    enableConsoleFilter();
+                  } else {
+                    disableConsoleFilter();
+                  }
                   
                   // Auto-save to database
                   try {
@@ -2676,17 +2723,6 @@ let __notifyMapOnInteraction = null;
                   } catch (e) {
                     console.error('Failed to save console filter setting:', e);
                   }
-                  
-                  // Show reload prompt only for user-initiated changes
-                  const messageKey = enabled ? 'msg_confirm_console_filter_enable' : 'msg_confirm_console_filter_disable';
-                  (async () => {
-                    const message = await getMessage(messageKey, {}, true) || (enabled 
-                      ? 'Console filter will be enabled on next page load. Reload now?' 
-                      : 'Console filter will be disabled on next page load. Reload now?');
-                    if(confirm(message)){
-                      location.reload();
-                    }
-                  })();
                 });
               }
             }
