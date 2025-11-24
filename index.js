@@ -19699,18 +19699,6 @@ function makePosts(){
         const id = props.id;
         const venueKey = props.venueKey || null;
         
-        // In hover_only mode, only allow hover on marker-icon layer
-        // The handler is already attached only to marker-icon in hover_only mode,
-        // but add extra safety check
-        const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-        if(mapCardDisplay === 'hover_only'){
-          // In hover_only mode, we only attach handlers to marker-icon, so this should be safe
-          // But verify the layer if available
-          if(e.layer && e.layer.id && e.layer.id !== 'marker-icon'){
-            return; // Don't trigger hover on non-icon layers in hover_only mode
-          }
-        }
-        
         if(id !== undefined && id !== null){
           hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
           updateSelectedMarkerRing();
@@ -19736,42 +19724,8 @@ function makePosts(){
         map.on('mouseleave', layer, handleMarkerHoverEnd);
       });
       
-      // Add DOM hover handlers for small-map-card elements (only in always mode, in hover_only they're created on hover)
-      // These handlers ensure hover only triggers on the small-map-card itself, not the entire map area
-      if(mapCardDisplay === 'always'){
-        const handleSmallMapCardHover = (e) => {
-          // Only trigger if hovering directly on small-map-card or its children
-          const card = e.target.closest('.small-map-card');
-          if(!card || !card.dataset || !card.dataset.id) return;
-          
-          // Don't trigger if hovering on mapmarker icon (that's handled by Mapbox layer)
-          if(e.target.closest('.mapmarker')) return;
-          
-          const id = card.dataset.id;
-          const venueKey = card.dataset.venueKey || null;
-          if(id){
-            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-            updateSelectedMarkerRing();
-          }
-        };
-        
-        const handleSmallMapCardHoverEnd = (e) => {
-          // Only clear if we're not moving to another small-map-card or mapmarker
-          const relatedTarget = e.relatedTarget;
-          if(!relatedTarget || (!relatedTarget.closest('.small-map-card') && !relatedTarget.closest('.mapmarker'))){
-            hoveredPostIds = [];
-            updateSelectedMarkerRing();
-          }
-        };
-        
-        // Use event delegation on map container for dynamically created cards
-        // Use capture phase to catch events before they bubble
-        const mapContainer = map.getContainer();
-        if(mapContainer){
-          mapContainer.addEventListener('mouseenter', handleSmallMapCardHover, true);
-          mapContainer.addEventListener('mouseleave', handleSmallMapCardHoverEnd, true);
-        }
-      }
+      // Note: DOM hover handlers removed - Mapbox layer handlers handle hover correctly
+      // The baseHoverLayers configuration already limits hover to correct layers based on mapCardDisplay
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
