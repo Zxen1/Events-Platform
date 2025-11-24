@@ -19315,6 +19315,7 @@ function makePosts(){
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
+                'icon-padding': 0,
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -19339,6 +19340,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-padding', 0); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
@@ -19374,6 +19376,7 @@ function makePosts(){
               'icon-allow-overlap': true,
               'icon-ignore-placement': true,
               'icon-anchor': 'center',
+              'icon-padding': 0,
               'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'viewport-y',
               'symbol-sort-key': 10,
