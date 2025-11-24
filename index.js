@@ -2344,9 +2344,22 @@ let __notifyMapOnInteraction = null;
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               window.adminIconFolder = data.settings.admin_icon_folder || 'assets/admin-icons';
               
-              // Store post mode shadow and console filter settings
-              if(data.settings.post_mode_shadow !== undefined){
-                localStorage.setItem('post_mode_shadow', data.settings.post_mode_shadow);
+              // Store map brightness and console filter settings
+              if(data.settings.map_brightness !== undefined){
+                localStorage.setItem('map_brightness', data.settings.map_brightness);
+              }
+              if(data.settings.map_brightness_mode !== undefined){
+                localStorage.setItem('map_brightness_mode', data.settings.map_brightness_mode);
+                // Set radio buttons
+                const postOnlyRadio = document.getElementById('mapBrightnessModePostOnly');
+                const alwaysRadio = document.getElementById('mapBrightnessModeAlways');
+                if(postOnlyRadio && alwaysRadio){
+                  if(data.settings.map_brightness_mode === 'always'){
+                    alwaysRadio.checked = true;
+                  } else {
+                    postOnlyRadio.checked = true;
+                  }
+                }
               }
               if(data.settings.console_filter !== undefined){
                 localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
@@ -24424,43 +24437,72 @@ document.addEventListener('DOMContentLoaded', () => {
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
   
-  // Auto-save function for post mode shadow
-  async function autoSavePostModeShadow(){
-    const shadowValue = parseFloat(opacityInput.value);
-    if(isNaN(shadowValue)) {
-      console.error('Invalid shadow value:', opacityInput.value);
+  // Auto-save function for map brightness
+  async function autoSaveMapBrightness(){
+    const brightnessValue = parseFloat(opacityInput.value);
+    if(isNaN(brightnessValue)) {
+      console.error('Invalid brightness value:', opacityInput.value);
       return;
     }
-    localStorage.setItem('post_mode_shadow', shadowValue);
+    localStorage.setItem('map_brightness', brightnessValue);
     try {
       const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_mode_shadow: shadowValue })
+        body: JSON.stringify({ map_brightness: brightnessValue })
       });
       if(!response.ok){
-        console.error('Failed to save post mode shadow: HTTP', response.status, response.statusText);
+        console.error('Failed to save map brightness: HTTP', response.status, response.statusText);
         const text = await response.text();
         console.error('Response:', text);
       } else {
         const result = await response.json();
         if(result && result.success !== false){
-          console.log('Post mode shadow saved successfully:', shadowValue, result);
+          console.log('Map brightness saved successfully:', brightnessValue, result);
           if(result.settings_saved !== undefined){
             console.log('Settings saved count:', result.settings_saved);
           }
         } else {
-          console.error('Failed to save post mode shadow:', result);
+          console.error('Failed to save map brightness:', result);
         }
       }
     } catch (e) {
-      console.error('Failed to save post mode shadow:', e);
+      console.error('Failed to save map brightness:', e);
+    }
+  }
+
+  // Auto-save function for map brightness mode
+  async function autoSaveMapBrightnessMode(modeValue){
+    localStorage.setItem('map_brightness_mode', modeValue);
+    try {
+      const response = await fetch('/gateway.php?action=save-admin-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ map_brightness_mode: modeValue })
+      });
+      if(!response.ok){
+        console.error('Failed to save map brightness mode: HTTP', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Response:', text);
+      } else {
+        const result = await response.json();
+        if(result && result.success !== false){
+          console.log('Map brightness mode saved successfully:', modeValue, result);
+          if(result.settings_saved !== undefined){
+            console.log('Settings saved count:', result.settings_saved);
+          }
+        } else {
+          console.error('Failed to save map brightness mode:', result);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to save map brightness mode:', e);
     }
   }
 
   if(opacityInput && opacityVal){
     // Load from localStorage (which is populated from database on page load)
-    const savedValue = localStorage.getItem('post_mode_shadow');
+    const savedValue = localStorage.getItem('map_brightness');
     opacityInput.value = savedValue !== null ? savedValue : 0;
     apply();
     
@@ -24472,7 +24514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-save on slider change
     opacityInput.addEventListener('change', () => {
       apply();
-      autoSavePostModeShadow();
+      autoSaveMapBrightness();
     });
     
     // Make value display editable on click
@@ -24509,7 +24551,7 @@ document.addEventListener('DOMContentLoaded', () => {
           input.remove();
           opacityInput.value = newValue;
           apply();
-          autoSavePostModeShadow();
+          autoSaveMapBrightness();
         };
         
         input.addEventListener('blur', commitValue);
