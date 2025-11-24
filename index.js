@@ -1794,11 +1794,6 @@ let __notifyMapOnInteraction = null;
     if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
       // UNIFIED: Both single and multi-venue map cards use System 2 (ensureMarkerLabelPillSprites)
       // Multi-venue map card composites are built separately in createMarkerLabelCompositeTextures
-      // Clear JavaScript cache for accent to force rebuild with current dimensions
-      // This ensures sprite changes take effect even if Mapbox had cached the old version
-      if(id === MARKER_LABEL_BG_ACCENT_ID){
-        markerLabelPillSpriteCache = null;
-      }
       const sprites = await ensureMarkerLabelPillSprites();
       if(id === MARKER_LABEL_BG_ID){
         return sprites.base;
@@ -2429,7 +2424,9 @@ let __notifyMapOnInteraction = null;
                   try{
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance){
-                      // Clear sprite cache
+                      // Clear JavaScript sprite cache
+                      markerLabelPillSpriteCache = null;
+                      // Clear sprite cache function if available
                       if(typeof window.clearMarkerLabelPillSpriteCache === 'function'){
                         window.clearMarkerLabelPillSpriteCache(mapInstance);
                       }
@@ -2446,7 +2443,7 @@ let __notifyMapOnInteraction = null;
                       if(typeof window.refreshInViewMarkerLabelComposites === 'function'){
                         window.refreshInViewMarkerLabelComposites(mapInstance);
                       }
-                      // Trigger styleimagemissing to regenerate sprites
+                      // Trigger repaint to regenerate
                       if(mapInstance.triggerRepaint){
                         mapInstance.triggerRepaint();
                       }
@@ -18675,25 +18672,13 @@ function makePosts(){
           if(!imageId){
             return;
           }
-          // For marker-label images, always remove and regenerate to clear Mapbox cache
-          // This ensures sprite dimension changes take effect immediately
-          const isMarkerLabelImage = imageId === MARKER_LABEL_BG_ID || imageId === MARKER_LABEL_BG_ACCENT_ID || 
-                                     (imageId && imageId.startsWith(MARKER_LABEL_COMPOSITE_PREFIX));
-          if(isMarkerLabelImage && map && typeof map.removeImage === 'function'){
-            try{
-              if(map.hasImage?.(imageId)){
-                map.removeImage(imageId);
-              }
-            }catch(err){}
-          } else {
-            // For other images, check cache first
-            try{
-              if(map.hasImage?.(imageId)){
-                return;
-              }
-            }catch(err){
-              console.error(err);
+          // Normal behavior: check cache first (fast performance)
+          try{
+            if(map.hasImage?.(imageId)){
+              return;
             }
+          }catch(err){
+            console.error(err);
           }
           if(pendingStyleImageRequests.has(imageId)){
             return;
@@ -18709,10 +18694,6 @@ function makePosts(){
                 return;
               }
               try{
-                // Always remove before adding for marker-label images to clear cache
-                if(isMarkerLabelImage && map.hasImage?.(imageId)){
-                  map.removeImage(imageId);
-                }
                 if(!map.hasImage?.(imageId)){
                   map.addImage(imageId, image, options || {});
                 }
@@ -18729,10 +18710,6 @@ function makePosts(){
           }
           if(result && result.image){
             try{
-              // Always remove before adding for marker-label images to clear cache
-              if(isMarkerLabelImage && map.hasImage?.(imageId)){
-                map.removeImage(imageId);
-              }
               if(!map.hasImage?.(imageId)){
                 map.addImage(imageId, result.image, result.options || {});
               }
