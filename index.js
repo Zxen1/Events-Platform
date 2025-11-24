@@ -2347,6 +2347,15 @@ let __notifyMapOnInteraction = null;
               // Store map shadow and console filter settings
               if(data.settings.map_shadow !== undefined){
                 localStorage.setItem('map_shadow', data.settings.map_shadow);
+                // Update slider if it exists
+                const opacityInput = document.getElementById('postModeBgOpacity');
+                if(opacityInput){
+                  opacityInput.value = data.settings.map_shadow;
+                  // Trigger apply if the function exists
+                  if(typeof window.applyMapShadow === 'function'){
+                    window.applyMapShadow();
+                  }
+                }
               }
               if(data.settings.map_shadow_mode !== undefined){
                 localStorage.setItem('map_shadow_mode', data.settings.map_shadow_mode);
@@ -24444,6 +24453,9 @@ document.addEventListener('DOMContentLoaded', () => {
     root.style.setProperty('--post-mode-bg-opacity', shouldShowShadow ? opacity : 0);
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
+  
+  // Make apply function globally accessible
+  window.applyMapShadow = apply;
   
   // Auto-save function for map shadow
   async function autoSaveMapShadow(){
