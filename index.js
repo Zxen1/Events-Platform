@@ -1030,11 +1030,12 @@ let __notifyMapOnInteraction = null;
   const markerLabelTextGapPx = 5;
   const markerLabelMarkerInsetPx = 5;
   const markerLabelTextRightPaddingPx = 5;
-  const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
+  const markerLabelTextPaddingPx = 10; // Fixed padding for labels (no icon reference)
   const markerLabelTextAreaWidthPx = Math.max(0, basePillWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelBgTranslatePx = 0;
+  const markerLabelPillLeftOffsetPx = -100; // Left edge of pill is 100px left of lat/lng
+  const markerLabelTextLeftOffsetPx = 100; // Left edge of label is 100px right of lat/lng
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
@@ -1561,17 +1562,7 @@ let __notifyMapOnInteraction = null;
     }
     const pillImg = pillAssets.base;
     const pillAccentImg = pillAssets.highlight;
-    const markerSources = window.subcategoryMarkers || {};
-    const iconUrl = meta && meta.iconId ? markerSources[meta.iconId] : null;
-    let iconImg = null;
-    if(iconUrl){
-      try{
-        iconImg = await loadMarkerLabelImage(iconUrl);
-      }catch(err){
-        console.error(err);
-        iconImg = null;
-      }
-    }
+    // No icon references - icons are standalone layer
     const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg, false);
     const accentDims = pillAccentImg ? computeMarkerLabelCanvasDimensions(pillAccentImg, true) : { canvasWidth, canvasHeight, pixelRatio };
     let deviceScale = 1;
@@ -1601,38 +1592,86 @@ let __notifyMapOnInteraction = null;
     if(line2){
       labelLines.push({ text: line2, color: meta && meta.isMulti ? '#d0d0d0' : '#ffffff' });
     }
-    const drawForeground = (ctx) => {
-      if(!ctx){
-        return;
+    // Composite sprite: pill on left (100px left of center), label on right (100px right of center)
+    // Anchor point is at center (lat/lng)
+    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1, useAccentDimensions = false) => {
+      if(!backgroundImage){
+        return null;
       }
-      try{
-        ctx.imageSmoothingEnabled = true;
-        if('imageSmoothingQuality' in ctx){
-          ctx.imageSmoothingQuality = 'high';
-        }
-      }catch(err){}
-      if(iconImg){
-        const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledPixelRatio;
-        const destX = Math.round(markerLabelMarkerInsetPx * scaledPixelRatio);
-        const destY = Math.round((scaledCanvasHeight - iconSizePx) / 2);
-        drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
-      }
+      const pillWidth = useAccentDimensions ? scaledAccentCanvasWidth : scaledCanvasWidth;
+      const pillHeight = useAccentDimensions ? scaledAccentCanvasHeight : scaledCanvasHeight;
+      const pixelRatio = useAccentDimensions ? scaledAccentPixelRatio : scaledPixelRatio;
+      
+      // Calculate label dimensions
+      let labelWidth = 0;
+      let labelHeight = pillHeight;
       if(labelLines.length){
-        const fontSizePx = markerLabelTextSize * scaledPixelRatio;
-        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledPixelRatio);
+        const fontSizePx = markerLabelTextSize * pixelRatio;
+        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
         const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-        let textY = Math.round((scaledCanvasHeight - totalHeight) / 2);
+        labelHeight = Math.max(totalHeight, pillHeight);
+        // Estimate label width (will be measured properly)
+        labelWidth = Math.max(150, pillWidth);
+      }
+      
+      // Canvas: anchor at center (lat/lng)
+      // Left side: 100px + pill width
+      // Right side: 100px + label width
+      const leftSide = Math.abs(markerLabelPillLeftOffsetPx) + pillWidth; // 100 + pill width
+      const rightSide = markerLabelTextLeftOffsetPx + labelWidth; // 100 + label width
+      const canvasWidth = leftSide + rightSide;
+      const canvasHeight = Math.max(pillHeight, labelHeight);
+      const centerX = leftSide; // Anchor point (lat/lng) at center
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      
+      // Draw pill: left edge at centerX - 100 (100px left of anchor)
+      const pillX = centerX + markerLabelPillLeftOffsetPx; // centerX - 100
+      const pillY = Math.round((canvasHeight - pillHeight) / 2);
+      try{
+        drawMarkerLabelComposite(ctx, backgroundImage, pillX, pillY, pillWidth, pillHeight);
+      }catch(err){
+        console.error(err);
+      }
+      if(tintColor){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = tintAlpha;
+        ctx.fillStyle = tintColor;
+        ctx.fillRect(pillX, pillY, pillWidth, pillHeight);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      
+      // Draw label: left edge at centerX + 100 (100px right of anchor)
+      if(labelLines.length){
+        const fontSizePx = markerLabelTextSize * pixelRatio;
+        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
+        const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
+        let textY = Math.round((canvasHeight - totalHeight) / 2);
         if(!Number.isFinite(textY) || textY < 0){
           textY = 0;
         }
-        const textX = Math.round(markerLabelTextPaddingPx * scaledPixelRatio);
+        const textX = centerX + markerLabelTextLeftOffsetPx; // centerX + 100
+        try{
+          ctx.imageSmoothingEnabled = true;
+          if('imageSmoothingQuality' in ctx){
+            ctx.imageSmoothingQuality = 'high';
+          }
+        }catch(err){}
         ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
         ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 2 * scaledPixelRatio;
+        ctx.shadowBlur = 2 * pixelRatio;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 1 * scaledPixelRatio;
+        ctx.shadowOffsetY = 1 * pixelRatio;
         labelLines.forEach(line => {
           ctx.fillStyle = line.color;
           try{
@@ -1644,87 +1683,10 @@ let __notifyMapOnInteraction = null;
         });
         ctx.shadowColor = 'transparent';
       }
-    };
-    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1, useAccentDimensions = false) => {
-      if(!backgroundImage){
-        return null;
-      }
-      const width = useAccentDimensions ? scaledAccentCanvasWidth : scaledCanvasWidth;
-      const height = useAccentDimensions ? scaledAccentCanvasHeight : scaledCanvasHeight;
-      const pixelRatio = useAccentDimensions ? scaledAccentPixelRatio : scaledPixelRatio;
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      ctx.clearRect(0, 0, width, height);
-      try{
-        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, width, height);
-      }catch(err){
-        console.error(err);
-      }
-      if(tintColor){
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.globalAlpha = tintAlpha;
-        ctx.fillStyle = tintColor;
-        ctx.fillRect(0, 0, width, height);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-      }
-      if(useAccentDimensions){
-        const drawAccentForeground = (ctx) => {
-          if(!ctx){
-            return;
-          }
-          try{
-            ctx.imageSmoothingEnabled = true;
-            if('imageSmoothingQuality' in ctx){
-              ctx.imageSmoothingQuality = 'high';
-            }
-          }catch(err){}
-          if(iconImg){
-            const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledAccentPixelRatio;
-            const destX = Math.round(markerLabelMarkerInsetPx * scaledAccentPixelRatio);
-            const destY = Math.round((height - iconSizePx) / 2);
-            drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
-          }
-          if(labelLines.length){
-            const fontSizePx = markerLabelTextSize * scaledAccentPixelRatio;
-            const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledAccentPixelRatio);
-            const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-            let textY = Math.round((height - totalHeight) / 2);
-            if(!Number.isFinite(textY) || textY < 0){
-              textY = 0;
-            }
-            const textX = Math.round(markerLabelTextPaddingPx * scaledAccentPixelRatio);
-            ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
-            ctx.textBaseline = 'top';
-            ctx.textAlign = 'left';
-            ctx.shadowColor = 'rgba(0,0,0,0.4)';
-            ctx.shadowBlur = 2 * scaledAccentPixelRatio;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 1 * scaledAccentPixelRatio;
-            labelLines.forEach(line => {
-              ctx.fillStyle = line.color;
-              try{
-                ctx.fillText(line.text, textX, textY);
-              }catch(err){
-                console.error(err);
-              }
-              textY += fontSizePx + lineGapPx;
-            });
-            ctx.shadowColor = 'transparent';
-          }
-        };
-        drawAccentForeground(ctx);
-      } else {
-        drawForeground(ctx);
-      }
+      
       let imageData = null;
       try{
-        imageData = ctx.getImageData(0, 0, width, height);
+        imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
       }catch(err){
         console.error(err);
         imageData = null;
@@ -2612,9 +2574,8 @@ let __notifyMapOnInteraction = null;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      // Map card layers only - marker-icon is completely separate
       const MARKER_LAYER_IDS = [
-        'hover-fill',
-        'marker-icon',
         'hover-fill',
         'marker-label',
         'marker-label-highlight'
@@ -18492,6 +18453,68 @@ function makePosts(){
           }
         });
         ensureMapIcon = attachIconLoader(map);
+        
+        let markerIconLayerInitialized = false;
+        const initializeMarkerIconLayer = () => {
+          if(markerIconLayerInitialized || !map || !map.getSource('posts')){
+            return;
+          }
+          const markerIconFilter = ['all',
+            ['!',['has','point_count']],
+            ['has','title']
+          ];
+          const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+            ['case',
+              ['==', ['var','iconId'], ''],
+              MULTI_POST_MARKER_ICON_ID,
+              ['var','iconId']
+            ]
+          ];
+          const markerIconLayerId = 'marker-icon';
+          if(!map.getLayer(markerIconLayerId)){
+            try{
+              map.addLayer({
+                id: markerIconLayerId,
+                type:'symbol',
+                source:'posts',
+                filter: markerIconFilter,
+                minzoom: MARKER_ZOOM_THRESHOLD,
+                layout:{
+                  'icon-image': markerIconImageExpression,
+                  'icon-size': 1,
+                  'icon-allow-overlap': true,
+                  'icon-ignore-placement': true,
+                  'icon-anchor': 'center',
+                  'icon-pitch-alignment': 'viewport',
+                  'symbol-z-order': 'viewport-y',
+                  'symbol-sort-key': 1000,
+                  'visibility': 'visible'
+                },
+                paint:{
+                  'icon-opacity': 1
+                }
+              });
+              markerIconLayerInitialized = true;
+            }catch(e){
+              if(map.getLayer(markerIconLayerId)){
+                markerIconLayerInitialized = true;
+              }
+            }
+          } else {
+            markerIconLayerInitialized = true;
+          }
+        };
+        whenStyleReady(map, () => {
+          if(map.getSource('posts')){
+            initializeMarkerIconLayer();
+          } else {
+            map.once('sourcedata', () => {
+              if(map.getSource('posts')){
+                initializeMarkerIconLayer();
+              }
+            });
+          }
+        });
         const pendingStyleImageRequests = new Map();
         const handleStyleImageMissing = (evt) => {
           const imageId = evt && evt.id;
@@ -19141,13 +19164,13 @@ function makePosts(){
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'left',
+                'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
               },
               paint:{
-                'icon-translate': [markerLabelBgTranslatePx, 0],
+                'icon-translate': [0, 0],
                 'icon-translate-anchor': 'viewport',
                 'icon-opacity': iconOpacity || 1
               }
@@ -19165,11 +19188,11 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
