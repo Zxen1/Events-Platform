@@ -24432,8 +24432,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function apply(){
     const opacity = opacityInput.value;
+    const shadowMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
+    const isPostMode = document.body.classList.contains('mode-posts');
+    
+    // Only apply shadow if mode is 'always' or if mode is 'post_mode_only' and we're in post mode
+    const shouldShowShadow = shadowMode === 'always' || (shadowMode === 'post_mode_only' && isPostMode);
+    
     root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
-    root.style.setProperty('--post-mode-bg-opacity', opacity);
+    root.style.setProperty('--post-mode-bg-opacity', shouldShowShadow ? opacity : 0);
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
   
@@ -24504,11 +24510,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load from localStorage (which is populated from database on page load)
     const savedValue = localStorage.getItem('map_shadow');
     opacityInput.value = savedValue !== null ? savedValue : 0;
-    apply();
+    apply(); // Apply on initial load
     
-    // Update display on slider input
+    // Re-apply when mode changes (e.g., when switching to/from post mode)
+    const checkModeAndApply = () => {
+      apply();
+    };
+    
+    // Listen for mode changes
+    document.addEventListener('click', checkModeAndApply);
+    window.addEventListener('popstate', checkModeAndApply);
+    
+    // Update display and shadow in real-time on slider input
     opacityInput.addEventListener('input', () => {
       opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
+      apply(); // Update shadow in real-time
     });
     
     // Auto-save on slider change
@@ -24580,14 +24596,25 @@ document.addEventListener('DOMContentLoaded', () => {
     postOnlyRadio.addEventListener('change', () => {
       if(postOnlyRadio.checked){
         autoSaveMapShadowMode('post_mode_only');
+        apply(); // Update shadow immediately when mode changes
       }
     });
     alwaysRadio.addEventListener('change', () => {
       if(alwaysRadio.checked){
         autoSaveMapShadowMode('always');
+        apply(); // Update shadow immediately when mode changes
       }
     });
   }
+  
+  // Watch for mode changes to update shadow visibility
+  const observer = new MutationObserver(() => {
+    apply();
+  });
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
 });
 
 // Extracted from <script>

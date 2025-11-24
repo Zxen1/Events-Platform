@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 25, 2025 at 01:50 AM
+-- Generation Time: Nov 25, 2025 at 02:02 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -200,7 +200,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(10, 'map_shadow', '0.37', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-24 14:50:33'),
+(10, 'map_shadow', '0.44', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-24 14:55:23'),
 (11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-24 03:37:39'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -208,7 +208,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-24 04:52:39'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 04:32:55'),
 (17, 'spin_zoom_max', '6', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-24 02:33:28'),
-(18, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(18, 'spin_speed', '0.8', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-24 14:55:15'),
 (19, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (20, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (21, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -216,7 +216,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (23, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-11-24 02:33:46'),
-(26, 'map_shadow_mode', 'post_mode_only', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-11-24 14:50:33');
+(26, 'map_shadow_mode', 'post_mode_only', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-11-24 14:56:01');
 
 -- --------------------------------------------------------
 
@@ -470,7 +470,7 @@ INSERT INTO `layout_containers` (`id`, `tab_id`, `tab_name`, `container_key`, `c
 (3, 4, 'Messages', 'msg_admin', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
 (4, 4, 'Messages', 'msg_email', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
 (5, 3, 'Map', 'map-spin-container', 'Map Spin Settings', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(6, 1, 'Settings', 'map_shadow_field', 'Map Shadow', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-24 14:50:33'),
+(6, 1, 'Settings', 'map_shadow_container', 'Map Shadow', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-24 15:02:52'),
 (7, 1, 'Settings', 'settings-welcome-container', 'Welcome Message', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
 (8, 1, 'Settings', 'settings-paypal-container', 'PayPal Settings', NULL, 3, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
 (9, 1, 'Settings', 'settings-icon-folders-container', 'Icon Folders', NULL, 4, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
@@ -971,7 +971,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1438;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1474;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
