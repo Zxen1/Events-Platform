@@ -18399,6 +18399,76 @@ function makePosts(){
           updateZoomIndicator();
         }
 
+        // Create map scale bar for checking map card scaling
+        const createMapScaleBar = () => {
+          const mapArea = document.querySelector('.map-area');
+          const mapControls = document.querySelector('.map-controls-map');
+          if(!mapArea || !mapControls) return;
+          
+          // Remove existing scale bar if present
+          const existingScaleBar = document.getElementById('mapScaleBar');
+          if(existingScaleBar){
+            existingScaleBar.remove();
+          }
+          
+          const scaleBar = document.createElement('div');
+          scaleBar.id = 'mapScaleBar';
+          scaleBar.className = 'map-scale-bar';
+          
+          // Position scale bar 10px below map control row
+          const updateScaleBarPosition = () => {
+            const controlsRect = mapControls.getBoundingClientRect();
+            const mapAreaRect = mapArea.getBoundingClientRect();
+            const topOffset = controlsRect.bottom - mapAreaRect.top + 10;
+            scaleBar.style.top = topOffset + 'px';
+          };
+          
+          // Create scale line
+          const scaleLine = document.createElement('div');
+          scaleLine.className = 'scale-line';
+          
+          // Create marks every 10px (30 marks total for 300px)
+          for(let i = 0; i <= 30; i++){
+            const mark = document.createElement('div');
+            mark.className = 'scale-mark';
+            const position = (i / 30) * 100;
+            mark.style.left = position + '%';
+            // Major marks every 50px (every 5th mark)
+            if(i % 5 === 0){
+              mark.classList.add('major');
+            }
+            scaleLine.appendChild(mark);
+          }
+          
+          // Create labels every 50px
+          for(let i = 0; i <= 6; i++){
+            const label = document.createElement('div');
+            label.className = 'scale-label';
+            const position = (i * 50);
+            label.textContent = position + 'px';
+            label.style.left = ((position / 300) * 100) + '%';
+            scaleBar.appendChild(label);
+          }
+          
+          scaleBar.appendChild(scaleLine);
+          mapArea.appendChild(scaleBar);
+          
+          // Update position on resize
+          updateScaleBarPosition();
+          window.addEventListener('resize', updateScaleBarPosition);
+          if(typeof map.on === 'function'){
+            map.on('resize', updateScaleBarPosition);
+          }
+        };
+        
+        // Create scale bar after a short delay to ensure controls are rendered
+        setTimeout(createMapScaleBar, 100);
+        if(typeof map.once === 'function'){
+          map.once('load', () => {
+            setTimeout(createMapScaleBar, 100);
+          });
+        }
+
         let recentMapInteraction = false;
         let recentInteractionTimeout = null;
         const markRecentInteraction = () => {
@@ -23652,7 +23722,9 @@ const adminAuthManager = (()=>{
 
   function updateUI(){
     if(adminBtn){
-      const isVisible = !!authenticated;
+      // Show admin button if authenticated OR in development mode
+      const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '';
+      const isVisible = !!authenticated || isDevelopment;
       adminBtn.hidden = !isVisible;
       adminBtn.style.display = isVisible ? 'flex' : 'none';
       adminBtn.setAttribute('aria-hidden', (!isVisible).toString());
@@ -23891,7 +23963,9 @@ document.addEventListener('pointerdown', (e) => {
   }
   if(adminBtn && adminPanel){
     adminBtn.addEventListener('click', ()=>{
-      if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+      // Allow opening admin panel in development mode without authentication
+      const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '';
+      if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated() && !isDevelopment){
         window.adminAuthManager.ensureAuthenticated();
         return;
       }
