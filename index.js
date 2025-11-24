@@ -23722,15 +23722,10 @@ const adminAuthManager = (()=>{
 
   function updateUI(){
     if(adminBtn){
-      // Show admin button if authenticated OR in development mode
-      const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '';
-      const isVisible = !!authenticated || isDevelopment;
-      adminBtn.hidden = !isVisible;
-      adminBtn.style.display = isVisible ? 'flex' : 'none';
-      adminBtn.setAttribute('aria-hidden', (!isVisible).toString());
-      if(!isVisible){
-        adminBtn.setAttribute('aria-pressed','false');
-      }
+      // Always show admin button
+      adminBtn.hidden = false;
+      adminBtn.style.display = 'flex';
+      adminBtn.setAttribute('aria-hidden', 'false');
     }
   }
 
@@ -23963,12 +23958,6 @@ document.addEventListener('pointerdown', (e) => {
   }
   if(adminBtn && adminPanel){
     adminBtn.addEventListener('click', ()=>{
-      // Allow opening admin panel in development mode without authentication
-      const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '';
-      if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated() && !isDevelopment){
-        window.adminAuthManager.ensureAuthenticated();
-        return;
-      }
       togglePanel(adminPanel);
     });
   }
