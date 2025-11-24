@@ -81,6 +81,8 @@
         // Get icon URL - use subcategory icon or fallback to multi-post icon
         const iconId = props.sub || MULTI_POST_MARKER_ICON_ID;
         const iconUrl = subcategoryMarkers[iconId] || subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || '';
+        const originalIconUrl = iconUrl;
+        
         if(iconUrl){
           markerEl.style.backgroundImage = `url(${iconUrl})`;
         } else {
@@ -100,11 +102,13 @@
           props,
           postId,
           post,
+          originalIconUrl,
           thumbnailUrl,
           thumbnailLoaded: false,
           thumbnailImg: null,
           isHovered: false,
-          isClicked: false
+          isActive: false,
+          isPostOpen: false
         };
         
         domMarkers.set(featureId, markerData);
@@ -114,7 +118,13 @@
     
     // Function to load thumbnail and replace icon (only after load completes)
     const loadThumbnailForMarker = async (markerData) => {
-      if(!markerData.thumbnailUrl || markerData.thumbnailLoaded) return;
+      if(!markerData.thumbnailUrl) return;
+      
+      if(markerData.thumbnailLoaded){
+        // Already loaded, just show it
+        markerData.element.style.backgroundImage = `url(${markerData.thumbnailUrl})`;
+        return;
+      }
       
       return new Promise((resolve) => {
         const img = new Image();
@@ -132,6 +142,85 @@
         img.src = markerData.thumbnailUrl;
       });
     };
+    
+    // Function to update marker appearance based on state
+    const updateMarkerAppearance = (markerData) => {
+      if(!markerData || !markerData.element) return;
+      
+      // If post is open or marker is active, show thumbnail and keep at 50px
+      if(markerData.isPostOpen || markerData.isActive){
+        if(markerData.thumbnailUrl){
+          loadThumbnailForMarker(markerData);
+        }
+        animateMarkerSize(markerData, 50);
+      } 
+      // If hovered, show thumbnail but keep at 30px
+      else if(markerData.isHovered){
+        if(markerData.thumbnailUrl){
+          loadThumbnailForMarker(markerData);
+        }
+        animateMarkerSize(markerData, 30);
+      }
+      // Otherwise, show icon at 30px
+      else {
+        if(markerData.originalIconUrl){
+          markerData.element.style.backgroundImage = `url(${markerData.originalIconUrl})`;
+        }
+        animateMarkerSize(markerData, 30);
+      }
+    };
+    
+    // Function to check and update which post is open
+    const updateActivePostMarkers = () => {
+      const activePostId = window.activePostId || null;
+      const openPostEl = document.querySelector('.open-post[data-id]');
+      const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
+      const currentOpenPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : openPostId;
+      
+      domMarkers.forEach((markerData) => {
+        const isOpen = currentOpenPostId && String(markerData.postId) === String(currentOpenPostId);
+        const wasOpen = markerData.isPostOpen;
+        markerData.isPostOpen = isOpen;
+        
+        // If post just closed, clear active state
+        if(wasOpen && !isOpen){
+          markerData.isActive = false;
+        }
+        
+        updateMarkerAppearance(markerData);
+      });
+    };
+    
+    // Monitor for post open/close changes
+    const observePostChanges = () => {
+      // Check immediately
+      updateActivePostMarkers();
+      
+      // Use MutationObserver to watch for .open-post changes
+      if(typeof MutationObserver !== 'undefined'){
+        const observer = new MutationObserver(() => {
+          updateActivePostMarkers();
+        });
+        observer.observe(document.body, { 
+          childList: true, 
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['data-id', 'class']
+        });
+      }
+      
+      // Also poll activePostId changes
+      let lastActivePostId = window.activePostId;
+      setInterval(() => {
+        if(window.activePostId !== lastActivePostId){
+          lastActivePostId = window.activePostId;
+          updateActivePostMarkers();
+        }
+      }, 100);
+    };
+    
+    // Start observing post changes
+    observePostChanges();
     
     // Function to animate marker size
     const animateMarkerSize = (markerData, targetSize) => {
@@ -208,108 +297,82 @@
     domMarkers.forEach((markerData, featureId) => {
       const postId = markerData.postId;
       
-      // Hover enter - load thumbnail and show it
-      markerData.element.addEventListener('mouseenter', async (e) => {
-        e.stopPropagation();
-        if(markerData.isHovered) return;
-        markerData.isHovered = true;
+        // Hover enter - load thumbnail and show it
+        markerData.element.addEventListener('mouseenter', async (e) => {
+          e.stopPropagation();
+          if(markerData.isHovered) return;
+          markerData.isHovered = true;
+          updateMarkerAppearance(markerData);
+        });
         
-        // Load thumbnail (waits for load to complete before showing)
-        await loadThumbnailForMarker(markerData);
-      });
+        // Hover leave - revert to icon if not active
+        markerData.element.addEventListener('mouseleave', (e) => {
+          e.stopPropagation();
+          markerData.isHovered = false;
+          updateMarkerAppearance(markerData);
+        });
       
-      // Hover leave - shrink back to 30px if not clicked
-      markerData.element.addEventListener('mouseleave', (e) => {
-        e.stopPropagation();
-        markerData.isHovered = false;
-        
-        // Only shrink if not clicked
-        if(!markerData.isClicked){
-          animateMarkerSize(markerData, 30);
-        }
-      });
-      
-      // Single click/tap
-      markerData.element.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        
-        if(isTouchDevice){
-          // Touch device - two-tap system
-          if(touchMarkerId === featureId){
-            // Second tap - animate to 50px and open post
-            clearTimeout(touchMarkerTimeout);
-            touchMarkerId = null;
-            markerData.isClicked = true;
+        // Single click/tap
+        markerData.element.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          
+          if(isTouchDevice){
+            // Touch device - two-tap system
+            if(touchMarkerId === featureId){
+              // Second tap - set active and open post
+              clearTimeout(touchMarkerTimeout);
+              touchMarkerId = null;
+              markerData.isActive = true;
+              
+              // Ensure thumbnail is loaded
+              await loadThumbnailForMarker(markerData);
+              updateMarkerAppearance(markerData);
+              
+              // Open post after animation
+              setTimeout(() => {
+                openPostFromMarker(postId);
+              }, 300);
+            } else {
+              // First tap - show thumbnail (hover effect)
+              touchMarkerId = featureId;
+              clearTimeout(touchMarkerTimeout);
+              touchMarkerTimeout = setTimeout(() => {
+                touchMarkerId = null;
+              }, 1000);
+              
+              // Load and show thumbnail
+              await loadThumbnailForMarker(markerData);
+              updateMarkerAppearance(markerData);
+            }
+          } else {
+            // Mouse - single click sets active and opens post
+            markerData.isActive = true;
             
             // Ensure thumbnail is loaded
             await loadThumbnailForMarker(markerData);
-            
-            // Animate to 50px
-            animateMarkerSize(markerData, 50);
+            updateMarkerAppearance(markerData);
             
             // Open post after animation
             setTimeout(() => {
               openPostFromMarker(postId);
-              // Shrink back after opening
-              setTimeout(() => {
-                markerData.isClicked = false;
-                animateMarkerSize(markerData, 30);
-              }, 300);
             }, 300);
-          } else {
-            // First tap - show thumbnail (hover effect)
-            touchMarkerId = featureId;
-            clearTimeout(touchMarkerTimeout);
-            touchMarkerTimeout = setTimeout(() => {
-              touchMarkerId = null;
-            }, 1000);
-            
-            // Load and show thumbnail
-            await loadThumbnailForMarker(markerData);
           }
-        } else {
-          // Mouse - single click animates to 50px and opens post
-          markerData.isClicked = true;
+        });
+        
+        // Double click - open post (desktop)
+        markerData.element.addEventListener('dblclick', async (e) => {
+          e.stopPropagation();
+          markerData.isActive = true;
           
           // Ensure thumbnail is loaded
           await loadThumbnailForMarker(markerData);
-          
-          // Animate to 50px
-          animateMarkerSize(markerData, 50);
+          updateMarkerAppearance(markerData);
           
           // Open post after animation
           setTimeout(() => {
             openPostFromMarker(postId);
-            // Shrink back after opening
-            setTimeout(() => {
-              markerData.isClicked = false;
-              animateMarkerSize(markerData, 30);
-            }, 300);
           }, 300);
-        }
-      });
-      
-      // Double click - open post (desktop)
-      markerData.element.addEventListener('dblclick', async (e) => {
-        e.stopPropagation();
-        markerData.isClicked = true;
-        
-        // Ensure thumbnail is loaded
-        await loadThumbnailForMarker(markerData);
-        
-        // Animate to 50px
-        animateMarkerSize(markerData, 50);
-        
-        // Open post after animation
-        setTimeout(() => {
-          openPostFromMarker(postId);
-          // Shrink back after opening
-          setTimeout(() => {
-            markerData.isClicked = false;
-            animateMarkerSize(markerData, 30);
-          }, 300);
-        }, 300);
-      });
+        });
     });
     
     // Helper function to sync marker hover/click with postcards
