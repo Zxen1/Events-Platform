@@ -2557,7 +2557,7 @@ button[aria-expanded="true"] .results-arrow{
 #tab-settings .settings-welcome-container,
 #tab-settings .settings-paypal-container,
 #tab-settings .settings-icon-folders-container,
-#tab-settings #map_brightness_field,
+#tab-settings #map_shadow_field,
 #memberPanel .member-form-container{
   width:100%;
   max-width:420px;

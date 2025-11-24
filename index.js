@@ -2344,17 +2344,17 @@ let __notifyMapOnInteraction = null;
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               window.adminIconFolder = data.settings.admin_icon_folder || 'assets/admin-icons';
               
-              // Store map brightness and console filter settings
-              if(data.settings.map_brightness !== undefined){
-                localStorage.setItem('map_brightness', data.settings.map_brightness);
+              // Store map shadow and console filter settings
+              if(data.settings.map_shadow !== undefined){
+                localStorage.setItem('map_shadow', data.settings.map_shadow);
               }
-              if(data.settings.map_brightness_mode !== undefined){
-                localStorage.setItem('map_brightness_mode', data.settings.map_brightness_mode);
+              if(data.settings.map_shadow_mode !== undefined){
+                localStorage.setItem('map_shadow_mode', data.settings.map_shadow_mode);
                 // Set radio buttons
-                const postOnlyRadio = document.getElementById('mapBrightnessModePostOnly');
-                const alwaysRadio = document.getElementById('mapBrightnessModeAlways');
+                const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
+                const alwaysRadio = document.getElementById('mapShadowModeAlways');
                 if(postOnlyRadio && alwaysRadio){
-                  if(data.settings.map_brightness_mode === 'always'){
+                  if(data.settings.map_shadow_mode === 'always'){
                     alwaysRadio.checked = true;
                   } else {
                     postOnlyRadio.checked = true;
@@ -24437,72 +24437,72 @@ document.addEventListener('DOMContentLoaded', () => {
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
   
-  // Auto-save function for map brightness
-  async function autoSaveMapBrightness(){
-    const brightnessValue = parseFloat(opacityInput.value);
-    if(isNaN(brightnessValue)) {
-      console.error('Invalid brightness value:', opacityInput.value);
+  // Auto-save function for map shadow
+  async function autoSaveMapShadow(){
+    const shadowValue = parseFloat(opacityInput.value);
+    if(isNaN(shadowValue)) {
+      console.error('Invalid shadow value:', opacityInput.value);
       return;
     }
-    localStorage.setItem('map_brightness', brightnessValue);
+    localStorage.setItem('map_shadow', shadowValue);
     try {
       const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ map_brightness: brightnessValue })
+        body: JSON.stringify({ map_shadow: shadowValue })
       });
       if(!response.ok){
-        console.error('Failed to save map brightness: HTTP', response.status, response.statusText);
+        console.error('Failed to save map shadow: HTTP', response.status, response.statusText);
         const text = await response.text();
         console.error('Response:', text);
       } else {
         const result = await response.json();
         if(result && result.success !== false){
-          console.log('Map brightness saved successfully:', brightnessValue, result);
+          console.log('Map shadow saved successfully:', shadowValue, result);
           if(result.settings_saved !== undefined){
             console.log('Settings saved count:', result.settings_saved);
           }
         } else {
-          console.error('Failed to save map brightness:', result);
+          console.error('Failed to save map shadow:', result);
         }
       }
     } catch (e) {
-      console.error('Failed to save map brightness:', e);
+      console.error('Failed to save map shadow:', e);
     }
   }
 
-  // Auto-save function for map brightness mode
-  async function autoSaveMapBrightnessMode(modeValue){
-    localStorage.setItem('map_brightness_mode', modeValue);
+  // Auto-save function for map shadow mode
+  async function autoSaveMapShadowMode(modeValue){
+    localStorage.setItem('map_shadow_mode', modeValue);
     try {
       const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ map_brightness_mode: modeValue })
+        body: JSON.stringify({ map_shadow_mode: modeValue })
       });
       if(!response.ok){
-        console.error('Failed to save map brightness mode: HTTP', response.status, response.statusText);
+        console.error('Failed to save map shadow mode: HTTP', response.status, response.statusText);
         const text = await response.text();
         console.error('Response:', text);
       } else {
         const result = await response.json();
         if(result && result.success !== false){
-          console.log('Map brightness mode saved successfully:', modeValue, result);
+          console.log('Map shadow mode saved successfully:', modeValue, result);
           if(result.settings_saved !== undefined){
             console.log('Settings saved count:', result.settings_saved);
           }
         } else {
-          console.error('Failed to save map brightness mode:', result);
+          console.error('Failed to save map shadow mode:', result);
         }
       }
     } catch (e) {
-      console.error('Failed to save map brightness mode:', e);
+      console.error('Failed to save map shadow mode:', e);
     }
   }
 
   if(opacityInput && opacityVal){
     // Load from localStorage (which is populated from database on page load)
-    const savedValue = localStorage.getItem('map_brightness');
+    const savedValue = localStorage.getItem('map_shadow');
     opacityInput.value = savedValue !== null ? savedValue : 0;
     apply();
     
@@ -24514,7 +24514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-save on slider change
     opacityInput.addEventListener('change', () => {
       apply();
-      autoSaveMapBrightness();
+      autoSaveMapShadow();
     });
     
     // Make value display editable on click
@@ -24551,7 +24551,7 @@ document.addEventListener('DOMContentLoaded', () => {
           input.remove();
           opacityInput.value = newValue;
           apply();
-          autoSaveMapBrightness();
+          autoSaveMapShadow();
         };
         
         input.addEventListener('blur', commitValue);
@@ -24571,6 +24571,22 @@ document.addEventListener('DOMContentLoaded', () => {
         input.select();
       });
     }
+  }
+
+  // Add event listeners for map shadow mode radio buttons
+  const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
+  const alwaysRadio = document.getElementById('mapShadowModeAlways');
+  if(postOnlyRadio && alwaysRadio){
+    postOnlyRadio.addEventListener('change', () => {
+      if(postOnlyRadio.checked){
+        autoSaveMapShadowMode('post_mode_only');
+      }
+    });
+    alwaysRadio.addEventListener('change', () => {
+      if(alwaysRadio.checked){
+        autoSaveMapShadowMode('always');
+      }
+    });
   }
 });
 
