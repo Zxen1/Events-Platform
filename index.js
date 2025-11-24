@@ -22588,86 +22588,25 @@ function openPanel(m){
       });
     }
     
-    // Initialize and auto-save welcome message editor
-    const welcomeMessageEditor = document.getElementById('welcomeMessageEditor');
-    const welcomeMessageTextarea = document.getElementById('welcomeMessage');
-    if(welcomeMessageEditor && !welcomeMessageEditor.dataset.autoSaveAdded){
-      welcomeMessageEditor.dataset.autoSaveAdded = 'true';
-      
-      // Load welcome message from settings
-      (async function initWelcomeMessage(){
+    // Auto-save welcome message enabled checkbox
+    const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
+    if(welcomeEnabledCheckbox && !welcomeEnabledCheckbox.dataset.autoSaveAdded){
+      welcomeEnabledCheckbox.dataset.autoSaveAdded = 'true';
+      welcomeEnabledCheckbox.addEventListener('change', async ()=>{
         try {
-          const response = await fetch('/gateway.php?action=get-admin-settings', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-          });
-          if(response.ok){
-            const data = await response.json();
-            if(data.success && data.settings && data.settings.welcome_message){
-              try {
-                const welcomeContent = JSON.parse(data.settings.welcome_message);
-                welcomeMessageEditor.innerHTML = welcomeContent;
-                if(welcomeMessageTextarea) welcomeMessageTextarea.value = welcomeContent;
-              } catch(e){
-                // If not JSON, use as string
-                welcomeMessageEditor.innerHTML = data.settings.welcome_message;
-                if(welcomeMessageTextarea) welcomeMessageTextarea.value = data.settings.welcome_message;
-              }
-            }
-          }
-        } catch(error){
-          console.error('Error loading welcome message:', error);
-        }
-      })();
-      
-      // Auto-save function - saves to admin_settings.welcome_message
-      async function saveWelcomeMessage(content){
-        try {
-          const saveResponse = await fetch('/gateway.php?action=save-admin-settings', {
+          await fetch('/gateway.php?action=save-admin-settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              welcome_message: JSON.stringify(content)
+              welcome_enabled: welcomeEnabledCheckbox.checked
             })
           });
-          
-          if(saveResponse.ok){
-            const saveResult = await saveResponse.json();
-            if(saveResult.success){
-              console.log('Welcome message auto-saved successfully');
-              return true;
-            } else {
-              console.error('Failed to auto-save welcome message:', saveResult.message || 'Unknown error');
-            }
-          } else {
-            const errorText = await saveResponse.text();
-            console.error('Failed to auto-save welcome message - HTTP status:', saveResponse.status, errorText);
-          }
         } catch(error){
-          console.error('Error auto-saving welcome message:', error);
+          console.error('Error auto-saving welcome enabled setting:', error);
         }
-        return false;
-      }
-      
-      // Auto-save on blur
-      welcomeMessageEditor.addEventListener('blur', async ()=>{
-        const content = welcomeMessageEditor.innerHTML;
-        if(welcomeMessageTextarea) welcomeMessageTextarea.value = content;
-        await saveWelcomeMessage(content);
-      });
-      
-      // Also save on input (debounced)
-      let saveTimeout;
-      welcomeMessageEditor.addEventListener('input', ()=>{
-        const content = welcomeMessageEditor.innerHTML;
-        if(welcomeMessageTextarea) welcomeMessageTextarea.value = content;
-        
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(async ()=>{
-          await saveWelcomeMessage(content);
-        }, 2000); // 2 second debounce
       });
     }
+    
   }
   
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
