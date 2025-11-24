@@ -2351,10 +2351,6 @@ let __notifyMapOnInteraction = null;
                 const opacityInput = document.getElementById('postModeBgOpacity');
                 if(opacityInput){
                   opacityInput.value = data.settings.map_shadow;
-                  // Trigger apply if the function exists
-                  if(typeof window.applyMapShadow === 'function'){
-                    window.applyMapShadow();
-                  }
                 }
               }
               if(data.settings.map_shadow_mode !== undefined){
@@ -2369,6 +2365,13 @@ let __notifyMapOnInteraction = null;
                     postOnlyRadio.checked = true;
                   }
                 }
+              }
+              
+              // Apply shadow after settings are loaded
+              if(typeof window.applyMapShadow === 'function'){
+                setTimeout(() => {
+                  window.applyMapShadow();
+                }, 100);
               }
               if(data.settings.console_filter !== undefined){
                 localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
@@ -24442,16 +24445,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function apply(){
     if(!opacityInput || !opacityVal) return;
     
-    const opacity = opacityInput.value;
+    const opacity = parseFloat(opacityInput.value) || 0;
     const shadowMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
     const isPostMode = document.body.classList.contains('mode-posts');
     
     // Only apply shadow if mode is 'always' or if mode is 'post_mode_only' and we're in post mode
     const shouldShowShadow = shadowMode === 'always' || (shadowMode === 'post_mode_only' && isPostMode);
+    const finalOpacity = shouldShowShadow ? opacity : 0;
     
     root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
-    root.style.setProperty('--post-mode-bg-opacity', shouldShowShadow ? opacity : 0);
+    root.style.setProperty('--post-mode-bg-opacity', String(finalOpacity));
     opacityVal.textContent = Number(opacity).toFixed(2);
+    
+    // Debug: log to verify shadow is being applied
+    console.log('Map shadow applied:', { opacity, shadowMode, isPostMode, shouldShowShadow, finalOpacity });
   }
   
   // Make apply function globally accessible
@@ -24523,14 +24530,28 @@ document.addEventListener('DOMContentLoaded', () => {
   if(opacityInput && opacityVal){
     // Load from localStorage (which is populated from database on page load)
     const savedValue = localStorage.getItem('map_shadow');
-    opacityInput.value = savedValue !== null ? savedValue : 0;
+    if(savedValue !== null){
+      opacityInput.value = savedValue;
+    } else {
+      opacityInput.value = 0;
+    }
     
     // Ensure shadow mode is set
     if(!localStorage.getItem('map_shadow_mode')){
       localStorage.setItem('map_shadow_mode', 'post_mode_only');
     }
     
-    apply(); // Apply on initial load
+    // Apply immediately
+    apply();
+    
+    // Also re-apply after a short delay to catch any async settings loading
+    setTimeout(() => {
+      const updatedValue = localStorage.getItem('map_shadow');
+      if(updatedValue !== null && updatedValue !== opacityInput.value){
+        opacityInput.value = updatedValue;
+      }
+      apply();
+    }, 500);
     
     // Update display and shadow in real-time on slider input
     opacityInput.addEventListener('input', () => {
