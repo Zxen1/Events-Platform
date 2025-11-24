@@ -2322,6 +2322,19 @@ let __notifyMapOnInteraction = null;
           mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
+      // Set title immediately from localStorage to prevent flash
+      (function setTitleFromCache(){
+        const cachedSiteName = localStorage.getItem('site_name');
+        if(cachedSiteName){
+          let pageTitle = cachedSiteName;
+          const cachedTagline = localStorage.getItem('site_tagline');
+          if(cachedTagline){
+            pageTitle += ' - ' + cachedTagline;
+          }
+          document.title = pageTitle;
+        }
+      })();
+      
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
@@ -2394,6 +2407,13 @@ let __notifyMapOnInteraction = null;
                   pageTitle += ' - ' + data.settings.site_tagline;
                 }
                 document.title = pageTitle;
+                // Cache in localStorage for instant title on next page load
+                localStorage.setItem('site_name', data.settings.site_name);
+                if(data.settings.site_tagline){
+                  localStorage.setItem('site_tagline', data.settings.site_tagline);
+                } else {
+                  localStorage.removeItem('site_tagline');
+                }
               }
               
               // Calculate if spin should be enabled
