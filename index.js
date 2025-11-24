@@ -2485,15 +2485,6 @@ let __notifyMapOnInteraction = null;
                       window.attachCursorHandlers();
                     }
                     
-                    // Ensure marker-icon is visible
-                    if(mapInstance && mapInstance.getLayer('marker-icon')){
-                      try {
-                        mapInstance.setPaintProperty('marker-icon', 'icon-opacity', 1);
-                        mapInstance.setLayoutProperty('marker-icon', 'visibility', 'visible');
-                        mapInstance.setLayoutProperty('marker-icon', 'icon-size', 1);
-                      } catch(e) {}
-                    }
-                    
                     // Auto-save to database
                     try {
                       await fetch('/gateway.php?action=save-admin-settings', {
@@ -2621,8 +2612,9 @@ let __notifyMapOnInteraction = null;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      // Map card layers only - marker-icon is completely separate and not included here
       const MARKER_LAYER_IDS = [
+        'hover-fill',
+        'marker-icon',
         'hover-fill',
         'marker-label',
         'marker-label-highlight'
@@ -7096,16 +7088,9 @@ function makePosts(){
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
-        // marker-icon is completely separate and not in MARKER_LAYER_IDS - it's always visible
         MARKER_LAYER_IDS.forEach(id => {
           setLayerVisibility(id, shouldShowMarkers);
         });
-        // Ensure marker-icon is always visible regardless of zoom level
-        if(map && map.getLayer('marker-icon')){
-          try{
-            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-          }catch(e){}
-        }
         markerLayersVisible = shouldShowMarkers;
       }
       if(balloonLayersVisible !== shouldShowBalloons){
@@ -18500,98 +18485,6 @@ function makePosts(){
         whenStyleReady(map, applyStyleAdjustments);
         map.on('style.load', applyStyleAdjustments);
         
-        let markerIconLayerInitialized = false;
-        const initializeMarkerIconLayer = () => {
-          if(markerIconLayerInitialized || !map || !map.getSource('posts')){
-            return;
-          }
-          const markerIconFilter = ['all',
-            ['!',['has','point_count']],
-            ['has','title']
-          ];
-          const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-            ['case',
-              ['==', ['var','iconId'], ''],
-              MULTI_POST_MARKER_ICON_ID,
-              ['var','iconId']
-            ]
-          ];
-          const markerIconLayerId = 'marker-icon';
-          if(!map.getLayer(markerIconLayerId)){
-            try{
-              map.addLayer({
-                id: markerIconLayerId,
-                type:'symbol',
-                source:'posts',
-                filter: markerIconFilter,
-                minzoom: MARKER_ZOOM_THRESHOLD,
-                layout:{
-                  'icon-image': markerIconImageExpression,
-                  'icon-size': 1,
-                  'icon-allow-overlap': true,
-                  'icon-ignore-placement': true,
-                  'icon-anchor': 'center',
-                  'icon-pitch-alignment': 'viewport',
-                  'symbol-z-order': 'viewport-y',
-                  'symbol-sort-key': 1000,
-                  'visibility': 'visible'
-                },
-                paint:{
-                  'icon-opacity': 1
-                }
-              });
-              markerIconLayerInitialized = true;
-              // Force marker-icon layer opacity to 1 immediately after creation
-              try{
-                map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-                map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-                map.setLayoutProperty('marker-icon', 'icon-size', 1);
-              }catch(e){}
-              // Also call updateMapCardLayerOpacity to ensure it stays at 1
-              if(typeof window.updateMapCardLayerOpacity === 'function'){
-                const currentDisplayMode = document.body.getAttribute('data-map-card-display') || 'always';
-                window.updateMapCardLayerOpacity(currentDisplayMode);
-              }
-            }catch(e){
-              if(map.getLayer(markerIconLayerId)){
-                markerIconLayerInitialized = true;
-                // Force marker-icon layer opacity to 1 immediately
-                try{
-                  map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-                  map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-                  map.setLayoutProperty('marker-icon', 'icon-size', 1);
-                }catch(e){}
-                // Also call updateMapCardLayerOpacity to ensure it stays at 1
-                if(typeof window.updateMapCardLayerOpacity === 'function'){
-                  const currentDisplayMode = document.body.getAttribute('data-map-card-display') || 'always';
-                  window.updateMapCardLayerOpacity(currentDisplayMode);
-                }
-              }
-            }
-          } else {
-            markerIconLayerInitialized = true;
-            // Force marker-icon layer opacity to 1 if it already exists
-            try{
-              map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-            }catch(e){}
-            // Also call updateMapCardLayerOpacity to ensure it stays at 1
-            if(typeof window.updateMapCardLayerOpacity === 'function'){
-              const currentDisplayMode = document.body.getAttribute('data-map-card-display') || 'always';
-              window.updateMapCardLayerOpacity(currentDisplayMode);
-            }
-          }
-        };
-        whenStyleReady(map, () => {
-          if(map.getSource('posts')){
-            initializeMarkerIconLayer();
-          } else {
-            map.once('sourcedata', () => {
-              if(map.getSource('posts')){
-                initializeMarkerIconLayer();
-              }
-            });
-          }
-        });
         map.on('styledata', () => {
           try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
@@ -19082,7 +18975,9 @@ function makePosts(){
         const multiCountLabel = `${multiCount} posts here`;
         const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
         const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
-        const spriteSource = ['multi', multiIconId || '', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
+        // Include venueKey in sprite source to ensure unique sprite IDs for different venues
+        // Even if they have same icon, count, and venue name
+        const spriteSource = ['multi', multiIconId || '', baseSub || '', multiCountLabel, multiVenueText || '', group.key || ''].join('|');
         const labelSpriteId = hashString(spriteSource);
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
@@ -19240,6 +19135,7 @@ function makePosts(){
               source,
               filter: filter || markerLabelFilter,
               minzoom: layerMinZoom,
+              maxzoom: 24,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
                 'icon-size': 1,
@@ -19278,9 +19174,8 @@ function makePosts(){
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
-      // marker-icon is completely separate and not in ALL_MARKER_LAYER_IDS
       ALL_MARKER_LAYER_IDS.forEach(id=>{
-        if(map.getLayer(id)){
+        if(id !== 'marker-icon' && map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
@@ -19288,7 +19183,7 @@ function makePosts(){
         ['marker-label','icon-opacity-transition'],
         ['marker-label-highlight','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
-        if(layer !== 'marker-icon' && map.getLayer(layer)){
+        if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
         }
       });
@@ -19301,39 +19196,10 @@ function makePosts(){
         if(map.getLayer('marker-label')){
           try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
         }
-        // Ensure marker-icon layer always has opacity 1 (never affected by map card display mode)
-        if(map.getLayer('marker-icon')){
-          try{ 
-            // Force opacity to 1 as a FIXED VALUE, not an expression
-            // This breaks any link to map card opacity expressions
-            const currentOpacity = map.getPaintProperty('marker-icon', 'icon-opacity');
-            // If it's an array (expression), we need to replace it with a fixed value
-            if(Array.isArray(currentOpacity)){
-              map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-            } else if(currentOpacity !== 1){
-              map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-            }
-            // Also ensure visibility, anchor, and translate are set correctly
-            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-            map.setLayoutProperty('marker-icon', 'icon-size', 1);
-            map.setLayoutProperty('marker-icon', 'icon-anchor', 'center');
-            // Ensure icon-translate is not set (or is [0,0]) to keep icon centered on lat/lng
-            const currentTranslate = map.getPaintProperty('marker-icon', 'icon-translate');
-            if(currentTranslate !== undefined && currentTranslate !== null){
-              const translateArray = Array.isArray(currentTranslate) ? currentTranslate : [currentTranslate];
-              if(translateArray.length > 0 && (translateArray[0] !== 0 || (translateArray[1] !== undefined && translateArray[1] !== 0))){
-                map.setPaintProperty('marker-icon', 'icon-translate', [0, 0]);
-              }
-            }
-          }catch(e){
-            // Silently fail - layer might not be ready yet
-          }
-        }
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Call on initial load to ensure marker-icon opacity is set correctly
       updateMapCardLayerOpacity(mapCardDisplay);
       
       
