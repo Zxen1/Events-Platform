@@ -19843,13 +19843,57 @@ function makePosts(){
       // Handle hover/tap to show accent pill
       // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
       // Only uses marker-icon layer for precise hover zone (avoids huge composite sprite hit area)
-      let hoverTimeout = null;
+      // Uses mousemove to track hover continuously for smooth transitions between markers
+      let currentHoveredId = null;
+      let hoverCheckTimeout = null;
+      
+      const updateHoverFromPoint = (point) => {
+        if(!point) return;
+        
+        // Clear any pending hover check
+        if(hoverCheckTimeout){
+          clearTimeout(hoverCheckTimeout);
+          hoverCheckTimeout = null;
+        }
+        
+        // Query what's under the cursor
+        const features = map.queryRenderedFeatures(point, {
+          layers: ['marker-icon']
+        });
+        
+        if(features.length > 0){
+          const f = features[0];
+          const props = f.properties || {};
+          const id = props.id;
+          const venueKey = props.venueKey || null;
+          
+          if(id !== undefined && id !== null && String(id) !== currentHoveredId){
+            currentHoveredId = String(id);
+            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+            updateSelectedMarkerRing();
+          }
+        } else {
+          // Not over any marker - clear hover after a short delay
+          hoverCheckTimeout = setTimeout(() => {
+            // Double-check we're still not over a marker
+            const recheckFeatures = map.queryRenderedFeatures(point, {
+              layers: ['marker-icon']
+            });
+            if(recheckFeatures.length === 0){
+              currentHoveredId = null;
+              hoveredPostIds = [];
+              updateSelectedMarkerRing();
+            }
+            hoverCheckTimeout = null;
+          }, 50);
+        }
+      };
       
       const handleMarkerHover = (e) => {
-        // Cancel any pending hover clear - we're entering a new marker
-        if(hoverTimeout){
-          clearTimeout(hoverTimeout);
-          hoverTimeout = null;
+        // Cancel any pending hover clear
+        if(hoverCheckTimeout){
+          clearTimeout(hoverCheckTimeout);
+          hoverCheckTimeout = null;
         }
         
         const f = e.features && e.features[0];
@@ -19859,40 +19903,32 @@ function makePosts(){
         const venueKey = props.venueKey || null;
         
         if(id !== undefined && id !== null){
+          currentHoveredId = String(id);
           hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
           updateSelectedMarkerRing();
         }
       };
 
       const handleMarkerHoverEnd = (e) => {
-        // Don't clear hover immediately - delay to allow smooth transition to next marker
-        // This prevents flicker when sliding from one marker to another
-        const point = e.point;
-        hoverTimeout = setTimeout(() => {
-          // Check if we're now over another marker at this point
-          if(point){
-            const features = map.queryRenderedFeatures(point, {
-              layers: ['marker-icon']
-            });
-            
-            // If we're over another marker, don't clear hover (handleMarkerHover will set it)
-            if(features.length > 0){
-              const f = features[0];
-              const props = f.properties || {};
-              const id = props.id;
-              if(id !== undefined && id !== null){
-                // We're over a different marker, let handleMarkerHover handle it
-                hoverTimeout = null;
-                return;
-              }
-            }
-          }
-          
-          // Not over any marker, clear hover
-          hoveredPostIds = [];
-          updateSelectedMarkerRing();
-          hoverTimeout = null;
-        }, 30); // Short delay to catch transitions between markers
+        // Use mousemove to check what we're over now - this handles smooth transitions
+        if(e.point){
+          updateHoverFromPoint(e.point);
+        } else {
+          // No point info, clear after delay
+          hoverCheckTimeout = setTimeout(() => {
+            currentHoveredId = null;
+            hoveredPostIds = [];
+            updateSelectedMarkerRing();
+            hoverCheckTimeout = null;
+          }, 50);
+        }
+      };
+      
+      // Also track mousemove over the map to catch transitions between markers
+      const handleMapMouseMove = (e) => {
+        if(e.point){
+          updateHoverFromPoint(e.point);
+        }
       };
       
       // Expose hover handlers globally so they can be updated when mapCardDisplay changes
@@ -19905,6 +19941,8 @@ function makePosts(){
       // Using only marker-icon ensures hover works reliably and precisely
       map.on('mouseenter', 'marker-icon', handleMarkerHover);
       map.on('mouseleave', 'marker-icon', handleMarkerHoverEnd);
+      // Track mousemove to catch smooth transitions between markers
+      map.on('mousemove', 'marker-icon', handleMapMouseMove);
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
