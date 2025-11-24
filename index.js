@@ -1634,7 +1634,7 @@ let __notifyMapOnInteraction = null;
       const rightSide = scaledTextLeftOffset + labelWidth; // scaled offset + label width
       const canvasWidth = 150; // EXACTLY 150px as ordered
       const canvasHeight = 40; // EXACTLY 40px as ordered
-      const centerX = leftSide; // Anchor point (lat/lng) at center
+      const centerX = 75; // Anchor point at center of 150px width
       
       const canvas = document.createElement('canvas');
       // Set canvas to exact 150x40px dimensions
