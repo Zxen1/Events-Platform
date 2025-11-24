@@ -2485,7 +2485,7 @@ let __notifyMapOnInteraction = null;
                       window.attachCursorHandlers();
                     }
                     
-                    // Ensure marker-icon is visible (critical - it's "god")
+                    // Ensure marker-icon is visible
                     if(mapInstance && mapInstance.getLayer('marker-icon')){
                       try {
                         mapInstance.setPaintProperty('marker-icon', 'icon-opacity', 1);
@@ -7100,7 +7100,7 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => {
           setLayerVisibility(id, shouldShowMarkers);
         });
-        // CRITICAL: Ensure marker-icon is always visible regardless of zoom level
+        // Ensure marker-icon is always visible regardless of zoom level
         if(map && map.getLayer('marker-icon')){
           try{
             map.setLayoutProperty('marker-icon', 'visibility', 'visible');
@@ -18541,8 +18541,7 @@ function makePosts(){
                 }
               });
               markerIconLayerInitialized = true;
-              // CRITICAL: Force marker-icon layer opacity to 1 immediately after creation
-              // This layer is "god" and must always be visible regardless of map card display mode
+              // Force marker-icon layer opacity to 1 immediately after creation
               try{
                 map.setPaintProperty('marker-icon', 'icon-opacity', 1);
                 map.setLayoutProperty('marker-icon', 'visibility', 'visible');
@@ -18556,7 +18555,7 @@ function makePosts(){
             }catch(e){
               if(map.getLayer(markerIconLayerId)){
                 markerIconLayerInitialized = true;
-                // CRITICAL: Force marker-icon layer opacity to 1 immediately
+                // Force marker-icon layer opacity to 1 immediately
                 try{
                   map.setPaintProperty('marker-icon', 'icon-opacity', 1);
                   map.setLayoutProperty('marker-icon', 'visibility', 'visible');
@@ -18571,7 +18570,7 @@ function makePosts(){
             }
           } else {
             markerIconLayerInitialized = true;
-            // CRITICAL: Force marker-icon layer opacity to 1 if it already exists
+            // Force marker-icon layer opacity to 1 if it already exists
             try{
               map.setPaintProperty('marker-icon', 'icon-opacity', 1);
             }catch(e){}
@@ -19303,8 +19302,6 @@ function makePosts(){
           try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
         }
         // Ensure marker-icon layer always has opacity 1 (never affected by map card display mode)
-        // This is critical - marker-icon is "god" and must always be visible
-        // Note: Layer may not exist yet if called before initializeMarkerIconLayer() runs
         if(map.getLayer('marker-icon')){
           try{ 
             // Force opacity to 1 as a FIXED VALUE, not an expression
@@ -19330,8 +19327,7 @@ function makePosts(){
       // Call on initial load to ensure marker-icon opacity is set correctly
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // CRITICAL: Periodically ensure marker-icon layer opacity stays at 1
-      // Something might be setting it to 0 in hover_only mode, so we need to keep forcing it back to 1
+      // Periodically ensure marker-icon layer opacity stays at 1
       const ensureMarkerIconVisible = () => {
         if(map && map.getLayer('marker-icon')){
           try{
@@ -19523,24 +19519,27 @@ function makePosts(){
       updateSelectedMarkerRing();
 
       // Set pointer cursor when hovering over markers (dynamic based on mapCardDisplay)
+      // Store cursor handler functions so we can remove only these specific handlers
+      const cursorEnterHandler = () => {
+        map.getCanvas().style.cursor = 'pointer';
+      };
+      const cursorLeaveHandler = () => {
+        map.getCanvas().style.cursor = 'grab';
+      };
       const attachCursorHandlers = () => {
-        // Remove old handlers from all possible layers
+        // Remove only our cursor handlers from all possible layers
         const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
         allPossibleLayers.forEach(layer => {
           try {
-            map.off('mouseenter', layer);
-            map.off('mouseleave', layer);
+            map.off('mouseenter', layer, cursorEnterHandler);
+            map.off('mouseleave', layer, cursorLeaveHandler);
           } catch(e) {}
         });
-        // Add handlers to current interactive layers
+        // Add cursor handlers to current interactive layers only
         getMarkerInteractiveLayers().forEach(layer => {
           try {
-            map.on('mouseenter', layer, () => {
-              map.getCanvas().style.cursor = 'pointer';
-            });
-            map.on('mouseleave', layer, () => {
-              map.getCanvas().style.cursor = 'grab';
-            });
+            map.on('mouseenter', layer, cursorEnterHandler);
+            map.on('mouseleave', layer, cursorLeaveHandler);
           } catch(e) {}
         });
       };
