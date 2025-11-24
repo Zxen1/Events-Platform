@@ -1032,6 +1032,7 @@ let __notifyMapOnInteraction = null;
   const markerLabelTextRightPaddingPx = 5;
   const markerLabelTextPaddingPx = 10; // Fixed padding for labels (no icon reference)
   const markerLabelTextAreaWidthPx = Math.max(0, basePillWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
+  const markerLabelTextAreaWidthPxSmall = 100; // For small map cards (non-multi-post venue)
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
   const markerLabelPillLeftOffsetPx = -20; // Left edge of pill is 20px left of lat/lng
@@ -1111,55 +1112,62 @@ let __notifyMapOnInteraction = null;
     }
     const lines = [];
     let remaining = normalized;
-    while(remaining && lines.length < maxLines){
-      if(lines.length === maxLines - 1){
-        lines.push(shortenMarkerLabelText(remaining, widthPx));
-        break;
-      }
-      let low = 1;
-      let high = remaining.length;
-      let bestIndex = 0;
-      while(low <= high){
-        const mid = Math.floor((low + high) / 2);
-        const candidate = remaining.slice(0, mid).trimEnd();
-        if(!candidate){
-          low = mid + 1;
-          continue;
-        }
-        if(ctx.measureText(candidate).width <= widthPx){
-          bestIndex = mid;
-          low = mid + 1;
+    const ellipsis = markerLabelEllipsisChar;
+    
+    // First line: don't break words
+    if(lines.length < maxLines && remaining){
+      const words = remaining.split(/\s+/);
+      let firstLine = '';
+      let firstLineWords = [];
+      
+      for(let i = 0; i < words.length; i++){
+        const testLine = firstLineWords.length > 0 
+          ? firstLineWords.join(' ') + ' ' + words[i]
+          : words[i];
+        if(ctx.measureText(testLine).width <= widthPx){
+          firstLineWords.push(words[i]);
+          firstLine = testLine;
         } else {
-          high = mid - 1;
+          break;
         }
       }
-      let line = remaining.slice(0, bestIndex).trimEnd();
-      const leftoverRaw = remaining.slice(bestIndex);
-      const leftoverHadLeadingWhitespace = /^\s/.test(leftoverRaw);
-      let leftover = leftoverRaw.trimStart();
-      if(leftover){
-        const lastSpace = line.lastIndexOf(' ');
-        if(lastSpace > 0){
-          const candidate = line.slice(0, lastSpace).trimEnd();
-          const movedBase = line.slice(lastSpace + 1);
-          const moved = (leftoverHadLeadingWhitespace ? `${movedBase} ${leftover}` : `${movedBase}${leftover}`).trim();
-          if(candidate && ctx.measureText(candidate).width <= widthPx){
-            line = candidate;
-            leftover = moved;
-          }
-        }
-      }
-      if(!line){
-        lines.push(shortenMarkerLabelText(remaining, widthPx));
-        break;
-      }
-      lines.push(line);
-      remaining = leftover;
-      if(remaining && ctx.measureText(remaining).width <= widthPx && lines.length < maxLines){
-        lines.push(remaining);
-        break;
+      
+      if(firstLineWords.length > 0){
+        lines.push(firstLine);
+        remaining = words.slice(firstLineWords.length).join(' ');
+      } else {
+        // If even the first word is too long, put it on second line
+        remaining = remaining;
       }
     }
+    
+    // Second line: can break words, add ellipses if incomplete
+    if(lines.length < maxLines && remaining){
+      if(ctx.measureText(remaining).width <= widthPx){
+        lines.push(remaining);
+      } else {
+        // Need to truncate with ellipses
+        let low = 0;
+        let high = remaining.length;
+        let best = ellipsis;
+        while(low <= high){
+          const mid = Math.floor((low + high) / 2);
+          if(mid <= 0){
+            high = mid - 1;
+            continue;
+          }
+          const candidate = remaining.slice(0, mid) + ellipsis;
+          if(ctx.measureText(candidate).width <= widthPx){
+            best = candidate;
+            low = mid + 1;
+          } else {
+            high = mid - 1;
+          }
+        }
+        lines.push(best);
+      }
+    }
+    
     return lines;
   }
 
@@ -1184,7 +1192,10 @@ let __notifyMapOnInteraction = null;
 
   function getMarkerLabelLines(p){
     const title = p && p.title ? p.title : '';
-    const markerTitleLines = splitTextAcrossLines(title, markerLabelTextAreaWidthPx, 2);
+    // Use 100px width for small map cards (non-multi-post venue cards only)
+    const isMultiVenue = Boolean(p && (p.isMultiVenue || (p.multiCount && Number(p.multiCount) > 1) || (Array.isArray(p.multiPostIds) && p.multiPostIds.length > 1)));
+    const widthForLines = isMultiVenue ? markerLabelTextAreaWidthPx : markerLabelTextAreaWidthPxSmall;
+    const markerTitleLines = splitTextAcrossLines(title, widthForLines, 2);
     while(markerTitleLines.length < 2){ markerTitleLines.push(''); }
     const cardTitleLines = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
     while(cardTitleLines.length < 2){ cardTitleLines.push(''); }
