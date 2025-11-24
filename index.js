@@ -2390,6 +2390,11 @@ let __notifyMapOnInteraction = null;
                 localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
               }
               
+              // Store welcome_enabled setting
+              if(data.settings.welcome_enabled !== undefined){
+                localStorage.setItem('welcome_enabled', data.settings.welcome_enabled ? 'true' : 'false');
+              }
+              
               // Store message category names and icons
               ['user', 'member', 'admin', 'email'].forEach(key => {
                 if(data.settings[`msg_category_${key}_name`]){
@@ -22593,6 +22598,9 @@ function openPanel(m){
     if(welcomeEnabledCheckbox && !welcomeEnabledCheckbox.dataset.autoSaveAdded){
       welcomeEnabledCheckbox.dataset.autoSaveAdded = 'true';
       welcomeEnabledCheckbox.addEventListener('change', async ()=>{
+        // Update localStorage immediately
+        localStorage.setItem('welcome_enabled', welcomeEnabledCheckbox.checked ? 'true' : 'false');
+        
         try {
           await fetch('/gateway.php?action=save-admin-settings', {
             method: 'POST',
@@ -24341,7 +24349,9 @@ document.addEventListener('pointerdown', (e) => {
         openPanel(m);
       }
     });
-    if(welcomeModal && !localStorage.getItem('welcome-seen')){
+    // Check welcome_enabled setting before showing welcome modal
+    const welcomeEnabled = localStorage.getItem('welcome_enabled') !== 'false';
+    if(welcomeModal && welcomeEnabled && !localStorage.getItem('welcome-seen')){
       openWelcome();
       localStorage.setItem('welcome-seen','true');
     }
