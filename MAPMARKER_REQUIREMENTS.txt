@@ -25,14 +25,47 @@ IMPLEMENTATION NOTES:
 - Preload all icons and map card pills once at the beginning of first map load for faster/smoother loading
 - Function names: prefix all with "mapmarker" (e.g., mapmarkerInit, mapmarkerHandleHover, etc.)
 
-Z-INDEX ORDER (from bottom to top):
-- map = 0
-- base pill = 5
-- accent pill = 10
-- small map card label = 15
-- big map card label = 20
-- mapmarker icon = 25
-- mapmarker thumbnail = 30
+SPRITE ELEMENTS - 10 COMPONENTS
+==================================
+
+The map marker system uses 10 sprite elements rendered via Mapbox's `symbol-sort-key` system (not CSS z-index). 
+The sort-key numbers correspond to the element order (1-10), where lower numbers render below higher numbers.
+
+PILL IMAGES:
+- Small base pill: `150x40-pill-70.webp` (150×40px)
+- Small accent/hover pill: `225x60-pill-2f3b73.webp` (resized to 150×40px for small cards)
+- Big map card pill: `225x60-pill-2f3b73.webp` (225×60px)
+
+MULTI-POST ICON:
+- `multi-post-icon-50.webp` - Used for multi-post markers
+  - Small map cards: 30×30px
+  - Big map cards: 50×50px
+
+NOTE: Pill image paths should not be hardcoded - please confirm if these should be stored in the database or configuration.
+
+10 SPRITE ELEMENTS WITH SORT-KEYS:
+
+| # | Element Name | Dimensions | symbol-sort-key | Notes |
+|---|--------------|------------|----------------|--------|
+| 1 | Small map card base pill | 150×40px | 1 | Default pill background |
+| 2 | Small map card accent pill | 150×40px | 2 | Hover/clicked pill (resized from 225×60) |
+| 3 | Small map card label | 2 lines, 100px max width | 3 | Post title (2 lines) |
+| 4 | Small multi-post map card label | 2 lines, 100px max width | 4 | Number of posts + venue name |
+| 5 | Big map card pill | 225×60px | 5 | Large pill background |
+| 6 | Big map card label | 3 lines, 145px max width | 6 | Post title + venue name |
+| 7 | Big multi-post map card label | 3 lines, 145px max width | 7 | Number of posts + venue + city + country |
+| 8 | Mapmarker icon | 30×30px | 8 | Single post icon |
+| 9 | Multi-post mapmarker icon | 30×30px (small) / 50×50px (big) | 9 | Uses `multi-post-icon-50.webp` |
+| 10 | Mapmarker thumbnail | 50×50px | 10 | Post thumbnail image |
+
+ANIMATION NOTE:
+- Animation grow has never worked, so these 10 elements will be used as-is (no size transitions)
+
+SPRITE Z-INDEX SYSTEM:
+- All elements use Mapbox `symbol-sort-key` for z-index/stacking order (1-10, lower numbers render below)
+- `symbol-z-order` is set to `'viewport-y'` for Y-position sorting
+- Layer order also affects rendering (layers added later render on top)
+- When cards stack, features with higher feature IDs should render on top of features with lower IDs
 
 MULTI-POST MARKERS:
 - Always use multi-post icon (never thumbnails)

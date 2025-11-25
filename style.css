@@ -32,6 +32,18 @@
  * The CSS z-index values below for .mapmarker-* elements only affect DOM elements
  * (like .mapmarker-overlay container), NOT the actual sprite-rendered map cards.
  * 
+ * SPRITE ELEMENTS - symbol-sort-key VALUES (1-10, lower renders below):
+ *   1: Small map card base pill (150×40px)
+ *   2: Small map card accent pill (150×40px, resized from 225×60)
+ *   3: Small map card label (2 lines, 100px max width)
+ *   4: Small multi-post map card label (2 lines, 100px max width)
+ *   5: Big map card pill (225×60px)
+ *   6: Big map card label (3 lines, 145px max width)
+ *   7: Big multi-post map card label (3 lines, 145px max width)
+ *   8: Mapmarker icon (30×30px)
+ *   9: Multi-post mapmarker icon (30×30px small / 50×50px big)
+ *  10: Mapmarker thumbnail (50×50px)
+ * 
  * Direct z-index values found in style.css:
  *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
  *   90: (--layer-modal) - modals

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 25, 2025 at 02:02 AM
+-- Generation Time: Nov 26, 2025 at 04:00 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -191,22 +191,22 @@ CREATE TABLE `admin_settings` (
 --
 
 INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'site_name', 'FunMap.com', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-14 09:57:22'),
-(2, 'site_tagline', 'The place to find stuff to do.', 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-14 09:23:36'),
+(1, 'site_name', 'FunMap', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-24 16:05:29'),
+(2, 'site_tagline', 'Find Stuff To Do', 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-24 16:19:55'),
 (3, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (4, 'contact_email', '', 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (5, 'support_email', '', 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
+(7, 'welcome_enabled', 'false', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-24 17:00:24'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(10, 'map_shadow', '0.44', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-24 14:55:23'),
-(11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-24 03:37:39'),
+(10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-25 06:26:02'),
+(11, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-24 17:10:53'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (14, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-11-24 04:52:26'),
 (15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-24 04:52:39'),
-(16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 04:32:55'),
+(16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 15:20:41'),
 (17, 'spin_zoom_max', '6', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-24 02:33:28'),
 (18, 'spin_speed', '0.8', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-24 14:55:15'),
 (19, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -215,8 +215,11 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (22, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (23, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-11-24 02:33:46'),
-(26, 'map_shadow_mode', 'post_mode_only', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-11-24 14:56:01');
+(25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-11-24 18:24:01'),
+(26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-11-24 18:15:16'),
+(27, 'small_map_card_pill', 'assets/system-images/150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-25 16:59:56'),
+(28, 'big_map_card_pill', 'assets/system-images/225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-25 16:59:26'),
+(29, 'multi_post_icon', 'assets/system-images/multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-11-25 16:59:26');
 
 -- --------------------------------------------------------
 
@@ -971,7 +974,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1474;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1608;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
