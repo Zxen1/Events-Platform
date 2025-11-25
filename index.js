@@ -19613,23 +19613,17 @@ function makePosts(){
       */
       
       // ============================================================================
-      // MAP MARKERS - Initialized via map.js
+      // SPRITE-BASED MAP MARKERS - Initialized via map.js
       // ============================================================================
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Initialize map markers if function is available
-      if(typeof window.mapmarkerInit === 'function'){
-        try{
-          await window.mapmarkerInit(map, postsData, {
-            minZoom: MARKER_ZOOM_THRESHOLD,
-            multiPostIconId: MULTI_POST_MARKER_ICON_ID,
-            subcategoryMarkers: subcategoryMarkers
-          });
-        }catch(err){
-          console.error('[Map Markers] Failed to initialize markers:', err);
-        }
-      } else {
-        console.warn('[Map Markers] mapmarkerInit function not found');
+      // Initialize sprite markers if function is available
+      if(typeof window.initSpriteMarkers === 'function'){
+        window.initSpriteMarkers(map, postsData, {
+          minZoom: MARKER_ZOOM_THRESHOLD,
+          multiPostIconId: MULTI_POST_MARKER_ICON_ID,
+          subcategoryMarkers: subcategoryMarkers
+        });
       }
       if(!postSourceEventsBound){
         // ============================================================================
