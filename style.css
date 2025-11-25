@@ -237,7 +237,6 @@
   transition: width 0.3s ease, height 0.3s ease;
   border-radius: 50%;
   overflow: hidden;
-  will-change: left, top;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;

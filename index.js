@@ -7048,25 +7048,6 @@ function makePosts(){
         }
         ensurePreparationPromise().catch(()=>{});
         updateMapFeatureHighlights(lastHighlightedPostIds);
-        
-        // Update DOM markers when source data changes (filters applied)
-        // This ensures DOM markers match the filtered data in the Mapbox source
-        if(typeof window.initDomMarkers === 'function' && map && postsData){
-          try{
-            // Get options - use same values as addPostSource
-            const minZoom = (typeof MARKER_ZOOM_THRESHOLD !== 'undefined') ? MARKER_ZOOM_THRESHOLD : 8;
-            const multiPostIconId = (typeof MULTI_POST_MARKER_ICON_ID !== 'undefined') ? MULTI_POST_MARKER_ICON_ID : 'multi-post-icon';
-            const subcategoryMarkersForMarkers = (typeof subcategoryMarkers !== 'undefined') ? subcategoryMarkers : (window.subcategoryMarkers || {});
-            
-            window.initDomMarkers(map, postsData, {
-              minZoom: minZoom,
-              multiPostIconId: multiPostIconId,
-              subcategoryMarkers: subcategoryMarkersForMarkers
-            });
-          }catch(err){
-            console.error('Failed to update DOM markers:', err);
-          }
-        }
       }
       return { updated, signature };
     }

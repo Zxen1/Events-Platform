@@ -275,36 +275,22 @@
     
     // Batch position updates to prevent flicker during zoom/move
     let positionUpdateScheduled = false;
-    let rafId = null;
-    
     const updateDomMarkerPositions = () => {
       if(!map || !domMarkersContainer) return;
       
-      // If already scheduled, skip
       if(positionUpdateScheduled) return;
-      
       positionUpdateScheduled = true;
       
-      // Cancel any pending RAF
-      if(rafId !== null){
-        cancelAnimationFrame(rafId);
-      }
-      
-      rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         positionUpdateScheduled = false;
-        rafId = null;
-        
         if(!map || !domMarkersContainer) return;
         
         const currentZoom = isZoomLevelValid();
         
-        // Batch DOM updates
         domMarkers.forEach((marker, featureId) => {
           try{
             const point = map.project([marker.lng, marker.lat]);
             if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
-              // Use left/top with will-change for performance
-              // CSS transform: translate(-50%, -50%) handles centering
               marker.element.style.left = point.x + 'px';
               marker.element.style.top = point.y + 'px';
             }
@@ -325,19 +311,13 @@
     };
     
     // Update positions on map events
-    // Use 'moveend' instead of 'move' to prevent flicker during panning
-    // Use 'zoom' for smooth zoom updates
-    addMapListener('moveend', updateDomMarkerPositions);
+    addMapListener('move', updateDomMarkerPositions);
     addMapListener('zoom', () => {
       updateDomMarkerPositions();
       updateMarkerVisibility();
     });
-    addMapListener('zoomend', () => {
-      updateDomMarkerPositions();
-      updateMarkerVisibility();
-    });
-    addMapListener('pitchend', updateDomMarkerPositions);
-    addMapListener('rotateend', updateDomMarkerPositions);
+    addMapListener('pitch', updateDomMarkerPositions);
+    addMapListener('rotate', updateDomMarkerPositions);
     
     // Initial position and visibility update
     updateDomMarkerPositions();
