@@ -10,8 +10,9 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   const markerIconBaseSizePx = 30;
   
   const iconIds = Object.keys(subcategoryMarkers);
-  if(typeof ensureMapIcon === 'function'){
-    await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+  const ensureMapIconFn = typeof ensureMapIcon === 'function' ? ensureMapIcon : (typeof window !== 'undefined' && typeof window.ensureMapIcon === 'function') ? window.ensureMapIcon : null;
+  if(ensureMapIconFn){
+    await Promise.all(iconIds.map(id => ensureMapIconFn(id).catch(()=>{})));
   }
   // Pre-load marker-icon sprites and add them to map
   const markerIconIds = new Set();
@@ -22,43 +23,59 @@ async function initSpriteMarkers(map, postsData, options = {}) {
     }
   });
   markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
+  const loadMarkerLabelImageFn = typeof loadMarkerLabelImage === 'function' ? loadMarkerLabelImage : (typeof window !== 'undefined' && typeof window.loadMarkerLabelImage === 'function') ? window.loadMarkerLabelImage : null;
   for(const iconId of markerIconIds){
-    if(typeof ensureMapIcon === 'function'){
-      await ensureMapIcon(iconId).catch(()=>{});
+    if(ensureMapIconFn){
+      await ensureMapIconFn(iconId).catch(()=>{});
     }
     const iconUrl = subcategoryMarkers[iconId];
     if(iconUrl && !map.hasImage(iconId)){
       try{
-        const img = await loadMarkerLabelImage(iconUrl);
-        if(img){
-          let deviceScale = 2;
-          try{
-            const ratio = window.devicePixelRatio;
-            if(Number.isFinite(ratio) && ratio > 0){
-              deviceScale = ratio;
+        if(loadMarkerLabelImageFn){
+          const img = await loadMarkerLabelImageFn(iconUrl);
+          if(img){
+            let deviceScale = 2;
+            try{
+              const ratio = window.devicePixelRatio;
+              if(Number.isFinite(ratio) && ratio > 0){
+                deviceScale = ratio;
+              }
+            }catch(err){
+              deviceScale = 2;
             }
-          }catch(err){
-            deviceScale = 2;
-          }
-          if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-            deviceScale = 2;
-          }
-          const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
-          const canvas = document.createElement('canvas');
-          canvas.width = iconSize;
-          canvas.height = iconSize;
-          const ctx = canvas.getContext('2d');
-          if(ctx){
-            ctx.drawImage(img, 0, 0, iconSize, iconSize);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+            if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+              deviceScale = 2;
+            }
+            const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
+            const canvas = document.createElement('canvas');
+            canvas.width = iconSize;
+            canvas.height = iconSize;
+            const ctx = canvas.getContext('2d');
+            if(ctx){
+              ctx.drawImage(img, 0, 0, iconSize, iconSize);
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+            }
           }
         }
       }catch(e){}
     }
   }
-  await prepareMarkerLabelCompositesForPosts(postsData);
-  updateMapFeatureHighlights(lastHighlightedPostIds);
+  const prepareMarkerLabelCompositesForPostsFn = typeof prepareMarkerLabelCompositesForPosts === 'function' ? prepareMarkerLabelCompositesForPosts : (typeof window !== 'undefined' && typeof window.prepareMarkerLabelCompositesForPosts === 'function') ? window.prepareMarkerLabelCompositesForPosts : null;
+  if(prepareMarkerLabelCompositesForPostsFn){
+    await prepareMarkerLabelCompositesForPostsFn(postsData);
+  }
+  const updateMapFeatureHighlightsFn = typeof updateMapFeatureHighlights === 'function' ? updateMapFeatureHighlights : (typeof window !== 'undefined' && typeof window.updateMapFeatureHighlights === 'function') ? window.updateMapFeatureHighlights : null;
+  const lastHighlightedPostIds = (typeof window !== 'undefined' && window.lastHighlightedPostIds) ? window.lastHighlightedPostIds : [];
+  if(updateMapFeatureHighlightsFn){
+    updateMapFeatureHighlightsFn(lastHighlightedPostIds);
+  }
+  
+  // Get constants from window or use defaults
+  const MARKER_LABEL_BG_ID = (typeof window !== 'undefined' && window.MARKER_LABEL_BG_ID) ? window.MARKER_LABEL_BG_ID : 'marker-label-bg';
+  const MARKER_LABEL_BG_ACCENT_ID = (typeof window !== 'undefined' && window.MARKER_LABEL_BG_ACCENT_ID) ? window.MARKER_LABEL_BG_ACCENT_ID : `${MARKER_LABEL_BG_ID}--accent`;
+  const MARKER_LABEL_COMPOSITE_PREFIX = (typeof window !== 'undefined' && window.MARKER_LABEL_COMPOSITE_PREFIX) ? window.MARKER_LABEL_COMPOSITE_PREFIX : 'marker-label-composite-';
+  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = (typeof window !== 'undefined' && window.MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX) ? window.MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX : '--accent';
   
   const markerLabelBaseConditions = [
     ['!',['has','point_count']],
@@ -194,6 +211,7 @@ async function initSpriteMarkers(map, postsData, options = {}) {
     }catch(e){}
   }
   
+  const ALL_MARKER_LAYER_IDS = (typeof window !== 'undefined' && Array.isArray(window.ALL_MARKER_LAYER_IDS)) ? window.ALL_MARKER_LAYER_IDS : ['marker-label', 'marker-label-highlight', 'marker-icon'];
   ALL_MARKER_LAYER_IDS.forEach(id=>{
     if(id !== 'marker-icon' && map.getLayer(id)){
       try{ map.moveLayer(id); }catch(e){}
@@ -245,7 +263,10 @@ async function initSpriteMarkers(map, postsData, options = {}) {
     }catch(e){}
   }
   
-  refreshInViewMarkerLabelComposites(map);
+  const refreshInViewMarkerLabelCompositesFn = typeof refreshInViewMarkerLabelComposites === 'function' ? refreshInViewMarkerLabelComposites : (typeof window !== 'undefined' && typeof window.refreshInViewMarkerLabelComposites === 'function') ? window.refreshInViewMarkerLabelComposites : null;
+  if(refreshInViewMarkerLabelCompositesFn){
+    refreshInViewMarkerLabelCompositesFn(map);
+  }
 }
 
 // Export to window
