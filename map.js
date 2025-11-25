@@ -159,112 +159,58 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   }
   console.log('[Sprite Markers] Loaded', loadedIconCount, 'icon sprites');
   
-  // Create marker-icon layer with dynamic size and image switching
-  // Filter: exclude cluster points, but don't require title (some features might not have it)
-  const markerIconFilter = ['!',['has','point_count']];
-  
-  // Start with SIMPLE expression - just use the icon, no thumbnails yet
-  // This ensures basic markers work first
-  const markerIconImageExpression = [
-    'coalesce',
-    ['get', 'sub'],
-    MULTI_POST_MARKER_ICON_ID
+  // Create marker-icon layer - EXACT pattern from old working code
+  const markerIconFilter = ['all',
+    ['!',['has','point_count']],
+    ['has','title']
   ];
-  
-  console.log('[Sprite Markers] Icon image expression (simplified):', JSON.stringify(markerIconImageExpression));
-  console.log('[Sprite Markers] Available sprites:', Array.from(markerIconIds).map(id => ({ id, hasImage: map.hasImage(id) })));
-  
-  // Start with SIMPLE size - just 1 (30px), no animations yet
-  const markerIconSizeExpression = baseIconSize;
-  
-  console.log('[Sprite Markers] Icon size:', markerIconSizeExpression);
-  
+  const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+    ['case',
+      ['==', ['var','iconId'], ''],
+      MULTI_POST_MARKER_ICON_ID,
+      ['var','iconId']
+    ]
+  ];
   const markerIconLayerId = 'marker-icon';
   
-  // Only create layer if it doesn't exist - don't remove/recreate on every call
-  if(map.getLayer(markerIconLayerId)){
-    console.log('[Sprite Markers] Layer already exists, updating filter and properties');
+  if(!map.getLayer(markerIconLayerId)){
     try{
-      // Update filter and properties without recreating
-      map.setFilter(markerIconLayerId, markerIconFilter);
-      map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-      map.setLayoutProperty(markerIconLayerId, 'icon-size', markerIconSizeExpression);
-      map._spriteMarkersInitializing = false;
-      return; // Layer already exists, just update it
+      map.addLayer({
+        id: markerIconLayerId,
+        type:'symbol',
+        source:'posts',
+        filter: markerIconFilter,
+        minzoom: MARKER_MIN_ZOOM,
+        layout:{
+          'icon-image': markerIconImageExpression,
+          'icon-size': 1,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+          'icon-anchor': 'center',
+          'icon-pitch-alignment': 'viewport',
+          'symbol-z-order': 'viewport-y',
+          'symbol-sort-key': 10,
+          'visibility': 'visible'
+        },
+        paint:{
+          'icon-opacity': 1
+        }
+      });
     }catch(e){
-      console.warn('[Sprite Markers] Failed to update existing layer:', e);
-      // If update fails, remove and recreate
-      try{
-        map.removeLayer(markerIconLayerId);
-      }catch(e2){}
+      console.error('[Sprite Markers] Failed to create layer:', e);
+      map._spriteMarkersInitializing = false;
+      return;
     }
   }
-  
-  // Create new marker-icon layer
-  try{
-    // Check if posts source exists
-    const postsSource = map.getSource('posts');
-    if(!postsSource){
-      console.error('[Sprite Markers] Posts source not found');
-      return;
+  if(map.getLayer(markerIconLayerId)){
+    try{
+      map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
+      map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+      map.setFilter(markerIconLayerId, markerIconFilter);
+      map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+    }catch(e){
+      console.error('[Sprite Markers] Failed to update layer:', e);
     }
-    
-    const featureCount = postsData.features ? postsData.features.length : 0;
-    const nonClusterFeatures = postsData.features ? postsData.features.filter(f => !f.properties?.point_count) : [];
-    console.log('[Sprite Markers] Creating marker-icon layer with', featureCount, 'total features,', nonClusterFeatures.length, 'non-cluster features');
-    console.log('[Sprite Markers] Current zoom:', map.getZoom(), 'Min zoom required:', MARKER_MIN_ZOOM);
-    console.log('[Sprite Markers] Sample feature:', nonClusterFeatures[0] ? {
-      id: nonClusterFeatures[0].id,
-      properties: { sub: nonClusterFeatures[0].properties?.sub, id: nonClusterFeatures[0].properties?.id }
-    } : 'none');
-    
-    map.addLayer({
-      id: markerIconLayerId,
-      type:'symbol',
-      source:'posts',
-      filter: markerIconFilter,
-      minzoom: MARKER_MIN_ZOOM,
-      maxzoom: 24,
-      layout:{
-        'icon-image': markerIconImageExpression,
-        'icon-size': markerIconSizeExpression,
-        'icon-allow-overlap': true,
-        'icon-ignore-placement': true,
-        'icon-anchor': 'center',
-        'icon-pitch-alignment': 'viewport',
-        'symbol-z-order': 'viewport-y',
-        'symbol-sort-key': 10,
-        'visibility': 'visible'
-      },
-      paint:{
-        'icon-opacity': 1
-      }
-    });
-    
-    // Verify layer was created
-    const createdLayer = map.getLayer(markerIconLayerId);
-    if(!createdLayer){
-      console.error('[Sprite Markers] Layer was not created!');
-      map._spriteMarkersInitializing = false;
-      return;
-    }
-    
-    // Check layer visibility
-    const layerVisibility = map.getLayoutProperty(markerIconLayerId, 'visibility');
-    const layerOpacity = map.getPaintProperty(markerIconLayerId, 'icon-opacity');
-    console.log('[Sprite Markers] Layer visibility:', layerVisibility, 'opacity:', layerOpacity);
-    
-    // Add smooth transitions for icon-size changes (300ms like DOM version)
-    map.setPaintProperty(markerIconLayerId, 'icon-size-transition', {
-      duration: 300,
-      delay: 0
-    });
-    
-    console.log('[Sprite Markers] Marker-icon layer created successfully');
-    
-  }catch(e){
-    console.error('[Sprite Markers] Failed to create marker-icon layer:', e);
-    return;
   }
   
   // Function to update marker feature state
