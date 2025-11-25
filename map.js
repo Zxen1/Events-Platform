@@ -604,7 +604,6 @@
 
   // Export to window
   window.initDomMarkers = initDomMarkers;
-}
 
 })();
 */
