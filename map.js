@@ -325,13 +325,19 @@
     };
     
     // Update positions on map events
-    addMapListener('move', updateDomMarkerPositions);
+    // Use 'moveend' instead of 'move' to prevent flicker during panning
+    // Use 'zoom' for smooth zoom updates
+    addMapListener('moveend', updateDomMarkerPositions);
     addMapListener('zoom', () => {
       updateDomMarkerPositions();
       updateMarkerVisibility();
     });
-    addMapListener('pitch', updateDomMarkerPositions);
-    addMapListener('rotate', updateDomMarkerPositions);
+    addMapListener('zoomend', () => {
+      updateDomMarkerPositions();
+      updateMarkerVisibility();
+    });
+    addMapListener('pitchend', updateDomMarkerPositions);
+    addMapListener('rotateend', updateDomMarkerPositions);
     
     // Initial position and visibility update
     updateDomMarkerPositions();

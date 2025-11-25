@@ -7050,12 +7050,13 @@ function makePosts(){
         updateMapFeatureHighlights(lastHighlightedPostIds);
         
         // Update DOM markers when source data changes (filters applied)
+        // This ensures DOM markers match the filtered data in the Mapbox source
         if(typeof window.initDomMarkers === 'function' && map && postsData){
           try{
-            // Get options from window or use defaults (same as addPostSource)
-            const minZoom = (typeof window.MARKER_ZOOM_THRESHOLD !== 'undefined') ? window.MARKER_ZOOM_THRESHOLD : 8;
-            const multiPostIconId = (typeof window.MULTI_POST_MARKER_ICON_ID !== 'undefined') ? window.MULTI_POST_MARKER_ICON_ID : 'multi-post-icon';
-            const subcategoryMarkersForMarkers = window.subcategoryMarkers || {};
+            // Get options - use same values as addPostSource
+            const minZoom = (typeof MARKER_ZOOM_THRESHOLD !== 'undefined') ? MARKER_ZOOM_THRESHOLD : 8;
+            const multiPostIconId = (typeof MULTI_POST_MARKER_ICON_ID !== 'undefined') ? MULTI_POST_MARKER_ICON_ID : 'multi-post-icon';
+            const subcategoryMarkersForMarkers = (typeof subcategoryMarkers !== 'undefined') ? subcategoryMarkers : (window.subcategoryMarkers || {});
             
             window.initDomMarkers(map, postsData, {
               minZoom: minZoom,
