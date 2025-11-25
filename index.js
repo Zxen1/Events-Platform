@@ -19613,21 +19613,18 @@ function makePosts(){
       */
       
       // ============================================================================
-      // DOM-BASED MAP MARKERS - Initialized via map.js
-      // COMMENTED OUT - Returning to sprite system
+      // SPRITE-BASED MAP MARKERS - Initialized via map.js
       // ============================================================================
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Initialize DOM markers if function is available
-      /*
-      if(typeof window.initDomMarkers === 'function'){
-        window.initDomMarkers(map, postsData, {
+      // Initialize sprite markers if function is available
+      if(typeof window.initSpriteMarkers === 'function'){
+        window.initSpriteMarkers(map, postsData, {
           minZoom: MARKER_ZOOM_THRESHOLD,
           multiPostIconId: MULTI_POST_MARKER_ICON_ID,
           subcategoryMarkers: subcategoryMarkers
         });
       }
-      */
       if(!postSourceEventsBound){
         // ============================================================================
         // SPRITE LAYER CLICK HANDLERS COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
