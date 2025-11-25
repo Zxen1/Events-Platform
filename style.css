@@ -201,7 +201,7 @@
       width: 30px;
       height: 30px;
       pointer-events: none;
-      z-index: 10;
+      z-index: 2;
       flex: 0 0 30px;
     }
     .map--midzoom-markers .mapmarker{
