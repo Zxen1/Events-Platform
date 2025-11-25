@@ -19614,10 +19614,12 @@ function makePosts(){
       
       // ============================================================================
       // DOM-BASED MAP MARKERS - Initialized via map.js
+      // COMMENTED OUT - Returning to sprite system
       // ============================================================================
       window.getMapInstance = () => map; // Expose map instance getter
       
       // Initialize DOM markers if function is available
+      /*
       if(typeof window.initDomMarkers === 'function'){
         window.initDomMarkers(map, postsData, {
           minZoom: MARKER_ZOOM_THRESHOLD,
@@ -19625,6 +19627,7 @@ function makePosts(){
           subcategoryMarkers: subcategoryMarkers
         });
       }
+      */
       if(!postSourceEventsBound){
         // ============================================================================
         // SPRITE LAYER CLICK HANDLERS COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
