@@ -1,7 +1,260 @@
-/*
+// ============================================================================
+// SPRITE MARKER SYSTEM
+// ============================================================================
+async function initSpriteMarkers(map, postsData, options = {}) {
+  if(!map || !postsData) return;
+  
+  const MARKER_MIN_ZOOM = options.minZoom || 8;
+  const MULTI_POST_MARKER_ICON_ID = options.multiPostIconId || 'multi-post-icon';
+  const subcategoryMarkers = options.subcategoryMarkers || window.subcategoryMarkers || {};
+  const markerIconBaseSizePx = 30;
+  
+  const iconIds = Object.keys(subcategoryMarkers);
+  if(typeof ensureMapIcon === 'function'){
+    await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+  }
+  // Pre-load marker-icon sprites and add them to map
+  const markerIconIds = new Set();
+  postsData.features.forEach(feature => {
+    if(feature.properties && !feature.properties.point_count){
+      const iconId = feature.properties.sub || MULTI_POST_MARKER_ICON_ID;
+      markerIconIds.add(iconId);
+    }
+  });
+  markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
+  for(const iconId of markerIconIds){
+    if(typeof ensureMapIcon === 'function'){
+      await ensureMapIcon(iconId).catch(()=>{});
+    }
+    const iconUrl = subcategoryMarkers[iconId];
+    if(iconUrl && !map.hasImage(iconId)){
+      try{
+        const img = await loadMarkerLabelImage(iconUrl);
+        if(img){
+          let deviceScale = 2;
+          try{
+            const ratio = window.devicePixelRatio;
+            if(Number.isFinite(ratio) && ratio > 0){
+              deviceScale = ratio;
+            }
+          }catch(err){
+            deviceScale = 2;
+          }
+          if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+            deviceScale = 2;
+          }
+          const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
+          const canvas = document.createElement('canvas');
+          canvas.width = iconSize;
+          canvas.height = iconSize;
+          const ctx = canvas.getContext('2d');
+          if(ctx){
+            ctx.drawImage(img, 0, 0, iconSize, iconSize);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+          }
+        }
+      }catch(e){}
+    }
+  }
+  await prepareMarkerLabelCompositesForPosts(postsData);
+  updateMapFeatureHighlights(lastHighlightedPostIds);
+  
+  const markerLabelBaseConditions = [
+    ['!',['has','point_count']],
+    ['has','title']
+  ];
+  const markerLabelFilter = ['all', ...markerLabelBaseConditions];
+
+  const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+    ['case',
+      ['==', ['var','spriteId'], ''],
+      MARKER_LABEL_BG_ID,
+      ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+    ]
+  ];
+
+  const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+    ['case',
+      ['==', ['var','spriteId'], ''],
+      MARKER_LABEL_BG_ACCENT_ID,
+      ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
+    ]
+  ];
+
+  const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+  const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+  const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+  const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
+  const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+
+  const markerLabelMinZoom = MARKER_MIN_ZOOM;
+  const labelLayersConfig = [
+    { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+    { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+  ];
+  labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
+    const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
+    const finalIconSize = iconSize !== undefined ? iconSize : 1;
+    let layerExists = !!map.getLayer(id);
+    if(!layerExists){
+      try{
+        map.addLayer({
+          id,
+          type:'symbol',
+          source,
+          filter: filter || markerLabelFilter,
+          minzoom: layerMinZoom,
+          maxzoom: 24,
+          layout:{
+            'icon-image': iconImage || markerLabelIconImage,
+            'icon-size': finalIconSize,
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'icon-anchor': 'center',
+            'icon-offset': [-82.5, 0],
+            'icon-pitch-alignment': 'viewport',
+            'symbol-z-order': 'viewport-y',
+            'symbol-sort-key': sortKey
+          },
+          paint:{
+            'icon-translate': [0, 0],
+            'icon-translate-anchor': 'viewport',
+            'icon-opacity': iconOpacity || 1
+          }
+        });
+        layerExists = !!map.getLayer(id);
+      }catch(e){
+        layerExists = !!map.getLayer(id);
+      }
+    }
+    if(!layerExists){
+      return;
+    }
+    try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-offset',[-82.5, 0]); }catch(e){}
+    try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
+    try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
+    try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
+    try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
+    try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
+    try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+    try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
+  });
+  
+  // Create marker-icon layer (sprites are already loaded above)
+  const markerIconFilter = ['all',
+    ['!',['has','point_count']],
+    ['has','title']
+  ];
+  const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+    ['case',
+      ['==', ['var','iconId'], ''],
+      MULTI_POST_MARKER_ICON_ID,
+      ['var','iconId']
+    ]
+  ];
+  const markerIconLayerId = 'marker-icon';
+  if(!map.getLayer(markerIconLayerId)){
+    try{
+      map.addLayer({
+        id: markerIconLayerId,
+        type:'symbol',
+        source:'posts',
+        filter: markerIconFilter,
+        minzoom: MARKER_MIN_ZOOM,
+        layout:{
+          'icon-image': markerIconImageExpression,
+          'icon-size': 1,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+          'icon-anchor': 'center',
+          'icon-pitch-alignment': 'viewport',
+          'symbol-z-order': 'viewport-y',
+          'symbol-sort-key': 10,
+          'visibility': 'visible'
+        },
+        paint:{
+          'icon-opacity': 1
+        }
+      });
+    }catch(e){}
+  }
+  if(map.getLayer(markerIconLayerId)){
+    try{
+      map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
+      map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+      map.setFilter(markerIconLayerId, markerIconFilter);
+      map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+    }catch(e){}
+  }
+  
+  ALL_MARKER_LAYER_IDS.forEach(id=>{
+    if(id !== 'marker-icon' && map.getLayer(id)){
+      try{ map.moveLayer(id); }catch(e){}
+    }
+  });
+  // Move marker-icon layer to top (above map cards)
+  if(map.getLayer('marker-icon')){
+    try{ 
+      map.moveLayer('marker-icon');
+    }catch(e){}
+  }
+  [
+    ['marker-label','icon-opacity-transition'],
+    ['marker-label-highlight','icon-opacity-transition']
+  ].forEach(([layer, prop])=>{
+    if(map.getLayer(layer)){
+      try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
+    }
+  });
+  
+  function updateMapCardLayerOpacity(displayMode){
+    if(!map) return;
+    const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
+    const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+    const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+    if(map.getLayer('marker-label')){
+      try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
+    }
+    // Ensure marker-icon is always visible at 100% opacity
+    if(map.getLayer('marker-icon')){
+      try{ 
+        map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+        map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+      }catch(e){}
+    }
+  }
+  window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
+  window.getMapInstance = () => map;
+  
+  updateMapCardLayerOpacity(mapCardDisplay);
+  
+  // Ensure marker-icon layer is visible and on top after map card setup
+  if(map.getLayer('marker-icon')){
+    try{
+      map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+      map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+      map.setLayoutProperty('marker-icon', 'symbol-sort-key', 10);
+      map.moveLayer('marker-icon'); // Move to top
+    }catch(e){}
+  }
+  
+  refreshInViewMarkerLabelComposites(map);
+}
+
+// Export to window
+window.initSpriteMarkers = initSpriteMarkers;
+
 // ============================================================================
 // OLD DOM MARKER CODE - Commented out, kept for reference
 // ============================================================================
+/*
 (function() {
   'use strict';
 
@@ -604,257 +857,5 @@
   window.initDomMarkers = initDomMarkers;
 
 })();
-
-// ============================================================================
-// OLD SPRITE MARKER CODE - Commented out, kept for reference
-// ============================================================================
-async function initSpriteMarkers(map, postsData, options = {}) {
-  if(!map || !postsData) return;
-  
-  const MARKER_MIN_ZOOM = options.minZoom || 8;
-  const MULTI_POST_MARKER_ICON_ID = options.multiPostIconId || 'multi-post-icon';
-  const subcategoryMarkers = options.subcategoryMarkers || window.subcategoryMarkers || {};
-  const markerIconBaseSizePx = 30;
-  
-  const iconIds = Object.keys(subcategoryMarkers);
-  if(typeof ensureMapIcon === 'function'){
-    await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
-  }
-  // Pre-load marker-icon sprites and add them to map
-  const markerIconIds = new Set();
-  postsData.features.forEach(feature => {
-    if(feature.properties && !feature.properties.point_count){
-      const iconId = feature.properties.sub || MULTI_POST_MARKER_ICON_ID;
-      markerIconIds.add(iconId);
-    }
-  });
-  markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
-  for(const iconId of markerIconIds){
-    if(typeof ensureMapIcon === 'function'){
-      await ensureMapIcon(iconId).catch(()=>{});
-    }
-    const iconUrl = subcategoryMarkers[iconId];
-    if(iconUrl && !map.hasImage(iconId)){
-      try{
-        const img = await loadMarkerLabelImage(iconUrl);
-        if(img){
-          let deviceScale = 2;
-          try{
-            const ratio = window.devicePixelRatio;
-            if(Number.isFinite(ratio) && ratio > 0){
-              deviceScale = ratio;
-            }
-          }catch(err){
-            deviceScale = 2;
-          }
-          if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-            deviceScale = 2;
-          }
-          const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
-          const canvas = document.createElement('canvas');
-          canvas.width = iconSize;
-          canvas.height = iconSize;
-          const ctx = canvas.getContext('2d');
-          if(ctx){
-            ctx.drawImage(img, 0, 0, iconSize, iconSize);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            map.addImage(iconId, imageData, { pixelRatio: deviceScale });
-          }
-        }
-      }catch(e){}
-    }
-  }
-  await prepareMarkerLabelCompositesForPosts(postsData);
-  updateMapFeatureHighlights(lastHighlightedPostIds);
-  
-  const markerLabelBaseConditions = [
-    ['!',['has','point_count']],
-    ['has','title']
-  ];
-  const markerLabelFilter = ['all', ...markerLabelBaseConditions];
-
-  const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-    ['case',
-      ['==', ['var','spriteId'], ''],
-      MARKER_LABEL_BG_ID,
-      ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
-    ]
-  ];
-
-  const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-    ['case',
-      ['==', ['var','spriteId'], ''],
-      MARKER_LABEL_BG_ACCENT_ID,
-      ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
-    ]
-  ];
-
-  const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-  const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-  const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-  const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-  const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
-
-  const markerLabelMinZoom = MARKER_MIN_ZOOM;
-  const labelLayersConfig = [
-    { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-    { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
-  ];
-  labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
-    const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
-    const finalIconSize = iconSize !== undefined ? iconSize : 1;
-    let layerExists = !!map.getLayer(id);
-    if(!layerExists){
-      try{
-        map.addLayer({
-          id,
-          type:'symbol',
-          source,
-          filter: filter || markerLabelFilter,
-          minzoom: layerMinZoom,
-          maxzoom: 24,
-          layout:{
-            'icon-image': iconImage || markerLabelIconImage,
-            'icon-size': finalIconSize,
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-            'icon-anchor': 'center',
-            'icon-offset': [-82.5, 0],
-            'icon-pitch-alignment': 'viewport',
-            'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': sortKey
-          },
-          paint:{
-            'icon-translate': [0, 0],
-            'icon-translate-anchor': 'viewport',
-            'icon-opacity': iconOpacity || 1
-          }
-        });
-        layerExists = !!map.getLayer(id);
-      }catch(e){
-        layerExists = !!map.getLayer(id);
-      }
-    }
-    if(!layerExists){
-      return;
-    }
-    try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-offset',[-82.5, 0]); }catch(e){}
-    try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
-    try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
-    try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-    try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
-    try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
-    try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-    try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
-  });
-  
-  // Create marker-icon layer (sprites are already loaded above)
-  const markerIconFilter = ['all',
-    ['!',['has','point_count']],
-    ['has','title']
-  ];
-  const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-    ['case',
-      ['==', ['var','iconId'], ''],
-      MULTI_POST_MARKER_ICON_ID,
-      ['var','iconId']
-    ]
-  ];
-  const markerIconLayerId = 'marker-icon';
-  if(!map.getLayer(markerIconLayerId)){
-    try{
-      map.addLayer({
-        id: markerIconLayerId,
-        type:'symbol',
-        source:'posts',
-        filter: markerIconFilter,
-        minzoom: MARKER_MIN_ZOOM,
-        layout:{
-          'icon-image': markerIconImageExpression,
-          'icon-size': 1,
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true,
-          'icon-anchor': 'center',
-          'icon-pitch-alignment': 'viewport',
-          'symbol-z-order': 'viewport-y',
-          'symbol-sort-key': 10,
-          'visibility': 'visible'
-        },
-        paint:{
-          'icon-opacity': 1
-        }
-      });
-    }catch(e){}
-  }
-  if(map.getLayer(markerIconLayerId)){
-    try{
-      map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
-      map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
-      map.setFilter(markerIconLayerId, markerIconFilter);
-      map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-    }catch(e){}
-  }
-  
-  ALL_MARKER_LAYER_IDS.forEach(id=>{
-    if(id !== 'marker-icon' && map.getLayer(id)){
-      try{ map.moveLayer(id); }catch(e){}
-    }
-  });
-  // Move marker-icon layer to top (above map cards)
-  if(map.getLayer('marker-icon')){
-    try{ 
-      map.moveLayer('marker-icon');
-    }catch(e){}
-  }
-  [
-    ['marker-label','icon-opacity-transition'],
-    ['marker-label-highlight','icon-opacity-transition']
-  ].forEach(([layer, prop])=>{
-    if(map.getLayer(layer)){
-      try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
-    }
-  });
-  
-  function updateMapCardLayerOpacity(displayMode){
-    if(!map) return;
-    const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
-    const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-    const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
-    if(map.getLayer('marker-label')){
-      try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
-    }
-    // Ensure marker-icon is always visible at 100% opacity
-    if(map.getLayer('marker-icon')){
-      try{ 
-        map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-        map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-      }catch(e){}
-    }
-  }
-  window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
-  window.getMapInstance = () => map;
-  
-  updateMapCardLayerOpacity(mapCardDisplay);
-  
-  // Ensure marker-icon layer is visible and on top after map card setup
-  if(map.getLayer('marker-icon')){
-    try{
-      map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-      map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-      map.setLayoutProperty('marker-icon', 'symbol-sort-key', 10);
-      map.moveLayer('marker-icon'); // Move to top
-    }catch(e){}
-  }
-  
-  refreshInViewMarkerLabelComposites(map);
-}
-
-// Export to window
-window.initSpriteMarkers = initSpriteMarkers;
 */
+
