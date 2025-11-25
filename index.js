@@ -19613,13 +19613,13 @@ function makePosts(){
       */
       
       // ============================================================================
-      // SPRITE-BASED MAP MARKERS - Initialized via map.js
+      // MAP MARKERS - Initialized via map.js
       // ============================================================================
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Initialize sprite markers if function is available
-      if(typeof window.initSpriteMarkers === 'function'){
-        window.initSpriteMarkers(map, postsData, {
+      // Initialize map markers if function is available
+      if(typeof window.mapmarkerInit === 'function'){
+        window.mapmarkerInit(map, postsData, {
           minZoom: MARKER_ZOOM_THRESHOLD,
           multiPostIconId: MULTI_POST_MARKER_ICON_ID,
           subcategoryMarkers: subcategoryMarkers

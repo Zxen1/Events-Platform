@@ -1,7 +1,563 @@
-/*
+// ============================================================================
+// MAP MARKER IMPLEMENTATION - Using Mapbox Symbol Layers
+// ============================================================================
+
+/**
+ * Initialize map markers using Mapbox symbol layers
+ * @param {Object} map - Mapbox map instance
+ * @param {Object} postsData - GeoJSON feature collection with post data
+ * @param {Object} options - Configuration options
+ */
+async function mapmarkerInit(map, postsData, options = {}) {
+  if(!map || !postsData) return;
+
+  const MARKER_MIN_ZOOM = options.minZoom || 8;
+  const MULTI_POST_MARKER_ICON_ID = options.multiPostIconId || 'multi-post-icon';
+  const subcategoryMarkers = options.subcategoryMarkers || window.subcategoryMarkers || {};
+  const markerIconBaseSizePx = 30;
+  const markerActiveSizePx = 50;
+  
+  // Get posts source
+  const postsSource = map.getSource('posts');
+  if(!postsSource) {
+    console.warn('[Map Markers] Posts source not found');
+    return;
+  }
+
+  // Load and add icon images to map
+  const iconIds = Object.keys(subcategoryMarkers);
+  const markerIconIds = new Set();
+  
+  // Collect all icon IDs needed
+  if(Array.isArray(postsData.features)){
+    postsData.features.forEach(feature => {
+      if(feature.properties && !feature.properties.point_count){
+        const iconId = feature.properties.sub || MULTI_POST_MARKER_ICON_ID;
+        markerIconIds.add(iconId);
+      }
+    });
+  }
+  markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
+
+  // Load icons if ensureMapIcon function exists
+  if(typeof ensureMapIcon === 'function'){
+    await Promise.all(Array.from(markerIconIds).map(id => ensureMapIcon(id).catch(()=>{})));
+  }
+
+  // Add icon images to map
+  for(const iconId of markerIconIds){
+    const iconUrl = subcategoryMarkers[iconId];
+    if(iconUrl && !map.hasImage(iconId)){
+      try{
+        const img = await loadMarkerLabelImage(iconUrl);
+        if(img){
+          let deviceScale = 2;
+          try{
+            const ratio = window.devicePixelRatio;
+            if(Number.isFinite(ratio) && ratio > 0){
+              deviceScale = ratio;
+            }
+          }catch(err){
+            deviceScale = 2;
+          }
+          if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+            deviceScale = 2;
+          }
+          const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
+          const canvas = document.createElement('canvas');
+          canvas.width = iconSize;
+          canvas.height = iconSize;
+          const ctx = canvas.getContext('2d');
+          if(ctx){
+            ctx.drawImage(img, 0, 0, iconSize, iconSize);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+          }
+        }
+      }catch(e){
+        console.warn('[Map Markers] Failed to load icon:', iconId, e);
+      }
+    }
+  }
+
+  // Store thumbnail images for markers (lazy loaded)
+  const thumbnailCache = new Map();
+  
+  /**
+   * Load thumbnail image and add to map
+   * @param {string} postId - Post ID
+   * @param {string} thumbnailUrl - Thumbnail URL
+   * @returns {Promise<string>} - Image ID for the thumbnail
+   */
+  async function mapmarkerLoadThumbnail(postId, thumbnailUrl) {
+    if(!postId || !thumbnailUrl) return null;
+    
+    const imageId = `marker-thumb-${postId}`;
+    
+    // Check cache
+    if(thumbnailCache.has(imageId)){
+      return imageId;
+    }
+    
+    // Check if already loaded in map
+    if(map.hasImage(imageId)){
+      thumbnailCache.set(imageId, true);
+      return imageId;
+    }
+    
+    // Load thumbnail
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try{
+          let deviceScale = 2;
+          try{
+            const ratio = window.devicePixelRatio;
+            if(Number.isFinite(ratio) && ratio > 0){
+              deviceScale = ratio;
+            }
+          }catch(err){
+            deviceScale = 2;
+          }
+          if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+            deviceScale = 2;
+          }
+          const thumbSize = Math.round(markerActiveSizePx * deviceScale);
+          const canvas = document.createElement('canvas');
+          canvas.width = thumbSize;
+          canvas.height = thumbSize;
+          const ctx = canvas.getContext('2d');
+          if(ctx){
+            ctx.drawImage(img, 0, 0, thumbSize, thumbSize);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            map.addImage(imageId, imageData, { pixelRatio: deviceScale });
+            thumbnailCache.set(imageId, true);
+            resolve(imageId);
+          } else {
+            resolve(null);
+          }
+        }catch(e){
+          console.warn('[Map Markers] Failed to add thumbnail to map:', postId, e);
+          resolve(null);
+        }
+      };
+      img.onerror = () => {
+        console.warn('[Map Markers] Failed to load thumbnail:', postId, thumbnailUrl);
+        resolve(null);
+      };
+      img.src = thumbnailUrl;
+    });
+  }
+
+  // Marker filter - exclude cluster points
+  const markerFilter = ['all',
+    ['!', ['has', 'point_count']],
+    ['has', 'title']
+  ];
+
+  // Icon image expression - use subcategory icon or multi-post icon
+  const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get', 'sub'], ''],
+    ['case',
+      ['==', ['var', 'iconId'], ''],
+      MULTI_POST_MARKER_ICON_ID,
+      ['var', 'iconId']
+    ]
+  ];
+
+  // Icon size expression - 30px normal/hover, 50px when active
+  const markerIconSizeExpression = [
+    'case',
+    ['boolean', ['feature-state', 'isActive'], false],
+    markerActiveSizePx / markerIconBaseSizePx, // 50/30 = 1.67
+    1 // 30px = base size (normal and hover)
+  ];
+
+  // Icon image expression that switches between icon and thumbnail based on state
+  // Uses feature-state to track thumbnail image ID and hover state
+  const markerImageExpression = [
+    'let', 'postId', ['get', 'id'],
+    ['let', 'isActive', ['boolean', ['feature-state', 'isActive'], false],
+      ['let', 'isHovered', ['boolean', ['feature-state', 'isHovered'], false],
+        ['let', 'isMultiPost', ['>', ['coalesce', ['get', 'multiCount'], 0], 1],
+          ['let', 'thumbImageId', ['coalesce', ['feature-state', 'thumbImageId'], ''],
+            ['case',
+              // If active, not multi-post, and has thumbnail, use thumbnail
+              ['all', 
+                ['var', 'isActive'], 
+                ['!', ['var', 'isMultiPost']],
+                ['!=', ['var', 'thumbImageId'], '']
+              ],
+              ['var', 'thumbImageId'],
+              // If hovered, not multi-post, and has thumbnail, use thumbnail (30x30)
+              ['all', 
+                ['var', 'isHovered'], 
+                ['!', ['var', 'isMultiPost']],
+                ['!=', ['var', 'thumbImageId'], '']
+              ],
+              ['var', 'thumbImageId'],
+              // Otherwise use icon
+              markerIconImageExpression
+            ]
+          ]
+        ]
+      ]
+    ]
+  ];
+
+  // Create or update marker-icon layer
+  const markerIconLayerId = 'marker-icon';
+  const layerExists = !!map.getLayer(markerIconLayerId);
+  
+  if(!layerExists){
+    try{
+      map.addLayer({
+        id: markerIconLayerId,
+        type: 'symbol',
+        source: 'posts',
+        filter: markerFilter,
+        minzoom: MARKER_MIN_ZOOM,
+        maxzoom: 24,
+        layout: {
+          'icon-image': markerImageExpression,
+          'icon-size': markerIconSizeExpression,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+          'icon-anchor': 'center',
+          'icon-pitch-alignment': 'viewport',
+          'symbol-z-order': 'viewport-y',
+          'symbol-sort-key': 10,
+          'visibility': 'visible'
+        },
+        paint: {
+          'icon-opacity': 1
+        }
+      });
+    }catch(e){
+      console.error('[Map Markers] Failed to add marker layer:', e);
+      return;
+    }
+  } else {
+    // Update existing layer
+    try{
+      map.setFilter(markerIconLayerId, markerFilter);
+      map.setLayoutProperty(markerIconLayerId, 'icon-image', markerImageExpression);
+      map.setLayoutProperty(markerIconLayerId, 'icon-size', markerIconSizeExpression);
+      map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
+      map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+      map.setLayerZoomRange(markerIconLayerId, MARKER_MIN_ZOOM, 24);
+    }catch(e){
+      console.warn('[Map Markers] Failed to update marker layer:', e);
+    }
+  }
+
+  // Move marker layer to top
+  try{
+    map.moveLayer(markerIconLayerId);
+  }catch(e){}
+
+  // Track active markers
+  const activeMarkers = new Set();
+  let hoveredMarkerId = null;
+
+  /**
+   * Set marker active state
+   * @param {string} featureId - Feature ID
+   * @param {boolean} isActive - Active state
+   * @param {string} thumbImageId - Optional thumbnail image ID (will be stored in feature-state)
+   */
+  function mapmarkerSetActive(featureId, isActive, thumbImageId = null) {
+    if(!featureId) return;
+    
+    try{
+      // Get current state to preserve thumbImageId if it exists
+      let currentState = {};
+      try{
+        const current = map.getFeatureState({ source: 'posts', id: featureId });
+        if(current && current.thumbImageId){
+          currentState.thumbImageId = current.thumbImageId;
+        }
+      }catch(e){}
+      
+      const state = { 
+        isActive: isActive,
+        isHovered: false // Clear hover when setting active
+      };
+      
+      // Preserve or set thumbImageId
+      if(thumbImageId){
+        state.thumbImageId = thumbImageId;
+      } else if(currentState.thumbImageId){
+        state.thumbImageId = currentState.thumbImageId;
+      }
+      
+      map.setFeatureState(
+        { source: 'posts', id: featureId },
+        state
+      );
+      
+      if(isActive){
+        activeMarkers.add(featureId);
+      } else {
+        activeMarkers.delete(featureId);
+      }
+    }catch(e){
+      console.warn('[Map Markers] Failed to set feature state:', featureId, e);
+    }
+  }
+
+  /**
+   * Set marker hover state
+   * @param {string} featureId - Feature ID
+   * @param {boolean} isHovered - Hover state
+   */
+  async function mapmarkerSetHover(featureId, isHovered) {
+    if(!featureId) return;
+    
+    try{
+      hoveredMarkerId = isHovered ? featureId : null;
+      
+      // On hover, load thumbnail if available and set feature state
+      if(isHovered && postsSource && postsSource._data){
+        const feature = postsSource._data.features?.find(f => 
+          (f.properties?.featureId || f.properties?.id) === featureId
+        );
+        if(feature){
+          const props = feature.properties;
+          const postId = props.id;
+          const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+          const multiCount = Number(props.multiCount) || rawMultiIds.length;
+          const isMultiPost = multiCount > 1;
+          
+          // Load thumbnail for single posts only
+          if(!isMultiPost && postId && typeof window.thumbUrl === 'function'){
+            const thumbUrl = window.thumbUrl(postId);
+            if(thumbUrl){
+              const thumbImageId = await mapmarkerLoadThumbnail(postId, thumbUrl);
+              if(thumbImageId){
+                // Set hover state with thumbnail
+                map.setFeatureState(
+                  { source: 'posts', id: featureId },
+                  { isHovered: true, thumbImageId: thumbImageId }
+                );
+              } else {
+                // Thumbnail failed, just set hover state
+                map.setFeatureState(
+                  { source: 'posts', id: featureId },
+                  { isHovered: true }
+                );
+              }
+            } else {
+              // No thumbnail URL, just set hover state
+              map.setFeatureState(
+                { source: 'posts', id: featureId },
+                { isHovered: true }
+              );
+            }
+          } else {
+            // Multi-post or no thumbUrl, just set hover state
+            map.setFeatureState(
+              { source: 'posts', id: featureId },
+              { isHovered: true }
+            );
+          }
+        }
+      } else {
+        // Clear hover state but preserve thumbImageId
+        let currentState = {};
+        try{
+          const current = map.getFeatureState({ source: 'posts', id: featureId });
+          if(current && current.thumbImageId){
+            currentState.thumbImageId = current.thumbImageId;
+          }
+        }catch(e){}
+        
+        const state = { isHovered: false };
+        if(currentState.thumbImageId){
+          state.thumbImageId = currentState.thumbImageId;
+        }
+        
+        map.setFeatureState(
+          { source: 'posts', id: featureId },
+          state
+        );
+      }
+    }catch(e){
+      console.warn('[Map Markers] Failed to set hover state:', featureId, e);
+    }
+  }
+
+  // Event handlers for marker interaction
+  const markerLayerId = markerIconLayerId;
+  
+  // Mouse enter - hover
+  map.on('mouseenter', markerLayerId, (e) => {
+    if(!e.features || e.features.length === 0) return;
+    const feature = e.features[0];
+    const featureId = feature.properties?.featureId || feature.id;
+    if(featureId){
+      mapmarkerSetHover(featureId, true);
+    }
+  });
+
+  // Mouse leave - unhover
+  map.on('mouseleave', markerLayerId, (e) => {
+    if(hoveredMarkerId){
+      mapmarkerSetHover(hoveredMarkerId, false);
+      hoveredMarkerId = null;
+    }
+  });
+
+  // Click - activate and open post
+  map.on('click', markerLayerId, async (e) => {
+    if(!e.features || e.features.length === 0) return;
+    e.preventDefault();
+    
+    const feature = e.features[0];
+    const featureId = feature.properties?.featureId || feature.id;
+    const postId = feature.properties?.id;
+    const props = feature.properties || {};
+    
+    if(!featureId || !postId) return;
+
+    // Check if multi-post
+    const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+    const multiCount = Number(props.multiCount) || rawMultiIds.length;
+    const isMultiPost = multiCount > 1;
+
+    // Set active state
+    mapmarkerSetActive(featureId, true);
+
+    // Load thumbnail for single posts
+    if(!isMultiPost && typeof window.thumbUrl === 'function'){
+      const thumbUrl = window.thumbUrl(postId);
+      if(thumbUrl){
+        const thumbImageId = await mapmarkerLoadThumbnail(postId, thumbUrl);
+        if(thumbImageId && map.hasImage(thumbImageId)){
+          // Update feature state with thumbnail image ID
+          mapmarkerSetActive(featureId, true, thumbImageId);
+        } else {
+          // Thumbnail failed to load, just set active without thumbnail
+          mapmarkerSetActive(featureId, true);
+        }
+      } else {
+        // No thumbnail URL, just set active
+        mapmarkerSetActive(featureId, true);
+      }
+    } else {
+      // Multi-post or no thumbUrl function, just set active
+      mapmarkerSetActive(featureId, true);
+    }
+
+    // Open post
+    if(typeof window.openPost === 'function'){
+      try{
+        if(typeof window.stopSpin === 'function'){
+          window.stopSpin();
+        }
+        if(typeof window.closePanel === 'function' && typeof window.filterPanel !== 'undefined' && window.filterPanel){
+          try{ window.closePanel(window.filterPanel); }catch(err){}
+        }
+        window.openPost(postId, false, true, null);
+      }catch(err){
+        console.error('[Map Markers] Failed to open post:', err);
+      }
+    }
+  });
+
+  // Monitor for post open/close to update active state
+  function mapmarkerUpdateActiveState() {
+    const activePostId = window.activePostId || null;
+    const openPostEl = document.querySelector('.open-post[data-id]');
+    const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
+    const currentOpenPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : openPostId;
+
+    // Clear all active states
+    activeMarkers.forEach(featureId => {
+      mapmarkerSetActive(featureId, false);
+    });
+
+    // Set active for open post
+    if(currentOpenPostId && postsSource && postsSource._data){
+      const feature = postsSource._data.features?.find(f => 
+        String(f.properties?.id) === String(currentOpenPostId)
+      );
+      if(feature){
+        const featureId = feature.properties?.featureId || feature.id;
+        const props = feature.properties || {};
+        const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+        const multiCount = Number(props.multiCount) || rawMultiIds.length;
+        const isMultiPost = multiCount > 1;
+        
+        if(featureId){
+          // Load thumbnail if single post
+          if(!isMultiPost && typeof window.thumbUrl === 'function'){
+            const thumbUrl = window.thumbUrl(currentOpenPostId);
+            if(thumbUrl){
+              mapmarkerLoadThumbnail(currentOpenPostId, thumbUrl).then(thumbImageId => {
+                if(thumbImageId){
+                  mapmarkerSetActive(featureId, true, thumbImageId);
+                } else {
+                  mapmarkerSetActive(featureId, true);
+                }
+              });
+            } else {
+              mapmarkerSetActive(featureId, true);
+            }
+          } else {
+            mapmarkerSetActive(featureId, true);
+          }
+        }
+      }
+    }
+  }
+
+  // Observe post changes
+  if(typeof MutationObserver !== 'undefined'){
+    const observer = new MutationObserver(() => {
+      mapmarkerUpdateActiveState();
+    });
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-id', 'class']
+    });
+  }
+
+  // Poll for activePostId changes
+  let lastActivePostId = window.activePostId;
+  setInterval(() => {
+    if(window.activePostId !== lastActivePostId){
+      lastActivePostId = window.activePostId;
+      mapmarkerUpdateActiveState();
+    }
+  }, 100);
+
+  // Initial update
+  mapmarkerUpdateActiveState();
+
+  // Export functions
+  window.mapmarkerSetActive = mapmarkerSetActive;
+  window.mapmarkerSetHover = mapmarkerSetHover;
+  window.mapmarkerLoadThumbnail = mapmarkerLoadThumbnail;
+  window.mapmarkerUpdateActiveState = mapmarkerUpdateActiveState;
+
+  return {
+    setActive: mapmarkerSetActive,
+    setHover: mapmarkerSetHover,
+    loadThumbnail: mapmarkerLoadThumbnail,
+    updateActiveState: mapmarkerUpdateActiveState
+  };
+}
+
+// Export to window
+window.mapmarkerInit = mapmarkerInit;
+
 // ============================================================================
 // OLD DOM MARKER CODE - Commented out, kept for reference
 // ============================================================================
+/*
 (function() {
   'use strict';
 
