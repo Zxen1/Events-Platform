@@ -108,6 +108,7 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
   
   // Load all icon sprites
+  let loadedIconCount = 0;
   for(const iconId of markerIconIds){
     if(typeof ensureMapIcon === 'function'){
       await ensureMapIcon(iconId).catch(()=>{});
@@ -138,13 +139,18 @@ async function initSpriteMarkers(map, postsData, options = {}) {
             ctx.drawImage(img, 0, 0, iconSize, iconSize);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+            loadedIconCount++;
+            console.log('[Sprite Markers] Loaded icon sprite:', iconId);
           }
         }
       }catch(e){
         console.warn('[Sprite Markers] Failed to load icon:', iconId, e);
       }
+    } else if(map.hasImage(iconId)){
+      loadedIconCount++;
     }
   }
+  console.log('[Sprite Markers] Loaded', loadedIconCount, 'icon sprites');
   
   // Create marker-icon layer with dynamic size and image switching
   const markerIconFilter = ['all',
@@ -153,23 +159,24 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   ];
   
   // Icon image expression: use thumbnail if hovered/active, otherwise use icon
+  // Note: If thumbnail sprite doesn't exist yet, Mapbox will fall back gracefully
+  // Use string literal directly for fallback icon ID
   const markerIconImageExpression = [
     'let', 'postId', ['get', 'id'],
     'let', 'isHovered', ['boolean', ['feature-state', 'isHovered'], false],
     'let', 'isActive', ['boolean', ['feature-state', 'isActive'], false],
     'let', 'isPostOpen', ['boolean', ['feature-state', 'isPostOpen'], false],
     'let', 'showThumbnail', ['any', ['var', 'isHovered'], ['var', 'isActive'], ['var', 'isPostOpen']],
-    'let', 'iconId', ['coalesce', ['get','sub'], MULTI_POST_MARKER_ICON_ID],
+    'let', 'iconId', ['coalesce', ['get','sub'], MULTI_POST_MARKER_ICON_ID], // Variable will be evaluated to string
     'let', 'thumbSpriteId', ['concat', 'marker-thumb-', ['to-string', ['var', 'postId']]],
     ['case',
-      ['all',
-        ['var', 'showThumbnail'],
-        ['has', ['var', 'thumbSpriteId']]
-      ],
+      ['var', 'showThumbnail'],
       ['var', 'thumbSpriteId'],
       ['var', 'iconId']
     ]
   ];
+  
+  console.log('[Sprite Markers] Icon image expression:', JSON.stringify(markerIconImageExpression));
   
   // Icon size expression: 1.67x (50px) when active/open, 1x (30px) otherwise
   const markerIconSizeExpression = [
@@ -193,6 +200,16 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   
   // Create new marker-icon layer
   try{
+    // Check if posts source exists
+    const postsSource = map.getSource('posts');
+    if(!postsSource){
+      console.error('[Sprite Markers] Posts source not found');
+      return;
+    }
+    
+    const featureCount = postsData.features ? postsData.features.length : 0;
+    console.log('[Sprite Markers] Creating marker-icon layer with', featureCount, 'features');
+    
     map.addLayer({
       id: markerIconLayerId,
       type:'symbol',
@@ -221,6 +238,8 @@ async function initSpriteMarkers(map, postsData, options = {}) {
       duration: 300,
       delay: 0
     });
+    
+    console.log('[Sprite Markers] Marker-icon layer created successfully');
     
   }catch(e){
     console.error('[Sprite Markers] Failed to create marker-icon layer:', e);
