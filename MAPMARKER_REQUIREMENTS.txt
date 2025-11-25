@@ -84,3 +84,40 @@ ASSET PRELOADING:
 - This avoids initial website loading delays
 - Do NOT preload on initial page load, only when zoom >= 8 is reached
 
+SPRITE POSITIONING SPECIFICATION
+==================================
+
+ARCHITECTURE:
+- All 10 elements use separate sprites (no composite sprites)
+- Each sprite has its own precise hit area matching visual size
+- Labels never trigger events (they're visual only, part of pill layers)
+
+VERTICAL POSITIONING:
+- All elements are vertically centered to lat/lng point
+
+HORIZONTAL POSITIONING (left edge distances from lat/lng):
+- Icons (30×30px): Center at 0px (centered on lat/lng)
+- Small pills (150×40px): Left edge at -20px from lat/lng
+- Big pills (225×60px): Left edge at -35px from lat/lng
+- Small labels (100×30px invisible rectangle): Left edge at 20px from lat/lng
+- Big labels (155×50px invisible rectangle): Left edge at 30px from lat/lng
+
+TRIGGER LAYERS:
+- Icons: Only trigger when pills are hidden (map_card_display === 'hover_only')
+- Pills: Trigger when visible (map_card_display === 'always')
+- Labels: Never trigger (visual only)
+
+INTERACTIVE LAYERS CONFIGURATION:
+- When map_card_display === 'hover_only': Only marker-icon layer (pills hidden, icon visible)
+- When map_card_display === 'always': Only pill layers (pills visible, icons not interactive)
+
+ALIGNMENT RULES:
+- No offsets (icon-translate, icon-offset, text-offset are removed)
+- All elements anchor to same lat/lng point
+- Horizontal positioning via anchor point positioning only
+
+BIDIRECTIONAL INTERACTION:
+- Map markers ↔ Post cards: Hover and click work both ways
+- Post card hover/click highlights corresponding map marker
+- Map marker hover/click highlights corresponding post card
+
