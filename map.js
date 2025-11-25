@@ -57,12 +57,15 @@
      * Preload marker icons when zoom >= 8 for first time
      */
     async function mapmarkerPreloadIcons() {
-      if(iconsPreloaded) return;
+      if(iconsPreloaded) {
+        console.log('[Mapmarker] Icons already preloaded');
+        return;
+      }
       
-      const currentZoom = map.getZoom();
-      if(currentZoom < MARKER_MIN_ZOOM) return;
-      
+      // Don't check zoom - always preload icons when function is called
+      // The minzoom on layers will handle visibility
       iconsPreloaded = true;
+      console.log('[Mapmarker] Starting icon preload...');
       
       // Collect all unique icon IDs needed
       const iconIds = new Set();
@@ -177,10 +180,8 @@
         return;
       }
 
-      const markerFilter = ['all',
-        ['!', ['has', 'point_count']],
-        ['has', 'title']
-      ];
+      // Filter: just exclude cluster points (don't require 'title' property)
+      const markerFilter = ['!', ['has', 'point_count']];
 
       // Icon layer - always shows subcategory icons (or multi-post icon)
       const iconLayerId = 'mapmarker-icon';
@@ -502,19 +503,23 @@
     // Wait for map to be ready, then preload icons and setup layers
     await waitForMapReady();
     
-    // Initial preload check - preload icons first before creating layers
-    if(map.getZoom() >= MARKER_MIN_ZOOM) {
-      await mapmarkerPreloadIcons();
-    } else {
-      // If zoom is too low, still preload icons (they'll be used when zoom increases)
-      // But don't await - let it happen in background
-      mapmarkerPreloadIcons().catch(e => {
-        console.warn('[Mapmarker] Error preloading icons:', e);
-      });
-    }
+    // Always preload icons first (regardless of zoom level)
+    // Icons need to be loaded before layers can display them
+    await mapmarkerPreloadIcons();
 
-    // Setup layers (icons should be loaded by now, or will load soon)
+    // Setup layers (icons should be loaded now)
     mapmarkerSetupLayers();
+
+    // Debug logging
+    console.log('[Mapmarker] Debug info:', {
+      sourceExists: !!map.getSource('posts'),
+      iconLayerExists: !!map.getLayer('mapmarker-icon'),
+      thumbnailLayerExists: !!map.getLayer('mapmarker-thumbnail'),
+      zoom: map.getZoom(),
+      iconsLoaded: iconsPreloaded,
+      subcategoryMarkersCount: Object.keys(subcategoryMarkers).length,
+      postsDataFeaturesCount: postsData && Array.isArray(postsData.features) ? postsData.features.length : 0
+    });
 
     // Setup interactions
     mapmarkerSetupInteractions();
