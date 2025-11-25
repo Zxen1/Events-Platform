@@ -39,6 +39,14 @@
       window._domMarkerMapListeners = [];
     }
     
+    // Clear old intervals
+    if(window._domMarkerIntervals){
+      window._domMarkerIntervals.forEach(interval => {
+        try{ clearInterval(interval); }catch(e){}
+      });
+      window._domMarkerIntervals = [];
+    }
+    
     // Store markers for position updates
     const domMarkers = new Map();
     
@@ -79,6 +87,7 @@
         markerEl.className = 'dom-map-marker';
         markerEl.dataset.featureId = featureId;
         markerEl.dataset.postId = postId || '';
+        markerEl.dataset.filtered = 'true'; // Initially visible, will be updated by filter monitoring
         
         // Get icon URL - use subcategory icon or fallback to multi-post icon
         const iconId = props.sub || MULTI_POST_MARKER_ICON_ID;
@@ -275,28 +284,49 @@
     
     // Batch position updates to prevent flicker during zoom/move
     let positionUpdateScheduled = false;
+    let positionUpdateTimeout = null;
     const updateDomMarkerPositions = () => {
       if(!map || !domMarkersContainer) return;
+      
+      // Clear any pending timeout
+      if(positionUpdateTimeout){
+        clearTimeout(positionUpdateTimeout);
+        positionUpdateTimeout = null;
+      }
       
       if(positionUpdateScheduled) return;
       positionUpdateScheduled = true;
       
+      // Use double RAF for smoother updates, similar to old sprite system
       requestAnimationFrame(() => {
-        positionUpdateScheduled = false;
-        if(!map || !domMarkersContainer) return;
-        
-        const currentZoom = isZoomLevelValid();
-        
-        domMarkers.forEach((marker, featureId) => {
-          try{
-            const point = map.project([marker.lng, marker.lat]);
-            if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
-              marker.element.style.left = point.x + 'px';
-              marker.element.style.top = point.y + 'px';
-            }
-            // Update visibility based on zoom
-            marker.element.style.display = currentZoom ? 'block' : 'none';
-          }catch(e){}
+        requestAnimationFrame(() => {
+          positionUpdateScheduled = false;
+          if(!map || !domMarkersContainer) return;
+          
+          const currentZoom = isZoomLevelValid();
+          
+          domMarkers.forEach((marker, featureId) => {
+            try{
+              const point = map.project([marker.lng, marker.lat]);
+              if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
+                // Use left/top positioning (CSS already has transform for centering)
+                const x = Math.round(point.x);
+                const y = Math.round(point.y);
+                // Only update if position actually changed to reduce flickering
+                const currentLeft = marker.element.style.left;
+                const currentTop = marker.element.style.top;
+                const newLeft = x + 'px';
+                const newTop = y + 'px';
+                if(currentLeft !== newLeft || currentTop !== newTop){
+                  marker.element.style.left = newLeft;
+                  marker.element.style.top = newTop;
+                }
+              }
+              // Update visibility based on zoom and filter state
+              const isFiltered = marker.element.dataset.filtered !== 'false';
+              marker.element.style.display = (currentZoom && isFiltered) ? 'block' : 'none';
+            }catch(e){}
+          });
         });
       });
     };
@@ -310,14 +340,33 @@
       window._domMarkerMapListeners.push({ event, handler });
     };
     
-    // Update positions on map events
-    addMapListener('move', updateDomMarkerPositions);
-    addMapListener('zoom', () => {
+    // Throttled position updates to prevent flickering
+    let lastUpdateTime = 0;
+    const THROTTLE_MS = 16; // ~60fps
+    const throttledUpdatePositions = () => {
+      const now = performance.now();
+      if(now - lastUpdateTime < THROTTLE_MS){
+        if(!positionUpdateTimeout){
+          positionUpdateTimeout = setTimeout(() => {
+            positionUpdateTimeout = null;
+            lastUpdateTime = performance.now();
+            updateDomMarkerPositions();
+          }, THROTTLE_MS - (now - lastUpdateTime));
+        }
+        return;
+      }
+      lastUpdateTime = now;
       updateDomMarkerPositions();
+    };
+    
+    // Update positions on map events
+    addMapListener('move', throttledUpdatePositions);
+    addMapListener('zoom', () => {
+      throttledUpdatePositions();
       updateMarkerVisibility();
     });
-    addMapListener('pitch', updateDomMarkerPositions);
-    addMapListener('rotate', updateDomMarkerPositions);
+    addMapListener('pitch', throttledUpdatePositions);
+    addMapListener('rotate', throttledUpdatePositions);
     
     // Initial position and visibility update
     updateDomMarkerPositions();
@@ -458,17 +507,98 @@
       observer.observe(document.body, { childList: true, subtree: true });
     }
     
+    // Function to update markers when filters change
+    // This listens to the posts source data changes and updates DOM markers accordingly
+    const updateMarkersFromSource = () => {
+      if(!map) return;
+      
+      try{
+        const postsSource = map.getSource('posts');
+        if(!postsSource) return;
+        
+        // Get current data from source
+        const sourceData = postsSource._data;
+        if(!sourceData || !Array.isArray(sourceData.features)) return;
+        
+        // Create a Set of feature IDs that should be visible
+        const visibleFeatureIds = new Set();
+        sourceData.features.forEach(feature => {
+          if(feature && feature.properties && !feature.properties.point_count){
+            const featureId = feature.properties.featureId || feature.properties.id || '';
+            if(featureId){
+              visibleFeatureIds.add(String(featureId));
+            }
+          }
+        });
+        
+        // Update marker visibility based on filtered data
+        domMarkers.forEach((marker, featureId) => {
+          const shouldBeVisible = visibleFeatureIds.has(String(featureId));
+          if(marker.element){
+            // Use a data attribute to track filtered state
+            marker.element.dataset.filtered = shouldBeVisible ? 'true' : 'false';
+            // Visibility is handled in updateDomMarkerPositions based on zoom and filter
+          }
+        });
+        
+        // Trigger position update to apply visibility changes
+        updateDomMarkerPositions();
+      }catch(e){
+        console.warn('[Map Markers] Error updating markers from source:', e);
+      }
+    };
+    
+    // Listen for source data changes (when syncMarkerSources updates the data)
+    // Use a more reliable method: check source data periodically and on map events
+    let lastSourceSignature = null;
+    const checkSourceUpdate = () => {
+      if(!map) return;
+      try{
+        const postsSource = map.getSource('posts');
+        if(postsSource && postsSource.__markerSignature){
+          const currentSignature = postsSource.__markerSignature;
+          if(currentSignature !== lastSourceSignature){
+            lastSourceSignature = currentSignature;
+            updateMarkersFromSource();
+          }
+        }
+      }catch(e){}
+    };
+    
+    // Check for source updates periodically
+    const sourceCheckInterval = setInterval(checkSourceUpdate, 200);
+    
+    // Also check on map data events
+    try{
+      map.on('data', (e) => {
+        if(e.sourceId === 'posts'){
+          setTimeout(checkSourceUpdate, 50);
+        }
+      });
+    }catch(e){}
+    
+    // Store interval for cleanup
+    if(!window._domMarkerIntervals){
+      window._domMarkerIntervals = [];
+    }
+    window._domMarkerIntervals.push(sourceCheckInterval);
+    
+    // Initial update from source
+    setTimeout(checkSourceUpdate, 100);
+    
     // Store markers globally for cleanup
     window.domMarkers = domMarkers;
     window.updateDomMarkerPositions = updateDomMarkerPositions;
     window.syncMarkerWithPostcard = syncMarkerWithPostcard;
+    window.updateMarkersFromSource = updateMarkersFromSource;
     
     // Return API for external access
     return {
       domMarkers,
       updateDomMarkerPositions,
       syncMarkerWithPostcard,
-      updateMarkerVisibility
+      updateMarkerVisibility,
+      updateMarkersFromSource
     };
   }
 
