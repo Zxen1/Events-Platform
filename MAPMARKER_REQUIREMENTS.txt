@@ -39,3 +39,15 @@ MULTI-POST MARKERS:
 - Simply grow from 30px to 50px on click
 - No thumbnail switching for multi-post markers
 
+THUMBNAIL LOADING:
+- Use picsum CDN for 50x50 thumbnails for mapmarkers (temporary, will use Cloudflare later)
+- Thumbnails are 50x50 but displayed at 30x30 on hover, 50x50 when clicked/active
+- Thumbnails should ONLY load on hover/click (lazy loading, no preloading)
+- Icons must remain visible until thumbnails are fully loaded to prevent flicker
+- Cloudflare will eventually provide multiple sized thumbnails (post card size, post size, 50x50 for mapmarkers)
+
+ASSET PRELOADING:
+- Mapmarker icons and the two pill images should be preloaded when zoom level reaches 8 for the first time
+- This avoids initial website loading delays
+- Do NOT preload on initial page load, only when zoom >= 8 is reached
+

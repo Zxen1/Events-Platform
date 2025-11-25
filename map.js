@@ -39,73 +39,45 @@ async function mapmarkerInit(map, postsData, options = {}) {
     }
   });
   
-  const deviceScale = window.devicePixelRatio || 2;
-  const iconSize = Math.round(BASE_SIZE * deviceScale);
+  // Icons and pills will be preloaded when zoom reaches 8 for the first time
+  // (see mapmarkerPreloadAssets function below)
   
-  // Load icons
-  if(typeof window.ensureMapIcon === 'function'){
-    for(const iconId of iconIds){
-      await window.ensureMapIcon(iconId).catch(()=>{});
-    }
-  } else {
-    // Fallback: load icons manually
-    for(const iconId of iconIds){
-      if(map.hasImage(iconId)) continue;
-      const iconUrl = subcategoryMarkers[iconId];
-      if(!iconUrl) continue;
-      try{
-        const img = await loadImage(iconUrl);
-        const canvas = document.createElement('canvas');
-        canvas.width = iconSize;
-        canvas.height = iconSize;
-        const ctx = canvas.getContext('2d');
-        if(ctx){
-          ctx.drawImage(img, 0, 0, iconSize, iconSize);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          map.addImage(iconId, imageData, { pixelRatio: deviceScale });
-        }
-      }catch(e){}
-    }
-  }
-  
-  // Preload thumbnails for single-post markers
+  // Lazy load 50x50 thumbnails from picsum CDN on hover/click
   const thumbnailCache = new Map();
-  if(typeof window.thumbUrl === 'function'){
-    const thumbPromises = [];
-    postsData.features.forEach(feature => {
-      if(!feature.properties || feature.properties.point_count) return;
-      if(isMultiPost(feature.properties)) return;
-      const postId = feature.properties.id;
-      if(!postId) return;
-      
-      const thumbUrl = window.thumbUrl(postId);
-      if(!thumbUrl || thumbnailCache.has(`thumb-${postId}`)) return;
-      
-      thumbPromises.push(
-        loadImage(thumbUrl).then(img => {
-          // Create square 30x30 thumbnail
-          const size = Math.min(img.width, img.height);
-          const canvas = document.createElement('canvas');
-          const thumbSize = Math.round(BASE_SIZE * deviceScale);
-          canvas.width = thumbSize;
-          canvas.height = thumbSize;
-          const ctx = canvas.getContext('2d');
-          if(ctx){
-            // Crop to square and scale
-            const sourceSize = Math.min(img.width, img.height);
-            const sourceX = (img.width - sourceSize) / 2;
-            const sourceY = (img.height - sourceSize) / 2;
-            ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, thumbSize, thumbSize);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const spriteId = `marker-thumb-${postId}`;
-            map.addImage(spriteId, imageData, { pixelRatio: deviceScale });
-            thumbnailCache.set(`thumb-${postId}`, spriteId);
-          }
-        }).catch(()=>{})
-      );
-    });
-    await Promise.all(thumbPromises);
-  }
+  const mapmarkerLoadThumbnail = async (postId, props = {}) => {
+    if(!postId || isMultiPost(props)) return;
+    const spriteId = `marker-thumb-${postId}`;
+    if(map.hasImage(spriteId) || thumbnailCache.has(spriteId)) return;
+    
+    thumbnailCache.set(spriteId, true); // Mark as loading
+    
+    // Use picsum CDN for 50x50 thumbnails (will be shrunk to 30x30 on hover)
+    const isPortrait = (id) => {
+      // Simple hash-based determination (same logic as thumbUrl)
+      const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return hash % 2 === 0;
+    };
+    const port = isPortrait(postId);
+    const thumbUrl = `https://picsum.photos/seed/${encodeURIComponent(postId)}-t/50/50`;
+    
+    try{
+      const img = await loadImage(thumbUrl);
+      const deviceScale = window.devicePixelRatio || 2;
+      const thumbSize = Math.round(ACTIVE_SIZE * deviceScale); // 50x50 at device scale
+      const canvas = document.createElement('canvas');
+      canvas.width = thumbSize;
+      canvas.height = thumbSize;
+      const ctx = canvas.getContext('2d');
+      if(ctx){
+        // Draw 50x50 thumbnail (will be scaled down to 30x30 via icon-size expression)
+        ctx.drawImage(img, 0, 0, thumbSize, thumbSize);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        map.addImage(spriteId, imageData, { pixelRatio: deviceScale });
+      }
+    }catch(e){
+      thumbnailCache.delete(spriteId);
+    }
+  };
   
   // Create marker layer
   const layerId = 'marker-icon';
@@ -116,6 +88,7 @@ async function mapmarkerInit(map, postsData, options = {}) {
   }
   
   // Icon image expression: show thumbnail on hover/active, icon otherwise
+  // Icons stay visible until thumbnails are ready (no flicker - Mapbox will show icon if thumbnail sprite doesn't exist yet)
   const iconImageExpr = [
     'let', 'postId', ['get', 'id'],
     'let', 'isHovered', ['boolean', ['feature-state', 'isHovered'], false],
@@ -174,12 +147,17 @@ async function mapmarkerInit(map, postsData, options = {}) {
   // Event handlers
   let hoveredFeatureId = null;
   
-  const mapmarkerHandleHover = (e) => {
+  const mapmarkerHandleHover = async (e) => {
     if(e.features && e.features.length > 0){
       const feature = e.features[0];
       const featureId = feature.id || feature.properties?.id;
+      const postId = feature.properties?.id;
       if(featureId && !isMultiPost(feature.properties)){
         hoveredFeatureId = featureId;
+        // Load thumbnail first, then set hover state (prevents flicker)
+        if(postId){
+          await mapmarkerLoadThumbnail(postId, feature.properties);
+        }
         map.setFeatureState({ source: 'posts', id: featureId }, { isHovered: true });
       }
     }
@@ -192,16 +170,21 @@ async function mapmarkerInit(map, postsData, options = {}) {
     }
   };
   
-  const mapmarkerHandleClick = (e) => {
+  const mapmarkerHandleClick = async (e) => {
     if(e.features && e.features.length > 0){
       const feature = e.features[0];
       const featureId = feature.id || feature.properties?.id;
+      const postId = feature.properties?.id;
       if(featureId){
+        // Load thumbnail first, then set active state (prevents flicker)
+        if(postId && !isMultiPost(feature.properties)){
+          await mapmarkerLoadThumbnail(postId, feature.properties);
+        }
         map.setFeatureState({ source: 'posts', id: featureId }, { isActive: true });
         // Open post if function exists
-        if(typeof window.openPost === 'function' && feature.properties?.id){
+        if(typeof window.openPost === 'function' && postId){
           setTimeout(() => {
-            window.openPost(feature.properties.id, false, true, null);
+            window.openPost(postId, false, true, null);
           }, 100);
         }
       }
@@ -221,11 +204,16 @@ async function mapmarkerInit(map, postsData, options = {}) {
     
     // Update all features
     if(Array.isArray(postsData.features)){
-      postsData.features.forEach(feature => {
+      postsData.features.forEach(async feature => {
         if(!feature.properties || feature.properties.point_count) return;
         const featureId = feature.id || feature.properties.id;
+        const postId = feature.properties.id;
         if(!featureId) return;
-        const isOpen = currentOpenId && String(feature.properties.id) === currentOpenId;
+        const isOpen = currentOpenId && String(postId) === currentOpenId;
+        // Load thumbnail when post opens (before setting state to prevent flicker)
+        if(isOpen && postId && !isMultiPost(feature.properties)){
+          await mapmarkerLoadThumbnail(postId, feature.properties);
+        }
         map.setFeatureState({ source: 'posts', id: featureId }, { isPostOpen: isOpen });
         if(!isOpen){
           map.setFeatureState({ source: 'posts', id: featureId }, { isActive: false });
@@ -247,6 +235,57 @@ async function mapmarkerInit(map, postsData, options = {}) {
   
   // Move layer to top
   try{ map.moveLayer(layerId); }catch(e){}
+  
+  // Preload icons and pills when zoom reaches 8 for the first time
+  let preloadDone = false;
+  const mapmarkerPreloadAssets = async () => {
+    if(preloadDone) return;
+    const currentZoom = map.getZoom();
+    if(currentZoom < MARKER_MIN_ZOOM) return;
+    
+    preloadDone = true;
+    const deviceScale = window.devicePixelRatio || 2;
+    const iconSize = Math.round(BASE_SIZE * deviceScale);
+    
+    // Load icons
+    if(typeof window.ensureMapIcon === 'function'){
+      for(const iconId of iconIds){
+        await window.ensureMapIcon(iconId).catch(()=>{});
+      }
+    } else {
+      // Fallback: load icons manually
+      for(const iconId of iconIds){
+        if(map.hasImage(iconId)) continue;
+        const iconUrl = subcategoryMarkers[iconId];
+        if(!iconUrl) continue;
+        try{
+          const img = await loadImage(iconUrl);
+          const canvas = document.createElement('canvas');
+          canvas.width = iconSize;
+          canvas.height = iconSize;
+          const ctx = canvas.getContext('2d');
+          if(ctx){
+            ctx.drawImage(img, 0, 0, iconSize, iconSize);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+          }
+        }catch(e){}
+      }
+    }
+    
+    // Load pill images if functions exist
+    if(typeof window.ensureMarkerLabelPillImage === 'function'){
+      await window.ensureMarkerLabelPillImage().catch(()=>{});
+    }
+  };
+  
+  // Check zoom and preload on first zoom >= 8
+  const checkZoomAndPreload = () => {
+    if(!preloadDone) mapmarkerPreloadAssets();
+  };
+  
+  map.on('zoom', checkZoomAndPreload);
+  checkZoomAndPreload(); // Check immediately in case already at zoom 8+
 }
 
 // Export
@@ -553,16 +592,16 @@ window.mapmarkerInit = mapmarkerInit;
       
       // Use double RAF for smoother updates, similar to old sprite system
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          positionUpdateScheduled = false;
-          if(!map || !domMarkersContainer) return;
-          
-          const currentZoom = isZoomLevelValid();
-          
-          domMarkers.forEach((marker, featureId) => {
-            try{
-              const point = map.project([marker.lng, marker.lat]);
-              if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
+      requestAnimationFrame(() => {
+        positionUpdateScheduled = false;
+        if(!map || !domMarkersContainer) return;
+        
+        const currentZoom = isZoomLevelValid();
+        
+        domMarkers.forEach((marker, featureId) => {
+          try{
+            const point = map.project([marker.lng, marker.lat]);
+            if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
                 // Use left/top positioning (CSS already has transform for centering)
                 const x = Math.round(point.x);
                 const y = Math.round(point.y);
@@ -579,7 +618,7 @@ window.mapmarkerInit = mapmarkerInit;
               // Update visibility based on zoom and filter state
               const isFiltered = marker.element.dataset.filtered !== 'false';
               marker.element.style.display = (currentZoom && isFiltered) ? 'block' : 'none';
-            }catch(e){}
+          }catch(e){}
           });
         });
       });
