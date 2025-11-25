@@ -9,7 +9,10 @@
  * @param {Object} options - Configuration options
  */
 async function mapmarkerInit(map, postsData, options = {}) {
-  if(!map || !postsData) return;
+  if(!map || !postsData) {
+    console.warn('[Map Markers] Missing map or postsData');
+    return;
+  }
 
   const MARKER_MIN_ZOOM = options.minZoom || 8;
   const MULTI_POST_MARKER_ICON_ID = options.multiPostIconId || 'multi-post-icon';
@@ -17,12 +20,19 @@ async function mapmarkerInit(map, postsData, options = {}) {
   const markerIconBaseSizePx = 30;
   const markerActiveSizePx = 50;
   
-  // Get posts source
-  const postsSource = map.getSource('posts');
+  // Get posts source - wait a bit if it doesn't exist yet
+  let postsSource = map.getSource('posts');
   if(!postsSource) {
-    console.warn('[Map Markers] Posts source not found');
-    return;
+    // Wait a frame for source to be available
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    postsSource = map.getSource('posts');
+    if(!postsSource) {
+      console.warn('[Map Markers] Posts source not found after wait');
+      return;
+    }
   }
+  
+  console.log('[Map Markers] Initializing markers...');
 
   // Load and add icon images to map
   const iconIds = Object.keys(subcategoryMarkers);
@@ -255,6 +265,8 @@ async function mapmarkerInit(map, postsData, options = {}) {
   try{
     map.moveLayer(markerIconLayerId);
   }catch(e){}
+  
+  console.log('[Map Markers] Marker layer created/updated:', markerIconLayerId);
 
   // Track active markers
   const activeMarkers = new Set();
