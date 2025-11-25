@@ -21,6 +21,17 @@
  *   --layer-content: 20        (primary content)
  *   --layer-base: 0           (map/base)
  * 
+ * MAP CARD SPRITE SYSTEM - Z-INDEX NOTE:
+ * =======================================
+ * IMPORTANT: Map cards (pills) are rendered using Mapbox GL sprite system, NOT DOM elements.
+ * CSS z-index does NOT control sprite rendering order. Sprite stacking is controlled by:
+ * 1. Mapbox layer order (which layer is added first/last)
+ * 2. symbol-sort-key property in the layer configuration (see index.js)
+ * 3. symbol-z-order property ('viewport-y' sorts by Y position)
+ * 
+ * The CSS z-index values below for .mapmarker-* elements only affect DOM elements
+ * (like .mapmarker-overlay container), NOT the actual sprite-rendered map cards.
+ * 
  * Direct z-index values found in style.css:
  *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
  *   90: (--layer-modal) - modals
@@ -33,12 +44,12 @@
  *   40: (--layer-header) - headers
  *   30: (--layer-card) - cards
  *   20: (--layer-content) - content
- *   10: panel resizers, various overlays
- *   5: mapmarker-overlay, various elements
- *   3: various elements
+ *   10: panel resizers, various overlays, .mapmarker (DOM element only, NOT sprites)
+ *   5: .mapmarker-overlay (DOM container only, NOT sprites)
+ *   3: .mapmarker-label (DOM element only, NOT sprites)
  *   2: post-cards, various elements
- *   1: form labels, form field headers, variant pricing labels, header-buttons
- *   0: base layer, various elements
+ *   1: form labels, form field headers, variant pricing labels, header-buttons, .small-map-card (DOM element only, NOT sprites)
+ *   0: base layer, various elements, .mapmarker-pill (DOM element only, NOT sprites)
  *   -1: some background elements
  *   auto: some elements
  */
@@ -99,6 +110,13 @@
    - Pill images are added to Mapbox as sprites using map.addImage()
    - Mapbox renders pills directly on the map canvas using symbol layers
    - The actual pill rendering happens in JavaScript, not CSS
+   - CSS z-index values do NOT affect sprite rendering order
+   
+   SPRITE Z-INDEX/STACKING ORDER:
+   - Controlled by Mapbox's symbol-sort-key property (see index.js, ~19445)
+   - Uses feature ID to ensure unique sortKey for each card
+   - symbol-z-order is set to 'viewport-y' for Y-position sorting
+   - Layer order also matters (marker-label-highlight renders above marker-label)
    
    TO MODIFY PILL IMAGES:
    1. Go to index.js, line ~1412 (ensureMarkerLabelPillImage function)
@@ -110,6 +128,8 @@
    
    NOTE: The .mapmarker-pill CSS class is for positioning only - the actual image
    comes from Mapbox sprites. Changing CSS won't change the pill image itself.
+   The CSS z-index values on .mapmarker-* elements only affect DOM elements,
+   NOT the sprite-rendered map cards.
    
    SYSTEM: Both single and multi-venue markers use the unified pill system.
    Multi-venue markers composite these pills with icons/text for unique sprites.
@@ -126,7 +146,7 @@
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
-      z-index: 5;
+      z-index: 5; /* DOM container z-index only - does NOT affect sprite rendering */
       /* Mapbox positions this element - it updates transform to move marker on map */
     }
     .mapmarker-overlay:has(.small-map-card){
@@ -153,7 +173,7 @@
       gap: 6px;
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
-      z-index: 1;
+      z-index: 1; /* DOM element z-index only - map cards are sprites, not affected by this */
       transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease;
     }
     .small-map-card:hover:not(.is-clicked):not(.is-post-open){
@@ -201,7 +221,7 @@
       width: 30px;
       height: 30px;
       pointer-events: none;
-      z-index: 2;
+      z-index: 10; /* DOM element z-index only - marker icons are sprites, not affected by this */
       flex: 0 0 30px;
     }
     .map--midzoom-markers .mapmarker{
@@ -220,7 +240,7 @@
       opacity: 0;
       visibility: hidden;
       mix-blend-mode: normal;
-      z-index: 0;
+      z-index: 0; /* DOM element z-index only - pills are sprites, not affected by this */
       transition: width 0.3s ease, height 0.3s ease;
     }
     .small-map-card:hover:not(.is-clicked):not(.is-post-open) .mapmarker-pill{
@@ -247,7 +267,7 @@
       gap: 1px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
       white-space: normal;
-      z-index: 3;
+      z-index: 3; /* DOM element z-index only - labels are sprites, not affected by this */
       text-align: left;
       flex: 1 1 auto;
       min-width: 0;
