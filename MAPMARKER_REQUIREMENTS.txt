@@ -1,0 +1,41 @@
+MAPMARKER REQUIREMENTS
+======================
+
+1. Mapmarker icons use the posts subcategory icons at 30x30 (except multi post)
+
+2. Hovering on a mapmarker changes it to 30x30 thumbnail (except multi post)
+
+3. The centre of the mapmarker is at latlng and never reloads to prevent flicker
+
+4. When a mapmarker is clicked, it animate grows to 50x50 thumbnail or multi post icon
+
+5. There is zero delay when changing hover state of mapmarkers and there is no need to move into a blank area to reset
+
+6. There must be only one source of truth for hover/click triggers and that must be the mapmarker or map card.
+
+7. Map cards are just decorations that sit behind the mapmarkers. The z-indexes for all components should be listed in the zindex table of style.css
+
+8. Ask questions every step of the way to add to this list. Never guess. Do not name functions or anything before asking what to name things.
+
+IMPLEMENTATION NOTES:
+=====================
+
+- Map cards will be dealt with AFTER mapmarkers are working properly
+- Everything will be sprite-based to avoid DOM conflicts and flickering
+- Preload all icons and map card pills once at the beginning of first map load for faster/smoother loading
+- Function names: prefix all with "mapmarker" (e.g., mapmarkerInit, mapmarkerHandleHover, etc.)
+
+Z-INDEX ORDER (from bottom to top):
+- map = 0
+- base pill = 5
+- accent pill = 10
+- small map card label = 15
+- big map card label = 20
+- mapmarker icon = 25
+- mapmarker thumbnail = 30
+
+MULTI-POST MARKERS:
+- Always use multi-post icon (never thumbnails)
+- Simply grow from 30px to 50px on click
+- No thumbnail switching for multi-post markers
+
