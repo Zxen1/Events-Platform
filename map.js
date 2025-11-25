@@ -1,7 +1,7 @@
+/*
 // ============================================================================
 // OLD DOM MARKER CODE - Commented out, kept for reference
 // ============================================================================
-/*
 (function() {
   'use strict';
 
@@ -604,12 +604,10 @@
   window.initDomMarkers = initDomMarkers;
 
 })();
-*/
 
 // ============================================================================
 // OLD SPRITE MARKER CODE - Commented out, kept for reference
 // ============================================================================
-/*
 async function initSpriteMarkers(map, postsData, options = {}) {
   if(!map || !postsData) return;
   
@@ -860,4 +858,3 @@ async function initSpriteMarkers(map, postsData, options = {}) {
 // Export to window
 window.initSpriteMarkers = initSpriteMarkers;
 */
-
