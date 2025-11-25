@@ -163,36 +163,21 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   // Filter: exclude cluster points, but don't require title (some features might not have it)
   const markerIconFilter = ['!',['has','point_count']];
   
-  // Icon image expression: use thumbnail if hovered/active, otherwise use icon
-  // Note: If thumbnail sprite doesn't exist yet, Mapbox will fall back gracefully
-  // Use string literal directly for fallback icon ID
+  // Start with SIMPLE expression - just use the icon, no thumbnails yet
+  // This ensures basic markers work first
   const markerIconImageExpression = [
-    'let', 'postId', ['get', 'id'],
-    'let', 'isHovered', ['boolean', ['feature-state', 'isHovered'], false],
-    'let', 'isActive', ['boolean', ['feature-state', 'isActive'], false],
-    'let', 'isPostOpen', ['boolean', ['feature-state', 'isPostOpen'], false],
-    'let', 'showThumbnail', ['any', ['var', 'isHovered'], ['var', 'isActive'], ['var', 'isPostOpen']],
-    'let', 'iconId', ['coalesce', ['get','sub'], MULTI_POST_MARKER_ICON_ID], // Variable will be evaluated to string
-    'let', 'thumbSpriteId', ['concat', 'marker-thumb-', ['to-string', ['var', 'postId']]],
-    ['case',
-      ['var', 'showThumbnail'],
-      ['var', 'thumbSpriteId'],
-      ['var', 'iconId']
-    ]
+    'coalesce',
+    ['get', 'sub'],
+    MULTI_POST_MARKER_ICON_ID
   ];
   
-  console.log('[Sprite Markers] Icon image expression:', JSON.stringify(markerIconImageExpression));
+  console.log('[Sprite Markers] Icon image expression (simplified):', JSON.stringify(markerIconImageExpression));
+  console.log('[Sprite Markers] Available sprites:', Array.from(markerIconIds).map(id => ({ id, hasImage: map.hasImage(id) })));
   
-  // Icon size expression: 1.67x (50px) when active/open, 1x (30px) otherwise
-  const markerIconSizeExpression = [
-    'let', 'isActive', ['boolean', ['feature-state', 'isActive'], false],
-    'let', 'isPostOpen', ['boolean', ['feature-state', 'isPostOpen'], false],
-    ['case',
-      ['any', ['var', 'isActive'], ['var', 'isPostOpen']],
-      activeIconSize,
-      baseIconSize
-    ]
-  ];
+  // Start with SIMPLE size - just 1 (30px), no animations yet
+  const markerIconSizeExpression = baseIconSize;
+  
+  console.log('[Sprite Markers] Icon size:', markerIconSizeExpression);
   
   const markerIconLayerId = 'marker-icon';
   
@@ -225,7 +210,13 @@ async function initSpriteMarkers(map, postsData, options = {}) {
     }
     
     const featureCount = postsData.features ? postsData.features.length : 0;
-    console.log('[Sprite Markers] Creating marker-icon layer with', featureCount, 'features');
+    const nonClusterFeatures = postsData.features ? postsData.features.filter(f => !f.properties?.point_count) : [];
+    console.log('[Sprite Markers] Creating marker-icon layer with', featureCount, 'total features,', nonClusterFeatures.length, 'non-cluster features');
+    console.log('[Sprite Markers] Current zoom:', map.getZoom(), 'Min zoom required:', MARKER_MIN_ZOOM);
+    console.log('[Sprite Markers] Sample feature:', nonClusterFeatures[0] ? {
+      id: nonClusterFeatures[0].id,
+      properties: { sub: nonClusterFeatures[0].properties?.sub, id: nonClusterFeatures[0].properties?.id }
+    } : 'none');
     
     map.addLayer({
       id: markerIconLayerId,
@@ -249,6 +240,19 @@ async function initSpriteMarkers(map, postsData, options = {}) {
         'icon-opacity': 1
       }
     });
+    
+    // Verify layer was created
+    const createdLayer = map.getLayer(markerIconLayerId);
+    if(!createdLayer){
+      console.error('[Sprite Markers] Layer was not created!');
+      map._spriteMarkersInitializing = false;
+      return;
+    }
+    
+    // Check layer visibility
+    const layerVisibility = map.getLayoutProperty(markerIconLayerId, 'visibility');
+    const layerOpacity = map.getPaintProperty(markerIconLayerId, 'icon-opacity');
+    console.log('[Sprite Markers] Layer visibility:', layerVisibility, 'opacity:', layerOpacity);
     
     // Add smooth transitions for icon-size changes (300ms like DOM version)
     map.setPaintProperty(markerIconLayerId, 'icon-size-transition', {
