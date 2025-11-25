@@ -1,12 +1,7 @@
 // ============================================================================
 // OLD DOM MARKER CODE - Commented out, kept for reference
 // ============================================================================
-/**
- * DOM-Based Map Markers
- * Handles creation, positioning, and interaction of DOM markers on the map
- * COMMENTED OUT - Returning to sprite system
- */
-
+/*
 (function() {
   'use strict';
 
@@ -17,7 +12,6 @@
    * @param {Object} postsData - GeoJSON feature collection with post data
    * @param {Object} options - Configuration options
    */
-  /*
   function initDomMarkers(map, postsData, options = {}) {
     if(!map || !postsData) return;
 
@@ -610,9 +604,10 @@
 
   // Export to window
   window.initDomMarkers = initDomMarkers;
-  */
+}
 
 })();
+*/
 
 // ============================================================================
 // OLD SPRITE MARKER CODE - Commented out, kept for reference
