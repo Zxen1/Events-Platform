@@ -5,13 +5,11 @@
 (function() {
   'use strict';
 
-  /**
-   * Initialize DOM markers for the map
-   * COMMENTED OUT - Returning to sprite system
-   * @param {Object} map - Mapbox map instance
-   * @param {Object} postsData - GeoJSON feature collection with post data
-   * @param {Object} options - Configuration options
-   */
+  // Initialize DOM markers for the map
+  // COMMENTED OUT - Returning to sprite system
+  // @param {Object} map - Mapbox map instance
+  // @param {Object} postsData - GeoJSON feature collection with post data
+  // @param {Object} options - Configuration options
   function initDomMarkers(map, postsData, options = {}) {
     if(!map || !postsData) return;
 
