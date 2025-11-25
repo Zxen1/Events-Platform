@@ -20,38 +20,37 @@
     const THUMBNAIL_SIZE_HOVER = 30;
     const THUMBNAIL_SIZE_ACTIVE = 50;
     
-    // Track preloaded state
-    let iconsPreloaded = false;
-    let thumbnailsCache = new Map(); // Cache loaded thumbnails
-    
-    /**
-     * Load an image and return as ImageData for Mapbox
-     */
-    function loadImageForMapbox(url, size) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            if(ctx) {
-              ctx.drawImage(img, 0, 0, size, size);
-              const imageData = ctx.getImageData(0, 0, size, size);
-              resolve(imageData);
-            } else {
-              reject(new Error('Could not get canvas context'));
-            }
-          } catch(e) {
-            reject(e);
-          }
-        };
-        img.onerror = () => reject(new Error('Failed to load image: ' + url));
-        img.src = url;
-      });
+    // Track preloaded state (use window to persist across multiple calls)
+    if(!window._mapmarkerIconsPreloaded) {
+      window._mapmarkerIconsPreloaded = false;
     }
+    let iconsPreloaded = window._mapmarkerIconsPreloaded;
+    // Thumbnails are cached in Mapbox via map.addImage() - no separate cache needed
+    
+    // Use existing functions from index.js (same as old working code)
+    const loadMarkerLabelImage = window.loadMarkerLabelImage || function(url) {
+      return new Promise((resolve, reject) => {
+        if(!url) {
+          reject(new Error('Missing URL'));
+          return;
+        }
+        const img = new Image();
+        try { img.crossOrigin = 'anonymous'; } catch(err) {}
+        img.decoding = 'async';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load ${url}`));
+        img.src = url;
+        if(img.complete) {
+          setTimeout(() => {
+            if(img.naturalWidth > 0 && img.naturalHeight > 0) {
+              resolve(img);
+            }
+          }, 0);
+        }
+      });
+    };
+    
+    const ensureMapIcon = window.ensureMapIcon || null;
 
     /**
      * Preload marker icons when zoom >= 8 for first time
@@ -65,6 +64,7 @@
       // Don't check zoom - always preload icons when function is called
       // The minzoom on layers will handle visibility
       iconsPreloaded = true;
+      window._mapmarkerIconsPreloaded = true;
       console.log('[Mapmarker] Starting icon preload...');
       
       // Collect all unique icon IDs needed
@@ -79,19 +79,48 @@
       }
       iconIds.add(MULTI_POST_MARKER_ICON_ID);
       
-      // Preload all icons
+      console.log('[Mapmarker] Icon IDs needed:', Array.from(iconIds));
+      console.log('[Mapmarker] subcategoryMarkers keys:', Object.keys(subcategoryMarkers));
+      console.log('[Mapmarker] subcategoryMarkers object:', subcategoryMarkers);
+      
+      // Use ensureMapIcon first (same as old working code)
+      if(typeof ensureMapIcon === 'function') {
+        await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(() => {})));
+      }
+      
+      // Preload all icons (same approach as old working code)
       const preloadPromises = [];
       for(const iconId of iconIds) {
         const iconUrl = subcategoryMarkers[iconId];
         if(iconUrl && !map.hasImage(iconId)) {
           preloadPromises.push(
-            loadImageForMapbox(iconUrl, ICON_SIZE)
-              .then(imageData => {
-                try {
-                  map.addImage(iconId, imageData);
-                  console.log('[Mapmarker] Icon loaded:', iconId);
-                } catch(e) {
-                  console.warn('[Mapmarker] Failed to add icon to map:', iconId, e);
+            loadMarkerLabelImage(iconUrl)
+              .then(img => {
+                if(img) {
+                  // Use devicePixelRatio like old code
+                  let deviceScale = 2;
+                  try {
+                    const ratio = window.devicePixelRatio;
+                    if(Number.isFinite(ratio) && ratio > 0) {
+                      deviceScale = ratio;
+                    }
+                  } catch(err) {
+                    deviceScale = 2;
+                  }
+                  if(!Number.isFinite(deviceScale) || deviceScale <= 0) {
+                    deviceScale = 2;
+                  }
+                  const iconSize = Math.round(ICON_SIZE * deviceScale);
+                  const canvas = document.createElement('canvas');
+                  canvas.width = iconSize;
+                  canvas.height = iconSize;
+                  const ctx = canvas.getContext('2d');
+                  if(ctx) {
+                    ctx.drawImage(img, 0, 0, iconSize, iconSize);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+                    console.log('[Mapmarker] Icon loaded:', iconId, 'from URL:', iconUrl);
+                  }
                 }
               })
               .catch(e => {
@@ -100,6 +129,8 @@
           );
         } else if(!iconUrl) {
           console.warn('[Mapmarker] No URL found for icon:', iconId, 'Available icons:', Object.keys(subcategoryMarkers));
+        } else {
+          console.log('[Mapmarker] Icon already exists in map:', iconId);
         }
       }
       
@@ -109,14 +140,16 @@
 
     /**
      * Load thumbnail for a post (lazy loading)
+     * Uses map.addImage() caching - once loaded, instant for all subsequent uses
      */
     async function mapmarkerLoadThumbnail(postId, featureId) {
       if(!postId) return null;
       
-      // Check cache first
-      const cacheKey = `thumb-${postId}`;
-      if(thumbnailsCache.has(cacheKey)) {
-        return thumbnailsCache.get(cacheKey);
+      const imageId = `thumb-${postId}`;
+      
+      // Check if already cached in Mapbox (instant - no reload needed)
+      if(map.hasImage(imageId)) {
+        return imageId;
       }
       
       // Get thumbnail URL using picsum CDN (temporary)
@@ -125,21 +158,40 @@
       if(!thumbnailUrl) return null;
       
       try {
-        const imageData = await loadImageForMapbox(thumbnailUrl, 50); // Load at 50x50
-        const imageId = `thumb-${postId}`;
-        
-        // Add to map if not already added
-        if(!map.hasImage(imageId)) {
-          map.addImage(imageId, imageData);
+        // Load image using same function as icons
+        const img = await loadMarkerLabelImage(thumbnailUrl);
+        if(img) {
+          // Use devicePixelRatio for retina displays
+          let deviceScale = 2;
+          try {
+            const ratio = window.devicePixelRatio;
+            if(Number.isFinite(ratio) && ratio > 0) {
+              deviceScale = ratio;
+            }
+          } catch(err) {
+            deviceScale = 2;
+          }
+          if(!Number.isFinite(deviceScale) || deviceScale <= 0) {
+            deviceScale = 2;
+          }
+          const thumbSize = 50; // Thumbnails are 50x50
+          const canvasSize = Math.round(thumbSize * deviceScale);
+          const canvas = document.createElement('canvas');
+          canvas.width = canvasSize;
+          canvas.height = canvasSize;
+          const ctx = canvas.getContext('2d');
+          if(ctx) {
+            ctx.drawImage(img, 0, 0, canvasSize, canvasSize);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            // Cache in Mapbox - instant for all subsequent uses
+            map.addImage(imageId, imageData, { pixelRatio: deviceScale });
+            return imageId;
+          }
         }
-        
-        // Cache it
-        thumbnailsCache.set(cacheKey, imageId);
-        return imageId;
       } catch(e) {
         console.warn('[Mapmarker] Failed to load thumbnail for post:', postId, e);
-        return null;
       }
+      return null;
     }
 
     /**
