@@ -1630,15 +1630,14 @@ let __notifyMapOnInteraction = null;
       // Right side: 100px + label width
       const scaledPillLeftOffset = markerLabelPillLeftOffsetPx * deviceScale;
       const scaledTextLeftOffset = markerLabelTextLeftOffsetPx * deviceScale;
-      // Canvas: EXACTLY 225x60px as ordered
-      const canvasWidth = 225;
-      const canvasHeight = 60;
-      // Anchor point: 30px from left, vertically centered (30px from top)
-      const centerX = 30;
-      const centerY = 30;
+      const leftSide = Math.abs(scaledPillLeftOffset) + pillWidth; // scaled offset + pill width
+      const rightSide = scaledTextLeftOffset + labelWidth; // scaled offset + label width
+      const canvasWidth = leftSide + rightSide;
+      const canvasHeight = Math.max(pillHeight, labelHeight);
+      const centerX = leftSide; // Anchor point (lat/lng) at center
       
       const canvas = document.createElement('canvas');
-      // Set canvas to exact 225x60px dimensions
+      // Set canvas to actual scaled pixel dimensions for real size rendering
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
       const ctx = canvas.getContext('2d');
@@ -1647,10 +1646,9 @@ let __notifyMapOnInteraction = null;
       }
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       
-      // Draw pill: positioned relative to anchor at (30, 30)
-      // Pill is 150px wide, positioned 20px left of anchor, so: 30 - 20 = 10px from left
-      const pillX = centerX + scaledPillLeftOffset; // 30 + (-20) = 10px
-      const pillY = Math.round((canvasHeight - pillHeight) / 2); // Vertically centered
+      // Draw pill: left edge at centerX - scaled offset
+      const pillX = centerX + scaledPillLeftOffset;
+      const pillY = Math.round((canvasHeight - pillHeight) / 2);
       try{
         drawMarkerLabelComposite(ctx, backgroundImage, pillX, pillY, pillWidth, pillHeight);
       }catch(err){
@@ -1665,7 +1663,7 @@ let __notifyMapOnInteraction = null;
         ctx.globalCompositeOperation = 'source-over';
       }
       
-      // Draw label: positioned to right of pill within 225px canvas
+      // Draw label: left edge at centerX + 100 (100px right of anchor)
       if(labelLines.length){
         const fontSizePx = markerLabelTextSize * pixelRatio;
         const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
@@ -1674,7 +1672,7 @@ let __notifyMapOnInteraction = null;
         if(!Number.isFinite(textY) || textY < 0){
           textY = 0;
         }
-        const textX = centerX + scaledTextLeftOffset; // 30 + 20 = 50px from left
+        const textX = centerX + scaledTextLeftOffset;
         try{
           ctx.imageSmoothingEnabled = true;
           if('imageSmoothingQuality' in ctx){
@@ -2549,7 +2547,7 @@ let __notifyMapOnInteraction = null;
                       window.updateMapCardLayerOpacity(mapCardDisplay);
                     }
                     
-                    // Update hover handlers - use marker-icon and marker-label (pill area)
+                    // Update hover handlers - always use marker-icon only for precise hover zone
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
                       // Remove old hover handlers from all possible layers
@@ -2558,20 +2556,13 @@ let __notifyMapOnInteraction = null;
                         try {
                           mapInstance.off('mouseenter', layer, window.handleMarkerHover);
                           mapInstance.off('mouseleave', layer, window.handleMarkerHoverEnd);
-                          mapInstance.off('mousemove', layer, window.handleMapMouseMove);
                         } catch(e) {}
                       });
                       
-                      // Use marker-icon and marker-label for hover (marker-label includes pill area)
+                      // Always use marker-icon only for precise hover zone (avoids huge composite sprite)
                       try {
                         mapInstance.on('mouseenter', 'marker-icon', window.handleMarkerHover);
                         mapInstance.on('mouseleave', 'marker-icon', window.handleMarkerHoverEnd);
-                        mapInstance.on('mouseenter', 'marker-label', window.handleMarkerHover);
-                        mapInstance.on('mouseleave', 'marker-label', window.handleMarkerHoverEnd);
-                        if(typeof window.handleMapMouseMove === 'function'){
-                          mapInstance.on('mousemove', 'marker-icon', window.handleMapMouseMove);
-                          mapInstance.on('mousemove', 'marker-label', window.handleMapMouseMove);
-                        }
                       } catch(e) {}
                     }
                     
@@ -19368,10 +19359,6 @@ function makePosts(){
         existing.setData(postsData);
         existing.__markerSignature = signature;
       }
-      // ============================================================================
-      // SPRITE CODE COMMENTED OUT - USING DOM MARKERS INSTEAD
-      // ============================================================================
-      /*
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
@@ -19477,7 +19464,6 @@ function makePosts(){
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
-                'icon-offset': [-82.5, 0], // Offset to position anchor at 30px from left (center of 225px is 112.5px, so -82.5px moves it to 30px)
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -19502,7 +19488,6 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-offset',[-82.5, 0]); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
@@ -19610,26 +19595,8 @@ function makePosts(){
       }
       
       refreshInViewMarkerLabelComposites(map);
-      */
-      
-      // ============================================================================
-      // SPRITE-BASED MAP MARKERS - Initialized via map.js
-      // ============================================================================
-      window.getMapInstance = () => map; // Expose map instance getter
-      
-      // Initialize sprite markers if function is available
-      if(typeof window.initSpriteMarkers === 'function'){
-        window.initSpriteMarkers(map, postsData, {
-          minZoom: MARKER_ZOOM_THRESHOLD,
-          multiPostIconId: MULTI_POST_MARKER_ICON_ID,
-          subcategoryMarkers: subcategoryMarkers
-        });
-      }
       if(!postSourceEventsBound){
-        // ============================================================================
-        // SPRITE LAYER CLICK HANDLERS COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
-        // ============================================================================
-        /*
+
         const handleMarkerClick = (e)=>{
           stopSpin();
           const f = e.features && e.features[0]; if(!f) return;
@@ -19741,13 +19708,7 @@ function makePosts(){
             }
           }
         };
-      */
-      // ============================================================================
-      // SPRITE LAYER CLICK HANDLERS COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
-      // ============================================================================
       // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
-      // COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
-      /*
       const attachClickHandlers = () => {
         // Remove old handlers from all possible layers
         const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
@@ -19766,7 +19727,6 @@ function makePosts(){
       attachClickHandlers();
       // Expose globally so handlers can be updated when mapCardDisplay changes
       window.attachClickHandlers = attachClickHandlers;
-      */
 
       // Function to update mapcard click and post-open states
       function updateMapCardStates(){
@@ -19880,10 +19840,6 @@ function makePosts(){
       // Expose globally so handlers can be updated when mapCardDisplay changes
       window.attachCursorHandlers = attachCursorHandlers;
 
-      // ============================================================================
-      // SPRITE HOVER HANDLERS COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
-      // ============================================================================
-      /*
       // Handle hover/tap to show accent pill
       // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
       // Only uses marker-icon layer for precise hover zone (avoids huge composite sprite hit area)
@@ -19900,68 +19856,28 @@ function makePosts(){
           hoverCheckTimeout = null;
         }
         
-        // Query what's under the cursor - check both marker-icon and marker-label (pill area)
+        // Query what's under the cursor
         const features = map.queryRenderedFeatures(point, {
-          layers: ['marker-icon', 'marker-label']
+          layers: ['marker-icon']
         });
         
         if(features.length > 0){
-          // Check marker-icon first (most precise), then marker-label (pill area)
-          let targetFeature = null;
-          for(const f of features){
-            if(f.layer && f.layer.id === 'marker-icon'){
-              targetFeature = f;
-              break;
-            }
-          }
-          // If no marker-icon, check if we're over marker-label (pill area)
-          if(!targetFeature){
-            for(const f of features){
-              if(f.layer && f.layer.id === 'marker-label'){
-                // Verify we're in the pill area (exact 150x40px area, not label text area)
-                // Pill is 150px wide x 40px high, positioned 20px left of center
-                const featureCenter = f.geometry && f.geometry.coordinates ? 
-                  map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]) : null;
-                if(featureCenter){
-                  const dx = point.x - featureCenter.x;
-                  const dy = point.y - featureCenter.y;
-                  
-                  // Pill bounds: 150px wide (from -20px to +130px from lat/lng center), 40px high (vertically centered)
-                  const pillLeft = -20;
-                  const pillRight = 130; // -20 + 150
-                  const pillTop = -20; // 40px height / 2
-                  const pillBottom = 20; // 40px height / 2
-                  
-                  // Only accept if cursor is within the exact 150x40 pill area
-                  if(dx >= pillLeft && dx <= pillRight && dy >= pillTop && dy <= pillBottom){
-                    targetFeature = f;
-                    break;
-                  }
-                } else {
-                  // No geometry info, skip (can't verify pill area)
-                  continue;
-                }
-              }
-            }
-          }
+          const f = features[0];
+          const props = f.properties || {};
+          const id = props.id;
+          const venueKey = props.venueKey || null;
           
-          if(targetFeature){
-            const props = targetFeature.properties || {};
-            const id = props.id;
-            const venueKey = props.venueKey || null;
-            
-            if(id !== undefined && id !== null && String(id) !== currentHoveredId){
-              currentHoveredId = String(id);
-              hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-              updateSelectedMarkerRing();
-            }
+          if(id !== undefined && id !== null && String(id) !== currentHoveredId){
+            currentHoveredId = String(id);
+            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+            updateSelectedMarkerRing();
           }
         } else {
           // Not over any marker - clear hover after a short delay
           hoverCheckTimeout = setTimeout(() => {
             // Double-check we're still not over a marker
             const recheckFeatures = map.queryRenderedFeatures(point, {
-              layers: ['marker-icon', 'marker-label']
+              layers: ['marker-icon']
             });
             if(recheckFeatures.length === 0){
               currentHoveredId = null;
@@ -19982,26 +19898,6 @@ function makePosts(){
         
         const f = e.features && e.features[0];
         if(!f) return;
-        
-        // If hovering on marker-label, verify we're in the 150x40px pill area only (not label text area)
-        // Pill is 150px wide x 40px high, positioned 20px left of center
-        if(e.layer && e.layer.id === 'marker-label' && e.point && f.geometry && f.geometry.coordinates){
-          const featureCenter = map.project([f.geometry.coordinates[0], f.geometry.coordinates[1]]);
-          const dx = e.point.x - featureCenter.x;
-          const dy = e.point.y - featureCenter.y;
-          
-          // Pill bounds: 150px wide (from -20px to +130px from center), 40px high (from -20px to +20px from center)
-          const pillLeft = -20;
-          const pillRight = 130; // -20 + 150
-          const pillTop = -20;
-          const pillBottom = 20; // -20 + 40
-          
-          // Only trigger if cursor is within the exact 150x40px pill area
-          if(dx < pillLeft || dx > pillRight || dy < pillTop || dy > pillBottom){
-            return; // Not in pill area, ignore
-          }
-        }
-        
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
@@ -20036,26 +19932,17 @@ function makePosts(){
       };
       
       // Expose hover handlers globally so they can be updated when mapCardDisplay changes
-      // COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
-      /*
       window.handleMarkerHover = handleMarkerHover;
       window.handleMarkerHoverEnd = handleMarkerHoverEnd;
-      window.handleMapMouseMove = handleMapMouseMove;
-      */
 
-      // Add hover handlers - marker-icon for icon, marker-label for pill area
-      // marker-icon is a small icon (30px) - precise hover zone
-      // marker-label includes pill area - we check if cursor is in pill portion (not label text)
-      // COMMENTED OUT - USING DOM MARKER HANDLERS INSTEAD
-      /*
+      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
+      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
+      // marker-label composite sprite is huge (500px+) and causes 200px+ hover zones on each side
+      // Using only marker-icon ensures hover works reliably and precisely
       map.on('mouseenter', 'marker-icon', handleMarkerHover);
       map.on('mouseleave', 'marker-icon', handleMarkerHoverEnd);
-      map.on('mouseenter', 'marker-label', handleMarkerHover);
-      map.on('mouseleave', 'marker-label', handleMarkerHoverEnd);
       // Track mousemove to catch smooth transitions between markers
       map.on('mousemove', 'marker-icon', handleMapMouseMove);
-      map.on('mousemove', 'marker-label', handleMapMouseMove);
-      */
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
@@ -22274,7 +22161,6 @@ function openPostModal(id){
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
-window.thumbUrl = thumbUrl; // Make available for map.js
 var __stableViewportHeight = (()=>{
   const initialInner = window.innerHeight || 0;
   const initialClient = document.documentElement ? document.documentElement.clientHeight : 0;
