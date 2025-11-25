@@ -4,6 +4,13 @@
 async function initSpriteMarkers(map, postsData, options = {}) {
   if(!map || !postsData) return;
   
+  // Prevent multiple simultaneous initializations
+  if(map._spriteMarkersInitializing){
+    console.log('[Sprite Markers] Already initializing, skipping...');
+    return;
+  }
+  map._spriteMarkersInitializing = true;
+  
   const MARKER_MIN_ZOOM = options.minZoom || 8;
   const MULTI_POST_MARKER_ICON_ID = options.multiPostIconId || 'multi-post-icon';
   const subcategoryMarkers = options.subcategoryMarkers || window.subcategoryMarkers || {};
@@ -153,10 +160,8 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   console.log('[Sprite Markers] Loaded', loadedIconCount, 'icon sprites');
   
   // Create marker-icon layer with dynamic size and image switching
-  const markerIconFilter = ['all',
-    ['!',['has','point_count']],
-    ['has','title']
-  ];
+  // Filter: exclude cluster points, but don't require title (some features might not have it)
+  const markerIconFilter = ['!',['has','point_count']];
   
   // Icon image expression: use thumbnail if hovered/active, otherwise use icon
   // Note: If thumbnail sprite doesn't exist yet, Mapbox will fall back gracefully
@@ -191,11 +196,23 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   
   const markerIconLayerId = 'marker-icon';
   
-  // Remove existing layer if it exists
+  // Only create layer if it doesn't exist - don't remove/recreate on every call
   if(map.getLayer(markerIconLayerId)){
+    console.log('[Sprite Markers] Layer already exists, updating filter and properties');
     try{
-      map.removeLayer(markerIconLayerId);
-    }catch(e){}
+      // Update filter and properties without recreating
+      map.setFilter(markerIconLayerId, markerIconFilter);
+      map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+      map.setLayoutProperty(markerIconLayerId, 'icon-size', markerIconSizeExpression);
+      map._spriteMarkersInitializing = false;
+      return; // Layer already exists, just update it
+    }catch(e){
+      console.warn('[Sprite Markers] Failed to update existing layer:', e);
+      // If update fails, remove and recreate
+      try{
+        map.removeLayer(markerIconLayerId);
+      }catch(e2){}
+    }
   }
   
   // Create new marker-icon layer
@@ -416,6 +433,9 @@ async function initSpriteMarkers(map, postsData, options = {}) {
   // Store functions globally for cleanup/access
   window.updateSpriteMarkerState = updateMarkerState;
   window.loadThumbnailSprite = loadThumbnailSprite;
+  
+  // Clear initialization flag
+  map._spriteMarkersInitializing = false;
 }
 
 // Export to window
