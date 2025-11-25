@@ -19617,8 +19617,17 @@ function makePosts(){
       // ============================================================================
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Initialize sprite markers if function is available
-      if(typeof window.initSpriteMarkers === 'function'){
+      // Initialize map markers if function is available
+      if(typeof window.mapmarkerInit === 'function'){
+        window.mapmarkerInit(map, postsData, {
+          minZoom: MARKER_ZOOM_THRESHOLD,
+          multiPostIconId: MULTI_POST_MARKER_ICON_ID,
+          subcategoryMarkers: subcategoryMarkers
+        }).catch(err => {
+          console.error('[Mapmarker] Error initializing markers:', err);
+        });
+      } else if(typeof window.initSpriteMarkers === 'function'){
+        // Fallback to old function if new one doesn't exist
         window.initSpriteMarkers(map, postsData, {
           minZoom: MARKER_ZOOM_THRESHOLD,
           multiPostIconId: MULTI_POST_MARKER_ICON_ID,

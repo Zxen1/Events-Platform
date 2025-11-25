@@ -86,18 +86,22 @@
               .then(imageData => {
                 try {
                   map.addImage(iconId, imageData);
+                  console.log('[Mapmarker] Icon loaded:', iconId);
                 } catch(e) {
                   console.warn('[Mapmarker] Failed to add icon to map:', iconId, e);
                 }
               })
               .catch(e => {
-                console.warn('[Mapmarker] Failed to preload icon:', iconId, e);
+                console.warn('[Mapmarker] Failed to preload icon:', iconId, 'URL:', iconUrl, e);
               })
           );
+        } else if(!iconUrl) {
+          console.warn('[Mapmarker] No URL found for icon:', iconId, 'Available icons:', Object.keys(subcategoryMarkers));
         }
       }
       
       await Promise.all(preloadPromises);
+      console.log('[Mapmarker] Icon preloading complete. Loaded', preloadPromises.length, 'icons');
     }
 
     /**
@@ -167,6 +171,12 @@
      * Setup marker layers
      */
     function mapmarkerSetupLayers() {
+      // Check if source exists
+      if(!map.getSource('posts')) {
+        console.warn('[Mapmarker] Source "posts" does not exist. Layers cannot be created.');
+        return;
+      }
+
       const markerFilter = ['all',
         ['!', ['has', 'point_count']],
         ['has', 'title']
@@ -175,42 +185,55 @@
       // Icon layer - always shows subcategory icons (or multi-post icon)
       const iconLayerId = 'mapmarker-icon';
       if(!map.getLayer(iconLayerId)) {
-        map.addLayer({
-          id: iconLayerId,
-          type: 'symbol',
-          source: 'posts',
-          filter: markerFilter,
-          minzoom: MARKER_MIN_ZOOM,
-          layout: {
-            'icon-image': ['let', 'iconId', ['coalesce', ['get', 'sub'], ''],
-              ['case',
-                ['==', ['var', 'iconId'], ''],
-                MULTI_POST_MARKER_ICON_ID,
-                ['var', 'iconId']
+        try {
+          map.addLayer({
+            id: iconLayerId,
+            type: 'symbol',
+            source: 'posts',
+            filter: markerFilter,
+            minzoom: MARKER_MIN_ZOOM,
+            layout: {
+              'icon-image': ['let', 'iconId', ['coalesce', ['get', 'sub'], ''],
+                ['case',
+                  ['==', ['var', 'iconId'], ''],
+                  MULTI_POST_MARKER_ICON_ID,
+                  ['var', 'iconId']
+                ]
+              ],
+              'icon-size': [
+                'case',
+                ['boolean', ['feature-state', 'isActive'], false],
+                50 / ICON_SIZE, // 50px when active (1.67x)
+                30 / ICON_SIZE  // 30px default (1x)
+              ],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'center',
+              'icon-pitch-alignment': 'viewport',
+              'symbol-z-order': 'viewport-y',
+              'symbol-sort-key': 25
+            },
+            paint: {
+              'icon-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'showThumbnail'], false],
+                0, // Hide icon when thumbnail is shown
+                1  // Show icon otherwise
               ]
-            ],
-            'icon-size': [
-              'case',
-              ['boolean', ['feature-state', 'isActive'], false],
-              50 / ICON_SIZE, // 50px when active
-              30 / ICON_SIZE  // 30px default
-            ],
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-            'icon-anchor': 'center',
-            'icon-pitch-alignment': 'viewport',
-            'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 25
-          },
-          paint: {
-            'icon-opacity': [
-              'case',
-              ['boolean', ['feature-state', 'showThumbnail'], false],
-              0, // Hide icon when thumbnail is shown
-              1  // Show icon otherwise
-            ]
-          }
-        });
+            }
+          });
+          console.log('[Mapmarker] Icon layer created:', iconLayerId);
+        } catch(e) {
+          console.error('[Mapmarker] Failed to create icon layer:', e);
+        }
+      } else {
+        // Update existing layer
+        try {
+          map.setFilter(iconLayerId, markerFilter);
+          console.log('[Mapmarker] Icon layer updated:', iconLayerId);
+        } catch(e) {
+          console.warn('[Mapmarker] Failed to update icon layer:', e);
+        }
       }
 
       // Thumbnail layer - shows thumbnails on hover/click (only for single posts)
@@ -222,41 +245,49 @@
       ];
       
       if(!map.getLayer(thumbnailLayerId)) {
-        map.addLayer({
-          id: thumbnailLayerId,
-          type: 'symbol',
-          source: 'posts',
-          filter: thumbnailFilter,
-          minzoom: MARKER_MIN_ZOOM,
-          layout: {
-            'icon-image': ['coalesce', ['get', 'thumbnailImageId'], ''],
-            'icon-size': [
-              'case',
-              ['boolean', ['feature-state', 'isActive'], false],
-              THUMBNAIL_SIZE_ACTIVE / 50, // 50px when active
-              THUMBNAIL_SIZE_HOVER / 50    // 30px when hovered
-            ],
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-            'icon-anchor': 'center',
-            'icon-pitch-alignment': 'viewport',
-            'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 30
-          },
-          paint: {
-            'icon-opacity': [
-              'case',
-              ['boolean', ['feature-state', 'showThumbnail'], false],
-              1, // Show thumbnail when state says so
-              0  // Hide otherwise
-            ]
-          }
-        });
+        try {
+          map.addLayer({
+            id: thumbnailLayerId,
+            type: 'symbol',
+            source: 'posts',
+            filter: thumbnailFilter,
+            minzoom: MARKER_MIN_ZOOM,
+            layout: {
+              'icon-image': ['coalesce', ['get', 'thumbnailImageId'], ''],
+              'icon-size': [
+                'case',
+                ['boolean', ['feature-state', 'isActive'], false],
+                THUMBNAIL_SIZE_ACTIVE / 50, // 50px when active (1x, since thumbnails are 50x50)
+                THUMBNAIL_SIZE_HOVER / 50    // 30px when hovered (0.6x)
+              ],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'center',
+              'icon-pitch-alignment': 'viewport',
+              'symbol-z-order': 'viewport-y',
+              'symbol-sort-key': 30
+            },
+            paint: {
+              'icon-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'showThumbnail'], false],
+                1, // Show thumbnail when state says so
+                0  // Hide otherwise
+              ]
+            }
+          });
+          console.log('[Mapmarker] Thumbnail layer created:', thumbnailLayerId);
+        } catch(e) {
+          console.error('[Mapmarker] Failed to create thumbnail layer:', e);
+        }
       } else {
         // Update filter if layer exists
         try {
           map.setFilter(thumbnailLayerId, thumbnailFilter);
-        } catch(e) {}
+          console.log('[Mapmarker] Thumbnail layer updated:', thumbnailLayerId);
+        } catch(e) {
+          console.warn('[Mapmarker] Failed to update thumbnail layer:', e);
+        }
       }
     }
 
@@ -449,19 +480,40 @@
       });
     }
 
+    // Wait for map to be ready before setting up layers
+    function waitForMapReady() {
+      return new Promise((resolve) => {
+        if(map.loaded()) {
+          resolve();
+        } else {
+          map.once('load', resolve);
+        }
+      });
+    }
+
     // Preload icons when zoom reaches threshold
-    map.on('zoom', () => {
+    const zoomHandler = () => {
       if(!iconsPreloaded) {
         mapmarkerPreloadIcons();
       }
-    });
+    };
+    map.on('zoom', zoomHandler);
 
-    // Initial preload check
+    // Wait for map to be ready, then preload icons and setup layers
+    await waitForMapReady();
+    
+    // Initial preload check - preload icons first before creating layers
     if(map.getZoom() >= MARKER_MIN_ZOOM) {
       await mapmarkerPreloadIcons();
+    } else {
+      // If zoom is too low, still preload icons (they'll be used when zoom increases)
+      // But don't await - let it happen in background
+      mapmarkerPreloadIcons().catch(e => {
+        console.warn('[Mapmarker] Error preloading icons:', e);
+      });
     }
 
-    // Setup layers
+    // Setup layers (icons should be loaded by now, or will load soon)
     mapmarkerSetupLayers();
 
     // Setup interactions
