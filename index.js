@@ -1829,30 +1829,46 @@ let __notifyMapOnInteraction = null;
     // New separate sprite system
     if(id === SPRITE_SMALL_PILL_BASE_ID){
       const sprites = await ensureMarkerLabelPillSprites();
+      if(!sprites || !sprites.smallBase){
+        console.error(`SPRITE_SMALL_PILL_BASE_ID sprite not available`);
+        return null;
+      }
       return sprites.smallBase;
     }
     if(id === SPRITE_SMALL_PILL_ACCENT_ID){
       const sprites = await ensureMarkerLabelPillSprites();
+      if(!sprites || !sprites.smallAccent){
+        console.error(`SPRITE_SMALL_PILL_ACCENT_ID sprite not available`);
+        return null;
+      }
       return sprites.smallAccent;
     }
     if(id === SPRITE_BIG_PILL_ID){
       const sprites = await ensureMarkerLabelPillSprites();
+      if(!sprites || !sprites.bigPill){
+        console.error(`SPRITE_BIG_PILL_ID sprite not available`);
+        return null;
+      }
       return sprites.bigPill;
     }
     if(id === SPRITE_MULTI_ICON_ID){
       const assets = await ensureMarkerLabelPillImage();
-      if(assets.multiPostIcon){
-        const iconSize = 50;
-        const canvas = document.createElement('canvas');
-        canvas.width = iconSize;
-        canvas.height = iconSize;
-        const ctx = canvas.getContext('2d');
-        if(ctx && assets.multiPostIcon){
-          ctx.drawImage(assets.multiPostIcon, 0, 0, iconSize, iconSize);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          return { image: imageData, options: { pixelRatio: 1 } };
-        }
+      if(!assets || !assets.multiPostIcon){
+        console.error(`SPRITE_MULTI_ICON_ID image not available`);
+        return null;
       }
+      const iconSize = 50;
+      const canvas = document.createElement('canvas');
+      canvas.width = iconSize;
+      canvas.height = iconSize;
+      const ctx = canvas.getContext('2d');
+      if(ctx && assets.multiPostIcon){
+        ctx.drawImage(assets.multiPostIcon, 0, 0, iconSize, iconSize);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        return { image: imageData, options: { pixelRatio: 1 } };
+      }
+      console.error(`SPRITE_MULTI_ICON_ID canvas context failed`);
+      return null;
     }
     // Legacy support
     if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
@@ -19496,6 +19512,40 @@ function makePosts(){
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
+      // Ensure sprite images are registered BEFORE creating layers
+      const spriteIdsToRegister = [
+        SPRITE_SMALL_PILL_BASE_ID,
+        SPRITE_SMALL_PILL_ACCENT_ID,
+        SPRITE_BIG_PILL_ID,
+        SPRITE_MULTI_ICON_ID
+      ];
+      for(const spriteId of spriteIdsToRegister){
+        if(!map.hasImage(spriteId)){
+          try{
+            const spriteData = await generateMarkerImageFromId(spriteId, map);
+            if(spriteData && spriteData.image){
+              map.addImage(spriteId, spriteData.image, spriteData.options || {});
+            } else {
+              console.warn(`Sprite ${spriteId} returned no image data`);
+            }
+          }catch(e){
+            console.error(`Failed to register sprite ${spriteId}:`, e);
+          }
+        }
+      }
+      
+      // Verify source exists and has data
+      const postsSource = map.getSource('posts');
+      if(!postsSource){
+        console.error('Posts source does not exist!');
+        return;
+      }
+      const sourceData = postsSource._data;
+      const featureCount = sourceData && sourceData.features ? sourceData.features.length : 0;
+      if(featureCount === 0){
+        console.warn('Posts source has no features');
+      }
+      
       // Base filter for single-post markers (not clusters)
       const singlePostFilter = ['all',
         ['!',['has','point_count']],
@@ -19514,24 +19564,6 @@ function makePosts(){
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-      
-      // Ensure sprite images are registered
-      const spriteIdsToRegister = [
-        SPRITE_SMALL_PILL_BASE_ID,
-        SPRITE_SMALL_PILL_ACCENT_ID,
-        SPRITE_BIG_PILL_ID,
-        SPRITE_MULTI_ICON_ID
-      ];
-      for(const spriteId of spriteIdsToRegister){
-        if(!map.hasImage(spriteId)){
-          try{
-            const spriteData = await generateMarkerImageFromId(spriteId, map);
-            if(spriteData && spriteData.image){
-              map.addImage(spriteId, spriteData.image, spriteData.options || {});
-            }
-          }catch(e){}
-        }
-      }
       
       // Helper function to create/update a layer
       // Pills and labels measured from left edge, icons from center
@@ -19602,6 +19634,10 @@ function makePosts(){
             }
             
             map.addLayer(layerConfig);
+            // Verify layer was created
+            if(!map.getLayer(id)){
+              console.error(`Layer ${id} was not created after addLayer call`);
+            }
           }catch(e){
             console.error(`Failed to create layer ${id}:`, e);
           }
@@ -19768,7 +19804,7 @@ function makePosts(){
       const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
         ['case',
           ['==', ['var','iconId'], ''],
-          SPRITE_MULTI_ICON_ID,
+          MULTI_POST_MARKER_ICON_ID, // Use the actual multi-post icon ID, not sprite ID
           ['var','iconId']
         ]
       ];
@@ -19782,7 +19818,7 @@ function makePosts(){
         anchor: 'center',
         iconOpacity: 1,
         minZoom: MARKER_MIN_ZOOM,
-        visibility: mapCardDisplay === 'hover_only' ? 'visible' : 'none',
+        visibility: 'visible', // Always visible, visibility controlled by updateMapCardLayerVisibility
         isInteractive: mapCardDisplay === 'hover_only'
       });
       
@@ -19799,7 +19835,7 @@ function makePosts(){
         anchor: 'center',
         iconOpacity: 1,
         minZoom: MARKER_MIN_ZOOM,
-        visibility: mapCardDisplay === 'hover_only' ? 'visible' : 'none',
+        visibility: 'visible', // Always visible, visibility controlled by updateMapCardLayerVisibility
         isInteractive: mapCardDisplay === 'hover_only'
       });
       
