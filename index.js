@@ -19441,31 +19441,13 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Per MAPMARKER_REQUIREMENTS.txt: Labels (pills) use sort-keys 1-7, marker icons use 8-9
-      // Determine if multi-post: check isMultiVenue, multiCount, or multiPostIds
-      const isMultiPost = ['case',
-        ['has', 'isMultiVenue'], ['get', 'isMultiVenue'],
-        ['has', 'multiCount'], ['>', ['to-number', ['get', 'multiCount']], 1],
-        ['has', 'multiPostIds'], ['>', ['length', ['get', 'multiPostIds']], 1],
-        false
-      ];
-      // marker-label-highlight (accent): sort-key 2 (small accent pill per requirements)
-      const markerLabelHighlightSortKey = 2;
-      // marker-label (base): sort-key 3 (small single) or 4 (small multi-post) per requirements
-      // Note: Big labels (sort-keys 5-7) will be added when size detection is refined
-      const markerLabelSortKey = ['case',
-        isMultiPost, 4, // Small multi-post map card label (sort-key 4)
-        3 // Small map card label (sort-key 3)
-      ];
-      // Marker icons: sort-key 8 for single post, 9 for multi-post (per MAPMARKER_REQUIREMENTS.txt)
-      const markerIconSortKey = ['case',
-        ['==', ['coalesce', ['get','sub'], ''], ''],
-        9, // Multi-post marker icon (sort-key 9)
-        8  // Single post marker icon (sort-key 8)
-      ];
+      // Use feature ID as sortKey to ensure unique stacking order for overlapping cards
+      // Subtract 0.1 from icon sortKey so icons render slightly below labels within same feature
+      const markerLabelSortKey = ['coalesce', ['to-number', ['get', 'id']], ['to-number', ['get', 'featureId']], 0];
+      const markerIconSortKey = ['-', markerLabelSortKey, 0.1]; // Icons render below labels
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: markerLabelHighlightSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label-highlight', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19487,7 +19469,7 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'auto',
+                'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
               },
               paint:{
@@ -19511,7 +19493,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-z-order','auto'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
@@ -19546,7 +19528,7 @@ function makePosts(){
               'icon-ignore-placement': true,
               'icon-anchor': 'center',
               'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
+              'symbol-z-order': 'viewport-y',
               'symbol-sort-key': markerIconSortKey,
               'visibility': 'visible'
             },
@@ -19566,29 +19548,23 @@ function makePosts(){
         }catch(e){}
       }
       
-      // Sort-key ensures icons render above labels (pills) - marker icons use sort-key 8 (single) or 9 (multi-post)
-      // Layer order overrides sort-key, so move label layers first, then marker-icon on top
+      // Layer order: marker-icon (lowest), marker-label, marker-label-highlight (highest)
+      // This ensures icons render below labels within same feature, but entire cards stack together
+      // Move marker-icon to before marker-label layers so labels render on top of icons
+      if(map.getLayer('marker-icon')){
+        try{ 
+          // Move marker-icon before first marker-label layer
+          const firstLabelLayer = map.getLayer('marker-label');
+          if(firstLabelLayer){
+            map.moveLayer('marker-icon', 'marker-label');
+          }
+        }catch(e){}
+      }
       ALL_MARKER_LAYER_IDS.forEach(id=>{
         if(id !== 'marker-icon' && map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
-      // Move marker-icon after label layers so it renders on top (layer order > sort-key)
-      if(map.getLayer('marker-icon')){
-        try{
-          const lastLabelLayer = map.getLayer('marker-label-highlight') || map.getLayer('marker-label');
-          if(lastLabelLayer){
-            map.moveLayer('marker-icon', lastLabelLayer);
-          } else {
-            map.moveLayer('marker-icon');
-          }
-          // Ensure visibility after moving
-          map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-          map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-        }catch(e){
-          console.warn('[Map Markers] Error moving marker-icon layer:', e);
-        }
-      }
       [
         ['marker-label','icon-opacity-transition'],
         ['marker-label-highlight','icon-opacity-transition']
@@ -26745,5 +26721,4 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
  
-
 
