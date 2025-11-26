@@ -19546,7 +19546,7 @@ function makePosts(){
               'icon-ignore-placement': true,
               'icon-anchor': 'center',
               'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
+              'symbol-z-order': 'auto',
               'symbol-sort-key': markerIconSortKey,
               'visibility': 'visible'
             },
