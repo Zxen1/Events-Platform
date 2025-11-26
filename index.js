@@ -19592,12 +19592,12 @@ function makePosts(){
               layerConfig.layout['text-size'] = textSize || 12;
               layerConfig.layout['text-anchor'] = anchor; // 'left' for labels
               layerConfig.layout['text-offset'] = latlngOffset; // Left edge position relative to lat/lng
-              layerConfig.layout['text-color'] = textColor;
               layerConfig.layout['text-font'] = ['Open Sans Regular', 'Arial Unicode MS Regular'];
               layerConfig.layout['text-max-width'] = textMaxWidth || 100;
               layerConfig.layout['text-line-height'] = 1.2;
               layerConfig.layout['text-allow-overlap'] = true;
               layerConfig.layout['text-ignore-placement'] = true;
+              layerConfig.paint['text-color'] = textColor; // text-color is a paint property, not layout
               layerConfig.paint['text-opacity'] = iconOpacity;
             }
             
@@ -19621,8 +19621,8 @@ function makePosts(){
             if(textField && textSize) map.setLayoutProperty(id, 'text-size', textSize);
             if(textField) map.setLayoutProperty(id, 'text-anchor', anchor);
             if(textField) map.setLayoutProperty(id, 'text-offset', latlngOffset);
-            if(textField) map.setLayoutProperty(id, 'text-color', textColor);
             if(textField && textMaxWidth) map.setLayoutProperty(id, 'text-max-width', textMaxWidth);
+            if(textField) map.setPaintProperty(id, 'text-color', textColor); // text-color is a paint property
             if(textField) map.setPaintProperty(id, 'text-opacity', iconOpacity);
             map.setLayoutProperty(id, 'visibility', visibility);
             map.setLayerZoomRange(id, minZoom, 24);
@@ -19709,14 +19709,14 @@ function makePosts(){
       });
       
       // LAYER 5: Big map card pill (225×60px) - sort-key 5
-      // Left edge at -35px, vertically centered (60px / 2 = 30px down from top)
+      // Left edge at -30px, vertically centered (60px / 2 = 30px down from top)
       createOrUpdateLayer({
         id: 'sprite-big-pill',
         filter: ['all', singlePostFilter, isBigCardExpression, ['!', isMultiPostExpression]],
         sortKey: createSortKey(5),
         iconImage: SPRITE_BIG_PILL_ID,
         iconSize: 1,
-        latlngOffset: [-35, 30], // Left edge at -35px, vertically centered
+        latlngOffset: [-30, 30], // Left edge at -30px, vertically centered
         anchor: 'left',
         iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
         minZoom: MARKER_MIN_ZOOM,
