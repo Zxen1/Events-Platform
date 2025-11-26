@@ -18717,8 +18717,8 @@ function makePosts(){
       });
       
       // Add label text layers (sort-keys 3, 4, 6, 7)
-      // Small labels: left edge at 20px from lat/lng (100×30px invisible rectangle)
-      // Big labels: left edge at 30px from lat/lng (155×50px invisible rectangle)
+      // Small labels: left edge at 20px from lat/lng (inside pill, which goes from -20px to 130px)
+      // Big labels: left edge at 30px from lat/lng (inside pill, which goes from -35px to 190px)
       const labelTextLayersConfig = [
         { id:'marker-label-text-small', source:'posts', sortKey: 3, filter: ['all', markerLabelFilter, ['!', ['get', 'isMultiVenue']]], minZoom: markerLabelMinZoom, textOffset: [20, 0], maxWidth: 100 },
         { id:'marker-label-text-small-multi', source:'posts', sortKey: 4, filter: ['all', markerLabelFilter, ['get', 'isMultiVenue']], minZoom: markerLabelMinZoom, textOffset: [20, 0], maxWidth: 100 },
