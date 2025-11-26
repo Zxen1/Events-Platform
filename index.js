@@ -1913,15 +1913,14 @@ let __notifyMapOnInteraction = null;
     }
     const baseComposite = assets.base;
     const highlightComposite = assets.highlight;
+    // Remove any existing images before adding new ones (already removed placeholders above, but check for non-placeholders too)
     try{
       if(mapInstance.hasImage?.(compositeId)){
         mapInstance.removeImage(compositeId);
       }
-      markerLabelCompositePlaceholderIds.delete(compositeId);
       if(mapInstance.hasImage?.(highlightId)){
         mapInstance.removeImage(highlightId);
       }
-      markerLabelCompositePlaceholderIds.delete(highlightId);
     }catch(err){
       console.error(err);
     }
@@ -1996,13 +1995,21 @@ let __notifyMapOnInteraction = null;
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
-        mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
+        // Double-check image doesn't exist before adding (race condition protection)
+        if(!mapInstance.hasImage?.(entry.compositeId)){
+          mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
+        }
         markerLabelCompositePlaceholderIds.delete(entry.compositeId);
         if(entry.highlightImage){
           const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
-          try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
-          catch(err){ console.error(err); }
+          try{
+            if(mapInstance.hasImage?.(highlightId)){
+              mapInstance.removeImage(highlightId);
+            }
+            mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {});
+          }catch(err){
+            console.error(err);
+          }
           markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
