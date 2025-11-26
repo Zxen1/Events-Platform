@@ -19567,8 +19567,6 @@ function makePosts(){
         console.error('Posts source does not exist!');
         return;
       }
-      const sourceData = postsSource._data;
-      const featureCount = sourceData && sourceData.features ? sourceData.features.length : 0;
       console.log(`Posts source has ${featureCount} features`);
       
       // Base filter for single-post markers (not clusters)
