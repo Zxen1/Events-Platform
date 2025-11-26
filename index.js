@@ -1216,6 +1216,19 @@ let __notifyMapOnInteraction = null;
     return lines.line1;
   }
 
+  // Sprite image IDs for the 10 separate elements
+  const SPRITE_SMALL_PILL_BASE_ID = 'sprite-small-pill-base';        // sort-key 1
+  const SPRITE_SMALL_PILL_ACCENT_ID = 'sprite-small-pill-accent';    // sort-key 2
+  const SPRITE_SMALL_LABEL_ID = 'sprite-small-label';                // sort-key 3
+  const SPRITE_SMALL_MULTI_LABEL_ID = 'sprite-small-multi-label';    // sort-key 4
+  const SPRITE_BIG_PILL_ID = 'sprite-big-pill';                     // sort-key 5
+  const SPRITE_BIG_LABEL_ID = 'sprite-big-label';                   // sort-key 6
+  const SPRITE_BIG_MULTI_LABEL_ID = 'sprite-big-multi-label';       // sort-key 7
+  const SPRITE_ICON_ID = 'sprite-icon';                              // sort-key 8
+  const SPRITE_MULTI_ICON_ID = 'sprite-multi-icon';                  // sort-key 9
+  const SPRITE_THUMBNAIL_ID = 'sprite-thumbnail';                   // sort-key 10
+  
+  // Legacy IDs for backward compatibility during transition
   const MARKER_LABEL_BG_ID = 'marker-label-bg';
   const MARKER_LABEL_BG_ACCENT_ID = `${MARKER_LABEL_BG_ID}--accent`;
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
@@ -1449,13 +1462,27 @@ let __notifyMapOnInteraction = null;
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/icons-30/225x60-pill-2f3b73.webp';
+    // Load pill paths from admin settings (fallback to defaults)
+    const smallPillUrl = (typeof window !== 'undefined' && window.smallMapCardPillPath) 
+      ? window.smallMapCardPillPath 
+      : 'assets/system-images/150x40-pill-70.webp';
+    const bigPillUrl = (typeof window !== 'undefined' && window.bigMapCardPillPath) 
+      ? window.bigMapCardPillPath 
+      : 'assets/system-images/225x60-pill-2f3b73.webp';
+    const multiPostIconUrl = (typeof window !== 'undefined' && window.multiPostIconPath) 
+      ? window.multiPostIconPath 
+      : 'assets/system-images/multi-post-icon-50.webp';
+    
     const promise = Promise.all([
-      loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl)
-    ]).then(([baseImg, accentImg]) => {
-      return { base: baseImg, highlight: accentImg };
+      loadMarkerLabelImage(smallPillUrl),
+      loadMarkerLabelImage(bigPillUrl),
+      loadMarkerLabelImage(multiPostIconUrl)
+    ]).then(([smallPillImg, bigPillImg, multiPostIconImg]) => {
+      return { 
+        smallPill: smallPillImg, 
+        bigPill: bigPillImg,
+        multiPostIcon: multiPostIconImg
+      };
     });
     markerLabelPillImagePromise = promise;
     return markerLabelPillImagePromise;
@@ -1549,11 +1576,19 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    // Build sprites for small pills (150×40px)
+    const smallBaseSprite = buildMarkerLabelPillSprite(assets.smallPill, 'rgba(0,0,0,1)', 0.9, false);
+    // Small accent is the big pill resized to 150×40
+    const smallAccentSprite = buildMarkerLabelPillSprite(assets.bigPill, null, 1, true);
+    // Big pill (225×60px)
+    const bigPillSprite = buildMarkerLabelPillSprite(assets.bigPill, null, 1, false);
     markerLabelPillSpriteCache = {
-      base: baseSprite,
-      highlight: accentSprite
+      smallBase: smallBaseSprite,
+      smallAccent: smallAccentSprite,
+      bigPill: bigPillSprite,
+      // Maintain backward compatibility
+      base: smallBaseSprite,
+      highlight: smallAccentSprite
     };
     return markerLabelPillSpriteCache;
   }
@@ -1791,6 +1826,35 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const targetMap = mapInstance || map;
+    // New separate sprite system
+    if(id === SPRITE_SMALL_PILL_BASE_ID){
+      const sprites = await ensureMarkerLabelPillSprites();
+      return sprites.smallBase;
+    }
+    if(id === SPRITE_SMALL_PILL_ACCENT_ID){
+      const sprites = await ensureMarkerLabelPillSprites();
+      return sprites.smallAccent;
+    }
+    if(id === SPRITE_BIG_PILL_ID){
+      const sprites = await ensureMarkerLabelPillSprites();
+      return sprites.bigPill;
+    }
+    if(id === SPRITE_MULTI_ICON_ID){
+      const assets = await ensureMarkerLabelPillImage();
+      if(assets.multiPostIcon){
+        const iconSize = 50;
+        const canvas = document.createElement('canvas');
+        canvas.width = iconSize;
+        canvas.height = iconSize;
+        const ctx = canvas.getContext('2d');
+        if(ctx && assets.multiPostIcon){
+          ctx.drawImage(assets.multiPostIcon, 0, 0, iconSize, iconSize);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          return { image: imageData, options: { pixelRatio: 1 } };
+        }
+      }
+    }
+    // Legacy support
     if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
       // UNIFIED: Both single and multi-venue map cards use System 2 (ensureMarkerLabelPillSprites)
       // Multi-venue map card composites are built separately in createMarkerLabelCompositeTextures
@@ -2357,6 +2421,11 @@ let __notifyMapOnInteraction = null;
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               window.adminIconFolder = data.settings.admin_icon_folder || 'assets/admin-icons';
               
+              // Store map card pill and icon paths from admin settings
+              window.smallMapCardPillPath = data.settings.small_map_card_pill || 'assets/system-images/150x40-pill-70.webp';
+              window.bigMapCardPillPath = data.settings.big_map_card_pill || 'assets/system-images/225x60-pill-2f3b73.webp';
+              window.multiPostIconPath = data.settings.multi_post_icon || 'assets/system-images/multi-post-icon-50.webp';
+              
               // Store map shadow and console filter settings
               if(data.settings.map_shadow !== undefined){
                 localStorage.setItem('map_shadow', data.settings.map_shadow);
@@ -2547,11 +2616,15 @@ let __notifyMapOnInteraction = null;
                       window.updateMapCardLayerOpacity(mapCardDisplay);
                     }
                     
-                    // Update hover handlers - always use marker-icon only for precise hover zone
+                    // Update hover handlers - use interactive layers based on mapCardDisplay
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
                       // Remove old hover handlers from all possible layers
-                      const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
+                      const allPossibleLayers = [
+                        'marker-icon', 'marker-label', 'marker-label-highlight', // Old layers
+                        'sprite-icon', 'sprite-multi-icon', // New icon layers
+                        'sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill' // New pill layers
+                      ];
                       allPossibleLayers.forEach(layer => {
                         try {
                           mapInstance.off('mouseenter', layer, window.handleMarkerHover);
@@ -2559,11 +2632,18 @@ let __notifyMapOnInteraction = null;
                         } catch(e) {}
                       });
                       
-                      // Always use marker-icon only for precise hover zone (avoids huge composite sprite)
-                      try {
-                        mapInstance.on('mouseenter', 'marker-icon', window.handleMarkerHover);
-                        mapInstance.on('mouseleave', 'marker-icon', window.handleMarkerHoverEnd);
-                      } catch(e) {}
+                      // Use interactive layers based on current display mode
+                      const interactiveLayers = typeof window.getMarkerInteractiveLayers === 'function' 
+                        ? window.getMarkerInteractiveLayers() 
+                        : (mapCardDisplay === 'hover_only' 
+                          ? ['sprite-icon', 'sprite-multi-icon'] 
+                          : ['sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill']);
+                      interactiveLayers.forEach(layer => {
+                        try {
+                          mapInstance.on('mouseenter', layer, window.handleMarkerHover);
+                          mapInstance.on('mouseleave', layer, window.handleMarkerHoverEnd);
+                        } catch(e) {}
+                      });
                     }
                     
                     // Update click and cursor handlers to match new display mode
@@ -3450,9 +3530,9 @@ let __notifyMapOnInteraction = null;
     const getMarkerInteractiveLayers = () => {
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       if(mapCardDisplay === 'hover_only'){
-        return ['marker-icon']; // Only marker-icon is clickable when cards are hidden
+        return ['sprite-icon', 'sprite-multi-icon']; // Only icons when pills hidden
       }
-      return ['marker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
+      return ['sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill']; // Only pills when visible
     };
     window.__overCard = window.__overCard || false;
 
@@ -19407,205 +19487,383 @@ function makePosts(){
           }catch(e){}
         }
       }
-      await prepareMarkerLabelCompositesForPosts(postsData);
+      // NEW 10-LAYER SPRITE SYSTEM
+      // ===========================
+      // All 10 elements use separate sprites with symbol-sort-key (1-10)
+      // Sort-key = (feature ID * 10) + base sort-key (1-10)
+      // This ensures proper stacking: higher feature IDs render above lower ones
+      // Within same feature, elements stack by base sort-key (1-10)
+      
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
-      const markerLabelBaseConditions = [
+      // Base filter for single-post markers (not clusters)
+      const singlePostFilter = ['all',
         ['!',['has','point_count']],
         ['has','title']
       ];
-      const markerLabelFilter = ['all', ...markerLabelBaseConditions];
-
-      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
-        ]
+      
+      // Base sort-key calculation: feature ID * 10 (so each feature gets its own range)
+      const baseFeatureSortKey = ['*', 
+        ['coalesce', ['to-number', ['get', 'id']], ['to-number', ['get', 'featureId']], 0],
+        10
       ];
-
-      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ACCENT_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
-        ]
-      ];
-
+      
+      // Sort-key for each of the 10 elements (1-10)
+      const createSortKey = (baseSortKeyNum) => ['+', baseFeatureSortKey, baseSortKeyNum];
+      
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
-
-      const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Use feature ID as sortKey to ensure unique stacking order for overlapping cards
-      // Subtract 0.1 from icon sortKey so icons render slightly below labels within same feature
-      const markerLabelSortKey = ['coalesce', ['to-number', ['get', 'id']], ['to-number', ['get', 'featureId']], 0];
-      const markerIconSortKey = ['-', markerLabelSortKey, 0.1]; // Icons render below labels
-      const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+      
+      // Ensure sprite images are registered
+      const spriteIdsToRegister = [
+        SPRITE_SMALL_PILL_BASE_ID,
+        SPRITE_SMALL_PILL_ACCENT_ID,
+        SPRITE_BIG_PILL_ID,
+        SPRITE_MULTI_ICON_ID
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
-        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
-        const finalIconSize = iconSize !== undefined ? iconSize : 1;
-        let layerExists = !!map.getLayer(id);
-        if(!layerExists){
+      for(const spriteId of spriteIdsToRegister){
+        if(!map.hasImage(spriteId)){
           try{
-            map.addLayer({
-              id,
-              type:'symbol',
-              source,
-              filter: filter || markerLabelFilter,
-              minzoom: layerMinZoom,
-              maxzoom: 24,
-              layout:{
-                'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': finalIconSize,
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-anchor': 'center',
-                'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
-                'symbol-sort-key': sortKey
-              },
-              paint:{
-                'icon-translate': [0, 0],
-                'icon-translate-anchor': 'viewport',
-                'icon-opacity': iconOpacity || 1
-              }
-            });
-            layerExists = !!map.getLayer(id);
-          }catch(e){
-            layerExists = !!map.getLayer(id);
-          }
-        }
-        if(!layerExists){
-          return;
-        }
-        try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
-      });
-      // Create marker-icon layer (sprites are already loaded above)
-      const markerIconFilter = ['all',
-        ['!',['has','point_count']],
-        ['has','title']
-      ];
-      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-        ['case',
-          ['==', ['var','iconId'], ''],
-          MULTI_POST_MARKER_ICON_ID,
-          ['var','iconId']
-        ]
-      ];
-      const markerIconLayerId = 'marker-icon';
-      if(!map.getLayer(markerIconLayerId)){
-        try{
-          map.addLayer({
-            id: markerIconLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerIconFilter,
-            minzoom: MARKER_MIN_ZOOM,
-            layout:{
-              'icon-image': markerIconImageExpression,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'center',
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': markerIconSortKey,
-              'visibility': 'visible'
-            },
-            paint:{
-              'icon-opacity': 1
+            const spriteData = await generateMarkerImageFromId(spriteId, map);
+            if(spriteData && spriteData.image){
+              map.addImage(spriteId, spriteData.image, spriteData.options || {});
             }
-          });
-        }catch(e){}
-      }
-      if(map.getLayer(markerIconLayerId)){
-        try{
-          map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
-          map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
-          map.setFilter(markerIconLayerId, markerIconFilter);
-          map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-          map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', markerIconSortKey);
-        }catch(e){}
-      }
-      
-      // Layer order: marker-icon (lowest), marker-label, marker-label-highlight (highest)
-      // This ensures icons render below labels within same feature, but entire cards stack together
-      // Move marker-icon to before marker-label layers so labels render on top of icons
-      if(map.getLayer('marker-icon')){
-        try{ 
-          // Move marker-icon before first marker-label layer
-          const firstLabelLayer = map.getLayer('marker-label');
-          if(firstLabelLayer){
-            map.moveLayer('marker-icon', 'marker-label');
-          }
-        }catch(e){}
-      }
-      ALL_MARKER_LAYER_IDS.forEach(id=>{
-        if(id !== 'marker-icon' && map.getLayer(id)){
-          try{ map.moveLayer(id); }catch(e){}
-        }
-      });
-      [
-        ['marker-label','icon-opacity-transition'],
-        ['marker-label-highlight','icon-opacity-transition']
-      ].forEach(([layer, prop])=>{
-        if(map.getLayer(layer)){
-          try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
-        }
-      });
-      
-      function updateMapCardLayerOpacity(displayMode){
-        if(!map) return;
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
-        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-        const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
-        if(map.getLayer('marker-label')){
-          try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
-        }
-        // Ensure marker-icon is always visible at 100% opacity
-        if(map.getLayer('marker-icon')){
-          try{ 
-            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-            map.setPaintProperty('marker-icon', 'icon-opacity', 1);
           }catch(e){}
         }
       }
-      window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
-      window.getMapInstance = () => map; // Expose map instance getter
       
-      updateMapCardLayerOpacity(mapCardDisplay);
+      // Helper function to create/update a layer
+      // Pills and labels measured from left edge, icons from center
+      // latlngOffset is the left edge position (for pills/labels) or center position (for icons) relative to lat/lng
+      const createOrUpdateLayer = (config) => {
+        const {
+          id,
+          type = 'symbol',
+          source = 'posts',
+          filter,
+          sortKey,
+          iconImage,
+          iconSize = 1,
+          latlngOffset = [0, 0], // Left edge position (pills/labels) or center position (icons) relative to lat/lng
+          anchor = 'left', // 'left' for pills/labels, 'center' for icons
+          iconOpacity = 1,
+          textField,
+          textSize,
+          textColor = '#ffffff',
+          textMaxWidth,
+          minZoom = MARKER_MIN_ZOOM,
+          visibility = 'visible',
+          isInteractive = false
+        } = config;
+        
+        const layerExists = !!map.getLayer(id);
+        
+        if(!layerExists){
+          try{
+            const layerConfig = {
+              id,
+              type,
+              source,
+              filter: filter || singlePostFilter,
+              minzoom: minZoom,
+              maxzoom: 24,
+              layout: {
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': sortKey,
+                'visibility': visibility
+              },
+              paint: {}
+            };
+            
+            if(iconImage){
+              layerConfig.layout['icon-image'] = iconImage;
+              layerConfig.layout['icon-size'] = iconSize;
+              layerConfig.layout['icon-anchor'] = anchor; // 'left' for pills, 'center' for icons
+              layerConfig.layout['icon-offset'] = latlngOffset; // Left edge (pills) or center (icons) position relative to lat/lng
+              layerConfig.paint['icon-opacity'] = iconOpacity;
+            }
+            
+            if(textField){
+              layerConfig.layout['text-field'] = textField;
+              layerConfig.layout['text-size'] = textSize || 12;
+              layerConfig.layout['text-anchor'] = anchor; // 'left' for labels
+              layerConfig.layout['text-offset'] = latlngOffset; // Left edge position relative to lat/lng
+              layerConfig.layout['text-color'] = textColor;
+              layerConfig.layout['text-font'] = ['Open Sans Regular', 'Arial Unicode MS Regular'];
+              layerConfig.layout['text-max-width'] = textMaxWidth || 100;
+              layerConfig.layout['text-line-height'] = 1.2;
+              layerConfig.layout['text-allow-overlap'] = true;
+              layerConfig.layout['text-ignore-placement'] = true;
+              layerConfig.paint['text-opacity'] = iconOpacity;
+            }
+            
+            map.addLayer(layerConfig);
+          }catch(e){
+            console.error(`Failed to create layer ${id}:`, e);
+          }
+        }
+        
+        // Update existing layer properties
+        if(map.getLayer(id)){
+          try{
+            map.setFilter(id, filter || singlePostFilter);
+            if(sortKey) map.setLayoutProperty(id, 'symbol-sort-key', sortKey);
+            if(iconImage) map.setLayoutProperty(id, 'icon-image', iconImage);
+            if(iconImage) map.setLayoutProperty(id, 'icon-size', iconSize);
+            if(iconImage) map.setLayoutProperty(id, 'icon-anchor', anchor);
+            if(iconImage) map.setLayoutProperty(id, 'icon-offset', latlngOffset);
+            if(iconImage) map.setPaintProperty(id, 'icon-opacity', iconOpacity);
+            if(textField) map.setLayoutProperty(id, 'text-field', textField);
+            if(textField && textSize) map.setLayoutProperty(id, 'text-size', textSize);
+            if(textField) map.setLayoutProperty(id, 'text-anchor', anchor);
+            if(textField) map.setLayoutProperty(id, 'text-offset', latlngOffset);
+            if(textField) map.setLayoutProperty(id, 'text-color', textColor);
+            if(textField && textMaxWidth) map.setLayoutProperty(id, 'text-max-width', textMaxWidth);
+            if(textField) map.setPaintProperty(id, 'text-opacity', iconOpacity);
+            map.setLayoutProperty(id, 'visibility', visibility);
+            map.setLayerZoomRange(id, minZoom, 24);
+          }catch(e){}
+        }
+      };
       
-      // Ensure marker-icon layer is visible with correct sortKey
-      if(map.getLayer('marker-icon')){
-        try{
-          map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-          map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-          map.setLayoutProperty('marker-icon', 'symbol-sort-key', markerIconSortKey);
-          // Don't move to top - sortKey controls stacking order
-        }catch(e){}
+      // Determine if feature is multi-post
+      const isMultiPostExpression = ['>', 
+        ['coalesce', 
+          ['to-number', ['get', 'multiCount']],
+          ['length', ['coalesce', ['get', 'multiPostIds'], []]],
+          0
+        ],
+        1
+      ];
+      
+      // Determine zoom level for big vs small cards (using zoom level)
+      const isBigCardExpression = ['>=', ['zoom'], 12];
+      
+      // LAYER 1: Small map card base pill (150×40px) - sort-key 1
+      // Left edge at -20px, vertically centered (40px / 2 = 20px down from top)
+      createOrUpdateLayer({
+        id: 'sprite-small-pill-base',
+        filter: ['all', singlePostFilter, ['!', isBigCardExpression], ['!', isMultiPostExpression]],
+        sortKey: createSortKey(1),
+        iconImage: SPRITE_SMALL_PILL_BASE_ID,
+        iconSize: 1,
+        latlngOffset: [-20, 20], // Left edge at -20px, vertically centered
+        anchor: 'left',
+        iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: mapCardDisplay === 'always'
+      });
+      
+      // LAYER 2: Small map card accent pill (150×40px) - sort-key 2
+      createOrUpdateLayer({
+        id: 'sprite-small-pill-accent',
+        filter: ['all', singlePostFilter, ['!', isBigCardExpression], ['!', isMultiPostExpression]],
+        sortKey: createSortKey(2),
+        iconImage: SPRITE_SMALL_PILL_ACCENT_ID,
+        iconSize: 1,
+        latlngOffset: [-20, 20], // Left edge at -20px, vertically centered
+        anchor: 'left',
+        iconOpacity: ['case', highlightedStateExpression, 1, 0],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: mapCardDisplay === 'always'
+      });
+      
+      // LAYER 3: Small map card label - sort-key 3
+      // Left edge at 20px, vertically centered (30px / 2 = 15px down from top)
+      createOrUpdateLayer({
+        id: 'sprite-small-label',
+        filter: ['all', singlePostFilter, ['!', isBigCardExpression], ['!', isMultiPostExpression]],
+        sortKey: createSortKey(3),
+        textField: ['get', 'title'],
+        textSize: 12,
+        latlngOffset: [20, 15], // Left edge at 20px, vertically centered
+        anchor: 'left',
+        textColor: '#ffffff',
+        textMaxWidth: 100,
+        iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: false
+      });
+      
+      // LAYER 4: Small multi-post map card label - sort-key 4
+      createOrUpdateLayer({
+        id: 'sprite-small-multi-label',
+        filter: ['all', singlePostFilter, ['!', isBigCardExpression], isMultiPostExpression],
+        sortKey: createSortKey(4),
+        textField: ['concat', 
+          ['get', 'multiCount'], ' posts\n',
+          ['get', 'venueName']
+        ],
+        textSize: 12,
+        latlngOffset: [20, 15], // Left edge at 20px, vertically centered
+        anchor: 'left',
+        textColor: '#ffffff',
+        textMaxWidth: 100,
+        iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: false
+      });
+      
+      // LAYER 5: Big map card pill (225×60px) - sort-key 5
+      // Left edge at -35px, vertically centered (60px / 2 = 30px down from top)
+      createOrUpdateLayer({
+        id: 'sprite-big-pill',
+        filter: ['all', singlePostFilter, isBigCardExpression, ['!', isMultiPostExpression]],
+        sortKey: createSortKey(5),
+        iconImage: SPRITE_BIG_PILL_ID,
+        iconSize: 1,
+        latlngOffset: [-35, 30], // Left edge at -35px, vertically centered
+        anchor: 'left',
+        iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: mapCardDisplay === 'always'
+      });
+      
+      // LAYER 6: Big map card label - sort-key 6
+      // Left edge at 30px, vertically centered (50px / 2 = 25px down from top)
+      createOrUpdateLayer({
+        id: 'sprite-big-label',
+        filter: ['all', singlePostFilter, isBigCardExpression, ['!', isMultiPostExpression]],
+        sortKey: createSortKey(6),
+        textField: ['concat',
+          ['get', 'title'], '\n',
+          ['get', 'venueName']
+        ],
+        textSize: 12,
+        latlngOffset: [30, 25], // Left edge at 30px, vertically centered
+        anchor: 'left',
+        textColor: '#ffffff',
+        textMaxWidth: 145,
+        iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: false
+      });
+      
+      // LAYER 7: Big multi-post map card label - sort-key 7
+      createOrUpdateLayer({
+        id: 'sprite-big-multi-label',
+        filter: ['all', singlePostFilter, isBigCardExpression, isMultiPostExpression],
+        sortKey: createSortKey(7),
+        textField: ['concat',
+          ['get', 'multiCount'], ' posts\n',
+          ['get', 'venueName'], '\n',
+          ['get', 'city'], ', ', ['get', 'country']
+        ],
+        textSize: 12,
+        latlngOffset: [30, 25], // Left edge at 30px, vertically centered
+        anchor: 'left',
+        textColor: '#ffffff',
+        textMaxWidth: 145,
+        iconOpacity: ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted],
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: false
+      });
+      
+      // LAYER 8: Mapmarker icon (30×30px) - sort-key 8
+      // Center at 0px (centered on lat/lng)
+      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+        ['case',
+          ['==', ['var','iconId'], ''],
+          SPRITE_MULTI_ICON_ID,
+          ['var','iconId']
+        ]
+      ];
+      createOrUpdateLayer({
+        id: 'sprite-icon',
+        filter: ['all', singlePostFilter, ['!', isMultiPostExpression]],
+        sortKey: createSortKey(8),
+        iconImage: markerIconImageExpression,
+        iconSize: 1,
+        latlngOffset: [0, 0], // Center at lat/lng point
+        anchor: 'center',
+        iconOpacity: 1,
+        minZoom: MARKER_MIN_ZOOM,
+        visibility: mapCardDisplay === 'hover_only' ? 'visible' : 'none',
+        isInteractive: mapCardDisplay === 'hover_only'
+      });
+      
+      // LAYER 9: Multi-post mapmarker icon (30×30px small / 50×50px big) - sort-key 9
+      // Center at 0px (centered on lat/lng)
+      const multiIconSizeExpression = ['case', isBigCardExpression, 50/30, 1];
+      createOrUpdateLayer({
+        id: 'sprite-multi-icon',
+        filter: ['all', singlePostFilter, isMultiPostExpression],
+        sortKey: createSortKey(9),
+        iconImage: SPRITE_MULTI_ICON_ID,
+        iconSize: multiIconSizeExpression,
+        latlngOffset: [0, 0], // Center at lat/lng point
+        anchor: 'center',
+        iconOpacity: 1,
+        minZoom: MARKER_MIN_ZOOM,
+        visibility: mapCardDisplay === 'hover_only' ? 'visible' : 'none',
+        isInteractive: mapCardDisplay === 'hover_only'
+      });
+      
+      // LAYER 10: Mapmarker thumbnail (50×50px) - sort-key 10
+      // Center at 0px (centered on lat/lng)
+      // TODO: Implement thumbnail loading on hover/click
+      createOrUpdateLayer({
+        id: 'sprite-thumbnail',
+        filter: ['all', singlePostFilter, ['!', isMultiPostExpression], ['has', 'thumbnailUrl']],
+        sortKey: createSortKey(10),
+        iconImage: ['get', 'thumbnailUrl'], // Will need to load and register thumbnail images
+        iconSize: 1,
+        latlngOffset: [0, 0], // Center at lat/lng point
+        anchor: 'center',
+        iconOpacity: ['case', highlightedStateExpression, 1, 0], // Only visible when highlighted/hovered
+        minZoom: MARKER_MIN_ZOOM,
+        isInteractive: false
+      });
+      
+      // Update interactive layers function - exposed globally
+      window.getMarkerInteractiveLayers = () => {
+        const currentMapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+        if(currentMapCardDisplay === 'hover_only'){
+          return ['sprite-icon', 'sprite-multi-icon']; // Only icons when pills hidden
+        }
+        return ['sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill']; // Only pills when visible
+      };
+      
+      // Update layer visibility based on mapCardDisplay
+      function updateMapCardLayerVisibility(displayMode){
+        if(!map) return;
+        const isHoverOnly = displayMode === 'hover_only';
+        
+        // Pills: visible when always, hidden when hover_only
+        ['sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill'].forEach(layerId => {
+          if(map.getLayer(layerId)){
+            try{
+              map.setLayoutProperty(layerId, 'visibility', isHoverOnly ? 'none' : 'visible');
+            }catch(e){}
+          }
+        });
+        
+        // Icons: visible when hover_only, hidden when always
+        ['sprite-icon', 'sprite-multi-icon'].forEach(layerId => {
+          if(map.getLayer(layerId)){
+            try{
+              map.setLayoutProperty(layerId, 'visibility', isHoverOnly ? 'visible' : 'none');
+            }catch(e){}
+          }
+        });
+        
+        // Labels: always follow pill visibility
+        ['sprite-small-label', 'sprite-small-multi-label', 'sprite-big-label', 'sprite-big-multi-label'].forEach(layerId => {
+          if(map.getLayer(layerId)){
+            try{
+              map.setLayoutProperty(layerId, 'visibility', isHoverOnly ? 'none' : 'visible');
+            }catch(e){}
+          }
+        });
       }
+      window.updateMapCardLayerOpacity = updateMapCardLayerVisibility; // Keep same function name for compatibility
+      window.getMapInstance = () => map;
       
-      refreshInViewMarkerLabelComposites(map);
+      updateMapCardLayerVisibility(mapCardDisplay);
       if(!postSourceEventsBound){
 
         const handleMarkerClick = (e)=>{
@@ -19721,8 +19979,12 @@ function makePosts(){
         };
       // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
       const attachClickHandlers = () => {
-        // Remove old handlers from all possible layers
-        const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
+        // Remove old handlers from all possible layers (old and new)
+        const allPossibleLayers = [
+          'marker-icon', 'marker-label', 'marker-label-highlight', // Old layers
+          'sprite-icon', 'sprite-multi-icon', // New icon layers
+          'sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill' // New pill layers
+        ];
         allPossibleLayers.forEach(layer => {
           try {
             map.off('click', layer, handleMarkerClick);
