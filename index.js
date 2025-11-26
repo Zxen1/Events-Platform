@@ -19519,7 +19519,9 @@ function makePosts(){
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
+      // COMMENTED OUT: Testing only marker-icon layer
       // Ensure sprite images are registered BEFORE creating layers
+      /*
       const spriteIdsToRegister = [
         SPRITE_SMALL_PILL_BASE_ID,
         SPRITE_SMALL_PILL_ACCENT_ID,
@@ -19547,6 +19549,7 @@ function makePosts(){
           }
         }
       }
+      */
       
       // Verify source exists and has data
       const postsSource = map.getSource('posts');
@@ -19702,6 +19705,8 @@ function makePosts(){
       // Determine zoom level for big vs small cards (using zoom level)
       const isBigCardExpression = ['>=', ['zoom'], 12];
       
+      // COMMENTED OUT: Testing only marker-icon layer
+      /*
       // LAYER 1: Small map card base pill (150×40px) - sort-key 1
       // Left edge at -20px, vertically centered (40px / 2 = 20px down from top)
       createOrUpdateLayer({
@@ -19821,6 +19826,7 @@ function makePosts(){
         minZoom: MARKER_MIN_ZOOM,
         isInteractive: false
       });
+      */
       
       // LAYER 8: Mapmarker icon (30×30px) - sort-key 8
       // Center at 0px (centered on lat/lng)
@@ -19845,6 +19851,8 @@ function makePosts(){
         isInteractive: mapCardDisplay === 'hover_only'
       });
       
+      // COMMENTED OUT: Testing only marker-icon layer
+      /*
       // LAYER 9: Multi-post mapmarker icon (30×30px small / 50×50px big) - sort-key 9
       // Center at 0px (centered on lat/lng)
       const multiIconSizeExpression = ['case', isBigCardExpression, 50/30, 1];
@@ -19877,16 +19885,17 @@ function makePosts(){
         minZoom: MARKER_MIN_ZOOM,
         isInteractive: false
       });
+      */
       
+      // COMMENTED OUT: Testing only marker-icon layer
       // Update interactive layers function - exposed globally
       window.getMarkerInteractiveLayers = () => {
-        const currentMapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-        if(currentMapCardDisplay === 'hover_only'){
-          return ['sprite-icon', 'sprite-multi-icon']; // Only icons when pills hidden
-        }
-        return ['sprite-small-pill-base', 'sprite-small-pill-accent', 'sprite-big-pill']; // Only pills when visible
+        // Only return sprite-icon for testing
+        return ['sprite-icon'];
       };
       
+      // COMMENTED OUT: Testing only marker-icon layer
+      /*
       // Update layer visibility based on mapCardDisplay
       function updateMapCardLayerVisibility(displayMode){
         if(!map) return;
@@ -19923,6 +19932,8 @@ function makePosts(){
       window.getMapInstance = () => map;
       
       updateMapCardLayerVisibility(mapCardDisplay);
+      */
+      window.getMapInstance = () => map;
       if(!postSourceEventsBound){
 
         const handleMarkerClick = (e)=>{
