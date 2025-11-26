@@ -19549,22 +19549,10 @@ function makePosts(){
                 }
               }
               map.addImage(spriteId, imageToAdd, spriteData.options || {});
-              // Verify image was actually added
-              if(!map.hasImage(spriteId)){
-                console.error(`Failed to add sprite ${spriteId} to map - hasImage returned false after addImage`);
-                console.error('Image type:', typeof imageToAdd, imageToAdd.constructor.name);
-              } else {
-                console.log(`Successfully added sprite ${spriteId} to map`);
-              }
-            } else {
-              console.error(`Sprite ${spriteId} returned no image data`);
             }
           }catch(e){
-            console.error(`Failed to register sprite ${spriteId}:`, e);
-            console.error('Error details:', e.message, e.stack);
+            // Silent fail like working version
           }
-        } else {
-          console.log(`Sprite ${spriteId} already exists in map`);
         }
       }
       
@@ -19595,8 +19583,7 @@ function makePosts(){
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
       
       // Helper function to create/update a layer
-      // Pills and labels measured from left edge, icons from center
-      // latlngOffset is the left edge position (for pills/labels) or center position (for icons) relative to lat/lng
+      // Simplified to match working version - uses icon-translate in paint, not icon-offset in layout
       const createOrUpdateLayer = (config) => {
         const {
           id,
@@ -19606,8 +19593,8 @@ function makePosts(){
           sortKey,
           iconImage,
           iconSize = 1,
-          latlngOffset = [0, 0], // Left edge position (pills/labels) or center position (icons) relative to lat/lng
-          anchor = 'left', // 'left' for pills/labels, 'center' for icons
+          latlngOffset = [0, 0], // Translation offset for positioning
+          anchor = 'center', // Default to center like working version
           iconOpacity = 1,
           textField,
           textSize,
@@ -19643,60 +19630,35 @@ function makePosts(){
             if(iconImage){
               layerConfig.layout['icon-image'] = iconImage;
               layerConfig.layout['icon-size'] = iconSize;
-              layerConfig.layout['icon-anchor'] = anchor; // 'left' for pills, 'center' for icons
-              layerConfig.layout['icon-offset'] = latlngOffset; // Left edge (pills) or center (icons) position relative to lat/lng
+              layerConfig.layout['icon-anchor'] = anchor;
+              if(anchor === 'left'){
+                // For left anchor, use icon-offset to position left edge
+                layerConfig.layout['icon-offset'] = latlngOffset;
+              } else {
+                // For center anchor, use icon-translate
+                layerConfig.paint['icon-translate'] = latlngOffset;
+                layerConfig.paint['icon-translate-anchor'] = 'viewport';
+              }
               layerConfig.paint['icon-opacity'] = iconOpacity;
             }
             
             if(textField){
               layerConfig.layout['text-field'] = textField;
               layerConfig.layout['text-size'] = textSize || 12;
-              layerConfig.layout['text-anchor'] = anchor; // 'left' for labels
-              layerConfig.layout['text-offset'] = latlngOffset; // Left edge position relative to lat/lng
+              layerConfig.layout['text-anchor'] = anchor;
+              layerConfig.layout['text-offset'] = latlngOffset;
               layerConfig.layout['text-font'] = ['Open Sans Regular', 'Arial Unicode MS Regular'];
               layerConfig.layout['text-max-width'] = textMaxWidth || 100;
               layerConfig.layout['text-line-height'] = 1.2;
               layerConfig.layout['text-allow-overlap'] = true;
               layerConfig.layout['text-ignore-placement'] = true;
-              // text-color MUST be in paint, not layout
               if(textColor) layerConfig.paint['text-color'] = textColor;
               layerConfig.paint['text-opacity'] = iconOpacity;
             }
             
-            // Verify map style is loaded before adding layer
-            if(map.isStyleLoaded && !map.isStyleLoaded()){
-              console.error(`Cannot add layer ${id} - map style not loaded`);
-              return;
-            }
-            
-            // Verify required images exist if using icon-image
-            if(iconImage && !map.hasImage(iconImage)){
-              console.error(`Cannot add layer ${id} - required image ${iconImage} not found in map`);
-              return;
-            }
-            
             map.addLayer(layerConfig);
-            // Verify layer was created
-            if(!map.getLayer(id)){
-              console.error(`Layer ${id} was not created after addLayer call`);
-              console.error('Layer config:', JSON.stringify(layerConfig, null, 2));
-              // Try to get more details about why it failed
-              try {
-                const style = map.getStyle();
-                if(style){
-                  console.error('Map style layers:', style.layers?.map(l => l.id).slice(-10));
-                }
-              } catch(e) {
-                console.error('Could not get map style:', e);
-              }
-            } else {
-              console.log(`Successfully created layer ${id}`);
-            }
           }catch(e){
-            console.error(`Failed to create layer ${id}:`, e);
-            console.error('Error message:', e.message);
-            console.error('Error stack:', e.stack);
-            console.error('Layer config:', JSON.stringify(layerConfig, null, 2));
+            // Silent fail like working version
           }
         }
         
@@ -19708,14 +19670,21 @@ function makePosts(){
             if(iconImage) map.setLayoutProperty(id, 'icon-image', iconImage);
             if(iconImage) map.setLayoutProperty(id, 'icon-size', iconSize);
             if(iconImage) map.setLayoutProperty(id, 'icon-anchor', anchor);
-            if(iconImage) map.setLayoutProperty(id, 'icon-offset', latlngOffset);
+            if(iconImage){
+              if(anchor === 'left'){
+                map.setLayoutProperty(id, 'icon-offset', latlngOffset);
+              } else {
+                map.setPaintProperty(id, 'icon-translate', latlngOffset);
+                map.setPaintProperty(id, 'icon-translate-anchor', 'viewport');
+              }
+            }
             if(iconImage) map.setPaintProperty(id, 'icon-opacity', iconOpacity);
             if(textField) map.setLayoutProperty(id, 'text-field', textField);
             if(textField && textSize) map.setLayoutProperty(id, 'text-size', textSize);
             if(textField) map.setLayoutProperty(id, 'text-anchor', anchor);
             if(textField) map.setLayoutProperty(id, 'text-offset', latlngOffset);
             if(textField && textMaxWidth) map.setLayoutProperty(id, 'text-max-width', textMaxWidth);
-            if(textField) map.setPaintProperty(id, 'text-color', textColor); // text-color is a paint property
+            if(textField) map.setPaintProperty(id, 'text-color', textColor);
             if(textField) map.setPaintProperty(id, 'text-opacity', iconOpacity);
             map.setLayoutProperty(id, 'visibility', visibility);
             map.setLayerZoomRange(id, minZoom, 24);
