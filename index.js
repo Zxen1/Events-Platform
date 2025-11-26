@@ -19540,11 +19540,6 @@ function makePosts(){
         console.error('Posts source does not exist!');
         return;
       }
-      const sourceData = postsSource._data;
-      const featureCount = sourceData && sourceData.features ? sourceData.features.length : 0;
-      if(featureCount === 0){
-        console.warn('Posts source has no features');
-      }
       
       // Base filter for single-post markers (not clusters)
       const singlePostFilter = ['all',
