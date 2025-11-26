@@ -19630,11 +19630,8 @@ function makePosts(){
               if(anchor === 'left'){
                 // For left anchor, use icon-offset to position left edge
                 layerConfig.layout['icon-offset'] = latlngOffset;
-              } else {
-                // For center anchor, use icon-translate
-                layerConfig.paint['icon-translate'] = latlngOffset;
-                layerConfig.paint['icon-translate-anchor'] = 'viewport';
               }
+              // For center anchor, no translation needed - icon-anchor handles centering
               layerConfig.paint['icon-opacity'] = iconOpacity;
             }
             
@@ -19670,13 +19667,8 @@ function makePosts(){
             if(iconImage) map.setLayoutProperty(id, 'icon-image', iconImage);
             if(iconImage) map.setLayoutProperty(id, 'icon-size', iconSize);
             if(iconImage) map.setLayoutProperty(id, 'icon-anchor', anchor);
-            if(iconImage){
-              if(anchor === 'left'){
-                map.setLayoutProperty(id, 'icon-offset', latlngOffset);
-              } else {
-                map.setPaintProperty(id, 'icon-translate', latlngOffset);
-                map.setPaintProperty(id, 'icon-translate-anchor', 'viewport');
-              }
+            if(iconImage && anchor === 'left'){
+              map.setLayoutProperty(id, 'icon-offset', latlngOffset);
             }
             if(iconImage) map.setPaintProperty(id, 'icon-opacity', iconOpacity);
             if(textField) map.setLayoutProperty(id, 'text-field', textField);
@@ -20201,7 +20193,7 @@ function makePosts(){
         
         // Query what's under the cursor
         const features = map.queryRenderedFeatures(point, {
-          layers: ['marker-icon']
+          layers: ['sprite-icon']
         });
         
         if(features.length > 0){
@@ -20220,7 +20212,7 @@ function makePosts(){
           hoverCheckTimeout = setTimeout(() => {
             // Double-check we're still not over a marker
             const recheckFeatures = map.queryRenderedFeatures(point, {
-              layers: ['marker-icon']
+              layers: ['sprite-icon']
             });
             if(recheckFeatures.length === 0){
               currentHoveredId = null;
@@ -20278,14 +20270,14 @@ function makePosts(){
       window.handleMarkerHover = handleMarkerHover;
       window.handleMarkerHoverEnd = handleMarkerHoverEnd;
 
-      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
-      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
+      // Add hover handlers - ONLY on sprite-icon layer for precise hover zone
+      // sprite-icon is a small icon (30px), so hover zone is precise and matches visual
       // marker-label composite sprite is huge (500px+) and causes 200px+ hover zones on each side
-      // Using only marker-icon ensures hover works reliably and precisely
-      map.on('mouseenter', 'marker-icon', handleMarkerHover);
-      map.on('mouseleave', 'marker-icon', handleMarkerHoverEnd);
+      // Using only sprite-icon ensures hover works reliably and precisely
+      map.on('mouseenter', 'sprite-icon', handleMarkerHover);
+      map.on('mouseleave', 'sprite-icon', handleMarkerHoverEnd);
       // Track mousemove to catch smooth transitions between markers
-      map.on('mousemove', 'marker-icon', handleMapMouseMove);
+      map.on('mousemove', 'sprite-icon', handleMapMouseMove);
 
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable

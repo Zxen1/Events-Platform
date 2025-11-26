@@ -98,7 +98,7 @@ VERTICAL POSITIONING:
 HORIZONTAL POSITIONING (left edge distances from lat/lng):
 - Icons (30×30px): Center at 0px (centered on lat/lng)
 - Small pills (150×40px): Left edge at -20px from lat/lng
-- Big pills (225×60px): Left edge at -35px from lat/lng
+- Big pills (225×60px): Left edge at -30px from lat/lng (5px from circle)
 - Small labels (100×30px invisible rectangle): Left edge at 20px from lat/lng
 - Big labels (155×50px invisible rectangle): Left edge at 30px from lat/lng
 
