@@ -1549,9 +1549,19 @@ let __notifyMapOnInteraction = null;
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
-    // Return canvas directly instead of ImageData to avoid dimension mismatches
+    // Convert canvas to ImageData like working version
+    let imageData = null;
+    try{
+      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    }catch(err){
+      console.error(err);
+      imageData = null;
+    }
+    if(!imageData){
+      return null;
+    }
     return {
-      image: canvas,
+      image: imageData,
       options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
     };
   }
@@ -1851,8 +1861,18 @@ let __notifyMapOnInteraction = null;
       const ctx = canvas.getContext('2d');
       if(ctx && assets.multiPostIcon){
         ctx.drawImage(assets.multiPostIcon, 0, 0, iconSize, iconSize);
-        // Return canvas directly instead of ImageData
-        return { image: canvas, options: { pixelRatio: 1 } };
+        // Convert canvas to ImageData like working version
+        let imageData = null;
+        try{
+          imageData = ctx.getImageData(0, 0, iconSize, iconSize);
+        }catch(err){
+          console.error(err);
+          imageData = null;
+        }
+        if(!imageData){
+          return null;
+        }
+        return { image: imageData, options: { pixelRatio: 1 } };
       }
       console.error(`SPRITE_MULTI_ICON_ID canvas context failed`);
       return null;
@@ -19511,7 +19531,7 @@ function makePosts(){
           try{
             const spriteData = await generateMarkerImageFromId(spriteId, map);
             if(spriteData && spriteData.image){
-              // Use image directly (canvas or ImageData)
+              // Use ImageData directly (matching working version)
               const imageToAdd = spriteData.image;
               // Prepare options: only include pixelRatio if it's not 1 (since 1 is the default)
               const options = spriteData.options || {};
