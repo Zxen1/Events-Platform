@@ -19487,7 +19487,7 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
+                'symbol-z-order': 'auto',
                 'symbol-sort-key': sortKey
               },
               paint:{
@@ -19511,7 +19511,7 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order','auto'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
