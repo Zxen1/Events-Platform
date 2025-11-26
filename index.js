@@ -1534,13 +1534,9 @@ let __notifyMapOnInteraction = null;
     }
     try{
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      const scale = window.devicePixelRatio || 1;
-      ctx.save();
-      ctx.scale(scale, scale);
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
-      ctx.restore();
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
     }catch(err){
       console.error(err);
       return null;
@@ -1553,18 +1549,9 @@ let __notifyMapOnInteraction = null;
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
-    let imageData = null;
-    try{
-      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    }catch(err){
-      console.error(err);
-      imageData = null;
-    }
-    if(!imageData){
-      return null;
-    }
+    // Return canvas directly instead of ImageData to avoid dimension mismatches
     return {
-      image: imageData,
+      image: canvas,
       options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
     };
   }
@@ -1864,8 +1851,8 @@ let __notifyMapOnInteraction = null;
       const ctx = canvas.getContext('2d');
       if(ctx && assets.multiPostIcon){
         ctx.drawImage(assets.multiPostIcon, 0, 0, iconSize, iconSize);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        return { image: imageData, options: { pixelRatio: 1 } };
+        // Return canvas directly instead of ImageData
+        return { image: canvas, options: { pixelRatio: 1 } };
       }
       console.error(`SPRITE_MULTI_ICON_ID canvas context failed`);
       return null;
@@ -19512,19 +19499,6 @@ function makePosts(){
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
-      // Helper to convert ImageData to HTMLCanvasElement for Mapbox compatibility
-      function imageDataToCanvas(imageData, width, height){
-        if(!imageData) return null;
-        const canvas = document.createElement('canvas');
-        canvas.width = width || imageData.width;
-        canvas.height = height || imageData.height;
-        const ctx = canvas.getContext('2d');
-        if(ctx){
-          ctx.putImageData(imageData, 0, 0);
-        }
-        return canvas;
-      }
-      
       // Ensure sprite images are registered BEFORE creating layers
       const spriteIdsToRegister = [
         SPRITE_SMALL_PILL_BASE_ID,
@@ -19537,16 +19511,8 @@ function makePosts(){
           try{
             const spriteData = await generateMarkerImageFromId(spriteId, map);
             if(spriteData && spriteData.image){
-              // Convert ImageData to HTMLCanvasElement if needed
-              let imageToAdd = spriteData.image;
-              if(spriteData.image instanceof ImageData){
-                const canvas = imageDataToCanvas(spriteData.image, spriteData.image.width, spriteData.image.height);
-                if(canvas){
-                  imageToAdd = canvas;
-                } else {
-                  continue;
-                }
-              }
+              // Use image directly (canvas or ImageData)
+              const imageToAdd = spriteData.image;
               // Prepare options: only include pixelRatio if it's not 1 (since 1 is the default)
               const options = spriteData.options || {};
               const finalOptions = {};
@@ -19557,7 +19523,7 @@ function makePosts(){
               map.addImage(spriteId, imageToAdd, Object.keys(finalOptions).length > 0 ? finalOptions : undefined);
             }
           }catch(e){
-            // Silently continue - error already logged by generateMarkerImageFromId if needed
+            console.error(`Exception registering sprite ${spriteId}:`, e.message);
           }
         }
       }
