@@ -18719,11 +18719,14 @@ function makePosts(){
       // Add label text layers (sort-keys 3, 4, 6, 7)
       // Small labels: left edge at 20px from lat/lng (inside pill, which goes from -20px to 130px)
       // Big labels: left edge at 30px from lat/lng (inside pill, which goes from -35px to 190px)
+      // text-offset uses em units, not pixels. With text-size 12, 20px = 20/12 = 1.67em
+      const textSize = 12;
+      const smallLabelOffsetEm = 20 / textSize; // 20px in em units
+      const bigLabelOffsetEm = 30 / textSize; // 30px in em units
+      // Only create small label layers for now (big cards are commented out)
       const labelTextLayersConfig = [
-        { id:'marker-label-text-small', source:'posts', sortKey: 3, filter: ['all', markerLabelFilter, ['!', ['get', 'isMultiVenue']]], minZoom: markerLabelMinZoom, textOffset: [20, 0], maxWidth: 100 },
-        { id:'marker-label-text-small-multi', source:'posts', sortKey: 4, filter: ['all', markerLabelFilter, ['get', 'isMultiVenue']], minZoom: markerLabelMinZoom, textOffset: [20, 0], maxWidth: 100 },
-        { id:'marker-label-text-big', source:'posts', sortKey: 6, filter: ['all', markerLabelFilter, ['!', ['get', 'isMultiVenue']]], minZoom: markerLabelMinZoom, textOffset: [30, 0], maxWidth: 145 },
-        { id:'marker-label-text-big-multi', source:'posts', sortKey: 7, filter: ['all', markerLabelFilter, ['get', 'isMultiVenue']], minZoom: markerLabelMinZoom, textOffset: [30, 0], maxWidth: 145 }
+        { id:'marker-label-text-small', source:'posts', sortKey: 3, filter: ['all', markerLabelFilter, ['!', ['get', 'isMultiVenue']]], minZoom: markerLabelMinZoom, textOffset: [smallLabelOffsetEm, 0], maxWidth: 100 },
+        { id:'marker-label-text-small-multi', source:'posts', sortKey: 4, filter: ['all', markerLabelFilter, ['get', 'isMultiVenue']], minZoom: markerLabelMinZoom, textOffset: [smallLabelOffsetEm, 0], maxWidth: 100 }
       ];
       labelTextLayersConfig.forEach(({ id, source, sortKey, filter, minZoom, textOffset, maxWidth }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
