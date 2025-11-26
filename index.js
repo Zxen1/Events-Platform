@@ -19544,19 +19544,20 @@ function makePosts(){
                 if(canvas){
                   imageToAdd = canvas;
                 } else {
-                  console.error(`Failed to convert ImageData to canvas for ${spriteId}`);
                   continue;
                 }
               }
-              map.addImage(spriteId, imageToAdd, spriteData.options || {});
-              if(!map.hasImage(spriteId)){
-                console.error(`Failed to register sprite ${spriteId}`);
+              // Prepare options: only include pixelRatio if it's not 1 (since 1 is the default)
+              const options = spriteData.options || {};
+              const finalOptions = {};
+              if(options.pixelRatio && options.pixelRatio !== 1){
+                finalOptions.pixelRatio = options.pixelRatio;
               }
-            } else {
-              console.error(`Sprite ${spriteId} returned no image data`);
+              // Only pass options if there are any non-default values
+              map.addImage(spriteId, imageToAdd, Object.keys(finalOptions).length > 0 ? finalOptions : undefined);
             }
           }catch(e){
-            console.error(`Exception registering sprite ${spriteId}:`, e.message);
+            // Silently continue - error already logged by generateMarkerImageFromId if needed
           }
         }
       }
