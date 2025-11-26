@@ -18659,13 +18659,16 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      // Small pills: left edge at -20px from lat/lng (150×40px)
+      // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
+        { id:'marker-label-highlight', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         const finalIconSize = iconSize !== undefined ? iconSize : 1;
+        const finalIconOffset = iconOffset || [0, 0];
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -18681,14 +18684,13 @@ function makePosts(){
                 'icon-size': finalIconSize,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'center',
+                'icon-anchor': 'left',
+                'icon-offset': finalIconOffset,
                 'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
+                'symbol-z-order': 'auto',
                 'symbol-sort-key': sortKey
               },
               paint:{
-                'icon-translate': [0, 0],
-                'icon-translate-anchor': 'viewport',
                 'icon-opacity': iconOpacity || 1
               }
             });
@@ -18705,13 +18707,77 @@ function makePosts(){
         try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-offset', finalIconOffset); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order','auto'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
+      });
+      
+      // Add label text layers (sort-keys 3, 4, 6, 7)
+      // Small labels: left edge at 20px from lat/lng (100×30px invisible rectangle)
+      // Big labels: left edge at 30px from lat/lng (155×50px invisible rectangle)
+      const labelTextLayersConfig = [
+        { id:'marker-label-text-small', source:'posts', sortKey: 3, filter: ['all', markerLabelFilter, ['!', ['get', 'isMultiVenue']]], minZoom: markerLabelMinZoom, textOffset: [20, 0], maxWidth: 100 },
+        { id:'marker-label-text-small-multi', source:'posts', sortKey: 4, filter: ['all', markerLabelFilter, ['get', 'isMultiVenue']], minZoom: markerLabelMinZoom, textOffset: [20, 0], maxWidth: 100 },
+        { id:'marker-label-text-big', source:'posts', sortKey: 6, filter: ['all', markerLabelFilter, ['!', ['get', 'isMultiVenue']]], minZoom: markerLabelMinZoom, textOffset: [30, 0], maxWidth: 145 },
+        { id:'marker-label-text-big-multi', source:'posts', sortKey: 7, filter: ['all', markerLabelFilter, ['get', 'isMultiVenue']], minZoom: markerLabelMinZoom, textOffset: [30, 0], maxWidth: 145 }
+      ];
+      labelTextLayersConfig.forEach(({ id, source, sortKey, filter, minZoom, textOffset, maxWidth }) => {
+        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
+        const finalTextOffset = textOffset || [0, 0];
+        let layerExists = !!map.getLayer(id);
+        if(!layerExists){
+          try{
+            map.addLayer({
+              id,
+              type:'symbol',
+              source,
+              filter: filter || markerLabelFilter,
+              minzoom: layerMinZoom,
+              maxzoom: 24,
+              layout:{
+                'text-field': ['coalesce', ['get', 'label'], ''],
+                'text-size': 12,
+                'text-line-height': 1.2,
+                'text-max-width': maxWidth || 100,
+                'text-anchor': 'left',
+                'text-offset': finalTextOffset,
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+                'text-pitch-alignment': 'viewport',
+                'symbol-z-order': 'auto',
+                'symbol-sort-key': sortKey
+              },
+              paint:{
+                'text-color': '#ffffff',
+                'text-halo-color': 'rgba(0,0,0,0.4)',
+                'text-halo-width': 1,
+                'text-halo-blur': 1
+              }
+            });
+            layerExists = !!map.getLayer(id);
+          }catch(e){
+            layerExists = !!map.getLayer(id);
+          }
+        }
+        if(!layerExists){
+          return;
+        }
+        try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-field', ['coalesce', ['get', 'label'], '']); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-size', 12); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-line-height', 1.2); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-max-width', maxWidth || 100); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-offset', finalTextOffset); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-allow-overlap', true); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-ignore-placement', true); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-pitch-alignment','viewport'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order','auto'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
       // Create marker-icon layer (sprites are already loaded above)
@@ -18741,9 +18807,10 @@ function makePosts(){
               'icon-allow-overlap': true,
               'icon-ignore-placement': true,
               'icon-anchor': 'center',
+              'icon-offset': [0, 0],
               'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': 10,
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': 8,
               'visibility': 'visible'
             },
             paint:{
@@ -18758,6 +18825,10 @@ function makePosts(){
           map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
           map.setFilter(markerIconLayerId, markerIconFilter);
           map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+          map.setLayoutProperty(markerIconLayerId, 'icon-anchor', 'center');
+          map.setLayoutProperty(markerIconLayerId, 'icon-offset', [0, 0]);
+          map.setLayoutProperty(markerIconLayerId, 'symbol-z-order', 'auto');
+          map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', 8);
         }catch(e){}
       }
       
@@ -18807,7 +18878,8 @@ function makePosts(){
         try{
           map.setLayoutProperty('marker-icon', 'visibility', 'visible');
           map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-          map.setLayoutProperty('marker-icon', 'symbol-sort-key', 10);
+          map.setLayoutProperty('marker-icon', 'symbol-sort-key', 8);
+          map.setLayoutProperty('marker-icon', 'symbol-z-order', 'auto');
           map.moveLayer('marker-icon'); // Move to top
         }catch(e){}
       }
