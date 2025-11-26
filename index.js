@@ -19512,6 +19512,19 @@ function makePosts(){
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
+      // Helper to convert ImageData to HTMLCanvasElement for Mapbox compatibility
+      function imageDataToCanvas(imageData, width, height){
+        if(!imageData) return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = width || imageData.width;
+        canvas.height = height || imageData.height;
+        const ctx = canvas.getContext('2d');
+        if(ctx){
+          ctx.putImageData(imageData, 0, 0);
+        }
+        return canvas;
+      }
+      
       // Ensure sprite images are registered BEFORE creating layers
       const spriteIdsToRegister = [
         SPRITE_SMALL_PILL_BASE_ID,
@@ -19524,13 +19537,34 @@ function makePosts(){
           try{
             const spriteData = await generateMarkerImageFromId(spriteId, map);
             if(spriteData && spriteData.image){
-              map.addImage(spriteId, spriteData.image, spriteData.options || {});
+              // Convert ImageData to HTMLCanvasElement if needed
+              let imageToAdd = spriteData.image;
+              if(spriteData.image instanceof ImageData){
+                const canvas = imageDataToCanvas(spriteData.image, spriteData.image.width, spriteData.image.height);
+                if(canvas){
+                  imageToAdd = canvas;
+                } else {
+                  console.error(`Failed to convert ImageData to canvas for ${spriteId}`);
+                  continue;
+                }
+              }
+              map.addImage(spriteId, imageToAdd, spriteData.options || {});
+              // Verify image was actually added
+              if(!map.hasImage(spriteId)){
+                console.error(`Failed to add sprite ${spriteId} to map - hasImage returned false after addImage`);
+                console.error('Image type:', typeof imageToAdd, imageToAdd.constructor.name);
+              } else {
+                console.log(`Successfully added sprite ${spriteId} to map`);
+              }
             } else {
-              console.warn(`Sprite ${spriteId} returned no image data`);
+              console.error(`Sprite ${spriteId} returned no image data`);
             }
           }catch(e){
             console.error(`Failed to register sprite ${spriteId}:`, e);
+            console.error('Error details:', e.message, e.stack);
           }
+        } else {
+          console.log(`Sprite ${spriteId} already exists in map`);
         }
       }
       
@@ -19629,14 +19663,39 @@ function makePosts(){
               layerConfig.paint['text-opacity'] = iconOpacity;
             }
             
+            // Verify map style is loaded before adding layer
+            if(map.isStyleLoaded && !map.isStyleLoaded()){
+              console.error(`Cannot add layer ${id} - map style not loaded`);
+              return;
+            }
+            
+            // Verify required images exist if using icon-image
+            if(iconImage && !map.hasImage(iconImage)){
+              console.error(`Cannot add layer ${id} - required image ${iconImage} not found in map`);
+              return;
+            }
+            
             map.addLayer(layerConfig);
             // Verify layer was created
             if(!map.getLayer(id)){
               console.error(`Layer ${id} was not created after addLayer call`);
               console.error('Layer config:', JSON.stringify(layerConfig, null, 2));
+              // Try to get more details about why it failed
+              try {
+                const style = map.getStyle();
+                if(style){
+                  console.error('Map style layers:', style.layers?.map(l => l.id).slice(-10));
+                }
+              } catch(e) {
+                console.error('Could not get map style:', e);
+              }
+            } else {
+              console.log(`Successfully created layer ${id}`);
             }
           }catch(e){
             console.error(`Failed to create layer ${id}:`, e);
+            console.error('Error message:', e.message);
+            console.error('Error stack:', e.stack);
             console.error('Layer config:', JSON.stringify(layerConfig, null, 2));
           }
         }
