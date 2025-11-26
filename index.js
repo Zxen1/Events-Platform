@@ -19441,13 +19441,9 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Use feature ID as sortKey to ensure unique stacking order for overlapping cards
-      // Subtract 0.1 from icon sortKey so icons render slightly below labels within same feature
-      const markerLabelSortKey = ['coalesce', ['to-number', ['get', 'id']], ['to-number', ['get', 'featureId']], 0];
-      const markerIconSortKey = ['-', markerLabelSortKey, 0.1]; // Icons render below labels
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19529,7 +19525,7 @@ function makePosts(){
               'icon-anchor': 'center',
               'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': markerIconSortKey,
+              'symbol-sort-key': 10,
               'visibility': 'visible'
             },
             paint:{
@@ -19544,27 +19540,20 @@ function makePosts(){
           map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
           map.setFilter(markerIconLayerId, markerIconFilter);
           map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-          map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', markerIconSortKey);
         }catch(e){}
       }
       
-      // Layer order: marker-icon (lowest), marker-label, marker-label-highlight (highest)
-      // This ensures icons render below labels within same feature, but entire cards stack together
-      // Move marker-icon to before marker-label layers so labels render on top of icons
-      if(map.getLayer('marker-icon')){
-        try{ 
-          // Move marker-icon before first marker-label layer
-          const firstLabelLayer = map.getLayer('marker-label');
-          if(firstLabelLayer){
-            map.moveLayer('marker-icon', 'marker-label');
-          }
-        }catch(e){}
-      }
       ALL_MARKER_LAYER_IDS.forEach(id=>{
         if(id !== 'marker-icon' && map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
+      // Move marker-icon layer to top (above map cards)
+      if(map.getLayer('marker-icon')){
+        try{ 
+          map.moveLayer('marker-icon');
+        }catch(e){}
+      }
       [
         ['marker-label','icon-opacity-transition'],
         ['marker-label-highlight','icon-opacity-transition']
@@ -19595,13 +19584,13 @@ function makePosts(){
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Ensure marker-icon layer is visible with correct sortKey
+      // Ensure marker-icon layer is visible and on top after map card setup
       if(map.getLayer('marker-icon')){
         try{
           map.setLayoutProperty('marker-icon', 'visibility', 'visible');
           map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-          map.setLayoutProperty('marker-icon', 'symbol-sort-key', markerIconSortKey);
-          // Don't move to top - sortKey controls stacking order
+          map.setLayoutProperty('marker-icon', 'symbol-sort-key', 10);
+          map.moveLayer('marker-icon'); // Move to top
         }catch(e){}
       }
       
