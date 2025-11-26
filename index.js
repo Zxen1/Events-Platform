@@ -19582,7 +19582,12 @@ function makePosts(){
           } else {
             map.moveLayer('marker-icon');
           }
-        }catch(e){}
+          // Ensure visibility after moving
+          map.setLayoutProperty('marker-icon', 'visibility', 'visible');
+          map.setPaintProperty('marker-icon', 'icon-opacity', 1);
+        }catch(e){
+          console.warn('[Map Markers] Error moving marker-icon layer:', e);
+        }
       }
       [
         ['marker-label','icon-opacity-transition'],
