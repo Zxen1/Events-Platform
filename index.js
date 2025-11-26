@@ -19549,9 +19549,14 @@ function makePosts(){
                 }
               }
               map.addImage(spriteId, imageToAdd, spriteData.options || {});
+              if(!map.hasImage(spriteId)){
+                console.error(`Failed to register sprite ${spriteId}`);
+              }
+            } else {
+              console.error(`Sprite ${spriteId} returned no image data`);
             }
           }catch(e){
-            // Silent fail like working version
+            console.error(`Exception registering sprite ${spriteId}:`, e.message);
           }
         }
       }
@@ -19562,6 +19567,9 @@ function makePosts(){
         console.error('Posts source does not exist!');
         return;
       }
+      const sourceData = postsSource._data;
+      const featureCount = sourceData && sourceData.features ? sourceData.features.length : 0;
+      console.log(`Posts source has ${featureCount} features`);
       
       // Base filter for single-post markers (not clusters)
       const singlePostFilter = ['all',
@@ -19657,8 +19665,12 @@ function makePosts(){
             }
             
             map.addLayer(layerConfig);
+            const created = !!map.getLayer(id);
+            if(!created){
+              console.error(`Failed to create layer ${id}`);
+            }
           }catch(e){
-            // Silent fail like working version
+            console.error(`Exception creating layer ${id}:`, e.message);
           }
         }
         
