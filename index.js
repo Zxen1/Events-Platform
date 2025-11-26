@@ -19441,9 +19441,22 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Use feature ID as sortKey to ensure unique stacking order for overlapping cards
-      // Labels (pills) use sort-keys 1-7, marker icons use 8-9 per requirements
-      const markerLabelSortKey = ['coalesce', ['to-number', ['get', 'id']], ['to-number', ['get', 'featureId']], 0];
+      // Per MAPMARKER_REQUIREMENTS.txt: Labels (pills) use sort-keys 1-7, marker icons use 8-9
+      // Determine if multi-post: check isMultiVenue, multiCount, or multiPostIds
+      const isMultiPost = ['case',
+        ['has', 'isMultiVenue'], ['get', 'isMultiVenue'],
+        ['has', 'multiCount'], ['>', ['to-number', ['get', 'multiCount']], 1],
+        ['has', 'multiPostIds'], ['>', ['length', ['get', 'multiPostIds']], 1],
+        false
+      ];
+      // marker-label-highlight (accent): sort-key 2 (small accent pill per requirements)
+      const markerLabelHighlightSortKey = 2;
+      // marker-label (base): sort-key 3 (small single) or 4 (small multi-post) per requirements
+      // Note: Big labels (sort-keys 5-7) will be added when size detection is refined
+      const markerLabelSortKey = ['case',
+        isMultiPost, 4, // Small multi-post map card label (sort-key 4)
+        3 // Small map card label (sort-key 3)
+      ];
       // Marker icons: sort-key 8 for single post, 9 for multi-post (per MAPMARKER_REQUIREMENTS.txt)
       const markerIconSortKey = ['case',
         ['==', ['coalesce', ['get','sub'], ''], ''],
@@ -19452,7 +19465,7 @@ function makePosts(){
       ];
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label-highlight', source:'posts', sortKey: markerLabelHighlightSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
