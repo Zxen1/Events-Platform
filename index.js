@@ -19566,15 +19566,20 @@ function makePosts(){
         }catch(e){}
       }
       
-      // Layer order: marker-icon, marker-label, marker-label-highlight (highest)
+      // Layer order: marker-label, marker-label-highlight, marker-icon (highest)
       // Sort-key ensures icons render above labels (pills) - marker icons use sort-key 8 (single) or 9 (multi-post)
-      // Move marker-icon to before marker-label layers (layer order is less important than sort-key)
+      // Move marker-icon after label layers so it renders on top
       if(map.getLayer('marker-icon')){
         try{ 
-          // Move marker-icon before first marker-label layer
-          const firstLabelLayer = map.getLayer('marker-label');
-          if(firstLabelLayer){
-            map.moveLayer('marker-icon', 'marker-label');
+          // Move marker-icon after last label layer so it renders on top
+          const lastLabelLayer = map.getLayer('marker-label-highlight');
+          if(lastLabelLayer){
+            map.moveLayer('marker-icon', lastLabelLayer);
+          } else {
+            const firstLabelLayer = map.getLayer('marker-label');
+            if(firstLabelLayer){
+              map.moveLayer('marker-icon', firstLabelLayer);
+            }
           }
         }catch(e){}
       }
