@@ -19442,9 +19442,14 @@ function makePosts(){
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Use feature ID as sortKey to ensure unique stacking order for overlapping cards
-      // Subtract 0.1 from icon sortKey so icons render slightly below labels within same feature
+      // Labels (pills) use sort-keys 1-7, marker icons use 8-9 per requirements
       const markerLabelSortKey = ['coalesce', ['to-number', ['get', 'id']], ['to-number', ['get', 'featureId']], 0];
-      const markerIconSortKey = ['-', markerLabelSortKey, 0.1]; // Icons render below labels
+      // Marker icons: sort-key 8 for single post, 9 for multi-post (per MAPMARKER_REQUIREMENTS.txt)
+      const markerIconSortKey = ['case',
+        ['==', ['coalesce', ['get','sub'], ''], ''],
+        9, // Multi-post marker icon (sort-key 9)
+        8  // Single post marker icon (sort-key 8)
+      ];
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: markerLabelSortKey, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
@@ -19548,9 +19553,9 @@ function makePosts(){
         }catch(e){}
       }
       
-      // Layer order: marker-icon (lowest), marker-label, marker-label-highlight (highest)
-      // This ensures icons render below labels within same feature, but entire cards stack together
-      // Move marker-icon to before marker-label layers so labels render on top of icons
+      // Layer order: marker-icon, marker-label, marker-label-highlight (highest)
+      // Sort-key ensures icons render above labels (pills) - marker icons use sort-key 8 (single) or 9 (multi-post)
+      // Move marker-icon to before marker-label layers (layer order is less important than sort-key)
       if(map.getLayer('marker-icon')){
         try{ 
           // Move marker-icon before first marker-label layer
