@@ -19624,7 +19624,8 @@ function makePosts(){
               layerConfig.layout['text-line-height'] = 1.2;
               layerConfig.layout['text-allow-overlap'] = true;
               layerConfig.layout['text-ignore-placement'] = true;
-              layerConfig.paint['text-color'] = textColor; // text-color is a paint property, not layout
+              // text-color MUST be in paint, not layout
+              if(textColor) layerConfig.paint['text-color'] = textColor;
               layerConfig.paint['text-opacity'] = iconOpacity;
             }
             
@@ -19632,9 +19633,11 @@ function makePosts(){
             // Verify layer was created
             if(!map.getLayer(id)){
               console.error(`Layer ${id} was not created after addLayer call`);
+              console.error('Layer config:', JSON.stringify(layerConfig, null, 2));
             }
           }catch(e){
             console.error(`Failed to create layer ${id}:`, e);
+            console.error('Layer config:', JSON.stringify(layerConfig, null, 2));
           }
         }
         
