@@ -1319,8 +1319,6 @@ let __notifyMapOnInteraction = null;
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
     const POINTER_READY_IDS = new Set([
-      'small-map-card-pill',
-      'big-map-card-pill',
       'post-balloons'
     ]);
 
@@ -1724,32 +1722,8 @@ let __notifyMapOnInteraction = null;
                       window.updateMapCardLayerOpacity(mapCardDisplay);
                     }
                     
-                    // Update hover handlers - always use marker-icon only for precise hover zone
-                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
-                    if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
-                      // Remove old hover handlers from all possible layers
-                      const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
-                      allPossibleLayers.forEach(layer => {
-                        try {
-                          mapInstance.off('mouseenter', layer, window.handleMarkerHover);
-                          mapInstance.off('mouseleave', layer, window.handleMarkerHoverEnd);
-                        } catch(e) {}
-                      });
-                      
-                      // Always use marker-icon only for precise hover zone
-                      try {
-                        mapInstance.on('mouseenter', 'mapmarker-icon', window.handleMarkerHover);
-                        mapInstance.on('mouseleave', 'mapmarker-icon', window.handleMarkerHoverEnd);
-                      } catch(e) {}
-                    }
                     
                     // Update click and cursor handlers to match new display mode
-                    if(typeof window.attachClickHandlers === 'function'){
-                      window.attachClickHandlers();
-                    }
-                    if(typeof window.attachCursorHandlers === 'function'){
-                      window.attachCursorHandlers();
-                    }
                     
                     // Auto-save to database
                     try {
@@ -1915,9 +1889,7 @@ let __notifyMapOnInteraction = null;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       // Map card layers only - marker-icon is completely separate
       const MARKER_LAYER_IDS = [
-        'hover-fill',
-        'small-map-card-pill',
-        'big-map-card-pill'
+        'hover-fill'
       ];
       const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
@@ -2358,39 +2330,6 @@ let __notifyMapOnInteraction = null;
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
     let hoveredPostIds = [];
-    // Function to update icon-size for big-map-card-pill layer based on click/open state
-    function updateMarkerLabelHighlightIconSize(){
-      if(!map || typeof map.setFeatureState !== 'function') return;
-      
-      const openPostEl = document.querySelector('.open-post[data-id]');
-      const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
-      const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
-      const expandedPostId = openPostId || clickedPostId;
-      
-      // Reset all features to not active
-      highlightedFeatureKeys.forEach(entry => {
-        try{ 
-          map.setFeatureState({ source: entry.source, id: entry.id }, { isActive: false }); 
-        }catch(err){}
-      });
-      
-      // Set active state for clicked/open post
-      if(expandedPostId){
-        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
-        if(entries && entries.length){
-          entries.forEach(entry => {
-            if(!entry) return;
-            const source = entry.source || 'posts';
-            const featureId = entry.id;
-            if(featureId !== undefined && featureId !== null){
-              try{ 
-                map.setFeatureState({ source: source, id: featureId }, { isActive: true }); 
-              }catch(err){}
-            }
-          });
-        }
-      }
-    }
     
     function updateMapFeatureHighlights(targets){
       const input = Array.isArray(targets) ? targets : [targets];
@@ -2482,8 +2421,6 @@ let __notifyMapOnInteraction = null;
       });
       highlightedFeatureKeys = nextEntries;
       
-      // Update icon-size based on click/open state
-      updateMarkerLabelHighlightIconSize();
       if(highlightSpriteIds.size){
         highlightSpriteIds.forEach(spriteId => {
         });
@@ -2619,16 +2556,6 @@ let __notifyMapOnInteraction = null;
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    // Get interactive layers based on map card display mode
-    // In hover_only mode, only marker-icon is clickable (map cards are hidden)
-    // In always mode, marker-icon and map card layers are clickable
-    const getMarkerInteractiveLayers = () => {
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      if(mapCardDisplay === 'hover_only'){
-        return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
-      }
-      return ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill']; // All layers clickable when cards are visible
-    };
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -16513,19 +16440,6 @@ function makePosts(){
           }
         }
         
-        // Update mapcard states after post opens
-        if(typeof window.updateMapCardStates === 'function'){
-          requestAnimationFrame(() => {
-            window.updateMapCardStates();
-          });
-        }
-        
-        // Update icon-size for expanded state
-        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-          requestAnimationFrame(() => {
-            updateMarkerLabelHighlightIconSize();
-          });
-        }
 
         await nextFrame();
 
@@ -16802,15 +16716,6 @@ function makePosts(){
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
         
-        // Update mapcard states when post closes
-        if(typeof window.updateMapCardStates === 'function'){
-          window.updateMapCardStates();
-        }
-        
-        // Update icon-size when post closes
-        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-          updateMarkerLabelHighlightIconSize();
-        }
       }
 
       window.openPost = openPost;
@@ -16829,14 +16734,6 @@ function makePosts(){
             const id = cardEl.getAttribute('data-id');
             if(!id) return;
             
-            // Add clicked state to corresponding mapcard
-            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-            if(mapCard){
-              document.querySelectorAll('.small-map-card').forEach(card => {
-                card.classList.remove('is-clicked');
-              });
-              mapCard.classList.add('is-clicked');
-            }
             
             callWhenDefined('openPost', (fn)=>{
               requestAnimationFrame(() => {
@@ -16862,14 +16759,6 @@ function makePosts(){
             if(id){
               e.preventDefault();
               
-              // Add clicked state to corresponding mapcard
-              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-              if(mapCard){
-                document.querySelectorAll('.small-map-card').forEach(card => {
-                  card.classList.remove('is-clicked');
-                });
-                mapCard.classList.add('is-clicked');
-              }
               
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
@@ -18400,537 +18289,14 @@ function makePosts(){
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
       }
-      // Pre-load marker-icon sprites and add them to map
-      const markerIconIds = new Set();
-      postsData.features.forEach(feature => {
-        if(feature.properties && !feature.properties.point_count){
-          const iconId = feature.properties.sub || MULTI_POST_MARKER_ICON_ID;
-          markerIconIds.add(iconId);
-        }
-      });
-      markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
-      for(const iconId of markerIconIds){
-        if(typeof ensureMapIcon === 'function'){
-          await ensureMapIcon(iconId).catch(()=>{});
-        }
-        const iconUrl = subcategoryMarkers[iconId];
-        if(iconUrl && !map.hasImage(iconId)){
-          try{
-            const img = await new Promise((resolve, reject) => {
-              const image = new Image();
-              try{ image.crossOrigin = 'anonymous'; }catch(e){}
-              image.onload = () => resolve(image);
-              image.onerror = () => reject(new Error(`Failed to load ${iconUrl}`));
-              image.src = iconUrl;
-            });
-            if(img){
-              let deviceScale = 2;
-              try{
-                const ratio = window.devicePixelRatio;
-                if(Number.isFinite(ratio) && ratio > 0){
-                  deviceScale = ratio;
-                }
-              }catch(err){
-                deviceScale = 2;
-              }
-              if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-                deviceScale = 2;
-              }
-              const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
-              const canvas = document.createElement('canvas');
-              canvas.width = iconSize;
-              canvas.height = iconSize;
-              const ctx = canvas.getContext('2d');
-              if(ctx){
-                ctx.drawImage(img, 0, 0, iconSize, iconSize);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                map.addImage(iconId, imageData, { pixelRatio: deviceScale });
-              }
-            }
-          }catch(e){}
-        }
-      }
-      
       updateMapFeatureHighlights(lastHighlightedPostIds);
-      
-      const markerLabelBaseConditions = [
-        ['!',['has','point_count']],
-        ['has','title']
-      ];
-      const markerLabelFilter = ['all', ...markerLabelBaseConditions];
-
-      const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      const smallPillOpacity = mapCardDisplay === 'hover_only' 
-        ? ['case', highlightedStateExpression, 1, 0]
-        : 1;
-      // Big pill should only show when post is active/clicked (isActive), not on hover
-      const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
-      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
-
-      const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Small pills: left edge at -20px from lat/lng (150×40px)
-      // Big pills: left edge at -35px from lat/lng (225×60px)
-      const labelLayersConfig = [
-        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: 'small-map-card-pill', iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: 'big-map-card-pill', iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
-      ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
-        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
-        const finalIconSize = iconSize !== undefined ? iconSize : 1;
-        const finalIconOffset = iconOffset || [0, 0];
-        let layerExists = !!map.getLayer(id);
-        if(!layerExists){
-          try{
-            map.addLayer({
-              id,
-              type:'symbol',
-              source,
-              filter: filter || markerLabelFilter,
-              minzoom: layerMinZoom,
-              maxzoom: 24,
-              layout:{
-                'icon-image': iconImage,
-                'icon-size': finalIconSize,
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-anchor': 'left',
-                'icon-offset': finalIconOffset,
-                'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'auto',
-                'symbol-sort-key': sortKey
-              },
-              paint:{
-                'icon-opacity': iconOpacity || 1
-              }
-            });
-            layerExists = !!map.getLayer(id);
-          }catch(e){
-            layerExists = !!map.getLayer(id);
-          }
-        }
-        if(!layerExists){
-          return;
-        }
-        // Update properties that can change (filter, opacity, and icon-image for small pill)
-        try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        // Update icon-image for small pill layer
-        if(id === 'small-map-card-pill' && iconImage){
-          try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
-        }
-      });
-      
-      // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
-      // Labels must be in the SAME layer as pills for sort-keys to work (sort-keys only work within same layer)
-      // Small labels: left edge at 20px from lat/lng (inside pill, which goes from -20px to 130px)
-      // text-offset uses em units, not pixels. With text-size 12, 20px = 20/12 = 1.67em
-      const textSize = 12;
-      const smallLabelOffsetEm = 20 / textSize; // 20px in em units
-      const labelTextLayerId = 'small-map-card-label';
-      if(!map.getLayer(labelTextLayerId)){
-        try{
-          map.addLayer({
-            id: labelTextLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerLabelFilter,
-            minzoom: markerLabelMinZoom,
-            maxzoom: 24,
-            layout:{
-              'text-field': ['coalesce', ['get', 'label'], ''],
-              'text-size': textSize,
-              'text-line-height': 1.2,
-              'text-max-width': 100,
-              'text-anchor': 'left',
-              'text-justify': 'left',
-              'text-offset': [smallLabelOffsetEm, 0],
-              'text-allow-overlap': true,
-              'text-ignore-placement': true,
-              'text-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 4, 3]
-            },
-            paint:{
-              'text-color': '#ffffff',
-              'text-opacity': mapCardDisplay === 'hover_only' ? 0 : 1,
-              'text-halo-color': 'rgba(0,0,0,0.4)',
-              'text-halo-width': 1,
-              'text-halo-blur': 1
-            }
-          });
-        }catch(e){
-          console.error('Failed to add label text layer:', e);
-        }
-      }
-      if(map.getLayer(labelTextLayerId)){
-        try{ 
-          // Only update properties that can change (filter and sort-key based on data)
-          map.setFilter(labelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
-        }catch(e){
-          console.error('Failed to update label text layer:', e);
-        }
-      }
-      
-      // Create marker-icon layer (sprites are already loaded above)
-      const markerIconFilter = ['all',
-        ['!',['has','point_count']],
-        ['has','title']
-      ];
-      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-        ['case',
-          ['==', ['var','iconId'], ''],
-          MULTI_POST_MARKER_ICON_ID,
-          ['var','iconId']
-        ]
-      ];
-      const markerIconLayerId = 'mapmarker-icon';
-      if(!map.getLayer(markerIconLayerId)){
-        try{
-          map.addLayer({
-            id: markerIconLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerIconFilter,
-            minzoom: MARKER_MIN_ZOOM,
-            layout:{
-              'icon-image': markerIconImageExpression,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'center',
-              'icon-offset': [0, 0],
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': 8,
-              'visibility': 'visible'
-            },
-            paint:{
-              'icon-opacity': 1
-            }
-          });
-        }catch(e){}
-      }
-      if(map.getLayer(markerIconLayerId)){
-        try{
-          // Only update properties that can change (filter and icon-image based on data)
-          map.setFilter(markerIconLayerId, markerIconFilter);
-          map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-        }catch(e){}
-      }
-      
-      // Layer ordering will be set at the end after all layers are created
-      [
-        ['small-map-card-pill','icon-opacity-transition'],
-        ['big-map-card-pill','icon-opacity-transition']
-      ].forEach(([layer, prop])=>{
-        if(map.getLayer(layer)){
-          try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
-        }
-      });
-      
-      function updateMapCardLayerOpacity(displayMode){
-        if(!map) return;
-        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-        // Small pill: in hover_only mode, only show when highlighted; in always mode, always show
-        if(map.getLayer('small-map-card-pill')){
-          const smallPillOpacity = displayMode === 'hover_only' 
-            ? ['case', highlightedStateExpression, 1, 0]
-            : 1;
-          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
-        }
-        // Hide labels in hover_only mode (same as pills)
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
-        if(map.getLayer('small-map-card-label')){
-          try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
-        }
-        // marker-icon visibility/opacity handled in final ordering section
-      }
-      window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
-      window.getMapInstance = () => map; // Expose map instance getter
-      
-      updateMapCardLayerOpacity(mapCardDisplay);
-      
-      // Final layer ordering (bottom to top): pills -> labels -> icons
-      // Ensure marker-icon layer is visible and on top
-      if(map.getLayer('mapmarker-icon')){
-        try{
-          map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
-          map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
-          map.moveLayer('mapmarker-icon'); // Move icons to top
-        }catch(e){}
-      }
-      // Move big labels above big pills but below icons
-      if(map.getLayer('big-map-card-label')){
-        try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('big-map-card-label', 'mapmarker-icon'); // Big labels below icons
-          } else {
-            map.moveLayer('big-map-card-label'); // Move to top if no icon layer
-          }
-        }catch(e){}
-      }
-      // Move small labels above pills but below big labels
-      if(map.getLayer('small-map-card-label')){
-        try{
-          if(map.getLayer('big-map-card-label')){
-            map.moveLayer('small-map-card-label', 'big-map-card-label'); // Small labels below big labels
-          } else if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
-          } else {
-            map.moveLayer('small-map-card-label'); // Move to top if no other layers
-          }
-        }catch(e){}
-      }
       
       if(!postSourceEventsBound){
 
-        const handleMarkerClick = (e)=>{
-          stopSpin();
-          const f = e.features && e.features[0]; if(!f) return;
-          const props = f.properties || {};
-          const venueKey = props.venueKey || null;
-          const id = props.id;
-          const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
-          const normalizedMultiIds = rawMultiIds.map(item => String(item)).filter(Boolean);
-          const multiCountFromProps = Number(props.multiCount);
-          let normalizedMultiCount = Number.isFinite(multiCountFromProps) && multiCountFromProps > 0 ? multiCountFromProps : 0;
-          if(!normalizedMultiCount){
-            normalizedMultiCount = normalizedMultiIds.length;
-          }
-          const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiPost ? 2 : 0);
-          const isMultiPost = helperMultiCount > 1;
-          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
-          
-            // Add clicked state to mapcard and update icon-size
-            if(id !== undefined && id !== null){
-              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-              if(mapCard){
-                document.querySelectorAll('.small-map-card').forEach(card => {
-                  card.classList.remove('is-clicked');
-                });
-                mapCard.classList.add('is-clicked');
-              }
-              // Update icon-size for expanded state
-              if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-                updateMarkerLabelHighlightIconSize();
-              }
-            }
-          
-          if(touchClick){
-            // Two-tap system: first tap shows accent pill, second tap opens post
-            if(touchMarker === id){
-              // Second tap on same marker - open the post
-              touchMarker = null;
-              hoveredPostIds = [];
-              if(id !== undefined && id !== null){
-                activePostId = id;
-                selectedVenueKey = venueKey;
-                updateSelectedMarkerRing();
-              }
-              const p = posts.find(x=>x.id===id);
-              if(p){
-                callWhenDefined('openPost', (fn)=>{
-                  requestAnimationFrame(() => {
-                    try{
-                      stopSpin();
-                      if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                        try{ closePanel(filterPanel); }catch(err){}
-                      }
-                      fn(id, false, true, null);
-                    }catch(err){ console.error(err); }
-                  });
-                });
-              }
-              if(isMultiPost){
-                autoOpenPostBoardForMultiPost({
-                  multiIds: normalizedMultiIds,
-                  multiCount: helperMultiCount,
-                  trigger: 'touch'
-                });
-              }
-              return;
-            } else {
-              // First tap - show accent pill, don't open
-              touchMarker = id;
-              if(id !== undefined && id !== null){
-                hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-                updateSelectedMarkerRing();
-              }
-              return;
-            }
-          }
-          
-          // Non-touch: open immediately
-          if(id !== undefined && id !== null){
-            activePostId = id;
-            selectedVenueKey = venueKey;
-            updateSelectedMarkerRing();
-          }
-          const coords = f.geometry && f.geometry.coordinates;
-          const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
-          const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
-          const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
-          const targetLngLat = baseLngLat || (e ? e.lngLat : null);
-          if(isMultiPost){
-            autoOpenPostBoardForMultiPost({
-              multiIds: normalizedMultiIds,
-              multiCount: helperMultiCount,
-              trigger: 'click'
-            });
-          } else {
-            const p = posts.find(x=>x.id===id);
-            if(p){
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                      try{ closePanel(filterPanel); }catch(err){}
-                    }
-                    fn(id, false, true, null);
-                  }catch(err){ console.error(err); }
-                });
-              });
-            }
-          }
-        };
-      // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
-      const attachClickHandlers = () => {
-        // Remove old handlers from all possible layers
-        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
-        allPossibleLayers.forEach(layer => {
-          try {
-            map.off('click', layer, handleMarkerClick);
-          } catch(e) {}
-        });
-        // Add handlers to current interactive layers
-        getMarkerInteractiveLayers().forEach(layer => {
-          try {
-            map.on('click', layer, handleMarkerClick);
-          } catch(e) {}
-        });
-      };
-      attachClickHandlers();
-      // Expose globally so handlers can be updated when mapCardDisplay changes
-      window.attachClickHandlers = attachClickHandlers;
-
-      // Function to update mapcard click and post-open states
-      function updateMapCardStates(){
-        const openPostEl = document.querySelector('.open-post[data-id]');
-        const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
-        
-        // Remove all click and post-open states
-        document.querySelectorAll('.small-map-card').forEach(card => {
-          card.classList.remove('is-clicked', 'is-post-open');
-        });
-        
-        // Add post-open state to mapcard if post is open
-        if(openPostId){
-          const mapCard = document.querySelector(`.small-map-card[data-id="${openPostId}"]`);
-          if(mapCard){
-            mapCard.classList.add('is-post-open');
-          }
-        }
-      }
       
-      // Expose globally
-      window.updateMapCardStates = updateMapCardStates;
-      
-      map.on('click', e=>{
-        const originalTarget = e.originalEvent && e.originalEvent.target;
-        const targetEl = originalTarget && typeof originalTarget.closest === 'function'
-          ? originalTarget.closest('.mapmarker-overlay, .small-map-card')
-          : null;
-        if(targetEl){
-          const smallMapCard = targetEl.classList.contains('small-map-card') 
-            ? targetEl 
-            : targetEl.querySelector('.small-map-card');
-          if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
-            const pid = smallMapCard.dataset.id;
-            
-            // Add clicked state
-            document.querySelectorAll('.small-map-card').forEach(card => {
-              card.classList.remove('is-clicked');
-            });
-            smallMapCard.classList.add('is-clicked');
-            
-            callWhenDefined('openPost', (fn)=>{
-              requestAnimationFrame(() => {
-                try{
-                  touchMarker = null;
-                  stopSpin();
-                  if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                    try{ closePanel(filterPanel); }catch(err){}
-                  }
-                  fn(pid, false, true, null);
-                }catch(err){ console.error(err); }
-              });
-            });
-          }
-          return;
-        }
-        const feats = map.queryRenderedFeatures(e.point);
-        if(!feats.length){
-          // Clicked elsewhere - remove click states
-          document.querySelectorAll('.small-map-card').forEach(card => {
-            card.classList.remove('is-clicked');
-          });
-          updateSelectedMarkerRing();
-          touchMarker = null;
-          hoveredPostIds = [];
-          updateSelectedMarkerRing();
-          updateMapCardStates();
-        } else {
-          const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
-          if(!clickedMarkerLabel){
-            // Clicked elsewhere - remove click states
-            document.querySelectorAll('.small-map-card').forEach(card => {
-              card.classList.remove('is-clicked');
-            });
-            touchMarker = null;
-            hoveredPostIds = [];
-            updateSelectedMarkerRing();
-            updateMapCardStates();
-          }
-        }
-      });
 
       updateSelectedMarkerRing();
 
-      // Set pointer cursor when hovering over markers (dynamic based on mapCardDisplay)
-      // Store cursor handler functions so we can remove only these specific handlers
-      const cursorEnterHandler = () => {
-        map.getCanvas().style.cursor = 'pointer';
-      };
-      const cursorLeaveHandler = () => {
-        map.getCanvas().style.cursor = 'grab';
-      };
-      const attachCursorHandlers = () => {
-        // Remove only our cursor handlers from all possible layers
-        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
-        allPossibleLayers.forEach(layer => {
-          try {
-            map.off('mouseenter', layer, cursorEnterHandler);
-            map.off('mouseleave', layer, cursorLeaveHandler);
-          } catch(e) {}
-        });
-        // Add cursor handlers to current interactive layers only
-        getMarkerInteractiveLayers().forEach(layer => {
-          try {
-            map.on('mouseenter', layer, cursorEnterHandler);
-            map.on('mouseleave', layer, cursorLeaveHandler);
-          } catch(e) {}
-        });
-      };
-      attachCursorHandlers();
-      // Expose globally so handlers can be updated when mapCardDisplay changes
-      window.attachCursorHandlers = attachCursorHandlers;
 
       // Handle hover/tap to show accent pill
       // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
@@ -18950,7 +18316,7 @@ function makePosts(){
         
         // Query what's under the cursor
         const features = map.queryRenderedFeatures(point, {
-          layers: ['mapmarker-icon']
+          layers: []
         });
         
         if(features.length > 0){
@@ -18969,7 +18335,7 @@ function makePosts(){
           hoverCheckTimeout = setTimeout(() => {
             // Double-check we're still not over a marker
             const recheckFeatures = map.queryRenderedFeatures(point, {
-              layers: ['mapmarker-icon']
+              layers: []
             });
             if(recheckFeatures.length === 0){
               currentHoveredId = null;
@@ -18981,59 +18347,6 @@ function makePosts(){
         }
       };
       
-      const handleMarkerHover = (e) => {
-        // Cancel any pending hover clear
-        if(hoverCheckTimeout){
-          clearTimeout(hoverCheckTimeout);
-          hoverCheckTimeout = null;
-        }
-        
-        const f = e.features && e.features[0];
-        if(!f) return;
-        const props = f.properties || {};
-        const id = props.id;
-        const venueKey = props.venueKey || null;
-        
-        if(id !== undefined && id !== null){
-          currentHoveredId = String(id);
-          hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-          updateSelectedMarkerRing();
-        }
-      };
-
-      const handleMarkerHoverEnd = (e) => {
-        // Use mousemove to check what we're over now - this handles smooth transitions
-        if(e.point){
-          updateHoverFromPoint(e.point);
-        } else {
-          // No point info, clear after delay
-          hoverCheckTimeout = setTimeout(() => {
-            currentHoveredId = null;
-            hoveredPostIds = [];
-            updateSelectedMarkerRing();
-            hoverCheckTimeout = null;
-          }, 50);
-        }
-      };
-      
-      // Also track mousemove over the map to catch transitions between markers
-      const handleMapMouseMove = (e) => {
-        if(e.point){
-          updateHoverFromPoint(e.point);
-        }
-      };
-      
-      // Expose hover handlers globally so they can be updated when mapCardDisplay changes
-      window.handleMarkerHover = handleMarkerHover;
-      window.handleMarkerHoverEnd = handleMarkerHoverEnd;
-
-      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
-      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
-      // Using only marker-icon ensures hover works reliably and precisely
-      map.on('mouseenter', 'mapmarker-icon', handleMarkerHover);
-      map.on('mouseleave', 'mapmarker-icon', handleMarkerHoverEnd);
-      // Track mousemove to catch smooth transitions between markers
-      map.on('mousemove', 'mapmarker-icon', handleMapMouseMove);
 
 
       // Maintain pointer cursor for balloons and surface multi-post cards when applicable
