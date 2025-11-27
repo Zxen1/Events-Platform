@@ -958,49 +958,6 @@ let __notifyMapOnInteraction = null;
     });
   }
 
-  function createTransparentPlaceholder(width, height){
-    const canvas = document.createElement('canvas');
-    const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
-    const h = Math.max(1, Number.isFinite(height) ? height : (Number.isFinite(width) ? width : (width || 2)));
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if(ctx){
-      ctx.clearRect(0, 0, w, h);
-    }
-    return canvas;
-  }
-
-  function ensurePlaceholderSprites(mapInstance){
-    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
-    const required = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
-    const install = () => {
-      required.forEach(name => {
-        try{
-          if(mapInstance.hasImage?.(name)) return;
-          const size = name === 'mx-federal-5' ? 2 : 4;
-          const options = { pixelRatio: 1 };
-          if(name !== 'mx-federal-5'){
-            options.sdf = true;
-          }
-          mapInstance.addImage(name, createTransparentPlaceholder(size), options);
-        }catch(err){}
-      });
-    };
-    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
-      if(!mapInstance.__placeholderSpriteReady){
-        const onStyleLoad = () => {
-          try{ install(); }catch(err){}
-          try{ mapInstance.off?.('style.load', onStyleLoad); }catch(err){}
-          mapInstance.__placeholderSpriteReady = null;
-        };
-        mapInstance.__placeholderSpriteReady = onStyleLoad;
-        try{ mapInstance.on('style.load', onStyleLoad); }catch(err){}
-      }
-      return;
-    }
-    install();
-  }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
@@ -1231,18 +1188,6 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const targetMap = mapInstance || map;
-    const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
-    if(placeholders.includes(id)){
-      const size = id === 'mx-federal-5' ? 2 : 4;
-      const placeholderOptions = { pixelRatio: 1 };
-      if(id !== 'mx-federal-5'){
-        placeholderOptions.sdf = true;
-      }
-      return {
-        image: createTransparentPlaceholder(size),
-        options: placeholderOptions
-      };
-    }
     const ensureIcon = options && typeof options.ensureIcon === 'function' ? options.ensureIcon : null;
     if(ensureIcon){
       try{
@@ -1367,7 +1312,6 @@ let __notifyMapOnInteraction = null;
       return;
     }
     if(!style) return;
-    try{ ensurePlaceholderSprites(mapInstance); }catch(err){}
     try{ patchLayerFiltersForMissingLayer(mapInstance, style); }catch(err){}
     try{ patchTerrainSource(mapInstance, style); }catch(err){}
   }
@@ -17701,7 +17645,6 @@ function makePosts(){
             console.error('Mapbox authentication error:', e.error);
           }
         });
-        try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
@@ -17853,7 +17796,6 @@ function makePosts(){
 // === Pill hooks (safe) ===
 
         const applyStyleAdjustments = () => {
-          try{ ensurePlaceholderSprites(map); }catch(err){}
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
         };
@@ -17861,7 +17803,6 @@ function makePosts(){
         map.on('style.load', applyStyleAdjustments);
         
         map.on('styledata', () => {
-          try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
             patchMapboxStyleArtifacts(map);
           }
