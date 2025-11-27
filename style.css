@@ -1602,6 +1602,12 @@ button[aria-expanded="true"] .results-arrow{
   margin-bottom:0;
 }
 
+.system-image-picker-field label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:500;
+}
+
 /* Map tab iconpicker styles (matching formbuilder edit panel) */
 #tab-map .iconpicker-container{
   position:relative;
@@ -8975,43 +8981,80 @@ html, body { cursor: auto !important; }
               max-height:none;
             }
             #tab-messages .iconpicker-container{
+              position:relative;
               display:flex;
               flex-direction:row;
               align-items:center;
               gap:12px;
             }
+            #tab-messages .iconpicker-button{
+              position:relative;
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              gap:8px;
+              padding:8px 16px;
+              border-radius:8px;
+              border:1px solid var(--btn);
+              background:var(--btn);
+              color:var(--button-text);
+              font-weight:600;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
+            }
+            #tab-messages .iconpicker-button:hover,
+            #tab-messages .iconpicker-button:focus-visible{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+              color:var(--button-text);
+              outline:none;
+            }
+            #tab-messages .iconpicker-button:focus-visible{
+              box-shadow:0 0 0 3px rgba(46,58,114,0.45);
+            }
+            #tab-messages .iconpicker-button[disabled],
+            #tab-messages .iconpicker-button[aria-disabled='true']{
+              cursor:not-allowed;
+              opacity:0.65;
+              background:rgba(255,255,255,0.08);
+              border-color:rgba(255,255,255,0.14);
+              color:var(--muted);
+              box-shadow:none;
+            }
+            #tab-messages .iconpicker-container.iconpicker-open .iconpicker-button{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+            }
             #tab-messages .iconpicker-preview{
               display:flex;
               align-items:center;
               justify-content:center;
+              color:var(--muted);
+              font-size:12px;
+              text-align:center;
+              padding:0;
+              box-sizing:border-box;
+              overflow:hidden;
+              background:none;
+              border:none;
               min-height:40px;
               min-width:40px;
               flex-shrink:0;
             }
             #tab-messages .iconpicker-preview img{
+              max-width:100%;
+              max-height:100%;
+              display:none;
+            }
+            #tab-messages .iconpicker-preview.has-image{
+              color:transparent;
+            }
+            #tab-messages .iconpicker-preview.has-image img{
+              display:block;
+            }
+            #tab-messages .iconpicker-preview img{
               width:30px;
               height:30px;
-              object-fit:contain;
-            }
-            #tab-messages .iconpicker-preview.has-image span{
-              display:none;
-            }
-            #tab-messages .iconpicker-preview:not(.has-image) img{
-              display:none;
-            }
-            #tab-messages .iconpicker-button{
-              padding:10px 16px;
-              border-radius:8px;
-              background:rgba(0,0,0,0.3);
-              border:1px solid rgba(255,255,255,0.15);
-              color:var(--button-text);
-              cursor:pointer;
-              transition:background .2s,border-color .2s;
-              white-space:nowrap;
-            }
-            #tab-messages .iconpicker-button:hover{
-              background:rgba(255,255,255,0.1);
-              border-color:rgba(255,255,255,0.25);
             }
             #tab-messages .formbuilder-inline-save{
               display:flex;

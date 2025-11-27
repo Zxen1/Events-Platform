@@ -1843,7 +1843,10 @@ let __notifyMapOnInteraction = null;
               },
               label: `Choose icon for ${picker.label}`,
               parentMenu: container.closest('.panel-field'),
-              iconFolder: settings.system_images_folder || 'assets/system-images'
+              iconFolder: (() => {
+                const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+                return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || 'assets/system-images';
+              })()
             });
           }
         });
