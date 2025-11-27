@@ -1873,6 +1873,17 @@ let __notifyMapOnInteraction = null;
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               
+              // Store system images folder globally
+              window.systemImagesFolder = data.settings.system_images_folder || 'assets/system-images';
+              
+              // Update multi-post icon from database if available
+              if(data.settings.multi_post_icon && typeof data.settings.multi_post_icon === 'string' && data.settings.multi_post_icon.trim()){
+                const multiPostIconPath = data.settings.multi_post_icon.trim();
+                if(window.subcategoryMarkers){
+                  window.subcategoryMarkers['multi-post-icon'] = multiPostIconPath;
+                }
+              }
+              
               // Store map shadow and console filter settings
               if(data.settings.map_shadow !== undefined){
                 localStorage.setItem('map_shadow', data.settings.map_shadow);
@@ -2277,18 +2288,26 @@ let __notifyMapOnInteraction = null;
         let balloonLayersVisible = true;
 
         async function ensureBalloonIconImage(mapInstance){
-          // Load balloon icon URL from admin_settings
-          if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
-            try {
-              const response = await fetch('/gateway.php?action=get-admin-settings');
-              if(response.ok){
-                const data = await response.json();
-                if(data.success && data.settings && data.settings.marker_cluster_icon){
-                  BALLOON_IMAGE_URL = data.settings.marker_cluster_icon;
-                }
+          // Load balloon icon URL from admin_settings (always check database, not just on first load)
+          try {
+            const response = await fetch('/gateway.php?action=get-admin-settings');
+            if(response.ok){
+              const data = await response.json();
+              if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
+                BALLOON_IMAGE_URL = data.settings.marker_cluster_icon.trim();
+              } else if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
+                // Only use hardcoded default if database doesn't have a value
+                BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png';
               }
-            } catch(err) {
-              console.error('Failed to load marker cluster icon setting:', err);
+            } else if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
+              // Fallback to hardcoded default if database fetch fails
+              BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png';
+            }
+          } catch(err) {
+            console.error('Failed to load marker cluster icon setting:', err);
+            // Use hardcoded default only if fetch fails and we don't have a value
+            if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
+              BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png';
             }
           }
           
@@ -4129,6 +4148,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return '';
     }
     const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
+    // Multi-post icon will be loaded from database in loadAdminSettings()
+    // Use hardcoded fallback only if database hasn't loaded yet
     if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
       subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
     }
