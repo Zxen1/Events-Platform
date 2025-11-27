@@ -1596,6 +1596,14 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:16px;
+  max-width:400px;
+  width:100%;
+  background:#1a1a1a;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  box-sizing:border-box;
 }
 
 .system-image-picker-field{
@@ -8980,6 +8988,12 @@ html, body { cursor: auto !important; }
               max-width:none;
               max-height:none;
             }
+            #tab-messages .category-edit-panel{
+              max-width:400px;
+              width:100%;
+              box-sizing:border-box;
+            }
+            
             #tab-messages .iconpicker-container{
               position:relative;
               display:flex;
