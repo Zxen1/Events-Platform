@@ -18729,6 +18729,7 @@ function makePosts(){
               'text-line-height': 1.2,
               'text-max-width': 100,
               'text-anchor': 'left',
+              'text-justify': 'left',
               'text-offset': [smallLabelOffsetEm, 0],
               'text-allow-overlap': true,
               'text-ignore-placement': true,
