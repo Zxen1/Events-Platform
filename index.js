@@ -9381,6 +9381,9 @@ function makePosts(){
               optionsList.push({ value: applyNormalizeIconPath(path) });
             }
           });
+          // Check if we're in map or messages tab for vertical layout
+          const isMapOrMessagesTab = container.closest('#tab-map, #tab-messages') !== null;
+          
           for(const entry of optionsList){
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -9395,6 +9398,17 @@ function makePosts(){
               img.src = value;
               img.alt = '';
               btn.appendChild(img);
+              
+              // Add filename for map and messages tabs
+              if(isMapOrMessagesTab){
+                const filename = document.createElement('div');
+                filename.className = 'icon-filename';
+                // Extract filename from path
+                const pathParts = value.split('/');
+                const fullFilename = pathParts[pathParts.length - 1] || value;
+                filename.textContent = fullFilename;
+                btn.appendChild(filename);
+              }
             }
             if(value === currentPath){
               btn.classList.add('selected');
