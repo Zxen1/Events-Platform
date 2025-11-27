@@ -1318,6 +1318,31 @@ let __notifyMapOnInteraction = null;
     if(!sourceImage){
       return null;
     }
+    // For small pills (base), use image as-is without any sizing or color modifications
+    if(!isAccent){
+      // Small pill: just use the source image directly
+      const canvas = document.createElement('canvas');
+      const width = sourceImage.naturalWidth || sourceImage.width || 150;
+      const height = sourceImage.naturalHeight || sourceImage.height || 40;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      try{
+        ctx.drawImage(sourceImage, 0, 0, width, height);
+        const imageData = ctx.getImageData(0, 0, width, height);
+        return {
+          image: imageData,
+          options: { pixelRatio: 1 }
+        };
+      }catch(err){
+        console.error(err);
+        return null;
+      }
+    }
+    // For accent/big pills, use original sizing logic
     const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
@@ -18838,6 +18863,56 @@ function makePosts(){
           console.error('Failed to update label text layer:', e);
         }
       }
+      
+      // Add big map card labels (3 lines, 145px max width, sort-keys 5, 6, 7)
+      // Big labels should show when post is open/active (when big pill is visible)
+      const bigLabelTextLayerId = 'big-map-card-label';
+      const bigLabelOffsetEm = 30 / textSize; // 30px in em units (big pill offset)
+      const bigLabelTextSize = 14; // Slightly larger for big labels
+      if(!map.getLayer(bigLabelTextLayerId)){
+        try{
+          map.addLayer({
+            id: bigLabelTextLayerId,
+            type:'symbol',
+            source:'posts',
+            filter: markerLabelFilter,
+            minzoom: markerLabelMinZoom,
+            maxzoom: 24,
+            layout:{
+              'text-field': ['coalesce', ['get', 'label'], ''],
+              'text-size': bigLabelTextSize,
+              'text-line-height': 1.2,
+              'text-max-width': 145,
+              'text-anchor': 'left',
+              'text-justify': 'left',
+              'text-offset': [bigLabelOffsetEm, 0],
+              'text-allow-overlap': true,
+              'text-ignore-placement': true,
+              'text-pitch-alignment': 'viewport',
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 7, 6]
+            },
+            paint:{
+              'text-color': '#ffffff',
+              'text-opacity': ['case', highlightedStateExpression, 1, 0], // Only show when highlighted/active
+              'text-halo-color': 'rgba(0,0,0,0.4)',
+              'text-halo-width': 1,
+              'text-halo-blur': 1
+            }
+          });
+        }catch(e){
+          console.error('Failed to add big label text layer:', e);
+        }
+      }
+      if(map.getLayer(bigLabelTextLayerId)){
+        try{ 
+          map.setFilter(bigLabelTextLayerId, markerLabelFilter);
+          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 7, 6]);
+        }catch(e){
+          console.error('Failed to update big label text layer:', e);
+        }
+      }
+      
       // Create marker-icon layer (sprites are already loaded above)
       const markerIconFilter = ['all',
         ['!',['has','point_count']],
@@ -18926,13 +19001,25 @@ function makePosts(){
           map.moveLayer('mapmarker-icon'); // Move icons to top
         }catch(e){}
       }
-      // Move label layer to be above pills but below icons
-      if(map.getLayer('small-map-card-label')){
+      // Move big labels above big pills but below icons
+      if(map.getLayer('big-map-card-label')){
         try{
           if(map.getLayer('mapmarker-icon')){
+            map.moveLayer('big-map-card-label', 'mapmarker-icon'); // Big labels below icons
+          } else {
+            map.moveLayer('big-map-card-label'); // Move to top if no icon layer
+          }
+        }catch(e){}
+      }
+      // Move small labels above pills but below big labels
+      if(map.getLayer('small-map-card-label')){
+        try{
+          if(map.getLayer('big-map-card-label')){
+            map.moveLayer('small-map-card-label', 'big-map-card-label'); // Small labels below big labels
+          } else if(map.getLayer('mapmarker-icon')){
             map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
           } else {
-            map.moveLayer('small-map-card-label'); // Move to top if no icon layer
+            map.moveLayer('small-map-card-label'); // Move to top if no other layers
           }
         }catch(e){}
       }
