@@ -2167,6 +2167,7 @@ let __notifyMapOnInteraction = null;
     let touchMarker = null;
     let activePostId = null;
     let selectedVenueKey = null;
+    const panelStack = [];
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
     const $ = (sel, root=document) => root.querySelector(sel);
