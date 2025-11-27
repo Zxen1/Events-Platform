@@ -1603,73 +1603,51 @@ button[aria-expanded="true"] .results-arrow{
   margin-bottom:0;
 }
 
-.image-picker-wrapper{
+/* Map tab iconpicker styles (matching messages tab) */
+#tab-map .iconpicker-container{
   display:flex;
-  flex-direction:column;
-  gap:8px;
+  flex-direction:row;
+  align-items:center;
+  gap:12px;
 }
 
-.image-picker-display{
+#tab-map .iconpicker-preview{
   display:flex;
-  flex-direction:column;
-  align-items:flex-start;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  min-width:40px;
+  flex-shrink:0;
 }
 
-.image-picker-preview{
-  border:1px solid rgba(255,255,255,0.2);
-  border-radius:4px;
-  background:rgba(0,0,0,0.3);
+#tab-map .iconpicker-preview img{
+  width:30px;
+  height:30px;
   object-fit:contain;
 }
 
-.image-picker-controls{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  width:100%;
+#tab-map .iconpicker-preview.has-image span{
+  display:none;
 }
 
-.image-picker-browse-btn{
-  background:rgba(46,58,114,0.8);
-  color:#fff;
-  border:1px solid rgba(255,255,255,0.2);
-  padding:6px 12px;
-  border-radius:4px;
+#tab-map .iconpicker-preview:not(.has-image) img{
+  display:none;
+}
+
+#tab-map .iconpicker-button{
+  padding:10px 16px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(255,255,255,0.15);
+  color:var(--button-text);
   cursor:pointer;
-  font-size:14px;
+  transition:background .2s,border-color .2s;
   white-space:nowrap;
-  transition:background 0.2s ease;
 }
 
-.image-picker-browse-btn:hover{
-  background:rgba(46,58,114,1);
-}
-
-.image-picker-path{
-  flex:1;
-  background:rgba(0,0,0,0.2);
-  border:1px solid rgba(255,255,255,0.1);
-  color:#fff;
-  padding:6px 8px;
-  border-radius:4px;
-  font-size:13px;
-  min-width:0;
-}
-
-.image-picker-clear-btn{
-  background:rgba(200,50,50,0.8);
-  color:#fff;
-  border:1px solid rgba(255,255,255,0.2);
-  padding:6px 12px;
-  border-radius:4px;
-  cursor:pointer;
-  font-size:14px;
-  white-space:nowrap;
-  transition:background 0.2s ease;
-}
-
-.image-picker-clear-btn:hover{
-  background:rgba(200,50,50,1);
+#tab-map .iconpicker-button:hover{
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(255,255,255,0.25);
 }
 
 /* Remove borders from all text/email/password inputs in settings tab */

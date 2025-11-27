@@ -1775,115 +1775,75 @@ let __notifyMapOnInteraction = null;
         }
       })();
       
-      // Initialize system image pickers
+      // Initialize system image pickers using iconpicker interface
       function initializeSystemImagePickers(settings){
         const imagePickers = [
-          { id: 'systemImageSmallMapCardPill', settingKey: 'small_map_card_pill', previewId: 'systemImageSmallMapCardPillPreview', pathId: 'systemImageSmallMapCardPillPath' },
-          { id: 'systemImageBigMapCardPill', settingKey: 'big_map_card_pill', previewId: 'systemImageBigMapCardPillPreview', pathId: 'systemImageBigMapCardPillPath' },
-          { id: 'systemImageHoverMapCardPill', settingKey: 'hover_map_card_pill', previewId: 'systemImageHoverMapCardPillPreview', pathId: 'systemImageHoverMapCardPillPath' },
-          { id: 'systemImageMultiPostIcon', settingKey: 'multi_post_icon', previewId: 'systemImageMultiPostIconPreview', pathId: 'systemImageMultiPostIconPath' }
+          { buttonId: 'systemImageSmallMapCardPillButton', containerId: 'systemImageSmallMapCardPillContainer', previewId: 'systemImageSmallMapCardPillPreview', settingKey: 'small_map_card_pill', label: 'Small Map Card Pill' },
+          { buttonId: 'systemImageBigMapCardPillButton', containerId: 'systemImageBigMapCardPillContainer', previewId: 'systemImageBigMapCardPillPreview', settingKey: 'big_map_card_pill', label: 'Big Map Card Pill' },
+          { buttonId: 'systemImageHoverMapCardPillButton', containerId: 'systemImageHoverMapCardPillContainer', previewId: 'systemImageHoverMapCardPillPreview', settingKey: 'hover_map_card_pill', label: 'Hover Map Card Pill' },
+          { buttonId: 'systemImageMultiPostIconButton', containerId: 'systemImageMultiPostIconContainer', previewId: 'systemImageMultiPostIconPreview', settingKey: 'multi_post_icon', label: 'Multi Post Icon' },
+          { buttonId: 'systemImageMarkerClusterButton', containerId: 'systemImageMarkerClusterContainer', previewId: 'systemImageMarkerClusterPreview', settingKey: 'marker_cluster_icon', label: 'Marker Cluster Icon' }
         ];
         
         imagePickers.forEach(picker => {
-          const fileInput = document.getElementById(picker.id);
-          const previewImg = document.getElementById(picker.previewId);
-          const pathInput = document.getElementById(picker.pathId);
-          const browseBtn = document.querySelector(`[data-target="${picker.id}"]`);
-          const clearBtn = document.querySelector(`.image-picker-clear-btn[data-target="${picker.id}"]`);
+          const button = document.getElementById(picker.buttonId);
+          const container = document.getElementById(picker.containerId);
+          const preview = document.getElementById(picker.previewId);
           
-          if(!fileInput || !previewImg || !pathInput || !browseBtn) return;
+          if(!button || !container || !preview) return;
+          
+          const previewImg = preview.querySelector('img');
+          const previewLabel = preview.querySelector('span');
           
           // Load initial value from settings
           const initialPath = settings[picker.settingKey] || '';
-          if(initialPath){
-            pathInput.value = initialPath;
+          if(initialPath && previewImg){
             previewImg.src = initialPath;
-            previewImg.style.display = 'block';
-            if(clearBtn) clearBtn.style.display = 'block';
+            preview.classList.add('has-image');
+            if(previewLabel) previewLabel.textContent = '';
+            button.textContent = 'Change Icon';
           }
           
-          // Browse button click handler
-          browseBtn.addEventListener('click', () => {
-            fileInput.click();
-          });
-          
-          // File input change handler
-          fileInput.addEventListener('change', async (e) => {
-            const file = e.target.files?.[0];
-            if(!file) return;
-            
-            // Validate it's an image
-            if(!file.type.startsWith('image/')){
-              alert('Please select an image file.');
-              fileInput.value = '';
-              return;
-            }
-            
-            // Get system images folder
-            const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
-            const systemImagesFolder = systemImagesFolderInput?.value.trim() || 'assets/system-images';
-            
-            // Create a path based on the folder and filename
-            const fileName = file.name;
-            const imagePath = `${systemImagesFolder}/${fileName}`;
-            
-            // Show preview using FileReader
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              previewImg.src = event.target.result;
-              previewImg.style.display = 'block';
-              pathInput.value = imagePath;
-              if(clearBtn) clearBtn.style.display = 'block';
-              
-              // Save to database
-              const settingsToSave = {};
-              settingsToSave[picker.settingKey] = imagePath;
-              
-              fetch('/gateway.php?action=save-admin-settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify(settingsToSave)
-              }).then(() => {
-                // Clear sprite cache to force reload
-                if(typeof window.markerLabelPillImagePromise !== 'undefined'){
-                  window.markerLabelPillImagePromise = null;
+          // Attach icon picker functionality
+          if(typeof window.attachIconPicker === 'function'){
+            window.attachIconPicker(button, container, {
+              getCurrentPath: () => settings[picker.settingKey] || '',
+              onSelect: (value) => {
+                if(value){
+                  if(previewImg) previewImg.src = value;
+                  preview.classList.add('has-image');
+                  if(previewLabel) previewLabel.textContent = '';
+                  button.textContent = 'Change Icon';
+                  
+                  // Save to admin_settings
+                  const settingsToSave = {};
+                  settingsToSave[picker.settingKey] = value;
+                  
+                  fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(settingsToSave)
+                  }).then(() => {
+                    // Update local settings
+                    settings[picker.settingKey] = value;
+                    
+                    // Clear sprite cache to force reload
+                    if(typeof window.markerLabelPillImagePromise !== 'undefined'){
+                      window.markerLabelPillImagePromise = null;
+                    }
+                    if(typeof window.markerLabelPillSpriteCache !== 'undefined'){
+                      window.markerLabelPillSpriteCache = null;
+                    }
+                    
+                    console.log(`${picker.label} updated. Click "Refresh Map Cards" to see changes.`);
+                  }).catch(err => {
+                    console.error(`Failed to save ${picker.label}:`, err);
+                  });
                 }
-                if(typeof window.markerLabelPillSpriteCache !== 'undefined'){
-                  window.markerLabelPillSpriteCache = null;
-                }
-                
-                // Refresh map cards if map is loaded
-                const refreshBtn = document.getElementById('refreshMapCardsBtn');
-                if(refreshBtn){
-                  console.log('System image updated. Click "Refresh Map Cards" to see changes.');
-                }
-              }).catch(err => {
-                console.error('Failed to save image path:', err);
-              });
-            };
-            reader.readAsDataURL(file);
-          });
-          
-          // Clear button handler
-          if(clearBtn){
-            clearBtn.addEventListener('click', () => {
-              fileInput.value = '';
-              previewImg.src = '';
-              previewImg.style.display = 'none';
-              pathInput.value = '';
-              clearBtn.style.display = 'none';
-              
-              // Save empty value to database
-              const settingsToSave = {};
-              settingsToSave[picker.settingKey] = '';
-              
-              fetch('/gateway.php?action=save-admin-settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify(settingsToSave)
-              }).catch(err => {
-                console.error('Failed to clear image path:', err);
-              });
+              },
+              label: `Choose icon for ${picker.label}`,
+              parentMenu: container.closest('.panel-field'),
+              iconFolder: settings.system_images_folder || 'assets/system-images'
             });
           }
         });
@@ -2153,7 +2113,9 @@ let __notifyMapOnInteraction = null;
               // Initialize system images folder input
               const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
               if(systemImagesFolderInput){
-                systemImagesFolderInput.value = data.settings.system_images_folder || 'assets/system-images';
+                const systemImagesFolder = data.settings.system_images_folder || 'assets/system-images';
+                systemImagesFolderInput.value = systemImagesFolder;
+                window.systemImagesFolder = systemImagesFolder;
               }
               
               // Initialize system image pickers
@@ -2313,12 +2275,27 @@ let __notifyMapOnInteraction = null;
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16181-60.png';
+        let BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png'; // Default, will be loaded from admin_settings
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
 
-        function ensureBalloonIconImage(mapInstance){
+        async function ensureBalloonIconImage(mapInstance){
+          // Load balloon icon URL from admin_settings
+          if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
+            try {
+              const response = await fetch('/gateway.php?action=get-admin-settings');
+              if(response.ok){
+                const data = await response.json();
+                if(data.success && data.settings && data.settings.marker_cluster_icon){
+                  BALLOON_IMAGE_URL = data.settings.marker_cluster_icon;
+                }
+              }
+            } catch(err) {
+              console.error('Failed to load marker cluster icon setting:', err);
+            }
+          }
+          
           return new Promise(resolve => {
             if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
               resolve();
@@ -15094,7 +15071,7 @@ function makePosts(){
             label: `Choose icon for ${cat.name}`,
             parentMenu: content,
             parentCategoryMenu: menu,
-            iconFolder: window.adminIconFolder || 'assets/admin-icons'
+            iconFolder: settings.system_images_folder || window.systemImagesFolder || 'assets/system-images'
           });
         }
         
@@ -15323,7 +15300,11 @@ function makePosts(){
     
     // Initialize messages categories when admin panel opens
     if(messagesCats){
-      renderMessagesCategories();
+      // Load message category icons before rendering
+      (async function(){
+        await loadMessageCategoryIcons();
+        renderMessagesCategories();
+      })();
       
       // Load messages from database (admin panel sees all messages including email/admin)
       loadAdminMessages();

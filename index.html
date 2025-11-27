@@ -367,59 +367,53 @@
               <label style="font-weight: 600; margin-bottom: 16px; display: block;">System Images</label>
               <div class="system-image-picker-container">
                 <div class="panel-field system-image-picker-field">
-                  <label for="systemImageSmallMapCardPill">Small Map Card Pill</label>
-                  <div class="image-picker-wrapper">
-                    <input type="file" id="systemImageSmallMapCardPill" accept="image/*" class="image-picker-input" data-setting-key="small_map_card_pill" style="display: none;" />
-                    <div class="image-picker-display">
-                      <img id="systemImageSmallMapCardPillPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 150px; max-height: 40px; margin-bottom: 8px;" />
-                      <div class="image-picker-controls">
-                        <button type="button" class="image-picker-browse-btn" data-target="systemImageSmallMapCardPill">Browse</button>
-                        <input type="text" id="systemImageSmallMapCardPillPath" class="image-picker-path" placeholder="assets/system-images/150x40-pill-70.webp" readonly />
-                        <button type="button" class="image-picker-clear-btn" data-target="systemImageSmallMapCardPill" style="display: none;">Clear</button>
-                      </div>
+                  <label>Small Map Card Pill</label>
+                  <div class="iconpicker-container" id="systemImageSmallMapCardPillContainer">
+                    <div class="iconpicker-preview" id="systemImageSmallMapCardPillPreview">
+                      <span></span>
+                      <img alt="Small map card pill preview" />
                     </div>
+                    <button type="button" class="iconpicker-button" id="systemImageSmallMapCardPillButton" data-setting-key="small_map_card_pill">Choose Icon</button>
                   </div>
                 </div>
                 <div class="panel-field system-image-picker-field">
-                  <label for="systemImageBigMapCardPill">Big Map Card Pill</label>
-                  <div class="image-picker-wrapper">
-                    <input type="file" id="systemImageBigMapCardPill" accept="image/*" class="image-picker-input" data-setting-key="big_map_card_pill" style="display: none;" />
-                    <div class="image-picker-display">
-                      <img id="systemImageBigMapCardPillPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 225px; max-height: 60px; margin-bottom: 8px;" />
-                      <div class="image-picker-controls">
-                        <button type="button" class="image-picker-browse-btn" data-target="systemImageBigMapCardPill">Browse</button>
-                        <input type="text" id="systemImageBigMapCardPillPath" class="image-picker-path" placeholder="assets/system-images/225x60-pill-2f3b73.webp" readonly />
-                        <button type="button" class="image-picker-clear-btn" data-target="systemImageBigMapCardPill" style="display: none;">Clear</button>
-                      </div>
+                  <label>Big Map Card Pill</label>
+                  <div class="iconpicker-container" id="systemImageBigMapCardPillContainer">
+                    <div class="iconpicker-preview" id="systemImageBigMapCardPillPreview">
+                      <span></span>
+                      <img alt="Big map card pill preview" />
                     </div>
+                    <button type="button" class="iconpicker-button" id="systemImageBigMapCardPillButton" data-setting-key="big_map_card_pill">Choose Icon</button>
                   </div>
                 </div>
                 <div class="panel-field system-image-picker-field">
-                  <label for="systemImageHoverMapCardPill">Hover Map Card Pill</label>
-                  <div class="image-picker-wrapper">
-                    <input type="file" id="systemImageHoverMapCardPill" accept="image/*" class="image-picker-input" data-setting-key="hover_map_card_pill" style="display: none;" />
-                    <div class="image-picker-display">
-                      <img id="systemImageHoverMapCardPillPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 150px; max-height: 40px; margin-bottom: 8px;" />
-                      <div class="image-picker-controls">
-                        <button type="button" class="image-picker-browse-btn" data-target="systemImageHoverMapCardPill">Browse</button>
-                        <input type="text" id="systemImageHoverMapCardPillPath" class="image-picker-path" placeholder="assets/system-images/150x40-pill-2f3b73.webp" readonly />
-                        <button type="button" class="image-picker-clear-btn" data-target="systemImageHoverMapCardPill" style="display: none;">Clear</button>
-                      </div>
+                  <label>Hover Map Card Pill</label>
+                  <div class="iconpicker-container" id="systemImageHoverMapCardPillContainer">
+                    <div class="iconpicker-preview" id="systemImageHoverMapCardPillPreview">
+                      <span></span>
+                      <img alt="Hover map card pill preview" />
                     </div>
+                    <button type="button" class="iconpicker-button" id="systemImageHoverMapCardPillButton" data-setting-key="hover_map_card_pill">Choose Icon</button>
                   </div>
                 </div>
                 <div class="panel-field system-image-picker-field">
-                  <label for="systemImageMultiPostIcon">Multi Post Icon</label>
-                  <div class="image-picker-wrapper">
-                    <input type="file" id="systemImageMultiPostIcon" accept="image/*" class="image-picker-input" data-setting-key="multi_post_icon" style="display: none;" />
-                    <div class="image-picker-display">
-                      <img id="systemImageMultiPostIconPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 50px; max-height: 50px; margin-bottom: 8px;" />
-                      <div class="image-picker-controls">
-                        <button type="button" class="image-picker-browse-btn" data-target="systemImageMultiPostIcon">Browse</button>
-                        <input type="text" id="systemImageMultiPostIconPath" class="image-picker-path" placeholder="assets/system-images/multi-post-icon-50.webp" readonly />
-                        <button type="button" class="image-picker-clear-btn" data-target="systemImageMultiPostIcon" style="display: none;">Clear</button>
-                      </div>
+                  <label>Multi Post Icon</label>
+                  <div class="iconpicker-container" id="systemImageMultiPostIconContainer">
+                    <div class="iconpicker-preview" id="systemImageMultiPostIconPreview">
+                      <span></span>
+                      <img alt="Multi post icon preview" />
                     </div>
+                    <button type="button" class="iconpicker-button" id="systemImageMultiPostIconButton" data-setting-key="multi_post_icon">Choose Icon</button>
+                  </div>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label>Marker Cluster Icon</label>
+                  <div class="iconpicker-container" id="systemImageMarkerClusterContainer">
+                    <div class="iconpicker-preview" id="systemImageMarkerClusterPreview">
+                      <span></span>
+                      <img alt="Marker cluster icon preview" />
+                    </div>
+                    <button type="button" class="iconpicker-button" id="systemImageMarkerClusterButton" data-setting-key="marker_cluster_icon">Choose Icon</button>
                   </div>
                 </div>
               </div>
