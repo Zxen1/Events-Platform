@@ -18445,8 +18445,8 @@ function makePosts(){
         const bigLabelVenue = venueName ? shortenMarkerLabelText(venueName, 145) : '';
         const bigLabel = bigLabelVenue ? `${bigLabelTitleLines[0]}\n${bigLabelTitleLines[1]}\n${bigLabelVenue}` : `${bigLabelTitleLines[0]}\n${bigLabelTitleLines[1]}`;
         // Each card gets a unique sort-key so all its elements (pill, label, icon) render together as a unit
-        // Use feature ID hash to create consistent sort-key per card
-        const cardSortKey = Math.abs(featureId.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % 10000 + 1000;
+        // Use feature ID hash to create consistent sort-key per card (1-10000 range)
+        const cardSortKey = Math.abs(featureId.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % 10000 + 1;
         return {
           type:'Feature',
           id: featureId,
@@ -18505,8 +18505,8 @@ function makePosts(){
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
         const multiIds = Array.from(group.postIds);
-        // Each card gets a unique sort-key so all its elements (pill, label, icon) render together as a unit
-        const cardSortKey = Math.abs(featureId.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % 10000 + 1000;
+        // Each card gets a unique sort-key so all its elements (pill, label, icon) render together as a unit (1-10000 range)
+        const cardSortKey = Math.abs(featureId.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % 10000 + 1;
         return [{
           type:'Feature',
           id: featureId,
@@ -18660,6 +18660,21 @@ function makePosts(){
         }
       }
       updateMapFeatureHighlights(lastHighlightedPostIds);
+      
+      // Ensure pill sprites are loaded and added to map before creating layers
+      if(typeof ensureMarkerLabelPillSprites === 'function'){
+        try{
+          const pillSprites = await ensureMarkerLabelPillSprites();
+          if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
+            map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+          }
+          if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+            map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+          }
+        }catch(e){
+          console.error('Failed to load pill sprites:', e);
+        }
+      }
       
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
