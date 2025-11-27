@@ -14968,11 +14968,13 @@ function makePosts(){
         menuBtn.setAttribute('aria-expanded', 'false');
         
         const logo = document.createElement('span');
-        logo.className = 'category-logo has-icon';
-        const logoImg = document.createElement('img');
-        logoImg.src = cat.icon;
-        logoImg.alt = '';
-        logo.appendChild(logoImg);
+        logo.className = cat.icon ? 'category-logo has-icon' : 'category-logo';
+        if(cat.icon){
+          const logoImg = document.createElement('img');
+          logoImg.src = cat.icon;
+          logoImg.alt = '';
+          logo.appendChild(logoImg);
+        }
         
         const label = document.createElement('span');
         label.className = 'label';
@@ -15071,7 +15073,10 @@ function makePosts(){
             label: `Choose icon for ${cat.name}`,
             parentMenu: content,
             parentCategoryMenu: menu,
-            iconFolder: settings.system_images_folder || window.systemImagesFolder || 'assets/system-images'
+            iconFolder: (() => {
+              const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+              return systemImagesFolderInput?.value.trim() || window.systemImagesFolder || 'assets/system-images';
+            })()
           });
         }
         
