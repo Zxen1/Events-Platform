@@ -2176,6 +2176,16 @@ let __notifyMapOnInteraction = null;
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
+    
+    function getViewportHeight(){
+      if(typeof window !== 'undefined' && window.innerHeight){
+        return window.innerHeight;
+      }
+      if(typeof document !== 'undefined' && document.documentElement && document.documentElement.clientHeight){
+        return document.documentElement.clientHeight;
+      }
+      return 0;
+    }
 
     // Ensure result lists occupy available space between the header and footer
     function adjustListHeight(){
@@ -13789,7 +13799,7 @@ function makePosts(){
       assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
       assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
       Object.keys(subcategoryMarkers).forEach(key => {
-        delete subcategoryMarkers[key];
+          delete subcategoryMarkers[key];
       });
       const markerOverrides = snapshot && snapshot.subcategoryMarkers;
       if(markerOverrides && typeof markerOverrides === 'object'){
@@ -17329,7 +17339,7 @@ function makePosts(){
         map.on('dragend', clearMapGeocoder);
         map.on('click', clearMapGeocoder);
         map.on('touchstart', () => requestAnimationFrame(blurAllGeocoderInputs));
-    }
+      }
 
     function startSpin(fromCurrent=false){
       if(mode!=='map') setModeFromUser('map');
@@ -19490,6 +19500,21 @@ function openPostModal(id){
         return false;
       }
       return selection.subs.has(p.category+'::'+p.subcategory);
+    }
+
+    function applyFilters(){
+      if(!postsLoaded) return;
+      const basePosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
+      filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
+      renderLists(filtered);
+      const boundsForCount = getVisibleMarkerBoundsForCount();
+      const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
+      const rawTotalMarkers = boundsForCount ? countMarkersForVenue(basePosts, null, boundsForCount) : countMarkersForVenue(basePosts);
+      const totalMarkers = Math.max(filteredMarkers, rawTotalMarkers);
+      const summary = $('#filterSummary');
+      if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
+      updateResultCount(filteredMarkers);
+      updateResetBtn();
     }
 
     function hideResultIndicators(){
