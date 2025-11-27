@@ -17323,7 +17323,6 @@ function makePosts(){
           scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
           updatePostPanel();
           updateFilterCounts();
-          refreshMarkers();
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
@@ -17619,103 +17618,6 @@ function makePosts(){
       };
     }
 
-    function renderLists(list){
-      if(spinning || !postsLoaded) return;
-        pendingAddPostSource = true;
-        return;
-      }
-      addingPostSource = true;
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= 12){
-      }
-      try{
-      // Always use filtered list if filters are initialized to prevent race conditions
-      // Update the source when filters change, but we need to
-      // ensure initial load and subsequent calls use the correct data
-      const markerList = (filtersInitialized && Array.isArray(filtered)) ? filtered : posts;
-      const postsData = postsToGeoJSON(markerList);
-      const featureCount = Array.isArray(postsData.features) ? postsData.features.length : 0;
-      if(featureCount > 1000){
-        await new Promise(resolve => scheduleIdle(resolve, 120));
-      }
-      const existing = map.getSource('posts');
-      if(!existing){
-        map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
-        const source = map.getSource('posts');
-      } else {
-        existing.setData(postsData);
-      }
-      const iconIds = Object.keys(subcategoryMarkers);
-      if(typeof ensureMapIcon === 'function'){
-        await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
-      }
-      
-      if(!postSourceEventsBound){
-
-      
-
-
-
-      // Handle hover/tap to show accent pill
-      // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
-      // Uses mousemove to track hover continuously for smooth transitions between markers
-      let currentHoveredId = null;
-      let hoverCheckTimeout = null;
-      
-      const updateHoverFromPoint = (point) => {
-        if(!point) return;
-        
-        // Clear any pending hover check
-        if(hoverCheckTimeout){
-          clearTimeout(hoverCheckTimeout);
-          hoverCheckTimeout = null;
-        }
-        
-        // Query what's under the cursor
-        const features = map.queryRenderedFeatures(point, {
-          layers: []
-        });
-        
-        if(features.length > 0){
-          const f = features[0];
-          const props = f.properties || {};
-          const id = props.id;
-          const venueKey = props.venueKey || null;
-          
-          if(id !== undefined && id !== null && String(id) !== currentHoveredId){
-            currentHoveredId = String(id);
-          }
-        } else {
-          // Not over any marker - clear hover after a short delay
-          hoverCheckTimeout = setTimeout(() => {
-            // Double-check we're still not over a marker
-            const recheckFeatures = map.queryRenderedFeatures(point, {
-              layers: []
-            });
-            if(recheckFeatures.length === 0){
-              currentHoveredId = null;
-            }
-            hoverCheckTimeout = null;
-          }, 50);
-        }
-      };
-      
-
-
-      // Maintain pointer cursor for balloons and surface multi-post cards when applicable
-      postSourceEventsBound = true;
-      }
-      } catch (err) {
-        console.error('addPostSource failed', err);
-      } finally {
-        addingPostSource = false;
-        const shouldReplay = pendingAddPostSource;
-        pendingAddPostSource = false;
-        if(shouldReplay){
-          addPostSource();
-        }
-      }
-    }
-    window.addPostSource = addPostSource;
     function renderLists(list){
       if(spinning || !postsLoaded) return;
       
@@ -19823,3 +19725,4 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
     }
+  })();
