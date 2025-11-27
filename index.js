@@ -958,21 +958,112 @@ let __notifyMapOnInteraction = null;
     });
   }
 
+  function createTransparentPlaceholder(width, height){
+    const canvas = document.createElement('canvas');
+    const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
+    const h = Math.max(1, Number.isFinite(height) ? height : (Number.isFinite(width) ? width : (width || 2)));
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if(ctx){
+      ctx.clearRect(0, 0, w, h);
+    }
+    return canvas;
+  }
+
+  function ensurePlaceholderSprites(mapInstance){
+    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
+    const required = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
+    const install = () => {
+      required.forEach(name => {
+        try{
+          if(mapInstance.hasImage?.(name)) return;
+          const size = name === 'mx-federal-5' ? 2 : 4;
+          const options = { pixelRatio: 1 };
+          if(name !== 'mx-federal-5'){
+            options.sdf = true;
+          }
+          mapInstance.addImage(name, createTransparentPlaceholder(size), options);
+        }catch(err){}
+      });
+    };
+    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
+      if(!mapInstance.__placeholderSpriteReady){
+        const onStyleLoad = () => {
+          try{ install(); }catch(err){}
+          try{ mapInstance.off?.('style.load', onStyleLoad); }catch(err){}
+          mapInstance.__placeholderSpriteReady = null;
+        };
+        mapInstance.__placeholderSpriteReady = onStyleLoad;
+        try{ mapInstance.on('style.load', onStyleLoad); }catch(err){}
+      }
+      return;
+    }
+    install();
+  }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
 // ============================================================================
-  function shortenText(text, widthPx = 100){
+// MAP MARKERS & MAP CARDS SYSTEM
+// ============================================================================
+// All code related to map markers (icons), marker clustering (balloons), and map cards (pills) is organized here.
+// Note: Markers are icons centered over lat/lng coordinates. Pills are map card backgrounds.
+// Balloons are clustering icons used at low zoom levels.
+// Sections:
+// 1. Constants & Configuration (lines ~1005-1202)
+// 2. Text Measurement & Formatting Helpers (lines ~1022-1183)
+// 3. Map Card System (lines ~1387-1547) - Map card background images (pills)
+// 5. Marker Clustering (Balloons) (lines ~2546-2912) - Balloon icons that cluster nearby markers
+// 6. Small Map Card DOM Functions (lines ~3219-3447)
+// 7. Marker Data Building & Collections (lines ~3448-6663)
+// 8. Map Source Integration (lines ~19001+)
+// ============================================================================
+
+  const markerIconSize = 1;
+  const markerIconBaseSizePx = 30;
+  const basePillWidthPx = 150;
+  const basePillHeightPx = 40;
+  let accentPillWidthPx = null;
+  let accentPillHeightPx = null;
+  const markerLabelTextGapPx = 5;
+  const markerLabelMarkerInsetPx = 5;
+  const markerLabelTextRightPaddingPx = 5;
+  const markerLabelTextPaddingPx = 10; // Fixed padding for labels (no icon reference)
+  const markerLabelTextAreaWidthPx = Math.max(0, basePillWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
+  const markerLabelTextAreaWidthPxSmall = 100; // For small map cards (non-multi-post venue)
+  const markerLabelTextSize = 12;
+  const markerLabelTextLineHeight = 1.2;
+  const markerLabelPillLeftOffsetPx = -20; // Left edge of pill is 20px left of lat/lng
+  const markerLabelTextLeftOffsetPx = 20; // Left edge of label is 20px right of lat/lng
+  const markerLabelEllipsisChar = '\u2026';
+  const mapCardTitleWidthPx = 165;
+  let markerLabelMeasureContext = null;
+
+  // --- Section 2: Text Measurement & Formatting Helpers ---
+  function ensureMarkerLabelMeasureContext(){
+    if(markerLabelMeasureContext){
+      return markerLabelMeasureContext;
+    }
+    const canvas = document.createElement('canvas');
+    markerLabelMeasureContext = canvas.getContext('2d');
+    return markerLabelMeasureContext;
+  }
+
+  function markerLabelMeasureFont(){
+    return `${markerLabelTextSize}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+  }
+
+  function shortenMarkerLabelText(text, widthPx = markerLabelTextAreaWidthPx){
     const raw = (text ?? '').toString().trim();
     if(!raw){
       return '';
     }
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = ensureMarkerLabelMeasureContext();
     if(!ctx){
       return raw;
     }
-    ctx.font = '12px "Open Sans", "Arial Unicode MS Regular", sans-serif';
+    ctx.font = markerLabelMeasureFont();
     const maxWidth = widthPx;
     if(maxWidth <= 0){
       return raw;
@@ -980,7 +1071,7 @@ let __notifyMapOnInteraction = null;
     if(ctx.measureText(raw).width <= maxWidth){
       return raw;
     }
-    const ellipsis = '\u2026';
+    const ellipsis = markerLabelEllipsisChar;
     let low = 0;
     let high = raw.length;
     let best = ellipsis;
@@ -1009,18 +1100,17 @@ let __notifyMapOnInteraction = null;
     if(!Number.isFinite(widthPx) || widthPx <= 0 || maxLines <= 0){
       return [normalized];
     }
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = ensureMarkerLabelMeasureContext();
     if(!ctx){
       return [normalized];
     }
-    ctx.font = '12px "Open Sans", "Arial Unicode MS Regular", sans-serif';
+    ctx.font = markerLabelMeasureFont();
     if(ctx.measureText(normalized).width <= widthPx){
       return [normalized];
     }
     const lines = [];
     let remaining = normalized;
-    const ellipsis = '\u2026';
+    const ellipsis = markerLabelEllipsisChar;
     
     // First line: don't break words
     if(lines.length < maxLines && remaining){
@@ -1098,7 +1188,39 @@ let __notifyMapOnInteraction = null;
     return p.city || '';
   }
 
+  function getMarkerLabelLines(p){
+    const title = p && p.title ? p.title : '';
+    // Use 100px width for small map cards (non-multi-post venue cards only)
+    const isMultiPost = Boolean(p && (p.isMultiPost || (p.multiCount && Number(p.multiCount) > 1) || (Array.isArray(p.multiPostIds) && p.multiPostIds.length > 1)));
+    const widthForLines = isMultiPost ? markerLabelTextAreaWidthPx : markerLabelTextAreaWidthPxSmall;
+    const markerTitleLines = splitTextAcrossLines(title, widthForLines, 2);
+    while(markerTitleLines.length < 2){ markerTitleLines.push(''); }
+    const cardTitleLines = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
+    while(cardTitleLines.length < 2){ cardTitleLines.push(''); }
+    const venueRaw = getPrimaryVenueName(p);
+    return {
+      line1: markerTitleLines[0] || '',
+      line2: markerTitleLines[1] || '',
+      cardTitleLines,
+      venueLine: venueRaw ? shortenMarkerLabelText(venueRaw, mapCardTitleWidthPx) : ''
+    };
+  }
 
+  function buildMarkerLabelText(p, overrideLines){
+    const lines = overrideLines || getMarkerLabelLines(p);
+    if(lines.line2){
+      return `${lines.line1}\n${lines.line2}`;
+    }
+    return lines.line1;
+  }
+
+  const MARKER_LABEL_BG_ID = 'small-map-card-pill';
+  const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
+  const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-pill', 'big-map-card-pill'];
+  // Mapbox GL JS enforces a hard limit on the number of images that can be
+  // registered with a style (currently ~1000).
+  const MARKER_SPRITE_RETAIN_ZOOM = 12;
+  let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
     try{
@@ -1110,11 +1232,180 @@ let __notifyMapOnInteraction = null;
   }
 
 
+  // --- Section 3: Map Card System ---
+  function loadMarkerLabelImage(url){
+    return new Promise((resolve, reject) => {
+      if(!url){
+        reject(new Error('Missing URL'));
+        return;
+      }
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(err){}
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load ${url}`));
+      img.src = url;
+      if(img.complete){
+        setTimeout(() => {
+          if(img.naturalWidth > 0 && img.naturalHeight > 0){
+            resolve(img);
+          }
+        }, 0);
+      }
+    });
+  }
+
+  // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds)
+  // Uses these images directly via ensureMarkerLabelPillSprites()
+  async function ensureMarkerLabelPillImage(){
+    if(markerLabelPillImagePromise){
+      return markerLabelPillImagePromise;
+    }
+    // Load from admin settings - no hardcoded defaults
+    let baseUrl = null;
+    let accentUrl = null;
+    
+    try {
+      const response = await fetch('/gateway.php?action=get-admin-settings');
+      if(response.ok){
+        const data = await response.json();
+        if(data.success && data.settings){
+          if(data.settings.small_map_card_pill){
+            baseUrl = data.settings.small_map_card_pill;
+          }
+          if(data.settings.big_map_card_pill){
+            accentUrl = data.settings.big_map_card_pill;
+          }
+        }
+      }
+    } catch(err) {
+      console.error('Failed to load pill image settings:', err);
+    }
+    
+    if(!baseUrl || !accentUrl){
+      const error = new Error('Pill image URLs not found in database settings');
+      markerLabelPillImagePromise = Promise.reject(error);
+      return markerLabelPillImagePromise;
+    }
+    
+    const promise = Promise.all([
+      loadMarkerLabelImage(baseUrl),
+      loadMarkerLabelImage(accentUrl)
+    ]).then(([baseImg, accentImg]) => {
+      return { base: baseImg, highlight: accentImg };
+    });
+    markerLabelPillImagePromise = promise;
+    return markerLabelPillImagePromise;
+  }
+
+  function computeMarkerLabelCanvasDimensions(sourceImage, isAccent = false){
+    if(isAccent){
+      const width = accentPillWidthPx !== null ? accentPillWidthPx : (sourceImage && (sourceImage.naturalWidth || sourceImage.width) ? (sourceImage.naturalWidth || sourceImage.width) : basePillWidthPx);
+      const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
+      const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
+      const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
+      const pixelRatio = 1;
+      return { canvasWidth, canvasHeight, pixelRatio };
+    }
+    const canvasWidth = basePillWidthPx;
+    const canvasHeight = basePillHeightPx;
+    const pixelRatio = 1;
+    return { canvasWidth, canvasHeight, pixelRatio };
+  }
+
+
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
+    if(!sourceImage){
+      return null;
+    }
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    const ctx = canvas.getContext('2d');
+    if(!ctx){
+      return null;
+    }
+    try{
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      const scale = window.devicePixelRatio || 1;
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
+      ctx.restore();
+    }catch(err){
+      console.error(err);
+      return null;
+    }
+    if(tintColor){
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.globalAlpha = tintAlpha;
+      ctx.fillStyle = tintColor;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    let imageData = null;
+    try{
+      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    }catch(err){
+      console.error(err);
+      imageData = null;
+    }
+    if(!imageData){
+      return null;
+    }
+    return {
+      image: imageData,
+      options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
+    };
+  }
+
+  let markerLabelPillSpriteCache = null;
+
+  async function ensureMarkerLabelPillSprites(){
+    if(markerLabelPillSpriteCache){
+      return markerLabelPillSpriteCache;
+    }
+    const assets = await ensureMarkerLabelPillImage();
+    // Base sprite: use image as-is, no tinting
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, null, 1, false);
+    // Accent sprite: use image as-is, no tinting
+    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    markerLabelPillSpriteCache = {
+      base: baseSprite,
+      highlight: accentSprite
+    };
+    return markerLabelPillSpriteCache;
+  }
+
+
   async function generateMarkerImageFromId(id, mapInstance, options = {}){
     if(!id){
       return null;
     }
     const targetMap = mapInstance || map;
+    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
+      const sprites = await ensureMarkerLabelPillSprites();
+      if(id === MARKER_LABEL_BG_ID){
+        return sprites.base;
+      }
+      return sprites.highlight;
+    }
+    const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
+    if(placeholders.includes(id)){
+      const size = id === 'mx-federal-5' ? 2 : 4;
+      const placeholderOptions = { pixelRatio: 1 };
+      if(id !== 'mx-federal-5'){
+        placeholderOptions.sdf = true;
+      }
+      return {
+        image: createTransparentPlaceholder(size),
+        options: placeholderOptions
+      };
+    }
     const ensureIcon = options && typeof options.ensureIcon === 'function' ? options.ensureIcon : null;
     if(ensureIcon){
       try{
@@ -1239,6 +1530,7 @@ let __notifyMapOnInteraction = null;
       return;
     }
     if(!style) return;
+    try{ ensurePlaceholderSprites(mapInstance); }catch(err){}
     try{ patchLayerFiltersForMissingLayer(mapInstance, style); }catch(err){}
     try{ patchTerrainSource(mapInstance, style); }catch(err){}
   }
@@ -1246,12 +1538,15 @@ let __notifyMapOnInteraction = null;
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
     const POINTER_READY_IDS = new Set([
+      'small-map-card-pill',
+      'big-map-card-pill',
       'post-balloons'
     ]);
 
     function shouldAttachPointer(layer){
       if (!layer || layer.type !== 'symbol') return false;
       if (POINTER_READY_IDS.has(layer.id)) return true;
+      if (typeof layer.source === 'string' && layer.source === 'posts') return true;
       if (layer.metadata && layer.metadata.cursor === 'pointer') return true;
       return false;
     }
@@ -1364,31 +1659,12 @@ let __notifyMapOnInteraction = null;
     });
   }
 
-const panelStack = [];
-
-function openPanel(panel){
-  if(!panel) return;
-  panel.classList.add('show');
-  panel.removeAttribute('hidden');
-  if(!panelStack.includes(panel)){
-    panelStack.push(panel);
+  function closeWelcomeModalIfOpen(){
+    const welcome = document.getElementById('welcome-modal');
+    if(welcome && welcome.classList.contains('show')){
+      closePanel(welcome);
+    }
   }
-}
-
-function closePanel(panel){
-  if(!panel) return;
-  panel.classList.remove('show');
-  panel.setAttribute('hidden', '');
-  const idx = panelStack.indexOf(panel);
-  if(idx !== -1) panelStack.splice(idx, 1);
-}
-
-function closeWelcomeModalIfOpen(){
-  const welcome = document.getElementById('welcome-modal');
-  if(welcome && welcome.classList.contains('show')){
-    closePanel(welcome);
-  }
-}
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -1458,6 +1734,7 @@ function closeWelcomeModalIfOpen(){
           spinZoomMax = 4,
           spinSpeed = 0.3,
           spinEnabled = false,
+          mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
       // Set title immediately from localStorage to prevent flash
@@ -1489,6 +1766,7 @@ function closeWelcomeModalIfOpen(){
               spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
               spinZoomMax = data.settings.spin_zoom_max || 4;
               spinSpeed = data.settings.spin_speed || 0.3;
+              mapCardDisplay = data.settings.map_card_display || 'hover_only';
               
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
@@ -1613,6 +1891,113 @@ function closeWelcomeModalIfOpen(){
                 spinSpeedDisplay.textContent = spinSpeed.toFixed(1);
               }
               
+              // Initialize map card display radios
+              const mapCardDisplayRadios = document.querySelectorAll('input[name="mapCardDisplay"]');
+              if(mapCardDisplayRadios.length){
+                mapCardDisplayRadios.forEach(radio => {
+                  radio.checked = (radio.value === mapCardDisplay);
+                });
+              }
+              
+              // Apply map card display setting
+              document.body.setAttribute('data-map-card-display', mapCardDisplay);
+              
+              // Add refresh map cards button handler
+              const refreshMapCardsBtn = document.getElementById('refreshMapCardsBtn');
+              if(refreshMapCardsBtn){
+                refreshMapCardsBtn.addEventListener('click', async () => {
+                  try{
+                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
+                    if(mapInstance){
+                      // Clear JavaScript sprite cache
+                      markerLabelPillSpriteCache = null;
+                      // Clear sprite cache function if available
+                      if(typeof window.clearMarkerLabelPillSpriteCache === 'function'){
+                        window.clearMarkerLabelPillSpriteCache(mapInstance);
+                      }
+                      // Remove all marker-label images from Mapbox cache
+                      const markerLabelImageIds = [MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID];
+                      markerLabelImageIds.forEach(id => {
+                        try{
+                          if(mapInstance.hasImage && mapInstance.hasImage(id)){
+                            mapInstance.removeImage(id);
+                          }
+                        }catch(e){}
+                      });
+                      // Trigger repaint to regenerate
+                      if(mapInstance.triggerRepaint){
+                        mapInstance.triggerRepaint();
+                      }
+                      // Show feedback
+                      const originalText = refreshMapCardsBtn.innerHTML;
+                      refreshMapCardsBtn.innerHTML = '<span>✓</span> Refreshed!';
+                      refreshMapCardsBtn.disabled = true;
+                      setTimeout(() => {
+                        refreshMapCardsBtn.innerHTML = originalText;
+                        refreshMapCardsBtn.disabled = false;
+                      }, 2000);
+                    } else {
+                      alert('Map instance not available. Please wait for the map to load.');
+                    }
+                  }catch(err){
+                    console.error('Error refreshing map cards:', err);
+                    alert('Error refreshing map cards. Check console for details.');
+                  }
+                });
+              }
+              
+              // Add change listeners for map card display radios
+              mapCardDisplayRadios.forEach(radio => {
+                radio.addEventListener('change', async () => {
+                  if(radio.checked){
+                    mapCardDisplay = radio.value;
+                    document.body.setAttribute('data-map-card-display', mapCardDisplay);
+                    
+                    // Update map immediately (no reload required)
+                    if(typeof window.updateMapCardLayerOpacity === 'function'){
+                      window.updateMapCardLayerOpacity(mapCardDisplay);
+                    }
+                    
+                    // Update hover handlers - always use marker-icon only for precise hover zone
+                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
+                    if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
+                      // Remove old hover handlers from all possible layers
+                      const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+                      allPossibleLayers.forEach(layer => {
+                        try {
+                          mapInstance.off('mouseenter', layer, window.handleMarkerHover);
+                          mapInstance.off('mouseleave', layer, window.handleMarkerHoverEnd);
+                        } catch(e) {}
+                      });
+                      
+                      // Always use marker-icon only for precise hover zone
+                      try {
+                        mapInstance.on('mouseenter', 'mapmarker-icon', window.handleMarkerHover);
+                        mapInstance.on('mouseleave', 'mapmarker-icon', window.handleMarkerHoverEnd);
+                      } catch(e) {}
+                    }
+                    
+                    // Update click and cursor handlers to match new display mode
+                    if(typeof window.attachClickHandlers === 'function'){
+                      window.attachClickHandlers();
+                    }
+                    if(typeof window.attachCursorHandlers === 'function'){
+                      window.attachCursorHandlers();
+                    }
+                    
+                    // Auto-save to database
+                    try {
+                      await fetch('/gateway.php?action=save-admin-settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ map_card_display: mapCardDisplay })
+                      });
+                    } catch (e) {
+                      console.error('Failed to save map card display setting:', e);
+                    }
+                  }
+                });
+              });
               
               // Initialize icon folder input
               const iconFolderInput = document.getElementById('adminIconFolder');
@@ -1754,6 +2139,23 @@ function closeWelcomeModalIfOpen(){
           throw err; // Or handle the error appropriately without using defaults
         }
       })();
+      let markersLoaded = false;
+      window.__markersLoaded = false;
+      const MARKER_ZOOM_THRESHOLD = 8;
+      const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
+      const ZOOM_VISIBILITY_PRECISION = 1000;
+      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
+      const MARKER_PRELOAD_OFFSET = 0.2;
+      const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      // Map card layers only - marker-icon is completely separate
+      const MARKER_LAYER_IDS = [
+        'hover-fill',
+        'small-map-card-pill',
+        'big-map-card-pill'
+      ];
+      const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS];
+      const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
+      const SPRITE_MARKER_CLASS = 'map--sprite-markers';
 
       // --- Section 5: Marker Clustering (Balloons) ---
       // Balloon icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
@@ -1763,7 +2165,7 @@ function closeWelcomeModalIfOpen(){
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
         const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16181-60.png';
         const BALLOON_MIN_ZOOM = 0;
-        const BALLOON_MAX_ZOOM = 8;
+        const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
 
         function ensureBalloonIconImage(mapInstance){
@@ -2183,8 +2585,144 @@ function closeWelcomeModalIfOpen(){
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
+    let postSourceEventsBound = false;
     let touchMarker = null;
     let activePostId = null;
+    let markerFeatureIndex = new Map();
+    let lastHighlightedPostIds = [];
+    let highlightedFeatureKeys = [];
+    let hoveredPostIds = [];
+    // Function to update icon-size for big-map-card-pill layer based on click/open state
+    function updateMarkerLabelHighlightIconSize(){
+      if(!map || typeof map.setFeatureState !== 'function') return;
+      
+      const openPostEl = document.querySelector('.open-post[data-id]');
+      const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
+      const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
+      const expandedPostId = openPostId || clickedPostId;
+      
+      // Reset all features to not expanded
+      highlightedFeatureKeys.forEach(entry => {
+        try{ 
+          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
+        }catch(err){}
+      });
+      
+      // Set expanded state for clicked/open post
+      if(expandedPostId){
+        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
+        if(entries && entries.length){
+          entries.forEach(entry => {
+            if(!entry) return;
+            const source = entry.source || 'posts';
+            const featureId = entry.id;
+            if(featureId !== undefined && featureId !== null){
+              try{ 
+                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true }); 
+              }catch(err){}
+            }
+          });
+        }
+      }
+    }
+    
+    function updateMapFeatureHighlights(targets){
+      const input = Array.isArray(targets) ? targets : [targets];
+      const seen = new Set();
+      const normalized = [];
+      const highlightSpriteIds = new Set();
+      input.forEach(entry => {
+        if(entry === undefined || entry === null) return;
+        let idValue;
+        let venueKeyValue = null;
+        if(typeof entry === 'object' && !Array.isArray(entry)){
+          const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
+          if(rawId === undefined || rawId === null) return;
+          idValue = String(rawId);
+          const rawVenue = entry.venueKey ?? entry.venue_key ?? entry.venue;
+          if(rawVenue !== undefined && rawVenue !== null){
+            const venueString = String(rawVenue).trim();
+            if(venueString){
+              venueKeyValue = venueString;
+            }
+          }
+        } else {
+          idValue = String(entry);
+        }
+        if(!idValue) return;
+        const dedupeKey = venueKeyValue ? `${idValue}::${venueKeyValue}` : idValue;
+        if(seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+        normalized.push({ id: idValue, venueKey: venueKeyValue });
+      });
+      lastHighlightedPostIds = normalized.map(item => ({ id: item.id, venueKey: item.venueKey }));
+      if(!map || typeof map.setFeatureState !== 'function'){
+        if(!normalized.length){
+          highlightedFeatureKeys = [];
+        }
+        return;
+      }
+      if(!normalized.length){
+        highlightedFeatureKeys.forEach(entry => {
+          try{ map.setFeatureState({ source: entry.source, id: entry.id }, { isHighlighted: false }); }
+          catch(err){}
+        });
+        highlightedFeatureKeys = [];
+        return;
+      }
+      const nextEntries = [];
+      const nextKeys = new Set();
+      const extractVenueFromId = (featureId)=>{
+        if(typeof featureId !== 'string') return '';
+        const parts = featureId.split('::');
+        return parts.length >= 3 ? String(parts[1] || '') : '';
+      };
+      normalized.forEach(target => {
+        if(!target || !target.id) return;
+        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(target.id) : null;
+        if(!entries || !entries.length) return;
+        entries.forEach(entry => {
+          if(!entry) return;
+          const source = entry.source || 'posts';
+          const featureId = entry.id;
+          if(featureId === undefined || featureId === null) return;
+          if(target.venueKey){
+            const entryVenueKey = entry.venueKey ? String(entry.venueKey) : extractVenueFromId(featureId);
+            if(!entryVenueKey || entryVenueKey !== target.venueKey){
+              return;
+            }
+          }
+          const compositeKey = `${source}::${featureId}`;
+          if(nextKeys.has(compositeKey)) return;
+          nextKeys.add(compositeKey);
+          nextEntries.push({ source, id: featureId });
+          if(entry.spriteId){
+            const spriteValue = String(entry.spriteId);
+            if(spriteValue){
+              highlightSpriteIds.add(spriteValue);
+            }
+          }
+        });
+      });
+      highlightedFeatureKeys.forEach(entry => {
+        const compositeKey = `${entry.source}::${entry.id}`;
+        if(nextKeys.has(compositeKey)) return;
+        try{ map.setFeatureState({ source: entry.source, id: entry.id }, { isHighlighted: false }); }
+        catch(err){}
+      });
+      nextEntries.forEach(entry => {
+        try{ map.setFeatureState({ source: entry.source, id: entry.id }, { isHighlighted: true }); }
+        catch(err){}
+      });
+      highlightedFeatureKeys = nextEntries;
+      
+      // Update icon-size based on click/open state
+      updateMarkerLabelHighlightIconSize();
+      if(highlightSpriteIds.size){
+        highlightSpriteIds.forEach(spriteId => {
+        });
+      }
+    }
     let selectedVenueKey = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
@@ -2195,16 +2733,6 @@ function closeWelcomeModalIfOpen(){
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
-    
-    function getViewportHeight(){
-      if(typeof window !== 'undefined' && window.innerHeight){
-        return window.innerHeight;
-      }
-      if(typeof document !== 'undefined' && document.documentElement && document.documentElement.clientHeight){
-        return document.documentElement.clientHeight;
-      }
-      return 0;
-    }
 
     // Ensure result lists occupy available space between the header and footer
     function adjustListHeight(){
@@ -2325,11 +2853,26 @@ function closeWelcomeModalIfOpen(){
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
+    // Get interactive layers based on map card display mode
+    // In hover_only mode, only marker-icon is clickable (map cards are hidden)
+    // In always mode, marker-icon and map card layers are clickable
+    const getMarkerInteractiveLayers = () => {
+      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+      if(mapCardDisplay === 'hover_only'){
+        return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
+      }
+      return ['mapmarker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
+    };
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
       return popup && typeof popup.getElement === 'function' ? popup.getElement() : null;
     }
+
+
+    const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
+    const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
+    const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
 
     function registerOverlayCleanup(overlayEl, fn){
@@ -2352,6 +2895,49 @@ function closeWelcomeModalIfOpen(){
       });
     }
 
+    // --- Section 5: Small Map Card DOM Functions ---
+    function enforceSmallMultiMapCardIcon(img, overlayEl){
+      if(!img) return;
+      const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
+      const apply = ()=>{
+        const currentSrc = img.getAttribute('src') || '';
+        if(currentSrc !== targetSrc){
+          img.setAttribute('src', targetSrc);
+        }
+      };
+      apply();
+      const onLoad = ()=> apply();
+      const onError = ()=> apply();
+      img.addEventListener('load', onLoad);
+      img.addEventListener('error', onError);
+      if(overlayEl){
+        registerOverlayCleanup(overlayEl, ()=>{
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+        });
+      }
+      if(typeof MutationObserver === 'function'){
+        const observer = new MutationObserver(()=>{
+          if(!img.isConnected){
+            observer.disconnect();
+            return;
+          }
+          apply();
+        });
+        try{
+          observer.observe(img, { attributes: true, attributeFilter: ['src'] });
+        }catch(err){
+          try{ observer.disconnect(); }catch(e){}
+          return;
+        }
+        if(overlayEl){
+          registerOverlayCleanup(overlayEl, ()=>{
+            try{ observer.disconnect(); }catch(e){}
+          });
+        }
+      }
+    }
+
     function escapeAttrValue(value){
       const raw = String(value);
       if(typeof window !== 'undefined' && window.CSS && typeof window.CSS.escape === 'function'){
@@ -2361,6 +2947,131 @@ function closeWelcomeModalIfOpen(){
     }
 
 
+    function updateSelectedMarkerRing(){
+      const highlightClass = 'is-map-highlight';
+      const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && el.classList.contains('post-card'));
+      const restoreHighlightBackground = (el)=>{
+        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          const prev = el.dataset.prevHighlightBackground;
+          delete el.dataset.prevHighlightBackground;
+          if(prev){
+            el.style.background = prev;
+            return;
+          }
+        }
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'surfaceBg')){
+          el.style.background = el.dataset.surfaceBg;
+        } else {
+          el.style.removeProperty('background');
+        }
+      };
+      const applyHighlightBackground = (el)=>{
+        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
+        if(!Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          el.dataset.prevHighlightBackground = el.style.background || '';
+        }
+        el.style.background = CARD_HIGHLIGHT;
+      };
+      const restoreAttr = (el)=>{
+        if(!el || !el.dataset) return;
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
+          const prev = el.dataset.prevAriaSelected;
+          if(prev){
+            el.setAttribute('aria-selected', prev);
+          } else {
+            el.removeAttribute('aria-selected');
+          }
+          delete el.dataset.prevAriaSelected;
+        }
+      };
+      document.querySelectorAll(`.post-card.${highlightClass}`).forEach(el => {
+        el.classList.remove(highlightClass);
+        restoreAttr(el);
+        restoreHighlightBackground(el);
+      });
+
+      let fallbackId = '';
+      if(activePostId !== undefined && activePostId !== null){
+        fallbackId = String(activePostId);
+      } else {
+        const openEl = document.querySelector('.post-board .open-post[data-id]');
+        fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
+      }
+      const idsToHighlight = Array.from(new Set([
+        fallbackId,
+        ...hoveredPostIds.map(entry => entry.id)
+      ].filter(Boolean)));
+      if(!idsToHighlight.length){
+        updateMapFeatureHighlights([]);
+        return;
+      }
+      const applyHighlight = (el)=>{
+        if(!el) return;
+        if(el.dataset && !Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
+          el.dataset.prevAriaSelected = el.hasAttribute('aria-selected') ? el.getAttribute('aria-selected') : '';
+        }
+        el.classList.add(highlightClass);
+        el.setAttribute('aria-selected', 'true');
+        applyHighlightBackground(el);
+      };
+      const globalVenueKey = typeof selectedVenueKey === 'string' && selectedVenueKey ? String(selectedVenueKey).trim() : '';
+      const highlightTargets = [];
+      const targetSeen = new Set();
+      idsToHighlight.forEach(id => {
+        const strId = String(id);
+        const selectorId = escapeAttrValue(strId);
+        const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
+        applyHighlight(listCard);
+        // Don't highlight open post cards - they should maintain their #1f2750 background
+        const preferredVenue = globalVenueKey;
+        const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
+        const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
+        if(!targetSeen.has(dedupeKey)){
+          targetSeen.add(dedupeKey);
+          highlightTargets.push({ id: strId, venueKey: normalizedVenue || null });
+        }
+      });
+      // Also include hovered posts with their venue keys
+      hoveredPostIds.forEach(entry => {
+        if(!entry || !entry.id) return;
+        const strId = String(entry.id);
+        const normalizedVenue = entry.venueKey ? String(entry.venueKey).trim() : '';
+        const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
+        if(!targetSeen.has(dedupeKey)){
+          targetSeen.add(dedupeKey);
+          highlightTargets.push({ id: strId, venueKey: normalizedVenue || null });
+        }
+      });
+      updateMapFeatureHighlights(highlightTargets);
+    }
+    
+    // Add postcard hover handlers to trigger mapcard highlight
+    const handlePostcardHover = (e) => {
+      const postcard = e.target.closest('.post-card');
+      if(!postcard || !postcard.dataset || !postcard.dataset.id) return;
+      const id = String(postcard.dataset.id);
+      hoveredPostIds = [{ id: id, venueKey: null }];
+      updateSelectedMarkerRing();
+    };
+    
+    const handlePostcardLeave = (e) => {
+      const postcard = e.target.closest('.post-card');
+      if(!postcard) return;
+      // Only clear if we're actually leaving the postcard (not moving to a child)
+      const relatedTarget = e.relatedTarget;
+      if(!relatedTarget || !postcard.contains(relatedTarget)){
+        hoveredPostIds = [];
+        updateSelectedMarkerRing();
+      }
+    };
+    
+    // Add postcard hover handlers using event delegation on .post-board
+    const postsWideElForHover = document.querySelector('.post-board');
+    if(postsWideElForHover){
+      postsWideElForHover.addEventListener('mouseenter', handlePostcardHover, true);
+      postsWideElForHover.addEventListener('mouseleave', handlePostcardLeave, true);
+    }
 
     function hashString(str){
       let hash = 0;
@@ -3295,6 +4006,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return '';
     }
     const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
+    if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
+      subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
+    }
     categories.forEach(cat => {
       if(!cat || typeof cat !== 'object') return;
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
@@ -3445,9 +4159,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         const key = venueKey(lng, lat);
         if(selectedVenueKey !== key){
           selectedVenueKey = key;
+          updateSelectedMarkerRing();
         }
       } else if(selectedVenueKey !== null){
         selectedVenueKey = null;
+        updateSelectedMarkerRing();
       }
     }
 
@@ -5469,6 +6185,138 @@ function makePosts(){
     }
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
+    const markerDataCache = {
+      signature: null,
+      postsData: EMPTY_FEATURE_COLLECTION,
+      featureIndex: new Map()
+    };
+
+    function invalidateMarkerDataCache(){
+      markerDataCache.signature = null;
+      markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
+      markerDataCache.featureIndex = new Map();
+    }
+
+    function markerSignatureForList(list){
+      if(!Array.isArray(list) || !list.length){
+        return 'empty';
+      }
+      const parts = [];
+      list.forEach(post => {
+        if(!post) return;
+        const baseId = post.id || '';
+        let added = false;
+        if(Array.isArray(post.locations) && post.locations.length){
+          post.locations.forEach((loc, idx) => {
+            if(!loc) return;
+            const key = toVenueCoordKey(loc.lng, loc.lat);
+            if(!key) return;
+            parts.push(`${baseId}#${idx}:${key}`);
+            added = true;
+          });
+        }
+        if(!added){
+          const key = toVenueCoordKey(post.lng, post.lat);
+          if(key){
+            parts.push(`${baseId}:${key}`);
+          } else {
+            parts.push(String(baseId));
+          }
+        }
+      });
+      parts.sort();
+      return parts.join('|');
+    }
+
+    function buildMarkerFeatureIndex(postsData){
+      const index = new Map();
+      const features = Array.isArray(postsData?.features) ? postsData.features : [];
+      features.forEach(feature => {
+        if(!feature || !feature.properties) return;
+        const props = feature.properties;
+        const baseId = props.id;
+        if(baseId === undefined || baseId === null) return;
+        const fid = feature.id ?? props.featureId;
+        if(fid === undefined || fid === null) return;
+        let venueKey = '';
+        if(props.venueKey !== undefined && props.venueKey !== null){
+          const venueString = String(props.venueKey).trim();
+          venueKey = venueString;
+        } else if(typeof fid === 'string'){
+          const parts = fid.split('::');
+          if(parts.length >= 3){
+            venueKey = String(parts[1] || '');
+          }
+        }
+        const rawSpriteId = props.spriteId ?? '';
+        const spriteId = rawSpriteId !== undefined && rawSpriteId !== null ? String(rawSpriteId) : '';
+        const ids = new Set();
+        ids.add(String(baseId));
+        if(Array.isArray(props.multiPostIds)){
+          props.multiPostIds.forEach(postId => {
+            if(postId === undefined || postId === null) return;
+            const strId = String(postId);
+            if(strId) ids.add(strId);
+          });
+        }
+        ids.forEach(idValue => {
+          if(!index.has(idValue)){
+            index.set(idValue, []);
+          }
+          index.get(idValue).push({ source: 'posts', id: fid, venueKey, spriteId });
+        });
+      });
+      return index;
+    }
+
+    function getMarkerCollections(list){
+      const signature = markerSignatureForList(list);
+      if(markerDataCache.signature === signature && markerDataCache.postsData){
+        return {
+          postsData: markerDataCache.postsData,
+          signature,
+          changed: false,
+          featureIndex: markerDataCache.featureIndex
+        };
+      }
+      if(!Array.isArray(list) || !list.length){
+        markerDataCache.signature = signature;
+        markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
+        markerDataCache.featureIndex = new Map();
+        return {
+          postsData: EMPTY_FEATURE_COLLECTION,
+          signature,
+          changed: true,
+          featureIndex: markerDataCache.featureIndex
+        };
+      }
+      const postsData = postsToGeoJSON(list);
+      markerDataCache.signature = signature;
+      markerDataCache.postsData = postsData;
+      markerDataCache.featureIndex = buildMarkerFeatureIndex(postsData);
+      return { postsData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
+    }
+
+
+    async function syncMarkerSources(list, options = {}){
+      const { force = false } = options;
+      const collections = getMarkerCollections(list);
+      const { postsData, signature, featureIndex } = collections;
+      markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
+      let updated = false;
+      if(map && typeof map.getSource === 'function'){
+        const postsSource = map.getSource('posts');
+        if(postsSource && (force || postsSource.__markerSignature !== signature)){
+          try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
+          postsSource.__markerSignature = signature;
+          updated = true;
+        }
+      }
+      if(updated || force){
+        updateMapFeatureHighlights(lastHighlightedPostIds);
+      }
+      return { updated, signature };
+    }
 
     let postsLoaded = false;
     window.postsLoaded = postsLoaded;
@@ -5547,6 +6395,7 @@ function makePosts(){
     }
 
     function clearLoadedPosts(){
+      invalidateMarkerDataCache();
       if(postsLoaded){
         postsLoaded = false;
         window.postsLoaded = postsLoaded;
@@ -5579,6 +6428,11 @@ function makePosts(){
       hideResultIndicators();
       if(typeof updateResetBtn === 'function'){ updateResetBtn(); }
       if(map){
+        const postsSource = map.getSource && map.getSource('posts');
+        if(postsSource && typeof postsSource.setData === 'function'){
+          postsSource.setData(EMPTY_FEATURE_COLLECTION);
+          postsSource.__markerSignature = null;
+        }
       }
       updateLayerVisibility(lastKnownZoom);
     }
@@ -5608,7 +6462,9 @@ function makePosts(){
       window.postsLoaded = postsLoaded;
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
+      invalidateMarkerDataCache();
       resetBalloonSourceState();
+      if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
       updateLayerVisibility(lastKnownZoom);
@@ -5653,8 +6509,10 @@ function makePosts(){
       const container = map.getContainer();
       if(!container || !container.classList) return;
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
-      const isMidZoom = false;
-      const isSpriteZoom = false;
+      const isMidZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD && zoomValue < MARKER_SPRITE_ZOOM;
+      const isSpriteZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_SPRITE_ZOOM;
+      container.classList.toggle(MID_ZOOM_MARKER_CLASS, isMidZoom);
+      container.classList.toggle(SPRITE_MARKER_CLASS, isSpriteZoom);
     }
 
     function updateLayerVisibility(zoom){
@@ -5663,7 +6521,14 @@ function makePosts(){
         ? Math.floor((zoomValue + 1e-6) * ZOOM_VISIBILITY_PRECISION)
         : NaN;
       const hasBucket = Number.isFinite(zoomBucket);
-      const shouldShowBalloons = balloonLayersVisible;
+      const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
+      const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
+      if(markerLayersVisible !== shouldShowMarkers){
+        MARKER_LAYER_IDS.forEach(id => {
+          setLayerVisibility(id, shouldShowMarkers);
+        });
+        markerLayersVisible = shouldShowMarkers;
+      }
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
@@ -5686,7 +6551,16 @@ function makePosts(){
       updateLayerVisibility(lastKnownZoom);
       updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= 12){
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+        map.__retainAllMarkerSprites = true;
+      }
+      if(!markersLoaded){
+        const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+        if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
+          try{ loadPostMarkers(); }catch(err){ console.error(err); }
+          markersLoaded = true;
+          window.__markersLoaded = true;
+        }
       }
     }
 
@@ -5711,7 +6585,7 @@ function makePosts(){
         zoomLevel = getZoomFromEvent();
       }
       if(waitForInitialZoom){
-        if(Number.isFinite(zoomLevel) && zoomLevel >= 7.8){
+        if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
           initialZoomStarted = false;
@@ -5727,7 +6601,7 @@ function makePosts(){
         return;
       }
       updatePostsButtonState(zoomLevel);
-      if(Number.isFinite(zoomLevel) && zoomLevel < 7.8){
+      if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_PRELOAD_ZOOM){
         postLoadRequested = true;
         if(postsLoaded || (Array.isArray(posts) && posts.length)){ clearLoadedPosts(); }
         hideResultIndicators();
@@ -13817,9 +14691,15 @@ function makePosts(){
       assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
       assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
       assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
+      const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
       Object.keys(subcategoryMarkers).forEach(key => {
+        if(key !== MULTI_POST_MARKER_ICON_ID){
           delete subcategoryMarkers[key];
+        }
       });
+      if(multiIconSrc){
+        subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = multiIconSrc;
+      }
       const markerOverrides = snapshot && snapshot.subcategoryMarkers;
       if(markerOverrides && typeof markerOverrides === 'object'){
         Object.keys(markerOverrides).forEach(name => {
@@ -13847,6 +14727,9 @@ function makePosts(){
         try{
           document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
         }catch(err){}
+      }
+      if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
+        try{ addPostSource(); }catch(err){ console.error('addPostSource failed after snapshot restore', err); }
       }
       updateFormbuilderSnapshot();
     }
@@ -15153,7 +16036,7 @@ function makePosts(){
       }
 
       updatePostsButtonState = function(currentZoom){
-        const threshold = 8;
+        const threshold = MARKER_ZOOM_THRESHOLD;
         let zoomValue = Number.isFinite(currentZoom) ? currentZoom : null;
         if(!Number.isFinite(zoomValue) && map && typeof map.getZoom === 'function'){
           try{ zoomValue = map.getZoom(); }catch(err){ zoomValue = null; }
@@ -15438,61 +16321,6 @@ function makePosts(){
         }
       });
 
-      const filterBtn = $('#filterBtn');
-      const memberBtn = $('#memberBtn');
-      const adminBtn = $('#adminBtn');
-      const fullscreenBtn = $('#fullscreenBtn');
-      const filterPanel = document.getElementById('filterPanel');
-      const memberPanel = document.getElementById('memberPanel');
-      const adminPanel = document.getElementById('adminPanel');
-
-      if(filterBtn && filterPanel){
-        filterBtn.addEventListener('click', () => {
-          const isOpen = filterPanel.classList.contains('show');
-          if(isOpen){
-            closePanel(filterPanel);
-          } else {
-            openPanel(filterPanel);
-          }
-        });
-      }
-
-      if(memberBtn && memberPanel){
-        memberBtn.addEventListener('click', () => {
-          const isOpen = memberPanel.classList.contains('show');
-          if(isOpen){
-            closePanel(memberPanel);
-          } else {
-            openPanel(memberPanel);
-          }
-        });
-      }
-
-      if(adminBtn && adminPanel){
-        adminBtn.addEventListener('click', () => {
-          const isOpen = adminPanel.classList.contains('show');
-          if(isOpen){
-            closePanel(adminPanel);
-          } else {
-            openPanel(adminPanel);
-          }
-        });
-      }
-
-      if(fullscreenBtn){
-        fullscreenBtn.addEventListener('click', () => {
-          if(!document.fullscreenElement){
-            document.documentElement.requestFullscreen().catch(err => {
-              console.error('Error attempting to enable fullscreen:', err);
-            });
-          } else {
-            document.exitFullscreen().catch(err => {
-              console.error('Error attempting to exit fullscreen:', err);
-            });
-          }
-        });
-      }
-
     function buildDetail(p, existingCard = null, isRecentsBoard = false){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
       const loc0 = locationList[0] || {};
@@ -15703,6 +16531,7 @@ function makePosts(){
         const p = getPostByIdAnywhere(id); if(!p) return;
         activePostId = id;
         selectedVenueKey = null;
+        updateSelectedMarkerRing();
 
         if(!fromHistory){
           if(document.body.classList.contains('show-history')){
@@ -15914,6 +16743,19 @@ function makePosts(){
           }
         }
         
+        // Update mapcard states after post opens
+        if(typeof window.updateMapCardStates === 'function'){
+          requestAnimationFrame(() => {
+            window.updateMapCardStates();
+          });
+        }
+        
+        // Update icon-size for expanded state
+        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
+          requestAnimationFrame(() => {
+            updateMarkerLabelHighlightIconSize();
+          });
+        }
 
         await nextFrame();
 
@@ -16185,10 +17027,20 @@ function makePosts(){
         }
         activePostId = null;
         selectedVenueKey = null;
+        updateSelectedMarkerRing();
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
         
+        // Update mapcard states when post closes
+        if(typeof window.updateMapCardStates === 'function'){
+          window.updateMapCardStates();
+        }
+        
+        // Update icon-size when post closes
+        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
+          updateMarkerLabelHighlightIconSize();
+        }
       }
 
       window.openPost = openPost;
@@ -16207,6 +17059,14 @@ function makePosts(){
             const id = cardEl.getAttribute('data-id');
             if(!id) return;
             
+            // Add clicked state to corresponding mapcard
+            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+            if(mapCard){
+              document.querySelectorAll('.small-map-card').forEach(card => {
+                card.classList.remove('is-clicked');
+              });
+              mapCard.classList.add('is-clicked');
+            }
             
             callWhenDefined('openPost', (fn)=>{
               requestAnimationFrame(() => {
@@ -16232,6 +17092,14 @@ function makePosts(){
             if(id){
               e.preventDefault();
               
+              // Add clicked state to corresponding mapcard
+              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+              if(mapCard){
+                document.querySelectorAll('.small-map-card').forEach(card => {
+                  card.classList.remove('is-clicked');
+                });
+                mapCard.classList.add('is-clicked');
+              }
               
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
@@ -16676,7 +17544,7 @@ function makePosts(){
           const applyFlight = () => {
             if(!map) return;
 
-            const minZoom = Math.max(cityZoomLevel, 8.01);
+            const minZoom = Math.max(cityZoomLevel, MARKER_ZOOM_THRESHOLD + 0.01);
             let maxZoom = 22;
             if(typeof map.getMaxZoom === 'function'){
               try{
@@ -17007,6 +17875,7 @@ function makePosts(){
             console.error('Mapbox authentication error:', e.error);
           }
         });
+        try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
@@ -17158,6 +18027,7 @@ function makePosts(){
 // === Pill hooks (safe) ===
 
         const applyStyleAdjustments = () => {
+          try{ ensurePlaceholderSprites(map); }catch(err){}
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
         };
@@ -17165,10 +18035,12 @@ function makePosts(){
         map.on('style.load', applyStyleAdjustments);
         
         map.on('styledata', () => {
+          try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
             patchMapboxStyleArtifacts(map);
           }
         });
+        ensureMapIcon = attachIconLoader(map);
         const pendingStyleImageRequests = new Map();
         const handleStyleImageMissing = (evt) => {
           const imageId = evt && evt.id;
@@ -17186,7 +18058,7 @@ function makePosts(){
           if(pendingStyleImageRequests.has(imageId)){
             return;
           }
-          const result = null;
+          const result = generateMarkerImageFromId(imageId, map, { ensureIcon: ensureMapIcon });
           if(result && typeof result.then === 'function'){
             const task = result.then(output => {
               if(!output){
@@ -17359,12 +18231,16 @@ function makePosts(){
         }
       });
       map.on('zoomend', ()=>{
+        if(markersLoaded) return;
         if(!map || typeof map.getZoom !== 'function') return;
         let currentZoom = NaN;
         try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
-        if(!Number.isFinite(currentZoom) || currentZoom < 7.8){
+        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
           return;
         }
+        try{ loadPostMarkers(); }catch(err){ console.error(err); }
+        markersLoaded = true;
+        window.__markersLoaded = true;
       });
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
@@ -17387,6 +18263,14 @@ function makePosts(){
         updatePostPanel();
         applyFilters();
         updateZoomState(getZoomFromEvent());
+        if(!markersLoaded){
+          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
+            try{ loadPostMarkers(); }catch(err){ console.error(err); }
+            markersLoaded = true;
+            window.__markersLoaded = true;
+          }
+        }
         checkLoadPosts();
       });
 
@@ -17402,6 +18286,7 @@ function makePosts(){
           scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
           updatePostPanel();
           updateFilterCounts();
+          refreshMarkers();
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
@@ -17546,7 +18431,856 @@ function makePosts(){
       return entries.filter(entry => entry.key);
     }
 
+    function postsToGeoJSON(list){
+      const features = [];
+      if(!Array.isArray(list) || !list.length){
+        return { type:'FeatureCollection', features };
+      }
 
+      const venueGroups = new Map();
+      const orphanEntries = [];
+
+      list.forEach(p => {
+        if(!p) return;
+        const entries = collectLocationEntries(p);
+        entries.forEach(entry => {
+          if(!entry) return;
+          const key = entry.key;
+          const post = entry.post || p;
+          if(!key){
+            orphanEntries.push({ post, entry });
+            return;
+          }
+          let group = venueGroups.get(key);
+          if(!group){
+            group = { key, entries: [], postIds: new Set() };
+            venueGroups.set(key, group);
+          }
+          group.entries.push({ post, entry });
+          if(post && post.id !== undefined && post.id !== null){
+            const strId = String(post.id);
+            if(strId) group.postIds.add(strId);
+          }
+        });
+      });
+
+      const buildSingleFeature = ({ post, entry }) => {
+        if(!post || !entry) return null;
+        const key = entry.key || '';
+        const baseSub = slugify(post.subcategory);
+        const labelLines = getMarkerLabelLines(post);
+        const combinedLabel = buildMarkerLabelText(post, labelLines);
+        const featureId = key
+          ? `post:${post.id}::${key}::${entry.index}`
+          : `post:${post.id}::${entry.index}`;
+        const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
+        return {
+          type:'Feature',
+          id: featureId,
+          properties:{
+            id: post.id,
+            featureId,
+            title: post.title,
+            label: combinedLabel,
+            labelLine1: labelLines.line1,
+            labelLine2: labelLines.line2,
+            venueName,
+            city: post.city,
+            cat: post.category,
+            sub: baseSub,
+            baseSub,
+            venueKey: key,
+            locationIndex: entry.index,
+            isMultiPost: false
+          },
+          geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
+        };
+      };
+
+      const buildMultiFeature = (group) => {
+        if(!group || !group.entries.length) return null;
+        const multiCount = group.postIds.size;
+        if(multiCount <= 1){
+          return group.entries.map(buildSingleFeature).filter(Boolean);
+        }
+        const primary = group.entries[0];
+        if(!primary || !primary.post || !primary.entry) return null;
+        const { post, entry } = primary;
+        const baseSub = slugify(post.subcategory);
+        const multiIconId = MULTI_POST_MARKER_ICON_ID;
+        const venueName = (() => {
+          for(const item of group.entries){
+            const candidate = item && item.entry && item.entry.loc && item.entry.loc.venue;
+            if(candidate){
+              return candidate;
+            }
+          }
+          return getPrimaryVenueName(post);
+        })() || '';
+        const multiCountLabel = `${multiCount} posts here`;
+        const multiPostText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
+        const combinedLabel = multiPostText ? `${multiCountLabel}\n${multiPostText}` : multiCountLabel;
+        // Include venueKey in sprite source to ensure unique sprite IDs for different venues
+        // Even if they have same icon, count, and venue name
+        const featureId = `venue:${group.key}::${post.id}`;
+        const coordinates = [entry.lng, entry.lat];
+        const multiIds = Array.from(group.postIds);
+        return [{
+          type:'Feature',
+          id: featureId,
+          properties:{
+            id: post.id,
+            featureId,
+            title: multiCountLabel,
+            label: combinedLabel,
+            labelLine1: multiCountLabel,
+            labelLine2: multiPostText,
+            venueName,
+            city: post.city,
+            cat: post.category,
+            sub: multiIconId,
+            baseSub,
+            venueKey: group.key,
+            locationIndex: entry.index,
+            isMultiPost: true,
+            multiCount,
+            multiPostIds: multiIds
+          },
+          geometry:{ type:'Point', coordinates }
+        }];
+      };
+
+      venueGroups.forEach(group => {
+        const result = buildMultiFeature(group);
+        if(Array.isArray(result)){
+          result.forEach(feature => { 
+            if(feature) {
+              // Prevent duplicate multi-post features - check if feature with same coordinates already exists
+              const existing = features.find(f => 
+                f && f.geometry && feature.geometry &&
+                Array.isArray(f.geometry.coordinates) && Array.isArray(feature.geometry.coordinates) &&
+                f.geometry.coordinates.length >= 2 && feature.geometry.coordinates.length >= 2 &&
+                Math.abs(f.geometry.coordinates[0] - feature.geometry.coordinates[0]) < 0.0001 &&
+                Math.abs(f.geometry.coordinates[1] - feature.geometry.coordinates[1]) < 0.0001 &&
+                f.properties && f.properties.isMultiPost && feature.properties && feature.properties.isMultiPost
+              );
+              if(!existing){
+                features.push(feature);
+              }
+            }
+          });
+        }
+      });
+
+      orphanEntries.forEach(item => {
+        const feature = buildSingleFeature(item);
+        if(feature) features.push(feature);
+      });
+
+      return {
+        type:'FeatureCollection',
+        features
+      };
+    }
+
+    let addingPostSource = false;
+    let pendingAddPostSource = false;
+
+    // --- Section 7: Map Source Integration ---
+    function loadPostMarkers(){
+      try{
+        addPostSource();
+      }catch(err){
+        console.error('loadPostMarkers failed', err);
+      }
+    }
+
+    async function addPostSource(){
+      if(!map){
+        return;
+      }
+      if(addingPostSource){
+        pendingAddPostSource = true;
+        return;
+      }
+      addingPostSource = true;
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+        map.__retainAllMarkerSprites = true;
+      }
+      try{
+      const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
+      const collections = getMarkerCollections(markerList);
+      const { postsData, signature, featureIndex } = collections;
+      markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
+      const featureCount = Array.isArray(postsData.features) ? postsData.features.length : 0;
+      if(featureCount > 1000){
+        await new Promise(resolve => scheduleIdle(resolve, 120));
+      }
+      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      const existing = map.getSource('posts');
+      if(!existing){
+        map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
+        const source = map.getSource('posts');
+        if(source){ source.__markerSignature = signature; }
+      } else {
+        existing.setData(postsData);
+        existing.__markerSignature = signature;
+      }
+      const iconIds = Object.keys(subcategoryMarkers);
+      if(typeof ensureMapIcon === 'function'){
+        await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+      }
+      // Pre-load marker-icon sprites and add them to map
+      const markerIconIds = new Set();
+      postsData.features.forEach(feature => {
+        if(feature.properties && !feature.properties.point_count){
+          const iconId = feature.properties.sub || MULTI_POST_MARKER_ICON_ID;
+          markerIconIds.add(iconId);
+        }
+      });
+      markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
+      for(const iconId of markerIconIds){
+        if(typeof ensureMapIcon === 'function'){
+          await ensureMapIcon(iconId).catch(()=>{});
+        }
+        const iconUrl = subcategoryMarkers[iconId];
+        if(iconUrl && !map.hasImage(iconId)){
+          try{
+            const img = await loadMarkerLabelImage(iconUrl);
+            if(img){
+              let deviceScale = 2;
+              try{
+                const ratio = window.devicePixelRatio;
+                if(Number.isFinite(ratio) && ratio > 0){
+                  deviceScale = ratio;
+                }
+              }catch(err){
+                deviceScale = 2;
+              }
+              if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+                deviceScale = 2;
+              }
+              const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
+              const canvas = document.createElement('canvas');
+              canvas.width = iconSize;
+              canvas.height = iconSize;
+              const ctx = canvas.getContext('2d');
+              if(ctx){
+                ctx.drawImage(img, 0, 0, iconSize, iconSize);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+              }
+            }
+          }catch(e){}
+        }
+      }
+      
+      // Ensure pill sprites are loaded before creating layers
+      const pillSprites = await ensureMarkerLabelPillSprites();
+      if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
+        try{
+          map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+        }catch(e){}
+      }
+      if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+        try{
+          map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+        }catch(e){}
+      }
+      
+      updateMapFeatureHighlights(lastHighlightedPostIds);
+      
+      const markerLabelBaseConditions = [
+        ['!',['has','point_count']],
+        ['has','title']
+      ];
+      const markerLabelFilter = ['all', ...markerLabelBaseConditions];
+
+      const markerLabelIconImage = MARKER_LABEL_BG_ID;
+      const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
+
+      const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+      // Small pill: Use expression to switch between default and accent sprites based on isHighlighted
+      // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
+      // In always mode, always show (opacity 1)
+      const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
+      const smallPillOpacity = mapCardDisplay === 'hover_only' 
+        ? ['case', highlightedStateExpression, 1, 0]
+        : 1;
+      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
+      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
+      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+
+      const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      // Small pills: left edge at -20px from lat/lng (150×40px)
+      // Big pills: left edge at -35px from lat/lng (225×60px)
+      const labelLayersConfig = [
+        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: smallPillIconImageExpression, iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
+      ];
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
+        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
+        const finalIconSize = iconSize !== undefined ? iconSize : 1;
+        const finalIconOffset = iconOffset || [0, 0];
+        let layerExists = !!map.getLayer(id);
+        if(!layerExists){
+          try{
+            map.addLayer({
+              id,
+              type:'symbol',
+              source,
+              filter: filter || markerLabelFilter,
+              minzoom: layerMinZoom,
+              maxzoom: 24,
+              layout:{
+                'icon-image': iconImage || markerLabelIconImage,
+                'icon-size': finalIconSize,
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-anchor': 'left',
+                'icon-offset': finalIconOffset,
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'auto',
+                'symbol-sort-key': sortKey
+              },
+              paint:{
+                'icon-opacity': iconOpacity || 1
+              }
+            });
+            layerExists = !!map.getLayer(id);
+          }catch(e){
+            layerExists = !!map.getLayer(id);
+          }
+        }
+        if(!layerExists){
+          return;
+        }
+        // Update properties that can change (filter, opacity, and icon-image for small pill)
+        try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        // Update icon-image for small pill layer (uses expression to switch sprites)
+        if(id === 'small-map-card-pill' && iconImage){
+          try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
+        }
+      });
+      
+      // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
+      // Labels must be in the SAME layer as pills for sort-keys to work (sort-keys only work within same layer)
+      // Small labels: left edge at 20px from lat/lng (inside pill, which goes from -20px to 130px)
+      // text-offset uses em units, not pixels. With text-size 12, 20px = 20/12 = 1.67em
+      const textSize = 12;
+      const smallLabelOffsetEm = 20 / textSize; // 20px in em units
+      const labelTextLayerId = 'small-map-card-label';
+      if(!map.getLayer(labelTextLayerId)){
+        try{
+          map.addLayer({
+            id: labelTextLayerId,
+            type:'symbol',
+            source:'posts',
+            filter: markerLabelFilter,
+            minzoom: markerLabelMinZoom,
+            maxzoom: 24,
+            layout:{
+              'text-field': ['coalesce', ['get', 'label'], ''],
+              'text-size': textSize,
+              'text-line-height': 1.2,
+              'text-max-width': 100,
+              'text-anchor': 'left',
+              'text-justify': 'left',
+              'text-offset': [smallLabelOffsetEm, 0],
+              'text-allow-overlap': true,
+              'text-ignore-placement': true,
+              'text-pitch-alignment': 'viewport',
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 4, 3]
+            },
+            paint:{
+              'text-color': '#ffffff',
+              'text-opacity': mapCardDisplay === 'hover_only' ? 0 : 1,
+              'text-halo-color': 'rgba(0,0,0,0.4)',
+              'text-halo-width': 1,
+              'text-halo-blur': 1
+            }
+          });
+        }catch(e){
+          console.error('Failed to add label text layer:', e);
+        }
+      }
+      if(map.getLayer(labelTextLayerId)){
+        try{ 
+          // Only update properties that can change (filter and sort-key based on data)
+          map.setFilter(labelTextLayerId, markerLabelFilter);
+          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
+        }catch(e){
+          console.error('Failed to update label text layer:', e);
+        }
+      }
+      // Create marker-icon layer (sprites are already loaded above)
+      const markerIconFilter = ['all',
+        ['!',['has','point_count']],
+        ['has','title']
+      ];
+      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+        ['case',
+          ['==', ['var','iconId'], ''],
+          MULTI_POST_MARKER_ICON_ID,
+          ['var','iconId']
+        ]
+      ];
+      const markerIconLayerId = 'mapmarker-icon';
+      if(!map.getLayer(markerIconLayerId)){
+        try{
+          map.addLayer({
+            id: markerIconLayerId,
+            type:'symbol',
+            source:'posts',
+            filter: markerIconFilter,
+            minzoom: MARKER_MIN_ZOOM,
+            layout:{
+              'icon-image': markerIconImageExpression,
+              'icon-size': 1,
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'center',
+              'icon-offset': [0, 0],
+              'icon-pitch-alignment': 'viewport',
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': 8,
+              'visibility': 'visible'
+            },
+            paint:{
+              'icon-opacity': 1
+            }
+          });
+        }catch(e){}
+      }
+      if(map.getLayer(markerIconLayerId)){
+        try{
+          // Only update properties that can change (filter and icon-image based on data)
+          map.setFilter(markerIconLayerId, markerIconFilter);
+          map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+        }catch(e){}
+      }
+      
+      // Layer ordering will be set at the end after all layers are created
+      [
+        ['small-map-card-pill','icon-opacity-transition'],
+        ['big-map-card-pill','icon-opacity-transition']
+      ].forEach(([layer, prop])=>{
+        if(map.getLayer(layer)){
+          try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
+        }
+      });
+      
+      function updateMapCardLayerOpacity(displayMode){
+        if(!map) return;
+        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+        // Small pill: in hover_only mode, only show when highlighted; in always mode, always show
+        if(map.getLayer('small-map-card-pill')){
+          const smallPillOpacity = displayMode === 'hover_only' 
+            ? ['case', highlightedStateExpression, 1, 0]
+            : 1;
+          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
+        }
+        // Hide labels in hover_only mode (same as pills)
+        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
+        if(map.getLayer('small-map-card-label')){
+          try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
+        }
+        // marker-icon visibility/opacity handled in final ordering section
+      }
+      window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
+      window.getMapInstance = () => map; // Expose map instance getter
+      
+      updateMapCardLayerOpacity(mapCardDisplay);
+      
+      // Final layer ordering (bottom to top): pills -> labels -> icons
+      // Ensure marker-icon layer is visible and on top
+      if(map.getLayer('mapmarker-icon')){
+        try{
+          map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
+          map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
+          map.moveLayer('mapmarker-icon'); // Move icons to top
+        }catch(e){}
+      }
+      // Move label layer to be above pills but below icons
+      if(map.getLayer('small-map-card-label')){
+        try{
+          if(map.getLayer('mapmarker-icon')){
+            map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
+          } else {
+            map.moveLayer('small-map-card-label'); // Move to top if no icon layer
+          }
+        }catch(e){}
+      }
+      
+      if(!postSourceEventsBound){
+
+        const handleMarkerClick = (e)=>{
+          stopSpin();
+          const f = e.features && e.features[0]; if(!f) return;
+          const props = f.properties || {};
+          const venueKey = props.venueKey || null;
+          const id = props.id;
+          const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+          const normalizedMultiIds = rawMultiIds.map(item => String(item)).filter(Boolean);
+          const multiCountFromProps = Number(props.multiCount);
+          let normalizedMultiCount = Number.isFinite(multiCountFromProps) && multiCountFromProps > 0 ? multiCountFromProps : 0;
+          if(!normalizedMultiCount){
+            normalizedMultiCount = normalizedMultiIds.length;
+          }
+          const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiPost ? 2 : 0);
+          const isMultiPost = helperMultiCount > 1;
+          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
+          
+            // Add clicked state to mapcard and update icon-size
+            if(id !== undefined && id !== null){
+              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
+              if(mapCard){
+                document.querySelectorAll('.small-map-card').forEach(card => {
+                  card.classList.remove('is-clicked');
+                });
+                mapCard.classList.add('is-clicked');
+              }
+              // Update icon-size for expanded state
+              if(typeof updateMarkerLabelHighlightIconSize === 'function'){
+                updateMarkerLabelHighlightIconSize();
+              }
+            }
+          
+          if(touchClick){
+            // Two-tap system: first tap shows accent pill, second tap opens post
+            if(touchMarker === id){
+              // Second tap on same marker - open the post
+              touchMarker = null;
+              hoveredPostIds = [];
+              if(id !== undefined && id !== null){
+                activePostId = id;
+                selectedVenueKey = venueKey;
+                updateSelectedMarkerRing();
+              }
+              const p = posts.find(x=>x.id===id);
+              if(p){
+                callWhenDefined('openPost', (fn)=>{
+                  requestAnimationFrame(() => {
+                    try{
+                      stopSpin();
+                      if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                        try{ closePanel(filterPanel); }catch(err){}
+                      }
+                      fn(id, false, true, null);
+                    }catch(err){ console.error(err); }
+                  });
+                });
+              }
+              if(isMultiPost){
+                autoOpenPostBoardForMultiPost({
+                  multiIds: normalizedMultiIds,
+                  multiCount: helperMultiCount,
+                  trigger: 'touch'
+                });
+              }
+              return;
+            } else {
+              // First tap - show accent pill, don't open
+              touchMarker = id;
+              if(id !== undefined && id !== null){
+                hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+                updateSelectedMarkerRing();
+              }
+              return;
+            }
+          }
+          
+          // Non-touch: open immediately
+          if(id !== undefined && id !== null){
+            activePostId = id;
+            selectedVenueKey = venueKey;
+            updateSelectedMarkerRing();
+          }
+          const coords = f.geometry && f.geometry.coordinates;
+          const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+          const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+          const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+          const targetLngLat = baseLngLat || (e ? e.lngLat : null);
+          if(isMultiPost){
+            autoOpenPostBoardForMultiPost({
+              multiIds: normalizedMultiIds,
+              multiCount: helperMultiCount,
+              trigger: 'click'
+            });
+          } else {
+            const p = posts.find(x=>x.id===id);
+            if(p){
+              callWhenDefined('openPost', (fn)=>{
+                requestAnimationFrame(() => {
+                  try{
+                    touchMarker = null;
+                    stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
+                    fn(id, false, true, null);
+                  }catch(err){ console.error(err); }
+                });
+              });
+            }
+          }
+        };
+      // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
+      const attachClickHandlers = () => {
+        // Remove old handlers from all possible layers
+        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+        allPossibleLayers.forEach(layer => {
+          try {
+            map.off('click', layer, handleMarkerClick);
+          } catch(e) {}
+        });
+        // Add handlers to current interactive layers
+        getMarkerInteractiveLayers().forEach(layer => {
+          try {
+            map.on('click', layer, handleMarkerClick);
+          } catch(e) {}
+        });
+      };
+      attachClickHandlers();
+      // Expose globally so handlers can be updated when mapCardDisplay changes
+      window.attachClickHandlers = attachClickHandlers;
+
+      // Function to update mapcard click and post-open states
+      function updateMapCardStates(){
+        const openPostEl = document.querySelector('.open-post[data-id]');
+        const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
+        
+        // Remove all click and post-open states
+        document.querySelectorAll('.small-map-card').forEach(card => {
+          card.classList.remove('is-clicked', 'is-post-open');
+        });
+        
+        // Add post-open state to mapcard if post is open
+        if(openPostId){
+          const mapCard = document.querySelector(`.small-map-card[data-id="${openPostId}"]`);
+          if(mapCard){
+            mapCard.classList.add('is-post-open');
+          }
+        }
+      }
+      
+      // Expose globally
+      window.updateMapCardStates = updateMapCardStates;
+      
+      map.on('click', e=>{
+        const originalTarget = e.originalEvent && e.originalEvent.target;
+        const targetEl = originalTarget && typeof originalTarget.closest === 'function'
+          ? originalTarget.closest('.mapmarker-overlay, .small-map-card')
+          : null;
+        if(targetEl){
+          const smallMapCard = targetEl.classList.contains('small-map-card') 
+            ? targetEl 
+            : targetEl.querySelector('.small-map-card');
+          if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
+            const pid = smallMapCard.dataset.id;
+            
+            // Add clicked state
+            document.querySelectorAll('.small-map-card').forEach(card => {
+              card.classList.remove('is-clicked');
+            });
+            smallMapCard.classList.add('is-clicked');
+            
+            callWhenDefined('openPost', (fn)=>{
+              requestAnimationFrame(() => {
+                try{
+                  touchMarker = null;
+                  stopSpin();
+                  if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                    try{ closePanel(filterPanel); }catch(err){}
+                  }
+                  fn(pid, false, true, null);
+                }catch(err){ console.error(err); }
+              });
+            });
+          }
+          return;
+        }
+        const feats = map.queryRenderedFeatures(e.point);
+        if(!feats.length){
+          // Clicked elsewhere - remove click states
+          document.querySelectorAll('.small-map-card').forEach(card => {
+            card.classList.remove('is-clicked');
+          });
+          updateSelectedMarkerRing();
+          touchMarker = null;
+          hoveredPostIds = [];
+          updateSelectedMarkerRing();
+          updateMapCardStates();
+        } else {
+          const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
+          if(!clickedMarkerLabel){
+            // Clicked elsewhere - remove click states
+            document.querySelectorAll('.small-map-card').forEach(card => {
+              card.classList.remove('is-clicked');
+            });
+            touchMarker = null;
+            hoveredPostIds = [];
+            updateSelectedMarkerRing();
+            updateMapCardStates();
+          }
+        }
+      });
+
+      updateSelectedMarkerRing();
+
+      // Set pointer cursor when hovering over markers (dynamic based on mapCardDisplay)
+      // Store cursor handler functions so we can remove only these specific handlers
+      const cursorEnterHandler = () => {
+        map.getCanvas().style.cursor = 'pointer';
+      };
+      const cursorLeaveHandler = () => {
+        map.getCanvas().style.cursor = 'grab';
+      };
+      const attachCursorHandlers = () => {
+        // Remove only our cursor handlers from all possible layers
+        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+        allPossibleLayers.forEach(layer => {
+          try {
+            map.off('mouseenter', layer, cursorEnterHandler);
+            map.off('mouseleave', layer, cursorLeaveHandler);
+          } catch(e) {}
+        });
+        // Add cursor handlers to current interactive layers only
+        getMarkerInteractiveLayers().forEach(layer => {
+          try {
+            map.on('mouseenter', layer, cursorEnterHandler);
+            map.on('mouseleave', layer, cursorLeaveHandler);
+          } catch(e) {}
+        });
+      };
+      attachCursorHandlers();
+      // Expose globally so handlers can be updated when mapCardDisplay changes
+      window.attachCursorHandlers = attachCursorHandlers;
+
+      // Handle hover/tap to show accent pill
+      // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
+      // Only uses marker-icon layer for precise hover zone
+      // Uses mousemove to track hover continuously for smooth transitions between markers
+      let currentHoveredId = null;
+      let hoverCheckTimeout = null;
+      
+      const updateHoverFromPoint = (point) => {
+        if(!point) return;
+        
+        // Clear any pending hover check
+        if(hoverCheckTimeout){
+          clearTimeout(hoverCheckTimeout);
+          hoverCheckTimeout = null;
+        }
+        
+        // Query what's under the cursor
+        const features = map.queryRenderedFeatures(point, {
+          layers: ['mapmarker-icon']
+        });
+        
+        if(features.length > 0){
+          const f = features[0];
+          const props = f.properties || {};
+          const id = props.id;
+          const venueKey = props.venueKey || null;
+          
+          if(id !== undefined && id !== null && String(id) !== currentHoveredId){
+            currentHoveredId = String(id);
+            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+            updateSelectedMarkerRing();
+          }
+        } else {
+          // Not over any marker - clear hover after a short delay
+          hoverCheckTimeout = setTimeout(() => {
+            // Double-check we're still not over a marker
+            const recheckFeatures = map.queryRenderedFeatures(point, {
+              layers: ['mapmarker-icon']
+            });
+            if(recheckFeatures.length === 0){
+              currentHoveredId = null;
+              hoveredPostIds = [];
+              updateSelectedMarkerRing();
+            }
+            hoverCheckTimeout = null;
+          }, 50);
+        }
+      };
+      
+      const handleMarkerHover = (e) => {
+        // Cancel any pending hover clear
+        if(hoverCheckTimeout){
+          clearTimeout(hoverCheckTimeout);
+          hoverCheckTimeout = null;
+        }
+        
+        const f = e.features && e.features[0];
+        if(!f) return;
+        const props = f.properties || {};
+        const id = props.id;
+        const venueKey = props.venueKey || null;
+        
+        if(id !== undefined && id !== null){
+          currentHoveredId = String(id);
+          hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+          updateSelectedMarkerRing();
+        }
+      };
+
+      const handleMarkerHoverEnd = (e) => {
+        // Use mousemove to check what we're over now - this handles smooth transitions
+        if(e.point){
+          updateHoverFromPoint(e.point);
+        } else {
+          // No point info, clear after delay
+          hoverCheckTimeout = setTimeout(() => {
+            currentHoveredId = null;
+            hoveredPostIds = [];
+            updateSelectedMarkerRing();
+            hoverCheckTimeout = null;
+          }, 50);
+        }
+      };
+      
+      // Also track mousemove over the map to catch transitions between markers
+      const handleMapMouseMove = (e) => {
+        if(e.point){
+          updateHoverFromPoint(e.point);
+        }
+      };
+      
+      // Expose hover handlers globally so they can be updated when mapCardDisplay changes
+      window.handleMarkerHover = handleMarkerHover;
+      window.handleMarkerHoverEnd = handleMarkerHoverEnd;
+
+      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
+      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
+      // Using only marker-icon ensures hover works reliably and precisely
+      map.on('mouseenter', 'mapmarker-icon', handleMarkerHover);
+      map.on('mouseleave', 'mapmarker-icon', handleMarkerHoverEnd);
+      // Track mousemove to catch smooth transitions between markers
+      map.on('mousemove', 'mapmarker-icon', handleMapMouseMove);
+
+
+      // Maintain pointer cursor for balloons and surface multi-post cards when applicable
+        postSourceEventsBound = true;
+      }
+      } catch (err) {
+        console.error('addPostSource failed', err);
+      } finally {
+        addingPostSource = false;
+        const shouldReplay = pendingAddPostSource;
+        pendingAddPostSource = false;
+        if(shouldReplay){
+          addPostSource();
+        }
+      }
+    }
+    window.addPostSource = addPostSource;
     function renderLists(list){
       if(spinning || !postsLoaded) return;
       
@@ -17564,6 +19298,7 @@ function makePosts(){
         }
         if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
         
+        const { postsData } = getMarkerCollections(arr);
         const boundsForCount = getVisibleMarkerBoundsForCount();
         const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
         
@@ -17582,6 +19317,7 @@ function makePosts(){
       }
       if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
 
+      const { postsData } = getMarkerCollections(arr);
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
 
@@ -17960,6 +19696,7 @@ function openPostModal(id){
       const p = getPostByIdAnywhere(id);
       if(!p) return;
       activePostId = id;
+      updateSelectedMarkerRing();
       const container = document.getElementById('post-modal-container');
       if(!container) return;
       const modal = container.querySelector('.post-modal');
@@ -19576,21 +21313,6 @@ function openPostModal(id){
       return selection.subs.has(p.category+'::'+p.subcategory);
     }
 
-    function applyFilters(){
-      if(!postsLoaded) return;
-      const basePosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
-      filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
-      renderLists(filtered);
-      const boundsForCount = getVisibleMarkerBoundsForCount();
-      const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
-      const rawTotalMarkers = boundsForCount ? countMarkersForVenue(basePosts, null, boundsForCount) : countMarkersForVenue(basePosts);
-      const totalMarkers = Math.max(filteredMarkers, rawTotalMarkers);
-      const summary = $('#filterSummary');
-      if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
-      updateResultCount(filteredMarkers);
-      updateResetBtn();
-    }
-
     function hideResultIndicators(){
       const resultCountEl = $('#resultCount');
       if(resultCountEl){
@@ -19612,7 +21334,7 @@ function openPostModal(id){
           zoomCandidate = NaN;
         }
       }
-      if(!Number.isFinite(zoomCandidate) || zoomCandidate < 8){
+      if(!Number.isFinite(zoomCandidate) || zoomCandidate < MARKER_ZOOM_THRESHOLD){
         return null;
       }
       const boundsSource = postPanel || (map && typeof map.getBounds === 'function' ? map.getBounds() : null);
@@ -19666,5 +21388,4647 @@ function openPostModal(id){
         adPosts = newAdPosts;
       }
       if(render) renderLists(filtered);
+      syncMarkerSources(filtered);
+      updateLayerVisibility(lastKnownZoom);
+      filtersInitialized = true;
     }
+
+    function applyFilters(render = true){
+      if(spinning){
+        hideResultIndicators();
+        return;
+      }
+      updateFilterCounts();
+      refreshMarkers(render);
+    }
+
+    function showNextAd(){
+      if(!adPanel || !adPosts.length) return;
+      adIndex = (adIndex + 1) % adPosts.length;
+      const p = adPosts[adIndex];
+      const slide = document.createElement('a');
+      slide.className = 'ad-slide';
+      slide.dataset.id = p.id;
+      slide.href = postUrl(p);
+      const img = new Image();
+      img.src = heroUrl(p);
+      img.alt = '';
+      img.decode().catch(()=>{}).then(()=>{
+        slide.appendChild(img);
+        const info = document.createElement('div');
+        info.className = 'info';
+        info.innerHTML = `
+          <div class="title">${p.title}</div>
+          <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+          <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+          <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+        `;
+        slide.appendChild(info);
+        adPanel.appendChild(slide);
+        requestAnimationFrame(()=> slide.classList.add('active'));
+        const slides = adPanel.querySelectorAll('.ad-slide');
+        if(slides.length > 1){
+          const old = slides[0];
+          old.classList.remove('active');
+          setTimeout(()=> old.remove(),1500);
+        }
+      });
+    }
+
+    function handleAdPanelClick(e){
+      const slide = e.target.closest('.ad-slide');
+      if(!slide) return;
+      e.preventDefault();
+      const id = slide.dataset.id;
+      requestAnimationFrame(() => {
+        callWhenDefined('openPost', (fn)=>{
+          // CASE 4: AD BOARD CLICKED - SCROLL TO TOP
+          // Parameters: (id, fromHistory=false, fromMap=false, originEl=null)
+          Promise.resolve(fn(id, false, false, null)).then(() => {
+            requestAnimationFrame(() => {
+              document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+              const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
+              if(quickCard){
+                quickCard.setAttribute('aria-selected','true');
+              }
+            });
+          }).catch(err => console.error(err));
+        });
+      });
+    }
+
+    function initAdBoard(){
+      adPanel = document.querySelector('.ad-panel');
+      if(!adPanel) return;
+      if(!adPanel.__adListenerBound){
+        adPanel.addEventListener('click', handleAdPanelClick, { capture: true });
+        adPanel.__adListenerBound = true;
+      }
+    }
+
+    // applyFilters();
+    setMode(mode);
+    if(historyWasActive && mode === 'posts'){
+      document.body.classList.add('show-history');
+      adjustBoards();
+    }
+    window.addEventListener('beforeunload', () => {
+      localStorage.setItem('mode', mode);
+      localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
+    });
   })();
+  
+// 0577 helpers (safety)
+function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
+function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
+function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
+var __stableViewportHeight = (()=>{
+  const initialInner = window.innerHeight || 0;
+  const initialClient = document.documentElement ? document.documentElement.clientHeight : 0;
+  const initialVisual = window.visualViewport ? (window.visualViewport.height || 0) : 0;
+  const initial = Math.max(initialInner, initialClient, initialVisual);
+  return Number.isFinite(initial) && initial > 0 ? initial : 0;
+})();
+
+function getViewportHeight(){
+  const innerHeight = window.innerHeight || 0;
+  const clientHeight = document.documentElement ? document.documentElement.clientHeight : 0;
+  if(window.visualViewport){
+    const viewport = window.visualViewport;
+    const viewportHeight = viewport.height || 0;
+    const offsetTop = typeof viewport.offsetTop === 'number' ? viewport.offsetTop : 0;
+    if(offsetTop > 0){
+      if(Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0){
+        return __stableViewportHeight;
+      }
+      return Math.max(innerHeight, clientHeight, viewportHeight, 0);
+    }
+    const candidate = Math.max(innerHeight, clientHeight, viewportHeight, 0);
+    if(Number.isFinite(candidate) && candidate > 0){
+      __stableViewportHeight = candidate;
+      return candidate;
+    }
+    return Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0 ? __stableViewportHeight : 0;
+  }
+  const fallback = Math.max(innerHeight, clientHeight, 0);
+  if(Number.isFinite(fallback) && fallback > 0){
+    if(!Number.isFinite(__stableViewportHeight) || __stableViewportHeight <= 0){
+      __stableViewportHeight = fallback;
+    } else {
+      const delta = Math.abs(fallback - __stableViewportHeight);
+      if(delta <= 120 || fallback > __stableViewportHeight){
+        __stableViewportHeight = fallback;
+      }
+    }
+    return fallback;
+  }
+  return Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0 ? __stableViewportHeight : 0;
+}
+const panelStack = [];
+function bringToTop(item){
+  const idx = panelStack.indexOf(item);
+  if(idx!==-1) panelStack.splice(idx,1);
+  panelStack.push(item);
+  panelStack.forEach((p,i)=>{
+    if(p instanceof Element){ 
+      // Use CSS variables for z-index, ensuring devtools buttons (z-index 100) stay on top
+      const baseZ = p.classList.contains('panel') ? 60 : (p.classList.contains('modal') ? 90 : 60);
+      p.style.zIndex = String(baseZ + i);
+    }
+  });
+}
+function registerPopup(p){
+  bringToTop(p);
+  if(typeof p.on==='function'){
+    p.on('close',()=>{
+      const i = panelStack.indexOf(p);
+      if(i!==-1) panelStack.splice(i,1);
+    });
+  }
+  const el = p.getElement && p.getElement();
+  if(el){
+    el.addEventListener('mousedown', ()=> bringToTop(p));
+  }
+}
+function savePanelState(m){
+  if(!m || !m.id || m.id === 'welcome-modal') return;
+  const content = m.querySelector('.panel-content');
+  if(!content) return;
+  const state = {
+    left: content.style.left,
+    top: content.style.top,
+    width: content.style.width,
+    height: content.style.height
+  };
+  localStorage.setItem(`panel-${m.id}`, JSON.stringify(state));
+}
+function loadPanelState(m){
+  if(!m || !m.id) return false;
+  const content = m.querySelector('.panel-content');
+  if(!content) return false;
+  const saved = JSON.parse(localStorage.getItem(`panel-${m.id}`) || 'null');
+  if(saved){
+    ['width','height','left','top'].forEach(prop=>{
+      if(saved[prop]) content.style[prop] = saved[prop];
+    });
+    if(saved.left || saved.top) content.style.transform = 'none';
+    return true;
+  }
+  return false;
+}
+const panelButtons = {
+  filterPanel: 'filterBtn',
+  memberPanel: 'memberBtn',
+  adminPanel: 'adminBtn'
+};
+
+const panelScrollOverlayItems = new Set();
+
+function updatePanelScrollOverlay(target){
+  if(!target || !target.isConnected) return;
+  const overlayWidth = target.offsetWidth - target.clientWidth;
+  const value = overlayWidth > 0 ? `${overlayWidth}px` : '0px';
+  target.style.setProperty('--panel-scrollbar-overlay', value);
+}
+
+function registerPanelScrollOverlay(target){
+  if(!target || panelScrollOverlayItems.has(target)) return;
+  panelScrollOverlayItems.add(target);
+  updatePanelScrollOverlay(target);
+  if('ResizeObserver' in window){
+    const observer = new ResizeObserver(()=> updatePanelScrollOverlay(target));
+    observer.observe(target);
+  }
+  target.addEventListener('scroll', ()=> updatePanelScrollOverlay(target), { passive: true });
+}
+
+function refreshPanelScrollOverlays(){
+  document.querySelectorAll('.panel-body').forEach(registerPanelScrollOverlay);
+  panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  refreshPanelScrollOverlays();
+  window.addEventListener('resize', ()=>{
+    requestAnimationFrame(()=>{
+      panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
+    });
+  });
+});
+
+(function(){
+  const MIN_HEADER_WIDTH = 390;
+  const SIDE_MARGIN = 10;
+  let mapControls = null;
+  let originalParent = null;
+  let originalNext = null;
+  let header = null;
+  let headerButtons = null;
+  let viewToggle = null;
+  let welcomeModal = null;
+  let placedInHeader = false;
+  let rafId = null;
+
+  function cacheElements(){
+    if(!mapControls || !mapControls.isConnected){
+      mapControls = document.querySelector('.map-controls-map');
+      if(mapControls){
+        if(!originalParent) originalParent = mapControls.parentElement;
+        if(!originalNext) originalNext = mapControls.nextElementSibling;
+      }
+    }
+    if(!header || !header.isConnected){
+      header = document.querySelector('.header');
+    }
+    if(header){
+      if(!headerButtons || !header.contains(headerButtons)){
+        headerButtons = header.querySelector('.header-buttons');
+      }
+      if(!viewToggle || !header.contains(viewToggle)){
+        viewToggle = header.querySelector('.view-toggle');
+      }
+    } else {
+      headerButtons = null;
+      viewToggle = null;
+    }
+    if(!welcomeModal || !welcomeModal.isConnected){
+      welcomeModal = document.getElementById('welcome-modal');
+    }
+    return Boolean(mapControls && header);
+  }
+
+  function moveToHeader(){
+    if(!cacheElements() || placedInHeader) return;
+    const insertBeforeNode = (headerButtons && headerButtons.parentNode === header) ? headerButtons : null;
+    if(insertBeforeNode){
+      header.insertBefore(mapControls, insertBeforeNode);
+    } else {
+      header.appendChild(mapControls);
+    }
+    mapControls.classList.add('in-header');
+    placedInHeader = true;
+  }
+
+  function moveToOriginal(){
+    if(!mapControls || !originalParent || !placedInHeader) return;
+    if(originalNext && originalNext.parentNode === originalParent){
+      originalParent.insertBefore(mapControls, originalNext);
+    } else {
+      originalParent.appendChild(mapControls);
+    }
+    mapControls.classList.remove('in-header');
+    mapControls.style.left = '';
+    mapControls.style.width = '';
+    mapControls.style.maxWidth = '';
+    placedInHeader = false;
+  }
+
+  function performUpdate(){
+    rafId = null;
+    if(!cacheElements()) return;
+    const welcomeOpen = welcomeModal && welcomeModal.classList.contains('show');
+    if(welcomeOpen){
+      moveToOriginal();
+      return;
+    }
+    if(!headerButtons || !viewToggle){
+      moveToOriginal();
+      return;
+    }
+    const headerRect = header.getBoundingClientRect();
+    const viewRect = viewToggle.getBoundingClientRect();
+    const buttonsRect = headerButtons.getBoundingClientRect();
+    const leftBoundary = Math.max(viewRect.right, headerRect.left) + SIDE_MARGIN;
+    const rightBoundary = Math.min(buttonsRect.left, headerRect.right) - SIDE_MARGIN;
+    const available = rightBoundary - leftBoundary;
+    if(available < MIN_HEADER_WIDTH){
+      moveToOriginal();
+      return;
+    }
+    moveToHeader();
+    const center = leftBoundary + available / 2;
+    mapControls.style.left = (center - headerRect.left) + 'px';
+    mapControls.style.width = '';
+    mapControls.style.maxWidth = '';
+    const ctrlRect = mapControls.getBoundingClientRect();
+    if(ctrlRect.width > available){
+      moveToOriginal();
+    }
+  }
+
+  function scheduleUpdate(){
+    if(rafId !== null) return;
+    rafId = requestAnimationFrame(performUpdate);
+  }
+
+  window.addEventListener('resize', scheduleUpdate);
+  window.addEventListener('orientationchange', scheduleUpdate);
+  document.addEventListener('DOMContentLoaded', scheduleUpdate);
+  window.addEventListener('load', scheduleUpdate);
+  if(document.readyState !== 'loading') scheduleUpdate();
+
+  const getWelcome = () => {
+    if(!welcomeModal || !welcomeModal.isConnected){
+      welcomeModal = document.getElementById('welcome-modal');
+    }
+    return welcomeModal;
+  };
+  const observedWelcome = getWelcome();
+  if(observedWelcome && typeof MutationObserver === 'function'){
+    const observer = new MutationObserver(scheduleUpdate);
+    observer.observe(observedWelcome, {attributes:true, attributeFilter:['class','style']});
+  }
+
+  window.updateHeaderMapControls = scheduleUpdate;
+})();
+
+function schedulePanelEntrance(content, force=false){
+  if(!content) return;
+  if(force){
+    content.classList.remove('panel-visible');
+  }
+  content.style.transform = '';
+  if(force || !content.classList.contains('panel-visible')){
+    requestAnimationFrame(()=>{
+      if(!content.isConnected) return;
+      content.classList.add('panel-visible');
+    });
+  }
+}
+function openPanel(m){
+  if(!m) return;
+  // Temporarily bypass admin authentication check (for development)
+  // if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+  //   window.adminAuthManager.ensureAuthenticated();
+  //   return;
+  // }
+  
+  // Initialize admin panel spin controls with current values
+  if(m.id === 'adminPanel'){
+    const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
+    const spinTypeRadios = document.querySelectorAll('input[name="spinType"]');
+    const spinLogoClickCheckbox = document.getElementById('spinLogoClick');
+    const spinZoomMaxSlider = document.getElementById('spinZoomMax');
+    const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
+    const spinSpeedSlider = document.getElementById('spinSpeed');
+    const spinSpeedDisplay = document.getElementById('spinSpeedDisplay');
+    
+    if(window.spinGlobals){
+      if(spinLoadStartCheckbox){
+        spinLoadStartCheckbox.checked = window.spinGlobals.spinLoadStart || false;
+      }
+      if(spinTypeRadios.length){
+        spinTypeRadios.forEach(radio => {
+          radio.checked = (radio.value === (window.spinGlobals.spinLoadType || 'everyone'));
+        });
+      }
+      if(spinLogoClickCheckbox){
+        spinLogoClickCheckbox.checked = window.spinGlobals.spinLogoClick !== undefined ? window.spinGlobals.spinLogoClick : true;
+      }
+      if(spinZoomMaxSlider && spinZoomMaxDisplay){
+        const zoomValue = window.spinGlobals.spinZoomMax || 4;
+        spinZoomMaxSlider.value = zoomValue;
+        spinZoomMaxDisplay.textContent = zoomValue;
+      }
+      if(spinSpeedSlider && spinSpeedDisplay){
+        const speedValue = window.spinGlobals.spinSpeed || 0.3;
+        spinSpeedSlider.value = speedValue;
+        spinSpeedDisplay.textContent = speedValue.toFixed(1);
+      }
+    }
+    
+    // Auto-save function for map settings
+    async function autoSaveMapSettings(){
+      const settings = {};
+      if(spinLoadStartCheckbox) settings.spin_on_load = spinLoadStartCheckbox.checked;
+      if(spinLogoClickCheckbox) settings.spin_on_logo = spinLogoClickCheckbox.checked;
+      const checkedRadio = Array.from(spinTypeRadios).find(r => r.checked);
+      if(checkedRadio) settings.spin_load_type = checkedRadio.value;
+      if(spinZoomMaxSlider){
+        const zoomValue = parseInt(spinZoomMaxSlider.value, 10);
+        if(!isNaN(zoomValue)) settings.spin_zoom_max = zoomValue;
+      }
+      if(spinSpeedSlider){
+        const speedValue = parseFloat(spinSpeedSlider.value);
+        if(!isNaN(speedValue)) settings.spin_speed = speedValue;
+      }
+      
+      // Include icon folder setting
+      const iconFolderInput = document.getElementById('adminIconFolder');
+      if(iconFolderInput){
+        const iconFolderValue = iconFolderInput.value.trim();
+        if(iconFolderValue){
+          settings.icon_folder = iconFolderValue;
+          window.iconFolder = iconFolderValue;
+        }
+      }
+      
+      // Include admin icon folder setting
+      const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
+      if(adminIconFolderInput){
+        const adminIconFolderValue = adminIconFolderInput.value.trim();
+        if(adminIconFolderValue){
+          settings.admin_icon_folder = adminIconFolderValue;
+          window.adminIconFolder = adminIconFolderValue;
+        }
+      }
+      
+      try {
+        await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(settings)
+        });
+      } catch(err){
+        console.warn('Auto-save failed:', err);
+      }
+    }
+    
+    // Make value displays editable on click
+    function makeValueEditable(display, slider, min, max, decimals){
+      if(!display || display.dataset.editableAdded) return;
+      display.dataset.editableAdded = 'true';
+      display.style.cursor = 'pointer';
+      
+      display.addEventListener('click', ()=>{
+        const currentValue = display.textContent;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentValue;
+        input.min = min;
+        input.max = max;
+        input.step = decimals ? '0.1' : '1';
+        input.className = 'slider-value-input';
+        input.style.width = '60px';
+        input.style.textAlign = 'center';
+        input.style.fontSize = '16px';
+        input.style.fontWeight = 'bold';
+        input.style.background = 'rgba(0,0,0,0.5)';
+        input.style.color = '#fff';
+        input.style.border = '1px solid #2e3a72';
+        input.style.borderRadius = '4px';
+        input.style.padding = '2px';
+        
+        const commitValue = ()=>{
+          let newValue = decimals ? parseFloat(input.value) : parseInt(input.value, 10);
+          if(isNaN(newValue)) newValue = decimals ? parseFloat(currentValue) : parseInt(currentValue, 10);
+          newValue = Math.max(min, Math.min(max, newValue));
+          const formattedValue = decimals ? newValue.toFixed(1) : newValue.toString();
+          display.textContent = formattedValue;
+          display.style.display = '';
+          input.remove();
+          if(slider) slider.value = newValue;
+          // Don't update window.spinGlobals - settings will be applied on next page load
+          autoSaveMapSettings();
+        };
+        
+        input.addEventListener('blur', commitValue);
+        input.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            commitValue();
+          } else if(e.key === 'Escape'){
+            display.style.display = '';
+            input.remove();
+          }
+        });
+        
+        display.style.display = 'none';
+        display.parentNode.insertBefore(input, display);
+        input.focus();
+        input.select();
+      });
+    }
+    
+    makeValueEditable(spinZoomMaxDisplay, spinZoomMaxSlider, 1, 10, false);
+    makeValueEditable(spinSpeedDisplay, spinSpeedSlider, 0.1, 2.0, true);
+    
+    // Zoom slider - update display on input, save on change
+    if(spinZoomMaxSlider && !spinZoomMaxSlider.dataset.listenerAdded){
+      spinZoomMaxSlider.dataset.listenerAdded = 'true';
+      spinZoomMaxSlider.addEventListener('input', ()=>{
+        spinZoomMaxDisplay.textContent = spinZoomMaxSlider.value;
+      });
+      spinZoomMaxSlider.addEventListener('change', ()=>{
+        // Don't update window.spinGlobals - settings will be applied on next page load
+        autoSaveMapSettings();
+      });
+    }
+    
+    // Speed slider - update display on input, save on change
+    if(spinSpeedSlider && !spinSpeedSlider.dataset.listenerAdded){
+      spinSpeedSlider.dataset.listenerAdded = 'true';
+      spinSpeedSlider.addEventListener('input', ()=>{
+        spinSpeedDisplay.textContent = parseFloat(spinSpeedSlider.value).toFixed(1);
+      });
+      spinSpeedSlider.addEventListener('change', ()=>{
+        // Don't update window.spinGlobals - settings will be applied on next page load
+        autoSaveMapSettings();
+      });
+    }
+    
+    // Auto-save when toggles/radios change
+    if(spinLoadStartCheckbox && !spinLoadStartCheckbox.dataset.autoSaveAdded){
+      spinLoadStartCheckbox.dataset.autoSaveAdded = 'true';
+      spinLoadStartCheckbox.addEventListener('change', ()=>{
+        // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
+        autoSaveMapSettings();
+      });
+    }
+    if(spinLogoClickCheckbox && !spinLogoClickCheckbox.dataset.autoSaveAdded){
+      spinLogoClickCheckbox.dataset.autoSaveAdded = 'true';
+      spinLogoClickCheckbox.addEventListener('change', ()=>{
+        // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
+        autoSaveMapSettings();
+      });
+    }
+    spinTypeRadios.forEach(radio => {
+      if(radio.dataset.autoSaveAdded) return;
+      radio.dataset.autoSaveAdded = 'true';
+      radio.addEventListener('change', ()=>{
+        // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
+        autoSaveMapSettings();
+      });
+    });
+    
+    // Auto-save icon folder setting on blur
+    const iconFolderInput = document.getElementById('adminIconFolder');
+    if(iconFolderInput && !iconFolderInput.dataset.autoSaveAdded){
+      iconFolderInput.dataset.autoSaveAdded = 'true';
+      iconFolderInput.addEventListener('blur', ()=>{
+        autoSaveMapSettings();
+      });
+      iconFolderInput.addEventListener('change', ()=>{
+        autoSaveMapSettings();
+      });
+    }
+    
+    // Auto-save admin icon folder setting on blur
+    const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
+    if(adminIconFolderInput && !adminIconFolderInput.dataset.autoSaveAdded){
+      adminIconFolderInput.dataset.autoSaveAdded = 'true';
+      adminIconFolderInput.addEventListener('blur', ()=>{
+        autoSaveMapSettings();
+      });
+      adminIconFolderInput.addEventListener('change', ()=>{
+        autoSaveMapSettings();
+      });
+    }
+    
+    // Auto-save welcome message enabled checkbox
+    const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
+    if(welcomeEnabledCheckbox && !welcomeEnabledCheckbox.dataset.autoSaveAdded){
+      welcomeEnabledCheckbox.dataset.autoSaveAdded = 'true';
+      welcomeEnabledCheckbox.addEventListener('change', async ()=>{
+        // Update localStorage immediately
+        localStorage.setItem('welcome_enabled', welcomeEnabledCheckbox.checked ? 'true' : 'false');
+        
+        try {
+          await fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              welcome_enabled: welcomeEnabledCheckbox.checked
+            })
+          });
+        } catch(error){
+          console.error('Error auto-saving welcome enabled setting:', error);
+        }
+      });
+    }
+    
+  }
+  
+  const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
+  if(content && m.id !== 'welcome-modal'){
+    content.style.width = '';
+    content.style.height = '';
+  }
+  let shouldScheduleEntrance = false;
+  if(content){
+    const rootStyles = getComputedStyle(document.documentElement);
+    const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+    const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
+    const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+    const viewportHeight = getViewportHeight();
+    const innerWidth = window.innerWidth;
+    if(m.id==='adminPanel' || m.id==='memberPanel'){
+      const topPos = headerH + safeTop;
+      const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
+      content.style.left='auto';
+      content.style.right='0';
+      content.style.top=`${topPos}px`;
+      content.style.bottom=`${footerH}px`;
+      content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
+      content.dataset.side='right';
+      if(!content.classList.contains('panel-visible')){
+        content.classList.remove('panel-visible');
+        shouldScheduleEntrance = true;
+      }
+    } else if(m.id==='filterPanel'){
+      const topPos = headerH + subH + safeTop;
+      if(innerWidth < 450){
+        content.style.left='0';
+        content.style.right='0';
+        content.style.top=`${topPos}px`;
+        content.style.bottom=`${footerH}px`;
+        content.style.maxHeight='';
+      } else {
+        const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
+        content.style.left='0';
+        content.style.right='';
+        content.style.top=`${topPos}px`;
+        content.style.bottom='';
+        content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
+      }
+      content.dataset.side='left';
+      if(!content.classList.contains('panel-visible')){
+        content.classList.remove('panel-visible');
+        shouldScheduleEntrance = true;
+      }
+    } else if(m.id==='welcome-modal'){
+      const topPos = headerH + safeTop + 10;
+      content.style.left='50%';
+      content.style.top=`${topPos}px`;
+      content.style.transform='translateX(-50%)';
+    } else {
+      content.style.left='50%';
+      content.style.top='50%';
+      content.style.transform='translate(-50%, -50%)';
+      if(m.id !== 'welcome-modal' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)){
+        loadPanelState(m);
+      }
+    }
+  }
+  m.classList.add('show');
+  m.removeAttribute('aria-hidden');
+  m.removeAttribute('inert');
+  if(m.id === 'welcome-modal'){
+    const mc = document.querySelector('.map-controls-map');
+    if(mc) mc.style.display = 'none';
+  }
+  const btnId = panelButtons[m && m.id];
+  if(btnId){
+    const btn = document.getElementById(btnId);
+    btn && btn.setAttribute('aria-pressed','true');
+  }
+  localStorage.setItem(`panel-open-${m.id}`,'true');
+  if(content && shouldScheduleEntrance){
+    schedulePanelEntrance(content);
+  }
+  if(!m.__bringToTopAdded){
+    m.addEventListener('mousedown', ()=> bringToTop(m));
+    m.__bringToTopAdded = true;
+  }
+  bringToTop(m);
+  if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+  if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
+  if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
+  if(content){
+    requestAnimationFrame(()=> refreshPanelScrollOverlays());
+  }
+}
+
+const memberPanelChangeManager = (()=>{
+  const DRAFT_KEY = 'member-form-draft-v1';
+  let panel = null;
+  let form = null;
+  let saveButton = null;
+  let discardButton = null;
+  let prompt = null;
+  let promptCancelButton = null;
+  let promptSaveButton = null;
+  let promptDiscardButton = null;
+  let promptKeydownListener = null;
+  let promptKeydownTarget = null;
+  let promptOpener = null;
+  let statusMessage = null;
+  let dirty = false;
+  let savedState = {};
+  let applying = false;
+  let initialized = false;
+  let statusTimer = null;
+  let pendingCloseTarget = null;
+
+  function ensureElements(){
+    panel = document.getElementById('memberPanel');
+    form = panel ? panel.querySelector('.panel-body') : null;
+    if(panel){
+      saveButton = panel.querySelector('.save-changes');
+      discardButton = panel.querySelector('.discard-changes');
+    }
+    prompt = document.getElementById('memberUnsavedPrompt');
+    if(prompt){
+      promptCancelButton = prompt.querySelector('.confirm-cancel');
+      promptSaveButton = prompt.querySelector('.confirm-save');
+      promptDiscardButton = prompt.querySelector('.confirm-discard');
+    } else {
+      promptCancelButton = null;
+      promptSaveButton = null;
+      promptDiscardButton = null;
+    }
+    statusMessage = document.getElementById('memberStatusMessage');
+  }
+
+  function getKey(el){
+    if(!el) return '';
+    return el.name || el.id || '';
+  }
+
+  function serializeState(){
+    if(!form) return {};
+    const data = {};
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+      const key = getKey(el);
+      if(!key) return;
+      if(el.type === 'file'){
+        data[key] = el.files && el.files.length ? '__FILE_SELECTED__' : '';
+        return;
+      }
+      if(el.type === 'checkbox'){
+        data[key] = !!el.checked;
+        return;
+      }
+      if(el.type === 'radio'){
+        if(!(key in data)) data[key] = null;
+        if(el.checked) data[key] = el.value;
+        return;
+      }
+      data[key] = el.value;
+    });
+    return data;
+  }
+
+  function saveDraft(state){
+    try{
+      const payload = { ts: Date.now(), state: state || {} };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    }catch(_e){}
+  }
+
+  function loadDraft(){
+    try{
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.state && typeof parsed.state === 'object'){
+        return parsed.state;
+      }
+    }catch(_e){}
+    return null;
+  }
+  function stateEquals(a, b){
+    const keys = new Set([
+      ...Object.keys(a || {}),
+      ...Object.keys(b || {})
+    ]);
+    for(const key of keys){
+      if(a[key] !== b[key]){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function setDirty(value){
+    dirty = !!value;
+    if(panel){
+      panel.classList.toggle('has-unsaved', dirty);
+      panel.setAttribute('data-unsaved', dirty ? 'true' : 'false');
+    }
+    if(saveButton){
+      saveButton.disabled = !dirty;
+    }
+    if(discardButton){
+      discardButton.disabled = !dirty;
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.disabled = !dirty;
+    }
+  }
+
+  function updateDirty(){
+    if(applying) return;
+    ensureElements();
+    const current = serializeState();
+    // Always persist draft; disable prompt for member panel
+    saveDraft(current);
+    setDirty(false);
+  }
+
+  async function showStatus(message){
+    ensureElements();
+    if(!statusMessage) return;
+    
+    // If message looks like a message key (starts with 'msg_'), fetch from DB
+    let displayMessage = message;
+    if(typeof message === 'string' && message.startsWith('msg_')){
+      displayMessage = await getMessage(message, {}, true) || message;
+    }
+    
+    statusMessage.textContent = displayMessage;
+    statusMessage.setAttribute('aria-hidden','false');
+    statusMessage.classList.add('show');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(()=>{
+      statusMessage.classList.remove('show');
+      statusMessage.setAttribute('aria-hidden','true');
+    }, 2000);
+  }
+
+  function applyState(state){
+    if(!form || !state) return;
+    applying = true;
+    try{
+      form.querySelectorAll('input, select, textarea').forEach(el => {
+        const key = getKey(el);
+        if(!key || !(key in state)) return;
+        const value = state[key];
+        if(el.type === 'file'){
+          const shouldClear = !value;
+          if(shouldClear && el.value){
+            el.value = '';
+          }
+          return;
+        }
+        if(el.type === 'checkbox'){
+          const nextChecked = !!value;
+          if(el.checked !== nextChecked){
+            el.checked = nextChecked;
+          }
+          return;
+        }
+        if(el.type === 'radio'){
+          const shouldCheck = value === el.value;
+          if(el.checked !== shouldCheck){
+            el.checked = shouldCheck;
+          }
+          return;
+        }
+        const nextValue = value == null ? '' : String(value);
+        if(el.value !== nextValue){
+          el.value = nextValue;
+        }
+      });
+    } finally {
+      applying = false;
+      updateDirty();
+    }
+  }
+
+  function refreshSavedState(){
+    savedState = serializeState();
+    setDirty(false);
+  }
+
+  function isFocusableCandidate(el){
+    if(!el || typeof el.focus !== 'function'){ return false; }
+    if('disabled' in el && el.disabled){ return false; }
+    if(el.classList && el.classList.contains('primary-action')){ return false; }
+    return true;
+  }
+
+  function findFocusTarget(){
+    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
+      return promptOpener;
+    }
+    const roots = [];
+    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+      roots.push(pendingCloseTarget);
+    }
+    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
+      roots.push(panel);
+    }
+    for(const root of roots){
+      const closeButton = root.querySelector('.close-panel');
+      if(isFocusableCandidate(closeButton)){
+        return closeButton;
+      }
+      const discardButtonCandidate = root.querySelector('.discard-changes');
+      if(isFocusableCandidate(discardButtonCandidate)){
+        return discardButtonCandidate;
+      }
+      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if(isFocusableCandidate(fallback)){
+        return fallback;
+      }
+    }
+    return null;
+  }
+
+  function closePrompt(){
+    if(prompt){
+      const active = document.activeElement;
+      if(active && prompt.contains(active)){
+        const focusTarget = findFocusTarget();
+        if(!focusTarget && panel){
+          const previousTabIndex = panel.getAttribute('tabindex');
+          panel.setAttribute('tabindex','-1');
+          panel.focus({ preventScroll: true });
+          if(previousTabIndex === null){
+            panel.removeAttribute('tabindex');
+          } else {
+            panel.setAttribute('tabindex', previousTabIndex);
+          }
+        } else if(focusTarget){
+          focusTarget.focus({ preventScroll: true });
+        }
+      }
+      prompt.classList.remove('show');
+      prompt.setAttribute('aria-hidden','true');
+      prompt.setAttribute('inert','');
+      promptOpener = null;
+    }
+  }
+
+  function cancelPrompt(){
+    pendingCloseTarget = null;
+    closePrompt();
+  }
+
+  function openPrompt(target){
+    pendingCloseTarget = target || panel;
+    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+    if(prompt){
+      prompt.classList.add('show');
+      prompt.setAttribute('aria-hidden','false');
+      prompt.removeAttribute('inert');
+      setTimeout(()=>{
+        if(promptCancelButton && !promptCancelButton.disabled){
+          promptCancelButton.focus();
+        } else if(promptSaveButton && !promptSaveButton.disabled){
+          promptSaveButton.focus();
+        }
+      }, 0);
+    }
+  }
+
+  async function handleSave({ closeAfter } = {}){
+    refreshSavedState();
+    await showStatus('msg_admin_saved');
+    if(closeAfter){
+      const target = pendingCloseTarget;
+      pendingCloseTarget = null;
+      closePrompt();
+      if(target) closePanel(target);
+    } else {
+      pendingCloseTarget = null;
+    }
+  }
+
+  function notifyDiscard(detail = {}){
+    try{
+      document.dispatchEvent(new CustomEvent('member-panel:discarded', { detail }));
+    }catch(err){
+      console.error('Failed to dispatch member discard event', err);
+    }
+  }
+
+  async function discardChanges({ closeAfter } = {}){
+    if(form && typeof form.reset === 'function'){
+      applying = true;
+      try{
+        form.reset();
+      } finally {
+        applying = false;
+      }
+    }
+    applyState(savedState);
+    setDirty(false);
+    await showStatus('msg_admin_discarded');
+    notifyDiscard({ closeAfter: !!closeAfter });
+    if(closeAfter){
+      const target = pendingCloseTarget;
+      pendingCloseTarget = null;
+      closePrompt();
+      if(target) closePanel(target);
+    } else {
+      pendingCloseTarget = null;
+      closePrompt();
+    }
+  }
+
+  function formChanged(){
+    if(applying) return;
+    updateDirty();
+  }
+
+  function attachListeners(){
+    if(initialized) return;
+    ensureElements();
+    if(!panel || !form) return;
+    
+// === Added Confirm Password Field ===
+(function ensureConfirmPasswordField(){
+  const registerPanel = document.getElementById('memberRegisterPanel');
+  if(!registerPanel) return;
+  const pwd = registerPanel.querySelector('input[type="password"]');
+  if(!pwd) return;
+  if(registerPanel.querySelector('#memberRegisterPasswordConfirm')) return;
+  const confirm = document.createElement('input');
+  confirm.type = 'password';
+  confirm.id = 'memberRegisterPasswordConfirm';
+  confirm.placeholder = 'Confirm Password';
+  if(pwd.className) confirm.className = pwd.className;
+  confirm.required = true;
+  pwd.insertAdjacentElement('afterend', confirm);
+})();
+// === End Added Confirm Password Field ===
+
+// Filter out auth inputs from triggering dirty state
+function formChangedWrapper(event){
+  if(event && event.target){
+    const target = event.target;
+    const isAuthInput = target.closest('.member-auth-panel') || 
+                       target.id === 'memberLoginEmail' || 
+                       target.id === 'memberLoginPassword' ||
+                       target.id === 'memberRegisterName' ||
+                       target.id === 'memberRegisterEmail' ||
+                       target.id === 'memberRegisterPassword' ||
+                       target.id === 'memberRegisterPasswordConfirm' ||
+                       target.id === 'memberRegisterAvatar';
+    if(isAuthInput) return;
+    // Exclude venue field inputs - they should not trigger form change
+    const isVenueField = target.closest('.venue-session-editor') || 
+                        target.closest('.venue-card') ||
+                        target.closest('.venue-session-venues') ||
+                        target.closest('.mapboxgl-ctrl-geocoder');
+    if(isVenueField) return;
+  }
+  formChanged();
+}
+
+form.addEventListener('input', formChangedWrapper, true);
+    form.addEventListener('change', formChangedWrapper, true);
+    if(saveButton){
+      saveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        pendingCloseTarget = null;
+        handleSave({ closeAfter:false });
+      });
+    }
+    if(discardButton){
+      discardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        pendingCloseTarget = null;
+        discardChanges({ closeAfter:false });
+      });
+    }
+    if(promptCancelButton){
+      promptCancelButton.addEventListener('click', e=>{
+        e.preventDefault();
+        cancelPrompt();
+      });
+    }
+    if(promptSaveButton){
+      promptSaveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        handleSave({ closeAfter:true });
+      });
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        discardChanges({ closeAfter:true });
+      });
+    }
+    if(prompt){
+      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
+        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
+      }
+      if(!promptKeydownListener){
+        promptKeydownListener = event => handlePromptKeydown(event, {
+          prompt,
+          cancelButton: promptCancelButton,
+          cancelPrompt
+        });
+      }
+      promptKeydownTarget = prompt;
+      prompt.addEventListener('keydown', promptKeydownListener);
+      prompt.addEventListener('click', e=>{
+        if(e.target === prompt) cancelPrompt();
+      });
+    }
+    initialized = true;
+    refreshSavedState();
+  }
+
+  ensureElements();
+  attachListeners();
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(()=>{
+      ensureElements();
+      attachListeners();
+      const draft = loadDraft();
+      if(draft){ applyState(draft); }
+      refreshSavedState();
+    }, 0);
+  });
+
+  function isPromptOpen(){
+    return !!(prompt && prompt.classList.contains('show'));
+  }
+
+  return {
+    handlePanelClose(_panelEl){ return false; },
+    handleEscape(_panelEl){ return false; }
+  };
+})();
+
+// Extracted from <script>
+(function(){
+  const SAVE_ENDPOINT = '/gateway.php?action=save-form';
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
+  const ERROR_CLASS = 'error';
+  const ERROR_TIMEOUT = 5000;
+
+  function showErrorBanner(message){
+    const banner = document.getElementById('adminStatusMessage');
+    if(!banner) return;
+    const text = typeof message === 'string' && message.trim() ? message.trim() : 'Failed to save changes.';
+    banner.textContent = text;
+    banner.setAttribute('aria-hidden', 'false');
+    banner.classList.add('show');
+    banner.classList.add(ERROR_CLASS);
+    if(window[STATUS_TIMER_KEY]){
+      clearTimeout(window[STATUS_TIMER_KEY]);
+    }
+    window[STATUS_TIMER_KEY] = setTimeout(()=>{
+      banner.classList.remove('show');
+      banner.classList.remove(ERROR_CLASS);
+      banner.setAttribute('aria-hidden', 'true');
+      window[STATUS_TIMER_KEY] = null;
+    }, ERROR_TIMEOUT);
+  }
+
+  async function saveAdminChanges(){
+    // Collect modified admin messages
+    const modifiedMessages = [];
+    document.querySelectorAll('.message-text-input').forEach(textarea => {
+      if(textarea.value !== textarea.dataset.originalValue){
+        modifiedMessages.push({
+          id: parseInt(textarea.dataset.messageId),
+          message_text: textarea.value
+        });
+      }
+    });
+    
+    // Collect general website settings
+    const websiteSettings = {};
+    
+    const websiteNameInput = document.getElementById('adminWebsiteName');
+    if(websiteNameInput){
+      websiteSettings.site_name = websiteNameInput.value.trim();
+    }
+    
+    const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
+    if(websiteTaglineInput){
+      websiteSettings.site_tagline = websiteTaglineInput.value.trim();
+    }
+    
+    const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
+    if(websiteCurrencyInput){
+      websiteSettings.site_currency = websiteCurrencyInput.value.trim();
+    }
+    
+    const contactEmailInput = document.getElementById('adminContactEmail');
+    if(contactEmailInput){
+      websiteSettings.contact_email = contactEmailInput.value.trim();
+    }
+    
+    const supportEmailInput = document.getElementById('adminSupportEmail');
+    if(supportEmailInput){
+      websiteSettings.support_email = supportEmailInput.value.trim();
+    }
+    
+    const maintenanceModeCheckbox = document.getElementById('adminMaintenanceMode');
+    if(maintenanceModeCheckbox){
+      websiteSettings.maintenance_mode = maintenanceModeCheckbox.checked;
+    }
+    
+    const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
+    if(welcomeEnabledCheckbox){
+      websiteSettings.welcome_enabled = welcomeEnabledCheckbox.checked;
+    }
+    
+    // Save messages separately to admin-settings endpoint (not formbuilder)
+    if(modifiedMessages.length > 0){
+      try {
+        const messageResponse = await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: modifiedMessages })
+        });
+        
+        if(!messageResponse.ok){
+          console.error('Failed to save messages - HTTP status:', messageResponse.status);
+        } else {
+          const messageResult = await messageResponse.json();
+          if(!messageResult.success){
+            console.error('Failed to save messages:', messageResult.message || 'Unknown error');
+          } else {
+            console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+            
+            // Update originalValue for all successfully saved messages
+            modifiedMessages.forEach(savedMessage => {
+              const textArea = document.querySelector(`.message-text-input[data-message-id="${savedMessage.id}"]`);
+              if(textArea){
+                // Update the originalValue to the current value (now saved)
+                textArea.dataset.originalValue = textArea.value;
+                
+                // Update the display
+                const messageItem = textArea.closest('.message-item');
+                if(messageItem){
+                  const messageTextDisplay = messageItem.querySelector('.message-text-display');
+                  if(messageTextDisplay){
+                    messageTextDisplay.innerHTML = textArea.value;
+                  }
+                  
+                  // Remove modified class since it's now saved
+                  messageItem.classList.remove('modified');
+                }
+              }
+            });
+          }
+        }
+      } catch(err) {
+        console.error('Failed to save messages:', err);
+      }
+    }
+    
+    // Save general settings to database if any exist
+    if(Object.keys(websiteSettings).length > 0){
+      try {
+        const response = await fetch('/gateway.php?action=save-admin-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(websiteSettings)
+        });
+        
+        if(!response.ok){
+          console.error('Failed to save website settings - HTTP status:', response.status);
+        } else {
+          const result = await response.json();
+          if(!result.success){
+            console.error('Failed to save website settings:', result.message || 'Unknown error');
+          } else {
+            console.log('Website settings saved successfully');
+          }
+        }
+      } catch(err) {
+        console.error('Failed to save website settings:', err);
+      }
+    }
+    
+    // Collect form data (separate from messages and settings)
+    let payload = null;
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
+      try {
+        payload = window.formbuilderStateManager.capture();
+      } catch (err) {
+        console.error('formbuilderStateManager.capture failed', err);
+      }
+    }
+    if(!payload || typeof payload !== 'object'){
+      payload = {};
+    }
+
+    // Only save form data if there's actual form data (not just empty object)
+    let response;
+    try {
+      // Only send form data if there's something to save
+      if(Object.keys(payload).length > 0){
+        response = await fetch(SAVE_ENDPOINT, {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // No form data to save, create a successful response object
+        response = {
+          ok: true,
+          text: async () => JSON.stringify({ success: true })
+        };
+      }
+    } catch (networkError) {
+      const errorMsg = await getMessage('msg_admin_save_error_network', {}, true) || 'Unable to reach the server. Please try again.';
+      showErrorBanner(errorMsg);
+      throw networkError;
+    }
+
+    const responseText = await response.text();
+    let data = {};
+    if(responseText){
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('[SaveAdminChanges] JSON parse error:', parseError, 'Response text:', responseText);
+        const errorMsg = await getMessage('msg_admin_save_error_response', {}, true) || 'Unexpected response while saving changes.';
+        showErrorBanner(errorMsg);
+        const error = new Error('Invalid JSON response');
+        error.responseText = responseText;
+        throw error;
+      }
+    }
+
+    if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
+      console.error('[SaveAdminChanges] Save failed:', { responseOk: response.ok, data });
+      const message = data && typeof data.message === 'string' && data.message.trim()
+        ? data.message.trim()
+        : `Failed to save changes${response.ok ? '' : ` (HTTP ${response.status})`}.`;
+      showErrorBanner(message);
+      const error = new Error(message);
+      error.response = response;
+      error.payload = data;
+      throw error;
+    }
+
+    if(Array.isArray(data.new_category_ids) && data.new_category_ids.length){
+      let idIndex = 0;
+      categories.forEach(cat => {
+        if(cat && (cat.id === null || cat.id === undefined)){
+          if(idIndex < data.new_category_ids.length){
+            cat.id = data.new_category_ids[idIndex];
+            idIndex++;
+          }
+        }
+      });
+    }
+
+    if(Array.isArray(data.new_subcategory_ids) && data.new_subcategory_ids.length){
+      let idIndex = 0;
+      categories.forEach(cat => {
+        if(!cat || !Array.isArray(cat.subs)) return;
+        cat.subs.forEach((subName, subIdx) => {
+          const subId = cat.subIds && cat.subIds[subName];
+          if(subId === null || subId === undefined){
+            if(idIndex < data.new_subcategory_ids.length){
+              if(!cat.subIds) cat.subIds = {};
+              cat.subIds[subName] = data.new_subcategory_ids[idIndex];
+              idIndex++;
+            }
+          }
+        });
+      });
+    }
+
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+      try{
+        window.formbuilderStateManager.save();
+      }catch(err){
+        console.error('Failed to update saved formbuilder state after ID assignment', err);
+      }
+    }
+
+    // Update original values for messages after successful save
+    if(modifiedMessages.length > 0){
+      document.querySelectorAll('.message-text-input').forEach(textarea => {
+        textarea.dataset.originalValue = textarea.value;
+        const messageItem = textarea.closest('.message-item');
+        if(messageItem){
+          messageItem.classList.remove('modified');
+        }
+      });
+    }
+
+    return data;
+  }
+
+  window.saveAdminChanges = saveAdminChanges;
+})();
+
+const adminPanelChangeManager = (()=>{
+  let panel = null;
+  let form = null;
+  let saveButton = null;
+  let discardButton = null;
+  let prompt = null;
+  let promptCancelButton = null;
+  let promptSaveButton = null;
+  let promptDiscardButton = null;
+  let promptKeydownListener = null;
+  let promptKeydownTarget = null;
+  let promptOpener = null;
+  let statusMessage = null;
+  let dirty = false;
+  let savedState = {};
+  let applying = false;
+  let statusTimer = null;
+  let initialized = false;
+  let pendingCloseTarget = null;
+
+  function ensureElements(){
+    panel = document.getElementById('adminPanel');
+    form = panel ? panel.querySelector('.panel-body') : null;
+    if(panel){
+      saveButton = panel.querySelector('.save-changes');
+      discardButton = panel.querySelector('.discard-changes');
+    }
+    prompt = document.getElementById('adminUnsavedPrompt');
+    if(prompt){
+      promptCancelButton = prompt.querySelector('.confirm-cancel');
+      promptSaveButton = prompt.querySelector('.confirm-save');
+      promptDiscardButton = prompt.querySelector('.confirm-discard');
+    } else {
+      promptCancelButton = null;
+      promptSaveButton = null;
+      promptDiscardButton = null;
+    }
+    statusMessage = document.getElementById('adminStatusMessage');
+  }
+
+  function trigger(el, type){
+    el.dispatchEvent(new Event(type, { bubbles: true }));
+  }
+
+  function serializeState(){
+    if(!form) return {};
+    const data = {};
+    const elements = form.querySelectorAll('input, select, textarea');
+    elements.forEach(el => {
+      if(!el) return;
+      const key = el.name || el.id;
+      if(!key) return;
+      if(el.type === 'file') return;
+      if(el.tagName === 'SELECT' && el.multiple){
+        data[key] = Array.from(el.options || []).filter(opt => opt.selected).map(opt => opt.value);
+        return;
+      }
+      if(el.type === 'checkbox'){
+        data[key] = el.checked;
+        return;
+      }
+      if(el.type === 'radio'){
+        if(!(key in data)) data[key] = null;
+        if(el.checked) data[key] = el.value;
+        return;
+      }
+      data[key] = el.value;
+    });
+    form.querySelectorAll('[contenteditable][id]').forEach(el => {
+      data[el.id] = el.innerHTML;
+    });
+    return data;
+  }
+
+  function applyState(state){
+    if(!form || !state) return;
+    applying = true;
+    try{
+      const elements = form.querySelectorAll('input, select, textarea');
+      elements.forEach(el => {
+        if(!el) return;
+        const key = el.name || el.id;
+        if(!key || !(key in state)) return;
+        if(el.type === 'file') return;
+        if(el.tagName === 'SELECT' && el.multiple){
+          const values = Array.isArray(state[key]) ? state[key].map(String) : [];
+          let changed = false;
+          Array.from(el.options || []).forEach(opt => {
+            const shouldSelect = values.includes(opt.value);
+            if(opt.selected !== shouldSelect){
+              opt.selected = shouldSelect;
+              changed = true;
+            }
+          });
+          if(changed) trigger(el, 'change');
+          return;
+        }
+        if(el.type === 'checkbox'){
+          const shouldCheck = !!state[key];
+          if(el.checked !== shouldCheck){
+            el.checked = shouldCheck;
+            trigger(el, 'change');
+          }
+          return;
+        }
+        if(el.type === 'radio'){
+          const shouldCheck = state[key] === el.value;
+          if(el.checked !== shouldCheck){
+            el.checked = shouldCheck;
+            if(shouldCheck) trigger(el, 'change');
+          }
+          return;
+        }
+        const nextValue = state[key] === null || state[key] === undefined ? '' : String(state[key]);
+        if(el.value !== nextValue){
+          el.value = nextValue;
+          trigger(el, 'input');
+          trigger(el, 'change');
+        }
+      });
+      form.querySelectorAll('[contenteditable][id]').forEach(el => {
+        if(!(el.id in state)) return;
+        const html = state[el.id] ?? '';
+        if(el.innerHTML !== html){
+          el.innerHTML = html;
+          trigger(el, 'input');
+          trigger(el, 'change');
+        }
+      });
+    } finally {
+      applying = false;
+    }
+  }
+
+  function setDirty(value){
+    dirty = !!value;
+    if(panel){
+      panel.classList.toggle('has-unsaved', dirty);
+      panel.setAttribute('data-unsaved', dirty ? 'true' : 'false');
+    }
+    if(saveButton){
+      saveButton.disabled = !dirty;
+    }
+    if(discardButton){
+      discardButton.disabled = !dirty;
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.disabled = !dirty;
+    }
+  }
+
+  function stateEquals(a, b){
+    const keys = new Set([
+      ...Object.keys(a || {}),
+      ...Object.keys(b || {})
+    ]);
+    for(const key of keys){
+      const aVal = a[key];
+      const bVal = b[key];
+      // Handle arrays (for multi-select)
+      if(Array.isArray(aVal) && Array.isArray(bVal)){
+        if(aVal.length !== bVal.length) return false;
+        for(let i = 0; i < aVal.length; i++){
+          if(aVal[i] !== bVal[i]) return false;
+        }
+        continue;
+      }
+      if(Array.isArray(aVal) || Array.isArray(bVal)) return false;
+      if(aVal !== bVal) return false;
+    }
+    return true;
+  }
+
+  function updateDirty(){
+    if(applying) return;
+    // Don't mark as dirty until saved state is initialized
+    if(!savedStateInitialized) return;
+    ensureElements();
+    const current = serializeState();
+    setDirty(!stateEquals(current, savedState));
+  }
+
+  function refreshSavedState({ skipManagerSave } = {}){
+    if(!form) return;
+    savedState = serializeState();
+    if(!skipManagerSave && window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+      window.formbuilderStateManager.save();
+    }
+    setDirty(false);
+  }
+
+  let savedStateInitializationPromise = null;
+  let savedStateInitialized = false;
+
+  async function initializeSavedState(){
+    if(savedStateInitialized) return Promise.resolve();
+    if(savedStateInitializationPromise) return savedStateInitializationPromise;
+    let formWasFound = false;
+    savedStateInitializationPromise = (async ()=>{
+      if(typeof window === 'undefined') return;
+      ensureElements();
+      formWasFound = !!form;
+      const manager = window.formbuilderStateManager;
+      let snapshot = null;
+      // NO FALLBACKS - only use backend snapshot
+      const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
+        ? window.fetchSavedFormbuilderSnapshot
+        : null;
+      if(!fetchSnapshot){
+        throw new Error('Formbuilder snapshot fetch function not available');
+      }
+      try{
+        snapshot = await fetchSnapshot();
+        if(!snapshot || typeof snapshot !== 'object'){
+          throw new Error('Invalid formbuilder snapshot received from server');
+        }
+      }catch(err){
+        console.error('Failed to fetch admin formbuilder snapshot from server:', err);
+        throw err; // Don't fall back to localStorage
+      }
+      if(manager && typeof manager.restore === 'function' && snapshot){
+        try{
+          manager.restore(snapshot);
+        }catch(err){
+          console.error('Failed to hydrate admin formbuilder snapshot:', err);
+          throw err; // Don't silently fail
+        }
+      }
+      refreshSavedState({ skipManagerSave: true });
+      if(manager && typeof manager.save === 'function'){
+        try{
+          manager.save();
+        }catch(err){
+          console.warn('Failed to persist hydrated admin formbuilder snapshot', err);
+        }
+      }
+    })()
+    .catch(err => {
+      console.warn('Failed to initialize admin saved state', err);
+    })
+    .finally(()=>{
+      savedStateInitializationPromise = null;
+      if(formWasFound){
+        savedStateInitialized = true;
+      }
+    });
+    return savedStateInitializationPromise;
+  }
+
+  function showStatus(message){
+    if(!statusMessage) statusMessage = document.getElementById('adminStatusMessage');
+    if(!statusMessage) return;
+    statusMessage.textContent = message;
+    statusMessage.setAttribute('aria-hidden','false');
+    statusMessage.classList.remove('error');
+    if(window.__adminStatusMessageTimer){
+      clearTimeout(window.__adminStatusMessageTimer);
+      window.__adminStatusMessageTimer = null;
+    }
+    statusMessage.classList.add('show');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(()=>{
+      statusMessage.classList.remove('show');
+      statusMessage.setAttribute('aria-hidden','true');
+    }, 2000);
+  }
+
+  function isFocusableCandidate(el){
+    if(!el || typeof el.focus !== 'function'){ return false; }
+    if('disabled' in el && el.disabled){ return false; }
+    if(el.classList && el.classList.contains('primary-action')){ return false; }
+    return true;
+  }
+
+  function findFocusTarget(){
+    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
+      return promptOpener;
+    }
+    const roots = [];
+    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+      roots.push(pendingCloseTarget);
+    }
+    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
+      roots.push(panel);
+    }
+    for(const root of roots){
+      const closeButton = root.querySelector('.close-panel');
+      if(isFocusableCandidate(closeButton)){
+        return closeButton;
+      }
+      const discardButtonCandidate = root.querySelector('.discard-changes');
+      if(isFocusableCandidate(discardButtonCandidate)){
+        return discardButtonCandidate;
+      }
+      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if(isFocusableCandidate(fallback)){
+        return fallback;
+      }
+    }
+    return null;
+  }
+
+  function closePrompt(){
+    if(prompt){
+      const active = document.activeElement;
+      if(active && prompt.contains(active)){
+        const focusTarget = findFocusTarget();
+        if(!focusTarget && panel){
+          const previousTabIndex = panel.getAttribute('tabindex');
+          panel.setAttribute('tabindex','-1');
+          panel.focus({ preventScroll: true });
+          if(previousTabIndex === null){
+            panel.removeAttribute('tabindex');
+          } else {
+            panel.setAttribute('tabindex', previousTabIndex);
+          }
+        } else if(focusTarget){
+          focusTarget.focus({ preventScroll: true });
+        }
+      }
+      prompt.classList.remove('show');
+      prompt.setAttribute('aria-hidden','true');
+      prompt.setAttribute('inert','');
+      promptOpener = null;
+    }
+  }
+
+  function cancelPrompt(){
+    pendingCloseTarget = null;
+    closePrompt();
+  }
+
+  function openPrompt(target){
+    pendingCloseTarget = target;
+    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+    if(prompt){
+      prompt.classList.add('show');
+      prompt.setAttribute('aria-hidden','false');
+      prompt.removeAttribute('inert');
+      setTimeout(()=>{
+        if(promptCancelButton && !promptCancelButton.disabled){
+          promptCancelButton.focus();
+        } else if(promptSaveButton && !promptSaveButton.disabled){
+          promptSaveButton.focus();
+        }
+      }, 0);
+    }
+  }
+
+  async function runSave({ closeAfter } = {}){
+    ensureElements();
+    let result = null;
+    try{
+      if(typeof window.saveAdminChanges === 'function'){
+        result = window.saveAdminChanges();
+      }
+      // Map settings (spin controls) auto-save on change, no need to save here
+    }catch(err){
+      const message = err && typeof err.message === 'string' ? err.message : '';
+      if(message && message.toLowerCase().includes('database connection not configured')){
+        console.warn('Skipped saving admin changes because the database connection is not configured.');
+      } else {
+        console.error('Failed to save admin changes', err);
+      }
+      if(!closeAfter) cancelPrompt();
+      return;
+    }
+    Promise.resolve(result).then(()=>{
+      refreshSavedState();
+      showStatus('Saved');
+      const panelToClose = closeAfter ? pendingCloseTarget : null;
+      if(closeAfter) pendingCloseTarget = null;
+      closePrompt();
+      if(panelToClose) closePanel(panelToClose);
+    }).catch(err => {
+      const message = err && typeof err.message === 'string' ? err.message : '';
+      if(message && message.toLowerCase().includes('database connection not configured')){
+        console.warn('Skipped saving admin changes because the database connection is not configured.');
+      } else {
+        console.error('Failed to save admin changes', err);
+      }
+    });
+  }
+
+  function notifyDiscard(detail = {}){
+    try{
+      document.dispatchEvent(new CustomEvent('admin-panel:discarded', { detail }));
+    }catch(err){
+      console.error('Failed to dispatch admin discard event', err);
+    }
+  }
+
+  function discardChanges({ closeAfter } = {}){
+    if(form && typeof form.reset === 'function'){
+      applying = true;
+      try{
+        form.reset();
+      } finally {
+        applying = false;
+      }
+    }
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restoreSaved === 'function'){
+      window.formbuilderStateManager.restoreSaved();
+    }
+    // Reset admin messages to original values
+    document.querySelectorAll('.message-text-input').forEach(textarea => {
+      textarea.value = textarea.dataset.originalValue;
+      const messageItem = textarea.closest('.message-item');
+      if(messageItem){
+        messageItem.classList.remove('modified');
+      }
+      const textPreview = messageItem?.querySelector('.message-text-preview');
+      if(textPreview){
+        textPreview.textContent = textarea.dataset.originalValue;
+      }
+    });
+    if(savedState) applyState(savedState);
+    setDirty(false);
+    showStatus('Changes Discarded');
+    notifyDiscard({ closeAfter: !!closeAfter });
+    const panelToClose = closeAfter ? pendingCloseTarget : null;
+    pendingCloseTarget = null;
+    closePrompt();
+    if(panelToClose) closePanel(panelToClose);
+  }
+
+  function formChanged(){
+    if(applying) return;
+    updateDirty();
+  }
+
+  function attachListeners(){
+    if(initialized) return;
+    ensureElements();
+    if(!panel || !form) return;
+    
+    // Filter out auth inputs from triggering dirty state (adminPanel version)
+    function formChangedWrapper(event){
+      if(event && event.target){
+        const target = event.target;
+        const isAuthInput = target.closest('.member-auth-panel') || 
+                           target.id === 'memberLoginEmail' || 
+                           target.id === 'memberLoginPassword' ||
+                           target.id === 'memberRegisterName' ||
+                           target.id === 'memberRegisterEmail' ||
+                           target.id === 'memberRegisterPassword' ||
+                           target.id === 'memberRegisterPasswordConfirm' ||
+                           target.id === 'memberRegisterAvatar';
+        if(isAuthInput) return;
+        // Exclude venue field inputs - they should not trigger form change
+        const isVenueField = target.closest('.venue-session-editor') || 
+                            target.closest('.venue-card') ||
+                            target.closest('.venue-session-venues') ||
+                            target.closest('.mapboxgl-ctrl-geocoder');
+        if(isVenueField) return;
+      }
+      formChanged();
+    }
+    
+    form.addEventListener('input', formChangedWrapper, true);
+    form.addEventListener('change', formChangedWrapper, true);
+    if(saveButton){
+      saveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        pendingCloseTarget = null;
+        runSave({ closeAfter:false });
+      });
+    }
+    if(discardButton){
+      discardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        discardChanges({ closeAfter:false });
+      });
+    }
+    if(promptCancelButton){
+      promptCancelButton.addEventListener('click', e=>{
+        e.preventDefault();
+        cancelPrompt();
+      });
+    }
+    if(promptSaveButton){
+      promptSaveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        runSave({ closeAfter:true });
+      });
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        discardChanges({ closeAfter:true });
+      });
+    }
+    if(prompt){
+      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
+        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
+      }
+      if(!promptKeydownListener){
+        promptKeydownListener = event => handlePromptKeydown(event, {
+          prompt,
+          cancelButton: promptCancelButton,
+          cancelPrompt
+        });
+      }
+      promptKeydownTarget = prompt;
+      prompt.addEventListener('keydown', promptKeydownListener);
+      prompt.addEventListener('click', e=>{
+        if(e.target === prompt) cancelPrompt();
+      });
+    }
+    initialized = true;
+  }
+
+  ensureElements();
+  attachListeners();
+  initializeSavedState().then(()=>{
+    refreshSavedState();
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(()=>{
+      ensureElements();
+      attachListeners();
+      initializeSavedState().then(()=>{
+        refreshSavedState();
+      });
+    }, 0);
+  });
+
+  function isPromptOpen(){
+    return !!(prompt && prompt.classList.contains('show'));
+  }
+
+  return {
+    hasUnsaved(){
+      return !!dirty;
+    },
+    handlePanelClose(panelEl){
+      if(!panel || panelEl !== panel) return false;
+      if(isPromptOpen()) return true;
+      if(dirty){
+        openPrompt(panelEl);
+        return true;
+      }
+      return false;
+    },
+    handleEscape(panelEl){
+      if(isPromptOpen()){
+        cancelPrompt();
+        return true;
+      }
+      if(panel && panelEl === panel && dirty){
+        openPrompt(panelEl);
+        return true;
+      }
+      return false;
+    },
+    markSaved(message){
+      ensureElements();
+      refreshSavedState();
+      if(message) showStatus(message);
+    },
+    markDirty(){
+      ensureElements();
+      setDirty(true);
+    },
+    runSave
+  };
+})();
+window.adminPanelModule = adminPanelChangeManager;
+
+function closePanel(m){
+  const btnId = panelButtons[m && m.id];
+  if(btnId){
+    const btn = document.getElementById(btnId);
+    btn && btn.setAttribute('aria-pressed','false');
+  }
+  const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
+  const active = document.activeElement;
+  if(active && m.contains(active)) active.blur();
+  if(m.id === 'welcome-modal'){
+    const mc = document.querySelector('.map-controls-map');
+    if(mc) mc.style.display = '';
+  }
+  m.setAttribute('inert','');
+  if(content && content.dataset.side){
+    content.classList.remove('panel-visible');
+    content.addEventListener('transitionend', function handler(){
+      content.removeEventListener('transitionend', handler);
+      m.classList.remove('show');
+      m.setAttribute('aria-hidden','true');
+      localStorage.setItem(`panel-open-${m.id}`,'false');
+      const idx = panelStack.indexOf(m);
+      if(idx!==-1) panelStack.splice(idx,1);
+      if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+      if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
+    }, {once:true});
+  } else {
+    m.classList.remove('show');
+    m.setAttribute('aria-hidden','true');
+    localStorage.setItem(`panel-open-${m.id}`,'false');
+    const idx = panelStack.indexOf(m);
+    if(idx!==-1) panelStack.splice(idx,1);
+    if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+    if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
+  }
+  if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
+}
+
+const adminAuthManager = (()=>{
+  const STORAGE_KEY = 'admin-authenticated';
+  const IDENTITY_KEY = 'admin-identity';
+  const adminBtn = document.getElementById('adminBtn');
+  const adminPanel = document.getElementById('adminPanel');
+  const memberPanel = document.getElementById('memberPanel');
+
+  let authenticated = localStorage.getItem(STORAGE_KEY) === 'true';
+  let adminIdentity = localStorage.getItem(IDENTITY_KEY) || '';
+
+  function updateUI(){
+    if(adminBtn){
+      // Always show admin button (temporarily - for development)
+      adminBtn.hidden = false;
+      adminBtn.style.display = 'flex';
+      adminBtn.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function setAuthenticatedState(value, identity){
+    const next = !!value;
+    if(next === authenticated){
+      updateUI();
+      return;
+    }
+    authenticated = next;
+    localStorage.setItem(STORAGE_KEY, authenticated ? 'true' : 'false');
+    if(authenticated){
+      const normalizedIdentity = typeof identity === 'string' ? identity.trim() : '';
+      adminIdentity = normalizedIdentity || adminIdentity;
+      if(adminIdentity){
+        localStorage.setItem(IDENTITY_KEY, adminIdentity);
+      }
+    } else {
+      adminIdentity = '';
+      localStorage.removeItem(IDENTITY_KEY);
+    }
+    updateUI();
+    if(!authenticated){
+      localStorage.setItem('panel-open-adminPanel','false');
+      if(adminPanel && adminPanel.classList.contains('show')){
+        closePanel(adminPanel);
+      }
+    }
+  }
+
+  function ensureAuthenticated(){
+    if(authenticated) return true;
+    if(memberPanel && !memberPanel.classList.contains('show')){
+      openPanel(memberPanel);
+    }
+    const memberBtn = document.getElementById('memberBtn');
+    if(memberBtn){
+      memberBtn.focus();
+    }
+    return false;
+  }
+
+  updateUI();
+  if(!authenticated){
+    localStorage.setItem('panel-open-adminPanel','false');
+    if(adminPanel && adminPanel.classList.contains('show')){
+      closePanel(adminPanel);
+    }
+  }
+
+  return {
+    isAuthenticated(){
+      return authenticated;
+    },
+    ensureAuthenticated,
+    setAuthenticated(value, identity){
+      setAuthenticatedState(value, identity);
+    },
+    getAdminUser(){
+      const identifier = adminIdentity || localStorage.getItem(IDENTITY_KEY) || 'admin';
+      const trimmed = identifier.trim();
+      const emailNormalized = trimmed ? trimmed.toLowerCase() : 'admin';
+      return {
+        name: 'Administrator',
+        email: trimmed || 'admin',
+        emailNormalized,
+        username: trimmed || 'admin',
+        avatar: '',
+        isAdmin: true
+      };
+    }
+  };
+})();
+window.adminAuthManager = adminAuthManager;
+
+const welcomeModalEl = document.getElementById('welcome-modal');
+if(welcomeModalEl){
+  const welcomeControls = welcomeModalEl.querySelector('.map-controls-welcome');
+  welcomeModalEl.addEventListener('click', e => {
+    if(welcomeControls && welcomeControls.contains(e.target)) return;
+    closePanel(welcomeModalEl);
+  });
+  const welcomeContent = welcomeModalEl.querySelector('.modal-content');
+  if(welcomeContent){
+    welcomeContent.addEventListener('click', e => {
+      if(welcomeControls && welcomeControls.contains(e.target)) return;
+      closePanel(welcomeModalEl);
+    });
+  }
+}
+
+function requestClosePanel(m){
+  if(m){
+    if(m.id === 'adminPanel' && adminPanelChangeManager.handlePanelClose(m)){
+      return;
+    }
+    if(m.id === 'memberPanel' && memberPanelChangeManager.handlePanelClose(m)){
+      return;
+    }
+  }
+  closePanel(m);
+}
+function togglePanel(m){
+  if(m.classList.contains('show')){
+    requestClosePanel(m);
+  } else {
+    openPanel(m);
+  }
+}
+function movePanelToEdge(panel, side){
+  if(!panel) return;
+  const content = panel.querySelector('.panel-content') || panel.querySelector('.modal-content');
+  if(!content) return;
+  const header = document.querySelector('.header');
+  const topPos = header ? header.getBoundingClientRect().bottom : 0;
+  content.style.top = `${topPos}px`;
+  if(side === 'left'){
+    content.dataset.side='left';
+    content.style.left = '0';
+    content.style.right = 'auto';
+    schedulePanelEntrance(content, true);
+  } else {
+    content.dataset.side='right';
+    content.style.left = 'auto';
+    content.style.right = '0';
+    schedulePanelEntrance(content, true);
+  }
+}
+function repositionPanels(){
+  ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
+    const panel = document.getElementById(id);
+    if(panel && panel.classList.contains('show')){
+      const content = panel.querySelector('.panel-content');
+      if(!content) return;
+      const w = content.style.width;
+      const h = content.style.height;
+      openPanel(panel);
+      content.style.width = w;
+      content.style.height = h;
+    }
+  });
+}
+function handleEsc(){
+  const top = panelStack[panelStack.length-1];
+  if(!top){
+    const {container} = ensureImageModalReady();
+    if(container && !container.classList.contains('hidden')){
+      closeImageModal(container);
+    }
+    return;
+  }
+  if(top instanceof Element){
+    if(top.id === 'adminPanel' && adminPanelChangeManager.handleEscape(top)){
+      return;
+    }
+    if(top.id === 'memberPanel' && memberPanelChangeManager.handleEscape(top)){
+      return;
+    }
+    if(top.id === 'post-modal-container'){
+      closePostModal();
+    } else {
+      requestClosePanel(top);
+    }
+  } else if(typeof top.remove==='function'){
+    panelStack.pop();
+    top.remove();
+  }
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') handleEsc();
+});
+
+let pointerStartedInFilterContent = false;
+
+function handleDocInteract(e){
+  if(e.target.closest('.image-modal-container')) return;
+  if(logoEls.some(el => el.contains(e.target))) return;
+  if(e.target.closest('#filterBtn')) return;
+  const welcome = document.getElementById('welcome-modal');
+  if(welcome && welcome.classList.contains('show')){
+    const controls = welcome.querySelector('.map-controls-welcome');
+    if(!controls || !controls.contains(e.target)){
+      closePanel(welcome);
+    }
+  }
+  const filterPanel = document.getElementById('filterPanel');
+  const fromPointerDown = !!e.__fromPointerDown;
+  if(filterPanel && filterPanel.classList.contains('show')){
+    const content = filterPanel.querySelector('.panel-content');
+    const pinBtn = filterPanel.querySelector('.pin-panel');
+    const pinned = pinBtn && pinBtn.getAttribute('aria-pressed')==='true';
+    const startedInside = pointerStartedInFilterContent;
+    if(content && !content.contains(e.target) && !pinned){
+      if(startedInside && !fromPointerDown){
+        pointerStartedInFilterContent = false;
+        return;
+      }
+      closePanel(filterPanel);
+      pointerStartedInFilterContent = false;
+      return;
+    }
+    if(!fromPointerDown){
+      pointerStartedInFilterContent = false;
+    }
+  } else if(!fromPointerDown){
+    pointerStartedInFilterContent = false;
+  }
+}
+
+document.addEventListener('click', handleDocInteract);
+document.addEventListener('pointerdown', (e) => {
+  const target = e.target;
+  const filterPanel = document.getElementById('filterPanel');
+  const content = filterPanel ? filterPanel.querySelector('.panel-content') : null;
+  pointerStartedInFilterContent = !!(filterPanel && filterPanel.classList.contains('show') && content && content.contains(target));
+  requestAnimationFrame(() => handleDocInteract({ target, __fromPointerDown: true }));
+});
+
+// Panels and admin/member interactions
+(function(){
+  const memberBtn = document.getElementById('memberBtn');
+  const adminBtn = document.getElementById('adminBtn');
+  const filterBtn = document.getElementById('filterBtn');
+  const memberPanel = document.getElementById('memberPanel');
+  const adminPanel = document.getElementById('adminPanel');
+  const filterPanel = document.getElementById('filterPanel');
+
+  if(memberBtn && memberPanel){
+    memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
+  }
+  if(adminBtn && adminPanel){
+    adminBtn.addEventListener('click', ()=> togglePanel(adminPanel));
+  }
+  filterBtn && filterBtn.addEventListener('click', ()=> {
+    closeWelcomeModalIfOpen();
+    togglePanel(filterPanel);
+  });
+  document.querySelectorAll('.panel .close-panel').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const panel = btn.closest('.panel');
+      requestClosePanel(panel);
+    });
+  });
+  document.querySelectorAll('.panel .move-left').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const panel = btn.closest('.panel');
+      movePanelToEdge(panel, 'left');
+    });
+  });
+  document.querySelectorAll('.panel .move-right').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const panel = btn.closest('.panel');
+      movePanelToEdge(panel, 'right');
+    });
+  });
+
+  document.querySelectorAll('#filterPanel .pin-panel').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const pressed = btn.getAttribute('aria-pressed')==='true';
+      btn.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+      if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
+    });
+  });
+
+  document.querySelectorAll('.panel .panel-header').forEach(header=>{
+    header.addEventListener('mousedown', e=>{
+      if(e.target.closest('button')) return;
+      const panel = header.closest('.panel');
+      const content = panel ? panel.querySelector('.panel-content') : null;
+      if(!content) return;
+      bringToTop(panel);
+      const rect = content.getBoundingClientRect();
+      const startX = e.clientX;
+      const startLeft = rect.left;
+      const onMove = (ev)=>{
+        const dx = ev.clientX - startX;
+        let newLeft = startLeft + dx;
+        const maxLeft = window.innerWidth - rect.width;
+        if(newLeft < 0) newLeft = 0;
+        if(newLeft > maxLeft) newLeft = maxLeft;
+        content.style.left = `${newLeft}px`;
+        content.style.right = 'auto';
+      };
+      const throttledMove = rafThrottle(onMove);
+      function onUp(){
+        document.removeEventListener('mousemove', throttledMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', throttledMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+
+    const welcomeModal = document.getElementById('welcome-modal');
+    const panelsToRestore = [memberPanel, adminPanel, welcomeModal];
+    panelsToRestore.forEach(m=>{
+      if(!m) return;
+      if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+        localStorage.setItem(`panel-open-${m.id}`,'false');
+        return;
+      }
+      if(localStorage.getItem(`panel-open-${m.id}`) === 'true'){
+        openPanel(m);
+      }
+    });
+    // Welcome modal will be shown after settings load (see loadAdminSettings function)
+    // This ensures it always respects the database setting, even after localStorage is cleared
+    const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') === 'true';
+    if(filterPanel && shouldOpenFilter){
+      openPanel(filterPanel);
+    }
+  document.querySelectorAll('.panel').forEach(panel=>{
+    const content = panel.querySelector('.panel-content');
+    if(content){
+      const defaultWidth = panel.id === 'filterPanel' ? '380px' : '440px';
+      content.style.width = defaultWidth;
+      content.style.maxWidth = defaultWidth;
+      content.style.top = 'calc(var(--header-h) + var(--safe-top))';
+      content.style.bottom = 'var(--footer-h)';
+      content.style.height = 'calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h))';
+      content.style.maxHeight = 'calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h))';
+    }
+  });
+
+  const adminTabs = document.querySelectorAll('#adminPanel .tab-bar button');
+  const adminPanels = document.querySelectorAll('#adminPanel .tab-panel');
+  adminTabs.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      adminTabs.forEach(b=>b.setAttribute('aria-selected','false'));
+      adminPanels.forEach(p=>p.classList.remove('active'));
+      btn.setAttribute('aria-selected','true');
+      const panel = document.getElementById(`tab-${btn.dataset.tab}`);
+      panel && panel.classList.add('active');
+    });
+  });
+
+  const memberTabs = document.querySelectorAll('#memberPanel .tab-bar .tab-btn');
+  const memberPanels = document.querySelectorAll('#memberPanel .member-tab-panel');
+  memberTabs.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      memberTabs.forEach(b=>b.setAttribute('aria-selected','false'));
+      memberPanels.forEach(p=>{
+        p.classList.remove('active');
+        p.setAttribute('hidden','');
+      });
+      btn.setAttribute('aria-selected','true');
+      const panel = document.getElementById(`memberTab-${btn.dataset.tab}`);
+      if(panel){
+        panel.classList.add('active');
+        panel.removeAttribute('hidden');
+      }
+    });
+  });
+
+  const adminPaypalClientId = document.getElementById('adminPaypalClientId');
+  const adminPaypalClientSecret = document.getElementById('adminPaypalClientSecret');
+
+  // Member form code has been moved to member-forms.js
+  // The member form initialization is now handled in that separate file
+
+  const colorAreas = [
+    {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
+    {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
+    {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
+    {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
+    {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-card'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
+    {key:'map', label:'Map', selectors:{popupBg:[], popupText:[], title:[]}},
+    {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
+    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
+  {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
+  {key:'welcome-modal', label:'Welcome Modal', selectors:{bg:['#welcome-modal .modal-content'], text:['#welcome-modal .modal-content'], title:['#welcome-modal .modal-content .t','#welcome-modal .modal-content .title'], btn:['#welcome-modal button:not([class*"mapboxgl-"])'], btnText:['#welcome-modal button:not([class*"mapboxgl-"])']}},
+  {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
+  {key:'imagePanel', label:'Image Modal', selectors:{bg:['.image-modal-container'], text:['.image-modal-container .image-modal']}}
+];
+
+  function storeTitleDefaults(){
+    colorAreas.forEach(area=>{
+      (area.selectors.title||[]).forEach(sel=>{
+        document.querySelectorAll(sel).forEach(el=>{
+          const cs = getComputedStyle(el);
+          el.dataset.titleDefaultColor = cs.color;
+          el.dataset.titleDefaultFont = cs.fontFamily;
+          el.dataset.titleDefaultSize = cs.fontSize;
+          el.dataset.titleDefaultWeight = cs.fontWeight;
+          el.dataset.titleDefaultShadow = cs.textShadow;
+        });
+      });
+    });
+    const varMap = {'today-c':'--today', 'sessionAvailable-c':'--session-available', 'sessionSelected-c':'--session-selected'};
+    Object.entries(varMap).forEach(([id,varName])=>{
+      const el = document.getElementById(id);
+      if(el){
+        const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        if(val) el.value = val;
+      }
+    });
+  }
+
+  function restoreTitleDefaults(area){
+    (area.selectors.title||[]).forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{
+        if(el.dataset.titleDefaultColor) el.style.color = el.dataset.titleDefaultColor;
+        if(el.dataset.titleDefaultFont) el.style.fontFamily = el.dataset.titleDefaultFont;
+        if(el.dataset.titleDefaultSize) el.style.fontSize = el.dataset.titleDefaultSize;
+        if(el.dataset.titleDefaultWeight) el.style.fontWeight = el.dataset.titleDefaultWeight;
+        if(el.dataset.titleDefaultShadow) el.style.textShadow = el.dataset.titleDefaultShadow;
+      });
+    });
+  }
+
+  storeTitleDefaults();
+
+  const headerEl = document.querySelector('.header');
+  if(headerEl && 'ResizeObserver' in window){
+    const headerObserver = new ResizeObserver(()=>{
+      updateLayoutVars();
+    });
+    headerObserver.observe(headerEl);
+  }
+
+  window.addEventListener('resize', updateLayoutVars);
+  window.addEventListener('resize', updateStickyImages);
+  window.addEventListener('load', updateLayoutVars);
+  updateLayoutVars();
+  if (typeof updateStickyImages === 'function') {
+    updateStickyImages();
+  }
+  if(typeof window.__wrapForInputYield === 'function'){
+    ['openPost','updateVenue','togglePanel','ensureMapForVenue'].forEach(name => window.__wrapForInputYield(name));
+  }
+})();
+
+// Extracted from <script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#adminPanel input[type="checkbox"]').forEach(cb => {
+    if (cb.closest('.switch')) return;
+    if (cb.closest('.subcategory-form-toggle')) return;
+    const wrapper = document.createElement('label');
+    wrapper.className = 'switch';
+    cb.parentNode.insertBefore(wrapper, cb);
+    wrapper.appendChild(cb);
+    const slider = document.createElement('span');
+    slider.className = 'slider';
+    cb.after(slider);
+  });
+});
+
+// Extracted from <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const opacityInput = document.getElementById('postModeBgOpacity');
+  const opacityVal = document.getElementById('postModeBgOpacityVal');
+  const root = document.documentElement;
+
+  function apply(){
+    if(!opacityInput || !opacityVal) return;
+    
+    const opacity = opacityInput.value;
+    const shadowMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
+    const isPostMode = document.body.classList.contains('mode-posts');
+    
+    // Only apply shadow if mode is 'always' or if mode is 'post_mode_only' and we're in post mode
+    const shouldShowShadow = shadowMode === 'always' || (shadowMode === 'post_mode_only' && isPostMode);
+    const finalOpacity = shouldShowShadow ? opacity : 0;
+    
+    // Show/hide the shadow element based on mode
+    const shadowElement = document.querySelector('.post-mode-background');
+    if(shadowElement){
+      if(shadowMode === 'always'){
+        shadowElement.style.display = 'block';
+      } else if(shadowMode === 'post_mode_only'){
+        // Let CSS handle it (it shows in .mode-posts via CSS rule)
+        shadowElement.style.display = '';
+      } else {
+        shadowElement.style.display = 'none';
+      }
+    }
+    
+    root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
+    root.style.setProperty('--post-mode-bg-opacity', finalOpacity);
+    opacityVal.textContent = Number(opacity).toFixed(2);
+  }
+  
+  // Make apply function globally accessible
+  window.applyMapShadow = apply;
+  
+  // Auto-save function for map shadow
+  async function autoSaveMapShadow(){
+    const shadowValue = parseFloat(opacityInput.value);
+    if(isNaN(shadowValue)) {
+      console.error('Invalid shadow value:', opacityInput.value);
+      return;
+    }
+    localStorage.setItem('map_shadow', shadowValue);
+    try {
+      const response = await fetch('/gateway.php?action=save-admin-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ map_shadow: shadowValue })
+      });
+      if(!response.ok){
+        console.error('Failed to save map shadow: HTTP', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Response:', text);
+      } else {
+        const result = await response.json();
+        if(result && result.success !== false){
+          console.log('Map shadow saved successfully:', shadowValue, result);
+          if(result.settings_saved !== undefined){
+            console.log('Settings saved count:', result.settings_saved);
+          }
+        } else {
+          console.error('Failed to save map shadow:', result);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to save map shadow:', e);
+    }
+  }
+
+  // Auto-save function for map shadow mode
+  async function autoSaveMapShadowMode(modeValue){
+    localStorage.setItem('map_shadow_mode', modeValue);
+    try {
+      const response = await fetch('/gateway.php?action=save-admin-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ map_shadow_mode: modeValue })
+      });
+      if(!response.ok){
+        console.error('Failed to save map shadow mode: HTTP', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Response:', text);
+      } else {
+        const result = await response.json();
+        if(result && result.success !== false){
+          console.log('Map shadow mode saved successfully:', modeValue, result);
+          if(result.settings_saved !== undefined){
+            console.log('Settings saved count:', result.settings_saved);
+          }
+        } else {
+          console.error('Failed to save map shadow mode:', result);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to save map shadow mode:', e);
+    }
+  }
+
+  if(opacityInput && opacityVal){
+    // Load from localStorage (which is populated from database on page load)
+    const savedValue = localStorage.getItem('map_shadow');
+    if(savedValue !== null){
+      opacityInput.value = savedValue;
+    } else {
+      opacityInput.value = 0;
+    }
+    
+    // Ensure shadow mode is set
+    if(!localStorage.getItem('map_shadow_mode')){
+      localStorage.setItem('map_shadow_mode', 'post_mode_only');
+    }
+    
+    // Apply immediately
+    apply();
+    
+    // Also re-apply after a short delay to catch any async settings loading
+    setTimeout(() => {
+      const updatedValue = localStorage.getItem('map_shadow');
+      if(updatedValue !== null && updatedValue !== opacityInput.value){
+        opacityInput.value = updatedValue;
+      }
+      apply();
+    }, 500);
+    
+    // Update display and shadow in real-time on slider input
+    opacityInput.addEventListener('input', () => {
+      apply(); // Update shadow in real-time
+      opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
+    });
+    
+    // Auto-save on slider change
+    opacityInput.addEventListener('change', () => {
+      apply();
+      autoSaveMapShadow();
+    });
+    
+    // Make value display editable on click
+    if(!opacityVal.dataset.editableAdded){
+      opacityVal.dataset.editableAdded = 'true';
+      opacityVal.style.cursor = 'pointer';
+      
+      opacityVal.addEventListener('click', ()=>{
+        const currentValue = opacityVal.textContent;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentValue;
+        input.min = 0;
+        input.max = 1;
+        input.step = 0.01;
+        input.className = 'slider-value-input';
+        input.style.width = '60px';
+        input.style.textAlign = 'center';
+        input.style.fontSize = '16px';
+        input.style.fontWeight = 'bold';
+        input.style.background = 'rgba(0,0,0,0.5)';
+        input.style.color = '#fff';
+        input.style.border = '1px solid #2e3a72';
+        input.style.borderRadius = '4px';
+        input.style.padding = '2px';
+        
+        const commitValue = ()=>{
+          let newValue = parseFloat(input.value);
+          if(isNaN(newValue)) newValue = parseFloat(currentValue);
+          newValue = Math.max(0, Math.min(1, newValue));
+          const formattedValue = newValue.toFixed(2);
+          opacityVal.textContent = formattedValue;
+          opacityVal.style.display = '';
+          input.remove();
+          opacityInput.value = newValue;
+          apply();
+          autoSaveMapShadow();
+        };
+        
+        input.addEventListener('blur', commitValue);
+        input.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            commitValue();
+          } else if(e.key === 'Escape'){
+            opacityVal.style.display = '';
+            input.remove();
+          }
+        });
+        
+        opacityVal.style.display = 'none';
+        opacityVal.parentNode.insertBefore(input, opacityVal);
+        input.focus();
+        input.select();
+      });
+    }
+  }
+
+  // Add event listeners for map shadow mode radio buttons
+  const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
+  const alwaysRadio = document.getElementById('mapShadowModeAlways');
+  if(postOnlyRadio && alwaysRadio){
+    // Set initial state from localStorage
+    const savedMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
+    if(savedMode === 'always'){
+      alwaysRadio.checked = true;
+    } else {
+      postOnlyRadio.checked = true;
+    }
+    
+    postOnlyRadio.addEventListener('change', () => {
+      if(postOnlyRadio.checked){
+        localStorage.setItem('map_shadow_mode', 'post_mode_only');
+        autoSaveMapShadowMode('post_mode_only');
+        apply(); // Update shadow immediately when mode changes
+      }
+    });
+    alwaysRadio.addEventListener('change', () => {
+      if(alwaysRadio.checked){
+        localStorage.setItem('map_shadow_mode', 'always');
+        autoSaveMapShadowMode('always');
+        apply(); // Update shadow immediately when mode changes
+      }
+    });
+  }
+  
+  // Watch for mode changes to update shadow visibility (when body class changes)
+  if(opacityInput && opacityVal){
+    const observer = new MutationObserver(() => {
+      apply();
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
+});
+
+// Extracted from <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const vp = document.getElementById('viewport');
+  const updateViewport = () => {
+    if (!vp) return;
+    if (window.innerWidth < 650) {
+      vp.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    } else {
+      vp.setAttribute('content','width=device-width, initial-scale=1');
+    }
+  };
+  updateViewport();
+  window.addEventListener('resize', updateViewport);
+  window.addEventListener('orientationchange', updateViewport);
+
+  const fsBtn = document.getElementById('fullscreenBtn');
+  if (fsBtn) {
+    const docEl = document.documentElement;
+    const canFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+    const enabled = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
+    if (!canFS || enabled === false) {
+      fsBtn.style.display = 'none';
+    } else {
+      const getFull = () => document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      const updateFsState = () => {
+        fsBtn.setAttribute('aria-pressed', getFull() ? 'true' : 'false');
+      };
+      updateFsState();
+      ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt => {
+        document.addEventListener(evt, updateFsState);
+      });
+      fsBtn.addEventListener('click', () => {
+        const isFull = getFull();
+        if (!isFull) {
+          const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+          if (req) {
+            try {
+              const result = req.call(docEl);
+              if (result && typeof result.catch === 'function') result.catch(() => {});
+            } catch (err) {
+              updateFsState();
+            }
+          }
+        } else {
+          const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+          if (exit) {
+            try {
+              const result = exit.call(document);
+              if (result && typeof result.catch === 'function') result.catch(() => {});
+            } catch (err) {
+              updateFsState();
+            }
+          }
+        }
+      });
+    }
+  }
+
+  if (window.innerWidth >= 650) return;
+
+  const posts = document.querySelector('.post-board');
+  if (!posts) return;
+
+  let defaultSize = parseFloat(getComputedStyle(posts).fontSize);
+  let startDist = null;
+  let enlarged = false;
+
+  function distance(t1, t2){
+    return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+  }
+
+  posts.addEventListener('touchstart', e => {
+    if (e.target.tagName === 'IMG') return;
+    if (e.touches.length === 2) {
+      startDist = distance(e.touches[0], e.touches[1]);
+    }
+  });
+
+  posts.addEventListener('touchmove', e => {
+    if (e.target.tagName === 'IMG') return;
+    if (e.touches.length === 2 && startDist) {
+      const scale = distance(e.touches[0], e.touches[1]) / startDist;
+      if (!enlarged && scale > 1.2) {
+        posts.style.fontSize = (defaultSize * 1.2) + 'px';
+        enlarged = true;
+      } else if (enlarged && scale < 0.8) {
+        posts.style.fontSize = defaultSize + 'px';
+        enlarged = false;
+      }
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  posts.addEventListener('touchend', e => {
+    if (e.touches.length < 2) startDist = null;
+  });
+
+  posts.querySelectorAll('img').forEach(img => {
+    img.addEventListener('click', e => { e.stopPropagation(); openImageModal(img.src, {origin: img}); });
+    img.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+        openImageModal(img.src, {origin: img});
+      }
+    }, { passive: false });
+  });
+});
+
+// Extracted from <script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type="color"]').forEach(el => {
+    if(!el.value) el.value = '#000000';
+  });
+});
+
+// Extracted from <script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('wheel', e => {
+    if(e.target.closest('.post-board, .panel-content, .options-menu, .calendar-scroll')){
+      e.stopPropagation();
+    }
+  });
+  const postsPanel = document.querySelector('.post-board');
+  const postsBg = document.querySelector('.post-mode-background');
+  if(postsPanel){
+    postsPanel.addEventListener('click', e => {
+      if(e.target === postsPanel || e.target.classList.contains('posts')){
+        e.stopPropagation();
+      }
+    });
+  }
+  if(postsBg){
+    postsBg.addEventListener('click', e => e.stopPropagation());
+  }
+});
+
+// Extracted from <script>
+let boardAdjustCleanup = null;
+
+function ensureImageModalReady(){
+  const container = document.querySelector('.image-modal-container');
+  if(!container) return {container:null, modal:null};
+  const modal = container.querySelector('.image-modal');
+  if(!container._listenerAdded){
+    container.addEventListener('click', e => {
+      if(e.target === container){
+        closeImageModal(container);
+      }
+    });
+    container._listenerAdded = true;
+  }
+  if(modal && !modal._closeListenerAdded){
+    modal.addEventListener('click', e => {
+      if(!e.target.closest('img')){
+        closeImageModal(container);
+      }
+    });
+    modal._closeListenerAdded = true;
+  }
+  return {container, modal};
+}
+
+function closeImageModal(container){
+  const target = container || ensureImageModalReady().container;
+  if(!target) return;
+  const modal = target.querySelector('.image-modal');
+  if(modal) modal.innerHTML = '';
+  target.classList.add('hidden');
+  if(target.dataset){
+    delete target.dataset.activeSrc;
+    delete target.dataset.activeIndex;
+  }
+  target._imageModalState = null;
+  target._imageModalImg = null;
+}
+
+function advanceImageModal(container, modal, step=1){
+  if(!container || !modal) return;
+  const state = container._imageModalState;
+  if(!state || !Array.isArray(state.images) || state.images.length <= 1) return;
+  const len = state.images.length;
+  state.index = ((state.index + step) % len + len) % len;
+  renderImageModalImage(container, modal);
+}
+
+function renderImageModalImage(container, modal){
+  if(!container || !modal) return;
+  const state = container._imageModalState;
+  if(!state || !Array.isArray(state.images) || !state.images.length) return;
+  let img = container._imageModalImg;
+  if(!img || img.parentNode !== modal){
+    modal.innerHTML = '';
+    img = document.createElement('img');
+    img.addEventListener('click', e => {
+      e.stopPropagation();
+      advanceImageModal(container, modal, 1);
+    });
+    container._imageModalImg = img;
+    modal.appendChild(img);
+  }
+  const src = state.images[state.index];
+  if(img.getAttribute('src') !== src){
+    img.src = src;
+  }
+  if(container.dataset){
+    container.dataset.activeSrc = src;
+    container.dataset.activeIndex = String(state.index);
+  }
+}
+
+function normalizeImageModalSrc(value){
+  if(!value) return '';
+  try {
+    return new URL(value, window.location.href).href;
+  } catch(err){
+    return String(value);
+  }
+}
+
+function resolveImageModalContext(config){
+  const result = {images: [], index: 0, gallery: null};
+  if(!config) return result;
+  const src = typeof config.src === 'string' ? config.src : '';
+  const providedImages = Array.isArray(config.images) ? config.images.filter(Boolean) : null;
+  const originEl = config.origin instanceof Element ? config.origin : null;
+  let galleryRoot = config.gallery instanceof Element ? config.gallery : null;
+  const findGalleryFrom = el => {
+    if(!el) return null;
+    const fromImageBox = el.closest && el.closest('.image-box');
+    if(fromImageBox) return fromImageBox;
+    const postImages = el.closest && el.closest('.post-images');
+    if(postImages){
+      const box = postImages.querySelector('.image-box');
+      if(box) return box;
+    }
+    const openPost = el.closest && el.closest('.open-post');
+    if(openPost){
+      const box = openPost.querySelector('.image-box');
+      if(box) return box;
+    }
+    return null;
+  };
+  if(!galleryRoot && originEl){
+    galleryRoot = findGalleryFrom(originEl);
+  }
+  let images = providedImages && providedImages.length ? providedImages.slice() : null;
+  if((!images || !images.length) && galleryRoot){
+    if(Array.isArray(galleryRoot._modalImages) && galleryRoot._modalImages.length){
+      images = galleryRoot._modalImages.slice();
+    } else if(galleryRoot.dataset && galleryRoot.dataset.modalImages){
+      try {
+        const parsed = JSON.parse(galleryRoot.dataset.modalImages);
+        if(Array.isArray(parsed) && parsed.length){
+          images = parsed.slice();
+        }
+      } catch(err){}
+    }
+  }
+  if((!images || !images.length) && galleryRoot){
+    const trackImgs = Array.from(galleryRoot.querySelectorAll('.image-track img'));
+    if(trackImgs.length){
+      images = trackImgs.map(im => (im.dataset && im.dataset.full) ? im.dataset.full : im.src);
+    }
+  }
+  if(!images || !images.length){
+    images = src ? [src] : [];
+  }
+  let index = null;
+  if(typeof config.startIndex === 'number' && Number.isFinite(config.startIndex)){
+    index = config.startIndex;
+  } else if(typeof config.startIndex === 'string'){
+    const parsedStart = parseInt(config.startIndex, 10);
+    if(Number.isFinite(parsedStart)){
+      index = parsedStart;
+    }
+  }
+  const originImg = originEl && originEl.tagName === 'IMG' ? originEl : (originEl && originEl.querySelector ? originEl.querySelector('img') : null);
+  if(index === null && originImg && originImg.dataset && originImg.dataset.index){
+    const parsed = parseInt(originImg.dataset.index, 10);
+    if(Number.isFinite(parsed)){
+      index = parsed;
+    }
+  }
+  if(index === null && galleryRoot && galleryRoot.dataset && galleryRoot.dataset.index){
+    const parsed = parseInt(galleryRoot.dataset.index, 10);
+    if(Number.isFinite(parsed)){
+      index = parsed;
+    }
+  }
+  if(index === null && src){
+    const found = images.indexOf(src);
+    if(found !== -1){
+      index = found;
+    } else {
+      const normalizedSrc = normalizeImageModalSrc(src);
+      for(let i=0;i<images.length;i++){
+        if(normalizeImageModalSrc(images[i]) === normalizedSrc){
+          index = i;
+          break;
+        }
+      }
+    }
+  }
+  if(index === null){
+    index = 0;
+  }
+  index = Math.max(0, Math.min(index, images.length ? images.length - 1 : 0));
+  result.images = images;
+  result.index = index;
+  result.gallery = galleryRoot;
+  return result;
+}
+
+function openImageModal(srcOrConfig, options){
+  const base = (typeof srcOrConfig === 'object' && srcOrConfig !== null && !Array.isArray(srcOrConfig))
+    ? Object.assign({}, srcOrConfig)
+    : {src: srcOrConfig};
+  if(options && typeof options === 'object'){
+    Object.assign(base, options);
+  }
+  if(typeof base.src !== 'string' || !base.src){
+    return;
+  }
+  const {container, modal} = ensureImageModalReady();
+  if(!container || !modal) return;
+  document.querySelectorAll('.image-modal-container').forEach(other => {
+    if(other !== container && !other.classList.contains('hidden')){
+      closeImageModal(other);
+    }
+  });
+  const context = resolveImageModalContext(base);
+  if(!context.images.length) return;
+  container._imageModalState = {
+    images: context.images.slice(),
+    index: context.index,
+    gallery: context.gallery || null
+  };
+  renderImageModalImage(container, modal);
+  container.classList.remove('hidden');
+}
+
+function initPostLayout(board){
+  if(typeof boardAdjustCleanup === 'function'){
+    boardAdjustCleanup();
+    boardAdjustCleanup = null;
+  }
+  const scheduleMapResize = mapInstance => {
+    if(!mapInstance) return;
+    if(typeof mapInstance.resize === 'function'){
+      requestAnimationFrame(()=>{
+        try { mapInstance.resize(); } catch(err){}
+      });
+    }
+  };
+  if(!(board instanceof Element)){
+    document.documentElement.style.removeProperty('--post-header-h');
+    if(typeof window.adjustBoards === 'function') window.adjustBoards();
+    return;
+  }
+  const openPost = board.querySelector('.open-post');
+  if(!openPost){
+    document.body.classList.remove('detail-open');
+    document.body.classList.remove('hide-map-calendar');
+    document.documentElement.style.removeProperty('--post-header-h');
+    if(typeof window.adjustBoards === 'function') window.adjustBoards();
+    return;
+  }
+  document.body.classList.add('detail-open');
+  document.body.classList.remove('hide-map-calendar');
+  const postBody = openPost.querySelector('.post-body');
+  if(postBody){
+    postBody.removeAttribute('hidden');
+    postBody.classList.remove('is-visible');
+    if(postBody.dataset) delete postBody.dataset.openPostId;
+  }
+  const triggerDetailMapResize = target => {
+    if(!target) return;
+    const mapNode = target.querySelector ? target.querySelector('.post-map') : null;
+    const ref = target._detailMap || (mapNode && mapNode._detailMap) || null;
+    const mapInstance = ref && ref.map;
+    if(mapInstance && typeof mapInstance.resize === 'function'){
+      scheduleMapResize(mapInstance);
+    }
+  };
+  triggerDetailMapResize(postBody);
+  const thumbRow = postBody ? postBody.querySelector('.thumbnail-row') : null;
+  const selectedImageBox = postBody ? postBody.querySelector('.selected-image, .image-box') : null;
+  ensureImageModalReady();
+  if(thumbRow){
+    thumbRow.scrollLeft = 0;
+  }
+  if(thumbRow && !thumbRow._imageModalListener){
+    thumbRow.addEventListener('dblclick', e => {
+      const img = e.target.closest('img');
+      if(img){
+        e.preventDefault();
+        e.stopPropagation();
+        openImageModal(img.src, {origin: img});
+      }
+    });
+    thumbRow._imageModalListener = true;
+  }
+  if(selectedImageBox && !selectedImageBox._imageModalListener){
+    selectedImageBox.addEventListener('click', evt => {
+      const currentTarget = (evt && evt.currentTarget instanceof Element)
+        ? evt.currentTarget
+        : selectedImageBox;
+      const clickedImageBox = (evt && evt.target instanceof Element)
+        ? evt.target.closest('.image-box')
+        : null;
+      if(clickedImageBox){
+        return;
+      }
+      const parseIndex = value => {
+        if(typeof value === 'undefined') return null;
+        const parsed = parseInt(value, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      let galleryRoot = null;
+      if(currentTarget instanceof Element){
+        if(currentTarget.classList.contains('image-box')){
+          galleryRoot = currentTarget;
+        } else {
+          const postImages = typeof currentTarget.closest === 'function'
+            ? currentTarget.closest('.post-images')
+            : null;
+          const parent = currentTarget.parentElement;
+          const host = postImages || parent;
+          if(host instanceof Element){
+            galleryRoot = host.querySelector('.image-box');
+          }
+        }
+      }
+      const activeImg = galleryRoot ? galleryRoot.querySelector('.image-track img.active') : null;
+      let img = activeImg || (currentTarget instanceof Element ? currentTarget.querySelector('img') : null);
+      if(!img && galleryRoot){
+        img = galleryRoot.querySelector('img');
+      }
+      if(!(img instanceof Element)){
+        return;
+      }
+      if(evt && typeof evt.preventDefault === 'function') evt.preventDefault();
+      if(evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+      let startIndex = null;
+      if(activeImg && activeImg.dataset){
+        startIndex = parseIndex(activeImg.dataset.index);
+      }
+      if(startIndex === null && galleryRoot && galleryRoot.dataset){
+        startIndex = parseIndex(galleryRoot.dataset.index);
+      }
+      if(startIndex === null && img.dataset){
+        startIndex = parseIndex(img.dataset.index);
+      }
+      const options = {origin: img};
+      if(galleryRoot){
+        options.gallery = galleryRoot;
+      }
+      if(startIndex !== null){
+        options.startIndex = startIndex;
+      }
+      const src = (img.dataset && img.dataset.full) ? img.dataset.full : img.src;
+      openImageModal(src, options);
+    });
+    selectedImageBox._imageModalListener = true;
+  }
+  if(typeof updateStickyImages === 'function'){
+    updateStickyImages();
+  }
+  const updateMetrics = () => {
+    if(typeof updateStickyImages === 'function'){
+      updateStickyImages();
+    }
+    if(openPost){
+      const cardHeader = openPost.querySelector('.post-card');
+      if(cardHeader){
+        document.documentElement.style.setProperty('--post-header-h', cardHeader.offsetHeight + 'px');
+      } else {
+        document.documentElement.style.removeProperty('--post-header-h');
+      }
+    }
+    triggerDetailMapResize(postBody);
+    if(typeof window.adjustBoards === 'function') window.adjustBoards();
+  };
+  updateMetrics();
+  window.addEventListener('resize', updateMetrics);
+  window.addEventListener('load', updateMetrics);
+  boardAdjustCleanup = () => {
+    window.removeEventListener('resize', updateMetrics);
+    window.removeEventListener('load', updateMetrics);
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initPostLayout(document.querySelector('.post-board'));
+});
+
+// Extracted from <script>
+(function(){
+  const MESSAGE = 'Please enter a valid URL with a dot and letters after it.';
+  const DOT_PATTERN = /\.[A-Za-z]{2,}(?=[^A-Za-z]|$)/;
+  const processed = new WeakSet();
+  let observerStarted = false;
+
+  function normalizeUrl(value){
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if(!raw) return '';
+    const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw);
+    const candidate = hasScheme ? raw : `https://${raw}`;
+    try {
+      const normalized = new URL(candidate);
+      return normalized.href;
+    } catch(err){
+      return '';
+    }
+  }
+
+  function disableLink(link){
+    if(!link) return;
+    link.setAttribute('aria-disabled','true');
+    link.removeAttribute('href');
+    link.tabIndex = -1;
+  }
+
+  function enableLink(link, href){
+    if(!link) return;
+    link.removeAttribute('aria-disabled');
+    link.href = href;
+    if(!link.hasAttribute('target')){
+      link.target = '_blank';
+    }
+    const rel = link.getAttribute('rel') || '';
+    const relParts = new Set(rel.split(/\s+/).filter(Boolean));
+    relParts.add('noopener');
+    relParts.add('noreferrer');
+    link.setAttribute('rel', Array.from(relParts).join(' '));
+    if(link.tabIndex < 0) link.tabIndex = 0;
+  }
+
+  function applyUrlBehavior(input){
+    if(!(input instanceof HTMLInputElement)) return;
+    if(processed.has(input)) return;
+    processed.add(input);
+    if(!input.dataset.urlMessage){
+      input.dataset.urlMessage = MESSAGE;
+    }
+    input.setAttribute('pattern', '.*\\.[A-Za-z]{2,}.*');
+    input.autocomplete = input.autocomplete || 'url';
+    input.inputMode = input.inputMode || 'url';
+    input.setAttribute('title', input.dataset.urlMessage);
+    const linkId = input.dataset.urlLinkId || '';
+    const link = linkId ? document.getElementById(linkId) : null;
+
+    if(link){
+      link.addEventListener('click', event => {
+        if(link.getAttribute('aria-disabled') === 'true'){
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      });
+    }
+
+    const validate = ()=>{
+      const value = input.value != null ? String(input.value).trim() : '';
+      if(!value){
+        input.setCustomValidity('');
+        if(link) disableLink(link);
+        return;
+      }
+      if(!DOT_PATTERN.test(value)){
+        input.setCustomValidity(input.dataset.urlMessage || MESSAGE);
+        if(link) disableLink(link);
+        return;
+      }
+      const normalized = normalizeUrl(value);
+      if(normalized){
+        input.setCustomValidity('');
+        if(link) enableLink(link, normalized);
+      } else {
+        input.setCustomValidity(input.dataset.urlMessage || MESSAGE);
+        if(link) disableLink(link);
+      }
+    };
+
+    input.addEventListener('input', validate);
+    input.addEventListener('change', validate);
+    input.addEventListener('blur', validate);
+    validate();
+  }
+
+  function scan(root){
+    if(!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll('input[data-url-type]') : [];
+    list.forEach(applyUrlBehavior);
+  }
+
+  function startObserver(){
+    if(observerStarted || !document.body) return;
+    observerStarted = true;
+    const observer = new MutationObserver(mutations => {
+      for(const mutation of mutations){
+        if(mutation.type === 'childList'){
+          mutation.addedNodes.forEach(node => {
+            if(!(node instanceof Element)) return;
+            if(node.matches && node.matches('input[data-url-type]')){
+              applyUrlBehavior(node);
+            }
+            if(node.querySelectorAll){
+              node.querySelectorAll('input[data-url-type]').forEach(applyUrlBehavior);
+            }
+          });
+        } else if(mutation.type === 'attributes'){
+          const target = mutation.target;
+          if(target instanceof HTMLInputElement && target.hasAttribute('data-url-type')){
+            applyUrlBehavior(target);
+          }
+        }
+      }
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-url-type']
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', () => {
+      scan(document);
+      startObserver();
+    }, { once: true });
+  } else {
+    scan(document);
+    startObserver();
+  }
+})();
+
+// Extracted from <script>
+(function(){
+  const DEFAULT_MAX = 10;
+  const processed = new WeakSet();
+  let observerStarted = false;
+  let dragState = null;
+
+  function handleThumbDragStart(event){
+    const targetEl = event.target instanceof Element ? event.target : null;
+    if(targetEl && targetEl.closest('.form-image-remove')){
+      event.preventDefault();
+      return;
+    }
+    let thumb = targetEl ? targetEl.closest('.form-image-thumb') : null;
+    if(!thumb && event.currentTarget instanceof Element){
+      thumb = event.currentTarget.closest('.form-image-thumb');
+    }
+    if(!thumb) return;
+    const previewEl = thumb ? thumb.parentElement : null;
+    if(!previewEl || !previewEl._imageInput) return;
+    const index = Number.parseInt(thumb.dataset.index || '', 10);
+    dragState = {
+      input: previewEl._imageInput,
+      fromIndex: Number.isNaN(index) ? -1 : index,
+      thumb
+    };
+    thumb.classList.add('is-dragging');
+    if(event.dataTransfer){
+      event.dataTransfer.effectAllowed = 'move';
+      try{ event.dataTransfer.setData('text/plain', thumb.dataset.index || ''); }catch(err){}
+    }
+  }
+
+  function handleThumbDragEnd(event){
+    let thumb = event.target instanceof Element ? event.target.closest('.form-image-thumb') : null;
+    if(!thumb && event.currentTarget instanceof Element){
+      thumb = event.currentTarget.closest('.form-image-thumb');
+    }
+    if(!thumb) return;
+    thumb.classList.remove('is-dragging');
+    if(dragState && dragState.thumb === thumb){
+      dragState = null;
+    }
+  }
+
+  function handlePreviewDragOver(event){
+    if(!dragState) return;
+    const previewEl = event.currentTarget;
+    if(!previewEl || previewEl._imageInput !== dragState.input) return;
+    event.preventDefault();
+    if(event.dataTransfer){
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  function handlePreviewDrop(event){
+    if(!dragState) return;
+    const previewEl = event.currentTarget;
+    if(!previewEl || previewEl._imageInput !== dragState.input) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const files = getStoredFiles(dragState.input);
+    const from = dragState.fromIndex;
+    if(from < 0 || from >= files.length){
+      if(dragState.thumb){
+        dragState.thumb.classList.remove('is-dragging');
+      }
+      dragState = null;
+      return;
+    }
+    let insertIndex = getDropInsertIndex(previewEl, event);
+    if(!Number.isInteger(insertIndex) || insertIndex < 0){
+      insertIndex = files.length;
+    }
+    const [moved] = files.splice(from, 1);
+    if(insertIndex > files.length){
+      insertIndex = files.length;
+    }
+    if(from < insertIndex){
+      insertIndex--;
+    }
+    if(insertIndex < 0){
+      insertIndex = 0;
+    }
+    files.splice(insertIndex, 0, moved);
+    if(dragState.thumb){
+      dragState.thumb.classList.remove('is-dragging');
+    }
+    const input = dragState.input;
+    dragState = null;
+    storeFiles(input, files);
+    renderPreviews(input);
+  }
+
+  function getDropInsertIndex(previewEl, event){
+    if(!previewEl) return 0;
+    const thumbs = Array.from(previewEl.querySelectorAll('.form-image-thumb'));
+    if(thumbs.length === 0) return 0;
+    const pointerX = event.clientX;
+    const pointerY = event.clientY;
+    let fallbackIndex = 0;
+    for(const thumb of thumbs){
+      if(dragState && dragState.thumb === thumb) continue;
+      const rect = thumb.getBoundingClientRect();
+      const datasetIndex = Number.parseInt(thumb.dataset.index || '', 10);
+      if(Number.isNaN(datasetIndex)) continue;
+      const centerX = rect.left + rect.width / 2;
+      if(pointerY < rect.top){
+        return datasetIndex;
+      }
+      if(pointerY <= rect.bottom){
+        if(pointerX < centerX){
+          return datasetIndex;
+        }
+        fallbackIndex = datasetIndex + 1;
+        continue;
+      }
+      fallbackIndex = datasetIndex + 1;
+    }
+    return fallbackIndex;
+  }
+
+  function getMax(input){
+    return Number.parseInt(input.dataset.maxImages, 10) || DEFAULT_MAX;
+  }
+
+  function getStoredFiles(input){
+    if(Array.isArray(input._imageFiles)){
+      return input._imageFiles.slice();
+    }
+    const files = Array.from(input.files || []);
+    input._imageFiles = files.slice();
+    return files;
+  }
+
+  function storeFiles(input, files){
+    const copy = files.slice();
+    if(typeof DataTransfer !== 'undefined'){
+      try {
+        const dt = new DataTransfer();
+        copy.forEach(file => {
+          try { dt.items.add(file); } catch(err){}
+        });
+        input.files = dt.files;
+      } catch(err){}
+    }
+    input._imageFiles = copy;
+    if(copy.length === 0){
+      try { input.value = ''; } catch(err){}
+    }
+  }
+
+  function updateLimitMessage(input, totalSelected){
+    const max = getMax(input);
+    if(totalSelected > max){
+      input._imageLimitMessage = `Only the first ${max} images will be used.`;
+    } else {
+      input._imageLimitMessage = '';
+    }
+  }
+
+  function removeImageAt(input, index){
+    const files = getStoredFiles(input);
+    if(index < 0 || index >= files.length) return;
+    files.splice(index, 1);
+    updateLimitMessage(input, files.length);
+    storeFiles(input, files);
+    renderPreviews(input);
+  }
+
+  function renderPreviews(input){
+    if(!(input instanceof HTMLInputElement)) return;
+    const previewId = input.dataset.imagePreviewTarget || '';
+    const messageId = input.dataset.imageMessageTarget || '';
+    const previewEl = previewId ? document.getElementById(previewId) : null;
+    const messageEl = messageId ? document.getElementById(messageId) : null;
+    const files = getStoredFiles(input);
+    if(messageEl){
+      const message = input._imageLimitMessage || '';
+      if(message){
+        messageEl.textContent = message;
+        messageEl.hidden = false;
+      } else {
+        messageEl.textContent = '';
+        messageEl.hidden = true;
+      }
+    }
+    if(previewEl){
+      previewEl._imageInput = input;
+      if(!previewEl._dragHandlersAttached){
+        previewEl.addEventListener('dragover', handlePreviewDragOver);
+        previewEl.addEventListener('drop', handlePreviewDrop);
+        previewEl._dragHandlersAttached = true;
+      }
+      previewEl.innerHTML = '';
+      files.forEach((file, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'form-image-thumb';
+        thumb.dataset.index = String(index);
+        thumb.draggable = true;
+        thumb.addEventListener('dragstart', handleThumbDragStart);
+        thumb.addEventListener('dragend', handleThumbDragEnd);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'form-image-remove';
+        removeBtn.setAttribute('aria-label', file.name ? `Remove ${file.name}` : `Remove image ${index + 1}`);
+        removeBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
+        removeBtn.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          if(typeof event.stopImmediatePropagation === 'function'){
+            event.stopImmediatePropagation();
+          }
+          removeImageAt(input, index);
+        });
+        const img = document.createElement('img');
+        img.alt = file.name ? `${file.name} preview` : `Image preview ${index + 1}`;
+        img.draggable = true;
+        img.addEventListener('dragstart', handleThumbDragStart);
+        img.addEventListener('dragend', handleThumbDragEnd);
+        thumb.append(removeBtn, img);
+        previewEl.appendChild(thumb);
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+          if(typeof reader.result === 'string'){
+            img.src = reader.result;
+          }
+        });
+        try {
+          reader.readAsDataURL(file);
+        } catch(err){}
+      });
+    }
+  }
+
+  function handleSelectionChange(input){
+    const newFiles = Array.from(input.files || []);
+    const existing = getStoredFiles(input);
+    if(newFiles.length === 0){
+      storeFiles(input, existing);
+      renderPreviews(input);
+      return;
+    }
+    const combined = existing.concat(newFiles);
+    updateLimitMessage(input, combined.length);
+    const max = getMax(input);
+    const limited = combined.slice(0, max);
+    storeFiles(input, limited);
+    renderPreviews(input);
+  }
+
+  function applyImageBehavior(input){
+    if(!(input instanceof HTMLInputElement)) return;
+    if(input.type !== 'file') return;
+    if(processed.has(input)) return;
+    processed.add(input);
+    input.multiple = true;
+    if(!input.accept) input.accept = 'image/*';
+    const initialFiles = Array.from(input.files || []);
+    updateLimitMessage(input, initialFiles.length);
+    const max = getMax(input);
+    const limited = initialFiles.slice(0, max);
+    storeFiles(input, limited);
+    renderPreviews(input);
+    input.addEventListener('change', () => handleSelectionChange(input));
+  }
+
+  function scan(root){
+    if(!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll('input[data-images-field]') : [];
+    list.forEach(applyImageBehavior);
+  }
+
+  function startObserver(){
+    if(observerStarted || !document.body) return;
+    observerStarted = true;
+    const observer = new MutationObserver(mutations => {
+      for(const mutation of mutations){
+        if(mutation.type === 'childList'){
+          mutation.addedNodes.forEach(node => {
+            if(!(node instanceof Element)) return;
+            if(node.matches && node.matches('input[data-images-field]')){
+              applyImageBehavior(node);
+            }
+            if(node.querySelectorAll){
+              node.querySelectorAll('input[data-images-field]').forEach(applyImageBehavior);
+            }
+          });
+        } else if(mutation.type === 'attributes'){
+          const target = mutation.target;
+          if(target instanceof HTMLInputElement && target.hasAttribute('data-images-field')){
+            applyImageBehavior(target);
+          }
+        }
+      }
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-images-field']
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', () => {
+      scan(document);
+      startObserver();
+    }, { once: true });
+  } else {
+    scan(document);
+    startObserver();
+  }
+})();
+
+// Extracted from <script>
+(function(){
+  const MESSAGE = 'Please include "@" and "." in the email address.';
+  const processedForms = new WeakSet();
+
+  function ensureFormListener(form){
+    if(!form || processedForms.has(form)) return;
+    form.addEventListener('submit', () => {
+      const candidates = form.querySelectorAll('input[data-email-textboxified="true"]');
+      candidates.forEach(input => {
+        if(typeof input._emailTextboxValidate === 'function'){
+          input._emailTextboxValidate();
+        }
+      });
+    }, true);
+    processedForms.add(form);
+  }
+
+  function applyEmailBehavior(input){
+    if(!(input instanceof HTMLInputElement)) return;
+    if(input.dataset.emailTextboxified === 'true') return;
+    input.dataset.emailTextboxified = 'true';
+    try {
+      input.type = 'text';
+    } catch(err) {}
+    ensureFormListener(input.form || null);
+
+    const validate = () => {
+      const value = input.value != null ? String(input.value).trim() : '';
+      if(!value){
+        input.setCustomValidity('');
+        return;
+      }
+      if(value.includes('@') && value.includes('.')){
+        input.setCustomValidity('');
+      } else {
+        input.setCustomValidity(MESSAGE);
+      }
+    };
+
+    input._emailTextboxValidate = validate;
+    input.addEventListener('input', validate);
+    input.addEventListener('change', validate);
+    input.addEventListener('blur', validate);
+    if(typeof input.setAttribute === 'function'){
+      input.setAttribute('title', MESSAGE);
+    }
+    validate();
+  }
+
+  function scan(root){
+    if(!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll('input[type="email"]') : [];
+    list.forEach(applyEmailBehavior);
+  }
+
+  function handleMutations(mutations){
+    for(const mutation of mutations){
+      if(mutation.type === 'childList'){
+        mutation.addedNodes.forEach(node => {
+          if(!(node instanceof Element)) return;
+          if(node.matches && node.matches('input[type="email"]')){
+            applyEmailBehavior(node);
+          }
+          if(node.querySelectorAll){
+            node.querySelectorAll('input[type="email"]').forEach(applyEmailBehavior);
+          }
+        });
+      } else if(mutation.type === 'attributes'){
+        const target = mutation.target;
+        if(target instanceof HTMLInputElement && target.type === 'email'){
+          applyEmailBehavior(target);
+        }
+      }
+    }
+  }
+
+  function init(){
+    if(!document.body){
+      return;
+    }
+    scan(document);
+    const observer = new MutationObserver(handleMutations);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['type']
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+
+// Extracted from <script>
+(function(){
+  const USERS_KEY = 'member-auth-users';
+  const CURRENT_KEY = 'member-auth-current';
+  let users = [];
+  let currentUser = null;
+  let statusTimer = null;
+  let lastAction = 'login';
+
+  let form = null;
+  let container = null;
+  let tabsWrap = null;
+  let loginTab = null;
+  let registerTab = null;
+  let loginPanel = null;
+  let registerPanel = null;
+  let profilePanel = null;
+  let loginInputs = [];
+  let registerInputs = [];
+  let profileAvatar = null;
+  let profileName = null;
+  let profileEmail = null;
+  let logoutBtn = null;
+
+  function normalizeUser(user){
+    if(!user || typeof user !== 'object') return null;
+    const emailRaw = typeof user.email === 'string' ? user.email.trim() : '';
+    const normalized = typeof user.emailNormalized === 'string' && user.emailNormalized.trim()
+      ? user.emailNormalized.trim().toLowerCase()
+      : emailRaw.toLowerCase();
+    if(!normalized) return null;
+    const usernameRaw = typeof user.username === 'string' ? user.username.trim() : '';
+    const username = usernameRaw || normalized;
+    return {
+      name: typeof user.name === 'string' ? user.name.trim() : '',
+      email: emailRaw,
+      emailNormalized: normalized,
+      username,
+      password: typeof user.password === 'string' ? user.password : '',
+      avatar: typeof user.avatar === 'string' ? user.avatar.trim() : ''
+    };
+  }
+
+  function loadUsers(){
+    try{
+      const raw = localStorage.getItem(USERS_KEY);
+      if(!raw) return [];
+      const parsed = JSON.parse(raw);
+      if(!Array.isArray(parsed)) return [];
+      return parsed.map(normalizeUser).filter(Boolean);
+    }catch(err){
+      return [];
+    }
+  }
+
+  function saveUsers(list){
+    users = Array.isArray(list) ? list.map(normalizeUser).filter(Boolean) : [];
+    try{
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }catch(err){}
+  }
+
+  function extractRoleFlags(source){
+    if(!source || typeof source !== 'object') return {};
+    const flags = {};
+    Object.keys(source).forEach(key => {
+      if(typeof source[key] === 'boolean' && (key.startsWith('is') || key.startsWith('can'))){
+        flags[key] = source[key];
+      }
+    });
+    if(Array.isArray(source.roles)){
+      const cleaned = source.roles
+        .map(role => typeof role === 'string' ? role.trim() : '')
+        .filter(Boolean);
+      if(cleaned.length){
+        flags.roles = cleaned;
+      }
+    }
+    if(typeof source.role === 'string'){
+      const trimmedRole = source.role.trim();
+      if(trimmedRole){
+        flags.role = trimmedRole;
+      }
+    }
+    return flags;
+  }
+
+  function storeCurrent(user){
+    try{
+      if(user){
+        const idValue = (()=>{
+          if(typeof user.id === 'number' && Number.isFinite(user.id)) return user.id;
+          if(typeof user.id === 'string'){
+            const trimmed = user.id.trim();
+            if(!trimmed) return null;
+            const numeric = Number(trimmed);
+            return Number.isFinite(numeric) ? numeric : trimmed;
+          }
+          return null;
+        })();
+        const storedType = (()=>{
+          if(user && user.isAdmin) return 'admin';
+          if(typeof user.type === 'string'){
+            const trimmedType = user.type.trim();
+            if(trimmedType){
+              return trimmedType.toLowerCase() === 'admin' ? 'admin' : trimmedType;
+            }
+          }
+          return 'member';
+        })();
+        const payload = {
+          type: storedType,
+          username: typeof user.username === 'string' ? user.username : '',
+          email: typeof user.email === 'string' ? user.email : '',
+          name: typeof user.name === 'string' ? user.name : '',
+          avatar: typeof user.avatar === 'string' ? user.avatar : ''
+        };
+        if(idValue !== null){
+          payload.id = idValue;
+        }
+        const roleData = extractRoleFlags(user);
+        Object.keys(roleData).forEach(key => {
+          payload[key] = roleData[key];
+        });
+        if(typeof user.emailNormalized === 'string' && user.emailNormalized){
+          payload.emailNormalized = user.emailNormalized;
+        }
+        localStorage.setItem(CURRENT_KEY, JSON.stringify(payload));
+      } else {
+        localStorage.removeItem(CURRENT_KEY);
+      }
+    }catch(err){}
+  }
+
+  function loadStoredCurrent(){
+    try{
+      const raw = localStorage.getItem(CURRENT_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== 'object') return null;
+      const rawType = typeof parsed.type === 'string' ? parsed.type.trim() : '';
+      const typeLower = rawType.toLowerCase();
+      const type = typeLower === 'admin' ? 'admin' : (rawType || 'member');
+      const username = typeof parsed.username === 'string' ? parsed.username : '';
+      const emailRaw = typeof parsed.email === 'string' ? parsed.email : username;
+      const storedNormalizedEmail = typeof parsed.emailNormalized === 'string'
+        ? parsed.emailNormalized.trim().toLowerCase()
+        : '';
+      const normalized = storedNormalizedEmail || (typeof emailRaw === 'string' ? emailRaw.trim().toLowerCase() : '');
+      const storedId = (()=>{
+        if(typeof parsed.id === 'number' && Number.isFinite(parsed.id)) return parsed.id;
+        if(typeof parsed.id === 'string'){
+          const trimmed = parsed.id.trim();
+          if(!trimmed) return null;
+          const numeric = Number(trimmed);
+          return Number.isFinite(numeric) ? numeric : trimmed;
+        }
+        return null;
+      })();
+      const storedRoles = extractRoleFlags(parsed);
+      if(type === 'admin'){
+        if(window.adminAuthManager){
+          window.adminAuthManager.setAuthenticated(true, username || emailRaw || 'admin');
+        }
+        return {
+          id: storedId,
+          name: parsed.name || 'Administrator',
+          email: emailRaw,
+          emailNormalized: normalized || 'admin',
+          username: username || emailRaw || 'admin',
+          avatar: parsed.avatar || '',
+          type: 'admin',
+          ...storedRoles,
+          isAdmin: true
+        };
+      }
+      if(normalized){
+        const existing = users.find(u => u.emailNormalized === normalized);
+        if(existing){
+          return { ...existing, id: storedId, ...storedRoles, type };
+        }
+      }
+      if(!emailRaw){
+        return null;
+      }
+      return {
+        id: storedId,
+        name: parsed.name || '',
+        email: emailRaw,
+        emailNormalized: normalized || emailRaw.toLowerCase(),
+        username: username || normalized || emailRaw,
+        avatar: parsed.avatar || '',
+        type,
+        ...storedRoles,
+        isAdmin: !!storedRoles.isAdmin && storedRoles.isAdmin === true
+      };
+    }catch(err){}
+    return null;
+  }
+
+  function svgPlaceholder(letter){
+    const palette = ['#2e3a72','#0ea5e9','#f97316','#14b8a6','#a855f7'];
+    const color = palette[letter.charCodeAt(0) % palette.length];
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${color}"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="36" font-family="Inter, Arial, sans-serif" fill="#ffffff">${letter}</text></svg>`;
+    try{
+      return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+    }catch(err){
+      return `data:image/svg+xml;base64,${btoa(svg)}`;
+    }
+  }
+
+  function createPlaceholder(name){
+    const trimmed = (name || '').trim();
+    const initial = trimmed ? trimmed[0].toUpperCase() : 'U';
+    return svgPlaceholder(initial);
+  }
+
+  function getAvatarSource(user){
+    if(!user) return createPlaceholder('');
+    const raw = user.avatar ? String(user.avatar).trim() : '';
+    if(raw) return raw;
+    return createPlaceholder(user.name || user.email || 'U');
+  }
+
+  function ensureMemberAvatarImage(){
+    const memberBtn = document.getElementById('memberBtn');
+    if(!memberBtn) return null;
+    let img = memberBtn.querySelector('.member-avatar');
+    if(!img){
+      img = document.createElement('img');
+      img.className = 'member-avatar';
+      img.alt = '';
+      img.setAttribute('aria-hidden','true');
+      memberBtn.appendChild(img);
+    }
+    return img;
+  }
+
+  function updateMemberButton(user){
+    const memberBtn = document.getElementById('memberBtn');
+    if(!memberBtn) return;
+    const img = ensureMemberAvatarImage();
+    if(!img) return;
+    img.onerror = null;
+    img.removeAttribute('data-fallback-applied');
+    if(user){
+      const descriptor = user.name || user.email || 'Member';
+      img.dataset.fallbackApplied = '';
+      img.onerror = () => {
+        if(img.dataset.fallbackApplied === '1') return;
+        img.dataset.fallbackApplied = '1';
+        img.src = createPlaceholder(descriptor);
+      };
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.src = getAvatarSource(user);
+      memberBtn.classList.add('has-avatar');
+      memberBtn.setAttribute('aria-label', `Open members area for ${descriptor}`);
+    } else {
+      img.removeAttribute('src');
+      img.removeAttribute('data-fallback-applied');
+      memberBtn.classList.remove('has-avatar');
+      memberBtn.setAttribute('aria-label', 'Open members area');
+    }
+  }
+
+  async function showStatus(message, options = {}){
+    const statusEl = document.getElementById('memberStatusMessage');
+    if(!statusEl) return;
+    const isError = !!options.error;
+    
+    // If message looks like a message key (starts with 'msg_'), fetch from DB
+    let displayMessage = message;
+    if(typeof message === 'string' && message.startsWith('msg_')){
+      displayMessage = await getMessage(message, options.placeholders || {}, false) || message;
+    }
+    
+    statusEl.textContent = displayMessage;
+    statusEl.classList.remove('error','success','show');
+    statusEl.classList.add(isError ? 'error' : 'success');
+    statusEl.setAttribute('aria-hidden','false');
+    void statusEl.offsetWidth;
+    statusEl.classList.add('show');
+    if(statusTimer) clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => {
+      statusEl.classList.remove('show');
+      statusEl.classList.remove('error','success');
+      statusEl.setAttribute('aria-hidden','true');
+    }, 2400);
+  }
+
+  function disableInputs(list, disabled){
+    list.forEach(input => {
+      input.disabled = !!disabled;
+    });
+  }
+
+  function clearInputs(list){
+    list.forEach(input => {
+      if('value' in input){
+        input.value = '';
+      }
+    });
+  }
+
+  function setAuthPanelState(panelEl, isActive, inputs){
+    if(!panelEl) return;
+    if(Array.isArray(inputs)){
+      disableInputs(inputs, !isActive);
+    }
+    const submitBtn = panelEl.querySelector('.member-auth-submit');
+    if(submitBtn){
+      if(!isActive){
+        submitBtn.dataset.memberAuthPrevDisabled = submitBtn.disabled ? 'true' : 'false';
+        submitBtn.disabled = true;
+      } else if('memberAuthPrevDisabled' in submitBtn.dataset){
+        submitBtn.disabled = submitBtn.dataset.memberAuthPrevDisabled === 'true';
+        delete submitBtn.dataset.memberAuthPrevDisabled;
+      } else {
+        submitBtn.disabled = false;
+      }
+    }
+    if(!isActive){
+      const activeEl = document.activeElement;
+      if(activeEl && panelEl.contains(activeEl) && typeof activeEl.blur === 'function'){
+        activeEl.blur();
+      }
+      panelEl.setAttribute('inert','');
+    } else {
+      panelEl.removeAttribute('inert');
+    }
+    panelEl.hidden = !isActive;
+    panelEl.setAttribute('aria-hidden', (!isActive).toString());
+  }
+
+  function focusFirstAuthField(panelEl){
+    if(!panelEl || panelEl.hidden) return;
+    let ancestor = panelEl.parentElement;
+    while(ancestor){
+      if(ancestor.hidden || ancestor.getAttribute && ancestor.getAttribute('aria-hidden') === 'true'){
+        return;
+      }
+      ancestor = ancestor.parentElement;
+    }
+    const target = panelEl.querySelector('input:not([type="hidden"]):not([disabled])')
+      || panelEl.querySelector('select:not([disabled])')
+      || panelEl.querySelector('textarea:not([disabled])')
+      || panelEl.querySelector('button:not([disabled])');
+    if(target && typeof target.focus === 'function'){
+      requestAnimationFrame(() => target.focus());
+    }
+  }
+
+  function setActivePanel(panel){
+    if(!container || container.dataset.state === 'logged-in') return;
+    const target = panel === 'register' ? 'register' : 'login';
+    const isLogin = target === 'login';
+    if(loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+    if(registerTab) registerTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+    setAuthPanelState(loginPanel, isLogin, loginInputs);
+    setAuthPanelState(registerPanel, !isLogin, registerInputs);
+    container.dataset.active = target;
+    lastAction = target;
+    focusFirstAuthField(isLogin ? loginPanel : registerPanel);
+  }
+
+  function render(){
+    if(window.adminAuthManager){
+      if(currentUser && currentUser.isAdmin){
+        const identity = currentUser.username || currentUser.email || 'admin';
+        window.adminAuthManager.setAuthenticated(true, identity);
+      } else {
+        window.adminAuthManager.setAuthenticated(false);
+      }
+    }
+    if(!container) return;
+    if(currentUser){
+      container.dataset.state = 'logged-in';
+      setAuthPanelState(loginPanel, false, loginInputs);
+      setAuthPanelState(registerPanel, false, registerInputs);
+      clearInputs(loginInputs);
+      clearInputs(registerInputs);
+      if(profilePanel){
+        profilePanel.hidden = false;
+        profilePanel.setAttribute('aria-hidden','false');
+        profilePanel.removeAttribute('inert');
+      }
+      if(profileAvatar){
+        const descriptor = currentUser.name || currentUser.email || 'Member';
+        profileAvatar.dataset.fallbackApplied = '';
+        profileAvatar.onerror = () => {
+          if(profileAvatar.dataset.fallbackApplied === '1') return;
+          profileAvatar.dataset.fallbackApplied = '1';
+          profileAvatar.src = createPlaceholder(descriptor);
+        };
+        profileAvatar.loading = 'lazy';
+        profileAvatar.decoding = 'async';
+        profileAvatar.src = getAvatarSource(currentUser);
+        profileAvatar.alt = `${descriptor}'s avatar`;
+      }
+      if(profileName) profileName.textContent = currentUser.name || 'Member';
+      if(profileEmail) profileEmail.textContent = currentUser.email || '';
+      if(tabsWrap) tabsWrap.setAttribute('aria-hidden','true');
+      updateMemberButton(currentUser);
+      lastAction = 'login';
+      if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
+        window.memberPanelChangeManager.markSaved();
+      }
+    } else {
+      container.dataset.state = 'logged-out';
+      if(profilePanel){
+        profilePanel.hidden = true;
+        profilePanel.setAttribute('aria-hidden','true');
+        profilePanel.setAttribute('inert','');
+      }
+      if(profileAvatar){
+        profileAvatar.onerror = null;
+        profileAvatar.removeAttribute('src');
+        profileAvatar.removeAttribute('data-fallback-applied');
+        profileAvatar.alt = '';
+      }
+      if(profileName) profileName.textContent = '';
+      if(profileEmail) profileEmail.textContent = '';
+      if(tabsWrap) tabsWrap.removeAttribute('aria-hidden');
+      const active = container.dataset.active === 'register' ? 'register' : 'login';
+      setActivePanel(active);
+      clearInputs(loginInputs);
+      clearInputs(registerInputs);
+      updateMemberButton(null);
+      if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
+        window.memberPanelChangeManager.markSaved();
+      }
+    }
+  }
+
+  async function handleLogin(){
+    const emailInput = document.getElementById('memberLoginEmail');
+    const passwordInput = document.getElementById('memberLoginPassword');
+    const usernameRaw = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    if(!usernameRaw || !password){
+      await showStatus('msg_auth_login_empty', { error: true });
+      if(!usernameRaw && emailInput){
+        emailInput.focus();
+      } else if(passwordInput){
+        passwordInput.focus();
+      }
+      return;
+    }
+    let verification = null;
+    try{
+      verification = await verifyUserLogin(usernameRaw, password);
+    }catch(err){
+      console.error('Login verification failed', err);
+      await showStatus('msg_auth_login_failed', { error: true });
+      return;
+    }
+    if(!verification || verification.success !== true){
+      await showStatus('msg_auth_login_incorrect', { error: true });
+      if(passwordInput){
+        passwordInput.focus();
+        passwordInput.select();
+      }
+      return;
+    }
+    const payload = verification && verification.user && typeof verification.user === 'object'
+      ? verification.user
+      : {};
+    const payloadEmailRaw = typeof payload.email === 'string' ? payload.email.trim() : '';
+    const email = payloadEmailRaw || usernameRaw;
+    const normalizedEmail = typeof email === 'string' && email ? email.toLowerCase() : '';
+    const payloadUsername = typeof payload.username === 'string' ? payload.username.trim() : '';
+    const username = payloadUsername || email || usernameRaw;
+    const payloadName = typeof payload.name === 'string' ? payload.name.trim() : '';
+    const payloadAvatar = typeof payload.avatar === 'string' ? payload.avatar.trim() : '';
+    const payloadId = (()=>{
+      if(typeof payload.id === 'number' && Number.isFinite(payload.id)) return payload.id;
+      if(typeof payload.id === 'string'){
+        const trimmed = payload.id.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        return Number.isFinite(numeric) ? numeric : trimmed;
+      }
+      if(typeof payload.user_id === 'number' && Number.isFinite(payload.user_id)) return payload.user_id;
+      if(typeof payload.user_id === 'string'){
+        const trimmed = payload.user_id.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        return Number.isFinite(numeric) ? numeric : trimmed;
+      }
+      if(typeof payload.userId === 'number' && Number.isFinite(payload.userId)) return payload.userId;
+      if(typeof payload.userId === 'string'){
+        const trimmed = payload.userId.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        return Number.isFinite(numeric) ? numeric : trimmed;
+      }
+      return null;
+    })();
+    const roleFlags = extractRoleFlags(payload);
+    const { isAdmin: extractedIsAdmin, roles: extractedRoles, ...otherRoleFlags } = roleFlags;
+    const rolesList = Array.isArray(extractedRoles)
+      ? extractedRoles
+      : (Array.isArray(payload.roles)
+        ? payload.roles
+            .map(role => typeof role === 'string' ? role.trim() : '')
+            .filter(Boolean)
+        : []);
+    const usernameLower = typeof username === 'string' ? username.toLowerCase() : '';
+    let isAdmin = false;
+    if(typeof payload.isAdmin === 'boolean'){
+      isAdmin = payload.isAdmin;
+    } else if(typeof extractedIsAdmin === 'boolean'){
+      isAdmin = extractedIsAdmin;
+    } else if(rolesList.includes('admin')){
+      isAdmin = true;
+    } else if(normalizedEmail === 'admin' || usernameLower === 'admin'){
+      isAdmin = true;
+    }
+    currentUser = {
+      id: payloadId,
+      name: payloadName,
+      email,
+      emailNormalized: normalizedEmail || usernameRaw.toLowerCase(),
+      username,
+      avatar: payloadAvatar,
+      type: isAdmin ? 'admin' : (typeof payload.type === 'string' && payload.type.trim() ? payload.type.trim() : 'member'),
+      ...otherRoleFlags,
+      ...(rolesList.length ? { roles: rolesList } : {}),
+      isAdmin
+    };
+    if(!currentUser.emailNormalized){
+      if(typeof currentUser.email === 'string' && currentUser.email){
+        currentUser.emailNormalized = currentUser.email.toLowerCase();
+      } else {
+        currentUser.emailNormalized = usernameLower;
+      }
+    }
+    if(!currentUser.username){
+      currentUser.username = currentUser.email || usernameRaw;
+    }
+    storeCurrent(currentUser);
+    render();
+    const displayName = currentUser.name || currentUser.email || currentUser.username;
+    await showStatus('msg_auth_login_success', { placeholders: { name: displayName } });
+  }
+
+  async function handleRegister(){
+    const nameInput = document.getElementById('memberRegisterName');
+    const emailInput = document.getElementById('memberRegisterEmail');
+    const passwordInput = document.getElementById('memberRegisterPassword');
+    const passwordConfirmInput = document.getElementById('memberRegisterPasswordConfirm');
+    const avatarInput = document.getElementById('memberRegisterAvatar');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const emailRaw = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    const passwordConfirm = passwordConfirmInput ? passwordConfirmInput.value : '';
+    const avatar = avatarInput ? avatarInput.value.trim() : '';
+    if(!name || !emailRaw || !password){
+      await showStatus('msg_auth_register_empty', { error: true });
+      if(!name && nameInput){
+        nameInput.focus();
+        return;
+      }
+      if(!emailRaw && emailInput){
+        emailInput.focus();
+        return;
+      }
+      if(!password && passwordInput){
+        passwordInput.focus();
+      }
+      return;
+    }
+    if(password.length < 4){
+      await showStatus('msg_auth_register_password_short', { error: true });
+      if(passwordInput) passwordInput.focus();
+      return;
+    }
+    if(!passwordConfirm){
+      await showStatus('msg_auth_register_empty', { error: true });
+      if(passwordConfirmInput) passwordConfirmInput.focus();
+      return;
+    }
+    if(password !== passwordConfirm){
+      await showStatus('msg_auth_register_password_mismatch', { error: true });
+      if(passwordConfirmInput){
+        passwordConfirmInput.focus();
+        if(typeof passwordConfirmInput.select === 'function'){
+          passwordConfirmInput.select();
+        }
+      }
+      return;
+    }
+    const normalized = emailRaw.toLowerCase();
+    const formData = new FormData();
+    formData.set('display_name', name);
+    formData.set('email', emailRaw);
+    formData.set('password', password);
+    formData.set('confirm', passwordConfirm);
+    formData.set('avatar_url', avatar);
+    let response;
+    try{
+      response = await fetch('/gateway.php?action=add-member', {
+        method: 'POST',
+        body: formData
+      });
+    }catch(err){
+      console.error('Registration request failed', err);
+      await showStatus('msg_auth_register_failed', { error: true });
+      return;
+    }
+    let responseText = '';
+    try{
+      responseText = await response.text();
+    }catch(err){
+      console.error('Failed to read registration response', err);
+      await showStatus('msg_auth_register_failed', { error: true });
+      return;
+    }
+    let payload = null;
+    if(responseText){
+      try{
+        payload = JSON.parse(responseText);
+      }catch(err){
+        payload = null;
+      }
+    }
+    if(!response.ok || !payload || payload.success === false){
+      let errorMessage = await getMessage('msg_auth_register_failed', {}, false) || 'Registration failed.';
+      if(payload && typeof payload === 'object'){
+        const possible = payload.error || payload.message;
+        if(typeof possible === 'string' && possible.trim()){
+          errorMessage = possible.trim();
+        }
+      } else if(responseText && responseText.trim()){
+        errorMessage = responseText.trim();
+      }
+      await showStatus(errorMessage, { error: true });
+      return;
+    }
+    const memberData = payload && typeof payload === 'object'
+      ? (payload.member || payload.user || payload.data || payload.payload || null)
+      : null;
+    const resolvedMember = memberData && typeof memberData === 'object' ? memberData : {};
+    const memberNameRaw = typeof resolvedMember.display_name === 'string' && resolvedMember.display_name.trim()
+      ? resolvedMember.display_name.trim()
+      : (typeof resolvedMember.name === 'string' && resolvedMember.name.trim() ? resolvedMember.name.trim() : name);
+    const memberEmailRaw = typeof resolvedMember.email === 'string' && resolvedMember.email.trim()
+      ? resolvedMember.email.trim()
+      : emailRaw;
+    const memberAvatarRaw = typeof resolvedMember.avatar_url === 'string' && resolvedMember.avatar_url.trim()
+      ? resolvedMember.avatar_url.trim()
+      : (typeof resolvedMember.avatar === 'string' && resolvedMember.avatar.trim()
+        ? resolvedMember.avatar.trim()
+        : avatar);
+    const memberUsernameRaw = typeof resolvedMember.username === 'string' && resolvedMember.username.trim()
+      ? resolvedMember.username.trim()
+      : (memberEmailRaw || normalized);
+    const finalEmailRaw = memberEmailRaw || emailRaw;
+    const finalEmail = typeof finalEmailRaw === 'string' ? finalEmailRaw.trim() : '';
+    const finalNormalized = finalEmail ? finalEmail.toLowerCase() : normalized;
+    currentUser = {
+      name: memberNameRaw || name,
+      email: finalEmail,
+      emailNormalized: finalNormalized,
+      username: memberUsernameRaw || finalEmail || finalNormalized,
+      avatar: memberAvatarRaw || '',
+      isAdmin: finalNormalized === 'admin'
+    };
+    storeCurrent(currentUser);
+    if(form && typeof form.reset === 'function'){
+      form.reset();
+    } else {
+      clearInputs(registerInputs);
+    }
+    render();
+    const displayName = currentUser.name || currentUser.email;
+    await showStatus('msg_auth_register_success', { placeholders: { name: displayName } });
+  }
+
+  async function handleLogout(){
+    currentUser = null;
+    storeCurrent(null);
+    render();
+    await showStatus('msg_auth_logout_success');
+  }
+
+  function setup(){
+    const memberPanel = document.getElementById('memberPanel');
+    form = memberPanel ? memberPanel.querySelector('.panel-body') : null;
+    if(!form) return;
+    container = form.querySelector('.member-auth');
+    if(!container) return;
+    tabsWrap = container.querySelector('.member-auth-tabs');
+    loginTab = document.getElementById('memberAuthTabLogin');
+    registerTab = document.getElementById('memberAuthTabRegister');
+    loginPanel = document.getElementById('memberLoginPanel');
+    registerPanel = document.getElementById('memberRegisterPanel');
+    profilePanel = document.getElementById('memberProfilePanel');
+    profileAvatar = document.getElementById('memberProfileAvatar');
+    profileName = document.getElementById('memberProfileName');
+    profileEmail = document.getElementById('memberProfileEmail');
+    logoutBtn = document.getElementById('memberLogoutBtn');
+    loginInputs = loginPanel ? Array.from(loginPanel.querySelectorAll('input')) : [];
+    registerInputs = registerPanel ? Array.from(registerPanel.querySelectorAll('input')) : [];
+
+    form.addEventListener('submit', event => {
+      let submitter = event.submitter || null;
+      if(!submitter){
+        const active = document.activeElement || null;
+        if(active && form.contains(active)){
+          submitter = active;
+        }
+      }
+      const origin = submitter && typeof submitter.closest === 'function' ? submitter : null;
+      const isMemberAuthEvent = origin && origin.closest('.member-auth');
+      if(!isMemberAuthEvent){
+        return;
+      }
+      event.preventDefault();
+      const action = submitter && submitter.dataset && submitter.dataset.action ? submitter.dataset.action : lastAction;
+      if(action === 'register'){
+        handleRegister();
+      } else {
+        Promise.resolve(handleLogin()).catch(err => {
+          console.error('Login handler failed', err);
+          showStatus('Unable to process login. Please try again.', { error: true });
+        });
+      }
+    });
+
+    const submitButtons = form.querySelectorAll('.member-auth-submit');
+    submitButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        lastAction = btn.dataset.action || 'login';
+      });
+    });
+
+    if(loginTab){
+      loginTab.addEventListener('click', () => {
+        setActivePanel('login');
+      });
+    }
+    if(registerTab){
+      registerTab.addEventListener('click', () => {
+        setActivePanel('register');
+      });
+    }
+    if(logoutBtn){
+      logoutBtn.addEventListener('click', event => {
+        event.preventDefault();
+        if(currentUser){
+          handleLogout();
+        }
+      });
+    }
+
+    users = loadUsers();
+    currentUser = loadStoredCurrent();
+    render();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setup, { once: true });
+  } else {
+    setup();
+  }
+})();
+
+// Extracted from <script>
+// Wait helpers if your app exposes callWhenDefined; otherwise poll.
+(function(){
+  function whenDefined(name, cb){
+    if (window.callWhenDefined) return window.callWhenDefined(name, cb);
+    const iv = setInterval(() => {
+      if (typeof window[name] === 'function') { clearInterval(iv); cb(window[name]); }
+    }, 20);
+  }
+
+  // Debounce/guard in-flight jobs by name
+  const _inflight = new Map();
+  function guardOnce(name, fn){
+    return async function guarded(...args){
+      if (_inflight.get(name)) return; // drop duplicates
+      _inflight.set(name, true);
+      try { return await fn.apply(this, args); }
+      finally { _inflight.delete(name); }
+    };
+  }
+
+  const factories = new Map([
+    ['hookDetailActions', (orig) => {
+      const wrapped = rafThrottle(function(...args){
+        scheduleIdle(() => orig.apply(this, args));
+      });
+      return guardOnce('hookDetailActions', wrapped);
+    }],
+    ['ensureMapForVenue', (orig) => {
+      let token = 0;
+      return guardOnce('ensureMapForVenue', function(...args){
+        const myToken = ++token;
+        // Defer heavy create to idle; newest call wins.
+        scheduleIdle(async () => {
+          if (myToken !== token) return;
+          try { await orig.apply(this, args); } catch(e) { /* swallow */ }
+        }, 300);
+      });
+    }]
+  ]);
+
+  function applyWrapper(name){
+    const factory = factories.get(name);
+    if (!factory) return;
+    whenDefined(name, (orig) => {
+      if (typeof orig !== 'function' || orig.__inputWrapped) return;
+      const wrapped = factory(orig);
+      if (typeof wrapped === 'function'){
+        wrapped.__inputWrapped = true;
+        window[name] = wrapped;
+      }
+    });
+  }
+
+  ['hookDetailActions','ensureMapForVenue'].forEach(applyWrapper);
+
+  window.__wrapForInputYield = function(name){
+    applyWrapper(name);
+  };
+})();
+
+// LocalStorage Clear Button Handler
+(function(){
+  function initClearLocalStorageBtn(){
+    const btn = document.getElementById('clearLocalStorageBtn');
+    if(!btn) {
+      // Retry if button not ready yet
+      setTimeout(initClearLocalStorageBtn, 100);
+      return;
+    }
+    
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      
+      try {
+        const keys = Object.keys(localStorage);
+        const keyCount = keys.length;
+        localStorage.clear();
+        console.log(`[LocalStorage] Cleared ${keyCount} items`);
+        
+        // Reload the page to apply changes
+        location.reload();
+      } catch(err){
+        console.error('[LocalStorage] Error clearing:', err);
+      }
+    });
+    
+    console.log('[LocalStorage] Clear button initialized');
+  }
+  
+  // Initialize when DOM is ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initClearLocalStorageBtn);
+  } else {
+    initClearLocalStorageBtn();
+  }
+})();
+
+ 
+
