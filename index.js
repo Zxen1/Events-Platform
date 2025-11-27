@@ -5715,7 +5715,7 @@ function makePosts(){
     return 2 * EARTH_RADIUS_KM * Math.atan2(Math.sqrt(clampChord), Math.sqrt(1 - clampChord));
   }
 
-  function buildMultiVenuePool(){
+  function buildMultiPostPool(){
     const cityLookup = singleVenueBases.reduce((acc, base)=>{
       if(!base || !base.city) return acc;
       if(Number.isFinite(base.lng) && Number.isFinite(base.lat)){
@@ -5980,11 +5980,11 @@ function makePosts(){
     return indices;
   }
 
-  function assignMultiVenues(postList, targetCount){
+  function assignMultiPosts(postList, targetCount){
     if(!Array.isArray(postList) || !postList.length || targetCount <= 0){
       return 0;
     }
-    const pool = buildMultiVenuePool();
+    const pool = buildMultiPostPool();
     if(pool.length < 2){
       return 0;
     }
@@ -6088,8 +6088,8 @@ function makePosts(){
     return assigned;
   }
 
-  // OPTIMIZED: Reduced multi-venue assignment target (was 1000, now 200 to match reduced post count)
-  assignMultiVenues(out, 200);
+  // OPTIMIZED: Reduced multi-post assignment target (was 1000, now 200 to match reduced post count)
+  assignMultiPosts(out, 200);
 
   out.forEach(post => {
     if(!post) return;
@@ -18483,8 +18483,8 @@ function makePosts(){
           return getPrimaryVenueName(post);
         })() || '';
         const multiCountLabel = `${multiCount} posts here`;
-        const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
-        const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
+        const multiPostText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
+        const combinedLabel = multiPostText ? `${multiCountLabel}\n${multiPostText}` : multiCountLabel;
         // Include venueKey in sprite source to ensure unique sprite IDs for different venues
         // Even if they have same icon, count, and venue name
         const featureId = `venue:${group.key}::${post.id}`;
@@ -18499,7 +18499,7 @@ function makePosts(){
             title: multiCountLabel,
             label: combinedLabel,
             labelLine1: multiCountLabel,
-            labelLine2: multiVenueText,
+            labelLine2: multiPostText,
             venueName,
             city: post.city,
             cat: post.category,
@@ -19237,7 +19237,7 @@ function makePosts(){
       map.on('mousemove', 'mapmarker-icon', handleMapMouseMove);
 
 
-      // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
+      // Maintain pointer cursor for balloons and surface multi-post cards when applicable
         postSourceEventsBound = true;
       }
       } catch (err) {
