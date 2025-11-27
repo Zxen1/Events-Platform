@@ -1322,52 +1322,25 @@ let __notifyMapOnInteraction = null;
     return markerLabelPillImagePromise;
   }
 
-  function computeMarkerLabelCanvasDimensions(sourceImage, isAccent = false){
-    if(isAccent){
-      const width = accentPillWidthPx !== null ? accentPillWidthPx : (sourceImage && (sourceImage.naturalWidth || sourceImage.width) ? (sourceImage.naturalWidth || sourceImage.width) : basePillWidthPx);
-      const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
-      const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
-      const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
-      const pixelRatio = 1;
-      return { canvasWidth, canvasHeight, pixelRatio };
-    }
-    const canvasWidth = basePillWidthPx;
-    const canvasHeight = basePillHeightPx;
-    const pixelRatio = 1;
+  function computeMarkerLabelCanvasDimensions(sourceImage){
+    const rawWidth = sourceImage && (sourceImage.naturalWidth || sourceImage.width)
+      ? (sourceImage.naturalWidth || sourceImage.width)
+      : basePillWidthPx;
+    const rawHeight = sourceImage && (sourceImage.naturalHeight || sourceImage.height)
+      ? (sourceImage.naturalHeight || sourceImage.height)
+      : basePillHeightPx;
+    const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : basePillWidthPx));
+    const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : basePillHeightPx));
+    const pixelRatio = canvasWidth / basePillWidthPx;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
 
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
     if(!sourceImage){
       return null;
     }
-    // For small pills (base), use image as-is without any sizing or color modifications
-    if(!isAccent){
-      // Small pill: just use the source image directly
-      const canvas = document.createElement('canvas');
-      const width = sourceImage.naturalWidth || sourceImage.width || 150;
-      const height = sourceImage.naturalHeight || sourceImage.height || 40;
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      try{
-        ctx.drawImage(sourceImage, 0, 0, width, height);
-        const imageData = ctx.getImageData(0, 0, width, height);
-        return {
-          image: imageData,
-          options: { pixelRatio: 1 }
-        };
-      }catch(err){
-        console.error(err);
-        return null;
-      }
-    }
-    // For accent/big pills, use original sizing logic
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage);
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
@@ -1419,16 +1392,23 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    // Base sprite: use image as-is, no tinting
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, null, 1, false);
-    // Accent sprite: use image as-is, no tinting
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
-    // Hover sprite: use hover image if available, otherwise use accent
-    const hoverSprite = assets.hover ? buildMarkerLabelPillSprite(assets.hover, null, 1, false) : accentSprite;
+    if(!assets || !assets.base){
+      return null;
+    }
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
+    let accentSprite = null;
+    if(assets.highlight){
+      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
+    }
+    if(!accentSprite){
+      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1);
+    }
+    if(!baseSprite){
+      return null;
+    }
     markerLabelPillSpriteCache = {
       base: baseSprite,
-      highlight: accentSprite,
-      hover: hoverSprite
+      highlight: accentSprite || baseSprite
     };
     return markerLabelPillSpriteCache;
   }
@@ -1439,24 +1419,15 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const targetMap = mapInstance || map;
-    // Handle pill sprite IDs - these are loaded from database
-    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID || id === MARKER_LABEL_BG_HOVER_ID){
-      try {
-        const sprites = await ensureMarkerLabelPillSprites();
-        if(!sprites){
-          return null;
-        }
-        if(id === MARKER_LABEL_BG_ID){
-          return sprites.base || null;
-        }
-        if(id === MARKER_LABEL_BG_HOVER_ID){
-          return sprites.hover || sprites.highlight || sprites.base || null;
-        }
-        return sprites.highlight || sprites.base || null;
-      } catch(e) {
-        console.error('Error loading pill sprites:', e);
-        return null;
+    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
+      const sprites = await ensureMarkerLabelPillSprites();
+      if(!sprites){
+        return {
+          image: createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx),
+          options: { pixelRatio: 1 }
+        };
       }
+      return id === MARKER_LABEL_BG_ID ? sprites.base : (sprites.highlight || sprites.base);
     }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
@@ -18764,7 +18735,7 @@ function makePosts(){
       // Small pill: Switch to hover pill sprite when highlighted, otherwise use base sprite
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = ['case', highlightedStateExpression, MARKER_LABEL_BG_HOVER_ID, MARKER_LABEL_BG_ID];
+      const smallPillIconImageExpression = MARKER_LABEL_BG_ID;
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
@@ -18876,55 +18847,6 @@ function makePosts(){
           map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
         }catch(e){
           console.error('Failed to update label text layer:', e);
-        }
-      }
-      
-      // Add big map card labels (3 lines, 145px max width, sort-keys 5, 6, 7)
-      // Big labels should show when post is open/active (when big pill is visible)
-      const bigLabelTextLayerId = 'big-map-card-label';
-      const bigLabelOffsetEm = 30 / textSize; // 30px in em units (big pill offset)
-      const bigLabelTextSize = 14; // Slightly larger for big labels
-      if(!map.getLayer(bigLabelTextLayerId)){
-        try{
-          map.addLayer({
-            id: bigLabelTextLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerLabelFilter,
-            minzoom: markerLabelMinZoom,
-            maxzoom: 24,
-            layout:{
-              'text-field': ['coalesce', ['get', 'label'], ''],
-              'text-size': bigLabelTextSize,
-              'text-line-height': 1.2,
-              'text-max-width': 145,
-              'text-anchor': 'left',
-              'text-justify': 'left',
-              'text-offset': [bigLabelOffsetEm, 0],
-              'text-allow-overlap': true,
-              'text-ignore-placement': true,
-              'text-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 7, 6]
-            },
-            paint:{
-              'text-color': '#ffffff',
-              'text-opacity': ['case', activeStateExpression, 1, 0], // Only show when active/clicked (isActive), not on hover
-              'text-halo-color': 'rgba(0,0,0,0.4)',
-              'text-halo-width': 1,
-              'text-halo-blur': 1
-            }
-          });
-        }catch(e){
-          console.error('Failed to add big label text layer:', e);
-        }
-      }
-      if(map.getLayer(bigLabelTextLayerId)){
-        try{ 
-          map.setFilter(bigLabelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 7, 6]);
-        }catch(e){
-          console.error('Failed to update big label text layer:', e);
         }
       }
       
