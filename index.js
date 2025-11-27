@@ -18730,10 +18730,10 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Use expression to switch between default and accent sprites based on isHighlighted
+      // Small pill: Always use small-map-card-pill sprite, never resize or recolor
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
+      const smallPillIconImageExpression = 'small-map-card-pill';
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
@@ -18790,7 +18790,7 @@ function makePosts(){
         // Update properties that can change (filter, opacity, and icon-image for small pill)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        // Update icon-image for small pill layer (uses expression to switch sprites)
+        // Update icon-image for small pill layer (always uses small-map-card-pill, never switches)
         if(id === 'small-map-card-pill' && iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
         }
