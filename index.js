@@ -1216,12 +1216,15 @@ let __notifyMapOnInteraction = null;
 
   const MARKER_LABEL_BG_ID = 'small-map-card-pill';
   const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
-  const MARKER_LABEL_BG_HOVER_ID = 'hover-map-card-pill';
+  const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
+  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
   const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-pill', 'big-map-card-pill'];
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
+  const markerLabelCompositeStore = new Map();
   let markerLabelPillImagePromise = null;
+  let markerLabelPillSpriteCache = null;
 
   function nowTimestamp(){
     try{
@@ -1257,44 +1260,12 @@ let __notifyMapOnInteraction = null;
   }
 
   // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds)
-  // Uses these images directly via ensureMarkerLabelPillSprites()
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    // Load from admin settings - no hardcoded defaults
-    let baseUrl = null;
-    let accentUrl = null;
-    let hoverUrl = null;
-    
-    try {
-      const response = await fetch('/gateway.php?action=get-admin-settings');
-      if(response.ok){
-        const data = await response.json();
-        if(data.success && data.settings){
-          if(data.settings.small_map_card_pill){
-            baseUrl = data.settings.small_map_card_pill;
-          }
-          if(data.settings.big_map_card_pill){
-            accentUrl = data.settings.big_map_card_pill;
-          }
-          if(data.settings.hover_map_card_pill){
-            hoverUrl = data.settings.hover_map_card_pill;
-          }
-        }
-      }
-    } catch(err) {
-      console.error('Failed to load pill image settings:', err);
-    }
-    
-    // Use hardcoded fallback URLs if database settings are not available
-    if(!baseUrl){
-      baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    }
-    if(!accentUrl){
-      accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
-    }
-    
+    const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
+    const accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl).catch(() => null)
@@ -1331,6 +1302,22 @@ let __notifyMapOnInteraction = null;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
+  function drawMarkerLabelComposite(ctx, image, x, y, width, height){
+    if(!ctx || !image){
+      return;
+    }
+    const scale = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.scale(scale, scale);
+    try{
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
+    }catch(err){
+      console.error(err);
+    }
+    ctx.restore();
+  }
 
   function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
     if(!sourceImage){
@@ -1381,8 +1368,6 @@ let __notifyMapOnInteraction = null;
     };
   }
 
-  let markerLabelPillSpriteCache = null;
-
   async function ensureMarkerLabelPillSprites(){
     if(markerLabelPillSpriteCache){
       return markerLabelPillSpriteCache;
@@ -1424,6 +1409,43 @@ let __notifyMapOnInteraction = null;
         };
       }
       return id === MARKER_LABEL_BG_ID ? sprites.base : (sprites.highlight || sprites.base);
+    }
+    if(id && id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
+      const isAccent = id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
+      const baseId = isAccent ? id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : id;
+      const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+      if(!spriteId){
+        return null;
+      }
+      const meta = markerLabelCompositeStore && markerLabelCompositeStore.get ? markerLabelCompositeStore.get(spriteId) : null;
+      if(!meta){
+        return null;
+      }
+      if(typeof ensureMarkerLabelCompositeAssets === 'function'){
+      const assets = await ensureMarkerLabelCompositeAssets(targetMap, spriteId, meta);
+      if(!assets || !assets.base){
+        return null;
+      }
+        const updatedMeta = markerLabelCompositeStore.get(spriteId) || assets.meta || meta;
+        if(isAccent){
+          const image = updatedMeta && (updatedMeta.highlightImage || updatedMeta.image);
+          if(!image){
+            return null;
+          }
+          return {
+            image,
+            options: updatedMeta.highlightOptions || updatedMeta.options || {}
+          };
+        }
+        if(updatedMeta && updatedMeta.image){
+          return {
+            image: updatedMeta.image,
+            options: updatedMeta.options || {}
+          };
+        }
+        return null;
+      }
+      return null;
     }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
@@ -18728,7 +18750,7 @@ function makePosts(){
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Switch to hover pill sprite when highlighted, otherwise use base sprite
+      // Small pill: Use base sprite
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
       const smallPillIconImageExpression = MARKER_LABEL_BG_ID;
@@ -18788,7 +18810,7 @@ function makePosts(){
         // Update properties that can change (filter, opacity, and icon-image for small pill)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        // Update icon-image for small pill layer (switches to hover pill when highlighted)
+        // Update icon-image for small pill layer
         if(id === 'small-map-card-pill' && iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
         }
