@@ -1869,7 +1869,6 @@ let __notifyMapOnInteraction = null;
               
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
-              window.adminIconFolder = data.settings.admin_icon_folder || 'assets/admin-icons';
               
               // Store map shadow and console filter settings
               if(data.settings.map_shadow !== undefined){
@@ -2098,10 +2097,10 @@ let __notifyMapOnInteraction = null;
                 });
               });
               
-              // Initialize admin icon folder input
-              const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
-              if(adminIconFolderInput){
-                adminIconFolderInput.value = window.adminIconFolder || 'assets/admin-icons';
+              // Initialize icon folder input
+              const iconFolderInput = document.getElementById('adminIconFolder');
+              if(iconFolderInput){
+                iconFolderInput.value = window.iconFolder;
               }
               
               // Initialize system images folder input
@@ -21963,13 +21962,13 @@ function openPanel(m){
         if(!isNaN(speedValue)) settings.spin_speed = speedValue;
       }
       
-      // Include admin icon folder setting
-      const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
-      if(adminIconFolderInput){
-        const adminIconFolderValue = adminIconFolderInput.value.trim();
-        if(adminIconFolderValue){
-          settings.admin_icon_folder = adminIconFolderValue;
-          window.adminIconFolder = adminIconFolderValue;
+      // Include icon folder setting
+      const iconFolderInput = document.getElementById('adminIconFolder');
+      if(iconFolderInput){
+        const iconFolderValue = iconFolderInput.value.trim();
+        if(iconFolderValue){
+          settings.icon_folder = iconFolderValue;
+          window.iconFolder = iconFolderValue;
         }
       }
       
@@ -22103,14 +22102,14 @@ function openPanel(m){
       });
     });
     
-    // Auto-save admin icon folder setting on blur
-    const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
-    if(adminIconFolderInput && !adminIconFolderInput.dataset.autoSaveAdded){
-      adminIconFolderInput.dataset.autoSaveAdded = 'true';
-      adminIconFolderInput.addEventListener('blur', ()=>{
+    // Auto-save icon folder setting on blur
+    const iconFolderInput = document.getElementById('adminIconFolder');
+    if(iconFolderInput && !iconFolderInput.dataset.autoSaveAdded){
+      iconFolderInput.dataset.autoSaveAdded = 'true';
+      iconFolderInput.addEventListener('blur', ()=>{
         autoSaveMapSettings();
       });
-      adminIconFolderInput.addEventListener('change', ()=>{
+      iconFolderInput.addEventListener('change', ()=>{
         autoSaveMapSettings();
       });
     }
