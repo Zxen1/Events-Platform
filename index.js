@@ -18652,7 +18652,7 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       // Small pill: Use expression to switch between default and accent sprites based on isHighlighted, opacity always 1
-      const smallPillIconImageExpression = ['case', highlightedStateExpression, MARKER_LABEL_BG_ACCENT_ID, MARKER_LABEL_BG_ID];
+      const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
       const smallPillOpacity = 1;
       // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
