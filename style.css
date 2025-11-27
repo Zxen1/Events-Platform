@@ -1599,10 +1599,8 @@ button[aria-expanded="true"] .results-arrow{
   max-width:400px;
   width:100%;
   background:#222222;
-  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:16px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.4);
   box-sizing:border-box;
 }
 
@@ -1685,10 +1683,15 @@ button[aria-expanded="true"] .results-arrow{
   flex-shrink:0;
 }
 
+#tab-map .iconpicker-preview{
+  border:none;
+}
+
 #tab-map .iconpicker-preview img{
   max-width:100%;
   max-height:100%;
   display:none;
+  border:none;
 }
 
 #tab-map .iconpicker-preview.has-image{
@@ -8993,10 +8996,8 @@ html, body { cursor: auto !important; }
               width:100%;
               box-sizing:border-box;
               background:#222222;
-              border:1px solid rgba(255,255,255,0.15);
               border-radius:8px;
               padding:16px;
-              box-shadow:0 8px 24px rgba(0,0,0,0.4);
             }
             
             #tab-messages .iconpicker-container{
@@ -9071,9 +9072,14 @@ html, body { cursor: auto !important; }
             #tab-messages .iconpicker-preview.has-image img{
               display:block;
             }
+            #tab-messages .iconpicker-preview{
+              border:none;
+            }
+            
             #tab-messages .iconpicker-preview img{
               width:30px;
               height:30px;
+              border:none;
             }
             #tab-messages .formbuilder-inline-save{
               display:flex;
