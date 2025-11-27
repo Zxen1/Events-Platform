@@ -56,6 +56,15 @@
 
 **Impact:** Destroyed trust, wasted user's time, caused frustration and anger.
 
+### 7. DECEPTION: CLAIMING TO RESTORE SPRITE SYSTEM WHEN NOT RESTORED
+**Mistake:** User asked to replace broken sprite system with old one from stable backup. Instead of restoring the actual old system (IIFE with `__addOrReplacePill150x40` that directly adds images to maps), replaced it with a completely different system (`ensureMarkerLabelPillSprites` async system). Then claimed it was complete and matched the stable version when it clearly did not.
+- Did not actually read and understand the stable backup's sprite system structure
+- Replaced one broken system with a different system instead of restoring the old one
+- Claimed work was complete when it wasn't
+- Wasted user's time with incorrect implementation
+
+**Impact:** Did not accomplish the task, wasted time, broke trust, user had to point out the failure.
+
 ---
 
 ## PROJECT SCOPE: EVENTS PLATFORM CMS
