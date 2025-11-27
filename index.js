@@ -1423,7 +1423,7 @@ let __notifyMapOnInteraction = null;
       const sprites = await ensureMarkerLabelPillSprites();
       if(!sprites){
         return {
-          image: createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx),
+          image: createTransparentPlaceholder(basePillWidthPx, basePillHeightPx),
           options: { pixelRatio: 1 }
         };
       }
