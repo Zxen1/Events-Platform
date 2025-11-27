@@ -1287,38 +1287,34 @@ let __notifyMapOnInteraction = null;
       console.error('Failed to load pill image settings:', err);
     }
     
-    if(!baseUrl || !accentUrl){
-      const error = new Error('Pill image URLs not found in database settings');
-      markerLabelPillImagePromise = Promise.reject(error);
-      return markerLabelPillImagePromise;
+    // Use hardcoded fallback URLs if database settings are not available
+    if(!baseUrl){
+      baseUrl = 'assets/icons-30/150x40-pill-70.webp';
     }
-    
-    const imagePromises = [
-      loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl)
-    ];
-    
-    // Load hover pill if available, otherwise use accent as fallback
-    // Make hover pill loading resilient - if it fails, fallback to accent
-    let hoverPromise = null;
-    if(hoverUrl){
-      hoverPromise = loadMarkerLabelImage(hoverUrl).catch(err => {
-        console.warn('Failed to load hover pill image, using accent as fallback:', err);
-        return null; // Will fallback to accentImg
-      });
+    if(!accentUrl){
+      accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
     }
     
     const promise = Promise.all([
-      ...imagePromises,
-      hoverPromise || Promise.resolve(null)
-    ]).then(([baseImg, accentImg, hoverImg]) => {
-      return { 
-        base: baseImg, 
-        highlight: accentImg,
-        hover: hoverImg || accentImg // Use hover if available, otherwise fallback to accent
-      };
+      loadMarkerLabelImage(baseUrl),
+      loadMarkerLabelImage(accentUrl).catch(() => null)
+    ]).then(([baseImg, accentImg]) => {
+      if(!baseImg){
+        return null;
+      }
+      return { base: baseImg, highlight: accentImg };
+    }).catch(err => {
+      console.error(err);
+      return null;
     });
     markerLabelPillImagePromise = promise;
+    promise.then(result => {
+      if(!result){
+        markerLabelPillImagePromise = null;
+      }
+    }).catch(() => {
+      markerLabelPillImagePromise = null;
+    });
     return markerLabelPillImagePromise;
   }
 
