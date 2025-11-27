@@ -18676,16 +18676,36 @@ function makePosts(){
       }
       
       // Ensure pill sprites are loaded before creating layers
-      const pillSprites = await ensureMarkerLabelPillSprites();
-      if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
-        try{
-          map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
-        }catch(e){}
-      }
-      if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-        try{
-          map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
-        }catch(e){}
+      try {
+        const pillSprites = await ensureMarkerLabelPillSprites();
+        if(!pillSprites){
+          console.error('Failed to load pill sprites: ensureMarkerLabelPillSprites returned null');
+        } else {
+          if(pillSprites.base && pillSprites.base.image){
+            if(!map.hasImage(MARKER_LABEL_BG_ID)){
+              try{
+                map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+              }catch(e){
+                console.error('Failed to add base pill sprite to map:', e);
+              }
+            }
+          } else {
+            console.error('Base pill sprite is missing or invalid');
+          }
+          if(pillSprites.highlight && pillSprites.highlight.image){
+            if(!map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+              try{
+                map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+              }catch(e){
+                console.error('Failed to add accent pill sprite to map:', e);
+              }
+            }
+          } else {
+            console.error('Accent pill sprite is missing or invalid');
+          }
+        }
+      } catch(e) {
+        console.error('Error loading pill sprites:', e);
       }
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
