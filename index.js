@@ -18739,7 +18739,6 @@ function makePosts(){
             },
             paint:{
               'text-color': '#ffffff',
-              'text-opacity': mapCardDisplay === 'hover_only' ? 0 : 1,
               'text-halo-color': 'rgba(0,0,0,0.4)',
               'text-halo-width': 1,
               'text-halo-blur': 1
@@ -18822,10 +18821,6 @@ function makePosts(){
         const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
         if(map.getLayer('small-map-card-pill')){
           try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
-        }
-        // Hide labels in hover_only mode (same as pills)
-        if(map.getLayer('small-map-card-label')){
-          try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
         }
         // marker-icon visibility/opacity handled in final ordering section
       }
