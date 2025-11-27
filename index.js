@@ -788,6 +788,152 @@ if (typeof slugify !== 'function') {
 }
 
 // Extracted from <script>
+// === 150x40 pill provider (sprite id: marker-label-bg) ===
+(function(){
+  const PILL_ID = 'marker-label-bg';
+  const ACCENT_ID = `${PILL_ID}--accent`;
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40-pill-70.webp';
+  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-2f3b73.webp';
+  let cachedImages = null;
+  let loadingTask = null;
+  const pendingMaps = new Set();
+
+  function applyImageToMap(map){
+    if(!map || typeof map.hasImage !== 'function' || !cachedImages){
+      return;
+    }
+    try{
+      if(map.hasImage(PILL_ID)){
+        try{ map.removeImage(PILL_ID); }catch(e){}
+      }
+      if(map.hasImage(ACCENT_ID)){
+        try{ map.removeImage(ACCENT_ID); }catch(e){}
+      }
+      const baseImage = cachedImages.base || cachedImages.accent;
+      if(baseImage){
+        map.addImage(PILL_ID, baseImage, { pixelRatio: 1 });
+      }
+      const accentImage = cachedImages.accent || cachedImages.base;
+      if(accentImage){
+        map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
+      }
+    }catch(e){ /* silent */ }
+  }
+
+  function tintImage(sourceImage, color, alpha = 1){
+    if(!sourceImage){
+      return null;
+    }
+    try{
+      const width = sourceImage.naturalWidth || sourceImage.width || 150;
+      const height = sourceImage.naturalHeight || sourceImage.height || 40;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(width));
+      canvas.height = Math.max(1, Math.round(height));
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scale = window.devicePixelRatio || 1;
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sourceImage, 0, 0, canvas.width / scale, canvas.height / scale);
+      ctx.restore();
+      if(color){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      return canvas;
+    }catch(err){
+      return null;
+    }
+  }
+
+  function prepareCachedImages(baseImage, accentImage){
+    if(!baseImage){
+      cachedImages = null;
+      return;
+    }
+    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
+    let highlight = null;
+    if(accentImage){
+      highlight = tintImage(accentImage, null, 1) || accentImage;
+    }
+    if(!highlight){
+      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
+    }
+    cachedImages = { base: tintedBase, accent: highlight };
+  }
+
+  function loadImage(url){
+    if(!url){
+      return Promise.resolve(null);
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(e){}
+      try{ img.decoding = 'async'; }catch(e){}
+      img.onload = () => {
+        if(img.naturalWidth > 0 && img.naturalHeight > 0){
+          resolve(img);
+        }else{
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+      if(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0){
+        resolve(img);
+      }
+    });
+  }
+
+  function ensureImage(){
+    if(cachedImages || loadingTask){
+      return;
+    }
+    loadingTask = Promise.all([
+      loadImage(PILL_BASE_IMAGE_URL),
+      loadImage(PILL_ACCENT_IMAGE_URL)
+    ]).then(([baseImage, accentImage]) => {
+      if(baseImage){
+        prepareCachedImages(baseImage, accentImage);
+        if(cachedImages){
+          pendingMaps.forEach((map) => applyImageToMap(map));
+        }
+      }
+    }).catch(() => {
+      cachedImages = null;
+    }).finally(() => {
+      pendingMaps.clear();
+      loadingTask = null;
+    });
+  }
+
+  function addOrReplacePill(map){
+    try{
+      if(!map || typeof map.hasImage !== 'function'){
+        return;
+      }
+      if(cachedImages){
+        applyImageToMap(map);
+        return;
+      }
+      pendingMaps.add(map);
+      ensureImage();
+    }catch(e){ /* silent */ }
+  }
+
+  window.__addOrReplacePill150x40 = addOrReplacePill;
+  ensureImage();
+})();
 
 // Extracted from <script>
 let __userInteractionObserved = false;
@@ -823,8 +969,7 @@ let __notifyMapOnInteraction = null;
     }, { capture: true });
 
 // Extracted from <script>
-
-  async function ensureMapboxCssFor(container) {
+async function ensureMapboxCssFor(container) {
     const ver = (window.MAPBOX_VERSION || "v3.15.0").replace(/^v/,'v');
     const cssHref = `https://api.mapbox.com/mapbox-gl-js/${ver}/mapbox-gl.css`;
 
@@ -1003,44 +1148,23 @@ let __notifyMapOnInteraction = null;
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-
-// ============================================================================
-// MAP MARKERS & MAP CARDS SYSTEM
-// ============================================================================
-// All code related to map markers (icons), marker clustering (balloons), and map cards (pills) is organized here.
-// Note: Markers are icons centered over lat/lng coordinates. Pills are map card backgrounds.
-// Balloons are clustering icons used at low zoom levels.
-// Sections:
-// 1. Constants & Configuration (lines ~1005-1202)
-// 2. Text Measurement & Formatting Helpers (lines ~1022-1183)
-// 3. Map Card System (lines ~1387-1547) - Map card background images (pills)
-// 5. Marker Clustering (Balloons) (lines ~2546-2912) - Balloon icons that cluster nearby markers
-// 6. Small Map Card DOM Functions (lines ~3219-3447)
-// 7. Marker Data Building & Collections (lines ~3448-6663)
-// 8. Map Source Integration (lines ~19001+)
-// ============================================================================
-
   const markerIconSize = 1;
   const markerIconBaseSizePx = 30;
-  const basePillWidthPx = 150;
-  const basePillHeightPx = 40;
-  let accentPillWidthPx = null;
-  let accentPillHeightPx = null;
+  const markerLabelBackgroundWidthPx = 150;
+  const markerLabelBackgroundHeightPx = 40;
   const markerLabelTextGapPx = 5;
   const markerLabelMarkerInsetPx = 5;
   const markerLabelTextRightPaddingPx = 5;
-  const markerLabelTextPaddingPx = 10; // Fixed padding for labels (no icon reference)
-  const markerLabelTextAreaWidthPx = Math.max(0, basePillWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
-  const markerLabelTextAreaWidthPxSmall = 100; // For small map cards (non-multi-post venue)
+  const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
+  const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelPillLeftOffsetPx = -20; // Left edge of pill is 20px left of lat/lng
-  const markerLabelTextLeftOffsetPx = 20; // Left edge of label is 20px right of lat/lng
+  const markerLabelBgTranslatePx = 0;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
+  const markerLabelCompositePlaceholderIds = new Set();
 
-  // --- Section 2: Text Measurement & Formatting Helpers ---
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
       return markerLabelMeasureContext;
@@ -1110,62 +1234,55 @@ let __notifyMapOnInteraction = null;
     }
     const lines = [];
     let remaining = normalized;
-    const ellipsis = markerLabelEllipsisChar;
-    
-    // First line: don't break words
-    if(lines.length < maxLines && remaining){
-      const words = remaining.split(/\s+/);
-      let firstLine = '';
-      let firstLineWords = [];
-      
-      for(let i = 0; i < words.length; i++){
-        const testLine = firstLineWords.length > 0 
-          ? firstLineWords.join(' ') + ' ' + words[i]
-          : words[i];
-        if(ctx.measureText(testLine).width <= widthPx){
-          firstLineWords.push(words[i]);
-          firstLine = testLine;
+    while(remaining && lines.length < maxLines){
+      if(lines.length === maxLines - 1){
+        lines.push(shortenMarkerLabelText(remaining, widthPx));
+        break;
+      }
+      let low = 1;
+      let high = remaining.length;
+      let bestIndex = 0;
+      while(low <= high){
+        const mid = Math.floor((low + high) / 2);
+        const candidate = remaining.slice(0, mid).trimEnd();
+        if(!candidate){
+          low = mid + 1;
+          continue;
+        }
+        if(ctx.measureText(candidate).width <= widthPx){
+          bestIndex = mid;
+          low = mid + 1;
         } else {
-          break;
+          high = mid - 1;
         }
       }
-      
-      if(firstLineWords.length > 0){
-        lines.push(firstLine);
-        remaining = words.slice(firstLineWords.length).join(' ');
-      } else {
-        // If even the first word is too long, put it on second line
-        remaining = remaining;
+      let line = remaining.slice(0, bestIndex).trimEnd();
+      const leftoverRaw = remaining.slice(bestIndex);
+      const leftoverHadLeadingWhitespace = /^\s/.test(leftoverRaw);
+      let leftover = leftoverRaw.trimStart();
+      if(leftover){
+        const lastSpace = line.lastIndexOf(' ');
+        if(lastSpace > 0){
+          const candidate = line.slice(0, lastSpace).trimEnd();
+          const movedBase = line.slice(lastSpace + 1);
+          const moved = (leftoverHadLeadingWhitespace ? `${movedBase} ${leftover}` : `${movedBase}${leftover}`).trim();
+          if(candidate && ctx.measureText(candidate).width <= widthPx){
+            line = candidate;
+            leftover = moved;
+          }
+        }
       }
-    }
-    
-    // Second line: can break words, add ellipses if incomplete
-    if(lines.length < maxLines && remaining){
-      if(ctx.measureText(remaining).width <= widthPx){
+      if(!line){
+        lines.push(shortenMarkerLabelText(remaining, widthPx));
+        break;
+      }
+      lines.push(line);
+      remaining = leftover;
+      if(remaining && ctx.measureText(remaining).width <= widthPx && lines.length < maxLines){
         lines.push(remaining);
-      } else {
-        // Need to truncate with ellipses
-        let low = 0;
-        let high = remaining.length;
-        let best = ellipsis;
-        while(low <= high){
-          const mid = Math.floor((low + high) / 2);
-          if(mid <= 0){
-            high = mid - 1;
-            continue;
-          }
-          const candidate = remaining.slice(0, mid) + ellipsis;
-          if(ctx.measureText(candidate).width <= widthPx){
-            best = candidate;
-            low = mid + 1;
-          } else {
-            high = mid - 1;
-          }
-        }
-        lines.push(best);
+        break;
       }
     }
-    
     return lines;
   }
 
@@ -1190,10 +1307,7 @@ let __notifyMapOnInteraction = null;
 
   function getMarkerLabelLines(p){
     const title = p && p.title ? p.title : '';
-    // Use 100px width for small map cards (non-multi-post venue cards only)
-    const isMultiVenue = Boolean(p && (p.isMultiVenue || (p.multiCount && Number(p.multiCount) > 1) || (Array.isArray(p.multiPostIds) && p.multiPostIds.length > 1)));
-    const widthForLines = isMultiVenue ? markerLabelTextAreaWidthPx : markerLabelTextAreaWidthPxSmall;
-    const markerTitleLines = splitTextAcrossLines(title, widthForLines, 2);
+    const markerTitleLines = splitTextAcrossLines(title, markerLabelTextAreaWidthPx, 2);
     while(markerTitleLines.length < 2){ markerTitleLines.push(''); }
     const cardTitleLines = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
     while(cardTitleLines.length < 2){ cardTitleLines.push(''); }
@@ -1214,11 +1328,22 @@ let __notifyMapOnInteraction = null;
     return lines.line1;
   }
 
-  const MARKER_LABEL_BG_ID = 'small-map-card-pill';
-  const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
+  const MARKER_LABEL_BG_ID = 'marker-label-bg';
+  const MARKER_LABEL_BG_ACCENT_ID = `${MARKER_LABEL_BG_ID}--accent`;
+  const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
+  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
   const VISIBLE_MARKER_LABEL_LAYERS = ['marker-label', 'marker-label-highlight'];
+  const markerLabelCompositeStore = new Map();
+  const markerLabelCompositePending = new Map();
+  let lastInViewMarkerLabelSpriteIds = new Set();
   // Mapbox GL JS enforces a hard limit on the number of images that can be
-  // registered with a style (currently ~1000).
+  // registered with a style (currently ~1000). Generating a composite sprite
+  // for every single marker label without a cap quickly exhausts that budget,
+  // which in turn causes Mapbox to render the fallback pill without any icon
+  // or text. Each composite registers both a base pill and its accent variant,
+  // so cap the composites to keep the total image count comfortably below the
+  // platform ceiling.
+  const MARKER_LABEL_COMPOSITE_LIMIT = 900;
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
@@ -1231,8 +1356,180 @@ let __notifyMapOnInteraction = null;
     return Date.now();
   }
 
+  function collectActiveCompositeEntries(mapInstance){
+    const entries = [];
+    if(!mapInstance) return entries;
+    markerLabelCompositeStore.forEach((meta, spriteId) => {
+      if(!meta || !meta.image) return;
+      const compositeId = markerLabelCompositeId(spriteId);
+      let present = false;
+      if(typeof mapInstance.hasImage === 'function'){
+        try{ present = !!mapInstance.hasImage(compositeId); }
+        catch(err){ present = false; }
+      }
+      if(!present) return;
+      entries.push({
+        spriteId,
+        compositeId,
+        priority: Boolean(meta.priority),
+        inView: Boolean(meta.inView),
+        lastUsed: Number.isFinite(meta.lastUsed) ? meta.lastUsed : 0
+      });
+    });
+    return entries;
+  }
 
-  // --- Section 3: Map Card System ---
+  function touchMarkerLabelCompositeMeta(spriteId, options = {}){
+    if(!spriteId) return null;
+    const opts = options || {};
+    const meta = markerLabelCompositeStore.get(spriteId) || {};
+    const shouldUpdateTime = opts.updateTimestamp !== false;
+    if(shouldUpdateTime){
+      const ts = Number.isFinite(opts.timestamp) ? opts.timestamp : nowTimestamp();
+      meta.lastUsed = ts;
+    } else if(!Number.isFinite(meta.lastUsed)){
+      meta.lastUsed = 0;
+    }
+    if(opts.inView !== undefined){
+      meta.inView = Boolean(opts.inView);
+    }
+    if(opts.priority !== undefined){
+      meta.priority = Boolean(opts.priority);
+    }
+    markerLabelCompositeStore.set(spriteId, meta);
+    return meta;
+  }
+
+  function refreshInViewMarkerLabelComposites(mapInstance){
+    if(!mapInstance || typeof mapInstance.queryRenderedFeatures !== 'function'){
+      return;
+    }
+    let features = [];
+    const layersToQuery = Array.isArray(VISIBLE_MARKER_LABEL_LAYERS)
+      ? VISIBLE_MARKER_LABEL_LAYERS.filter(layerId => {
+          if(!layerId){
+            return false;
+          }
+          if(typeof mapInstance.getLayer !== 'function'){
+            return true;
+          }
+          try{
+            return Boolean(mapInstance.getLayer(layerId));
+          }catch(err){
+            return false;
+          }
+        })
+      : [];
+    try{
+      if(layersToQuery.length){
+        features = mapInstance.queryRenderedFeatures({ layers: layersToQuery });
+      }
+    }catch(err){
+      features = [];
+    }
+    const nextIds = new Set();
+    const timestamp = nowTimestamp();
+    features.forEach(feature => {
+      if(!feature || !feature.properties) return;
+      const rawSpriteId = feature.properties.labelSpriteId ?? feature.properties.spriteId;
+      if(rawSpriteId === undefined || rawSpriteId === null) return;
+      const spriteId = String(rawSpriteId);
+      if(!spriteId) return;
+      if(nextIds.has(spriteId)){
+        touchMarkerLabelCompositeMeta(spriteId, { inView: true, updateTimestamp: false });
+        return;
+      }
+      nextIds.add(spriteId);
+      touchMarkerLabelCompositeMeta(spriteId, { inView: true, timestamp });
+    });
+    lastInViewMarkerLabelSpriteIds.forEach(spriteId => {
+      if(nextIds.has(spriteId)) return;
+      const meta = markerLabelCompositeStore.get(spriteId);
+      if(!meta) return;
+      meta.inView = false;
+      markerLabelCompositeStore.set(spriteId, meta);
+    });
+    lastInViewMarkerLabelSpriteIds = nextIds;
+  }
+
+  function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
+    if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
+      return;
+    }
+    let zoomForBudget = NaN;
+    if(typeof mapInstance.getZoom === 'function'){
+      try{ zoomForBudget = mapInstance.getZoom(); }
+      catch(err){ zoomForBudget = NaN; }
+    }
+    if(Number.isFinite(zoomForBudget) && zoomForBudget >= MARKER_SPRITE_RETAIN_ZOOM){
+      mapInstance.__retainAllMarkerSprites = true;
+    }
+    if(mapInstance.__retainAllMarkerSprites){
+      return;
+    }
+    if(typeof mapInstance.removeImage !== 'function'){
+      return;
+    }
+    const { keep = [], reserve = 0 } = options || {};
+    const keepList = Array.isArray(keep) ? keep : [keep];
+    const keepSet = new Set(keepList.filter(Boolean));
+    const entries = collectActiveCompositeEntries(mapInstance);
+    if(!entries.length){
+      return;
+    }
+    const effectiveLimit = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, reserve));
+    if(entries.length <= effectiveLimit){
+      return;
+    }
+    entries.forEach(entry => {
+      entry.keep = keepSet.has(entry.spriteId);
+    });
+    entries.sort((a, b) => {
+      if(a.keep !== b.keep){
+        return a.keep ? -1 : 1;
+      }
+      if(a.inView !== b.inView){
+        return a.inView ? -1 : 1;
+      }
+      if(a.priority !== b.priority){
+        return a.priority ? -1 : 1;
+      }
+      return (b.lastUsed || 0) - (a.lastUsed || 0);
+    });
+    entries.slice(effectiveLimit).forEach(entry => {
+      if(keepSet.has(entry.spriteId)) return;
+      const meta = markerLabelCompositeStore.get(entry.spriteId);
+      if(meta){
+        if(meta.image){
+          try{ delete meta.image; }catch(err){ meta.image = null; }
+        }
+        if(meta.options){
+          try{ delete meta.options; }catch(err){ meta.options = undefined; }
+        }
+        if(meta.highlightImage){
+          try{ delete meta.highlightImage; }catch(err){ meta.highlightImage = null; }
+        }
+        if(meta.highlightOptions){
+          try{ delete meta.highlightOptions; }catch(err){ meta.highlightOptions = undefined; }
+        }
+        meta.inView = false;
+        markerLabelCompositeStore.set(entry.spriteId, meta);
+      }
+      markerLabelCompositePending.delete(entry.spriteId);
+      try{
+        if(typeof mapInstance.hasImage === 'function'){
+          if(mapInstance.hasImage(entry.compositeId)){
+            mapInstance.removeImage(entry.compositeId);
+          }
+          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          if(mapInstance.hasImage(highlightId)){
+            mapInstance.removeImage(highlightId);
+          }
+        }
+      }catch(err){}
+    });
+  }
+
   function loadMarkerLabelImage(url){
     return new Promise((resolve, reject) => {
       if(!url){
@@ -1255,64 +1552,70 @@ let __notifyMapOnInteraction = null;
     });
   }
 
-  // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds)
-  // Uses these images directly via ensureMarkerLabelPillSprites()
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    // Load from admin settings
-    let baseUrl = 'assets/system-images/150x40-pill-70.webp';
-    let accentUrl = 'assets/system-images/225x60-pill-2f3b73.webp';
-    
-    try {
-      const response = await fetch('/gateway.php?action=get-admin-settings');
-      if(response.ok){
-        const data = await response.json();
-        if(data.success && data.settings){
-          if(data.settings.small_map_card_pill){
-            baseUrl = data.settings.small_map_card_pill;
-          }
-          if(data.settings.big_map_card_pill){
-            accentUrl = data.settings.big_map_card_pill;
-          }
-        }
-      }
-    } catch(err) {
-      console.error('Failed to load pill image settings:', err);
-    }
-    
+    const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
+    const accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl)
+      loadMarkerLabelImage(accentUrl).catch(() => null)
     ]).then(([baseImg, accentImg]) => {
+      if(!baseImg){
+        return null;
+      }
       return { base: baseImg, highlight: accentImg };
+    }).catch(err => {
+      console.error(err);
+      return null;
     });
     markerLabelPillImagePromise = promise;
+    promise.then(result => {
+      if(!result){
+        markerLabelPillImagePromise = null;
+      }
+    }).catch(() => {
+      markerLabelPillImagePromise = null;
+    });
     return markerLabelPillImagePromise;
   }
 
-  function computeMarkerLabelCanvasDimensions(sourceImage, isAccent = false){
-    if(isAccent){
-      const width = accentPillWidthPx !== null ? accentPillWidthPx : (sourceImage && (sourceImage.naturalWidth || sourceImage.width) ? (sourceImage.naturalWidth || sourceImage.width) : basePillWidthPx);
-      const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
-      const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
-      const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
-      const pixelRatio = 1;
-      return { canvasWidth, canvasHeight, pixelRatio };
-    }
-    const canvasWidth = basePillWidthPx;
-    const canvasHeight = basePillHeightPx;
-    const pixelRatio = 1;
+  function computeMarkerLabelCanvasDimensions(sourceImage){
+    const rawWidth = sourceImage && (sourceImage.naturalWidth || sourceImage.width)
+      ? (sourceImage.naturalWidth || sourceImage.width)
+      : markerLabelBackgroundWidthPx;
+    const rawHeight = sourceImage && (sourceImage.naturalHeight || sourceImage.height)
+      ? (sourceImage.naturalHeight || sourceImage.height)
+      : markerLabelBackgroundHeightPx;
+    const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
+    const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
+    const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
+  function drawMarkerLabelComposite(ctx, image, x, y, width, height){
+    if(!ctx || !image){
+      return;
+    }
+    const scale = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.scale(scale, scale);
+    try{
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
+    }catch(err){
+      console.error(err);
+    }
+    ctx.restore();
+  }
 
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
     if(!sourceImage){
       return null;
     }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage);
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
@@ -1364,15 +1667,235 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    if(!assets || !assets.base){
+      return null;
+    }
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
+    let accentSprite = null;
+    if(assets.highlight){
+      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
+    }
+    if(!accentSprite){
+      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1);
+    }
+    if(!baseSprite){
+      return null;
+    }
     markerLabelPillSpriteCache = {
       base: baseSprite,
-      highlight: accentSprite
+      highlight: accentSprite || baseSprite
     };
     return markerLabelPillSpriteCache;
   }
 
+  function markerLabelCompositeId(spriteId){
+    return `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
+  }
+
+  async function createMarkerLabelCompositeTextures(mapInstance, labelSpriteId, meta){
+    if(!labelSpriteId){
+      return null;
+    }
+    const pillAssets = await ensureMarkerLabelPillImage();
+    if(!pillAssets || !pillAssets.base){
+      return null;
+    }
+    const pillImg = pillAssets.base;
+    const pillAccentImg = pillAssets.highlight;
+    const markerSources = window.subcategoryMarkers || {};
+    const iconUrl = meta && meta.iconId ? markerSources[meta.iconId] : null;
+    let iconImg = null;
+    if(iconUrl){
+      try{
+        iconImg = await loadMarkerLabelImage(iconUrl);
+      }catch(err){
+        console.error(err);
+        iconImg = null;
+      }
+    }
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg);
+    let deviceScale = 1;
+    try{
+      const ratio = window.devicePixelRatio;
+      if(Number.isFinite(ratio) && ratio > 0){
+        deviceScale = ratio;
+      }
+    }catch(err){
+      deviceScale = 1;
+    }
+    if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+      deviceScale = 1;
+    }
+    const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
+    const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
+    const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
+    const labelLines = [];
+    const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
+    const line2 = (meta && meta.labelLine2 ? meta.labelLine2 : '').trim();
+    if(line1){
+      labelLines.push({ text: line1, color: '#ffffff' });
+    }
+    if(line2){
+      labelLines.push({ text: line2, color: meta && meta.isMulti ? '#d0d0d0' : '#ffffff' });
+    }
+    const drawForeground = (ctx) => {
+      if(!ctx){
+        return;
+      }
+      try{
+        ctx.imageSmoothingEnabled = true;
+        if('imageSmoothingQuality' in ctx){
+          ctx.imageSmoothingQuality = 'high';
+        }
+      }catch(err){}
+      if(iconImg){
+        const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledPixelRatio;
+        const destX = Math.round(markerLabelMarkerInsetPx * scaledPixelRatio);
+        const destY = Math.round((scaledCanvasHeight - iconSizePx) / 2);
+        drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
+      }
+      if(labelLines.length){
+        const fontSizePx = markerLabelTextSize * scaledPixelRatio;
+        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledPixelRatio);
+        const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
+        let textY = Math.round((scaledCanvasHeight - totalHeight) / 2);
+        if(!Number.isFinite(textY) || textY < 0){
+          textY = 0;
+        }
+        const textX = Math.round(markerLabelTextPaddingPx * scaledPixelRatio);
+        ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 2 * scaledPixelRatio;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 1 * scaledPixelRatio;
+        labelLines.forEach(line => {
+          ctx.fillStyle = line.color;
+          try{
+            ctx.fillText(line.text, textX, textY);
+          }catch(err){
+            console.error(err);
+          }
+          textY += fontSizePx + lineGapPx;
+        });
+        ctx.shadowColor = 'transparent';
+      }
+    };
+    const buildComposite = (backgroundImage, tintColor, tintAlpha = 1) => {
+      if(!backgroundImage){
+        return null;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = scaledCanvasWidth;
+      canvas.height = scaledCanvasHeight;
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      try{
+        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      }catch(err){
+        console.error(err);
+      }
+      if(tintColor){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = tintAlpha;
+        ctx.fillStyle = tintColor;
+        ctx.fillRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      drawForeground(ctx);
+      let imageData = null;
+      try{
+        imageData = ctx.getImageData(0, 0, scaledCanvasWidth, scaledCanvasHeight);
+      }catch(err){
+        console.error(err);
+        imageData = null;
+      }
+      if(!imageData){
+        return null;
+      }
+      return {
+        image: imageData,
+        options: { pixelRatio: Number.isFinite(scaledPixelRatio) && scaledPixelRatio > 0 ? scaledPixelRatio : 1 }
+      };
+    };
+    const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+    let accentComposite = null;
+    if(pillAccentImg){
+      accentComposite = buildComposite(pillAccentImg, null, 1);
+    }
+    if(!accentComposite){
+      accentComposite = buildComposite(pillImg, '#2f3b73', 1);
+    }
+    if(!baseComposite){
+      return null;
+    }
+    const highlightComposite = accentComposite || baseComposite;
+    const nextMeta = Object.assign({}, meta || {}, {
+      image: baseComposite.image,
+      options: baseComposite.options,
+      highlightImage: highlightComposite ? highlightComposite.image : null,
+      highlightOptions: (highlightComposite && highlightComposite.options) || baseComposite.options
+    });
+    markerLabelCompositeStore.set(labelSpriteId, nextMeta);
+    return {
+      base: baseComposite,
+      highlight: highlightComposite,
+      meta: nextMeta
+    };
+  }
+
+  async function ensureMarkerLabelCompositeAssets(mapInstance, labelSpriteId, meta){
+    if(!labelSpriteId){
+      return null;
+    }
+    const existing = markerLabelCompositeStore.get(labelSpriteId);
+    if(existing && existing.image){
+      return {
+        base: { image: existing.image, options: existing.options || {} },
+        highlight: {
+          image: existing.highlightImage || existing.image,
+          options: existing.highlightOptions || existing.options || {}
+        },
+        meta: existing
+      };
+    }
+    if(markerLabelCompositePending.has(labelSpriteId)){
+      try{
+        await markerLabelCompositePending.get(labelSpriteId);
+      }catch(err){
+        console.error(err);
+      }
+      const refreshed = markerLabelCompositeStore.get(labelSpriteId);
+      if(refreshed && refreshed.image){
+        return {
+          base: { image: refreshed.image, options: refreshed.options || {} },
+          highlight: {
+            image: refreshed.highlightImage || refreshed.image,
+            options: refreshed.highlightOptions || refreshed.options || {}
+          },
+          meta: refreshed
+        };
+      }
+    }
+    const task = (async () => {
+      return createMarkerLabelCompositeTextures(mapInstance, labelSpriteId, meta);
+    })();
+    markerLabelCompositePending.set(labelSpriteId, task);
+    try{
+      const generated = await task;
+      if(!generated || !generated.base){
+        return null;
+      }
+      return generated;
+    }finally{
+      markerLabelCompositePending.delete(labelSpriteId);
+    }
+  }
 
   async function generateMarkerImageFromId(id, mapInstance, options = {}){
     if(!id){
@@ -1381,10 +1904,47 @@ let __notifyMapOnInteraction = null;
     const targetMap = mapInstance || map;
     if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
       const sprites = await ensureMarkerLabelPillSprites();
-      if(id === MARKER_LABEL_BG_ID){
-        return sprites.base;
+      if(!sprites){
+        return {
+          image: createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx),
+          options: { pixelRatio: 1 }
+        };
       }
-      return sprites.highlight;
+      return id === MARKER_LABEL_BG_ID ? sprites.base : (sprites.highlight || sprites.base);
+    }
+    if(id && id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
+      const isAccent = id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
+      const baseId = isAccent ? id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : id;
+      const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+      if(!spriteId){
+        return null;
+      }
+      const meta = markerLabelCompositeStore.get(spriteId);
+      if(!meta){
+        return null;
+      }
+      const assets = await ensureMarkerLabelCompositeAssets(targetMap, spriteId, meta);
+      if(!assets || !assets.base){
+        return null;
+      }
+      const updatedMeta = markerLabelCompositeStore.get(spriteId) || assets.meta || meta;
+      if(isAccent){
+        const image = updatedMeta && (updatedMeta.highlightImage || updatedMeta.image);
+        if(!image){
+          return null;
+        }
+        return {
+          image,
+          options: updatedMeta.highlightOptions || updatedMeta.options || {}
+        };
+      }
+      if(updatedMeta && updatedMeta.image){
+        return {
+          image: updatedMeta.image,
+          options: updatedMeta.options || {}
+        };
+      }
+      return null;
     }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
@@ -1418,8 +1978,196 @@ let __notifyMapOnInteraction = null;
     return null;
   }
 
+  async function ensureMarkerLabelComposite(mapInstance, labelSpriteId, iconId, labelLine1, labelLine2, isMulti, options = {}){
+    if(!mapInstance || !labelSpriteId){
+      return null;
+    }
+    const { priority = false } = options || {};
+    const compositeId = markerLabelCompositeId(labelSpriteId);
+    const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+    const meta = markerLabelCompositeStore.get(labelSpriteId) || {};
+    meta.iconId = iconId || meta.iconId || '';
+    meta.labelLine1 = labelLine1 ?? meta.labelLine1 ?? '';
+    meta.labelLine2 = labelLine2 ?? meta.labelLine2 ?? '';
+    meta.isMulti = Boolean(isMulti ?? meta.isMulti);
+    meta.priority = Boolean(priority);
+    meta.lastUsed = nowTimestamp();
+    markerLabelCompositeStore.set(labelSpriteId, meta);
+    if(mapInstance.hasImage?.(compositeId)){
+      if(markerLabelCompositePlaceholderIds.has(compositeId)){
+        try{ mapInstance.removeImage(compositeId); }catch(err){}
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+      } else {
+        return compositeId;
+      }
+    }
+    if(markerLabelCompositePlaceholderIds.has(highlightId) && mapInstance.hasImage?.(highlightId)){
+      try{ mapInstance.removeImage(highlightId); }catch(err){}
+      markerLabelCompositePlaceholderIds.delete(highlightId);
+    }
+    const assets = await ensureMarkerLabelCompositeAssets(mapInstance, labelSpriteId, meta);
+    if(!assets || !assets.base){
+      return null;
+    }
+    const baseComposite = assets.base;
+    const highlightComposite = assets.highlight;
+    try{
+      if(mapInstance.hasImage?.(compositeId)){
+        mapInstance.removeImage(compositeId);
+      }
+      markerLabelCompositePlaceholderIds.delete(compositeId);
+      if(mapInstance.hasImage?.(highlightId)){
+        mapInstance.removeImage(highlightId);
+      }
+      markerLabelCompositePlaceholderIds.delete(highlightId);
+    }catch(err){
+      console.error(err);
+    }
+    try{
+      enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
+      mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
+      markerLabelCompositePlaceholderIds.delete(compositeId);
+      if(highlightComposite && highlightComposite.image){
+        mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
+        markerLabelCompositePlaceholderIds.delete(highlightId);
+      }
+      const updatedMeta = markerLabelCompositeStore.get(labelSpriteId) || meta;
+      if(updatedMeta){
+        markerLabelCompositeStore.set(labelSpriteId, Object.assign(updatedMeta, {
+          image: baseComposite.image,
+          options: baseComposite.options,
+          highlightImage: highlightComposite ? highlightComposite.image : null,
+          highlightOptions: (highlightComposite && highlightComposite.options) || baseComposite.options
+        }));
+      }
+      enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
+      return compositeId;
+    }catch(err){
+      console.error(err);
+      return null;
+    }
+  }
 
+  function reapplyMarkerLabelComposites(mapInstance){
+    if(!mapInstance){
+      return;
+    }
+    const entries = [];
+    markerLabelCompositeStore.forEach((entry, spriteId) => {
+      if(!entry || !entry.image){
+        return;
+      }
+      entries.push({
+        spriteId,
+        compositeId: markerLabelCompositeId(spriteId),
+        image: entry.image,
+        options: entry.options || {},
+        highlightImage: entry.highlightImage,
+        highlightOptions: entry.highlightOptions || entry.options || {},
+        priority: Boolean(entry.priority),
+        lastUsed: Number.isFinite(entry.lastUsed) ? entry.lastUsed : 0
+      });
+    });
+    entries.sort((a, b) => {
+      if(a.priority !== b.priority){
+        return a.priority ? -1 : 1;
+      }
+      if(a.lastUsed !== b.lastUsed){
+        return (b.lastUsed || 0) - (a.lastUsed || 0);
+      }
+      return a.spriteId.localeCompare(b.spriteId);
+    });
+    entries.forEach(entry => {
+      let already = false;
+      if(typeof mapInstance.hasImage === 'function'){
+        try{ already = !!mapInstance.hasImage(entry.compositeId); }
+        catch(err){ already = false; }
+      }
+      if(already){
+        if(markerLabelCompositePlaceholderIds.has(entry.compositeId)){
+          try{ mapInstance.removeImage(entry.compositeId); }catch(err){}
+          markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+          already = false;
+        } else {
+          return;
+        }
+      }
+      try{
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
+        mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
+        markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+        if(entry.highlightImage){
+          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
+          try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
+          catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
+      }catch(err){
+        console.error(err);
+      }
+    });
+  }
 
+  function scheduleMarkerLabelBackgroundRetry(mapInstance){
+    if(!mapInstance || typeof mapInstance === 'undefined') return;
+    const mark = '__markerLabelBgRetryScheduled';
+    if(mapInstance[mark]) return;
+    mapInstance[mark] = true;
+    const retry = () => {
+      mapInstance[mark] = false;
+      try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+    };
+    if(typeof mapInstance.once === 'function'){
+      mapInstance.once('style.load', retry);
+    } else if(typeof mapInstance.on === 'function'){
+      const handler = () => {
+        try{ mapInstance.off?.('style.load', handler); }catch(err){}
+        retry();
+      };
+      mapInstance.on('style.load', handler);
+    } else {
+      setTimeout(retry, 0);
+    }
+  }
+
+  function ensureMarkerLabelBackground(mapInstance){
+    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
+    try{
+      if(mapInstance.hasImage && mapInstance.hasImage(MARKER_LABEL_BG_ID)){
+        mapInstance.__markerLabelBgRetryScheduled = false;
+        return;
+      }
+    }catch(err){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    const placeholder = document.createElement('canvas');
+    try{
+      placeholder.width = Math.max(1, Math.round(markerLabelBackgroundWidthPx));
+      placeholder.height = Math.max(1, Math.round(markerLabelBackgroundHeightPx));
+      const phCtx = placeholder.getContext('2d');
+      if(phCtx){
+        phCtx.clearRect(0, 0, placeholder.width, placeholder.height);
+      }
+    }catch(err){
+      placeholder.width = 1;
+      placeholder.height = 1;
+    }
+    try{
+      mapInstance.addImage(MARKER_LABEL_BG_ID, placeholder, { pixelRatio: 1 });
+      mapInstance.__markerLabelBgRetryScheduled = false;
+    }catch(err){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    try{ window.__addOrReplacePill150x40?.(mapInstance); }catch(err){}
+  }
 
   function patchLayerFiltersForMissingLayer(mapInstance, style){
     if(!mapInstance || typeof mapInstance.setFilter !== 'function') return;
@@ -1726,21 +2474,7 @@ let __notifyMapOnInteraction = null;
           spinZoomMax = 4,
           spinSpeed = 0.3,
           spinEnabled = false,
-          mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
-      
-      // Set title immediately from localStorage to prevent flash
-      (function setTitleFromCache(){
-        const cachedSiteName = localStorage.getItem('site_name');
-        if(cachedSiteName){
-          let pageTitle = cachedSiteName;
-          const cachedTagline = localStorage.getItem('site_tagline');
-          if(cachedTagline){
-            pageTitle += ' - ' + cachedTagline;
-          }
-          document.title = pageTitle;
-        }
-      })();
       
       // Load admin settings from database
       (async function loadAdminSettings(){
@@ -1758,59 +2492,17 @@ let __notifyMapOnInteraction = null;
               spinLogoClick = data.settings.spin_on_logo !== undefined ? data.settings.spin_on_logo : true;
               spinZoomMax = data.settings.spin_zoom_max || 4;
               spinSpeed = data.settings.spin_speed || 0.3;
-              mapCardDisplay = data.settings.map_card_display || 'hover_only';
               
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               window.adminIconFolder = data.settings.admin_icon_folder || 'assets/admin-icons';
               
-              // Store map shadow and console filter settings
-              if(data.settings.map_shadow !== undefined){
-                localStorage.setItem('map_shadow', data.settings.map_shadow);
-                // Update slider if it exists
-                const opacityInput = document.getElementById('postModeBgOpacity');
-                if(opacityInput){
-                  opacityInput.value = data.settings.map_shadow;
-                }
-              }
-              if(data.settings.map_shadow_mode !== undefined){
-                localStorage.setItem('map_shadow_mode', data.settings.map_shadow_mode);
-                // Set radio buttons
-                const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
-                const alwaysRadio = document.getElementById('mapShadowModeAlways');
-                if(postOnlyRadio && alwaysRadio){
-                  if(data.settings.map_shadow_mode === 'always'){
-                    alwaysRadio.checked = true;
-                  } else {
-                    postOnlyRadio.checked = true;
-                  }
-                }
-              }
-              
-              // Apply shadow after settings are loaded
-              if(typeof window.applyMapShadow === 'function'){
-                setTimeout(() => {
-                  window.applyMapShadow();
-                }, 100);
+              // Store post mode shadow and console filter settings
+              if(data.settings.post_mode_shadow !== undefined){
+                localStorage.setItem('post_mode_shadow', data.settings.post_mode_shadow);
               }
               if(data.settings.console_filter !== undefined){
                 localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
-              }
-              
-              // Store welcome_enabled setting
-              if(data.settings.welcome_enabled !== undefined){
-                localStorage.setItem('welcome_enabled', data.settings.welcome_enabled ? 'true' : 'false');
-                
-                // If welcome is enabled and user hasn't seen it, show it now
-                if(data.settings.welcome_enabled && !localStorage.getItem('welcome-seen')){
-                  const welcomeModal = document.getElementById('welcome-modal');
-                  if(welcomeModal && typeof window.openWelcome === 'function'){
-                    setTimeout(() => {
-                      window.openWelcome();
-                      localStorage.setItem('welcome-seen','true');
-                    }, 500); // Small delay to ensure page is ready
-                  }
-                }
               }
               
               // Store message category names and icons
@@ -1822,22 +2514,6 @@ let __notifyMapOnInteraction = null;
                   localStorage.setItem(`msg_category_${key}_icon`, data.settings[`msg_category_${key}_icon`]);
                 }
               });
-              
-              // Update document title with site name and tagline
-              if(data.settings.site_name){
-                let pageTitle = data.settings.site_name;
-                if(data.settings.site_tagline){
-                  pageTitle += ' - ' + data.settings.site_tagline;
-                }
-                document.title = pageTitle;
-                // Cache in localStorage for instant title on next page load
-                localStorage.setItem('site_name', data.settings.site_name);
-                if(data.settings.site_tagline){
-                  localStorage.setItem('site_tagline', data.settings.site_tagline);
-                } else {
-                  localStorage.removeItem('site_tagline');
-                }
-              }
               
               // Calculate if spin should be enabled
               const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
@@ -1882,114 +2558,6 @@ let __notifyMapOnInteraction = null;
                 spinSpeedSlider.value = spinSpeed;
                 spinSpeedDisplay.textContent = spinSpeed.toFixed(1);
               }
-              
-              // Initialize map card display radios
-              const mapCardDisplayRadios = document.querySelectorAll('input[name="mapCardDisplay"]');
-              if(mapCardDisplayRadios.length){
-                mapCardDisplayRadios.forEach(radio => {
-                  radio.checked = (radio.value === mapCardDisplay);
-                });
-              }
-              
-              // Apply map card display setting
-              document.body.setAttribute('data-map-card-display', mapCardDisplay);
-              
-              // Add refresh map cards button handler
-              const refreshMapCardsBtn = document.getElementById('refreshMapCardsBtn');
-              if(refreshMapCardsBtn){
-                refreshMapCardsBtn.addEventListener('click', async () => {
-                  try{
-                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
-                    if(mapInstance){
-                      // Clear JavaScript sprite cache
-                      markerLabelPillSpriteCache = null;
-                      // Clear sprite cache function if available
-                      if(typeof window.clearMarkerLabelPillSpriteCache === 'function'){
-                        window.clearMarkerLabelPillSpriteCache(mapInstance);
-                      }
-                      // Remove all marker-label images from Mapbox cache
-                      const markerLabelImageIds = [MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID];
-                      markerLabelImageIds.forEach(id => {
-                        try{
-                          if(mapInstance.hasImage && mapInstance.hasImage(id)){
-                            mapInstance.removeImage(id);
-                          }
-                        }catch(e){}
-                      });
-                      // Trigger repaint to regenerate
-                      if(mapInstance.triggerRepaint){
-                        mapInstance.triggerRepaint();
-                      }
-                      // Show feedback
-                      const originalText = refreshMapCardsBtn.innerHTML;
-                      refreshMapCardsBtn.innerHTML = '<span>✓</span> Refreshed!';
-                      refreshMapCardsBtn.disabled = true;
-                      setTimeout(() => {
-                        refreshMapCardsBtn.innerHTML = originalText;
-                        refreshMapCardsBtn.disabled = false;
-                      }, 2000);
-                    } else {
-                      alert('Map instance not available. Please wait for the map to load.');
-                    }
-                  }catch(err){
-                    console.error('Error refreshing map cards:', err);
-                    alert('Error refreshing map cards. Check console for details.');
-                  }
-                });
-              }
-              
-              // Add change listeners for map card display radios
-              mapCardDisplayRadios.forEach(radio => {
-                radio.addEventListener('change', async () => {
-                  if(radio.checked){
-                    mapCardDisplay = radio.value;
-                    document.body.setAttribute('data-map-card-display', mapCardDisplay);
-                    
-                    // Update map immediately (no reload required)
-                    if(typeof window.updateMapCardLayerOpacity === 'function'){
-                      window.updateMapCardLayerOpacity(mapCardDisplay);
-                    }
-                    
-                    // Update hover handlers - always use marker-icon only for precise hover zone
-                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
-                    if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
-                      // Remove old hover handlers from all possible layers
-                      const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
-                      allPossibleLayers.forEach(layer => {
-                        try {
-                          mapInstance.off('mouseenter', layer, window.handleMarkerHover);
-                          mapInstance.off('mouseleave', layer, window.handleMarkerHoverEnd);
-                        } catch(e) {}
-                      });
-                      
-                      // Always use marker-icon only for precise hover zone
-                      try {
-                        mapInstance.on('mouseenter', 'marker-icon', window.handleMarkerHover);
-                        mapInstance.on('mouseleave', 'marker-icon', window.handleMarkerHoverEnd);
-                      } catch(e) {}
-                    }
-                    
-                    // Update click and cursor handlers to match new display mode
-                    if(typeof window.attachClickHandlers === 'function'){
-                      window.attachClickHandlers();
-                    }
-                    if(typeof window.attachCursorHandlers === 'function'){
-                      window.attachCursorHandlers();
-                    }
-                    
-                    // Auto-save to database
-                    try {
-                      await fetch('/gateway.php?action=save-admin-settings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ map_card_display: mapCardDisplay })
-                      });
-                    } catch (e) {
-                      console.error('Failed to save map card display setting:', e);
-                    }
-                  }
-                });
-              });
               
               // Initialize icon folder input
               const iconFolderInput = document.getElementById('adminIconFolder');
@@ -2041,9 +2609,7 @@ let __notifyMapOnInteraction = null;
               
               // Initialize console filter checkbox
               const consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
-              if(consoleFilterCheckbox && !consoleFilterCheckbox.dataset.autoSaveAdded){
-                consoleFilterCheckbox.dataset.autoSaveAdded = 'true';
-                
+              if(consoleFilterCheckbox){
                 // Track if we're programmatically setting the checkbox (to avoid triggering change event)
                 let isSettingProgrammatically = false;
                 const savedState = localStorage.getItem('enableConsoleFilter') === 'true';
@@ -2051,64 +2617,20 @@ let __notifyMapOnInteraction = null;
                 consoleFilterCheckbox.checked = savedState;
                 isSettingProgrammatically = false;
                 
-                // Store original console.warn to restore when disabling
-                const originalConsoleWarn = console.warn;
-                let consoleFilterActive = false;
-                
-                // Function to enable console filter
-                function enableConsoleFilter(){
-                  if(consoleFilterActive) return;
-                  
-                  const suppressedWarnings = [
-                    /featureNamespace.*selector/i,
-                    /cutoff.*disabled.*terrain/i,
-                  ];
-                  
-                  console.warn = function(...args) {
-                    const message = args.join(' ');
-                    if(!suppressedWarnings.some(pattern => pattern.test(message))){
-                      originalConsoleWarn.apply(console, args);
-                    }
-                  };
-                  
-                  consoleFilterActive = true;
-                  console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
-                    'Suppressing', suppressedWarnings.length, 'warning patterns.');
-                }
-                
-                // Function to disable console filter
-                function disableConsoleFilter(){
-                  if(!consoleFilterActive) return;
-                  console.warn = originalConsoleWarn;
-                  consoleFilterActive = false;
-                  console.log('%c[Console Filter Disabled]', 'color: #ff9900; font-weight: bold;');
-                }
-                
-                // Enable filter if it was enabled on page load
-                if(savedState){
-                  enableConsoleFilter();
-                }
-                
                 consoleFilterCheckbox.addEventListener('change', async (event) => {
                   // Skip if this change was programmatic
                   if(isSettingProgrammatically){
                     return;
                   }
                   
-                  // Only process user-initiated events (not programmatic changes)
+                  // Only show prompt for user-initiated events (not programmatic changes)
+                  // event.isTrusted is false for programmatic changes
                   if(event.isTrusted === false){
                     return;
                   }
                   
                   const enabled = consoleFilterCheckbox.checked;
                   localStorage.setItem('enableConsoleFilter', enabled ? 'true' : 'false');
-                  
-                  // Enable/disable filter immediately
-                  if(enabled){
-                    enableConsoleFilter();
-                  } else {
-                    disableConsoleFilter();
-                  }
                   
                   // Auto-save to database
                   try {
@@ -2120,6 +2642,17 @@ let __notifyMapOnInteraction = null;
                   } catch (e) {
                     console.error('Failed to save console filter setting:', e);
                   }
+                  
+                  // Show reload prompt only for user-initiated changes
+                  const messageKey = enabled ? 'msg_confirm_console_filter_enable' : 'msg_confirm_console_filter_disable';
+                  (async () => {
+                    const message = await getMessage(messageKey, {}, true) || (enabled 
+                      ? 'Console filter will be enabled on next page load. Reload now?' 
+                      : 'Console filter will be disabled on next page load. Reload now?');
+                    if(confirm(message)){
+                      location.reload();
+                    }
+                  })();
                 });
               }
             }
@@ -2139,7 +2672,6 @@ let __notifyMapOnInteraction = null;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      // Map card layers only - marker-icon is completely separate
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -2148,10 +2680,7 @@ let __notifyMapOnInteraction = null;
       const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
-
-      // --- Section 5: Marker Clustering (Balloons) ---
-      // Balloon icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
-      const BALLOON_SOURCE_ID = 'post-balloon-source';
+        const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
@@ -2577,47 +3106,14 @@ let __notifyMapOnInteraction = null;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
+    let hoverPopup = null;
     let postSourceEventsBound = false;
     let touchMarker = null;
     let activePostId = null;
     let markerFeatureIndex = new Map();
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
-    let hoveredPostIds = [];
-    // Function to update icon-size for marker-label-highlight layer based on click/open state
-    function updateMarkerLabelHighlightIconSize(){
-      if(!map || typeof map.setFeatureState !== 'function') return;
-      
-      const openPostEl = document.querySelector('.open-post[data-id]');
-      const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
-      const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
-      const expandedPostId = openPostId || clickedPostId;
-      
-      // Reset all features to not expanded
-      highlightedFeatureKeys.forEach(entry => {
-        try{ 
-          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
-        }catch(err){}
-      });
-      
-      // Set expanded state for clicked/open post
-      if(expandedPostId){
-        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
-        if(entries && entries.length){
-          entries.forEach(entry => {
-            if(!entry) return;
-            const source = entry.source || 'posts';
-            const featureId = entry.id;
-            if(featureId !== undefined && featureId !== null){
-              try{ 
-                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true }); 
-              }catch(err){}
-            }
-          });
-        }
-      }
-    }
-    
+    const hoverHighlightedPostIds = new Set();
     function updateMapFeatureHighlights(targets){
       const input = Array.isArray(targets) ? targets : [targets];
       const seen = new Set();
@@ -2707,11 +3203,9 @@ let __notifyMapOnInteraction = null;
         catch(err){}
       });
       highlightedFeatureKeys = nextEntries;
-      
-      // Update icon-size based on click/open state
-      updateMarkerLabelHighlightIconSize();
       if(highlightSpriteIds.size){
         highlightSpriteIds.forEach(spriteId => {
+          touchMarkerLabelCompositeMeta(spriteId, { updateTimestamp: true });
         });
       }
     }
@@ -2833,7 +3327,7 @@ let __notifyMapOnInteraction = null;
 
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
-    // === 0528 helpers: contextmenu list (robust positioning + locking) ===
+    // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
     let listLocked = false;
     function lockMap(lock){
       listLocked = lock;
@@ -2845,27 +3339,68 @@ let __notifyMapOnInteraction = null;
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    // Get interactive layers based on map card display mode
-    // In hover_only mode, only marker-icon is clickable (map cards are hidden)
-    // In always mode, marker-icon and map card layers are clickable
-    const getMarkerInteractiveLayers = () => {
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      if(mapCardDisplay === 'hover_only'){
-        return ['marker-icon']; // Only marker-icon is clickable when cards are hidden
-      }
-      return ['marker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
-    };
+    const MARKER_INTERACTIVE_LAYERS = VISIBLE_MARKER_LABEL_LAYERS.slice();
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
       return popup && typeof popup.getElement === 'function' ? popup.getElement() : null;
     }
 
+    function popupIsHovered(popup){
+      if(window.__overCard){
+        return true;
+      }
+      const el = getPopupElement(popup);
+      if(!el) return false;
+      if(el.matches(':hover')) return true;
+      try {
+        const hovered = el.querySelector(':hover');
+        if(hovered) return true;
+      } catch(err){}
+      try {
+        const hoveredList = document.querySelectorAll(':hover');
+        for(let i = hoveredList.length - 1; i >= 0; i--){
+          const node = hoveredList[i];
+          if(node && (node === el || el.contains(node))){
+            return true;
+          }
+        }
+      } catch(err){}
+      return false;
+    }
 
+    function schedulePopupRemoval(popup, delay=180){
+      const target = popup || hoverPopup;
+      if(!target) return;
+      setTimeout(()=>{
+        if(hoverPopup !== target) return;
+        if(popupIsHovered(target)){
+          window.__overCard = true;
+          return;
+        }
+        window.__overCard = false;
+        runOverlayCleanup(target);
+        try{ target.remove(); }catch(e){}
+        if(hoverPopup === target){
+          hoverPopup = null;
+          updateSelectedMarkerRing();
+        }
+      }, delay);
+    }
+
+    const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
+    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
+      function resetBigMapCardTransforms(){
+        document.querySelectorAll('.big-map-card').forEach(card => {
+          card.style.transform = 'none';
+        });
+      }
+      resetBigMapCardTransforms();
+      document.addEventListener('DOMContentLoaded', resetBigMapCardTransforms);
 
     function registerOverlayCleanup(overlayEl, fn){
       if(!overlayEl || typeof fn !== 'function') return;
@@ -2887,7 +3422,29 @@ let __notifyMapOnInteraction = null;
       });
     }
 
-    // --- Section 5: Small Map Card DOM Functions ---
+    function setSmallMapCardPillImage(cardEl, highlighted){
+      if(!cardEl) return;
+      const pillImg = cardEl.querySelector('.mapmarker-pill, .map-card-pill')
+        || cardEl.querySelector('img[src*="150x40-pill" i]');
+      if(!pillImg) return;
+      if(!pillImg.dataset.defaultSrc){
+        const currentSrc = pillImg.getAttribute('src') || '';
+        pillImg.dataset.defaultSrc = currentSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC;
+      }
+      if(!pillImg.dataset.highlightSrc){
+        pillImg.dataset.highlightSrc = SMALL_MAP_CARD_PILL_HOVER_SRC;
+      }
+      const targetSrc = highlighted
+        ? (pillImg.dataset.highlightSrc || SMALL_MAP_CARD_PILL_HOVER_SRC)
+        : (pillImg.dataset.defaultSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC);
+      if((pillImg.getAttribute('src') || '') !== targetSrc){
+        pillImg.setAttribute('src', targetSrc);
+      }
+      if(pillImg.getAttribute('srcset')){
+        pillImg.removeAttribute('srcset');
+      }
+    }
+
     function enforceSmallMultiMapCardIcon(img, overlayEl){
       if(!img) return;
       const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
@@ -2938,9 +3495,96 @@ let __notifyMapOnInteraction = null;
       return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
     }
 
+    function getOverlayMultiIds(overlay){
+      if(!overlay || !overlay.dataset) return [];
+      const raw = overlay.dataset.multiIds || '';
+      if(!raw) return [];
+      return raw.split(',').map(id => id.trim()).filter(Boolean);
+    }
+
+    function findMarkerOverlaysById(id){
+      if(id === undefined || id === null) return [];
+      const strId = String(id);
+      const matches = new Set();
+      const escaped = escapeAttrValue(strId);
+      if(typeof document !== 'undefined' && document.querySelectorAll){
+        try{
+          document.querySelectorAll(`.mapmarker-overlay[data-id="${escaped}"]`).forEach(el => matches.add(el));
+        }catch(err){ /* ignore selector issues */ }
+        document.querySelectorAll('.mapmarker-overlay[data-multi-ids]').forEach(el => {
+          if(matches.has(el)) return;
+          const multiIds = getOverlayMultiIds(el);
+          if(multiIds.includes(strId)){
+            matches.add(el);
+          }
+        });
+      }
+      return Array.from(matches);
+    }
+
+    function toggleSmallMapCardHoverHighlight(postId, shouldHighlight){
+      if(postId === undefined || postId === null) return;
+      const idStr = String(postId);
+      const highlightClass = 'is-pill-highlight';
+      const mapHighlightClass = 'is-map-highlight';
+      let highlightChanged = false;
+      if(shouldHighlight){
+        if(!hoverHighlightedPostIds.has(idStr)){
+          hoverHighlightedPostIds.add(idStr);
+          highlightChanged = true;
+        }
+      } else {
+        if(hoverHighlightedPostIds.delete(idStr)){
+          highlightChanged = true;
+        }
+      }
+      const overlays = findMarkerOverlaysById(postId);
+      overlays.forEach(overlay => {
+        overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
+          if(shouldHighlight){
+            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
+              cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(highlightClass) ? '1' : '0';
+            }
+            if(!cardEl.classList.contains(highlightClass)){
+              cardEl.classList.add(highlightClass);
+            }
+            setSmallMapCardPillImage(cardEl, true);
+          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
+            const prev = cardEl.dataset.hoverPrevHighlight === '1';
+            delete cardEl.dataset.hoverPrevHighlight;
+            if(!prev){
+              cardEl.classList.remove(highlightClass);
+              setSmallMapCardPillImage(cardEl, false);
+            } else {
+              setSmallMapCardPillImage(cardEl, true);
+            }
+          }
+        });
+        overlay.querySelectorAll('.big-map-card').forEach(cardEl => {
+          if(shouldHighlight){
+            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
+              cardEl.dataset.hoverPrevMapHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
+            }
+            if(!cardEl.classList.contains(mapHighlightClass)){
+              cardEl.classList.add(mapHighlightClass);
+            }
+          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
+            const prev = cardEl.dataset.hoverPrevMapHighlight === '1';
+            delete cardEl.dataset.hoverPrevMapHighlight;
+            if(!prev){
+              cardEl.classList.remove(mapHighlightClass);
+            }
+          }
+        });
+      });
+      if(highlightChanged || shouldHighlight){
+        updateSelectedMarkerRing();
+      }
+    }
 
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
+      const markerHighlightClass = 'is-pill-highlight';
       const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && el.classList.contains('post-card'));
       const restoreHighlightBackground = (el)=>{
         if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
@@ -2977,22 +3621,36 @@ let __notifyMapOnInteraction = null;
           delete el.dataset.prevAriaSelected;
         }
       };
-      document.querySelectorAll(`.post-card.${highlightClass}`).forEach(el => {
+      document.querySelectorAll(`.post-card.${highlightClass}, .big-map-card.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
         restoreHighlightBackground(el);
       });
+      document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
+        setSmallMapCardPillImage(el, false);
+        el.classList.remove(markerHighlightClass);
+      });
 
+      const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
+        ? hoverPopup.getElement()
+        : null;
+      const overlayId = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.id || '') : '';
+      const overlayMultiIds = overlayEl ? getOverlayMultiIds(overlayEl) : [];
       let fallbackId = '';
-      if(activePostId !== undefined && activePostId !== null){
-        fallbackId = String(activePostId);
-      } else {
-        const openEl = document.querySelector('.post-board .open-post[data-id]');
-        fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
+      if(!overlayId){
+        if(activePostId !== undefined && activePostId !== null){
+          fallbackId = String(activePostId);
+        } else {
+          const openEl = document.querySelector('.post-board .open-post[data-id]');
+          fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
+        }
       }
+      const hoverHighlightList = Array.from(hoverHighlightedPostIds);
       const idsToHighlight = Array.from(new Set([
+        overlayId,
         fallbackId,
-        ...hoveredPostIds.map(entry => entry.id)
+        ...(overlayMultiIds || []),
+        ...hoverHighlightList
       ].filter(Boolean)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
@@ -3007,6 +3665,7 @@ let __notifyMapOnInteraction = null;
         el.setAttribute('aria-selected', 'true');
         applyHighlightBackground(el);
       };
+      const overlayVenueKey = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.venueKey || '').trim() : '';
       const globalVenueKey = typeof selectedVenueKey === 'string' && selectedVenueKey ? String(selectedVenueKey).trim() : '';
       const highlightTargets = [];
       const targetSeen = new Set();
@@ -3016,19 +3675,24 @@ let __notifyMapOnInteraction = null;
         const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
         applyHighlight(listCard);
         // Don't highlight open post cards - they should maintain their #1f2750 background
-        const preferredVenue = globalVenueKey;
+        const preferredVenue = (overlayId && strId === overlayId && overlayVenueKey)
+          ? overlayVenueKey
+          : globalVenueKey;
         const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
-        const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
-        if(!targetSeen.has(dedupeKey)){
-          targetSeen.add(dedupeKey);
-          highlightTargets.push({ id: strId, venueKey: normalizedVenue || null });
-        }
-      });
-      // Also include hovered posts with their venue keys
-      hoveredPostIds.forEach(entry => {
-        if(!entry || !entry.id) return;
-        const strId = String(entry.id);
-        const normalizedVenue = entry.venueKey ? String(entry.venueKey).trim() : '';
+        const overlays = findMarkerOverlaysById(strId);
+        overlays.forEach(overlay => {
+          const overlayKey = overlay && overlay.dataset ? String(overlay.dataset.venueKey || '').trim() : '';
+          if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
+            return;
+          }
+          overlay.querySelectorAll('.small-map-card').forEach(el => {
+            setSmallMapCardPillImage(el, true);
+            el.classList.add(markerHighlightClass);
+          });
+          overlay.querySelectorAll('.big-map-card').forEach(el => {
+            el.classList.add(highlightClass);
+          });
+        });
         const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
         if(!targetSeen.has(dedupeKey)){
           targetSeen.add(dedupeKey);
@@ -3047,7 +3711,6 @@ let __notifyMapOnInteraction = null;
       return hash.toString(36);
     }
 
-// --- Section 6: Marker Data Building & Collections ---
 function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   if(!Array.isArray(postsAtVenue) || !postsAtVenue.length){
     return 0;
@@ -3925,7 +4588,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       document.querySelectorAll('.field-edit-panel').forEach(panel => {
         if(panel === exceptPanel) return;
         panel.hidden = true;
-        const host = panel.closest('.subcategory-field-row, .form-field');
+        const host = panel.closest('.subcategory-field-row, .form-preview-field');
         if(host && host.classList){
           host.classList.remove('field-edit-open');
         }
@@ -4095,6 +4758,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
 
       mapInstance.on('style.load', async () => {
+        try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+        try{ reapplyMarkerLabelComposites(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
         const preloadList = Array.from(new Set([...KNOWN, ...Object.keys(markers)]));
         if(!preloadList.length) return;
@@ -6213,7 +6878,7 @@ function makePosts(){
             venueKey = String(parts[1] || '');
           }
         }
-        const rawSpriteId = props.spriteId ?? '';
+        const rawSpriteId = props.labelSpriteId ?? props.spriteId ?? '';
         const spriteId = rawSpriteId !== undefined && rawSpriteId !== null ? String(rawSpriteId) : '';
         const ids = new Set();
         ids.add(String(baseId));
@@ -6262,22 +6927,182 @@ function makePosts(){
       return { postsData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
     }
 
+    function prepareMarkerLabelCompositesForPosts(postsData){
+      const enforceBudget = () => {
+        if(typeof enforceMarkerLabelCompositeBudget === 'function' && map){
+          try{ enforceMarkerLabelCompositeBudget(map); }catch(err){}
+        }
+      };
+      if(!map || typeof ensureMarkerLabelComposite !== 'function'){
+        enforceBudget();
+        return Promise.resolve();
+      }
+      const features = Array.isArray(postsData?.features) ? postsData.features : [];
+      if(!features.length){
+        enforceBudget();
+        return Promise.resolve();
+      }
+      const spriteMeta = new Map();
+      const zoomLevel = typeof map.getZoom === 'function' ? Number(map.getZoom()) : NaN;
+      const zoomEligible = Number.isFinite(zoomLevel) && zoomLevel >= 8;
+      const rawBounds = zoomEligible && typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
+      const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
+      const highlightedPostIdSet = new Set();
+      (Array.isArray(lastHighlightedPostIds) ? lastHighlightedPostIds : []).forEach(entry => {
+        if(!entry) return;
+        const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
+        if(rawId === undefined || rawId === null) return;
+        const strId = String(rawId);
+        if(strId){
+          highlightedPostIdSet.add(strId);
+        }
+      });
+      const usageTimestamp = nowTimestamp();
+      features.forEach(feature => {
+        if(!feature || !feature.properties) return;
+        const props = feature.properties;
+        const spriteId = props.labelSpriteId;
+        if(!spriteId || spriteMeta.has(spriteId)) return;
+        const coords = Array.isArray(feature.geometry && feature.geometry.coordinates)
+          ? feature.geometry.coordinates
+          : null;
+        let inView = false;
+        if(zoomEligible && coords && coords.length >= 2 && priorityBounds){
+          const [lng, lat] = coords;
+          if(Number.isFinite(lng) && Number.isFinite(lat)){
+            inView = pointWithinBounds(lng, lat, priorityBounds);
+          }
+        }
+        const existing = markerLabelCompositeStore.get(spriteId) || {};
+        const iconId = props.sub || props.baseSub || '';
+        const labelLine1 = props.labelLine1 || '';
+        const labelLine2 = props.labelLine2 || '';
+        const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+        const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
+        const isHighlighted = (() => {
+          const ownId = props.id !== undefined && props.id !== null ? String(props.id) : '';
+          if(ownId && highlightedPostIdSet.has(ownId)){
+            return true;
+          }
+          return multiIds.some(mid => {
+            if(mid === undefined || mid === null) return false;
+            return highlightedPostIdSet.has(String(mid));
+          });
+        })();
+        const priority = Boolean(inView || isHighlighted);
+        let lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
+        if(priority){
+          lastUsed = usageTimestamp;
+        }
+        const updatedMeta = Object.assign({}, existing, {
+          iconId,
+          labelLine1,
+          labelLine2,
+          isMulti,
+          priority,
+          lastUsed,
+          inView
+        });
+        markerLabelCompositeStore.set(spriteId, updatedMeta);
+        spriteMeta.set(spriteId, {
+          iconId,
+          labelLine1,
+          labelLine2,
+          isMulti,
+          priority,
+          lastUsed,
+          inView
+        });
+      });
+      const spriteEntries = Array.from(spriteMeta.entries());
+      const compareEntries = (a, b) => {
+        const aMeta = a[1] || {};
+        const bMeta = b[1] || {};
+        const aPriority = aMeta.priority ? 1 : 0;
+        const bPriority = bMeta.priority ? 1 : 0;
+        if(aPriority !== bPriority){
+          return bPriority - aPriority;
+        }
+        const aLast = Number.isFinite(aMeta.lastUsed) ? aMeta.lastUsed : 0;
+        const bLast = Number.isFinite(bMeta.lastUsed) ? bMeta.lastUsed : 0;
+        if(aLast !== bLast){
+          return bLast - aLast;
+        }
+        return String(a[0]).localeCompare(String(b[0]));
+      };
+      spriteEntries.sort(compareEntries);
+      const compositeSafetyBuffer = 25;
+      let eagerSpriteEntries = [];
+      if(zoomEligible){
+        eagerSpriteEntries = spriteEntries.filter(([, meta]) => meta && (meta.inView || meta.priority));
+        if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
+          const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
+          if(maxEager <= 0){
+            eagerSpriteEntries = [];
+          } else if(eagerSpriteEntries.length > maxEager){
+            eagerSpriteEntries = eagerSpriteEntries.slice(0, maxEager);
+          }
+        }
+      }
+      const tasks = eagerSpriteEntries.map(([spriteId, meta]) =>
+        ensureMarkerLabelComposite(
+          map,
+          spriteId,
+          meta.iconId,
+          meta.labelLine1,
+          meta.labelLine2,
+          meta.isMulti,
+          { priority: meta.priority }
+        ).catch(()=>{})
+      );
+      return Promise.all(tasks).then(() => {
+        enforceBudget();
+      });
+    }
 
     async function syncMarkerSources(list, options = {}){
       const { force = false } = options;
       const collections = getMarkerCollections(list);
       const { postsData, signature, featureIndex } = collections;
       markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
+      let preparationPromise = null;
+      let preparationErrorLogged = false;
+      const ensurePreparationPromise = () => {
+        if(!preparationPromise){
+          preparationPromise = prepareMarkerLabelCompositesForPosts(postsData);
+        }
+        return preparationPromise;
+      };
+      const awaitPreparation = async () => {
+        try{
+          await ensurePreparationPromise();
+          return true;
+        }catch(err){
+          if(!preparationErrorLogged){
+            preparationErrorLogged = true;
+            console.error(err);
+          }
+          return false;
+        }
+      };
+      let preparationReady = false;
       let updated = false;
       if(map && typeof map.getSource === 'function'){
         const postsSource = map.getSource('posts');
         if(postsSource && (force || postsSource.__markerSignature !== signature)){
-          try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
-          postsSource.__markerSignature = signature;
-          updated = true;
+          preparationReady = await awaitPreparation();
+          if(preparationReady){
+            try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
+            postsSource.__markerSignature = signature;
+            updated = true;
+          }
         }
       }
       if(updated || force){
+        if(!preparationReady){
+          preparationReady = await awaitPreparation();
+        }
+        ensurePreparationPromise().catch(()=>{});
         updateMapFeatureHighlights(lastHighlightedPostIds);
       }
       return { updated, signature };
@@ -6489,9 +7314,7 @@ function makePosts(){
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
-        MARKER_LAYER_IDS.forEach(id => {
-          setLayerVisibility(id, shouldShowMarkers);
-        });
+        MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
       if(balloonLayersVisible !== shouldShowBalloons){
@@ -6634,6 +7457,52 @@ function makePosts(){
       return 'assets/balloons/birthday-party-png-45917-100.png';
     }
 
+    function mapCardHTML(p, opts={}){
+      const overrideKey = typeof opts.venueKey === 'string' && opts.venueKey ? opts.venueKey : null;
+      const prevKey = selectedVenueKey;
+      if(overrideKey){
+        selectedVenueKey = overrideKey;
+      }
+      try{
+        const venueName = getPrimaryVenueName(p) || p.city;
+        const labelLines = getMarkerLabelLines(p);
+        const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+          ? labelLines.cardTitleLines.slice(0, 2)
+          : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+        const normalizedTitleLines = cardTitleLines.slice(0, 2);
+        const firstTitleLine = normalizedTitleLines[0] || '';
+        const hasSecondTitleLine = Boolean((normalizedTitleLines[1] || '').trim());
+        const displayTitleLines = hasSecondTitleLine ? normalizedTitleLines : [firstTitleLine];
+        const titleHtml = displayTitleLines
+          .map(line => `<div class="map-card-title-line">${line}</div>`)
+          .join('');
+        const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
+        const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
+        const labelClasses = ['map-card-label'];
+        if(!hasSecondTitleLine){
+          labelClasses.push('map-card-label--single-line');
+        }
+        const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
+        const classes = ['big-map-card'];
+        const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
+        const variant = opts.variant || 'popup';
+        if(variant === 'popup') classes.push('big-map-card--popup');
+        if(variant === 'list') classes.push('big-map-card--list');
+        extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
+        if(variant === 'list'){
+          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${thumbUrl(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        }
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${thumbUrl(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+      } finally {
+        if(overrideKey){
+          selectedVenueKey = prevKey;
+        }
+      }
+    }
+
+    function hoverHTML(p){
+      return mapCardHTML(p);
+    }
 
     // Categories UI
     const categoryControllers = {};
@@ -7838,1221 +8707,6 @@ function makePosts(){
       });
     };
     
-    function ensureFieldDefaults(field){
-      const safeField = field && typeof field === 'object' ? field : {};
-      if(typeof safeField.name !== 'string'){
-        safeField.name = '';
-      } else if(!safeField.name.trim()){
-        safeField.name = '';
-      }
-      if(typeof safeField.type !== 'string'){
-        safeField.type = '';
-      } else {
-        // Preserve description and text-area types BEFORE normalization
-        const originalType = safeField.type;
-        const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
-                                 (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
-        
-        if(isDescriptionType){
-          // Normalize but preserve description/text-area
-          const normalizedType = getBaseFieldType(originalType);
-          if(normalizedType === 'description' || normalizedType === 'text-area'){
-            safeField.type = normalizedType;
-          } else if(originalType === 'description' || originalType === 'text-area'){
-            safeField.type = originalType;
-          } else {
-            // Extract description/text-area from the type string
-            safeField.type = originalType.includes('description') ? 'description' : 'text-area';
-          }
-        } else {
-          // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-          const normalizedType = getBaseFieldType(safeField.type);
-          if(normalizedType){
-            safeField.type = normalizedType;
-          }
-        }
-      }
-      // Ensure key and fieldTypeKey sync with each other if one is missing
-      if(!safeField.key && safeField.fieldTypeKey){
-        safeField.key = safeField.fieldTypeKey;
-      }
-      if(!safeField.fieldTypeKey && safeField.key){
-        safeField.fieldTypeKey = safeField.key;
-      }
-      // For brand new fields, default to first field type in list
-      // Don't default to first field type - let user select
-      // Only set defaults if field type is explicitly provided
-      if(!safeField.key && !safeField.fieldTypeKey){
-        // Leave unset - user must select from dropdown
-      } else if(safeField.fieldTypeKey && !safeField.key){
-        safeField.key = safeField.fieldTypeKey;
-      } else if(safeField.key && !safeField.fieldTypeKey){
-        safeField.fieldTypeKey = safeField.key;
-      }
-      
-      // Only auto-name if field type is explicitly set (not defaulted)
-        if(!safeField.name){
-          safeField.name = '';
-        }
-        if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-        const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
-        const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
-        const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-        let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
-        if(!resolvedFieldTypeName && fieldTypeKey){
-          const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-          if(matchingFieldType){
-            resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
-          }
-        }
-        resolvedFieldTypeName = resolvedFieldTypeName || '';
-        safeField.field_type_name = resolvedFieldTypeName;
-        safeField.fieldTypeName = resolvedFieldTypeName;
-      // Only auto-name if field type is set AND field doesn't already have a custom name
-      // For editable fields, preserve existing custom names
-      if(fieldTypeKey && resolvedFieldTypeName){
-        const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-        const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
-        // Only auto-name if not editable OR if name is empty
-        if(!isEditable || !safeField.name || safeField.name.trim() === ''){
-          safeField.name = resolvedFieldTypeName;
-        }
-      }
-        if(fieldTypeKey === 'location'){
-          if(!safeField.placeholder || !safeField.placeholder.trim()){
-            safeField.placeholder = 'Search for a location';
-          }
-          const loc = safeField.location && typeof safeField.location === 'object' ? safeField.location : {};
-          const address = typeof loc.address === 'string' ? loc.address : '';
-          const latitude = typeof loc.latitude === 'string' ? loc.latitude : '';
-          const longitude = typeof loc.longitude === 'string' ? loc.longitude : '';
-          safeField.location = { address, latitude, longitude };
-        } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
-          delete safeField.location;
-        }
-        const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-        safeField.required = hasRequiredProp ? !!safeField.required : false;
-        if(!Array.isArray(safeField.options)){
-          safeField.options = [];
-        }
-        if(fieldTypeKey === 'venue-ticketing'){
-          safeField.options = normalizeVenueSessionOptions(safeField.options);
-        } else if(fieldTypeKey === 'variant-pricing'){
-          safeField.options = safeField.options.map(opt => {
-            if(opt && typeof opt === 'object'){
-              return {
-                version: typeof opt.version === 'string' ? opt.version : '',
-                currency: typeof opt.currency === 'string' ? opt.currency : '',
-                price: typeof opt.price === 'string' ? opt.price : ''
-              };
-            }
-            const str = typeof opt === 'string' ? opt : String(opt ?? '');
-            return { version: str, currency: '', price: '' };
-          });
-          if(safeField.options.length === 0){
-            safeField.options.push({ version: '', currency: '', price: '' });
-          }
-        } else {
-          safeField.options = safeField.options.map(opt => {
-            if(typeof opt === 'string') return opt;
-            if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
-              return opt.version;
-            }
-            return String(opt ?? '');
-          });
-          if((safeField.type === 'dropdown' || safeField.type === 'radio') && safeField.options.length === 0){
-            safeField.options.push('', '', '');
-          }
-        }
-        if(safeField.type !== 'venue-ticketing'){
-          resetVenueAutofillState(safeField);
-        }
-        return safeField;
-    }
-
-    function renderForm(options = {}){
-      if (!options.formFields || !options.formId || !options.fields) {
-        console.error('renderForm: Missing required options (formFields, formId, fields)');
-        return;
-      }
-      
-      const formFields = options.formFields;
-      const formId = options.formId;
-      const fields = options.fields;
-      const categoryName = options.categoryName || '';
-      const subcategoryName = options.subcategoryName || '';
-      const fieldIdCounter = options.fieldIdCounter !== undefined ? options.fieldIdCounter : 0;
-      const formLabel = options.formLabel || 'Form';
-      
-      const isUserFormContext = options.isUserForm === true;
-      const ensureDefaults = (isUserFormContext && typeof window.ensureFieldDefaultsForMember === 'function')
-        ? window.ensureFieldDefaultsForMember
-        : ensureFieldDefaults;
-      
-      let currentFieldIdCounter = fieldIdCounter;
-      
-      formFields.innerHTML = '';
-      
-      const categorySubcategoryLabel = document.createElement('div');
-      categorySubcategoryLabel.className = 'form-category-label';
-      const labelText = categoryName && subcategoryName ? `${categoryName} > ${subcategoryName}` : formLabel;
-      categorySubcategoryLabel.textContent = labelText;
-      categorySubcategoryLabel.style.marginBottom = '12px';
-      categorySubcategoryLabel.style.fontSize = '14px';
-      categorySubcategoryLabel.style.fontWeight = '600';
-      categorySubcategoryLabel.style.color = 'var(--button-text)';
-      formFields.appendChild(categorySubcategoryLabel);
-      
-      if(!fields.length){
-        const empty = document.createElement('p');
-        empty.className = 'form-empty';
-        empty.textContent = 'No fields added yet.';
-        formFields.appendChild(empty);
-        return;
-      }
-      fields.forEach((fieldData, fieldIndex)=>{
-        const field = ensureDefaults(fieldData);
-        const wrapper = document.createElement('div');
-        wrapper.className = 'panel-field form-field';
-        const baseId = `${formId}-field-${++currentFieldIdCounter}`;
-        const labelText = field.name.trim() || `Field ${fieldIndex + 1}`;
-        const labelEl = document.createElement('span');
-        labelEl.className = 'subcategory-form-label';
-        labelEl.textContent = labelText;
-        const labelId = `${baseId}-label`;
-        labelEl.id = labelId;
-        let control = null;
-        
-        const fieldTypeKey = field.fieldTypeKey || field.key || '';
-        let baseType = '';
-        if (isUserFormContext) {
-          if (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown') {
-            baseType = fieldTypeKey;
-          } else {
-            baseType = fieldTypeKey || field.type || 'text-box';
-          }
-        } else {
-          baseType = getBaseFieldType(field.type) || 'text-box';
-        }
-        
-        if(baseType === 'text-area' || baseType === 'description'){
-          const textarea = document.createElement('textarea');
-          textarea.rows = 5;
-          textarea.readOnly = false;
-          textarea.tabIndex = 0;
-          textarea.addEventListener('change', (e) => {
-            e.stopPropagation();
-          });
-          textarea.addEventListener('input', (e) => {
-            e.stopPropagation();
-          });
-          textarea.placeholder = field.placeholder || '';
-          textarea.className = 'form-textarea';
-          textarea.style.resize = 'vertical';
-          const textareaId = `${baseId}-input`;
-          textarea.id = textareaId;
-          if(baseType === 'description'){
-            textarea.classList.add('form-description');
-          }
-          if(field.required) textarea.required = true;
-          control = textarea;
-        } else if(field.type === 'dropdown' || baseType === 'dropdown'){
-          wrapper.classList.add('form-field--dropdown');
-          const dropdownWrapper = document.createElement('div');
-          dropdownWrapper.className = 'options-dropdown';
-          const menuBtn = document.createElement('button');
-          menuBtn.type = 'button';
-          menuBtn.className = 'form-select';
-          menuBtn.setAttribute('aria-haspopup', 'true');
-          menuBtn.setAttribute('aria-expanded', 'false');
-          const selectId = `${baseId}-input`;
-          menuBtn.id = selectId;
-          if(field.required) menuBtn.setAttribute('data-required', 'true');
-          const menuId = `${selectId}-menu`;
-          menuBtn.setAttribute('aria-controls', menuId);
-          const options = Array.isArray(field.options) ? field.options : [];
-          const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
-          menuBtn.textContent = defaultText;
-          const arrow = document.createElement('span');
-          arrow.className = 'dropdown-arrow';
-          arrow.setAttribute('aria-hidden', 'true');
-          menuBtn.appendChild(arrow);
-          const optionsMenu = document.createElement('div');
-          optionsMenu.className = 'options-menu';
-          optionsMenu.id = menuId;
-          optionsMenu.hidden = true;
-          if(options.length){
-            options.forEach((optionValue, optionIndex)=>{
-              const optionBtn = document.createElement('button');
-              optionBtn.type = 'button';
-              optionBtn.className = 'menu-option';
-              const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-              optionBtn.textContent = stringValue.trim() || '';
-              optionBtn.dataset.value = stringValue;
-              optionBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const arrow = menuBtn.querySelector('.dropdown-arrow');
-                menuBtn.textContent = stringValue.trim() || 'Select an option';
-                if(arrow) menuBtn.appendChild(arrow);
-                optionsMenu.hidden = true;
-                menuBtn.setAttribute('aria-expanded', 'false');
-                if(typeof window.updatePostButtonState === 'function'){
-                  window.updatePostButtonState();
-                }
-              });
-              optionsMenu.appendChild(optionBtn);
-            });
-          } else {
-            const placeholderBtn = document.createElement('button');
-            placeholderBtn.type = 'button';
-            placeholderBtn.className = 'menu-option';
-            placeholderBtn.textContent = 'Select an option';
-            placeholderBtn.disabled = true;
-            optionsMenu.appendChild(placeholderBtn);
-          }
-          menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const open = !optionsMenu.hasAttribute('hidden');
-            if(open){
-              optionsMenu.hidden = true;
-              menuBtn.setAttribute('aria-expanded', 'false');
-            } else {
-              optionsMenu.hidden = false;
-              menuBtn.setAttribute('aria-expanded', 'true');
-              const outsideHandler = (ev) => {
-                if(!dropdownWrapper.contains(ev.target)){
-                  optionsMenu.hidden = true;
-                  menuBtn.setAttribute('aria-expanded', 'false');
-                  document.removeEventListener('click', outsideHandler);
-                  document.removeEventListener('pointerdown', outsideHandler);
-                }
-              };
-              setTimeout(() => {
-                document.addEventListener('click', outsideHandler);
-                document.addEventListener('pointerdown', outsideHandler);
-              }, 0);
-            }
-          });
-          optionsMenu.addEventListener('click', (e) => e.stopPropagation());
-          dropdownWrapper.appendChild(menuBtn);
-          dropdownWrapper.appendChild(optionsMenu);
-          control = dropdownWrapper;
-        } else if(field.type === 'radio' || baseType === 'radio'){
-          const options = Array.isArray(field.options) ? field.options : [];
-          const radioGroup = document.createElement('div');
-          radioGroup.className = 'form-radio-group';
-          wrapper.classList.add('form-field--radio-toggle');
-          const groupName = `${baseId}-radio`;
-          if(options.length){
-            options.forEach((optionValue, optionIndex)=>{
-              const radioLabel = document.createElement('label');
-              radioLabel.className = 'form-radio-option';
-              const radio = document.createElement('input');
-              radio.type = 'radio';
-              radio.name = groupName;
-              const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-              radio.value = stringValue;
-              radio.tabIndex = 0;
-              radio.disabled = false;
-              if(field.required && optionIndex === 0) radio.required = true;
-              if(!isUserFormContext){
-                radio.addEventListener('change', (e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                });
-                radio.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                });
-                radio.addEventListener('mousedown', (e) => {
-                  e.stopPropagation();
-                });
-                radioLabel.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                });
-                radioLabel.addEventListener('mousedown', (e) => {
-                  e.stopPropagation();
-                });
-              }
-              const radioText = document.createElement('span');
-              radioText.textContent = stringValue.trim() || '';
-              radioLabel.append(radio, radioText);
-              radioGroup.appendChild(radioLabel);
-            });
-          } else {
-            const placeholderOption = document.createElement('label');
-            placeholderOption.className = 'form-radio-option';
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.tabIndex = -1;
-            radio.disabled = true;
-            placeholderOption.append(radio, document.createTextNode('Option'));
-            radioGroup.appendChild(placeholderOption);
-          }
-          control = radioGroup;
-        } else if(field.type === 'venue-ticketing'){
-          wrapper.classList.add('form-field--venues-sessions-pricing');
-          if(typeof window.buildVenueSessionPreview === 'function'){
-            control = window.buildVenueSessionPreview(field, baseId);
-          } else {
-            control = document.createElement('div');
-            control.textContent = 'Venue ticketing field';
-          }
-          if(control && field.required){
-            control.setAttribute('aria-required','true');
-          }
-        } else if(field.type === 'variant-pricing'){
-          wrapper.classList.add('form-field--variant-pricing');
-          const editor = document.createElement('div');
-          editor.className = 'form-variant-pricing variant-pricing-options-editor';
-          const versionList = document.createElement('div');
-          versionList.className = 'variant-pricing-options-list';
-          editor.appendChild(versionList);
-
-          const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
-
-          const normalizeOptions = ()=>{
-            if(!Array.isArray(field.options)){
-              field.options = [];
-            }
-            field.options = field.options.map(opt => {
-              if(opt && typeof opt === 'object'){
-                return {
-                  version: typeof opt.version === 'string' ? opt.version : '',
-                  currency: typeof opt.currency === 'string' ? opt.currency : '',
-                  price: typeof opt.price === 'string' ? opt.price : ''
-                };
-              }
-              const str = typeof opt === 'string' ? opt : String(opt ?? '');
-              return { version: str, currency: '', price: '' };
-            });
-            if(field.options.length === 0){
-              field.options.push(createEmptyOption());
-            }
-          };
-
-          const safeNotifyFormbuilderChange = typeof window !== 'undefined' && typeof window.notifyFormbuilderChange === 'function' 
-            ? window.notifyFormbuilderChange 
-            : (()=>{});
-
-          const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
-            normalizeOptions();
-            versionList.innerHTML = '';
-            let firstId = null;
-            const currencyAlertMessage = 'Please select a currency before entering a price.';
-            let lastCurrencyAlertAt = 0;
-            let currencyAlertHandle = null;
-            let currencyAlertTimeout = 0;
-            const showCurrencyAlert = target => {
-              const candidate = (target && typeof target.getBoundingClientRect === 'function')
-                ? target
-                : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
-                  ? document.activeElement
-                  : null);
-              const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
-              if(!inputEl) return;
-              const now = Date.now();
-              if(now - lastCurrencyAlertAt < 400){
-                if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
-                  currencyAlertHandle.reposition();
-                }
-                return;
-              }
-              lastCurrencyAlertAt = now;
-              if(currencyAlertTimeout){
-                clearTimeout(currencyAlertTimeout);
-                currencyAlertTimeout = 0;
-              }
-              if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
-                currencyAlertHandle.remove();
-                currencyAlertHandle = null;
-              }
-              const showCopyStyleMessageFn = typeof window !== 'undefined' && typeof window.showCopyStyleMessage === 'function' ? window.showCopyStyleMessage : (() => null);
-              const handle = showCopyStyleMessageFn(currencyAlertMessage, inputEl);
-              if(!handle) return;
-              currencyAlertHandle = handle;
-              currencyAlertTimeout = window.setTimeout(()=>{
-                handle.remove();
-                if(currencyAlertHandle === handle){
-                  currencyAlertHandle = null;
-                }
-                currencyAlertTimeout = 0;
-              }, 1500);
-            };
-            field.options.forEach((optionValue, optionIndex)=>{
-              const optionRow = document.createElement('div');
-              optionRow.className = 'variant-pricing-option';
-              optionRow.dataset.optionIndex = String(optionIndex);
-
-              const topRow = document.createElement('div');
-              topRow.className = 'variant-pricing-row variant-pricing-row--top';
-
-              const versionInput = document.createElement('input');
-              versionInput.type = 'text';
-              versionInput.className = 'variant-pricing-name';
-              versionInput.placeholder = 'Version Name';
-              const versionInputId = `${baseId}-version-${optionIndex}`;
-              versionInput.id = versionInputId;
-              if(optionIndex === 0){
-                firstId = versionInputId;
-              }
-              versionInput.value = optionValue.version || '';
-              versionInput.addEventListener('input', ()=>{
-                field.options[optionIndex].version = versionInput.value;
-                safeNotifyFormbuilderChange();
-              });
-              topRow.appendChild(versionInput);
-
-              const bottomRow = document.createElement('div');
-              bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
-
-              const currencyWrapper = document.createElement('div');
-              currencyWrapper.className = 'options-dropdown';
-              const currencyMenuBtn = document.createElement('button');
-              currencyMenuBtn.type = 'button';
-              currencyMenuBtn.className = 'variant-pricing-currency';
-              currencyMenuBtn.setAttribute('aria-haspopup', 'true');
-              currencyMenuBtn.setAttribute('aria-expanded', 'false');
-              const currencyMenuId = `variant-currency-${baseId}-${optionIndex}`;
-              currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-              const existingCurrency = optionValue.currency || '';
-              currencyMenuBtn.textContent = existingCurrency || 'Currency';
-              currencyMenuBtn.dataset.value = existingCurrency;
-              const currencyArrow = document.createElement('span');
-              currencyArrow.className = 'dropdown-arrow';
-              currencyArrow.setAttribute('aria-hidden', 'true');
-              currencyMenuBtn.appendChild(currencyArrow);
-              const currencyMenu = document.createElement('div');
-              currencyMenu.className = 'options-menu';
-              currencyMenu.id = currencyMenuId;
-              currencyMenu.hidden = true;
-              const placeholderBtn = document.createElement('button');
-              placeholderBtn.type = 'button';
-              placeholderBtn.className = 'menu-option';
-              placeholderBtn.textContent = 'Currency';
-              placeholderBtn.dataset.value = '';
-              placeholderBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                currencyMenuBtn.textContent = 'Currency';
-                if(arrow) currencyMenuBtn.appendChild(arrow);
-                currencyMenuBtn.dataset.value = '';
-                currencyMenu.hidden = true;
-                currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                const previousCurrency = field.options[optionIndex].currency || '';
-                field.options[optionIndex].currency = '';
-                const priceCleared = updatePriceState();
-                if(previousCurrency !== '' || priceCleared){
-                  safeNotifyFormbuilderChange();
-                }
-              });
-              if(!existingCurrency){
-                currencyMenu.appendChild(placeholderBtn);
-              }
-              const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
-              currencyOptions.forEach(code => {
-                const optionBtn = document.createElement('button');
-                optionBtn.type = 'button';
-                optionBtn.className = 'menu-option';
-                optionBtn.textContent = code;
-                optionBtn.dataset.value = code;
-                optionBtn.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                  const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                  currencyMenuBtn.textContent = code;
-                  if(arrow) currencyMenuBtn.appendChild(arrow);
-                  currencyMenuBtn.dataset.value = code;
-                  currencyMenu.hidden = true;
-                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                  const previousCurrency = field.options[optionIndex].currency || '';
-                  field.options[optionIndex].currency = code;
-                  const priceCleared = updatePriceState();
-                  if(isCurrencySelected()){
-                    commitPriceValue();
-                  }
-                  if(previousCurrency !== code || priceCleared){
-                    safeNotifyFormbuilderChange();
-                  }
-                  const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                  if(placeholder){
-                    placeholder.remove();
-                  }
-                });
-                currencyMenu.appendChild(optionBtn);
-              });
-              currencyMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const open = !currencyMenu.hasAttribute('hidden');
-                if(open){
-                  currencyMenu.hidden = true;
-                  currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                } else {
-                  // Ensure currency options are populated when menu opens
-                  const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
-                  if(existingOptions.length === 0){
-                    const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
-                    currencyOptions.forEach(code => {
-                      // Check if option already exists
-                      const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
-                      if(!existing){
-                        const optionBtn = document.createElement('button');
-                        optionBtn.type = 'button';
-                        optionBtn.className = 'menu-option';
-                        optionBtn.textContent = code;
-                        optionBtn.dataset.value = code;
-                        optionBtn.addEventListener('click', (e) => {
-                          e.stopPropagation();
-                          const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                          currencyMenuBtn.textContent = code;
-                          if(arrow) currencyMenuBtn.appendChild(arrow);
-                          currencyMenuBtn.dataset.value = code;
-                          currencyMenu.hidden = true;
-                          currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                          const previousCurrency = field.options[optionIndex].currency || '';
-                          field.options[optionIndex].currency = code;
-                          const priceCleared = updatePriceState();
-                          if(isCurrencySelected()){
-                            commitPriceValue();
-                          }
-                          if(previousCurrency !== code || priceCleared){
-                            safeNotifyFormbuilderChange();
-                          }
-                          const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                          if(placeholder){
-                            placeholder.remove();
-                          }
-                        });
-                        currencyMenu.appendChild(optionBtn);
-                      }
-                    });
-                  }
-                  currencyMenu.hidden = false;
-                  currencyMenuBtn.setAttribute('aria-expanded', 'true');
-                  const outsideHandler = (ev) => {
-                    if(!currencyWrapper.contains(ev.target)){
-                      currencyMenu.hidden = true;
-                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                      document.removeEventListener('click', outsideHandler);
-                      document.removeEventListener('pointerdown', outsideHandler);
-                    }
-                  };
-                  setTimeout(() => {
-                    document.addEventListener('click', outsideHandler);
-                    document.addEventListener('pointerdown', outsideHandler);
-                  }, 0);
-                }
-              });
-              currencyMenu.addEventListener('click', (e) => e.stopPropagation());
-              currencyWrapper.appendChild(currencyMenuBtn);
-              currencyWrapper.appendChild(currencyMenu);
-              const currencySelect = currencyMenuBtn;
-              const isCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
-
-              const priceInput = document.createElement('input');
-              priceInput.type = 'text';
-              priceInput.inputMode = 'decimal';
-              priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
-              priceInput.className = 'variant-pricing-price';
-              priceInput.placeholder = '0.00';
-              const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
-              const formatPriceValue = value => {
-                const trimmed = (value || '').trim();
-                if(trimmed === '') return '';
-                let normalized = trimmed.replace(/,/g, '.');
-                if(normalized === '.') return '0.00';
-                if(normalized.startsWith('.')){
-                  normalized = `0${normalized}`;
-                }
-                const dotIndex = normalized.indexOf('.');
-                if(dotIndex === -1){
-                  return `${normalized}.00`;
-                }
-                let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
-                if(integerPart === ''){
-                  integerPart = '0';
-                }
-                let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
-                if(decimalPart.length === 0){
-                  decimalPart = '00';
-                } else if(decimalPart.length === 1){
-                  decimalPart = `${decimalPart}0`;
-                } else {
-                  decimalPart = decimalPart.slice(0, 2);
-                }
-                return `${integerPart}.${decimalPart}`;
-              };
-              const initialPriceValue = sanitizePriceValue(optionValue.price || '');
-              const formattedInitialPrice = formatPriceValue(initialPriceValue);
-              priceInput.value = formattedInitialPrice;
-              if(formattedInitialPrice !== (field.options[optionIndex].price || '')){
-                field.options[optionIndex].price = formattedInitialPrice;
-              }
-              const clearPriceValue = ()=>{
-                let changed = false;
-                if(priceInput.value !== ''){
-                  priceInput.value = '';
-                  changed = true;
-                }
-                if(field.options[optionIndex].price !== ''){
-                  field.options[optionIndex].price = '';
-                  changed = true;
-                } else if(typeof field.options[optionIndex].price !== 'string'){
-                  field.options[optionIndex].price = '';
-                }
-                return changed;
-              };
-              const updatePriceState = ()=>{
-                if(isCurrencySelected()){
-                  priceInput.readOnly = false;
-                  priceInput.classList.remove('is-awaiting-currency');
-                  priceInput.removeAttribute('aria-disabled');
-                  return false;
-                }
-                priceInput.readOnly = true;
-                priceInput.classList.add('is-awaiting-currency');
-                priceInput.setAttribute('aria-disabled', 'true');
-                return clearPriceValue();
-              };
-              const blockPriceAccess = event => {
-                if(isCurrencySelected()) return false;
-                if(event && event.type === 'pointerdown' && event.button !== 0) return false;
-                if(event && typeof event.preventDefault === 'function'){
-                  event.preventDefault();
-                }
-                if(event && typeof event.stopPropagation === 'function'){
-                  event.stopPropagation();
-                }
-                if(typeof priceInput.blur === 'function'){
-                  requestAnimationFrame(()=>{
-                    try{ priceInput.blur(); }catch(err){}
-                  });
-                }
-                showCurrencyAlert(priceInput);
-                return true;
-              };
-
-              const commitPriceValue = event => {
-                if(!isCurrencySelected()){
-                  if(clearPriceValue()){
-                    safeNotifyFormbuilderChange();
-                  }
-                  return;
-                }
-                const rawValue = priceInput.value;
-                const sanitized = sanitizePriceValue(rawValue);
-                if(rawValue !== sanitized){
-                  priceInput.value = sanitized;
-                }
-                const formatted = formatPriceValue(sanitized);
-                if(priceInput.value !== formatted){
-                  priceInput.value = formatted;
-                }
-                if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
-                  if(formatted === ''){
-                    priceInput.setSelectionRange(0, 0);
-                  } else if(!/[.,]/.test(sanitized)){ 
-                    const dotIndex = formatted.indexOf('.');
-                    const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
-                    priceInput.setSelectionRange(caretPos, caretPos);
-                  } else {
-                    const dotIndex = formatted.indexOf('.');
-                    if(dotIndex === -1){
-                      priceInput.setSelectionRange(formatted.length, formatted.length);
-                    } else {
-                      const decimals = sanitized.split(/[.,]/)[1] || '';
-                      if(decimals.length === 0){
-                        priceInput.setSelectionRange(dotIndex + 1, formatted.length);
-                      } else {
-                        const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
-                        priceInput.setSelectionRange(caretPos, caretPos);
-                      }
-                    }
-                  }
-                }
-                const previous = field.options[optionIndex].price || '';
-                if(previous !== formatted){
-                  field.options[optionIndex].price = formatted;
-                  safeNotifyFormbuilderChange();
-                }
-              };
-              priceInput.addEventListener('beforeinput', event => {
-                if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
-                  event.preventDefault();
-                }
-              });
-              priceInput.addEventListener('pointerdown', event => {
-                blockPriceAccess(event);
-              });
-              priceInput.addEventListener('focus', event => {
-                blockPriceAccess(event);
-              });
-              priceInput.addEventListener('keydown', event => {
-                if(event.key === 'Tab' || event.key === 'Shift') return;
-                if(blockPriceAccess(event)) return;
-              });
-              priceInput.addEventListener('input', commitPriceValue);
-              priceInput.addEventListener('change', commitPriceValue);
-              const initialCleared = updatePriceState();
-              if(isCurrencySelected()){
-                commitPriceValue();
-              } else if(initialCleared){
-                safeNotifyFormbuilderChange();
-              }
-
-              const actions = document.createElement('div');
-              actions.className = 'dropdown-option-actions variant-pricing-option-actions';
-
-              const addBtn = document.createElement('button');
-              addBtn.type = 'button';
-              addBtn.className = 'dropdown-option-add';
-              addBtn.textContent = '+';
-              addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
-              addBtn.addEventListener('click', ()=>{
-                field.options.splice(optionIndex + 1, 0, createEmptyOption());
-                safeNotifyFormbuilderChange();
-                renderVersionEditor(optionIndex + 1);
-              });
-
-              const removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'dropdown-option-remove';
-              removeBtn.textContent = '-';
-              removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
-              removeBtn.disabled = field.options.length <= 1;
-              removeBtn.addEventListener('click', ()=>{
-                if(field.options.length <= 1){
-                  field.options[0] = createEmptyOption();
-                } else {
-                  field.options.splice(optionIndex, 1);
-                }
-                safeNotifyFormbuilderChange();
-                const nextFocus = Math.min(optionIndex, Math.max(field.options.length - 1, 0));
-                renderVersionEditor(nextFocus);
-              });
-
-              actions.append(addBtn, removeBtn);
-              bottomRow.append(currencyWrapper, priceInput, actions);
-
-              optionRow.append(topRow, bottomRow);
-              versionList.appendChild(optionRow);
-            });
-
-            if(focusIndex !== null){
-              requestAnimationFrame(()=>{
-                const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
-                if(!targetRow) return;
-                let focusEl = null;
-                if(focusTarget === 'price'){
-                  focusEl = targetRow.querySelector('.variant-pricing-price');
-                } else if(focusTarget === 'currency'){
-                  focusEl = targetRow.querySelector('button.variant-pricing-currency');
-                }
-                if(!focusEl){
-                  focusEl = targetRow.querySelector('.variant-pricing-name');
-                }
-                if(focusEl && typeof focusEl.focus === 'function'){
-                  try{ focusEl.focus({ preventScroll: true }); }
-                  catch(err){
-                    try{ focusEl.focus(); }catch(e){}
-                  }
-                }
-              });
-            }
-          };
-
-          renderVersionEditor();
-          editor.setAttribute('aria-required', field.required ? 'true' : 'false');
-          control = editor;
-        } else if(field.type === 'website-url' || field.type === 'tickets-url'){
-          wrapper.classList.add('form-field--url');
-          const urlWrapper = document.createElement('div');
-          urlWrapper.className = 'form-url-wrapper';
-          const urlInput = document.createElement('input');
-          urlInput.type = 'text';
-          urlInput.className = 'form-url-input';
-          const urlInputId = `${baseId}-input`;
-          urlInput.id = urlInputId;
-          const placeholderValue = field.placeholder && /\.[A-Za-z]{2,}/.test(field.placeholder)
-            ? field.placeholder
-            : 'https://example.com';
-          urlInput.placeholder = placeholderValue;
-          urlInput.dataset.urlType = field.type === 'website-url' ? 'website' : 'tickets';
-          urlInput.dataset.urlMessage = 'Please enter a valid URL with a dot and letters after it.';
-          const linkId = `${baseId}-link`;
-          urlInput.dataset.urlLinkId = linkId;
-          urlInput.autocomplete = 'url';
-          urlInput.inputMode = 'url';
-          const urlLink = document.createElement('a');
-          urlLink.id = linkId;
-          urlLink.href = '#';
-          urlLink.target = '_blank';
-          urlLink.rel = 'noopener noreferrer';
-          urlLink.className = 'form-url-link';
-          urlLink.textContent = 'Open link';
-          urlLink.setAttribute('aria-disabled','true');
-          urlLink.tabIndex = -1;
-          const urlMessage = document.createElement('div');
-          urlMessage.className = 'form-url-message';
-          urlMessage.textContent = 'Link disabled until a valid URL is entered.';
-          urlWrapper.append(urlInput, urlLink, urlMessage);
-          control = urlWrapper;
-        } else if(field.type === 'images'){
-          wrapper.classList.add('form-field--images');
-          const imageWrapper = document.createElement('div');
-          imageWrapper.className = 'form-images';
-          const fileInput = document.createElement('input');
-          fileInput.type = 'file';
-          const fileInputId = `${baseId}-input`;
-          fileInput.id = fileInputId;
-          fileInput.accept = 'image/*';
-          fileInput.multiple = true;
-          fileInput.dataset.imagesField = 'true';
-          fileInput.dataset.maxImages = '10';
-          const previewId = `${baseId}-previews`;
-          const messageId = `${baseId}-message`;
-          fileInput.dataset.imagePreviewTarget = previewId;
-          fileInput.dataset.imageMessageTarget = messageId;
-          const hint = document.createElement('div');
-          hint.className = 'form-image-hint';
-          hint.textContent = 'Upload up to 10 images.';
-          const message = document.createElement('div');
-          message.className = 'form-image-message';
-          message.id = messageId;
-          message.hidden = true;
-          const previewGrid = document.createElement('div');
-          previewGrid.className = 'form-image-previews';
-          previewGrid.id = previewId;
-          imageWrapper.append(fileInput, hint, message, previewGrid);
-          control = imageWrapper;
-        } else if(field.type === 'location'){
-          wrapper.classList.add('form-field--location');
-          const ensureLocationState = ()=>{
-            if(!field.location || typeof field.location !== 'object'){
-              field.location = { address: '', latitude: '', longitude: '' };
-            } else {
-              if(typeof field.location.address !== 'string') field.location.address = '';
-              if(typeof field.location.latitude !== 'string') field.location.latitude = '';
-              if(typeof field.location.longitude !== 'string') field.location.longitude = '';
-            }
-            return field.location;
-          };
-          const locationState = ensureLocationState();
-          const locationWrapper = document.createElement('div');
-          locationWrapper.className = 'location-field-wrapper';
-          locationWrapper.setAttribute('role', 'group');
-          const addressRow = document.createElement('div');
-          addressRow.className = 'venue-line address_line-line';
-          const geocoderContainer = document.createElement('div');
-          geocoderContainer.className = 'address_line-geocoder-container';
-          const addressInputId = `${baseId}-location-address`;
-          geocoderContainer.id = `${baseId}-location-geocoder`;
-          addressRow.appendChild(geocoderContainer);
-          locationWrapper.appendChild(addressRow);
-          const latitudeInput = document.createElement('input');
-          latitudeInput.type = 'hidden';
-          latitudeInput.dataset.locationLatitude = 'true';
-          latitudeInput.value = locationState.latitude || '';
-          const longitudeInput = document.createElement('input');
-          longitudeInput.type = 'hidden';
-          longitudeInput.dataset.locationLongitude = 'true';
-          longitudeInput.value = locationState.longitude || '';
-          locationWrapper.append(latitudeInput, longitudeInput);
-          const placeholderValue = (field.placeholder && field.placeholder.trim())
-            ? field.placeholder
-            : 'Search for a location';
-          const syncCoordinateInputs = ()=>{
-            latitudeInput.value = locationState.latitude || '';
-            longitudeInput.value = locationState.longitude || '';
-          };
-          syncCoordinateInputs();
-          const formatCoord = value => {
-            const num = Number(value);
-            return Number.isFinite(num) ? num.toFixed(6) : '';
-          };
-          const applyAddressLabel = input => {
-            if(input){
-              input.setAttribute('aria-labelledby', labelId);
-            }
-            return input;
-          };
-          const createFallbackAddressInput = ()=>{
-            geocoderContainer.innerHTML = '';
-            geocoderContainer.classList.remove('is-geocoder-active');
-            const fallback = document.createElement('input');
-            fallback.type = 'text';
-            fallback.id = addressInputId;
-            fallback.className = 'address_line-fallback';
-            fallback.placeholder = placeholderValue;
-            fallback.setAttribute('aria-label', placeholderValue);
-            fallback.dataset.locationAddress = 'true';
-            fallback.value = locationState.address || '';
-            if(field.required) fallback.required = true;
-            fallback.addEventListener('input', ()=>{
-              locationState.address = fallback.value;
-              safeNotifyFormbuilderChange();
-            });
-            geocoderContainer.appendChild(fallback);
-            addressInput = fallback;
-            applyAddressLabel(fallback);
-            return fallback;
-          };
-          const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
-          let addressInput = null;
-          if(mapboxReady){
-            const geocoderOptions = {
-              accessToken: window.mapboxgl.accessToken,
-              mapboxgl: window.mapboxgl,
-              marker: false,
-              placeholder: placeholderValue,
-              geocodingUrl: MAPBOX_VENUE_ENDPOINT,
-              types: 'address,poi',
-              reverseGeocode: true,
-              localGeocoder: localVenueGeocoder,
-              externalGeocoder: externalMapboxVenueGeocoder,
-              filter: majorVenueFilter,
-              limit: 7,
-              language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
-            };
-            const geocoder = new MapboxGeocoder(geocoderOptions);
-            const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
-              ? window.requestAnimationFrame.bind(window)
-              : (cb)=> setTimeout(cb, 16);
-            let attempts = 0;
-            const maxAttempts = 20;
-            let geocoderMounted = false;
-            let fallbackActivated = false;
-            const attachGeocoder = ()=>{
-              if(fallbackActivated){
-                return;
-              }
-              const scheduleRetry = ()=>{
-                attempts += 1;
-                if(attempts > maxAttempts){
-                  addressInput = createFallbackAddressInput();
-                  fallbackActivated = true;
-                  return false;
-                }
-                schedule(attachGeocoder);
-                return true;
-              };
-              if(!geocoderContainer.isConnected){
-                scheduleRetry();
-                return;
-              }
-              if(!geocoderMounted){
-                try{
-                  geocoder.addTo(geocoderContainer);
-                  geocoderMounted = true;
-                }catch(err){
-                  addressInput = createFallbackAddressInput();
-                  fallbackActivated = true;
-                  return;
-                }
-              }
-              const setGeocoderActive = isActive => {
-                const active = !!isActive;
-                geocoderContainer.classList.toggle('is-geocoder-active', active);
-                const subMenu = geocoderContainer.closest('.subcategory-form-menu');
-                if(subMenu){
-                  subMenu.classList.toggle('has-floating-overlay', active);
-                }
-                const categoryMenu = subMenu
-                  ? subMenu.closest('.category-form-menu')
-                  : geocoderContainer.closest('.category-form-menu');
-                if(categoryMenu){
-                  categoryMenu.classList.toggle('has-floating-overlay', active);
-                }
-              };
-              setGeocoderActive(false);
-              const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
-              if(geocoderRoot && !geocoderRoot.__formGeocoderBound){
-                geocoderRoot.__formGeocoderBound = true;
-                const handleFocusIn = ()=> setGeocoderActive(true);
-                const handleFocusOut = event => {
-                  const nextTarget = event && event.relatedTarget;
-                  if(!nextTarget || !geocoderRoot.contains(nextTarget)){
-                    setGeocoderActive(false);
-                  }
-                };
-                const handlePointerDown = ()=> setGeocoderActive(true);
-                geocoderRoot.addEventListener('focusin', handleFocusIn);
-                geocoderRoot.addEventListener('focusout', handleFocusOut);
-                geocoderRoot.addEventListener('pointerdown', handlePointerDown);
-              }
-              const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
-              if(!geocoderInput){
-                scheduleRetry();
-                return;
-              }
-              if(geocoderInput.__formLocationBound){
-                addressInput = geocoderInput;
-                applyAddressLabel(geocoderInput);
-                return;
-              }
-              geocoderInput.__formLocationBound = true;
-              geocoderInput.placeholder = placeholderValue;
-              geocoderInput.setAttribute('aria-label', placeholderValue);
-              geocoderInput.id = addressInputId;
-              geocoderInput.dataset.locationAddress = 'true';
-              geocoderInput.value = locationState.address || '';
-              if(field.required) geocoderInput.required = true;
-              addressInput = geocoderInput;
-              applyAddressLabel(geocoderInput);
-              geocoderInput.addEventListener('blur', ()=>{
-                const nextValue = geocoderInput.value || '';
-                if(locationState.address !== nextValue){
-                  locationState.address = nextValue;
-                  safeNotifyFormbuilderChange();
-                }
-              });
-              geocoderInput.addEventListener('keydown', (e)=>{
-                if(e.key === 'Enter'){
-                  e.stopPropagation();
-                }
-              });
-              geocoder.on('results', ()=> setGeocoderActive(true));
-              geocoder.on('result', event => {
-                const result = event && event.result;
-                if(result){
-                  const clone = cloneGeocoderFeature(result);
-                  const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
-                  if(placeName){
-                    locationState.address = placeName;
-                    geocoderInput.value = placeName;
-                  } else {
-                    locationState.address = geocoderInput.value || '';
-                  }
-                  const center = getMapboxVenueFeatureCenter(clone);
-                  if(center && center.length >= 2){
-                    const [lng, lat] = center;
-                    locationState.longitude = formatCoord(lng);
-                    locationState.latitude = formatCoord(lat);
-                  }
-                  syncCoordinateInputs();
-                  safeNotifyFormbuilderChange();
-                }
-                setGeocoderActive(false);
-              });
-              geocoder.on('clear', ()=>{
-                locationState.address = '';
-                locationState.latitude = '';
-                locationState.longitude = '';
-                geocoderInput.value = '';
-                syncCoordinateInputs();
-                safeNotifyFormbuilderChange();
-                setGeocoderActive(false);
-              });
-              geocoder.on('error', ()=> setGeocoderActive(false));
-              return geocoderInput;
-            };
-            attachGeocoder();
-          } else {
-            addressInput = createFallbackAddressInput();
-          }
-          if(addressInput){
-            addressInput.setAttribute('aria-labelledby', labelId);
-          }
-          control = locationWrapper;
-        } else {
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = field.placeholder || '';
-          input.readOnly = false;
-          input.tabIndex = 0;
-          const inputId = `${baseId}-input`;
-          input.id = inputId;
-          if(field.type === 'title'){
-            input.classList.add('form-title-input');
-          }
-          if(field.required) input.required = true;
-          if(!isUserFormContext){
-            input.addEventListener('change', (e) => {
-              e.stopPropagation();
-            });
-            input.addEventListener('input', (e) => {
-              e.stopPropagation();
-            });
-          }
-          control = input;
-        }
-        if(control){
-          if(control instanceof HTMLElement){
-            control.setAttribute('aria-required', field.required ? 'true' : 'false');
-            if(labelId){
-              control.setAttribute('aria-labelledby', labelId);
-            }
-          }
-        }
-        if(field.required){
-          wrapper.classList.add('form-field--required');
-          labelEl.appendChild(document.createTextNode(' '));
-          const asterisk = document.createElement('span');
-          asterisk.className = 'required-asterisk';
-          asterisk.textContent = '*';
-          labelEl.appendChild(asterisk);
-        }
-        const header = document.createElement('div');
-        header.className = 'form-field-header';
-        header.style.position = 'relative';
-        header.appendChild(labelEl);
-
-        if(!isUserFormContext && typeof createFieldEditUI === 'function'){
-          const fieldEditUI = createFieldEditUI(field, {
-            hostElement: wrapper,
-            attachDropdownToPanel: true
-          });
-
-          if(fieldEditUI && typeof fieldEditUI.setDeleteHandler === 'function'){
-            const sourceRow = field.__rowEl instanceof Element ? field.__rowEl : null;
-            const rowDeleteHandler = sourceRow && typeof sourceRow.__deleteHandler === 'function'
-              ? sourceRow.__deleteHandler
-              : null;
-            const deleteHandler = rowDeleteHandler || (typeof field.__handleDeleteField === 'function'
-              ? field.__handleDeleteField
-              : null);
-            fieldEditUI.setDeleteHandler(deleteHandler);
-          }
-
-          fieldEditUI.setSummaryUpdater(()=>{
-            const displayName = (typeof field.name === 'string' && field.name.trim())
-              ? field.name.trim()
-              : labelText;
-            fieldEditUI.editBtn.setAttribute('aria-label', `Edit ${displayName || 'field'} settings`);
-          });
-          fieldEditUI.runSummaryUpdater();
-
-          header.append(fieldEditUI.editBtn, fieldEditUI.editPanel);
-
-          const handleHeaderClick = event => {
-            if(event.defaultPrevented) return;
-            const origin = event.target;
-            if(!origin) return;
-            if(origin.closest('.formbuilder-drag-handle')) return;
-            if(origin.closest('.field-edit-btn')) return;
-            if(origin.closest('.field-edit-panel')) return;
-            event.stopPropagation();
-            document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-              if(panel !== fieldEditUI.editPanel){
-                panel.hidden = true;
-              }
-            });
-            if(typeof closeFieldEditPanels === 'function'){
-              closeFieldEditPanels({ exceptPanel: fieldEditUI.editPanel, exceptButton: fieldEditUI.editBtn });
-            }
-            fieldEditUI.openEditPanel();
-          };
-
-          header.addEventListener('click', handleHeaderClick);
-        }
-
-        wrapper.append(header, control);
-        formFields.appendChild(wrapper);
-        
-        if(options.onFieldRendered && typeof options.onFieldRendered === 'function'){
-          options.onFieldRendered(wrapper, field);
-        }
-      });
-    }
-    window.renderForm = renderForm;
     
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
@@ -9830,7 +9484,137 @@ function makePosts(){
           // Text will be loaded from DB
           addFieldBtn.setAttribute('aria-label', `Add field to ${sub}`);
 
-          // ensureFieldDefaults is now defined at module scope, use it directly
+          const ensureFieldDefaults = (field)=>{
+            const safeField = field && typeof field === 'object' ? field : {};
+            if(typeof safeField.name !== 'string'){
+              safeField.name = '';
+            } else if(!safeField.name.trim()){
+              safeField.name = '';
+          }
+          if(typeof safeField.type !== 'string'){
+            safeField.type = '';
+          } else {
+            // Preserve description and text-area types BEFORE normalization
+            const originalType = safeField.type;
+            const isDescriptionType = originalType === 'description' || originalType === 'text-area' ||
+                                     (typeof originalType === 'string' && (originalType.includes('description') || originalType.includes('text-area')));
+            
+            if(isDescriptionType){
+              // Normalize but preserve description/text-area
+              const normalizedType = getBaseFieldType(originalType);
+              if(normalizedType === 'description' || normalizedType === 'text-area'){
+                safeField.type = normalizedType;
+              } else if(originalType === 'description' || originalType === 'text-area'){
+                safeField.type = originalType;
+              } else {
+                // Extract description/text-area from the type string
+                safeField.type = originalType.includes('description') ? 'description' : 'text-area';
+              }
+            } else {
+              // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
+              const normalizedType = getBaseFieldType(safeField.type);
+              if(normalizedType){
+                safeField.type = normalizedType;
+              }
+            }
+          }
+          // Ensure key and fieldTypeKey sync with each other if one is missing
+          if(!safeField.key && safeField.fieldTypeKey){
+            safeField.key = safeField.fieldTypeKey;
+          }
+          if(!safeField.fieldTypeKey && safeField.key){
+            safeField.fieldTypeKey = safeField.key;
+          }
+          // For brand new fields, default to first field type in list
+          // Don't default to first field type - let user select
+          // Only set defaults if field type is explicitly provided
+          if(!safeField.key && !safeField.fieldTypeKey){
+            // Leave unset - user must select from dropdown
+          } else if(safeField.fieldTypeKey && !safeField.key){
+            safeField.key = safeField.fieldTypeKey;
+          } else if(safeField.key && !safeField.fieldTypeKey){
+            safeField.fieldTypeKey = safeField.key;
+          }
+          
+          // Only auto-name if field type is explicitly set (not defaulted)
+            if(!safeField.name){
+              safeField.name = '';
+            }
+            if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+            const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+            const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
+            const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
+            let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
+            if(!resolvedFieldTypeName && fieldTypeKey){
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
+              if(matchingFieldType){
+                resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
+              }
+            }
+            resolvedFieldTypeName = resolvedFieldTypeName || '';
+            safeField.field_type_name = resolvedFieldTypeName;
+            safeField.fieldTypeName = resolvedFieldTypeName;
+          // Only auto-name if field type is set AND field doesn't already have a custom name
+          // For editable fields, preserve existing custom names
+          if(fieldTypeKey && resolvedFieldTypeName){
+            const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+            const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+            // Only auto-name if not editable OR if name is empty
+            if(!isEditable || !safeField.name || safeField.name.trim() === ''){
+              safeField.name = resolvedFieldTypeName;
+            }
+          }
+            if(fieldTypeKey === 'location'){
+              if(!safeField.placeholder || !safeField.placeholder.trim()){
+                safeField.placeholder = 'Search for a location';
+              }
+              const loc = safeField.location && typeof safeField.location === 'object' ? safeField.location : {};
+              const address = typeof loc.address === 'string' ? loc.address : '';
+              const latitude = typeof loc.latitude === 'string' ? loc.latitude : '';
+              const longitude = typeof loc.longitude === 'string' ? loc.longitude : '';
+              safeField.location = { address, latitude, longitude };
+            } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
+              delete safeField.location;
+            }
+            const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
+            safeField.required = hasRequiredProp ? !!safeField.required : false;
+            if(!Array.isArray(safeField.options)){
+              safeField.options = [];
+            }
+            if(fieldTypeKey === 'venue-ticketing'){
+              safeField.options = normalizeVenueSessionOptions(safeField.options);
+            } else if(fieldTypeKey === 'variant-pricing'){
+              safeField.options = safeField.options.map(opt => {
+                if(opt && typeof opt === 'object'){
+                  return {
+                    version: typeof opt.version === 'string' ? opt.version : '',
+                    currency: typeof opt.currency === 'string' ? opt.currency : '',
+                    price: typeof opt.price === 'string' ? opt.price : ''
+                  };
+                }
+                const str = typeof opt === 'string' ? opt : String(opt ?? '');
+                return { version: str, currency: '', price: '' };
+              });
+              if(safeField.options.length === 0){
+                safeField.options.push({ version: '', currency: '', price: '' });
+              }
+            } else {
+              safeField.options = safeField.options.map(opt => {
+                if(typeof opt === 'string') return opt;
+                if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
+                  return opt.version;
+                }
+                return String(opt ?? '');
+              });
+              if((safeField.type === 'dropdown' || safeField.type === 'radio') && safeField.options.length === 0){
+                safeField.options.push('', '', '');
+              }
+            }
+            if(safeField.type !== 'venue-ticketing'){
+              resetVenueAutofillState(safeField);
+            }
+            return safeField;
+          };
           const buildVenueSessionPreview = (previewField, baseId)=>{
             // CRITICAL: Clone options to prevent sharing state between form preview and member forms
             // Each instance needs its own independent copy of the options
@@ -12366,9 +12150,7 @@ function makePosts(){
                               markAutoChange();
                             }
                           });
-                          if(!existingCurrency){
-                            currencyMenu.appendChild(placeholderBtn);
-                          }
+                          currencyMenu.appendChild(placeholderBtn);
                           const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
                           currencyOptions.forEach(code => {
                             const optionBtn = document.createElement('button');
@@ -12398,10 +12180,6 @@ function makePosts(){
                               if(previousCurrency !== nextCurrency || priceCleared || propagated){
                                 markAutoChange();
                               }
-                              const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                              if(placeholder){
-                                placeholder.remove();
-                              }
                             });
                             currencyMenu.appendChild(optionBtn);
                           });
@@ -12412,54 +12190,10 @@ function makePosts(){
                               currencyMenu.hidden = true;
                               currencyMenuBtn.setAttribute('aria-expanded', 'false');
                             } else {
-                              // Ensure currency options are populated when menu opens
-                              const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
-                              if(existingOptions.length === 0){
-                                const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
-                                currencyOptions.forEach(code => {
-                                  // Check if option already exists
-                                  const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
-                                  if(!existing){
-                                    const optionBtn = document.createElement('button');
-                                    optionBtn.type = 'button';
-                                    optionBtn.className = 'menu-option';
-                                    optionBtn.textContent = code;
-                                    optionBtn.dataset.value = code;
-                                    optionBtn.addEventListener('click', (e) => {
-                                      e.stopPropagation();
-                                      currencyMenuBtn.textContent = code;
-                                      currencyMenuBtn.dataset.value = code;
-                                      currencyMenuBtn.appendChild(currencyArrow);
-                                      currencyMenu.hidden = true;
-                                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                                      const nextCurrency = code.trim();
-                                      const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
-                                      tier.currency = nextCurrency;
-                                      const shouldClearPrice = nextCurrency === '';
-                                      const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
-                                      const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
-                                        sourceTier: tier,
-                                        clearPrices: shouldClearPrice
-                                      });
-                                      if(sessionIndex > 0 && previousCurrency !== nextCurrency){
-                                        lockSessionMirror(venue);
-                                      }
-                                      if(previousCurrency !== nextCurrency || priceCleared || propagated){
-                                        markAutoChange();
-                                      }
-                                      const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                                      if(placeholder){
-                                        placeholder.remove();
-                                      }
-                                    });
-                                    currencyMenu.appendChild(optionBtn);
-                                  }
-                                });
-                              }
                               currencyMenu.hidden = false;
                               currencyMenuBtn.setAttribute('aria-expanded', 'true');
                               const outsideHandler = (ev) => {
-                                if(!currencyWrapper.contains(ev.target)){
+                                if(!ev.target.closest(currencyWrapper)){
                                   currencyMenu.hidden = true;
                                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
                                   document.removeEventListener('click', outsideHandler);
@@ -12778,7 +12512,7 @@ function makePosts(){
 
           const formPreviewBtn = document.createElement('button');
           formPreviewBtn.type = 'button';
-          formPreviewBtn.className = 'form-btn';
+          formPreviewBtn.className = 'form-preview-btn';
           formPreviewBtn.setAttribute('aria-expanded', 'false');
           formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
           const formPreviewLabel = document.createElement('span');
@@ -12789,10 +12523,10 @@ function makePosts(){
           formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
 
           const formPreviewContainer = document.createElement('div');
-          formPreviewContainer.className = 'form-container';
+          formPreviewContainer.className = 'form-preview-container';
           formPreviewContainer.hidden = true;
           const formPreviewFields = document.createElement('div');
-          formPreviewFields.className = 'form-fields';
+          formPreviewFields.className = 'form-preview-fields';
           formPreviewContainer.appendChild(formPreviewFields);
           const formPreviewId = `${subContentId}Preview`;
           formPreviewContainer.id = formPreviewId;
@@ -12809,15 +12543,7 @@ function makePosts(){
             formPreviewBtn.setAttribute('aria-expanded', String(nextExpanded));
             formPreviewContainer.hidden = !nextExpanded;
             if(nextExpanded){
-              renderForm({
-                formFields: formPreviewFields,
-                formId: formPreviewId,
-                fields: fields,
-                categoryName: c && c.name,
-                subcategoryName: sub,
-                fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
-              });
+              renderFormPreview();
             }
           });
 
@@ -12967,15 +12693,7 @@ function makePosts(){
                 
                 notifyFormbuilderChange();
                 updateFieldEditorsByType();
-                renderForm({
-                  formFields: formPreviewFields,
-                  formId: formPreviewId,
-                  fields: fields,
-                  categoryName: c && c.name,
-                  subcategoryName: sub,
-                  fieldIdCounter: formPreviewFieldIdCounter,
-                  formLabel: 'Form Preview'
-                });
+                renderFormPreview();
                 runSummaryUpdater();
               });
               
@@ -12992,7 +12710,7 @@ function makePosts(){
                 fieldTypeMenu.hidden = false;
                 fieldTypeMenuBtn.setAttribute('aria-expanded', 'true');
                 const outsideHandler = (ev) => {
-                  if(!fieldTypeWrapper.contains(ev.target)){
+                  if(!ev.target.closest(fieldTypeWrapper)){
                     fieldTypeMenu.hidden = true;
                     fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
                     document.removeEventListener('click', outsideHandler);
@@ -13094,15 +12812,7 @@ function makePosts(){
               if(next === !!safeField.required) return;
               safeField.required = next;
               notifyFormbuilderChange();
-              renderForm({
-                formFields: formPreviewFields,
-                formId: formPreviewId,
-                fields: fields,
-                categoryName: c && c.name,
-                subcategoryName: sub,
-                fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
-              });
+              renderFormPreview();
               runSummaryUpdater();
             };
 
@@ -13194,15 +12904,7 @@ function makePosts(){
                   safeField.options[optionIndex] = optionInput.value;
                   optionRow._optionValue = optionInput.value;
                   notifyFormbuilderChange();
-                  renderForm({
-                    formFields: formPreviewFields,
-                    formId: formPreviewId,
-                    fields: fields,
-                    categoryName: c && c.name,
-                    subcategoryName: sub,
-                    fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
-                  });
+                  renderFormPreview();
                 });
 
                 const actions = document.createElement('div');
@@ -13219,15 +12921,7 @@ function makePosts(){
                   safeField.options.splice(optionIndex + 1, 0, '');
                   notifyFormbuilderChange();
                   renderDropdownOptions(optionIndex + 1);
-                  renderForm({
-                    formFields: formPreviewFields,
-                    formId: formPreviewId,
-                    fields: fields,
-                    categoryName: c && c.name,
-                    subcategoryName: sub,
-                    fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
-                  });
+                  renderFormPreview();
                 });
 
                 const removeOptionBtn = document.createElement('button');
@@ -13246,15 +12940,7 @@ function makePosts(){
                   notifyFormbuilderChange();
                   const nextFocus = Math.min(optionIndex, Math.max(safeField.options.length - 1, 0));
                   renderDropdownOptions(nextFocus);
-                  renderForm({
-                    formFields: formPreviewFields,
-                    formId: formPreviewId,
-                    fields: fields,
-                    categoryName: c && c.name,
-                    subcategoryName: sub,
-                    fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
-                  });
+                  renderFormPreview();
                 });
 
                 actions.append(addOptionBtn, removeOptionBtn);
@@ -13337,15 +13023,7 @@ function makePosts(){
               }
               notifyFormbuilderChange();
               renderDropdownOptions();
-              renderForm({
-                formFields: formPreviewFields,
-                formId: formPreviewId,
-                fields: fields,
-                categoryName: c && c.name,
-                subcategoryName: sub,
-                fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
-              });
+              renderFormPreview();
             });
 
             const updateFieldEditorsByType = ()=>{
@@ -13438,15 +13116,7 @@ function makePosts(){
                 safeField.name = newName;
                 // Only update preview and summary, don't trigger formbuilder change event
                 // which causes member forms to refresh
-                renderForm({
-                  formFields: formPreviewFields,
-                  formId: formPreviewId,
-                  fields: fields,
-                  categoryName: c && c.name,
-                  subcategoryName: sub,
-                  fieldIdCounter: formPreviewFieldIdCounter,
-                  formLabel: 'Form Preview'
-                });
+                renderFormPreview();
                 runSummaryUpdater();
               }
             });
@@ -13576,19 +13246,982 @@ function makePosts(){
           };
 
           let formPreviewFieldIdCounter = 0;
+          function renderFormPreview(){
+            formPreviewFields.innerHTML = '';
+            
+            const categorySubcategoryLabel = document.createElement('div');
+            categorySubcategoryLabel.className = 'form-preview-category-label';
+            categorySubcategoryLabel.textContent = `${c.name} > ${sub}`;
+            categorySubcategoryLabel.style.marginBottom = '12px';
+            categorySubcategoryLabel.style.fontSize = '14px';
+            categorySubcategoryLabel.style.fontWeight = '600';
+            categorySubcategoryLabel.style.color = 'var(--button-text)';
+            formPreviewFields.appendChild(categorySubcategoryLabel);
+            
+            if(!fields.length){
+              const empty = document.createElement('p');
+              empty.className = 'form-preview-empty';
+              empty.textContent = 'No fields added yet.';
+              formPreviewFields.appendChild(empty);
+              return;
+            }
+            fields.forEach((fieldData, previewIndex)=>{
+              const previewField = ensureFieldDefaults(fieldData);
+              const wrapper = document.createElement('div');
+              wrapper.className = 'panel-field form-preview-field';
+              const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
+              const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              const labelEl = document.createElement('span');
+              labelEl.className = 'subcategory-form-label';
+              labelEl.textContent = labelText;
+              const labelId = `${baseId}-label`;
+              labelEl.id = labelId;
+              let control = null;
+              const baseType = getBaseFieldType(previewField.type);
+              if(baseType === 'text-area' || baseType === 'description'){
+                const textarea = document.createElement('textarea');
+                textarea.rows = 5;
+                textarea.readOnly = false;
+                textarea.tabIndex = 0;
+                // Make editable but prevent any form submission or member form linking
+                textarea.addEventListener('change', (e) => {
+                  e.stopPropagation();
+                });
+                textarea.addEventListener('input', (e) => {
+                  e.stopPropagation();
+                });
+                textarea.placeholder = previewField.placeholder || '';
+                textarea.className = 'form-preview-textarea';
+                textarea.style.resize = 'vertical';
+                const textareaId = `${baseId}-input`;
+                textarea.id = textareaId;
+                if(baseType === 'description'){
+                  textarea.classList.add('form-preview-description');
+                }
+                control = textarea;
+              } else if(previewField.type === 'dropdown'){
+                wrapper.classList.add('form-preview-field--dropdown');
+                const dropdownWrapper = document.createElement('div');
+                dropdownWrapper.className = 'options-dropdown';
+                const menuBtn = document.createElement('button');
+                menuBtn.type = 'button';
+                menuBtn.className = 'form-preview-select';
+                menuBtn.setAttribute('aria-haspopup', 'true');
+                menuBtn.setAttribute('aria-expanded', 'false');
+                const selectId = `${baseId}-input`;
+                menuBtn.id = selectId;
+                const menuId = `${selectId}-menu`;
+                menuBtn.setAttribute('aria-controls', menuId);
+                const options = Array.isArray(previewField.options) ? previewField.options : [];
+                const defaultText = options.length > 0 ? options[0].trim() || 'Select an option' : 'Select an option';
+                menuBtn.textContent = defaultText;
+                const arrow = document.createElement('span');
+                arrow.className = 'dropdown-arrow';
+                arrow.setAttribute('aria-hidden', 'true');
+                menuBtn.appendChild(arrow);
+                const optionsMenu = document.createElement('div');
+                optionsMenu.className = 'options-menu';
+                optionsMenu.id = menuId;
+                optionsMenu.hidden = true;
+                if(options.length){
+                  options.forEach((optionValue, optionIndex)=>{
+                    const optionBtn = document.createElement('button');
+                    optionBtn.type = 'button';
+                    optionBtn.className = 'menu-option';
+                    const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+                    optionBtn.textContent = stringValue.trim() || '';
+                    optionBtn.dataset.value = stringValue;
+                    optionBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                menuBtn.textContent = stringValue.trim() || 'Select an option';
+                optionsMenu.hidden = true;
+                      menuBtn.setAttribute('aria-expanded', 'false');
+                    });
+                    optionsMenu.appendChild(optionBtn);
+                  });
+                } else {
+                  const placeholderBtn = document.createElement('button');
+                  placeholderBtn.type = 'button';
+                  placeholderBtn.className = 'menu-option';
+                  placeholderBtn.textContent = 'Select an option';
+                  placeholderBtn.disabled = true;
+                  optionsMenu.appendChild(placeholderBtn);
+                }
+                menuBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const open = !optionsMenu.hasAttribute('hidden');
+                  if(open){
+                    optionsMenu.hidden = true;
+                    menuBtn.setAttribute('aria-expanded', 'false');
+                  } else {
+                    optionsMenu.hidden = false;
+                    menuBtn.setAttribute('aria-expanded', 'true');
+                    const outsideHandler = (ev) => {
+                      if(!ev.target.closest(dropdownWrapper)){
+                        optionsMenu.hidden = true;
+                        menuBtn.setAttribute('aria-expanded', 'false');
+                        document.removeEventListener('click', outsideHandler);
+                        document.removeEventListener('pointerdown', outsideHandler);
+                      }
+                    };
+                    setTimeout(() => {
+                      document.addEventListener('click', outsideHandler);
+                      document.addEventListener('pointerdown', outsideHandler);
+                    }, 0);
+                  }
+                });
+                optionsMenu.addEventListener('click', (e) => e.stopPropagation());
+                dropdownWrapper.appendChild(menuBtn);
+                dropdownWrapper.appendChild(optionsMenu);
+                control = dropdownWrapper;
+              } else if(previewField.type === 'radio'){
+                const options = Array.isArray(previewField.options) ? previewField.options : [];
+                const radioGroup = document.createElement('div');
+                radioGroup.className = 'form-preview-radio-group';
+                wrapper.classList.add('form-preview-field--radio-toggle');
+                const groupName = `${baseId}-radio`;
+                if(options.length){
+                  options.forEach((optionValue, optionIndex)=>{
+                    const radioLabel = document.createElement('label');
+                    radioLabel.className = 'form-preview-radio-option';
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = groupName;
+                    const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+                    radio.value = stringValue;
+                    radio.tabIndex = 0;
+                    radio.disabled = false;
+                    // Prevent form preview radio from triggering member form actions
+                    radio.addEventListener('change', (e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    });
+                    radio.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                    });
+                    radio.addEventListener('mousedown', (e) => {
+                      e.stopPropagation();
+                    });
+                    // Also prevent on the label wrapper
+                    radioLabel.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                    });
+                    radioLabel.addEventListener('mousedown', (e) => {
+                      e.stopPropagation();
+                    });
+                    // Use the actual option value, don't fall back to "Option X"
+                    const radioText = document.createElement('span');
+                    radioText.textContent = stringValue.trim() || '';
+                    radioLabel.append(radio, radioText);
+                    radioGroup.appendChild(radioLabel);
+                  });
+                } else {
+                  const placeholderOption = document.createElement('label');
+                  placeholderOption.className = 'form-preview-radio-option';
+                  const radio = document.createElement('input');
+                  radio.type = 'radio';
+                  radio.tabIndex = -1;
+                  radio.disabled = true;
+                  placeholderOption.append(radio, document.createTextNode('Option'));
+                  radioGroup.appendChild(placeholderOption);
+                }
+                control = radioGroup;
+              } else if(previewField.type === 'venue-ticketing'){
+                wrapper.classList.add('form-preview-field--venues-sessions-pricing');
+                control = buildVenueSessionPreview(previewField, baseId);
+              } else if(previewField.type === 'variant-pricing'){
+                wrapper.classList.add('form-preview-field--variant-pricing');
+                const editor = document.createElement('div');
+                editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+                const versionList = document.createElement('div');
+                versionList.className = 'variant-pricing-options-list';
+                editor.appendChild(versionList);
+
+                const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
+
+                const normalizeOptions = ()=>{
+                  if(!Array.isArray(previewField.options)){
+                    previewField.options = [];
+                  }
+                  previewField.options = previewField.options.map(opt => {
+                    if(opt && typeof opt === 'object'){
+                      return {
+                        version: typeof opt.version === 'string' ? opt.version : '',
+                        currency: typeof opt.currency === 'string' ? opt.currency : '',
+                        price: typeof opt.price === 'string' ? opt.price : ''
+                      };
+                    }
+                    const str = typeof opt === 'string' ? opt : String(opt ?? '');
+                    return { version: str, currency: '', price: '' };
+                  });
+                  if(previewField.options.length === 0){
+                    previewField.options.push(createEmptyOption());
+                  }
+                };
+
+                const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
+                  normalizeOptions();
+                  versionList.innerHTML = '';
+                  let firstId = null;
+                  const currencyAlertMessage = 'Please select a currency before entering a price.';
+                  let lastCurrencyAlertAt = 0;
+                  let currencyAlertHandle = null;
+                  let currencyAlertTimeout = 0;
+                  const showCurrencyAlert = target => {
+                    const candidate = (target && typeof target.getBoundingClientRect === 'function')
+                      ? target
+                      : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+                        ? document.activeElement
+                        : null);
+                    const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+                    if(!inputEl) return;
+                    const now = Date.now();
+                    if(now - lastCurrencyAlertAt < 400){
+                      if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
+                        currencyAlertHandle.reposition();
+                      }
+                      return;
+                    }
+                    lastCurrencyAlertAt = now;
+                    if(currencyAlertTimeout){
+                      clearTimeout(currencyAlertTimeout);
+                      currencyAlertTimeout = 0;
+                    }
+                    if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
+                      currencyAlertHandle.remove();
+                      currencyAlertHandle = null;
+                    }
+                    const handle = showCopyStyleMessage(currencyAlertMessage, inputEl);
+                    if(!handle) return;
+                    currencyAlertHandle = handle;
+                    currencyAlertTimeout = window.setTimeout(()=>{
+                      handle.remove();
+                      if(currencyAlertHandle === handle){
+                        currencyAlertHandle = null;
+                      }
+                      currencyAlertTimeout = 0;
+                    }, 1500);
+                  };
+                  previewField.options.forEach((optionValue, optionIndex)=>{
+                    const optionRow = document.createElement('div');
+                    optionRow.className = 'variant-pricing-option';
+                    optionRow.dataset.optionIndex = String(optionIndex);
+
+                    const topRow = document.createElement('div');
+                    topRow.className = 'variant-pricing-row variant-pricing-row--top';
+
+                    const versionInput = document.createElement('input');
+                    versionInput.type = 'text';
+                    versionInput.className = 'variant-pricing-name';
+                    versionInput.placeholder = 'Version Name';
+                    const versionInputId = `${baseId}-version-${optionIndex}`;
+                    versionInput.id = versionInputId;
+                    if(optionIndex === 0){
+                      firstId = versionInputId;
+                    }
+                    versionInput.value = optionValue.version || '';
+                    versionInput.addEventListener('input', ()=>{
+                      previewField.options[optionIndex].version = versionInput.value;
+                      notifyFormbuilderChange();
+                    });
+                    topRow.appendChild(versionInput);
+
+                    const bottomRow = document.createElement('div');
+                    bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
+
+                    const currencyWrapper = document.createElement('div');
+                    currencyWrapper.className = 'options-dropdown';
+                    const currencyMenuBtn = document.createElement('button');
+                    currencyMenuBtn.type = 'button';
+                    currencyMenuBtn.className = 'variant-pricing-currency';
+                    currencyMenuBtn.setAttribute('aria-haspopup', 'true');
+                    currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                    const currencyMenuId = `variant-currency-${baseId}-${optionIndex}`;
+                    currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
+                    const existingCurrency = optionValue.currency || '';
+                    currencyMenuBtn.textContent = existingCurrency || 'Currency';
+                    currencyMenuBtn.dataset.value = existingCurrency;
+                    const currencyArrow = document.createElement('span');
+                    currencyArrow.className = 'dropdown-arrow';
+                    currencyArrow.setAttribute('aria-hidden', 'true');
+                    currencyMenuBtn.appendChild(currencyArrow);
+                    const currencyMenu = document.createElement('div');
+                    currencyMenu.className = 'options-menu';
+                    currencyMenu.id = currencyMenuId;
+                    currencyMenu.hidden = true;
+                    const placeholderBtn = document.createElement('button');
+                    placeholderBtn.type = 'button';
+                    placeholderBtn.className = 'menu-option';
+                    placeholderBtn.textContent = 'Currency';
+                    placeholderBtn.dataset.value = '';
+                    placeholderBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      currencyMenuBtn.textContent = 'Currency';
+                      currencyMenuBtn.dataset.value = '';
+                      currencyMenu.hidden = true;
+                      currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      const previousCurrency = previewField.options[optionIndex].currency || '';
+                      previewField.options[optionIndex].currency = '';
+                      const priceCleared = updatePriceState();
+                      if(previousCurrency !== '' || priceCleared){
+                        notifyFormbuilderChange();
+                      }
+                    });
+                    currencyMenu.appendChild(placeholderBtn);
+                    const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                    currencyOptions.forEach(code => {
+                      const optionBtn = document.createElement('button');
+                      optionBtn.type = 'button';
+                      optionBtn.className = 'menu-option';
+                      optionBtn.textContent = code;
+                      optionBtn.dataset.value = code;
+                      optionBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        currencyMenuBtn.textContent = code;
+                        currencyMenuBtn.dataset.value = code;
+                        currencyMenu.hidden = true;
+                        currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                        const previousCurrency = previewField.options[optionIndex].currency || '';
+                        previewField.options[optionIndex].currency = code;
+                        const priceCleared = updatePriceState();
+                        if(isCurrencySelected()){
+                          commitPriceValue();
+                        }
+                        if(previousCurrency !== code || priceCleared){
+                          notifyFormbuilderChange();
+                        }
+                      });
+                      currencyMenu.appendChild(optionBtn);
+                    });
+                    currencyMenuBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      const open = !currencyMenu.hasAttribute('hidden');
+                      if(open){
+                        currencyMenu.hidden = true;
+                        currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      } else {
+                        currencyMenu.hidden = false;
+                        currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                        const outsideHandler = (ev) => {
+                          if(!ev.target.closest(currencyWrapper)){
+                            currencyMenu.hidden = true;
+                            currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                            document.removeEventListener('click', outsideHandler);
+                            document.removeEventListener('pointerdown', outsideHandler);
+                          }
+                        };
+                        setTimeout(() => {
+                          document.addEventListener('click', outsideHandler);
+                          document.addEventListener('pointerdown', outsideHandler);
+                        }, 0);
+                      }
+                    });
+                    currencyMenu.addEventListener('click', (e) => e.stopPropagation());
+                    currencyWrapper.appendChild(currencyMenuBtn);
+                    currencyWrapper.appendChild(currencyMenu);
+                    const currencySelect = currencyMenuBtn; // Keep reference for isCurrencySelected
+                    const isCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
+
+                    const priceInput = document.createElement('input');
+                    priceInput.type = 'text';
+                    priceInput.inputMode = 'decimal';
+                    priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
+                    priceInput.className = 'variant-pricing-price';
+                    priceInput.placeholder = '0.00';
+                    const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
+                    const formatPriceValue = value => {
+                      const trimmed = (value || '').trim();
+                      if(trimmed === '') return '';
+                      let normalized = trimmed.replace(/,/g, '.');
+                      if(normalized === '.') return '0.00';
+                      if(normalized.startsWith('.')){
+                        normalized = `0${normalized}`;
+                      }
+                      const dotIndex = normalized.indexOf('.');
+                      if(dotIndex === -1){
+                        return `${normalized}.00`;
+                      }
+                      let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
+                      if(integerPart === ''){
+                        integerPart = '0';
+                      }
+                      let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
+                      if(decimalPart.length === 0){
+                        decimalPart = '00';
+                      } else if(decimalPart.length === 1){
+                        decimalPart = `${decimalPart}0`;
+                      } else {
+                        decimalPart = decimalPart.slice(0, 2);
+                      }
+                      return `${integerPart}.${decimalPart}`;
+                    };
+                    const initialPriceValue = sanitizePriceValue(optionValue.price || '');
+                    const formattedInitialPrice = formatPriceValue(initialPriceValue);
+                    priceInput.value = formattedInitialPrice;
+                    if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
+                      previewField.options[optionIndex].price = formattedInitialPrice;
+                    }
+                    const clearPriceValue = ()=>{
+                      let changed = false;
+                      if(priceInput.value !== ''){
+                        priceInput.value = '';
+                        changed = true;
+                      }
+                      if(previewField.options[optionIndex].price !== ''){
+                        previewField.options[optionIndex].price = '';
+                        changed = true;
+                      } else if(typeof previewField.options[optionIndex].price !== 'string'){
+                        previewField.options[optionIndex].price = '';
+                      }
+                      return changed;
+                    };
+                    const updatePriceState = ()=>{
+                      if(isCurrencySelected()){
+                        priceInput.readOnly = false;
+                        priceInput.classList.remove('is-awaiting-currency');
+                        priceInput.removeAttribute('aria-disabled');
+                        return false;
+                      }
+                      priceInput.readOnly = true;
+                      priceInput.classList.add('is-awaiting-currency');
+                      priceInput.setAttribute('aria-disabled', 'true');
+                      return clearPriceValue();
+                    };
+                    const blockPriceAccess = event => {
+                      if(isCurrencySelected()) return false;
+                      if(event && event.type === 'pointerdown' && event.button !== 0) return false;
+                      if(event && typeof event.preventDefault === 'function'){
+                        event.preventDefault();
+                      }
+                      if(event && typeof event.stopPropagation === 'function'){
+                        event.stopPropagation();
+                      }
+                      if(typeof priceInput.blur === 'function'){
+                        requestAnimationFrame(()=>{
+                          try{ priceInput.blur(); }catch(err){}
+                        });
+                      }
+                      showCurrencyAlert(priceInput);
+                      return true;
+                    };
+                    // Currency change is now handled in the menu option click handlers above
+
+                    const commitPriceValue = event => {
+                      if(!isCurrencySelected()){
+                        if(clearPriceValue()){
+                          notifyFormbuilderChange();
+                        }
+                        return;
+                      }
+                      const rawValue = priceInput.value;
+                      const sanitized = sanitizePriceValue(rawValue);
+                      if(rawValue !== sanitized){
+                        priceInput.value = sanitized;
+                      }
+                      const formatted = formatPriceValue(sanitized);
+                      if(priceInput.value !== formatted){
+                        priceInput.value = formatted;
+                      }
+                      if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
+                        if(formatted === ''){
+                          priceInput.setSelectionRange(0, 0);
+                        } else if(!/[.,]/.test(sanitized)){ 
+                          const dotIndex = formatted.indexOf('.');
+                          const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
+                          priceInput.setSelectionRange(caretPos, caretPos);
+                        } else {
+                          const dotIndex = formatted.indexOf('.');
+                          if(dotIndex === -1){
+                            priceInput.setSelectionRange(formatted.length, formatted.length);
+                          } else {
+                            const decimals = sanitized.split(/[.,]/)[1] || '';
+                            if(decimals.length === 0){
+                              priceInput.setSelectionRange(dotIndex + 1, formatted.length);
+                            } else {
+                              const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
+                              priceInput.setSelectionRange(caretPos, caretPos);
+                            }
+                          }
+                        }
+                      }
+                      const previous = previewField.options[optionIndex].price || '';
+                      if(previous !== formatted){
+                        previewField.options[optionIndex].price = formatted;
+                        notifyFormbuilderChange();
+                      }
+                    };
+                    priceInput.addEventListener('beforeinput', event => {
+                      if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
+                        event.preventDefault();
+                      }
+                    });
+                    priceInput.addEventListener('pointerdown', event => {
+                      blockPriceAccess(event);
+                    });
+                    priceInput.addEventListener('focus', event => {
+                      blockPriceAccess(event);
+                    });
+                    priceInput.addEventListener('keydown', event => {
+                      if(event.key === 'Tab' || event.key === 'Shift') return;
+                      if(blockPriceAccess(event)) return;
+                    });
+                    priceInput.addEventListener('input', commitPriceValue);
+                    priceInput.addEventListener('change', commitPriceValue);
+                    const initialCleared = updatePriceState();
+                    if(isCurrencySelected()){
+                      commitPriceValue();
+                    } else if(initialCleared){
+                      notifyFormbuilderChange();
+                    }
+
+                    const actions = document.createElement('div');
+                    actions.className = 'dropdown-option-actions variant-pricing-option-actions';
+
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'dropdown-option-add';
+                    addBtn.textContent = '+';
+                    addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
+                    addBtn.addEventListener('click', ()=>{
+                      previewField.options.splice(optionIndex + 1, 0, createEmptyOption());
+                      notifyFormbuilderChange();
+                      renderVersionEditor(optionIndex + 1);
+                    });
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'dropdown-option-remove';
+                    removeBtn.textContent = '-';
+                    removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
+                    removeBtn.disabled = previewField.options.length <= 1;
+                    removeBtn.addEventListener('click', ()=>{
+                      if(previewField.options.length <= 1){
+                        previewField.options[0] = createEmptyOption();
+                      } else {
+                        previewField.options.splice(optionIndex, 1);
+                      }
+                      notifyFormbuilderChange();
+                      const nextFocus = Math.min(optionIndex, Math.max(previewField.options.length - 1, 0));
+                      renderVersionEditor(nextFocus);
+                    });
+
+                    actions.append(addBtn, removeBtn);
+                    bottomRow.append(currencyWrapper, priceInput, actions);
+
+                    optionRow.append(topRow, bottomRow);
+                    versionList.appendChild(optionRow);
+                  });
+
+                  if(focusIndex !== null){
+                    requestAnimationFrame(()=>{
+                      const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
+                      if(!targetRow) return;
+                      let focusEl = null;
+                      if(focusTarget === 'price'){
+                        focusEl = targetRow.querySelector('.variant-pricing-price');
+                      } else if(focusTarget === 'currency'){
+                        focusEl = targetRow.querySelector('button.variant-pricing-currency');
+                      }
+                      if(!focusEl){
+                        focusEl = targetRow.querySelector('.variant-pricing-name');
+                      }
+                      if(focusEl && typeof focusEl.focus === 'function'){
+                        try{ focusEl.focus({ preventScroll: true }); }
+                        catch(err){
+                          try{ focusEl.focus(); }catch(e){}
+                        }
+                      }
+                    });
+                  }
+                };
+
+                renderVersionEditor();
+                editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+                control = editor;
+              } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
+                wrapper.classList.add('form-preview-field--url');
+                const urlWrapper = document.createElement('div');
+                urlWrapper.className = 'form-preview-url-wrapper';
+                const urlInput = document.createElement('input');
+                urlInput.type = 'text';
+                urlInput.className = 'form-preview-url-input';
+                const urlInputId = `${baseId}-input`;
+                urlInput.id = urlInputId;
+                const placeholderValue = previewField.placeholder && /\.[A-Za-z]{2,}/.test(previewField.placeholder)
+                  ? previewField.placeholder
+                  : 'https://example.com';
+                urlInput.placeholder = placeholderValue;
+                urlInput.dataset.urlType = previewField.type === 'website-url' ? 'website' : 'tickets';
+                urlInput.dataset.urlMessage = 'Please enter a valid URL with a dot and letters after it.';
+                const linkId = `${baseId}-link`;
+                urlInput.dataset.urlLinkId = linkId;
+                urlInput.autocomplete = 'url';
+                urlInput.inputMode = 'url';
+                const urlLink = document.createElement('a');
+                urlLink.id = linkId;
+                urlLink.href = '#';
+                urlLink.target = '_blank';
+                urlLink.rel = 'noopener noreferrer';
+                urlLink.className = 'form-preview-url-link';
+                urlLink.textContent = 'Open link';
+                urlLink.setAttribute('aria-disabled','true');
+                urlLink.tabIndex = -1;
+                const urlMessage = document.createElement('div');
+                urlMessage.className = 'form-preview-url-message';
+                urlMessage.textContent = 'Link disabled until a valid URL is entered.';
+                urlWrapper.append(urlInput, urlLink, urlMessage);
+                control = urlWrapper;
+              } else if(previewField.type === 'images'){
+                wrapper.classList.add('form-preview-field--images');
+                const imageWrapper = document.createElement('div');
+                imageWrapper.className = 'form-preview-images';
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                const fileInputId = `${baseId}-input`;
+                fileInput.id = fileInputId;
+                fileInput.accept = 'image/*';
+                fileInput.multiple = true;
+                fileInput.dataset.imagesField = 'true';
+                fileInput.dataset.maxImages = '10';
+                const previewId = `${baseId}-previews`;
+                const messageId = `${baseId}-message`;
+                fileInput.dataset.imagePreviewTarget = previewId;
+                fileInput.dataset.imageMessageTarget = messageId;
+                const hint = document.createElement('div');
+                hint.className = 'form-preview-image-hint';
+                hint.textContent = 'Upload up to 10 images.';
+                const message = document.createElement('div');
+                message.className = 'form-preview-image-message';
+                message.id = messageId;
+                message.hidden = true;
+                const previewGrid = document.createElement('div');
+                previewGrid.className = 'form-preview-image-previews';
+                previewGrid.id = previewId;
+                imageWrapper.append(fileInput, hint, message, previewGrid);
+                control = imageWrapper;
+              } else if(previewField.type === 'location'){
+                wrapper.classList.add('form-preview-field--location');
+                const ensureLocationState = ()=>{
+                  if(!previewField.location || typeof previewField.location !== 'object'){
+                    previewField.location = { address: '', latitude: '', longitude: '' };
+                  } else {
+                    if(typeof previewField.location.address !== 'string') previewField.location.address = '';
+                    if(typeof previewField.location.latitude !== 'string') previewField.location.latitude = '';
+                    if(typeof previewField.location.longitude !== 'string') previewField.location.longitude = '';
+                  }
+                  return previewField.location;
+                };
+                const locationState = ensureLocationState();
+                const locationWrapper = document.createElement('div');
+                locationWrapper.className = 'location-field-wrapper';
+                locationWrapper.setAttribute('role', 'group');
+                const addressRow = document.createElement('div');
+                addressRow.className = 'venue-line address_line-line';
+                const geocoderContainer = document.createElement('div');
+                geocoderContainer.className = 'address_line-geocoder-container';
+                const addressInputId = `${baseId}-location-address`;
+                geocoderContainer.id = `${baseId}-location-geocoder`;
+                addressRow.appendChild(geocoderContainer);
+                locationWrapper.appendChild(addressRow);
+                const latitudeInput = document.createElement('input');
+                latitudeInput.type = 'hidden';
+                latitudeInput.dataset.locationLatitude = 'true';
+                latitudeInput.value = locationState.latitude || '';
+                const longitudeInput = document.createElement('input');
+                longitudeInput.type = 'hidden';
+                longitudeInput.dataset.locationLongitude = 'true';
+                longitudeInput.value = locationState.longitude || '';
+                locationWrapper.append(latitudeInput, longitudeInput);
+                const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
+                  ? previewField.placeholder
+                  : 'Search for a location';
+                const syncCoordinateInputs = ()=>{
+                  latitudeInput.value = locationState.latitude || '';
+                  longitudeInput.value = locationState.longitude || '';
+                };
+                syncCoordinateInputs();
+                const formatCoord = value => {
+                  const num = Number(value);
+                  return Number.isFinite(num) ? num.toFixed(6) : '';
+                };
+                const applyAddressLabel = input => {
+                  if(input){
+                    input.setAttribute('aria-labelledby', labelId);
+                  }
+                  return input;
+                };
+                const createFallbackAddressInput = ()=>{
+                  geocoderContainer.innerHTML = '';
+                  geocoderContainer.classList.remove('is-geocoder-active');
+                  const fallback = document.createElement('input');
+                  fallback.type = 'text';
+                  fallback.id = addressInputId;
+                  fallback.className = 'address_line-fallback';
+                  fallback.placeholder = placeholderValue;
+                  fallback.setAttribute('aria-label', placeholderValue);
+                  fallback.dataset.locationAddress = 'true';
+                  fallback.value = locationState.address || '';
+                  if(previewField.required) fallback.required = true;
+                  fallback.addEventListener('input', ()=>{
+                    locationState.address = fallback.value;
+                    notifyFormbuilderChange();
+                  });
+                  geocoderContainer.appendChild(fallback);
+                  addressInput = fallback;
+                  applyAddressLabel(fallback);
+                  return fallback;
+                };
+                const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+                let addressInput = null;
+                if(mapboxReady){
+                  const geocoderOptions = {
+                    accessToken: window.mapboxgl.accessToken,
+                    mapboxgl: window.mapboxgl,
+                    marker: false,
+                    placeholder: placeholderValue,
+                    geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+                    types: 'address,poi',
+                    reverseGeocode: true,
+                    localGeocoder: localVenueGeocoder,
+                    externalGeocoder: externalMapboxVenueGeocoder,
+                    filter: majorVenueFilter,
+                    limit: 7,
+                    language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+                  };
+                  const geocoder = new MapboxGeocoder(geocoderOptions);
+                  const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+                    ? window.requestAnimationFrame.bind(window)
+                    : (cb)=> setTimeout(cb, 16);
+                  let attempts = 0;
+                  const maxAttempts = 20;
+                  let geocoderMounted = false;
+                  let fallbackActivated = false;
+                  const attachGeocoder = ()=>{
+                    if(fallbackActivated){
+                      return;
+                    }
+                    const scheduleRetry = ()=>{
+                      attempts += 1;
+                      if(attempts > maxAttempts){
+                        addressInput = createFallbackAddressInput();
+                        fallbackActivated = true;
+                        return false;
+                      }
+                      schedule(attachGeocoder);
+                      return true;
+                    };
+                    if(!geocoderContainer.isConnected){
+                      scheduleRetry();
+                      return;
+                    }
+                    if(!geocoderMounted){
+                      try{
+                        geocoder.addTo(geocoderContainer);
+                        geocoderMounted = true;
+                      }catch(err){
+                        addressInput = createFallbackAddressInput();
+                        fallbackActivated = true;
+                        return;
+                      }
+                    }
+                    const setGeocoderActive = isActive => {
+                      const active = !!isActive;
+                      geocoderContainer.classList.toggle('is-geocoder-active', active);
+                      const subMenu = geocoderContainer.closest('.subcategory-form-menu');
+                      if(subMenu){
+                        subMenu.classList.toggle('has-floating-overlay', active);
+                      }
+                      const categoryMenu = subMenu
+                        ? subMenu.closest('.category-form-menu')
+                        : geocoderContainer.closest('.category-form-menu');
+                      if(categoryMenu){
+                        categoryMenu.classList.toggle('has-floating-overlay', active);
+                      }
+                    };
+                    setGeocoderActive(false);
+                    const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
+                    if(geocoderRoot && !geocoderRoot.__formPreviewGeocoderBound){
+                      geocoderRoot.__formPreviewGeocoderBound = true;
+                      const handleFocusIn = ()=> setGeocoderActive(true);
+                      const handleFocusOut = event => {
+                        const nextTarget = event && event.relatedTarget;
+                        if(!nextTarget || !geocoderRoot.contains(nextTarget)){
+                          setGeocoderActive(false);
+                        }
+                      };
+                      const handlePointerDown = ()=> setGeocoderActive(true);
+                      geocoderRoot.addEventListener('focusin', handleFocusIn);
+                      geocoderRoot.addEventListener('focusout', handleFocusOut);
+                      geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+                    }
+                    const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+                    if(!geocoderInput){
+                      scheduleRetry();
+                      return;
+                    }
+                    if(geocoderInput.__formPreviewLocationBound){
+                      addressInput = geocoderInput;
+                      applyAddressLabel(geocoderInput);
+                      return;
+                    }
+                    geocoderInput.__formPreviewLocationBound = true;
+                    geocoderInput.placeholder = placeholderValue;
+                    geocoderInput.setAttribute('aria-label', placeholderValue);
+                    geocoderInput.id = addressInputId;
+                    geocoderInput.dataset.locationAddress = 'true';
+                    geocoderInput.value = locationState.address || '';
+                    if(previewField.required) geocoderInput.required = true;
+                    addressInput = geocoderInput;
+                    applyAddressLabel(geocoderInput);
+                    geocoderInput.addEventListener('blur', ()=>{
+                      const nextValue = geocoderInput.value || '';
+                      if(locationState.address !== nextValue){
+                        locationState.address = nextValue;
+                        notifyFormbuilderChange();
+                      }
+                    });
+                    // Prevent Enter key from submitting form when in geocoder (form preview location field)
+                    geocoderInput.addEventListener('keydown', (e)=>{
+                      if(e.key === 'Enter'){
+                        e.stopPropagation();
+                        // Don't preventDefault - let geocoder handle it
+                      }
+                    });
+                    geocoder.on('results', ()=> setGeocoderActive(true));
+                    geocoder.on('result', event => {
+                      const result = event && event.result;
+                      if(result){
+                        const clone = cloneGeocoderFeature(result);
+                        const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
+                        if(placeName){
+                          locationState.address = placeName;
+                          geocoderInput.value = placeName;
+                        } else {
+                          locationState.address = geocoderInput.value || '';
+                        }
+                        const center = getMapboxVenueFeatureCenter(clone);
+                        if(center && center.length >= 2){
+                          const [lng, lat] = center;
+                          locationState.longitude = formatCoord(lng);
+                          locationState.latitude = formatCoord(lat);
+                        }
+                        syncCoordinateInputs();
+                        notifyFormbuilderChange();
+                      }
+                      setGeocoderActive(false);
+                    });
+                    geocoder.on('clear', ()=>{
+                      locationState.address = '';
+                      locationState.latitude = '';
+                      locationState.longitude = '';
+                      geocoderInput.value = '';
+                      syncCoordinateInputs();
+                      notifyFormbuilderChange();
+                      setGeocoderActive(false);
+                    });
+                    geocoder.on('error', ()=> setGeocoderActive(false));
+                    return geocoderInput;
+                  };
+                  attachGeocoder();
+                } else {
+                  addressInput = createFallbackAddressInput();
+                }
+                if(addressInput){
+                  addressInput.setAttribute('aria-labelledby', labelId);
+                }
+                control = locationWrapper;
+              } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = previewField.placeholder || '';
+                input.readOnly = false;
+                input.tabIndex = 0;
+                const inputId = `${baseId}-input`;
+                input.id = inputId;
+                if(previewField.type === 'title'){
+                  input.classList.add('form-preview-title-input');
+                }
+                // Make editable but prevent any form submission or member form linking
+                input.addEventListener('change', (e) => {
+                  e.stopPropagation();
+                });
+                input.addEventListener('input', (e) => {
+                  e.stopPropagation();
+                });
+                control = input;
+              }
+              if(control){
+                if(control instanceof HTMLElement){
+                  control.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+                  if(labelId){
+                    control.setAttribute('aria-labelledby', labelId);
+                  }
+                }
+              if(previewField.required){
+                wrapper.classList.add('form-preview-field--required');
+                labelEl.appendChild(document.createTextNode(' '));
+                const asterisk = document.createElement('span');
+                asterisk.className = 'required-asterisk';
+                asterisk.textContent = '*';
+                labelEl.appendChild(asterisk);
+              }
+              const header = document.createElement('div');
+              header.className = 'form-preview-field-header';
+              header.style.position = 'relative';
+              header.appendChild(labelEl);
+
+              const previewFieldEditUI = createFieldEditUI(previewField, {
+                hostElement: wrapper,
+                attachDropdownToPanel: true
+              });
+
+              if(previewFieldEditUI && typeof previewFieldEditUI.setDeleteHandler === 'function'){
+                const sourceRow = previewField.__rowEl instanceof Element ? previewField.__rowEl : null;
+                const rowDeleteHandler = sourceRow && typeof sourceRow.__deleteHandler === 'function'
+                  ? sourceRow.__deleteHandler
+                  : null;
+                const deleteHandler = rowDeleteHandler || (typeof previewField.__handleDeleteField === 'function'
+                  ? previewField.__handleDeleteField
+                  : null);
+                previewFieldEditUI.setDeleteHandler(deleteHandler);
+              }
+
+              previewFieldEditUI.setSummaryUpdater(()=>{
+                const displayName = (typeof previewField.name === 'string' && previewField.name.trim())
+                  ? previewField.name.trim()
+                  : labelText;
+                previewFieldEditUI.editBtn.setAttribute('aria-label', `Edit ${displayName || 'field'} settings`);
+              });
+              previewFieldEditUI.runSummaryUpdater();
+
+              header.append(previewFieldEditUI.editBtn, previewFieldEditUI.editPanel);
+
+              const handlePreviewHeaderClick = event => {
+                if(event.defaultPrevented) return;
+                const origin = event.target;
+                if(!origin) return;
+                if(origin.closest('.formbuilder-drag-handle')) return;
+                if(origin.closest('.field-edit-btn')) return;
+                if(origin.closest('.field-edit-panel')) return;
+                event.stopPropagation();
+                document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+                  if(panel !== previewFieldEditUI.editPanel){
+                    panel.hidden = true;
+                  }
+                });
+                closeFieldEditPanels({ exceptPanel: previewFieldEditUI.editPanel, exceptButton: previewFieldEditUI.editBtn });
+                previewFieldEditUI.openEditPanel();
+              };
+
+              header.addEventListener('click', handlePreviewHeaderClick);
+              wrapper.append(header, control);
+              formPreviewFields.appendChild(wrapper);
+            }
+            });
+          }
 
           if(fieldsContainerState){
-            fieldsContainerState.onFieldsReordered = () => {
-              renderForm({
-                formFields: formPreviewFields,
-                formId: formPreviewId,
-                fields: fields,
-                categoryName: c && c.name,
-                subcategoryName: sub,
-                fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
-              });
-            };
+            fieldsContainerState.onFieldsReordered = renderFormPreview;
           }
 
           const createFieldRow = (field)=>{
@@ -13699,15 +14332,7 @@ function makePosts(){
               setDeleteHandler(null);
               notifyFormbuilderChange();
               syncFieldOrderFromDom(fieldsList, fields);
-              renderForm({
-                formFields: formPreviewFields,
-                formId: formPreviewId,
-                fields: fields,
-                categoryName: c && c.name,
-                subcategoryName: sub,
-                fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
-              });
+              renderFormPreview();
               
               // Update formbuilder state manager snapshot after field deletion
               if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
@@ -13815,26 +14440,10 @@ function makePosts(){
                 fieldRow.focus();
               }
             });
-            renderForm({
-              formFields: formPreviewFields,
-              formId: formPreviewId,
-              fields: fields,
-              categoryName: c && c.name,
-              subcategoryName: sub,
-              fieldIdCounter: formPreviewFieldIdCounter,
-              formLabel: 'Form Preview'
-            });
+            renderFormPreview();
           });
 
-          renderForm({
-            formFields: formPreviewFields,
-            formId: formPreviewId,
-            fields: fields,
-            categoryName: c && c.name,
-            subcategoryName: sub,
-            fieldIdCounter: formPreviewFieldIdCounter,
-            formLabel: 'Form Preview'
-          });
+          renderFormPreview();
 
           const defaultSubName = sub || 'Subcategory';
           let currentSubName = defaultSubName;
@@ -15970,13 +16579,13 @@ function makePosts(){
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
       let userClosedPostBoard = false;
-      const WIDE_SCREEN_MULTI_POST_MIN_WIDTH = 1200;
+      const WIDE_SCREEN_CLUSTER_MIN_WIDTH = 1200;
 
       function isWideScreenPostBoard(){
-        return window.innerWidth >= WIDE_SCREEN_MULTI_POST_MIN_WIDTH;
+        return window.innerWidth >= WIDE_SCREEN_CLUSTER_MIN_WIDTH;
       }
 
-      function autoOpenPostBoardForMultiPost({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
+      function autoOpenPostBoardForCluster({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
         if(trigger !== 'click' && trigger !== 'touch') return;
         if(userClosedPostBoard) return;
         if(!isWideScreenPostBoard()) return;
@@ -16490,6 +17099,23 @@ function makePosts(){
         
         lockMap(false);
         touchMarker = null;
+        if(hoverPopup){
+          let shouldRemovePopup = true;
+          if(fromMap && typeof popupIsHovered === 'function'){
+            try{
+              if(popupIsHovered(hoverPopup)){
+                shouldRemovePopup = false;
+              }
+            }catch(err){
+              shouldRemovePopup = true;
+            }
+          }
+          if(shouldRemovePopup){
+            runOverlayCleanup(hoverPopup);
+            try{ hoverPopup.remove(); }catch(err){}
+            hoverPopup = null;
+          }
+        }
         spinEnabled = false;
         localStorage.setItem('spinGlobe', 'false');
         stopSpin();
@@ -16510,6 +17136,7 @@ function makePosts(){
           }
         }
         $$('.recents-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        $$('.mapboxgl-popup.big-map-card .big-map-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
 
         const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
         if(!container){
@@ -16657,6 +17284,8 @@ function makePosts(){
             }
           }
         }
+        const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
+        if(mapCard) mapCard.setAttribute('aria-selected','true');
 
         // Store position before buildDetail modifies DOM
         const targetParent = target.parentElement;
@@ -16706,20 +17335,6 @@ function makePosts(){
           if (typeof updateStickyImages === 'function') {
             updateStickyImages();
           }
-        }
-        
-        // Update mapcard states after post opens
-        if(typeof window.updateMapCardStates === 'function'){
-          requestAnimationFrame(() => {
-            window.updateMapCardStates();
-          });
-        }
-        
-        // Update icon-size for expanded state
-        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-          requestAnimationFrame(() => {
-            updateMarkerLabelHighlightIconSize();
-          });
         }
 
         await nextFrame();
@@ -16996,16 +17611,6 @@ function makePosts(){
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
-        
-        // Update mapcard states when post closes
-        if(typeof window.updateMapCardStates === 'function'){
-          window.updateMapCardStates();
-        }
-        
-        // Update icon-size when post closes
-        if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-          updateMarkerLabelHighlightIconSize();
-        }
       }
 
       window.openPost = openPost;
@@ -17023,16 +17628,6 @@ function makePosts(){
             e.preventDefault();
             const id = cardEl.getAttribute('data-id');
             if(!id) return;
-            
-            // Add clicked state to corresponding mapcard
-            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-            if(mapCard){
-              document.querySelectorAll('.small-map-card').forEach(card => {
-                card.classList.remove('is-clicked');
-              });
-              mapCard.classList.add('is-clicked');
-            }
-            
             callWhenDefined('openPost', (fn)=>{
               requestAnimationFrame(() => {
                 try{
@@ -17056,16 +17651,6 @@ function makePosts(){
             const id = cardEl.getAttribute('data-id');
             if(id){
               e.preventDefault();
-              
-              // Add clicked state to corresponding mapcard
-              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-              if(mapCard){
-                document.querySelectorAll('.small-map-card').forEach(card => {
-                  card.classList.remove('is-clicked');
-                });
-                mapCard.classList.add('is-clicked');
-              }
-              
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
                   try{
@@ -17869,76 +18454,6 @@ function makePosts(){
           updateZoomIndicator();
         }
 
-        // Create map scale bar for checking map card scaling
-        const createMapScaleBar = () => {
-          const mapArea = document.querySelector('.map-area');
-          const mapControls = document.querySelector('.map-controls-map');
-          if(!mapArea || !mapControls) return;
-          
-          // Remove existing scale bar if present
-          const existingScaleBar = document.getElementById('mapScaleBar');
-          if(existingScaleBar){
-            existingScaleBar.remove();
-          }
-          
-          const scaleBar = document.createElement('div');
-          scaleBar.id = 'mapScaleBar';
-          scaleBar.className = 'map-scale-bar';
-          
-          // Position scale bar 10px below map control row
-          const updateScaleBarPosition = () => {
-            const controlsRect = mapControls.getBoundingClientRect();
-            const mapAreaRect = mapArea.getBoundingClientRect();
-            const topOffset = controlsRect.bottom - mapAreaRect.top + 10;
-            scaleBar.style.top = topOffset + 'px';
-          };
-          
-          // Create scale line
-          const scaleLine = document.createElement('div');
-          scaleLine.className = 'scale-line';
-          
-          // Create marks every 10px (30 marks total for 300px)
-          for(let i = 0; i <= 30; i++){
-            const mark = document.createElement('div');
-            mark.className = 'scale-mark';
-            const position = (i / 30) * 100;
-            mark.style.left = position + '%';
-            // Major marks every 50px (every 5th mark)
-            if(i % 5 === 0){
-              mark.classList.add('major');
-            }
-            scaleLine.appendChild(mark);
-          }
-          
-          // Create labels every 50px
-          for(let i = 0; i <= 6; i++){
-            const label = document.createElement('div');
-            label.className = 'scale-label';
-            const position = (i * 50);
-            label.textContent = position + 'px';
-            label.style.left = ((position / 300) * 100) + '%';
-            scaleBar.appendChild(label);
-          }
-          
-          scaleBar.appendChild(scaleLine);
-          mapArea.appendChild(scaleBar);
-          
-          // Update position on resize
-          updateScaleBarPosition();
-          window.addEventListener('resize', updateScaleBarPosition);
-          if(typeof map.on === 'function'){
-            map.on('resize', updateScaleBarPosition);
-          }
-        };
-        
-        // Create scale bar after a short delay to ensure controls are rendered
-        setTimeout(createMapScaleBar, 100);
-        if(typeof map.once === 'function'){
-          map.once('load', () => {
-            setTimeout(createMapScaleBar, 100);
-          });
-        }
-
         let recentMapInteraction = false;
         let recentInteractionTimeout = null;
         const markRecentInteraction = () => {
@@ -17990,6 +18505,13 @@ function makePosts(){
           });
         }
 // === Pill hooks (safe) ===
+try { if (typeof __addOrReplacePill150x40 === 'function') __addOrReplacePill150x40(map); } catch(e){}
+if (!map.__pillHooksInstalled) {
+  try { map.on('style.load', () => __addOrReplacePill150x40(map)); } catch(e){}
+  try { map.on('styleimagemissing', (evt) => { if (evt && evt.id === 'marker-label-bg') __addOrReplacePill150x40(map); }); } catch(e){}
+  map.__pillHooksInstalled = true;
+}
+        try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
 
         const applyStyleAdjustments = () => {
           try{ ensurePlaceholderSprites(map); }catch(err){}
@@ -17998,7 +18520,6 @@ function makePosts(){
         };
         whenStyleReady(map, applyStyleAdjustments);
         map.on('style.load', applyStyleAdjustments);
-        
         map.on('styledata', () => {
           try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
@@ -18012,7 +18533,6 @@ function makePosts(){
           if(!imageId){
             return;
           }
-          // Normal behavior: check cache first (fast performance)
           try{
             if(map.hasImage?.(imageId)){
               return;
@@ -18034,9 +18554,10 @@ function makePosts(){
                 return;
               }
               try{
-                if(!map.hasImage?.(imageId)){
-                  map.addImage(imageId, image, options || {});
+                if(map.hasImage?.(imageId)){
+                  return;
                 }
+                map.addImage(imageId, image, options || {});
               }catch(error){
                 console.error(error);
               }
@@ -18252,6 +18773,7 @@ function makePosts(){
           updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
+          refreshInViewMarkerLabelComposites(map);
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
@@ -18435,6 +18957,8 @@ function makePosts(){
         const baseSub = slugify(post.subcategory);
         const labelLines = getMarkerLabelLines(post);
         const combinedLabel = buildMarkerLabelText(post, labelLines);
+        const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
+        const labelSpriteId = hashString(spriteSource);
         const featureId = key
           ? `post:${post.id}::${key}::${entry.index}`
           : `post:${post.id}::${entry.index}`;
@@ -18449,6 +18973,7 @@ function makePosts(){
             label: combinedLabel,
             labelLine1: labelLines.line1,
             labelLine2: labelLines.line2,
+            labelSpriteId,
             venueName,
             city: post.city,
             cat: post.category,
@@ -18485,8 +19010,8 @@ function makePosts(){
         const multiCountLabel = `${multiCount} posts here`;
         const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
         const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
-        // Include venueKey in sprite source to ensure unique sprite IDs for different venues
-        // Even if they have same icon, count, and venue name
+        const spriteSource = ['multi', multiIconId || '', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
+        const labelSpriteId = hashString(spriteSource);
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
         const multiIds = Array.from(group.postIds);
@@ -18500,6 +19025,7 @@ function makePosts(){
             label: combinedLabel,
             labelLine1: multiCountLabel,
             labelLine2: multiVenueText,
+            labelSpriteId,
             venueName,
             city: post.city,
             cat: post.category,
@@ -18520,7 +19046,7 @@ function makePosts(){
         if(Array.isArray(result)){
           result.forEach(feature => { 
             if(feature) {
-              // Prevent duplicate multi-post features - check if feature with same coordinates already exists
+              // Prevent nested clusters - check if cluster feature with same coordinates already exists
               const existing = features.find(f => 
                 f && f.geometry && feature.geometry &&
                 Array.isArray(f.geometry.coordinates) && Array.isArray(feature.geometry.coordinates) &&
@@ -18551,7 +19077,6 @@ function makePosts(){
     let addingPostSource = false;
     let pendingAddPostSource = false;
 
-    // --- Section 7: Map Source Integration ---
     function loadPostMarkers(){
       try{
         addPostSource();
@@ -18595,77 +19120,42 @@ function makePosts(){
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
       }
-      // Pre-load marker-icon sprites and add them to map
-      const markerIconIds = new Set();
-      postsData.features.forEach(feature => {
-        if(feature.properties && !feature.properties.point_count){
-          const iconId = feature.properties.sub || MULTI_POST_MARKER_ICON_ID;
-          markerIconIds.add(iconId);
-        }
-      });
-      markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
-      for(const iconId of markerIconIds){
-        if(typeof ensureMapIcon === 'function'){
-          await ensureMapIcon(iconId).catch(()=>{});
-        }
-        const iconUrl = subcategoryMarkers[iconId];
-        if(iconUrl && !map.hasImage(iconId)){
-          try{
-            const img = await loadMarkerLabelImage(iconUrl);
-            if(img){
-              let deviceScale = 2;
-              try{
-                const ratio = window.devicePixelRatio;
-                if(Number.isFinite(ratio) && ratio > 0){
-                  deviceScale = ratio;
-                }
-              }catch(err){
-                deviceScale = 2;
-              }
-              if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-                deviceScale = 2;
-              }
-              const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
-              const canvas = document.createElement('canvas');
-              canvas.width = iconSize;
-              canvas.height = iconSize;
-              const ctx = canvas.getContext('2d');
-              if(ctx){
-                ctx.drawImage(img, 0, 0, iconSize, iconSize);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                map.addImage(iconId, imageData, { pixelRatio: deviceScale });
-              }
-            }
-          }catch(e){}
-        }
-      }
+      await prepareMarkerLabelCompositesForPosts(postsData);
+      ensureMarkerLabelBackground(map);
       updateMapFeatureHighlights(lastHighlightedPostIds);
-      
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
         ['has','title']
       ];
       const markerLabelFilter = ['all', ...markerLabelBaseConditions];
 
-      const markerLabelIconImage = MARKER_LABEL_BG_ID;
-      const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
+      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+        ['case',
+          ['==', ['var','spriteId'], ''],
+          MARKER_LABEL_BG_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+        ]
+      ];
+
+      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+        ['case',
+          ['==', ['var','spriteId'], ''],
+          MARKER_LABEL_BG_ACCENT_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
+        ]
+      ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 5, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
-        const finalIconSize = iconSize !== undefined ? iconSize : 1;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -18675,19 +19165,18 @@ function makePosts(){
               source,
               filter: filter || markerLabelFilter,
               minzoom: layerMinZoom,
-              maxzoom: 24,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': finalIconSize,
+                'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'center',
+                'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
               },
               paint:{
-                'icon-translate': [0, 0],
+                'icon-translate': [markerLabelBgTranslatePx, 0],
                 'icon-translate-anchor': 'viewport',
                 'icon-opacity': iconOpacity || 1
               }
@@ -18702,76 +19191,23 @@ function makePosts(){
         }
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate',[0,0]); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
-      // Create marker-icon layer (sprites are already loaded above)
-      const markerIconFilter = ['all',
-        ['!',['has','point_count']],
-        ['has','title']
-      ];
-      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-        ['case',
-          ['==', ['var','iconId'], ''],
-          MULTI_POST_MARKER_ICON_ID,
-          ['var','iconId']
-        ]
-      ];
-      const markerIconLayerId = 'marker-icon';
-      if(!map.getLayer(markerIconLayerId)){
-        try{
-          map.addLayer({
-            id: markerIconLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerIconFilter,
-            minzoom: MARKER_MIN_ZOOM,
-            layout:{
-              'icon-image': markerIconImageExpression,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'center',
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': 10,
-              'visibility': 'visible'
-            },
-            paint:{
-              'icon-opacity': 1
-            }
-          });
-        }catch(e){}
-      }
-      if(map.getLayer(markerIconLayerId)){
-        try{
-          map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
-          map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
-          map.setFilter(markerIconLayerId, markerIconFilter);
-          map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-        }catch(e){}
-      }
-      
       ALL_MARKER_LAYER_IDS.forEach(id=>{
-        if(id !== 'marker-icon' && map.getLayer(id)){
+        if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
-      // Move marker-icon layer to top (above map cards)
-      if(map.getLayer('marker-icon')){
-        try{ 
-          map.moveLayer('marker-icon');
-        }catch(e){}
-      }
       [
         ['marker-label','icon-opacity-transition'],
         ['marker-label-highlight','icon-opacity-transition']
@@ -18780,39 +19216,338 @@ function makePosts(){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
         }
       });
-      
-      function updateMapCardLayerOpacity(displayMode){
-        if(!map) return;
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
-        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-        const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
-        if(map.getLayer('marker-label')){
-          try{ map.setPaintProperty('marker-label', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
-        }
-        // Ensure marker-icon is always visible at 100% opacity
-        if(map.getLayer('marker-icon')){
-          try{ 
-            map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-            map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-          }catch(e){}
-        }
-      }
-      window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
-      window.getMapInstance = () => map; // Expose map instance getter
-      
-      updateMapCardLayerOpacity(mapCardDisplay);
-      
-      // Ensure marker-icon layer is visible and on top after map card setup
-      if(map.getLayer('marker-icon')){
-        try{
-          map.setLayoutProperty('marker-icon', 'visibility', 'visible');
-          map.setPaintProperty('marker-icon', 'icon-opacity', 1);
-          map.setLayoutProperty('marker-icon', 'symbol-sort-key', 10);
-          map.moveLayer('marker-icon'); // Move to top
-        }catch(e){}
-      }
-      
+      refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
+        function createMapCardOverlay(post, opts = {}){
+          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
+          const previousKey = selectedVenueKey;
+          if(overlayVenueKey){
+            selectedVenueKey = overlayVenueKey;
+          }
+          try{
+            const overlayRoot = document.createElement('div');
+            overlayRoot.className = 'mapmarker-overlay';
+            overlayRoot.setAttribute('aria-hidden', 'true');
+            overlayRoot.style.pointerEvents = 'none';
+            overlayRoot.style.userSelect = 'none';
+
+            const parseVenueKey = (key)=>{
+              if(typeof key !== 'string') return null;
+              const parts = key.split(',');
+              if(parts.length !== 2) return null;
+              const lng = Number(parts[0]);
+              const lat = Number(parts[1]);
+              if(!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+              return { lng, lat };
+            };
+
+            let resolvedVenueKey = typeof overlayVenueKey === 'string' && overlayVenueKey ? overlayVenueKey : '';
+            let resolvedCoords = resolvedVenueKey ? parseVenueKey(resolvedVenueKey) : null;
+            const sourceCoord = targetLngLat || fixedLngLat || eventLngLat || (Number.isFinite(post?.lng) && Number.isFinite(post?.lat) ? { lng: post.lng, lat: post.lat } : null);
+            if(!resolvedCoords && sourceCoord && Number.isFinite(sourceCoord.lng) && Number.isFinite(sourceCoord.lat)){
+              resolvedCoords = { lng: Number(sourceCoord.lng), lat: Number(sourceCoord.lat) };
+            }
+            if(!resolvedVenueKey && resolvedCoords){
+              resolvedVenueKey = toVenueCoordKey(resolvedCoords.lng, resolvedCoords.lat);
+            }
+            if(resolvedVenueKey){
+              overlayRoot.dataset.venueKey = resolvedVenueKey;
+            } else if(overlayVenueKey){
+              overlayRoot.dataset.venueKey = overlayVenueKey;
+            } else {
+              delete overlayRoot.dataset.venueKey;
+            }
+
+            let visibleList = filtersInitialized ? filtered : posts;
+            if(!Array.isArray(visibleList) || visibleList.length === 0){
+              visibleList = Array.isArray(posts) ? posts : [];
+            }
+            const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
+              if(!item || item.id === undefined || item.id === null) return '';
+              return String(item.id);
+            }).filter(Boolean) : []);
+            let venuePostsAll = [];
+            if(resolvedCoords && typeof getPostsAtVenueByCoords === 'function'){
+              venuePostsAll = getPostsAtVenueByCoords(resolvedCoords.lng, resolvedCoords.lat) || [];
+            } else if(resolvedVenueKey && typeof getPostsAtVenueByCoords === 'function'){
+              const coords = parseVenueKey(resolvedVenueKey);
+              if(coords){
+                venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
+              }
+            }
+            let venuePostsVisible = Array.isArray(venuePostsAll)
+              ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id)))
+              : [];
+            if((!Array.isArray(venuePostsVisible) || venuePostsVisible.length === 0) && post){
+              venuePostsVisible = [post];
+            }
+            const uniqueVenuePosts = [];
+            const venuePostIds = new Set();
+            venuePostsVisible.forEach(item => {
+              if(!item || item.id === undefined || item.id === null) return;
+              const idStr = String(item.id);
+              if(!idStr || venuePostIds.has(idStr)) return;
+              venuePostIds.add(idStr);
+              uniqueVenuePosts.push(item);
+            });
+            const multiIds = uniqueVenuePosts.map(item => String(item.id)).filter(Boolean);
+            const multiCount = uniqueVenuePosts.length;
+            const isMultiVenue = multiCount > 1;
+            if(isMultiVenue){
+              overlayRoot.dataset.multiIds = multiIds.join(',');
+            } else {
+              delete overlayRoot.dataset.multiIds;
+            }
+            const sortedList = Array.isArray(sortedPostList) ? sortedPostList : [];
+            let primaryVenuePost = null;
+            if(isMultiVenue && sortedList.length){
+              primaryVenuePost = sortedList.find(entry => entry && venuePostIds.has(String(entry.id))) || null;
+            }
+            if(!primaryVenuePost){
+              primaryVenuePost = uniqueVenuePosts[0] || post;
+            }
+            const overlayId = primaryVenuePost && primaryVenuePost.id !== undefined && primaryVenuePost.id !== null
+              ? String(primaryVenuePost.id)
+              : String(post.id);
+            overlayRoot.dataset.id = overlayId;
+
+            const markerContainer = document.createElement('div');
+            markerContainer.className = 'small-map-card';
+            markerContainer.dataset.id = overlayId;
+            markerContainer.setAttribute('aria-hidden', 'true');
+            markerContainer.style.pointerEvents = 'none';
+            markerContainer.style.userSelect = 'none';
+
+            const markerIcon = new Image();
+            try{ markerIcon.decoding = 'async'; }catch(e){}
+            markerIcon.alt = '';
+            markerIcon.className = 'mapmarker';
+            markerIcon.draggable = false;
+            markerIcon.loading = 'eager';
+            markerIcon.referrerPolicy = 'no-referrer';
+            if(isMultiVenue){
+              markerIcon.src = SMALL_MULTI_MAP_CARD_ICON_SRC;
+              enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
+            } else {
+              const markerSources = window.subcategoryMarkers || {};
+              const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+              const markerIdCandidates = [];
+              if(post && post.subcategory){
+                markerIdCandidates.push(slugifyFn(post.subcategory));
+              }
+              const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
+              if(markerIconUrl){
+                markerIcon.src = markerIconUrl;
+              }
+            }
+            requestAnimationFrame(() => {
+              if(typeof markerIcon.decode === 'function'){
+                markerIcon.decode().catch(()=>{});
+              }
+            });
+
+            const markerPill = new Image();
+            try{ markerPill.decoding = 'async'; }catch(e){}
+            markerPill.alt = '';
+            markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
+            markerPill.dataset.defaultSrc = 'assets/icons-30/150x40-pill-70.webp';
+            markerPill.dataset.highlightSrc = 'assets/icons-30/150x40-pill-2f3b73.webp';
+            markerPill.className = 'mapmarker-pill';
+            markerPill.loading = 'eager';
+            markerPill.style.opacity = '0.9';
+            markerPill.style.visibility = 'visible';
+            markerPill.draggable = false;
+            requestAnimationFrame(() => {
+              if(typeof markerPill.decode === 'function'){
+                markerPill.decode().catch(()=>{});
+              }
+            });
+
+            const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
+            const venueDisplayName = (()=>{
+              if(resolvedVenueKey){
+                const candidates = uniqueVenuePosts.length ? uniqueVenuePosts : (post ? [post] : []);
+                for(const candidate of candidates){
+                  const locs = Array.isArray(candidate?.locations) ? candidate.locations : [];
+                  const match = locs.find(loc => loc && toVenueCoordKey(loc.lng, loc.lat) === resolvedVenueKey && loc.venue);
+                  if(match && match.venue){
+                    return match.venue;
+                  }
+                }
+              }
+              const fallback = uniqueVenuePosts[0] || post;
+              return getPrimaryVenueName(fallback) || '';
+            })();
+            const multiSmallVenueText = shortenMarkerLabelText(venueDisplayName, markerLabelTextAreaWidthPx);
+            const multiBigVenueText = shortenMarkerLabelText(venueDisplayName, mapCardTitleWidthPx);
+            const multiCountLabel = `${multiCount} posts here`;
+            const markerLabel = document.createElement('div');
+            markerLabel.className = 'mapmarker-label';
+            if(isMultiVenue){
+              markerContainer.classList.add('small-multi-post-map-card');
+              const markerLine1 = document.createElement('div');
+              markerLine1.className = 'mapmarker-label-line';
+              markerLine1.textContent = multiCountLabel;
+              const markerLine2 = document.createElement('div');
+              markerLine2.className = 'mapmarker-label-line';
+              markerLine2.textContent = multiSmallVenueText || venueDisplayName || '';
+              markerLabel.append(markerLine1, markerLine2);
+            } else if(labelLines){
+              const markerLine1 = document.createElement('div');
+              markerLine1.className = 'mapmarker-label-line';
+              markerLine1.textContent = labelLines.line1;
+              markerLabel.appendChild(markerLine1);
+              if(labelLines.line2){
+                const markerLine2 = document.createElement('div');
+                markerLine2.className = 'mapmarker-label-line';
+                markerLine2.textContent = labelLines.line2;
+                markerLabel.appendChild(markerLine2);
+              }
+            }
+
+            markerContainer.append(markerPill, markerIcon, markerLabel);
+
+            const cardRoot = document.createElement('div');
+            cardRoot.className = 'big-map-card big-map-card--popup';
+            if(isMultiVenue){
+              cardRoot.classList.add('big-multi-post-map-card');
+            }
+            cardRoot.dataset.id = overlayId;
+            cardRoot.setAttribute('aria-hidden', 'true');
+            cardRoot.style.pointerEvents = 'auto';
+            cardRoot.style.userSelect = 'none';
+
+            const pillImg = new Image();
+            try{ pillImg.decoding = 'async'; }catch(e){}
+            pillImg.alt = '';
+            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
+            pillImg.className = 'map-card-pill';
+            pillImg.style.opacity = '0.9';
+            pillImg.draggable = false;
+
+            const thumbImg = new Image();
+            try{ thumbImg.decoding = 'async'; }catch(e){}
+            thumbImg.alt = '';
+            thumbImg.loading = 'eager';
+            thumbImg.draggable = false;
+            if(isMultiVenue){
+              thumbImg.src = 'assets/icons-30/multi-post-icon-50.webp';
+              thumbImg.className = 'map-card-thumb';
+            } else {
+              const thumbFallback = 'assets/funmap-logo-small.png';
+              thumbImg.onerror = ()=>{
+                thumbImg.onerror = null;
+                thumbImg.src = thumbFallback;
+              };
+              thumbImg.src = thumbUrl(post) || thumbFallback;
+              thumbImg.className = 'map-card-thumb';
+              thumbImg.referrerPolicy = 'no-referrer';
+            }
+            requestAnimationFrame(() => {
+              if(typeof thumbImg.decode === 'function'){
+                thumbImg.decode().catch(()=>{});
+              }
+            });
+
+            const labelEl = document.createElement('div');
+            labelEl.className = 'map-card-label';
+            const titleWrap = document.createElement('div');
+            titleWrap.className = 'map-card-title';
+            if(isMultiVenue){
+              [multiCountLabel, multiBigVenueText || venueDisplayName || ''].forEach(line => {
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
+              });
+            } else if(labelLines){
+              const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+                ? labelLines.cardTitleLines.slice(0, 2)
+                : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+              cardTitleLines.forEach(line => {
+                if(!line) return;
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
+              });
+            }
+            if(!titleWrap.childElementCount){
+              const lineEl = document.createElement('div');
+              lineEl.className = 'map-card-title-line';
+              lineEl.textContent = '';
+              titleWrap.appendChild(lineEl);
+            }
+            labelEl.appendChild(titleWrap);
+            if(!isMultiVenue && labelLines){
+              const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
+              if(venueLine){
+                const venueEl = document.createElement('div');
+                venueEl.className = 'map-card-venue';
+                venueEl.textContent = venueLine;
+                labelEl.appendChild(venueEl);
+              }
+            }
+
+            cardRoot.append(pillImg, thumbImg, labelEl);
+            overlayRoot.append(markerContainer, cardRoot);
+            overlayRoot.classList.add('is-card-visible');
+            overlayRoot.style.pointerEvents = '';
+            resetBigMapCardTransforms();
+
+            const handleOverlayClick = (ev)=>{
+              ev.preventDefault();
+              ev.stopPropagation();
+              const pid = overlayRoot.dataset.id;
+              if(!pid) return;
+              callWhenDefined('openPost', (fn)=>{
+                requestAnimationFrame(() => {
+                  try{
+                    touchMarker = null;
+                    stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
+                    // CASE 3: MAP MARKER CLICKED (overlay) - SCROLL TO TOP
+                    // Parameters: (id, fromHistory=false, fromMap=true, originEl=null)
+                    fn(pid, false, true, null);
+                  }catch(err){ console.error(err); }
+                });
+              });
+            };
+            cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
+            ['pointerdown','mousedown','touchstart'].forEach(type => {
+              cardRoot.addEventListener(type, (ev)=>{
+                const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
+                const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
+                if(!isTouchLike){
+                  try{ ev.preventDefault(); }catch(err){}
+                }
+                try{ ev.stopPropagation(); }catch(err){}
+              }, { capture: true });
+            });
+            const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
+            if(typeof marker.setZIndexOffset === 'function'){
+              try{ marker.setZIndexOffset(20000); }catch(e){}
+            }
+            const markerElement = typeof marker.getElement === 'function' ? marker.getElement() : overlayRoot;
+            if(markerElement && markerElement.style){
+              markerElement.style.zIndex = '20000';
+            }
+            if(targetLngLat){ marker.setLngLat(targetLngLat); }
+            else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
+            else if(eventLngLat){ marker.setLngLat(eventLngLat); }
+            marker.addTo(map);
+            marker.__fixedLngLat = fixedLngLat;
+            window.__overCard = false;
+            registerPopup(marker);
+            return marker;
+          } finally {
+            if(overlayVenueKey){
+              selectedVenueKey = previousKey;
+            }
+          }
+        }
 
         const handleMarkerClick = (e)=>{
           stopSpin();
@@ -18828,69 +19563,7 @@ function makePosts(){
             normalizedMultiCount = normalizedMultiIds.length;
           }
           const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiVenue ? 2 : 0);
-          const isMultiPost = helperMultiCount > 1;
-          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
-          
-            // Add clicked state to mapcard and update icon-size
-            if(id !== undefined && id !== null){
-              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-              if(mapCard){
-                document.querySelectorAll('.small-map-card').forEach(card => {
-                  card.classList.remove('is-clicked');
-                });
-                mapCard.classList.add('is-clicked');
-              }
-              // Update icon-size for expanded state
-              if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-                updateMarkerLabelHighlightIconSize();
-              }
-            }
-          
-          if(touchClick){
-            // Two-tap system: first tap shows accent pill, second tap opens post
-            if(touchMarker === id){
-              // Second tap on same marker - open the post
-              touchMarker = null;
-              hoveredPostIds = [];
-              if(id !== undefined && id !== null){
-                activePostId = id;
-                selectedVenueKey = venueKey;
-                updateSelectedMarkerRing();
-              }
-              const p = posts.find(x=>x.id===id);
-              if(p){
-                callWhenDefined('openPost', (fn)=>{
-                  requestAnimationFrame(() => {
-                    try{
-                      stopSpin();
-                      if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                        try{ closePanel(filterPanel); }catch(err){}
-                      }
-                      fn(id, false, true, null);
-                    }catch(err){ console.error(err); }
-                  });
-                });
-              }
-              if(isMultiPost){
-                autoOpenPostBoardForMultiPost({
-                  multiIds: normalizedMultiIds,
-                  multiCount: helperMultiCount,
-                  trigger: 'touch'
-                });
-              }
-              return;
-            } else {
-              // First tap - show accent pill, don't open
-              touchMarker = id;
-              if(id !== undefined && id !== null){
-                hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-                updateSelectedMarkerRing();
-              }
-              return;
-            }
-          }
-          
-          // Non-touch: open immediately
+          const isMultiCluster = helperMultiCount > 1;
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
@@ -18901,265 +19574,108 @@ function makePosts(){
           const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const targetLngLat = baseLngLat || (e ? e.lngLat : null);
-          if(isMultiPost){
-            autoOpenPostBoardForMultiPost({
+          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
+          if(touchClick){
+            if(touchMarker !== id || !hoverPopup){
+              touchMarker = id;
+              if(hoverPopup){
+                runOverlayCleanup(hoverPopup);
+                try{ hoverPopup.remove(); }catch(err){}
+                hoverPopup = null;
+                updateSelectedMarkerRing();
+              }
+              const p = posts.find(x=>x.id===id);
+              if(p){
+                hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
+                updateSelectedMarkerRing();
+              }
+            }
+            if(isMultiCluster){
+              autoOpenPostBoardForCluster({
+                multiIds: normalizedMultiIds,
+                multiCount: helperMultiCount,
+                trigger: 'touch'
+              });
+            }
+            return;
+          }
+          if(isMultiCluster){
+            autoOpenPostBoardForCluster({
               multiIds: normalizedMultiIds,
               multiCount: helperMultiCount,
               trigger: 'click'
             });
-          } else {
-            const p = posts.find(x=>x.id===id);
-            if(p){
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                      try{ closePanel(filterPanel); }catch(err){}
-                    }
-                    fn(id, false, true, null);
-                  }catch(err){ console.error(err); }
-                });
-              });
-            }
           }
         };
-      // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
-      const attachClickHandlers = () => {
-        // Remove old handlers from all possible layers
-        const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
-        allPossibleLayers.forEach(layer => {
-          try {
-            map.off('click', layer, handleMarkerClick);
-          } catch(e) {}
-        });
-        // Add handlers to current interactive layers
-        getMarkerInteractiveLayers().forEach(layer => {
-          try {
-            map.on('click', layer, handleMarkerClick);
-          } catch(e) {}
-        });
-      };
-      attachClickHandlers();
-      // Expose globally so handlers can be updated when mapCardDisplay changes
-      window.attachClickHandlers = attachClickHandlers;
+      MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
 
-      // Function to update mapcard click and post-open states
-      function updateMapCardStates(){
-        const openPostEl = document.querySelector('.open-post[data-id]');
-        const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
-        
-        // Remove all click and post-open states
-        document.querySelectorAll('.small-map-card').forEach(card => {
-          card.classList.remove('is-clicked', 'is-post-open');
-        });
-        
-        // Add post-open state to mapcard if post is open
-        if(openPostId){
-          const mapCard = document.querySelector(`.small-map-card[data-id="${openPostId}"]`);
-          if(mapCard){
-            mapCard.classList.add('is-post-open');
-          }
-        }
-      }
-      
-      // Expose globally
-      window.updateMapCardStates = updateMapCardStates;
-      
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
         const targetEl = originalTarget && typeof originalTarget.closest === 'function'
-          ? originalTarget.closest('.mapmarker-overlay, .small-map-card')
+          ? originalTarget.closest('.mapmarker-overlay')
           : null;
         if(targetEl){
-          const smallMapCard = targetEl.classList.contains('small-map-card') 
-            ? targetEl 
-            : targetEl.querySelector('.small-map-card');
-          if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
-            const pid = smallMapCard.dataset.id;
-            
-            // Add clicked state
-            document.querySelectorAll('.small-map-card').forEach(card => {
-              card.classList.remove('is-clicked');
-            });
-            smallMapCard.classList.add('is-clicked');
-            
-            callWhenDefined('openPost', (fn)=>{
-              requestAnimationFrame(() => {
-                try{
-                  touchMarker = null;
-                  stopSpin();
-                  if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                    try{ closePanel(filterPanel); }catch(err){}
-                  }
-                  fn(pid, false, true, null);
-                }catch(err){ console.error(err); }
-              });
-            });
-          }
           return;
         }
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
-          // Clicked elsewhere - remove click states
-          document.querySelectorAll('.small-map-card').forEach(card => {
-            card.classList.remove('is-clicked');
-          });
+          if(hoverPopup){
+            runOverlayCleanup(hoverPopup);
+            try{ hoverPopup.remove(); }catch(err){}
+            hoverPopup = null;
+          }
           updateSelectedMarkerRing();
           touchMarker = null;
-          hoveredPostIds = [];
-          updateSelectedMarkerRing();
-          updateMapCardStates();
-        } else {
-          const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
-          if(!clickedMarkerLabel){
-            // Clicked elsewhere - remove click states
-            document.querySelectorAll('.small-map-card').forEach(card => {
-              card.classList.remove('is-clicked');
-            });
-            touchMarker = null;
-            hoveredPostIds = [];
-            updateSelectedMarkerRing();
-            updateMapCardStates();
-          }
         }
       });
 
       updateSelectedMarkerRing();
 
-      // Set pointer cursor when hovering over markers (dynamic based on mapCardDisplay)
-      // Store cursor handler functions so we can remove only these specific handlers
-      const cursorEnterHandler = () => {
+      // Cursor + popup for marker points
+      
+      const handleMarkerMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
-      };
-      const cursorLeaveHandler = () => {
-        map.getCanvas().style.cursor = 'grab';
-      };
-      const attachCursorHandlers = () => {
-        // Remove only our cursor handlers from all possible layers
-        const allPossibleLayers = ['marker-icon', 'marker-label', 'marker-label-highlight'];
-        allPossibleLayers.forEach(layer => {
-          try {
-            map.off('mouseenter', layer, cursorEnterHandler);
-            map.off('mouseleave', layer, cursorLeaveHandler);
-          } catch(e) {}
-        });
-        // Add cursor handlers to current interactive layers only
-        getMarkerInteractiveLayers().forEach(layer => {
-          try {
-            map.on('mouseenter', layer, cursorEnterHandler);
-            map.on('mouseleave', layer, cursorLeaveHandler);
-          } catch(e) {}
-        });
-      };
-      attachCursorHandlers();
-      // Expose globally so handlers can be updated when mapCardDisplay changes
-      window.attachCursorHandlers = attachCursorHandlers;
-
-      // Handle hover/tap to show accent pill
-      // Uses Mapbox sprite layer system only - no DOM handlers to avoid conflicts
-      // Only uses marker-icon layer for precise hover zone
-      // Uses mousemove to track hover continuously for smooth transitions between markers
-      let currentHoveredId = null;
-      let hoverCheckTimeout = null;
-      
-      const updateHoverFromPoint = (point) => {
-        if(!point) return;
-        
-        // Clear any pending hover check
-        if(hoverCheckTimeout){
-          clearTimeout(hoverCheckTimeout);
-          hoverCheckTimeout = null;
-        }
-        
-        // Query what's under the cursor
-        const features = map.queryRenderedFeatures(point, {
-          layers: ['marker-icon']
-        });
-        
-        if(features.length > 0){
-          const f = features[0];
-          const props = f.properties || {};
-          const id = props.id;
-          const venueKey = props.venueKey || null;
-          
-          if(id !== undefined && id !== null && String(id) !== currentHoveredId){
-            currentHoveredId = String(id);
-            hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-            updateSelectedMarkerRing();
-          }
-        } else {
-          // Not over any marker - clear hover after a short delay
-          hoverCheckTimeout = setTimeout(() => {
-            // Double-check we're still not over a marker
-            const recheckFeatures = map.queryRenderedFeatures(point, {
-              layers: ['marker-icon']
-            });
-            if(recheckFeatures.length === 0){
-              currentHoveredId = null;
-              hoveredPostIds = [];
-              updateSelectedMarkerRing();
-            }
-            hoverCheckTimeout = null;
-          }, 50);
-        }
-      };
-      
-      const handleMarkerHover = (e) => {
-        // Cancel any pending hover clear
-        if(hoverCheckTimeout){
-          clearTimeout(hoverCheckTimeout);
-          hoverCheckTimeout = null;
-        }
-        
-        const f = e.features && e.features[0];
-        if(!f) return;
+        const f = e.features && e.features[0]; if(!f) return;
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
-        
-        if(id !== undefined && id !== null){
-          currentHoveredId = String(id);
-          hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
+        const coords = f.geometry && f.geometry.coordinates;
+        const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+        const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+        const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+        const targetLngLat = baseLngLat || (e ? e.lngLat : null);
+        const p = posts.find(x=>x.id===id);
+        if(!p){
+          return;
+        }
+        if(hoverPopup){
+          runOverlayCleanup(hoverPopup);
+          try{ hoverPopup.remove(); }catch(e){}
+          hoverPopup = null;
           updateSelectedMarkerRing();
         }
+        hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
+        updateSelectedMarkerRing();
       };
+      MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
-      const handleMarkerHoverEnd = (e) => {
-        // Use mousemove to check what we're over now - this handles smooth transitions
-        if(e.point){
-          updateHoverFromPoint(e.point);
-        } else {
-          // No point info, clear after delay
-          hoverCheckTimeout = setTimeout(() => {
-            currentHoveredId = null;
-            hoveredPostIds = [];
-            updateSelectedMarkerRing();
-            hoverCheckTimeout = null;
-          }, 50);
+      const onMarkerMove = window.rafThrottle((evt)=>{
+        if(hoverPopup && typeof hoverPopup.setLngLat === 'function'){
+          const fixed = hoverPopup.__fixedLngLat;
+          if(fixed && Number.isFinite(fixed.lng) && Number.isFinite(fixed.lat)){
+            hoverPopup.setLngLat(fixed);
+          }
         }
-      };
-      
-      // Also track mousemove over the map to catch transitions between markers
-      const handleMapMouseMove = (e) => {
-        if(e.point){
-          updateHoverFromPoint(e.point);
-        }
-      };
-      
-      // Expose hover handlers globally so they can be updated when mapCardDisplay changes
-      window.handleMarkerHover = handleMarkerHover;
-      window.handleMarkerHoverEnd = handleMarkerHoverEnd;
+      });
+      MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mousemove', layer, onMarkerMove));
 
-      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
-      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
-      // Using only marker-icon ensures hover works reliably and precisely
-      map.on('mouseenter', 'marker-icon', handleMarkerHover);
-      map.on('mouseleave', 'marker-icon', handleMarkerHoverEnd);
-      // Track mousemove to catch smooth transitions between markers
-      map.on('mousemove', 'marker-icon', handleMapMouseMove);
-
+      const handleMarkerMouseLeave = ()=>{
+        map.getCanvas().style.cursor = 'grab';
+        if(listLocked) return;
+        const currentPopup = hoverPopup;
+        schedulePopupRemoval(currentPopup, 200);
+      };
+      MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
       // Maintain pointer cursor for balloons and surface multi-venue cards when applicable
         postSourceEventsBound = true;
@@ -19420,10 +19936,33 @@ function makePosts(){
         renderHistoryBoard();
       });
 
+      const handleHoverHighlight = (state)=> toggleSmallMapCardHoverHighlight(p.id, state);
+
+      el.addEventListener('mouseenter', ()=> handleHoverHighlight(true));
+      el.addEventListener('mouseleave', ()=> handleHoverHighlight(false));
       el.dataset.hoverHighlightBound = '1';
       return el;
     }
 
+    document.addEventListener('mouseover', event => {
+      const cardEl = event.target.closest('.post-card, .recents-card');
+      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
+      const related = event.relatedTarget;
+      if(related && cardEl.contains(related)) return;
+      const id = cardEl.dataset ? cardEl.dataset.id : null;
+      if(!id) return;
+      toggleSmallMapCardHoverHighlight(id, true);
+    });
+
+    document.addEventListener('mouseout', event => {
+      const cardEl = event.target.closest('.post-card, .recents-card');
+      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
+      const related = event.relatedTarget;
+      if(related && cardEl.contains(related)) return;
+      const id = cardEl.dataset ? cardEl.dataset.id : null;
+      if(!id) return;
+      toggleSmallMapCardHoverHighlight(id, false);
+    });
 
     // History board
     function loadHistory(){ 
@@ -19682,6 +20221,29 @@ function openPostModal(id){
       handleHash();
     });
 
+    document.addEventListener('click', (ev)=>{
+      const card = ev.target.closest('.mapboxgl-popup.big-map-card .big-map-card');
+      if(card){
+        ev.preventDefault();
+        const pid = card.getAttribute('data-id') || (card.closest('.map-card-list-item') && card.closest('.map-card-list-item').getAttribute('data-id'));
+        if(pid){
+          callWhenDefined('openPost', (fn)=>{
+            requestAnimationFrame(() => {
+              try{
+                touchMarker = null;
+                stopSpin();
+                if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                  try{ closePanel(filterPanel); }catch(err){}
+                }
+                // CASE 3: MAP MARKER CLICKED (popup card) - SCROLL TO TOP
+                // Parameters: (id, fromHistory=false, fromMap=true, originEl=null)
+                fn(pid, false, true, null);
+              }catch(err){ console.error(err); }
+            });
+          });
+        }
+      }
+    }, { capture:true });
 
     function hookDetailActions(el, p){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
@@ -21652,11 +22214,10 @@ function schedulePanelEntrance(content, force=false){
 }
 function openPanel(m){
   if(!m) return;
-  // Temporarily bypass admin authentication check (for development)
-  // if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
-  //   window.adminAuthManager.ensureAuthenticated();
-  //   return;
-  // }
+  if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+    window.adminAuthManager.ensureAuthenticated();
+    return;
+  }
   
   // Initialize admin panel spin controls with current values
   if(m.id === 'adminPanel'){
@@ -21773,7 +22334,8 @@ function openPanel(m){
           display.style.display = '';
           input.remove();
           if(slider) slider.value = newValue;
-          // Don't update window.spinGlobals - settings will be applied on next page load
+          if(slider === spinZoomMaxSlider && window.spinGlobals) window.spinGlobals.spinZoomMax = newValue;
+          if(slider === spinSpeedSlider && window.spinGlobals) window.spinGlobals.spinSpeed = newValue;
           autoSaveMapSettings();
         };
         
@@ -21805,7 +22367,10 @@ function openPanel(m){
         spinZoomMaxDisplay.textContent = spinZoomMaxSlider.value;
       });
       spinZoomMaxSlider.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - settings will be applied on next page load
+        const zoomValue = parseInt(spinZoomMaxSlider.value, 10);
+        if(!isNaN(zoomValue) && window.spinGlobals){
+          window.spinGlobals.spinZoomMax = zoomValue;
+        }
         autoSaveMapSettings();
       });
     }
@@ -21817,7 +22382,10 @@ function openPanel(m){
         spinSpeedDisplay.textContent = parseFloat(spinSpeedSlider.value).toFixed(1);
       });
       spinSpeedSlider.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - settings will be applied on next page load
+        const speedValue = parseFloat(spinSpeedSlider.value);
+        if(!isNaN(speedValue) && window.spinGlobals){
+          window.spinGlobals.spinSpeed = speedValue;
+        }
         autoSaveMapSettings();
       });
     }
@@ -21826,16 +22394,14 @@ function openPanel(m){
     if(spinLoadStartCheckbox && !spinLoadStartCheckbox.dataset.autoSaveAdded){
       spinLoadStartCheckbox.dataset.autoSaveAdded = 'true';
       spinLoadStartCheckbox.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - that triggers the spin animation
-        // Settings will be applied on next page load
+        if(window.spinGlobals) window.spinGlobals.spinLoadStart = spinLoadStartCheckbox.checked;
         autoSaveMapSettings();
       });
     }
     if(spinLogoClickCheckbox && !spinLogoClickCheckbox.dataset.autoSaveAdded){
       spinLogoClickCheckbox.dataset.autoSaveAdded = 'true';
       spinLogoClickCheckbox.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - that triggers the spin animation
-        // Settings will be applied on next page load
+        if(window.spinGlobals) window.spinGlobals.spinLogoClick = spinLogoClickCheckbox.checked;
         autoSaveMapSettings();
       });
     }
@@ -21843,8 +22409,7 @@ function openPanel(m){
       if(radio.dataset.autoSaveAdded) return;
       radio.dataset.autoSaveAdded = 'true';
       radio.addEventListener('change', ()=>{
-        // Don't update window.spinGlobals - that triggers the spin animation
-        // Settings will be applied on next page load
+        if(radio.checked && window.spinGlobals) window.spinGlobals.spinLoadType = radio.value;
         autoSaveMapSettings();
       });
     });
@@ -21872,29 +22437,6 @@ function openPanel(m){
         autoSaveMapSettings();
       });
     }
-    
-    // Auto-save welcome message enabled checkbox
-    const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
-    if(welcomeEnabledCheckbox && !welcomeEnabledCheckbox.dataset.autoSaveAdded){
-      welcomeEnabledCheckbox.dataset.autoSaveAdded = 'true';
-      welcomeEnabledCheckbox.addEventListener('change', async ()=>{
-        // Update localStorage immediately
-        localStorage.setItem('welcome_enabled', welcomeEnabledCheckbox.checked ? 'true' : 'false');
-        
-        try {
-          await fetch('/gateway.php?action=save-admin-settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              welcome_enabled: welcomeEnabledCheckbox.checked
-            })
-          });
-        } catch(error){
-          console.error('Error auto-saving welcome enabled setting:', error);
-        }
-      });
-    }
-    
   }
   
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
@@ -22011,7 +22553,7 @@ const memberPanelChangeManager = (()=>{
 
   function ensureElements(){
     panel = document.getElementById('memberPanel');
-    form = panel ? panel.querySelector('.panel-body') : null;
+    form = document.getElementById('memberForm');
     if(panel){
       saveButton = panel.querySelector('.save-changes');
       discardButton = panel.querySelector('.discard-changes');
@@ -22720,7 +23262,7 @@ const adminPanelChangeManager = (()=>{
 
   function ensureElements(){
     panel = document.getElementById('adminPanel');
-    form = panel ? panel.querySelector('.panel-body') : null;
+    form = document.getElementById('adminForm');
     if(panel){
       saveButton = panel.querySelector('.save-changes');
       discardButton = panel.querySelector('.discard-changes');
@@ -23317,10 +23859,13 @@ const adminAuthManager = (()=>{
 
   function updateUI(){
     if(adminBtn){
-      // Always show admin button (temporarily - for development)
-      adminBtn.hidden = false;
-      adminBtn.style.display = 'flex';
-      adminBtn.setAttribute('aria-hidden', 'false');
+      const isVisible = !!authenticated;
+      adminBtn.hidden = !isVisible;
+      adminBtn.style.display = isVisible ? 'flex' : 'none';
+      adminBtn.setAttribute('aria-hidden', (!isVisible).toString());
+      if(!isVisible){
+        adminBtn.setAttribute('aria-pressed','false');
+      }
     }
   }
 
@@ -23552,12 +24097,15 @@ document.addEventListener('pointerdown', (e) => {
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
   }
   if(adminBtn && adminPanel){
-    adminBtn.addEventListener('click', ()=> togglePanel(adminPanel));
+    adminBtn.addEventListener('click', ()=>{
+      if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+        window.adminAuthManager.ensureAuthenticated();
+        return;
+      }
+      togglePanel(adminPanel);
+    });
   }
-  filterBtn && filterBtn.addEventListener('click', ()=> {
-    closeWelcomeModalIfOpen();
-    togglePanel(filterPanel);
-  });
+  filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const panel = btn.closest('.panel');
@@ -23629,8 +24177,10 @@ document.addEventListener('pointerdown', (e) => {
         openPanel(m);
       }
     });
-    // Welcome modal will be shown after settings load (see loadAdminSettings function)
-    // This ensures it always respects the database setting, even after localStorage is cleared
+    if(welcomeModal && !localStorage.getItem('welcome-seen')){
+      openWelcome();
+      localStorage.setItem('welcome-seen','true');
+    }
     const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') === 'true';
     if(filterPanel && shouldOpenFilter){
       openPanel(filterPanel);
@@ -23690,7 +24240,7 @@ document.addEventListener('pointerdown', (e) => {
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
     {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-card'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
-    {key:'map', label:'Map', selectors:{popupBg:[], popupText:[], title:[]}},
+    {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.big-map-card .mapboxgl-popup-content','.mapboxgl-popup.big-map-card .big-map-card','.mapboxgl-popup.big-map-card .chip','.mapboxgl-popup.big-map-card .chip-small','.mapboxgl-popup.big-map-card .map-card-list-item'], popupText:['.mapboxgl-popup.big-map-card .big-map-card','.mapboxgl-popup.big-map-card .map-card-title','.mapboxgl-popup.big-map-card .map-card-venue','.mapboxgl-popup.big-map-card .chip','.mapboxgl-popup.big-map-card .chip-small','.mapboxgl-popup.big-map-card .map-card-list-item'], title:['.mapboxgl-popup.big-map-card .map-card-title','.mapboxgl-popup.big-map-card .chip .t','.mapboxgl-popup.big-map-card .chip .title','.mapboxgl-popup.big-map-card .chip-small .t','.mapboxgl-popup.big-map-card .chip-small .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
@@ -23778,136 +24328,61 @@ document.addEventListener('DOMContentLoaded', () => {
   const root = document.documentElement;
 
   function apply(){
-    if(!opacityInput || !opacityVal) return;
-    
     const opacity = opacityInput.value;
-    const shadowMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
-    const isPostMode = document.body.classList.contains('mode-posts');
-    
-    // Only apply shadow if mode is 'always' or if mode is 'post_mode_only' and we're in post mode
-    const shouldShowShadow = shadowMode === 'always' || (shadowMode === 'post_mode_only' && isPostMode);
-    const finalOpacity = shouldShowShadow ? opacity : 0;
-    
-    // Show/hide the shadow element based on mode
-    const shadowElement = document.querySelector('.post-mode-background');
-    if(shadowElement){
-      if(shadowMode === 'always'){
-        shadowElement.style.display = 'block';
-      } else if(shadowMode === 'post_mode_only'){
-        // Let CSS handle it (it shows in .mode-posts via CSS rule)
-        shadowElement.style.display = '';
-      } else {
-        shadowElement.style.display = 'none';
-      }
-    }
-    
     root.style.setProperty('--post-mode-bg-color', '0,0,0'); // Always black
-    root.style.setProperty('--post-mode-bg-opacity', finalOpacity);
+    root.style.setProperty('--post-mode-bg-opacity', opacity);
     opacityVal.textContent = Number(opacity).toFixed(2);
   }
   
-  // Make apply function globally accessible
-  window.applyMapShadow = apply;
-  
-  // Auto-save function for map shadow
-  async function autoSaveMapShadow(){
+  // Auto-save function for post mode shadow
+  async function autoSavePostModeShadow(){
     const shadowValue = parseFloat(opacityInput.value);
     if(isNaN(shadowValue)) {
       console.error('Invalid shadow value:', opacityInput.value);
       return;
     }
-    localStorage.setItem('map_shadow', shadowValue);
+    localStorage.setItem('post_mode_shadow', shadowValue);
     try {
       const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ map_shadow: shadowValue })
+        body: JSON.stringify({ post_mode_shadow: shadowValue })
       });
       if(!response.ok){
-        console.error('Failed to save map shadow: HTTP', response.status, response.statusText);
+        console.error('Failed to save post mode shadow: HTTP', response.status, response.statusText);
         const text = await response.text();
         console.error('Response:', text);
       } else {
         const result = await response.json();
         if(result && result.success !== false){
-          console.log('Map shadow saved successfully:', shadowValue, result);
+          console.log('Post mode shadow saved successfully:', shadowValue, result);
           if(result.settings_saved !== undefined){
             console.log('Settings saved count:', result.settings_saved);
           }
         } else {
-          console.error('Failed to save map shadow:', result);
+          console.error('Failed to save post mode shadow:', result);
         }
       }
     } catch (e) {
-      console.error('Failed to save map shadow:', e);
-    }
-  }
-
-  // Auto-save function for map shadow mode
-  async function autoSaveMapShadowMode(modeValue){
-    localStorage.setItem('map_shadow_mode', modeValue);
-    try {
-      const response = await fetch('/gateway.php?action=save-admin-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ map_shadow_mode: modeValue })
-      });
-      if(!response.ok){
-        console.error('Failed to save map shadow mode: HTTP', response.status, response.statusText);
-        const text = await response.text();
-        console.error('Response:', text);
-      } else {
-        const result = await response.json();
-        if(result && result.success !== false){
-          console.log('Map shadow mode saved successfully:', modeValue, result);
-          if(result.settings_saved !== undefined){
-            console.log('Settings saved count:', result.settings_saved);
-          }
-        } else {
-          console.error('Failed to save map shadow mode:', result);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to save map shadow mode:', e);
+      console.error('Failed to save post mode shadow:', e);
     }
   }
 
   if(opacityInput && opacityVal){
     // Load from localStorage (which is populated from database on page load)
-    const savedValue = localStorage.getItem('map_shadow');
-    if(savedValue !== null){
-      opacityInput.value = savedValue;
-    } else {
-      opacityInput.value = 0;
-    }
-    
-    // Ensure shadow mode is set
-    if(!localStorage.getItem('map_shadow_mode')){
-      localStorage.setItem('map_shadow_mode', 'post_mode_only');
-    }
-    
-    // Apply immediately
+    const savedValue = localStorage.getItem('post_mode_shadow');
+    opacityInput.value = savedValue !== null ? savedValue : 0;
     apply();
     
-    // Also re-apply after a short delay to catch any async settings loading
-    setTimeout(() => {
-      const updatedValue = localStorage.getItem('map_shadow');
-      if(updatedValue !== null && updatedValue !== opacityInput.value){
-        opacityInput.value = updatedValue;
-      }
-      apply();
-    }, 500);
-    
-    // Update display and shadow in real-time on slider input
+    // Update display on slider input
     opacityInput.addEventListener('input', () => {
-      apply(); // Update shadow in real-time
       opacityVal.textContent = parseFloat(opacityInput.value).toFixed(2);
     });
     
     // Auto-save on slider change
     opacityInput.addEventListener('change', () => {
       apply();
-      autoSaveMapShadow();
+      autoSavePostModeShadow();
     });
     
     // Make value display editable on click
@@ -23944,7 +24419,7 @@ document.addEventListener('DOMContentLoaded', () => {
           input.remove();
           opacityInput.value = newValue;
           apply();
-          autoSaveMapShadow();
+          autoSavePostModeShadow();
         };
         
         input.addEventListener('blur', commitValue);
@@ -23964,45 +24439,6 @@ document.addEventListener('DOMContentLoaded', () => {
         input.select();
       });
     }
-  }
-
-  // Add event listeners for map shadow mode radio buttons
-  const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
-  const alwaysRadio = document.getElementById('mapShadowModeAlways');
-  if(postOnlyRadio && alwaysRadio){
-    // Set initial state from localStorage
-    const savedMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
-    if(savedMode === 'always'){
-      alwaysRadio.checked = true;
-    } else {
-      postOnlyRadio.checked = true;
-    }
-    
-    postOnlyRadio.addEventListener('change', () => {
-      if(postOnlyRadio.checked){
-        localStorage.setItem('map_shadow_mode', 'post_mode_only');
-        autoSaveMapShadowMode('post_mode_only');
-        apply(); // Update shadow immediately when mode changes
-      }
-    });
-    alwaysRadio.addEventListener('change', () => {
-      if(alwaysRadio.checked){
-        localStorage.setItem('map_shadow_mode', 'always');
-        autoSaveMapShadowMode('always');
-        apply(); // Update shadow immediately when mode changes
-      }
-    });
-  }
-  
-  // Watch for mode changes to update shadow visibility (when body class changes)
-  if(opacityInput && opacityVal){
-    const observer = new MutationObserver(() => {
-      apply();
-    });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
   }
 });
 
@@ -24653,13 +25089,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleThumbDragStart(event){
     const targetEl = event.target instanceof Element ? event.target : null;
-    if(targetEl && targetEl.closest('.form-image-remove')){
+    if(targetEl && targetEl.closest('.form-preview-image-remove')){
       event.preventDefault();
       return;
     }
-    let thumb = targetEl ? targetEl.closest('.form-image-thumb') : null;
+    let thumb = targetEl ? targetEl.closest('.form-preview-image-thumb') : null;
     if(!thumb && event.currentTarget instanceof Element){
-      thumb = event.currentTarget.closest('.form-image-thumb');
+      thumb = event.currentTarget.closest('.form-preview-image-thumb');
     }
     if(!thumb) return;
     const previewEl = thumb ? thumb.parentElement : null;
@@ -24678,9 +25114,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleThumbDragEnd(event){
-    let thumb = event.target instanceof Element ? event.target.closest('.form-image-thumb') : null;
+    let thumb = event.target instanceof Element ? event.target.closest('.form-preview-image-thumb') : null;
     if(!thumb && event.currentTarget instanceof Element){
-      thumb = event.currentTarget.closest('.form-image-thumb');
+      thumb = event.currentTarget.closest('.form-preview-image-thumb');
     }
     if(!thumb) return;
     thumb.classList.remove('is-dragging');
@@ -24740,7 +25176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getDropInsertIndex(previewEl, event){
     if(!previewEl) return 0;
-    const thumbs = Array.from(previewEl.querySelectorAll('.form-image-thumb'));
+    const thumbs = Array.from(previewEl.querySelectorAll('.form-preview-image-thumb'));
     if(thumbs.length === 0) return 0;
     const pointerX = event.clientX;
     const pointerY = event.clientY;
@@ -24841,14 +25277,14 @@ document.addEventListener('DOMContentLoaded', () => {
       previewEl.innerHTML = '';
       files.forEach((file, index) => {
         const thumb = document.createElement('div');
-        thumb.className = 'form-image-thumb';
+        thumb.className = 'form-preview-image-thumb';
         thumb.dataset.index = String(index);
         thumb.draggable = true;
         thumb.addEventListener('dragstart', handleThumbDragStart);
         thumb.addEventListener('dragend', handleThumbDragEnd);
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.className = 'form-image-remove';
+        removeBtn.className = 'form-preview-image-remove';
         removeBtn.setAttribute('aria-label', file.name ? `Remove ${file.name}` : `Remove image ${index + 1}`);
         removeBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
         removeBtn.addEventListener('click', event => {
@@ -25745,8 +26181,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setup(){
-    const memberPanel = document.getElementById('memberPanel');
-    form = memberPanel ? memberPanel.querySelector('.panel-body') : null;
+    form = document.getElementById('memberForm');
     if(!form) return;
     container = form.querySelector('.member-auth');
     if(!container) return;
