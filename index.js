@@ -1412,12 +1412,21 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const targetMap = mapInstance || map;
+    // Handle pill sprite IDs - these are loaded from database
     if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
-      const sprites = await ensureMarkerLabelPillSprites();
-      if(id === MARKER_LABEL_BG_ID){
-        return sprites.base;
+      try {
+        const sprites = await ensureMarkerLabelPillSprites();
+        if(!sprites){
+          return null;
+        }
+        if(id === MARKER_LABEL_BG_ID){
+          return sprites.base || null;
+        }
+        return sprites.highlight || sprites.base || null;
+      } catch(e) {
+        console.error('Error loading pill sprites:', e);
+        return null;
       }
-      return sprites.highlight;
     }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
@@ -6332,7 +6341,11 @@ function makePosts(){
       if(map && typeof map.getSource === 'function'){
         const postsSource = map.getSource('posts');
         if(postsSource && (force || postsSource.__markerSignature !== signature)){
-          try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
+          try{ 
+            postsSource.setData(postsData); 
+          }catch(err){ 
+            console.error('syncMarkerSources error:', err); 
+          }
           postsSource.__markerSignature = signature;
           updated = true;
         }
@@ -18633,7 +18646,10 @@ function makePosts(){
         map.__retainAllMarkerSprites = true;
       }
       try{
-      const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
+      // Always use filtered list if filters are initialized to prevent race conditions
+      // syncMarkerSources will update the source when filters change, but we need to
+      // ensure initial load and subsequent calls use the correct data
+      const markerList = (filtersInitialized && Array.isArray(filtered)) ? filtered : posts;
       const collections = getMarkerCollections(markerList);
       const { postsData, signature, featureIndex } = collections;
       markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
@@ -18700,39 +18716,7 @@ function makePosts(){
         }
       }
       
-      // Ensure pill sprites are loaded before creating layers
-      try {
-        const pillSprites = await ensureMarkerLabelPillSprites();
-        if(!pillSprites){
-          console.error('Failed to load pill sprites: ensureMarkerLabelPillSprites returned null');
-        } else {
-          if(pillSprites.base && pillSprites.base.image){
-            if(!map.hasImage(MARKER_LABEL_BG_ID)){
-              try{
-                map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
-              }catch(e){
-                console.error('Failed to add base pill sprite to map:', e);
-              }
-            }
-          } else {
-            console.error('Base pill sprite is missing or invalid');
-          }
-          if(pillSprites.highlight && pillSprites.highlight.image){
-            if(!map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-              try{
-                map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
-              }catch(e){
-                console.error('Failed to add accent pill sprite to map:', e);
-              }
-            }
-          } else {
-            console.error('Accent pill sprite is missing or invalid');
-          }
-        }
-      } catch(e) {
-        console.error('Error loading pill sprites:', e);
-      }
-      
+      // Pill sprites are loaded via styleimagemissing handler - no manual pre-loading needed
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
       const markerLabelBaseConditions = [
@@ -21495,7 +21479,9 @@ function openPostModal(id){
         adPosts = newAdPosts;
       }
       if(render) renderLists(filtered);
-      syncMarkerSources(filtered);
+      // Always sync marker sources with filtered data when filters are applied
+      // This ensures the map source is updated even if addPostSource was called earlier
+      syncMarkerSources(filtered, { force: true });
       updateLayerVisibility(lastKnownZoom);
       filtersInitialized = true;
     }
