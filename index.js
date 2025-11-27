@@ -1845,7 +1845,7 @@ let __notifyMapOnInteraction = null;
               parentMenu: container.closest('.panel-field'),
               iconFolder: (() => {
                 const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
-                return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || 'assets/system-images';
+                return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || null;
               })()
             });
           }
@@ -1873,8 +1873,12 @@ let __notifyMapOnInteraction = null;
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
               
-              // Store system images folder globally
-              window.systemImagesFolder = data.settings.system_images_folder || 'assets/system-images';
+              // Store system images folder globally - no fallback
+              if(data.settings.system_images_folder && typeof data.settings.system_images_folder === 'string' && data.settings.system_images_folder.trim()){
+                window.systemImagesFolder = data.settings.system_images_folder.trim();
+              } else {
+                window.systemImagesFolder = null;
+              }
               
               // Update multi-post icon from database if available
               if(data.settings.multi_post_icon && typeof data.settings.multi_post_icon === 'string' && data.settings.multi_post_icon.trim()){
@@ -2120,7 +2124,7 @@ let __notifyMapOnInteraction = null;
               // Initialize system images folder input
               const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
               if(systemImagesFolderInput){
-                const systemImagesFolder = data.settings.system_images_folder || 'assets/system-images';
+                const systemImagesFolder = data.settings.system_images_folder && typeof data.settings.system_images_folder === 'string' ? data.settings.system_images_folder.trim() : '';
                 systemImagesFolderInput.value = systemImagesFolder;
                 window.systemImagesFolder = systemImagesFolder;
               }
@@ -2282,33 +2286,23 @@ let __notifyMapOnInteraction = null;
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        let BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png'; // Default, will be loaded from admin_settings
+        let BALLOON_IMAGE_URL = null; // Loaded from admin_settings
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
 
         async function ensureBalloonIconImage(mapInstance){
-          // Load balloon icon URL from admin_settings (always check database, not just on first load)
+          // Load balloon icon URL from admin_settings - no fallbacks
           try {
             const response = await fetch('/gateway.php?action=get-admin-settings');
             if(response.ok){
               const data = await response.json();
               if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
                 BALLOON_IMAGE_URL = data.settings.marker_cluster_icon.trim();
-              } else if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
-                // Only use hardcoded default if database doesn't have a value
-                BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png';
               }
-            } else if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
-              // Fallback to hardcoded default if database fetch fails
-              BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png';
             }
           } catch(err) {
             console.error('Failed to load marker cluster icon setting:', err);
-            // Use hardcoded default only if fetch fails and we don't have a value
-            if(!BALLOON_IMAGE_URL || BALLOON_IMAGE_URL === 'assets/system-images/red-balloon-40.png'){
-              BALLOON_IMAGE_URL = 'assets/system-images/red-balloon-40.png';
-            }
           }
           
           return new Promise(resolve => {
@@ -3013,8 +3007,6 @@ let __notifyMapOnInteraction = null;
 
 
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
-    const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
-    const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
 
     function registerOverlayCleanup(overlayEl, fn){
@@ -3040,7 +3032,9 @@ let __notifyMapOnInteraction = null;
     // --- Section 5: Small Map Card DOM Functions ---
     function enforceSmallMultiMapCardIcon(img, overlayEl){
       if(!img) return;
-      const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
+      // Get multi-post icon from database - no fallback
+      const targetSrc = window.subcategoryMarkers && window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] ? window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] : null;
+      if(!targetSrc) return; // No icon available from database
       const apply = ()=>{
         const currentSrc = img.getAttribute('src') || '';
         if(currentSrc !== targetSrc){
@@ -4148,11 +4142,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return '';
     }
     const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
-    // Multi-post icon will be loaded from database in loadAdminSettings()
-    // Use hardcoded fallback only if database hasn't loaded yet
-    if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
-      subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
-    }
+    // Multi-post icon will be loaded from database in loadAdminSettings() - no fallback
     categories.forEach(cat => {
       if(!cat || typeof cat !== 'object') return;
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
@@ -15106,7 +15096,7 @@ function makePosts(){
             parentCategoryMenu: menu,
             iconFolder: (() => {
               const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
-              return systemImagesFolderInput?.value.trim() || window.systemImagesFolder || 'assets/system-images';
+              return systemImagesFolderInput?.value.trim() || window.systemImagesFolder || null;
             })()
           });
         }
