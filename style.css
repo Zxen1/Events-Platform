@@ -1569,8 +1569,7 @@ button[aria-expanded="true"] .results-arrow{
 .settings-general-container,
 .settings-paypal-container,
 .settings-icon-folders-container{
-  background:rgba(0,0,0,0.2);
-  border:1px solid rgba(255,255,255,0.1);
+  background:#444444;
   width:100%;
   max-width:420px;
   margin:12px auto;
@@ -1599,8 +1598,10 @@ button[aria-expanded="true"] .results-arrow{
   max-width:400px;
   width:100%;
   background:#222222;
+  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
   box-sizing:border-box;
 }
 
@@ -2680,8 +2681,7 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
   margin:0 auto;
-  background:rgba(0,0,0,0.2);
-  border:1px solid rgba(255,255,255,0.1);
+  background:#444444;
   border-radius:8px;
   padding:0 10px 10px;
 }
@@ -2690,8 +2690,7 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
   margin:0 auto;
-  background:rgba(0,0,0,0.2);
-  border:1px solid rgba(255,255,255,0.1);
+  background:#444444;
   border-radius:8px;
   padding:10px;
 }
