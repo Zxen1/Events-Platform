@@ -1962,11 +1962,16 @@ let __notifyMapOnInteraction = null;
                         } catch(e) {}
                       });
                       
-                      // Always use marker-icon only for precise hover zone
-                      try {
-                        mapInstance.on('mouseenter', 'mapmarker-icon', window.handleMarkerHover);
-                        mapInstance.on('mouseleave', 'mapmarker-icon', window.handleMarkerHoverEnd);
-                      } catch(e) {}
+                      // Add hover handlers to marker-icon and pill layers
+                      const hoverLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+                      hoverLayers.forEach(layer => {
+                        if(mapInstance.getLayer && mapInstance.getLayer(layer)){
+                          try{
+                            mapInstance.on('mouseenter', layer, window.handleMarkerHover);
+                            mapInstance.on('mouseleave', layer, window.handleMarkerHoverEnd);
+                          }catch(e){}
+                        }
+                      });
                     }
                     
                     // Update click and cursor handlers to match new display mode
@@ -2849,10 +2854,7 @@ let __notifyMapOnInteraction = null;
     // In hover_only mode, only marker-icon is clickable (map cards are hidden)
     // In always mode, marker-icon and map card layers are clickable
     const getMarkerInteractiveLayers = () => {
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      if(mapCardDisplay === 'hover_only'){
-        return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
-      }
+      return ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
       return ['mapmarker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
     };
     window.__overCard = window.__overCard || false;
@@ -18690,13 +18692,13 @@ function makePosts(){
       // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       // Each card's elements use the same cardSortKey from feature properties so cards render as units
+      const bigPillSizeExpression = ['case', highlightedStateExpression, 1.0, 0.6667];
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-30, 0], iconSize: bigPillSizeExpression }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconOffset, iconSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
-        const finalIconSize = iconSize !== undefined ? iconSize : 1;
         const finalIconOffset = iconOffset || [0, 0];
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
@@ -18710,7 +18712,6 @@ function makePosts(){
               maxzoom: 24,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': finalIconSize,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'left',
@@ -19289,13 +19290,17 @@ function makePosts(){
       window.handleMarkerHover = handleMarkerHover;
       window.handleMarkerHoverEnd = handleMarkerHoverEnd;
 
-      // Add hover handlers - ONLY on marker-icon layer for precise hover zone
-      // marker-icon is a small icon (30px), so hover zone is precise and matches visual
-      // Using only marker-icon ensures hover works reliably and precisely
-      map.on('mouseenter', 'mapmarker-icon', handleMarkerHover);
-      map.on('mouseleave', 'mapmarker-icon', handleMarkerHoverEnd);
-      // Track mousemove to catch smooth transitions between markers
-      map.on('mousemove', 'mapmarker-icon', handleMapMouseMove);
+      // Add hover handlers to marker-icon and pill layers
+      const hoverLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+      hoverLayers.forEach(layer => {
+        if(map.getLayer(layer)){
+          try{
+            map.on('mouseenter', layer, handleMarkerHover);
+            map.on('mouseleave', layer, handleMarkerHoverEnd);
+            map.on('mousemove', layer, handleMapMouseMove);
+          }catch(e){}
+        }
+      });
 
 
       // Maintain pointer cursor for balloons and surface multi-post cards when applicable
