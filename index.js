@@ -1216,6 +1216,7 @@ let __notifyMapOnInteraction = null;
 
   const MARKER_LABEL_BG_ID = 'small-map-card-pill';
   const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
+  const MARKER_LABEL_BG_HOVER_ID = 'hover-map-card-pill';
   const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-pill', 'big-map-card-pill'];
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
@@ -1264,6 +1265,7 @@ let __notifyMapOnInteraction = null;
     // Load from admin settings - no hardcoded defaults
     let baseUrl = null;
     let accentUrl = null;
+    let hoverUrl = null;
     
     try {
       const response = await fetch('/gateway.php?action=get-admin-settings');
@@ -1275,6 +1277,9 @@ let __notifyMapOnInteraction = null;
           }
           if(data.settings.big_map_card_pill){
             accentUrl = data.settings.big_map_card_pill;
+          }
+          if(data.settings.hover_map_card_pill){
+            hoverUrl = data.settings.hover_map_card_pill;
           }
         }
       }
@@ -1288,11 +1293,22 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillImagePromise;
     }
     
-    const promise = Promise.all([
+    const imagePromises = [
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl)
-    ]).then(([baseImg, accentImg]) => {
-      return { base: baseImg, highlight: accentImg };
+    ];
+    
+    // Load hover pill if available, otherwise use accent as fallback
+    if(hoverUrl){
+      imagePromises.push(loadMarkerLabelImage(hoverUrl));
+    }
+    
+    const promise = Promise.all(imagePromises).then(([baseImg, accentImg, hoverImg]) => {
+      return { 
+        base: baseImg, 
+        highlight: accentImg,
+        hover: hoverImg || accentImg // Use hover if available, otherwise fallback to accent
+      };
     });
     markerLabelPillImagePromise = promise;
     return markerLabelPillImagePromise;
@@ -1399,9 +1415,12 @@ let __notifyMapOnInteraction = null;
     const baseSprite = buildMarkerLabelPillSprite(assets.base, null, 1, false);
     // Accent sprite: use image as-is, no tinting
     const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    // Hover sprite: use hover image if available, otherwise use accent
+    const hoverSprite = assets.hover ? buildMarkerLabelPillSprite(assets.hover, null, 1, false) : accentSprite;
     markerLabelPillSpriteCache = {
       base: baseSprite,
-      highlight: accentSprite
+      highlight: accentSprite,
+      hover: hoverSprite
     };
     return markerLabelPillSpriteCache;
   }
@@ -1413,7 +1432,7 @@ let __notifyMapOnInteraction = null;
     }
     const targetMap = mapInstance || map;
     // Handle pill sprite IDs - these are loaded from database
-    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
+    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID || id === MARKER_LABEL_BG_HOVER_ID){
       try {
         const sprites = await ensureMarkerLabelPillSprites();
         if(!sprites){
@@ -1421,6 +1440,9 @@ let __notifyMapOnInteraction = null;
         }
         if(id === MARKER_LABEL_BG_ID){
           return sprites.base || null;
+        }
+        if(id === MARKER_LABEL_BG_HOVER_ID){
+          return sprites.hover || sprites.highlight || sprites.base || null;
         }
         return sprites.highlight || sprites.base || null;
       } catch(e) {
@@ -18730,10 +18752,10 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Always use small-map-card-pill sprite, never resize or recolor
+      // Small pill: Switch to hover pill sprite when highlighted, otherwise use base sprite
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = 'small-map-card-pill';
+      const smallPillIconImageExpression = ['case', highlightedStateExpression, MARKER_LABEL_BG_HOVER_ID, MARKER_LABEL_BG_ID];
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
