@@ -18444,6 +18444,9 @@ function makePosts(){
         while(bigLabelTitleLines.length < 2){ bigLabelTitleLines.push(''); }
         const bigLabelVenue = venueName ? shortenMarkerLabelText(venueName, 145) : '';
         const bigLabel = bigLabelVenue ? `${bigLabelTitleLines[0]}\n${bigLabelTitleLines[1]}\n${bigLabelVenue}` : `${bigLabelTitleLines[0]}\n${bigLabelTitleLines[1]}`;
+        // Each card gets a unique sort-key so all its elements (pill, label, icon) render together as a unit
+        // Use feature ID hash to create consistent sort-key per card
+        const cardSortKey = Math.abs(featureId.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % 10000 + 1000;
         return {
           type:'Feature',
           id: featureId,
@@ -18462,7 +18465,8 @@ function makePosts(){
             baseSub,
             venueKey: key,
             locationIndex: entry.index,
-            isMultiPost: false
+            isMultiPost: false,
+            cardSortKey: cardSortKey
           },
           geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
         };
@@ -18501,6 +18505,8 @@ function makePosts(){
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
         const multiIds = Array.from(group.postIds);
+        // Each card gets a unique sort-key so all its elements (pill, label, icon) render together as a unit
+        const cardSortKey = Math.abs(featureId.split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % 10000 + 1000;
         return [{
           type:'Feature',
           id: featureId,
@@ -18522,7 +18528,8 @@ function makePosts(){
             locationIndex: entry.index,
             isMultiPost: true,
             multiCount,
-            multiPostIds: multiIds
+            multiPostIds: multiIds,
+            cardSortKey: cardSortKey
           },
           geometry:{ type:'Point', coordinates }
         }];
@@ -18673,11 +18680,11 @@ function makePosts(){
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
-      // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
+      // Each card's elements use the same cardSortKey from feature properties so cards render as units
       const labelLayersConfig = [
-        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
+        { id:'small-map-card-pill', source:'posts', sortKey: ['get', 'cardSortKey'], filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
+        { id:'big-map-card-pill', source:'posts', sortKey: ['get', 'cardSortKey'], filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -18749,7 +18756,7 @@ function makePosts(){
               'text-ignore-placement': true,
               'text-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 4, 3]
+              'symbol-sort-key': ['get', 'cardSortKey']
             },
             paint:{
               'text-color': '#ffffff',
@@ -18767,7 +18774,7 @@ function makePosts(){
         try{ 
           // Only update properties that can change (filter and sort-key based on data)
           map.setFilter(labelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
+          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['get', 'cardSortKey']);
         }catch(e){
           console.error('Failed to update label text layer:', e);
         }
@@ -18802,7 +18809,7 @@ function makePosts(){
               'text-ignore-placement': true,
               'text-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 7, 6]
+              'symbol-sort-key': ['get', 'cardSortKey']
             },
             paint:{
               'text-color': '#ffffff',
@@ -18820,7 +18827,7 @@ function makePosts(){
         try{ 
           // Only update properties that can change (filter and sort-key based on data)
           map.setFilter(bigLabelTextLayerId, bigLabelFilter);
-          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 7, 6]);
+          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['get', 'cardSortKey']);
         }catch(e){
           console.error('Failed to update big label text layer:', e);
         }
@@ -18856,7 +18863,7 @@ function makePosts(){
               'icon-offset': [0, 0],
               'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': 8,
+              'symbol-sort-key': ['get', 'cardSortKey'],
               'visibility': 'visible'
             },
             paint:{
@@ -18905,7 +18912,8 @@ function makePosts(){
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Final layer ordering (bottom to top): pills -> labels -> icons
+      // Final layer ordering (bottom to top): small pills -> small labels -> big pills -> big labels -> icons
+      // This ensures all elements of a card render together, and big cards completely cover small cards
       // Ensure marker-icon layer is visible and on top
       if(map.getLayer('mapmarker-icon')){
         try{
@@ -18914,22 +18922,27 @@ function makePosts(){
           map.moveLayer('mapmarker-icon'); // Move icons to top
         }catch(e){}
       }
-      // Move label layers to be above pills but below icons
-      if(map.getLayer('small-map-card-label')){
+      // Order: small pills -> small labels -> big pills -> big labels -> icons
+      if(map.getLayer('small-map-card-label') && map.getLayer('small-map-card-pill')){
         try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
-          } else {
-            map.moveLayer('small-map-card-label'); // Move to top if no icon layer
+          map.moveLayer('small-map-card-label', 'small-map-card-pill'); // Small labels after small pills
+        }catch(e){}
+      }
+      if(map.getLayer('big-map-card-pill')){
+        try{
+          if(map.getLayer('small-map-card-label')){
+            map.moveLayer('big-map-card-pill', 'small-map-card-label'); // Big pills after small labels
+          } else if(map.getLayer('small-map-card-pill')){
+            map.moveLayer('big-map-card-pill', 'small-map-card-pill');
           }
         }catch(e){}
       }
       if(map.getLayer('big-map-card-label')){
         try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('big-map-card-label', 'mapmarker-icon'); // Big labels below icons
-          } else {
-            map.moveLayer('big-map-card-label'); // Move to top if no icon layer
+          if(map.getLayer('big-map-card-pill')){
+            map.moveLayer('big-map-card-label', 'big-map-card-pill'); // Big labels after big pills
+          } else if(map.getLayer('mapmarker-icon')){
+            map.moveLayer('big-map-card-label', 'mapmarker-icon');
           }
         }catch(e){}
       }
