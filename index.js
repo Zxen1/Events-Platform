@@ -1261,9 +1261,9 @@ let __notifyMapOnInteraction = null;
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    // Load from admin settings
-    let baseUrl = 'assets/system-images/150x40-pill-70.webp';
-    let accentUrl = 'assets/system-images/225x60-pill-2f3b73.webp';
+    // Load from admin settings - no hardcoded defaults
+    let baseUrl = null;
+    let accentUrl = null;
     
     try {
       const response = await fetch('/gateway.php?action=get-admin-settings');
@@ -1280,6 +1280,12 @@ let __notifyMapOnInteraction = null;
       }
     } catch(err) {
       console.error('Failed to load pill image settings:', err);
+    }
+    
+    if(!baseUrl || !accentUrl){
+      const error = new Error('Pill image URLs not found in database settings');
+      markerLabelPillImagePromise = Promise.reject(error);
+      return markerLabelPillImagePromise;
     }
     
     const promise = Promise.all([
