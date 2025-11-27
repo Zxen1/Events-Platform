@@ -14934,11 +14934,31 @@ function makePosts(){
     // ============= Messages Tab =============
     const messagesCats = document.getElementById('messagesCats');
     const MESSAGE_CATEGORIES = [
-      { name: 'User Messages', key: 'user', icon: 'assets/admin-icons/user-messages.svg', description: 'Messages for public visitors' },
-      { name: 'Member Messages', key: 'member', icon: 'assets/admin-icons/member-messages.svg', description: 'Messages for authenticated members' },
-      { name: 'Admin Messages', key: 'admin', icon: 'assets/admin-icons/admin-messages.svg', description: 'Messages for admin panel' },
-      { name: 'Email Messages', key: 'email', icon: 'assets/admin-icons/email-messages.svg', description: 'Email communications' }
+      { name: 'User Messages', key: 'user', icon: '', description: 'Messages for public visitors' },
+      { name: 'Member Messages', key: 'member', icon: '', description: 'Messages for authenticated members' },
+      { name: 'Admin Messages', key: 'admin', icon: '', description: 'Messages for admin panel' },
+      { name: 'Email Messages', key: 'email', icon: '', description: 'Email communications' }
     ];
+    
+    // Load message category icons from admin_settings
+    async function loadMessageCategoryIcons(){
+      try {
+        const response = await fetch('/gateway.php?action=get-admin-settings');
+        if(response.ok){
+          const data = await response.json();
+          if(data.success && data.settings){
+            MESSAGE_CATEGORIES.forEach(cat => {
+              const settingKey = `msg_category_${cat.key}_icon`;
+              if(data.settings[settingKey]){
+                cat.icon = data.settings[settingKey];
+              }
+            });
+          }
+        }
+      } catch(err) {
+        console.error('Failed to load message category icons:', err);
+      }
+    }
     
     // Load custom category names and icons from database if available
     MESSAGE_CATEGORIES.forEach(cat => {
