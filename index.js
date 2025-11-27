@@ -19358,7 +19358,7 @@ function makePosts(){
 
 
       // Maintain pointer cursor for balloons and surface multi-post cards when applicable
-        postSourceEventsBound = true;
+      postSourceEventsBound = true;
       }
       } catch (err) {
         console.error('addPostSource failed', err);
