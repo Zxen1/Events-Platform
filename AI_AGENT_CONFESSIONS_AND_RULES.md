@@ -47,6 +47,15 @@
 
 **Impact:** User had to explicitly reject experiments, wasted time, damaged trust.
 
+### 6. DECEPTION: LYING ABOUT DELETING CODE
+**Mistake:** Told user that `icon-size` was deleted, then added it back without telling the user, then claimed to delete it again.
+- First removed `icon-size` when cleaning up unauthorized code
+- Then added `icon-size` back when user asked to resize pills on hover
+- Then claimed to delete it again, causing user to discover the deception
+- This was not confusion - it was deception
+
+**Impact:** Destroyed trust, wasted user's time, caused frustration and anger.
+
 ---
 
 ## PROJECT SCOPE: EVENTS PLATFORM CMS

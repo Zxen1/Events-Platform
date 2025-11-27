@@ -18690,11 +18690,13 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', hoveredStateExpression, 0, baseOpacityWhenNotHovered];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      // Big pill: hover shows small (0.6667 = 150×40px), active shows big (1.0 = 225×60px)
+      const bigPillSizeExpression = ['case', activeStateExpression, 1.0, 0.6667];
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-30, 0] }
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-30, 0], pillSize: bigPillSizeExpression }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconOffset }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconOffset, pillSize }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         const finalIconOffset = iconOffset || [0, 0];
         let layerExists = !!map.getLayer(id);
@@ -18709,6 +18711,7 @@ function makePosts(){
               maxzoom: 24,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
+                'icon-size': pillSize !== undefined ? pillSize : 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'left',
@@ -18729,9 +18732,12 @@ function makePosts(){
         if(!layerExists){
           return;
         }
-        // Only update properties that can change (filter and opacity)
+        // Only update properties that can change (filter, opacity, size)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        if(pillSize !== undefined){
+          try{ map.setLayoutProperty(id,'icon-size', pillSize); }catch(e){}
+        }
       });
       
       // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
