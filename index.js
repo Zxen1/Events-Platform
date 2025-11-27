@@ -1258,9 +1258,19 @@ let __notifyMapOnInteraction = null;
   // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds)
   // Uses these images directly via ensureMarkerLabelPillSprites()
   async function ensureMarkerLabelPillImage(){
+    // If we have a cached promise, try to use it, but clear cache if it was rejected
     if(markerLabelPillImagePromise){
-      return markerLabelPillImagePromise;
+      try {
+        // Try to await the cached promise - if it's already resolved, this will return immediately
+        // If it was rejected, this will throw and we'll clear the cache
+        await Promise.resolve(markerLabelPillImagePromise);
+        return markerLabelPillImagePromise;
+      } catch(err) {
+        // Cached promise was rejected - clear it and try again
+        markerLabelPillImagePromise = null;
+      }
     }
+    
     // Load from admin settings - no hardcoded defaults
     let baseUrl = null;
     let accentUrl = null;
@@ -1288,8 +1298,8 @@ let __notifyMapOnInteraction = null;
     
     if(!baseUrl || !accentUrl){
       const error = new Error('Pill image URLs not found in database settings');
-      markerLabelPillImagePromise = Promise.reject(error);
-      return markerLabelPillImagePromise;
+      // Don't cache rejected promises - allow retry on next call
+      return Promise.reject(error);
     }
     
     // Load base and accent images (required)
@@ -1315,7 +1325,13 @@ let __notifyMapOnInteraction = null;
         result.hover = images[1]; // Fall back to accent
       }
       return result;
+    }).catch((err) => {
+      // Clear cache on error to allow retry
+      markerLabelPillImagePromise = null;
+      throw err;
     });
+    
+    // Cache the promise (will be cleared if it rejects)
     markerLabelPillImagePromise = promise;
     return markerLabelPillImagePromise;
   }
