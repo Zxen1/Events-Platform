@@ -18651,6 +18651,9 @@ function makePosts(){
       const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      // Small pill: Use expression to switch between default and accent sprites based on isHighlighted, opacity always 1
+      const smallPillIconImageExpression = ['case', highlightedStateExpression, MARKER_LABEL_BG_ACCENT_ID, MARKER_LABEL_BG_ID];
+      const smallPillOpacity = 1;
       // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
@@ -18662,7 +18665,7 @@ function makePosts(){
       // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
-        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
+        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: smallPillIconImageExpression, iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
         { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
@@ -18702,9 +18705,13 @@ function makePosts(){
         if(!layerExists){
           return;
         }
-        // Only update properties that can change (filter and opacity)
+        // Update properties that can change (filter, opacity, and icon-image for small pill)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        // Update icon-image for small pill layer (uses expression to switch sprites)
+        if(id === 'small-map-card-pill' && iconImage){
+          try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
+        }
       });
       
       // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
@@ -18817,11 +18824,10 @@ function makePosts(){
       
       function updateMapCardLayerOpacity(displayMode){
         if(!map) return;
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
-        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-        const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+        // Small pill always has opacity 1 (sprite switching handles visibility via expression)
+        // For hover_only mode, the sprite expression will handle showing/hiding via icon-image switching
         if(map.getLayer('small-map-card-pill')){
-          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
+          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', 1); }catch(e){}
         }
         // Hide labels in hover_only mode (same as pills)
         if(map.getLayer('small-map-card-label')){
