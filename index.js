@@ -18690,9 +18690,8 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', hoveredStateExpression, 0, baseOpacityWhenNotHovered];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Small pills: left edge at -20px from lat/lng (150×40px)
-      // Big pills: left edge at -30px from lat/lng (225×60px when active)
-      // Hover shows small pill (0.6667 = 150×40px), active shows big pill (1.0 = 225×60px)
+      // Big pill: hover shows small (0.6667 = 150×40px), active shows big (1.0 = 225×60px)
+      // When hovered but not active: 0.6667, when hovered AND active: 1.0
       const bigPillSizeExpression = ['case', activeStateExpression, 1.0, 0.6667];
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
@@ -18718,7 +18717,7 @@ function makePosts(){
                 'icon-anchor': 'left',
                 'icon-offset': finalIconOffset,
                 'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'auto',
+                'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
               },
               paint:{
@@ -18923,34 +18922,39 @@ function makePosts(){
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Final layer ordering (bottom to top): pills -> labels -> icons
-      // Ensure marker-icon layer is visible and on top
-      if(map.getLayer('mapmarker-icon')){
-        try{
-          map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
-          map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
-          map.moveLayer('mapmarker-icon'); // Move icons to top
-        }catch(e){}
-      }
-      // Move label layers to be above pills but below icons
-      if(map.getLayer('small-map-card-label')){
-        try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
-          } else {
-            map.moveLayer('small-map-card-label'); // Move to top if no icon layer
-          }
-        }catch(e){}
-      }
-      if(map.getLayer('big-map-card-label')){
-        try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('big-map-card-label', 'mapmarker-icon'); // Big labels below icons
-          } else {
-            map.moveLayer('big-map-card-label'); // Move to top if no icon layer
-          }
-        }catch(e){}
-      }
+      // Final layer ordering (bottom to top): small pills -> big pills -> small labels -> big labels -> icons
+      // Mapbox layer order: layers added/moved later render on top
+      // This ensures proper stacking so card elements don't show through each other
+      const layerOrder = [
+        'small-map-card-pill',
+        'big-map-card-pill', 
+        'small-map-card-label',
+        'big-map-card-label',
+        'mapmarker-icon'
+      ];
+      layerOrder.forEach((layerId, index) => {
+        if(map.getLayer(layerId)){
+          try{
+            if(index === 0){
+              // First layer - move to bottom
+              map.moveLayer(layerId);
+            } else {
+              // Subsequent layers - place after previous layer
+              const prevLayer = layerOrder[index - 1];
+              if(map.getLayer(prevLayer)){
+                map.moveLayer(layerId, prevLayer);
+              } else {
+                map.moveLayer(layerId);
+              }
+            }
+            // Ensure icon layer is visible
+            if(layerId === 'mapmarker-icon'){
+              map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
+              map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
+            }
+          }catch(e){}
+        }
+      });
       
       if(!postSourceEventsBound){
 
