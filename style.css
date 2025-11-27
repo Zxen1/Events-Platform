@@ -1,3 +1,48 @@
+/*
+ * Z-INDEX REFERENCE LIST
+ * ======================
+ * 
+ * PERMANENT RULE: All z-index values on this site must NOT exceed 100.
+ * All z-index values (including CSS variables and direct values) must be
+ * documented in this reference list. When adding new z-index values, update
+ * this list immediately.
+ * 
+ * Maximum z-index: 100 (--layer-devtools)
+ * 
+ * CSS Variables (defined in :root):
+ *   --layer-devtools: 100    (developer tools, always on top)
+ *   --layer-modal: 90         (welcome modal, full-screen modals)
+ *   --layer-image-modal: 88  (lightbox/image modal)
+ *   --layer-dialog: 86        (confirmations/dialogs/toasts, unsaved changes dialogs)
+ *   --layer-menu: 85          (menus, dropdowns, tooltips, pickers, currency menus)
+ *   --layer-panel: 60         (member/admin/filter panels)
+ *   --layer-header: 40        (headers/nav)
+ *   --layer-card: 30          (floating cards above content)
+ *   --layer-content: 20        (primary content)
+ *   --layer-base: 0           (map/base)
+ * 
+ * Direct z-index values found in style.css:
+ *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
+ *   90: (--layer-modal) - modals
+ *   88: (--layer-image-modal) - image modals
+ *   86: (--layer-dialog) - dialogs, unsaved changes prompts (#adminUnsavedPrompt, #memberUnsavedPrompt)
+ *   85: (--layer-menu) - standard menus, dropdowns, currency menus, field-type-select menus
+ *   66: formpicker dropdown menus
+ *   65: formpicker dropdown buttons
+ *   60: (--layer-panel) - panels
+ *   40: (--layer-header) - headers
+ *   30: (--layer-card) - cards
+ *   20: (--layer-content) - content
+ *   10: panel resizers, various overlays
+ *   5: mapmarker-overlay, various elements
+ *   3: various elements
+ *   2: post-cards, various elements
+ *   1: form labels, form field headers, variant pricing labels, header-buttons
+ *   0: base layer, various elements
+ *   -1: some background elements
+ *   auto: some elements
+ */
+
 /* Extracted from <styleid="hotfixes"> */
 /* Hand cursor for DOM-based Mapbox markers */
     .mapboxgl-marker,
@@ -21,8 +66,22 @@
       to { transform: rotate(360deg); }
     }
 
+    /* Layer scale */
+    :root{
+      --layer-devtools: 100;    /* developer tools (always on top) */
+      --layer-modal: 90;        /* welcome modal, full-screen modals */
+      --layer-image-modal: 88;  /* lightbox/image modal */
+      --layer-dialog: 86;       /* confirmations/dialogs/toasts */
+      --layer-menu: 85;         /* menus, dropdowns, tooltips, pickers, currency menus */
+      --layer-panel: 60;        /* member/admin/filter panels */
+      --layer-header: 40;       /* headers/nav */
+      --layer-card: 30;         /* floating cards above content */
+      --layer-content: 20;      /* primary content */
+      --layer-base: 0;          /* map/base */
+    }
+
     /* Menus stay clickable above overlays */
-    .options-menu { z-index: 10000; }
+    .options-menu { z-index: var(--layer-menu); }
 
     /* Cards stay clickable on narrow screens */
     @media (max-width: 600px){
@@ -30,72 +89,63 @@
     }
 
 
+/* ============================================================================
+   MAP CARDS - MAPBOX SPRITE SYSTEM
+   ============================================================================
+   
+   IMPORTANT: Map cards (pills) are controlled by Mapbox GL sprite system, NOT DOM img elements.
+   
+   HOW IT WORKS:
+   - Pill images are added to Mapbox as sprites using map.addImage()
+   - Mapbox renders pills directly on the map canvas using symbol layers
+   - The actual pill rendering happens in JavaScript, not CSS
+   
+   TO MODIFY PILL IMAGES:
+   1. Go to index.js, line ~1412 (ensureMarkerLabelPillImage function)
+   2. Update baseUrl for default pill
+   3. Update accentUrl for highlighted/clicked pill
+   4. Update CSS dimensions below to match your image size:
+     - .small-map-card width/height (currently: 225px × 60px)
+     - .mapmarker-pill width/height (currently: 225px × 60px)
+   
+   NOTE: The .mapmarker-pill CSS class is for positioning only - the actual image
+   comes from Mapbox sprites. Changing CSS won't change the pill image itself.
+   
+   SYSTEM: Both single and multi-venue markers use the unified pill system.
+   Multi-venue markers composite these pills with icons/text for unique sprites.
+   
+   ============================================================================ */
+
 /* Extracted from <style> */
-.big-map-card{
-      position: relative;
-      width: 225px;
-      height: 60px;
-      transform: translate3d(0, 0, 0);
-      will-change: transform;
-      pointer-events: auto;
-      isolation: isolate;
-      touch-action: none;
-      border-radius: 999px;
-    }
     .mapmarker-overlay{
       position: relative;
       width: 0;
       height: 0;
-      transform: translateZ(0);
       pointer-events: none;
-      isolation: isolate;
       touch-action: none;
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
       z-index: 5;
-      will-change: transform;
+      /* Mapbox positions this element - it updates transform to move marker on map */
     }
-    .mapmarker-overlay > .big-map-card{
-      position: absolute;
-      left: 0;
-      top: 0;
-      transform: translate3d(-30px, -30px, 0);
+    .mapmarker-overlay:has(.small-map-card){
       pointer-events: auto;
-      z-index: 30;
     }
-    .mapmarker-overlay.is-card-visible > .small-map-card{
-      opacity: 0;
-      visibility: hidden;
-    }
-    .mapmarker-overlay.is-card-visible{
+    .mapmarker-overlay .small-map-card{
       pointer-events: auto;
-      z-index: 20000;
+      cursor: pointer;
     }
-    .big-map-card img,
     .small-map-card img{ display:block; }
-    .map-card-pill{
-      position: absolute;
-      inset: auto;
-      left: 5px;
-      top: 5px;
-      right: 5px;
-      bottom: 5px;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
     .small-map-card{
       position: absolute;
       left: 0;
       top: 0;
       width: 150px;
       height: 40px;
-      transform: translate3d(-20px, -20px, 0);
-      pointer-events: none;
+      transform: translate3d(-75px, -50%, 0);
+      pointer-events: auto;
+      cursor: pointer;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
       display: flex;
@@ -103,7 +153,19 @@
       gap: 6px;
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
-      transition: background-color 0.2s ease;
+      z-index: 1;
+      transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease;
+    }
+    .small-map-card:hover:not(.is-clicked):not(.is-post-open){
+      width: 150px;
+      height: 40px;
+      transform: translate3d(-75px, -50%, 0);
+    }
+    .small-map-card.is-clicked,
+    .small-map-card.is-post-open{
+      width: 225px;
+      height: 60px;
+      transform: translate3d(-90px, -50%, 0);
     }
     .small-multi-post-map-card{
       gap: 5px;
@@ -139,7 +201,7 @@
       width: 30px;
       height: 30px;
       pointer-events: none;
-      z-index: 2;
+      z-index: 10;
       flex: 0 0 30px;
     }
     .map--midzoom-markers .mapmarker{
@@ -159,66 +221,20 @@
       visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
+      transition: width 0.3s ease, height 0.3s ease;
     }
-    .big-map-card--popup{
-      background-color: rgba(0, 0, 0, 0.88);
-      transition: background-color 0.2s ease;
+    .small-map-card:hover:not(.is-clicked):not(.is-post-open) .mapmarker-pill{
+      width: 150px;
+      height: 40px;
     }
-    .big-map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .big-map-card--popup{
-      background-color: #2e3a72;
+    .small-map-card.is-clicked .mapmarker-pill,
+    .small-map-card.is-post-open .mapmarker-pill{
+      width: 225px;
+      height: 60px;
     }
     .open-post .post-card.is-map-highlight{
       background-color: #2e3a72;
     }
-    .small-map-card.is-pill-highlight{
-      background-color: #2e3a72;
-    }
-    .mapmarker-overlay:hover .small-map-card{
-      background-color: #2e3a72;
-    }
-    .map-card-thumb{
-      position: absolute;
-      left: 5px;
-      top: 5px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-      z-index: 40;
-    }
-    .big-multi-post-map-card .map-card-thumb{
-      border-radius: 12px;
-      object-fit: contain;
-      background: transparent;
-      box-shadow: none;
-    }
-    .map-card-label,
-    .mapmarker-label{
-      position: absolute;
-      left: 60px;
-      top: 5px;
-      width: calc(100% - 65px);
-      height: 50px;
-      padding: 0 5px 0 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.2;
-      white-space: normal;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-      z-index: 1;
-      pointer-events: auto;
-    }
-
     .mapmarker-label{
       position: relative;
       left: auto;
@@ -269,77 +285,6 @@
       transform: scale(1.1);
     }
 
-    .map-card-label{
-      justify-content: center;
-    }
-
-    .map-card-title{
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      width: 100%;
-    }
-
-    .map-card-title-line{
-      width: 100%;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      line-height: 1.2;
-      font-weight: 400;
-    }
-
-    .map-card-venue{
-      font-weight: 400;
-      font-size: 12px;
-      line-height: 1.2;
-      opacity: 0.9;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      margin-top: 0;
-      color: #d0d0d0;
-    }
-    .big-map-card--list{
-      position: relative;
-      width: 100%;
-      height: auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transform: none;
-      background: none;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .big-map-card--list .map-card-thumb{
-      position: static;
-      width: 64px;
-      height: 64px;
-      border-radius: 8px;
-      box-shadow: none;
-      flex: 0 0 64px;
-    }
-    .big-map-card--list .map-card-label{
-      position: static;
-      width: auto;
-      height: auto;
-      padding: 0;
-      gap: 4px;
-      text-shadow: none;
-    }
-    .big-map-card--list .map-card-title{
-      white-space: normal;
-    }
-    .big-map-card--list .map-card-title-line{
-      white-space: normal;
-    }
-    .big-map-card--list .map-card-venue{
-      white-space: nowrap;
-    }
 
 
 /* Extracted from <styleid="mapboxgl-critical-css"> */
@@ -679,13 +624,44 @@ textarea::placeholder{
   font-size: var(--panel-title-size);
 }
 
-select{
+select:not(.form-select){
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
   border-radius: var(--dropdown-radius);
 }
 .venue-select{
   color: var(--dropdown-venue-text);
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+select.venue-select,
+.venue-select-wrapper select.venue-select,
+*:has(.venue-select) select.venue-select{
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+*:has(.venue-select){
+  position:relative;
+}
+*:has(.venue-select)::after{
+  content:'';
+  position:absolute;
+  top:50%;
+  right:12px;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:var(--button-text, #ffffff);
+  transform:translateY(-50%) rotate(45deg);
+  transition:transform .3s ease;
+  pointer-events:none;
+  z-index:2;
+}
+*:has(.venue-select:focus)::after{
+  transform:translateY(-50%) rotate(-135deg);
 }
 select option{
   background: var(--dropdown-bg);
@@ -707,7 +683,7 @@ input[type="search"],
 input[type="tel"],
 input[type="url"],
 textarea,
-select{
+select:not(.form-select){
   height: var(--control-h);
   border-radius: 8px;
 }
@@ -729,7 +705,7 @@ input[type="checkbox"]{
     top: 0;
     left: 0;
     right: 0;
-    z-index: 20;
+    z-index: var(--layer-header);
     background: rgba(0,0,0,0.7);
   }
 
@@ -752,7 +728,7 @@ input[type="checkbox"]{
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    z-index: 2500;
+    z-index: var(--layer-modal);
     opacity: 1;
     pointer-events: auto;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -920,6 +896,9 @@ input[type="checkbox"]{
   vertical-align:middle;
 }
 
+.options-dropdown{
+  position:relative;
+}
 .options-dropdown .dropdown-arrow,
 .options-dropdown .results-arrow{
   position:absolute;
@@ -927,6 +906,7 @@ input[type="checkbox"]{
   right:10px;
   transform:translateY(-50%) rotate(45deg);
   margin-right:0;
+  pointer-events:none;
 }
 
 button[aria-expanded="true"] .dropdown-arrow,
@@ -973,7 +953,7 @@ button[aria-expanded="true"] .results-arrow{
   height:calc(var(--vh, 1vh) * 100);
   background:transparent;
   display:none;
-  z-index:2000;
+  z-index: var(--layer-panel);
   pointer-events:none;
 }
 .panel.show{
@@ -988,7 +968,7 @@ button[aria-expanded="true"] .results-arrow{
   height:calc(var(--vh, 1vh) * 100);
   background:transparent;
   display:none;
-  z-index:2000;
+  z-index: var(--layer-modal);
   pointer-events:none;
 }
 .modal.show{
@@ -1152,20 +1132,20 @@ button[aria-expanded="true"] .results-arrow{
 
   #adminPanel .mapboxgl-ctrl-geocoder{
     position:relative;
-    z-index:1000001;
+    z-index:var(--layer-menu);
   }
 
   #adminPanel .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:1000002;
+    z-index:var(--layer-menu);
   }
 
   #memberPanel .mapboxgl-ctrl-geocoder{
     position:relative;
-    z-index:1000001;
+    z-index:var(--layer-menu);
   }
 
   #memberPanel .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:1000002;
+    z-index:var(--layer-menu);
   }
 #filterPanel .panel-content{
   width:100%;
@@ -1204,6 +1184,32 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel button{
   height:35px;
   line-height:35px;
+}
+.refresh-map-cards-btn{
+  width:100%;
+  padding:8px 12px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:14px;
+}
+.refresh-map-cards-btn:hover:not(:disabled){
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+.refresh-map-cards-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+.refresh-map-cards-btn span{
+  font-size:16px;
 }
 #adminPanel input[type="color"]{
   width:35px;
@@ -1252,7 +1258,7 @@ button[aria-expanded="true"] .results-arrow{
   pointer-events:none;
   transform:translateY(4px);
   transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-  z-index:5000;
+  z-index:var(--layer-menu);
 }
 #filterPanel .calendar-container.is-visible{
   opacity:1;
@@ -1687,7 +1693,7 @@ button[aria-expanded="true"] .results-arrow{
   position:absolute;
   top:44px;
   left:0;
-  z-index:20;
+  z-index: var(--layer-menu);
   background:#fff;
   border:1px solid #ccc;
   border-radius:8px;
@@ -1888,10 +1894,7 @@ button[aria-expanded="true"] .results-arrow{
 #memberPanel .member-create-fields{
   display:flex;
   flex-direction:column;
-  gap:16px;
-}
-#memberPanel .member-create-fields .panel-field{
-  max-width:100%;
+  gap:0;
 }
 #memberPanel .member-create-checkout{
   display:flex;
@@ -2079,6 +2082,9 @@ button[aria-expanded="true"] .results-arrow{
   gap:20px;
   margin-left:20px;
 }
+#map_shadow_container .spin-type-toggles{
+  margin-left:0;
+}
 .spin-type-option{
   display:flex;
   align-items:center;
@@ -2114,8 +2120,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:4px 6px;
 }
 .panel-field input,
-.panel-field textarea,
-.panel-field select{
+.panel-field textarea{
   padding:8px;
   border-radius:var(--dropdown-radius);
   border:none;
@@ -2188,7 +2193,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,0.65);
-  z-index:12000;
+  z-index:var(--layer-dialog);
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease;
@@ -2222,7 +2227,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,0.65);
-  z-index:12000;
+  z-index:var(--layer-dialog);
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease;
@@ -2262,7 +2267,7 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease, transform 0.2s ease;
-  z-index:13000;
+  z-index:var(--layer-dialog);
   font-size:14px;
 }
 #adminStatusMessage.error{
@@ -2286,7 +2291,7 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease, transform 0.2s ease;
-  z-index:13000;
+  z-index:var(--layer-dialog);
   font-size:14px;
 }
 #memberStatusMessage.show{
@@ -2555,7 +2560,7 @@ button[aria-expanded="true"] .results-arrow{
 #tab-settings .settings-welcome-container,
 #tab-settings .settings-paypal-container,
 #tab-settings .settings-icon-folders-container,
-#tab-settings #post-mode-background-field,
+#tab-map #map_shadow_container,
 #memberPanel .member-form-container{
   width:100%;
   max-width:420px;
@@ -2727,7 +2732,7 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0;
   pointer-events:none;
   transition:opacity 0.2s ease;
-  z-index:15000;
+  z-index:var(--layer-dialog);
 }
 
 .formbuilder-confirm-overlay.visible{
@@ -3413,6 +3418,103 @@ button[aria-expanded="true"] .results-arrow{
   cursor:default;
 }
 
+/* Make formpicker full width */
+.formpicker-container{
+  width:100%;
+  max-width:100%;
+  margin-left:0;
+  margin-right:0;
+}
+
+.formpicker-dropdowns{
+  width:100%;
+  max-width:100%;
+}
+
+/* Ensure category and subcategory dropdowns follow local styles */
+.formpicker-dropdowns .form-field{
+  width:100%;
+  max-width:100%;
+}
+
+.formpicker-dropdowns .form-field-label{
+  text-align:left;
+}
+
+.formpicker-dropdowns .options-dropdown{
+  width:100%;
+  position:relative;
+}
+
+.formpicker-dropdowns .options-dropdown > button,
+.formpicker-dropdowns .form-select{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  text-align:left !important;
+  padding-left:12px;
+  padding-right:30px;
+  z-index:65;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+
+.formpicker-dropdowns .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  box-sizing:border-box;
+  background:#222222;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
+  color:#fff;
+  z-index:66;
+}
+
+.formpicker-dropdowns .options-menu .menu-option{
+  width:100%;
+  background:transparent;
+  color:#fff;
+  border:1px solid transparent;
+  border-radius:8px;
+  text-align:left;
+  justify-content:flex-start;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  gap:10px;
+}
+
+.formpicker-dropdowns .options-menu .menu-option .formpicker-category-icon,
+.formpicker-dropdowns .options-menu .menu-option .formpicker-subcategory-icon{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  object-fit:contain;
+}
+
+/* Icons on menu buttons (selected state) */
+.formpicker-dropdowns .options-dropdown > button .formpicker-category-icon,
+.formpicker-dropdowns .options-dropdown > button .formpicker-subcategory-icon,
+.formpicker-dropdowns .form-select .formpicker-category-icon,
+.formpicker-dropdowns .form-select .formpicker-subcategory-icon{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  object-fit:contain;
+  padding:10px;
+  box-sizing:content-box;
+}
+
+.formpicker-dropdowns .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.1);
+}
+
 .reset-box{
   margin:0;
 }
@@ -3609,7 +3711,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   top:calc(var(--header-h, 60px) + var(--safe-top, 0px) + 10px);
   left:50%;
   transform:translateX(-50%);
-  z-index:100;
+  z-index: var(--layer-panel);
   background:var(--btn);
   border:1px solid var(--border);
   border-radius:50%;
@@ -3994,6 +4096,393 @@ body.hide-ads .ad-board{
    END AD PANEL STYLES
    ========================================================================== */
 
+/* ============================================================================
+   FORMS STYLES - DEDICATED BLOCK
+   ============================================================================
+   
+   Form preview styles for form containers, fields, and related components.
+   
+   ========================================================================== */
+
+#tab-forms .form-container,
+#memberPanel .member-create-fields{
+  border:none;
+  border-radius:0;
+  background:none;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+#tab-forms .form-container[hidden]{
+  display:none;
+}
+#tab-forms .form-fields{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+#tab-forms .form-empty{
+  margin:0;
+  font-size:14px;
+  color:var(--muted);
+}
+#tab-forms .form-container .panel-field,
+#memberPanel .member-create-fields .panel-field{
+  background:none;
+  padding:0;
+  border-radius:0;
+  border:none;
+  max-width:none;
+}
+#tab-forms .form-container .form-field,
+#memberPanel .member-create-fields .form-field{
+  padding-top:0;
+  padding-bottom:0;
+  margin:0;
+}
+#tab-forms .form-container .panel-field label,
+#tab-forms .form-container .panel-field .subcategory-form-button,
+#tab-forms .form-container .panel-field .subcategory-form-label,
+#memberPanel .member-create-fields .panel-field label,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+  font-weight:600;
+  position:relative;
+  z-index:1;
+}
+#tab-forms .form-container .panel-field .subcategory-form-button,
+#tab-forms .form-container .panel-field .subcategory-form-label,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+  border:none;
+  background:none;
+  color:inherit;
+  font:inherit;
+  padding:0;
+  margin:0;
+  text-align:left;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  width:100%;
+  justify-content:flex-start;
+}
+#tab-forms .form-container .panel-field .subcategory-form-button,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button{
+  cursor:pointer;
+}
+#tab-forms .form-container .panel-field .subcategory-form-label,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+  cursor:default;
+}
+#tab-forms .form-field-header,
+#memberPanel .member-create-fields .form-field-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0;
+  padding-top:10px;
+  position:relative;
+  z-index:1;
+}
+#tab-forms .form-field-header .subcategory-form-button,
+#tab-forms .form-field-header .subcategory-form-label,
+#memberPanel .member-create-fields .form-field-header .subcategory-form-button,
+#memberPanel .member-create-fields .form-field-header .subcategory-form-label{
+  flex:1 1 auto;
+  min-width:0;
+}
+#tab-forms .form-field-header .field-edit-btn{
+  flex:0 0 auto;
+}
+#tab-forms .form-field-header .delete-field-btn{
+  flex:0 0 auto;
+}
+#tab-forms .form-container .panel-field .subcategory-form-button:focus-visible,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button:focus-visible{
+  outline:2px solid var(--btn-hover, #2e3a72);
+  outline-offset:2px;
+}
+#tab-forms .form-container .panel-field .subcategory-form-button .required-asterisk,
+#tab-forms .form-container .panel-field .subcategory-form-label .required-asterisk,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button .required-asterisk,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label .required-asterisk{
+  font-size:inherit;
+}
+#tab-forms .form-container .panel-field input,
+#memberPanel .member-create-fields .panel-field input{
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+}
+#tab-forms .form-container .panel-field input[readonly],
+#memberPanel .member-create-fields .panel-field input[readonly]{
+  cursor:default;
+}
+#tab-forms .form-container .panel-field select,
+#tab-forms .form-container .panel-field textarea,
+#memberPanel .member-create-fields .panel-field select,
+#memberPanel .member-create-fields .panel-field textarea{
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+  box-sizing:border-box;
+  width:100%;
+}
+#tab-forms .form-container .panel-field textarea,
+#memberPanel .member-create-fields .panel-field textarea{
+  resize:vertical;
+  min-height:120px;
+  padding:8px 12px;
+}
+#tab-forms .form-container .panel-field select,
+#tab-forms .form-container .form-field--dropdown .form-select,
+#memberPanel .member-create-fields .panel-field select,
+#memberPanel .member-create-fields .form-field--dropdown .form-select{
+  height:36px;
+  padding:0 30px 0 12px;
+  width:100%;
+  box-sizing:border-box;
+  max-width:100%;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  position:relative;
+}
+#tab-forms .form-container .panel-field select:focus,
+#tab-forms .form-container .form-field--dropdown .form-select:focus,
+#memberPanel .member-create-fields .panel-field select:focus,
+#memberPanel .member-create-fields .form-field--dropdown .form-select:focus{
+  border-color:var(--btn-hover, #2e3a72);
+  outline:none;
+  width:100%;
+  box-sizing:border-box;
+}
+#tab-forms .form-container .form-field--dropdown,
+#memberPanel .member-create-fields .form-field--dropdown{
+  position:relative;
+  width:100%;
+  box-sizing:border-box;
+}
+#tab-forms .form-container .form-field--dropdown .options-menu,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+}
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option:disabled,
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option.field-type-disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option:disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option.field-type-disabled{
+  opacity:0.5;
+  font-style:italic;
+  cursor:not-allowed;
+}
+#tab-forms .form-container .form-field--radio-toggle,
+#memberPanel .member-create-fields .form-field--radio-toggle{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#tab-forms .form-container .form-radio-group,
+#memberPanel .member-create-fields .form-radio-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:flex-start;
+  width:100%;
+}
+#tab-forms .form-container .form-radio-option,
+#memberPanel .member-create-fields .form-radio-option{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  font-size:14px;
+  cursor:pointer;
+  width:100%;
+  text-align:left;
+  padding:0;
+  margin:0;
+}
+#tab-forms .form-container .form-radio-option input[type="radio"],
+#memberPanel .member-create-fields .form-radio-option input[type="radio"]{
+  flex-shrink:0;
+  margin:0;
+  padding:0;
+  cursor:pointer;
+  width:auto;
+  height:auto;
+}
+#tab-forms .form-container .form-radio-option span,
+#memberPanel .member-create-fields .form-radio-option span{
+  flex:0 1 auto;
+  margin:0;
+  padding:0;
+}
+#tab-forms .form-field--url .form-url-wrapper,
+#memberPanel .member-create-fields .form-field--url .form-url-wrapper{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#tab-forms .form-url-input,
+#memberPanel .member-create-fields .form-url-input{
+  width:100%;
+  height:36px;
+  padding:0 12px;
+  box-sizing:border-box;
+}
+#tab-forms .form-url-link,
+#memberPanel .member-create-fields .form-url-link{
+  align-self:flex-start;
+  color:var(--link-color, #8ab4ff);
+  font-weight:600;
+  text-decoration:underline;
+  transition:opacity .2s ease;
+}
+#tab-forms .form-url-link[aria-disabled="true"],
+#memberPanel .member-create-fields .form-url-link[aria-disabled="true"]{
+  opacity:0.4;
+  pointer-events:none;
+  cursor:default;
+}
+#tab-forms .form-url-message,
+#memberPanel .member-create-fields .form-url-message{
+  font-size:12px;
+  color:rgba(255,255,255,0.7);
+}
+#tab-forms .form-field--images .form-images,
+#memberPanel .member-create-fields .form-field--images .form-images{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#tab-forms .form-field--images input[type="file"],
+#memberPanel .member-create-fields .form-field--images input[type="file"]{
+  color:inherit;
+}
+#tab-forms .form-image-hint,
+#memberPanel .member-create-fields .form-image-hint{
+  font-size:12px;
+  color:rgba(255,255,255,0.7);
+}
+#tab-forms .form-image-message,
+#memberPanel .member-create-fields .form-image-message{
+  font-size:12px;
+  color:#ffb347;
+}
+#tab-forms .form-image-previews,
+#memberPanel .member-create-fields .form-image-previews{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
+  gap:8px;
+}
+#tab-forms .form-image-thumb,
+#memberPanel .member-create-fields .form-image-thumb{
+  position:relative;
+  padding-top:100%;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.25);
+  cursor:grab;
+}
+#tab-forms .form-image-thumb.is-dragging,
+#memberPanel .member-create-fields .form-image-thumb.is-dragging{
+  opacity:0.7;
+  cursor:grabbing;
+}
+#tab-forms .form-image-remove,
+.form-image-remove{
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:35px;
+  height:35px;
+  border-radius:10px;
+  border:none;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  font-size:16px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background-color .2s ease;
+  z-index:1;
+}
+#tab-forms .form-image-remove:hover,
+.form-image-remove:hover{
+  background:rgba(255,77,77,0.85);
+}
+.form-image-remove span{
+  pointer-events:none;
+}
+#tab-forms .form-image-thumb img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+#tab-forms .form-field--variant-pricing .form-variant-pricing{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#tab-forms .form-variant-pricing-item{
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
+  background:rgba(0,0,0,0.25);
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+#tab-forms .form-variant-pricing-name{
+  font-weight:600;
+}
+#tab-forms .form-variant-pricing-price{
+  font-size:14px;
+  color:rgba(255,255,255,0.85);
+}
+#tab-forms .form-field .required-asterisk,
+.required-asterisk{
+  color:#ff4d4d;
+  font-weight:700;
+}
+#tab-forms .form-container .panel-field select:disabled{
+  opacity:1;
+}
+
+/* ============================================================================
+   END FORMS STYLES
+   ========================================================================== */
+
 #filterBtn,
 #memberBtn,
 #adminBtn{
@@ -4058,7 +4547,7 @@ body.hide-ads .ad-board{
   box-shadow:0 10px 25px rgba(0,0,0,0.4);
   font-size:14px;
   font-weight:normal;
-  z-index:13000;
+  z-index:var(--layer-dialog);
   pointer-events:none;
   opacity:0;
   transition:opacity 0.2s ease, transform 0.2s ease;
@@ -4114,9 +4603,15 @@ body.filters-active #filterBtn{
   }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index:30; }
+.options-dropdown > button,
+.options-dropdown .form-select,
+.options-dropdown .variant-pricing-currency,
+.options-dropdown .field-type-select,
+.options-dropdown .session-currency-select{ text-align:left; }
+.options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; right:0; width:100%; min-width:100%; max-width:100%; box-sizing:border-box; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.options-menu .menu-option{ text-align:left; justify-content:flex-start; }
 
 .card,
 .recents-card,
@@ -4339,6 +4834,49 @@ body.filters-active #filterBtn{
   z-index:5;
   min-width:72px;
   text-align:center;
+}
+
+.map-scale-bar{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  width:300px;
+  height:30px;
+  z-index:1;
+  pointer-events:none;
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-start;
+}
+
+.map-scale-bar .scale-line{
+  position:relative;
+  width:100%;
+  height:2px;
+  background:#000;
+  margin-bottom:0;
+}
+
+.map-scale-bar .scale-mark{
+  position:absolute;
+  bottom:0;
+  width:1px;
+  height:6px;
+  background:#000;
+}
+
+.map-scale-bar .scale-mark.major{
+  height:10px;
+}
+
+.map-scale-bar .scale-label{
+  position:absolute;
+  bottom:12px;
+  font-size:10px;
+  color:#000;
+  font-weight:600;
+  transform:translateX(-50%);
+  white-space:nowrap;
 }
 
 .map-control-row{
@@ -5229,7 +5767,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index:5000;
+  z-index: var(--layer-menu);
 }
 .open-post .post-venue-menu,
 .open-post .session-menu{
@@ -5542,7 +6080,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .time-popup,
 .post-body .calendar-container .time-popup{
   position:absolute;
-  z-index:10500;
+  z-index:var(--layer-menu);
 }
 
 .open-post .calendar-container .time-popup .time-list,
@@ -6068,7 +6606,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     opacity:0;
     transition:opacity .3s;
     pointer-events:none;
-    z-index:10000;
+    z-index:var(--layer-dialog);
   }
   .copy-msg.show{opacity:1;}
 
@@ -6082,7 +6620,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:3000;
+    z-index:var(--layer-image-modal);
   }
   .image-modal-container.hidden{display:none;}
   .image-modal-container .image-modal img{
@@ -6101,7 +6639,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:3000;
+    z-index: var(--layer-modal);
   }
   #post-modal-container.hidden{display:none;}
     #post-modal-container .post-modal{
@@ -6200,35 +6738,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   z-index:-1;
 }
 
-.big-map-card--popup,
-.big-map-card--list{
-  pointer-events: auto;
-  cursor: pointer;
-}
-.big-map-card--popup{
-  display: block;
-}
-
-.map-card-list{
-  max-height: 360px;
-  overflow-y: auto;
-  overflow-y: overlay;
-  overflow-x: hidden;
-  padding: 2px 6px 2px 2px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.map-card-list-item{
-  padding: 5px;
-  border-radius: 8px;
-  cursor: pointer;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
 .mapboxgl-popup,
 .mapboxgl-popup-content{
   border-radius:8px !important;
@@ -6238,10 +6747,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   background: var(--popup-bg) !important;
   color: var(--popup-text) !important;
   overflow:hidden;
-}
-
-.mapboxgl-popup.big-map-card .mapboxgl-popup-content{
-  overflow: visible;
 }
 
 .mapboxgl-popup-close-button{
@@ -7004,7 +7509,7 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .form-preview-btn{
+            #tab-forms .form-btn{
               width:100%;
               height:40px;
               border-radius:8px;
@@ -7021,29 +7526,32 @@ html, body { cursor: auto !important; }
               cursor:pointer;
               transition:background .2s,border-color .2s,color .2s;
             }
-            #tab-forms .form-preview-btn:hover{
+            #tab-forms .form-btn:hover{
               background:#2e3a72;
               border-color:#2e3a72;
             }
-            #tab-forms .form-preview-btn .dropdown-arrow{
+            #tab-forms .form-btn .dropdown-arrow{
               margin-left:auto;
               transform:rotate(45deg);
               transition:transform .3s ease;
             }
-            #tab-forms .form-preview-btn[aria-expanded="true"] .dropdown-arrow{
+            #tab-forms .form-btn[aria-expanded="true"] .dropdown-arrow{
               transform:rotate(-135deg);
             }
-            #tab-forms .form-preview-field--venues-sessions-pricing .venue-session-editor{
+            #tab-forms .form-field--venues-sessions-pricing .venue-session-editor,
+            #memberPanel .member-create-fields .form-field--venues-sessions-pricing .venue-session-editor{
               display:flex;
               flex-direction:column;
               gap:16px;
             }
-            #tab-forms .venue-session-venues{
+            #tab-forms .venue-session-venues,
+            #memberPanel .member-create-fields .venue-session-venues{
               display:flex;
               flex-direction:column;
               gap:16px;
             }
-            #tab-forms .venue-card{
+            #tab-forms .venue-card,
+            #memberPanel .member-create-fields .venue-card{
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
@@ -7052,14 +7560,20 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .venue-card > *{
+            #tab-forms .venue-card > *,
+            #memberPanel .member-create-fields .venue-card > *{
               width:100%;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row,
             #tab-forms .session-time-row,
             #tab-forms .session-pricing-card,
-            #tab-forms .tier-row{
+            #tab-forms .tier-row,
+            #memberPanel .member-create-fields .venue-line,
+            #memberPanel .member-create-fields .session-date-row,
+            #memberPanel .member-create-fields .session-time-row,
+            #memberPanel .member-create-fields .session-pricing-card,
+            #memberPanel .member-create-fields .tier-row{
               display:grid;
               grid-template-columns:minmax(0, 1fr) auto;
               justify-items:start;
@@ -7068,28 +7582,39 @@ html, body { cursor: auto !important; }
               row-gap:12px;
               width:100%;
             }
-            #tab-forms .address_line-line{
+            #tab-forms .address_line-line,
+            #memberPanel .member-create-fields .address_line-line{
               grid-template-columns:1fr;
               justify-items:stretch;
               align-items:stretch;
             }
-            #tab-forms .address_line-line > *{
+            #tab-forms .address_line-line > *,
+            #memberPanel .member-create-fields .address_line-line > *{
               width:100%;
               min-width:0;
             }
             #tab-forms .venue-line,
-            #tab-forms .session-date-row{
+            #tab-forms .session-date-row,
+            #memberPanel .member-create-fields .venue-line,
+            #memberPanel .member-create-fields .session-date-row{
               position:relative;
             }
             #tab-forms .address_line-geocoder-container.is-geocoder-active,
-            #tab-forms .session-date-row.has-open-session-picker{
+            #tab-forms .session-date-row.has-open-session-picker,
+            #memberPanel .member-create-fields .address_line-geocoder-container.is-geocoder-active,
+            #memberPanel .member-create-fields .session-date-row.has-open-session-picker{
               z-index:var(--forms-layer-overlay);
             }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
             #tab-forms .session-time-actions,
             #tab-forms .version-actions,
-            #tab-forms .tier-actions{
+            #tab-forms .tier-actions,
+            #memberPanel .member-create-fields .venue-line-actions,
+            #memberPanel .member-create-fields .session-date-actions,
+            #memberPanel .member-create-fields .session-time-actions,
+            #memberPanel .member-create-fields .version-actions,
+            #memberPanel .member-create-fields .tier-actions{
               margin-left:0;
               display:flex;
               gap:4px;
@@ -7101,7 +7626,11 @@ html, body { cursor: auto !important; }
             #tab-forms .session-time-input,
             #tab-forms .seating_area-input,
             #tab-forms .pricing_tier-input,
-            #tab-forms .session-price-input{
+            #tab-forms .session-price-input,
+            #memberPanel .member-create-fields .session-time-input,
+            #memberPanel .member-create-fields .seating_area-input,
+            #memberPanel .member-create-fields .pricing_tier-input,
+            #memberPanel .member-create-fields .session-price-input{
               width:100%;
               height:36px;
               border-radius:8px;
@@ -7112,57 +7641,74 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
             }
             #tab-forms .venue-name-input,
-            #tab-forms .session-date-input{
+            #tab-forms .session-date-input,
+            #memberPanel .member-create-fields .venue-name-input,
+            #memberPanel .member-create-fields .session-date-input{
               background:#2e3a72 !important;
               color:var(--button-text);
             }
-            #tab-forms .session-time-input{
+            #tab-forms .session-time-input,
+            #memberPanel .member-create-fields .session-time-input{
               background:rgba(0,0,0,0.35);
               color:var(--input-text);
             }
-            #tab-forms .session-date-input-wrapper{
+            #tab-forms .session-date-input-wrapper,
+            #memberPanel .member-create-fields .session-date-input-wrapper{
               position:relative;
               display:flex;
               align-items:center;
               width:100%;
             }
-            #tab-forms .session-date-input{
+            #tab-forms .session-date-input,
+            #memberPanel .member-create-fields .session-date-input{
               padding-right:36px;
               text-align:left;
             }
-            #tab-forms .session-date-dropdown-indicator{
+            #tab-forms .session-date-dropdown-indicator,
+            #memberPanel .member-create-fields .session-date-dropdown-indicator{
               position:absolute;
+              top:50%;
               right:12px;
+              transform:translateY(-50%);
               display:inline-flex;
               align-items:center;
               justify-content:center;
               pointer-events:none;
               color:var(--button-text);
-              transition:transform 0.2s ease;
+              transition:transform 0.3s ease;
             }
-            #tab-forms .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
-              transform:rotate(180deg);
+            #tab-forms .session-date-input-wrapper.is-open .session-date-dropdown-indicator,
+            #memberPanel .member-create-fields .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
+              transform:translateY(-50%) rotate(180deg);
             }
-            #tab-forms .session-time-input{
+            #tab-forms .session-time-input,
+            #memberPanel .member-create-fields .session-time-input{
               font-variant-numeric:tabular-nums;
             }
-            #tab-forms .session-time-input.is-invalid{
+            #tab-forms .session-time-input.is-invalid,
+            #memberPanel .member-create-fields .session-time-input.is-invalid{
               border-color:#b83030;
               box-shadow:0 0 0 1px #b83030;
             }
             #tab-forms .address_line-geocoder-container,
-            #tab-forms .address_line-fallback{
+            #tab-forms .address_line-fallback,
+            #memberPanel .member-create-fields .address_line-geocoder-container,
+            #memberPanel .member-create-fields .address_line-fallback{
               position:relative;
             }
-            #tab-forms .address_line-geocoder-container{
+            #tab-forms .address_line-geocoder-container,
+            #memberPanel .member-create-fields .address_line-geocoder-container{
               z-index:var(--forms-layer-stacked);
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl{
               width:100%;
               min-width:0;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
               box-shadow:none;
               border-radius:8px;
               border:1px solid var(--border);
@@ -7171,7 +7717,8 @@ html, body { cursor: auto !important; }
               position:relative;
               z-index:var(--forms-layer-overlay);
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
               line-height:36px;
               padding:0 12px;
@@ -7180,34 +7727,43 @@ html, body { cursor: auto !important; }
               font-size:inherit;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
               display:none;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
               background:transparent;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
               display:none;
             }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
               z-index:var(--forms-layer-popover);
             }
-            #tab-forms .form-preview-field--location .location-field-wrapper{
+            #tab-forms .form-field--location .location-field-wrapper,
+            #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
               display:flex;
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .location-field-coordinates{
+            #tab-forms .location-field-coordinates,
+            #memberPanel .member-create-fields .location-field-coordinates{
               display:grid;
               grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
               gap:8px;
             }
-            #tab-forms .session-list{
+            #tab-forms .session-list,
+            #memberPanel .member-create-fields .session-list{
               display:flex;
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .session-card{
+            #tab-forms .session-card,
+            #memberPanel .member-create-fields .session-card{
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
@@ -7217,39 +7773,46 @@ html, body { cursor: auto !important; }
               gap:12px;
               position:relative;
             }
-            #tab-forms .session-date-input{
+            #tab-forms .session-date-input,
+            #memberPanel .member-create-fields .session-date-input{
               cursor:pointer;
             }
-            #tab-forms .session-times{
+            #tab-forms .session-times,
+            #memberPanel .member-create-fields .session-times{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .session-time-row{
+            #tab-forms .session-time-row,
+            #memberPanel .member-create-fields .session-time-row{
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.25);
               padding:0;
             }
-            #tab-forms .seating_area-list{
+            #tab-forms .seating_area-list,
+            #memberPanel .member-create-fields .seating_area-list{
               display:flex;
               flex-direction:column;
               gap:10px;
               width:100%;
             }
-            #tab-forms .session-pricing-card{
+            #tab-forms .session-pricing-card,
+            #memberPanel .member-create-fields .session-pricing-card{
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.2);
               padding:0;
             }
-            #tab-forms .pricing_tier-list{
+            #tab-forms .pricing_tier-list,
+            #memberPanel .member-create-fields .pricing_tier-list{
               display:flex;
               flex-direction:column;
               gap:8px;
               width:100%;
             }
-            #tab-forms .tier-price-row{
+            #tab-forms .tier-price-row,
+            #memberPanel .member-create-fields .tier-price-row{
               display:grid;
               grid-template-columns:minmax(110px, auto) 1fr;
               align-items:center;
@@ -7257,10 +7820,14 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .session-time-row .seating_area-list,
             #tab-forms .session-pricing-card .pricing_tier-list,
-            #tab-forms .tier-row .tier-price-row{
+            #tab-forms .tier-row .tier-price-row,
+            #memberPanel .member-create-fields .session-time-row .seating_area-list,
+            #memberPanel .member-create-fields .session-pricing-card .pricing_tier-list,
+            #memberPanel .member-create-fields .tier-row .tier-price-row{
               grid-column:1 / -1;
             }
-            #tab-forms .same-pricing-row{
+            #tab-forms .same-pricing-row,
+            #memberPanel .member-create-fields .same-pricing-row{
               grid-column:1 / -1;
               display:flex;
               flex-wrap:wrap;
@@ -7269,86 +7836,111 @@ html, body { cursor: auto !important; }
               padding:0 12px 12px;
               box-sizing:border-box;
             }
-            #tab-forms .same-pricing-label{
+            #tab-forms .same-pricing-label,
+            #memberPanel .member-create-fields .same-pricing-label{
               font-weight:600;
             }
-            #tab-forms .same-pricing-options{
+            #tab-forms .same-pricing-options,
+            #memberPanel .member-create-fields .same-pricing-options{
               display:flex;
               gap:16px;
               align-items:center;
             }
-            #tab-forms .same-pricing-options label{
+            #tab-forms .same-pricing-options label,
+            #memberPanel .member-create-fields .same-pricing-options label{
               display:flex;
               align-items:center;
               gap:6px;
               cursor:pointer;
             }
-            #tab-forms .session-time-row.has-same-pricing{
+            #tab-forms .session-time-row.has-same-pricing,
+            #memberPanel .member-create-fields .session-time-row.has-same-pricing{
               padding-bottom:0;
             }
-            #tab-forms .session-currency-select{
+            #tab-forms .session-currency-select,
+            #memberPanel .member-create-fields .session-currency-select{
               height:36px;
               border-radius:8px;
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
               color:var(--input-text);
-              padding:0 10px;
+              padding:0 30px 0 10px;
             }
             #tab-forms .venue-line > *:first-child,
             #tab-forms .session-date-row > *:first-child,
             #tab-forms .session-time-row > *:first-child,
             #tab-forms .session-pricing-card > *:first-child,
-            #tab-forms .tier-row > *:first-child{
+            #tab-forms .tier-row > *:first-child,
+            #memberPanel .member-create-fields .venue-line > *:first-child,
+            #memberPanel .member-create-fields .session-date-row > *:first-child,
+            #memberPanel .member-create-fields .session-time-row > *:first-child,
+            #memberPanel .member-create-fields .session-pricing-card > *:first-child,
+            #memberPanel .member-create-fields .tier-row > *:first-child{
               min-width:0;
               width:100%;
             }
-            #tab-forms .tier-price-row > *{
+            #tab-forms .tier-price-row > *,
+            #memberPanel .member-create-fields .tier-price-row > *{
               min-width:0;
               width:100%;
             }
             #tab-forms .seating_area-label,
-            #tab-forms .pricing_tier-label{
+            #tab-forms .pricing_tier-label,
+            #memberPanel .member-create-fields .seating_area-label,
+            #memberPanel .member-create-fields .pricing_tier-label{
               display:block;
               margin-bottom:4px;
               font-size:12px;
               font-weight:600;
             }
             #tab-forms .session-pricing-card .seating_area-label,
-            #tab-forms .tier-row .pricing_tier-label{
+            #tab-forms .tier-row .pricing_tier-label,
+            #memberPanel .member-create-fields .session-pricing-card .seating_area-label,
+            #memberPanel .member-create-fields .tier-row .pricing_tier-label{
               grid-column:1 / -1;
             }
-            #tab-forms .session-pricing-card .seating_area-input{
+            #tab-forms .session-pricing-card .seating_area-input,
+            #memberPanel .member-create-fields .session-pricing-card .seating_area-input{
               grid-column:1 / 2;
               grid-row:2;
             }
-            #tab-forms .session-pricing-card .version-actions{
+            #tab-forms .session-pricing-card .version-actions,
+            #memberPanel .member-create-fields .session-pricing-card .version-actions{
               grid-column:2 / 3;
               grid-row:2;
             }
-            #tab-forms .tier-row .pricing_tier-input{
+            #tab-forms .tier-row .pricing_tier-input,
+            #memberPanel .member-create-fields .tier-row .pricing_tier-input{
               grid-column:1 / 2;
               grid-row:2;
             }
-            #tab-forms .tier-row .tier-actions{
+            #tab-forms .tier-row .tier-actions,
+            #memberPanel .member-create-fields .tier-row .tier-actions{
               grid-column:2 / 3;
               grid-row:2;
             }
             #tab-forms .session-pricing-card .version-actions,
-            #tab-forms .tier-row .tier-actions{
+            #tab-forms .tier-row .tier-actions,
+            #memberPanel .member-create-fields .session-pricing-card .version-actions,
+            #memberPanel .member-create-fields .tier-row .tier-actions{
               align-self:start;
               justify-self:end;
             }
-            #tab-forms .session-details{
+            #tab-forms .session-details,
+            #memberPanel .member-create-fields .session-details{
               display:flex;
               flex-direction:column;
               gap:12px;
               width:100%;
             }
-            #tab-forms .session-details[hidden]{
+            #tab-forms .session-details[hidden],
+            #memberPanel .member-create-fields .session-details[hidden]{
               display:none;
             }
             #tab-forms .session-time-row .seating_area-list,
-            #tab-forms .tier-row .tier-price-row{
+            #tab-forms .tier-row .tier-price-row,
+            #memberPanel .member-create-fields .session-time-row .seating_area-list,
+            #memberPanel .member-create-fields .tier-row .tier-price-row{
               width:100%;
             }
             #tab-forms .session-date-picker{
@@ -7530,32 +8122,64 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .field-type-select-wrapper{
               position:relative;
-              display:flex;
-              align-items:center;
-              flex:0 0 auto;
+              display:block;
+              flex:1 1 0;
+              width:100%;
+              min-width:0;
+              max-width:100%;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu{
+              position:absolute;
+              top:calc(100% + 4px);
+              left:0;
+              right:0;
+              bottom:auto;
+              width:100%;
+              min-width:100%;
+              max-width:100%;
+              box-sizing:border-box;
+              z-index:var(--layer-menu);
             }
             #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
               flex:1 1 auto;
+              width:100%;
             }
             #tab-forms .field-type-select{
-              padding-right:32px;
+              padding-right:30px;
+              width:100%;
+              min-width:0;
+              box-sizing:border-box;
+              text-align:left;
+              display:flex;
+              align-items:center;
+              justify-content:flex-start;
             }
-            #tab-forms .field-type-select-arrow{
-              position:absolute;
-              right:12px;
-              pointer-events:none;
-              color:var(--button-text);
-              font-size:12px;
-              line-height:1;
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option{
+              text-align:left;
+              justify-content:flex-start;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu{
+              background:#222222;
+              border:1px solid rgba(255,255,255,1);
+              border-radius:8px;
+              padding:10px;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option{
+              background:rgba(0,0,0,0.2);
+              border:none;
+              border-radius:0;
+            }
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option:disabled,
+            #tab-forms .field-type-select-wrapper .options-menu .menu-option.field-type-disabled{
+              opacity:0.5;
+              font-style:italic;
+              cursor:not-allowed;
             }
             #tab-forms .field-type-select option:disabled,
             #tab-forms .field-type-select option.field-type-disabled{
               color:#666;
               opacity:0.5;
               font-style:italic;
-            }
-            #tab-forms .subcategory-field-row .field-row-header .field-name-input{
-              flex:1;
             }
             #tab-forms .subcategory-field-row input:not([type="radio"]):not([type="checkbox"]),
             #tab-forms .subcategory-field-row select{
@@ -7567,6 +8191,31 @@ html, body { cursor: auto !important; }
               color:var(--button-text);
               padding:0 12px;
               box-sizing:border-box;
+            }
+            #tab-forms .field-name-editor{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+              margin-top:8px;
+            }
+            #tab-forms .field-name-label{
+              font-size:14px;
+              font-weight:600;
+              color:var(--button-text);
+            }
+            #tab-forms .field-name-input{
+              width:100%;
+              height:36px;
+              padding:0 12px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+              box-sizing:border-box;
+            }
+            #tab-forms .field-name-input:focus{
+              border-color:var(--btn-hover, #2e3a72);
+              outline:none;
             }
             #tab-forms .field-required-row{
               display:flex;
@@ -7667,24 +8316,31 @@ html, body { cursor: auto !important; }
               background:#d13c3c;
               border-color:#d13c3c;
             }
-            #tab-forms .variant-pricing-options-editor{
+            #tab-forms .variant-pricing-options-editor,
+            #memberPanel .member-create-fields .variant-pricing-options-editor{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .variant-pricing-options-editor[hidden]{
+            #tab-forms .variant-pricing-options-editor[hidden],
+            #memberPanel .member-create-fields .variant-pricing-options-editor[hidden]{
               display:none !important;
             }
-            #tab-forms .variant-pricing-options-label{
+            #tab-forms .variant-pricing-options-label,
+            #memberPanel .member-create-fields .variant-pricing-options-label{
               font-size:14px;
               font-weight:600;
+              position:relative;
+              z-index:1;
             }
-            #tab-forms .variant-pricing-options-list{
+            #tab-forms .variant-pricing-options-list,
+            #memberPanel .member-create-fields .variant-pricing-options-list{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .variant-pricing-option{
+            #tab-forms .variant-pricing-option,
+            #memberPanel .member-create-fields .variant-pricing-option{
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -7692,37 +8348,107 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               background:rgba(0,0,0,0.2);
             }
-            #tab-forms .variant-pricing-row{
+            #tab-forms .variant-pricing-row,
+            #memberPanel .member-create-fields .variant-pricing-row{
               display:flex;
               gap:8px;
               align-items:center;
+              position:relative;
             }
-            #tab-forms .variant-pricing-row--top input{
+            #tab-forms .variant-pricing-row--top input,
+            #memberPanel .member-create-fields .variant-pricing-row--top input{
               width:100%;
             }
-            #tab-forms .variant-pricing-row--bottom{
+            #tab-forms .variant-pricing-row--bottom,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom{
               display:grid;
               grid-template-columns:minmax(110px, auto) 1fr auto;
               gap:8px;
               align-items:center;
             }
-            #tab-forms .variant-pricing-currency{
+            #tab-forms .variant-pricing-row--bottom .options-dropdown,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown{
+              position:relative;
+              overflow:visible;
+              width:100%;
+              max-width:100%;
+              min-width:0;
+              box-sizing:border-box;
+              flex:0 0 auto;
+            }
+            #tab-forms .variant-pricing-currency,
+            #memberPanel .member-create-fields .variant-pricing-currency{
+              width:100%;
+              max-width:100%;
+              min-width:0;
+              position:relative;
+              overflow:hidden;
+              box-sizing:border-box;
+              padding-right:30px;
+              display:block;
+              flex-shrink:0;
+            }
+            #tab-forms .variant-pricing-currency .dropdown-arrow,
+            #memberPanel .member-create-fields .variant-pricing-currency .dropdown-arrow{
+              position:absolute;
+              top:50%;
+              right:10px;
+              transform:translateY(-50%) rotate(45deg);
+              display:inline-block;
+              width:8px;
+              height:8px;
+              border-style:solid;
+              border-width:0 2px 2px 0;
+              border-color:currentColor;
+              color:inherit;
+              pointer-events:none;
+            }
+            #tab-forms .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow,
+            #memberPanel .member-create-fields .variant-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+              transform:translateY(-50%) rotate(-135deg);
+            }
+            #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu{
+              position:absolute;
+              top:calc(100% + 4px);
+              bottom:auto;
+              left:0;
+              right:0;
+              width:100%;
+              min-width:100%;
+              max-width:100%;
+              box-sizing:border-box;
+              z-index:var(--layer-menu);
+              margin:0;
+              background:#222222;
+              border:1px solid rgba(255,255,255,1);
+              border-radius:8px;
+              padding:10px;
+            }
+            #tab-forms .variant-pricing-row--bottom .options-dropdown .options-menu .menu-option,
+            #memberPanel .member-create-fields .variant-pricing-row--bottom .options-dropdown .options-menu .menu-option{
+              background:rgba(0,0,0,0.2);
+              border:none;
+              border-radius:0;
+            }
+            #tab-forms .variant-pricing-price,
+            #memberPanel .member-create-fields .variant-pricing-price{
               width:100%;
             }
-            #tab-forms .variant-pricing-price{
-              width:100%;
-            }
-            #tab-forms .variant-pricing-price.is-awaiting-currency{
+            #tab-forms .variant-pricing-price.is-awaiting-currency,
+            #memberPanel .member-create-fields .variant-pricing-price.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .session-price-input.is-awaiting-currency{
+            #tab-forms .session-price-input.is-awaiting-currency,
+            #memberPanel .member-create-fields .session-price-input.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .variant-pricing-option-actions{
+            #tab-forms .variant-pricing-option-actions,
+            #memberPanel .member-create-fields .variant-pricing-option-actions{
               display:flex;
               gap:6px;
               justify-content:flex-end;
@@ -7847,257 +8573,6 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .form-preview-container{
-              border:none;
-              border-radius:0;
-              background:none;
-              padding:0;
-              display:flex;
-              flex-direction:column;
-              gap:0;
-            }
-            #tab-forms .form-preview-container[hidden]{
-              display:none;
-            }
-            #tab-forms .form-preview-fields{
-              display:flex;
-              flex-direction:column;
-              gap:0;
-            }
-            #tab-forms .form-preview-empty{
-              margin:0;
-              font-size:14px;
-              color:var(--muted);
-            }
-            #tab-forms .form-preview-container .panel-field{
-              background:none;
-              padding:0;
-              border-radius:0;
-              border:none;
-              max-width:none;
-            }
-            #tab-forms .form-preview-container .form-preview-field{
-              padding-top:0;
-              padding-bottom:0;
-              margin:0;
-            }
-            #tab-forms .form-preview-container .panel-field label,
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button,
-            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
-              font-weight:600;
-            }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button,
-            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
-              border:none;
-              background:none;
-              color:inherit;
-              font:inherit;
-              padding:0;
-              margin:0;
-              text-align:left;
-              display:inline-flex;
-              align-items:center;
-              gap:4px;
-              width:100%;
-              justify-content:flex-start;
-            }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button{
-              cursor:pointer;
-            }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-label{
-              cursor:default;
-            }
-            #tab-forms .form-preview-field-header{
-              display:flex;
-              align-items:center;
-              gap:8px;
-              margin:0;
-              padding-top:10px;
-            }
-            #tab-forms .form-preview-field-header .subcategory-form-button,
-            #tab-forms .form-preview-field-header .subcategory-form-label{
-              flex:1 1 auto;
-              min-width:0;
-            }
-            #tab-forms .form-preview-field-header .field-edit-btn{
-              flex:0 0 auto;
-            }
-            #tab-forms .form-preview-field-header .delete-field-btn{
-              flex:0 0 auto;
-            }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button:focus-visible{
-              outline:2px solid var(--btn-hover, #2e3a72);
-              outline-offset:2px;
-            }
-            #tab-forms .form-preview-container .panel-field .subcategory-form-button .required-asterisk,
-            #tab-forms .form-preview-container .panel-field .subcategory-form-label .required-asterisk{
-              font-size:inherit;
-            }
-            #tab-forms .form-preview-container .panel-field input{
-              border:1px solid var(--border);
-              border-radius:8px;
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-            }
-            #tab-forms .form-preview-container .panel-field input[readonly]{
-              cursor:default;
-            }
-            #tab-forms .form-preview-container .panel-field select,
-            #tab-forms .form-preview-container .panel-field textarea{
-              border:1px solid var(--border);
-              border-radius:8px;
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              box-sizing:border-box;
-              width:100%;
-            }
-            #tab-forms .form-preview-container .panel-field textarea{
-              resize:vertical;
-              min-height:120px;
-              padding:8px 12px;
-            }
-            #tab-forms .form-preview-container .panel-field select{
-              appearance:none;
-              height:36px;
-              padding:0 12px;
-            }
-            #tab-forms .form-preview-container .form-preview-field--dropdown{
-              position:relative;
-            }
-            #tab-forms .form-preview-container .form-preview-field--dropdown::after{
-              content:'';
-              position:absolute;
-              top:50%;
-              right:18px;
-              width:8px;
-              height:8px;
-              border:2px solid var(--button-text);
-              border-top:0;
-              border-left:0;
-              transform:translateY(-50%) rotate(45deg);
-              pointer-events:none;
-            }
-            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
-              padding-right:40px;
-            }
-            #tab-forms .form-preview-container .form-preview-field--radio-toggle{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #tab-forms .form-preview-container .form-preview-radio-group{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-              align-items:flex-start;
-              width:100%;
-            }
-            #tab-forms .form-preview-container .form-preview-radio-option{
-              display:flex;
-              align-items:center;
-              justify-content:flex-start;
-              gap:10px;
-              font-size:14px;
-              cursor:pointer;
-              width:100%;
-              text-align:left;
-            }
-            #tab-forms .form-preview-field--url .form-preview-url-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-            }
-            #tab-forms .form-preview-url-input{
-              width:100%;
-              height:36px;
-              padding:0 12px;
-              box-sizing:border-box;
-            }
-            #tab-forms .form-preview-url-link{
-              align-self:flex-start;
-              color:var(--link-color, #8ab4ff);
-              font-weight:600;
-              text-decoration:underline;
-              transition:opacity .2s ease;
-            }
-            #tab-forms .form-preview-url-link[aria-disabled="true"]{
-              opacity:0.4;
-              pointer-events:none;
-              cursor:default;
-            }
-            #tab-forms .form-preview-url-message{
-              font-size:12px;
-              color:rgba(255,255,255,0.7);
-            }
-            #tab-forms .form-preview-field--images .form-preview-images{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #tab-forms .form-preview-field--images input[type="file"]{
-              color:inherit;
-            }
-            #tab-forms .form-preview-image-hint{
-              font-size:12px;
-              color:rgba(255,255,255,0.7);
-            }
-            #tab-forms .form-preview-image-message{
-              font-size:12px;
-              color:#ffb347;
-            }
-            #tab-forms .form-preview-image-previews{
-              display:grid;
-              grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
-              gap:8px;
-            }
-            #tab-forms .form-preview-image-thumb{
-              position:relative;
-              padding-top:100%;
-              border-radius:8px;
-              overflow:hidden;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.25);
-              cursor:grab;
-            }
-            #tab-forms .form-preview-image-thumb.is-dragging{
-              opacity:0.7;
-              cursor:grabbing;
-            }
-            #tab-forms .form-preview-image-remove,
-            .form-preview-image-remove{
-              position:absolute;
-              top:4px;
-              right:4px;
-              width:35px;
-              height:35px;
-              border-radius:10px;
-              border:none;
-              background:rgba(0,0,0,0.75);
-              color:#fff;
-              font-size:16px;
-              line-height:1;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              cursor:pointer;
-              transition:background-color .2s ease;
-              z-index:1;
-            }
-            #tab-forms .form-preview-image-remove:hover,
-            .form-preview-image-remove:hover{
-              background:rgba(255,77,77,0.85);
-            }
-            .form-preview-image-remove span{
-              pointer-events:none;
-            }
-            #tab-forms .form-preview-image-thumb img{
-              position:absolute;
-              inset:0;
-              width:100%;
-              height:100%;
-              object-fit:cover;
-            }
-            
             /* ============= Messages Tab Styles ============= */
             #tab-messages .messages-container{
               width:100%;
@@ -8155,7 +8630,7 @@ html, body { cursor: auto !important; }
               min-width:280px;
               max-width:400px;
               box-shadow:0 8px 24px rgba(0,0,0,0.6);
-              z-index:1000;
+              z-index: var(--layer-menu);
               opacity:0;
               pointer-events:none;
               transform:translateY(-8px);
@@ -8459,436 +8934,13 @@ html, body { cursor: auto !important; }
               color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
             }
             /* ============= End Messages Tab Styles ============= */
-            
-            #memberPanel .member-create-fields{
-              display:flex;
-              flex-direction:column;
-              gap:0;
-            }
-            #memberPanel .member-create-fields .form-preview-field{
-              background:none;
-              padding:0;
-              border-radius:0;
-              border:none;
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-              padding-top:0;
-              padding-bottom:0;
-              margin:0;
-            }
-            #memberPanel .member-create-fields .form-preview-field label{
-              font-weight:600;
-            }
-            #memberPanel .member-create-fields .form-preview-field-header{
-              display:flex;
-              align-items:center;
-              gap:8px;
-              margin:0;
-              padding-top:10px;
-            }
-            #memberPanel .member-create-fields .form-preview-field input,
-            #memberPanel .member-create-fields .form-preview-field select,
-            #memberPanel .member-create-fields .form-preview-field textarea{
-              border:1px solid var(--border);
-              border-radius:8px;
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              box-sizing:border-box;
-              width:100%;
-            }
-            #memberPanel .member-create-fields .form-preview-field textarea{
-              resize:vertical;
-              min-height:120px;
-              padding:8px 12px;
-            }
-            #memberPanel .member-create-fields .form-preview-field select{
-              appearance:none;
-              height:36px;
-              padding:0 12px;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown{
-              position:relative;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown::after{
-              content:'';
-              position:absolute;
-              top:50%;
-              right:18px;
-              width:8px;
-              height:8px;
-              border:2px solid var(--button-text);
-              border-top:0;
-              border-left:0;
-              transform:translateY(-50%) rotate(45deg);
-              pointer-events:none;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
-              padding-right:40px;
-            }
-            #memberPanel .member-create-fields .form-preview-radio-group{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-              align-items:flex-start;
-            }
-            #memberPanel .member-create-fields .form-preview-field--location .location-field-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .location-field-coordinates{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .form-preview-radio-option{
-              display:flex;
-              align-items:center;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .form-preview-field--url .form-preview-url-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-            }
-            #memberPanel .member-create-fields .form-preview-field--images .form-preview-images{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-preview-image-previews{
-              display:grid;
-              grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-preview-image-thumb{
-              position:relative;
-              padding-top:100%;
-              border-radius:8px;
-              overflow:hidden;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.25);
-            }
-            #memberPanel .member-create-fields .form-preview-image-thumb img{
-              position:absolute;
-              inset:0;
-              width:100%;
-              height:100%;
-              object-fit:cover;
-            }
-            #memberPanel .member-create-fields .form-preview-variant-pricing{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-options-list{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-option{
-              border:1px solid var(--border);
-              border-radius:8px;
-              padding:10px 12px;
-              background:rgba(0,0,0,0.25);
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row--bottom{
-              flex-direction:row;
-              align-items:center;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-option-actions{
-              display:flex;
-              justify-content:flex-end;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .venue-session-editor{
-              display:flex;
-              flex-direction:column;
-              gap:16px;
-            }
-            #memberPanel .member-create-fields .venue-session-venues{
-              display:flex;
-              flex-direction:column;
-              gap:16px;
-            }
-            #memberPanel .member-create-fields .venue-card > *{
-              width:100%;
-            }
-            #memberPanel .member-create-fields .venue-card{
-              border:none;
-              border-radius:10px;
-              background:rgba(0,0,0,0.2);
-              padding:0;
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .venue-line,
-            #memberPanel .member-create-fields .session-date-row,
-            #memberPanel .member-create-fields .session-time-row,
-            #memberPanel .member-create-fields .session-pricing-card,
-            #memberPanel .member-create-fields .tier-row{
-              display:grid;
-              grid-template-columns:minmax(0, 1fr) auto;
-              justify-items:start;
-              align-items:start;
-              column-gap:8px;
-              row-gap:12px;
-              width:100%;
-            }
-            #memberPanel .member-create-fields .address_line-line{
-              grid-template-columns:1fr;
-              justify-items:stretch;
-              align-items:stretch;
-            }
-            #memberPanel .member-create-fields .address_line-line > *{
-              width:100%;
-              min-width:0;
-            }
-            #memberPanel .member-create-fields .venue-line,
-            #memberPanel .member-create-fields .session-date-row{
-              position:relative;
-            }
-            #memberPanel .member-create-fields .venue-line-actions,
-            #memberPanel .member-create-fields .session-date-actions,
-            #memberPanel .member-create-fields .session-time-actions,
-            #memberPanel .member-create-fields .version-actions,
-            #memberPanel .member-create-fields .tier-actions{
-              margin-left:0;
-              display:flex;
-              gap:4px;
-              align-items:center;
-              justify-self:end;
-              align-self:center;
-              justify-content:flex-end;
-            }
-            #memberPanel .member-create-fields .session-pricing-card-list{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-pricing-card{
-              border:none;
-              border-radius:8px;
-              background:rgba(0,0,0,0.2);
-              padding:0;
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-time-list{
-              display:flex;
-              flex-direction:column;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .session-time-row{
-              border:none;
-              border-radius:8px;
-              background:rgba(0,0,0,0.25);
-              padding:0;
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-time-input-wrapper{
-              display:flex;
-              align-items:center;
-              justify-content:space-between;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-time-input,
-            #memberPanel .member-create-fields .seating_area-input,
-            #memberPanel .member-create-fields .pricing_tier-input,
-            #memberPanel .member-create-fields .session-price-input{
-              width:100%;
-              height:36px;
-              border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--input-text);
-              padding:0 12px;
-              box-sizing:border-box;
-            }
-            #memberPanel .member-create-fields .venue-name-input,
-            #memberPanel .member-create-fields .session-date-input{
-              background:#2e3a72 !important;
-              color:var(--button-text);
-            }
-            #memberPanel .member-create-fields .session-time-input{
-              background:rgba(0,0,0,0.35);
-              color:var(--input-text);
-            }
-            #memberPanel .member-create-fields .session-date-input-wrapper{
-              position:relative;
-              display:flex;
-              align-items:center;
-              width:100%;
-            }
-            #memberPanel .member-create-fields .session-date-input{
-              padding-right:36px;
-              text-align:left;
-            }
-            #memberPanel .member-create-fields .session-date-dropdown-indicator{
-              position:absolute;
-              right:12px;
-              display:inline-flex;
-              align-items:center;
-              justify-content:center;
-              pointer-events:none;
-              color:var(--button-text);
-              transition:transform 0.2s ease;
-            }
-            #memberPanel .member-create-fields .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
-              transform:rotate(180deg);
-            }
-            #memberPanel .member-create-fields .session-time-input{
-              font-variant-numeric:tabular-nums;
-            }
-            #memberPanel .member-create-fields .session-time-input.is-invalid{
-              border-color:#b83030;
-              box-shadow:0 0 0 1px #b83030;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container,
-            #memberPanel .member-create-fields .address_line-fallback{
-              position:relative;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container{
-              z-index:var(--forms-layer-stacked);
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl{
-              width:100%;
-              min-width:0;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
-              box-shadow:none;
-              border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              min-height:36px;
-              position:relative;
-              z-index:var(--forms-layer-overlay);
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
-              height:36px;
-              line-height:36px;
-              padding:0 12px;
-              color:var(--input-text);
-              background:transparent;
-              font-size:inherit;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
-              display:none;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
-              background:transparent;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
-              display:none;
-            }
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
-              z-index:var(--forms-layer-popover);
-            }
-            #memberPanel .member-create-fields .session-list{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-card{
-              border:none;
-              border-radius:10px;
-              background:rgba(0,0,0,0.2);
-              padding:0;
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-              position:relative;
-            }
-            #memberPanel .member-create-fields .session-date-input{
-              cursor:pointer;
-            }
-            #memberPanel .member-create-fields .session-times{
-              display:flex;
-              flex-direction:column;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .seating_area-list{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-version-list{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .version-entry-card{
-              border-radius:8px;
-              background:rgba(0,0,0,0.2);
-              padding:0;
-              display:flex;
-              flex-direction:column;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .tier-list{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .tier-row{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
-              gap:8px;
-              align-items:center;
-            }
-            #memberPanel .member-create-fields .tier-row input,
-            #memberPanel .member-create-fields .tier-row select{
-              width:100%;
-            }
-            #tab-forms .form-preview-field--variant-pricing .form-preview-variant-pricing{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #tab-forms .form-preview-variant-pricing-item{
-              border:1px solid var(--border);
-              border-radius:8px;
-              padding:10px 12px;
-              background:rgba(0,0,0,0.25);
-              display:flex;
-              flex-direction:column;
-              gap:4px;
-            }
-            #tab-forms .form-preview-variant-pricing-name{
-              font-weight:600;
-            }
-            #tab-forms .form-preview-variant-pricing-price{
-              font-size:14px;
-              color:rgba(255,255,255,0.85);
-            }
-            #tab-forms .form-preview-field .required-asterisk,
-            .required-asterisk{
-              color:#ff4d4d;
-              font-weight:700;
-            }
             .subcategory-field-overlay{
               position:absolute;
               top:0;
               left:0;
               display:none;
               background:transparent;
-              z-index:200000;
+              z-index: var(--layer-menu);
               pointer-events:none;
             }
             .subcategory-field-overlay.visible{
@@ -8910,10 +8962,7 @@ html, body { cursor: auto !important; }
               width:100%;
             }
             .subcategory-field-placeholder{
-              display:none !important;
-            }
-            #tab-forms .form-preview-container .panel-field select:disabled{
-              opacity:1;
+              display:none;
             }
             #tab-forms .subcategory-form-content[hidden]{
               display:none;
@@ -8942,30 +8991,31 @@ html, body { cursor: auto !important; }
             }
  
  
-/* DevTools Toggle Button */
+/* DevTools Toggle Button - Must be above all other elements */
+#devtoolsBtn,
 .devtools-btn{
-  position: fixed !important;
-  bottom: 60px !important;
-  right: 10px !important;
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 8px !important;
-  background: #ff9800 !important;
-  background-color: #ff9800 !important;
-  color: #000 !important;
-  border: 1px solid #ff9800 !important;
-  border-color: #ff9800 !important;
-  padding: 10px !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  z-index: 10000 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-  transition: all 0.2s ease !important;
-  user-select: none !important;
+  position: fixed;
+  bottom: 60px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #ff9800;
+  background-color: #ff9800;
+  color: #000;
+  border: 1px solid #ff9800;
+  border-color: #ff9800;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
 .devtools-btn:hover{
@@ -8993,30 +9043,31 @@ html, body { cursor: auto !important; }
   color: #000 !important;
 }
 
-/* LocalStorage Clear Button */
+/* LocalStorage Clear Button - Must be above all other elements */
+#clearLocalStorageBtn,
 .clear-localstorage-btn{
-  position: fixed !important;
-  bottom: 10px !important;
-  right: 10px !important;
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 8px !important;
-  background: #ffc107 !important;
-  background-color: #ffc107 !important;
-  color: #000 !important;
-  border: 1px solid #ffc107 !important;
-  border-color: #ffc107 !important;
-  padding: 10px !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  z-index: 10000 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-  transition: all 0.2s ease !important;
-  user-select: none !important;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #ffc107;
+  background-color: #ffc107;
+  color: #000;
+  border: 1px solid #ffc107;
+  border-color: #ffc107;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
 .clear-localstorage-btn:hover{

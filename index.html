@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="funmap-api-key" content="" />
-  <title>Events Platform</title>
+  <title>Loading...</title>
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png" />
@@ -204,7 +204,7 @@
           <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts" data-message-key="msg_member_tab_myposts">My Posts</button>
         </div>
       </div>
-      <form id="memberForm" class="panel-body" novalidate>
+      <div class="panel-body">
         <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
           <div class="member-auth" data-state="logged-out">
             <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
@@ -257,7 +257,7 @@
           </div>
         </section>
         <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -279,7 +279,7 @@
           <button type="button" class="tab-btn" data-tab="messages" aria-selected="false">Messages</button>
         </div>
       </div>
-      <form id="adminForm" class="panel-body">
+      <div class="panel-body">
         <div id="tab-map" class="tab-panel">
           <div class="map-spin-container">
             <div class="panel-field">
@@ -324,6 +324,45 @@
                 <input type="range" id="spinSpeed" min="0.1" max="2.0" step="0.1" value="0.3" class="spin-slider" />
               </div>
             </div>
+            <div class="panel-field">
+              <div class="option-label">
+                <span>Map Card Display</span>
+                <div class="spin-type-toggles">
+                  <label class="spin-type-option">
+                    <input type="radio" name="mapCardDisplay" value="hover_only" />
+                    <span>Hover Only</span>
+                  </label>
+                  <label class="spin-type-option">
+                    <input type="radio" name="mapCardDisplay" value="always" />
+                    <span>Always</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="panel-field">
+              <button type="button" id="refreshMapCardsBtn" class="refresh-map-cards-btn" title="Clear sprite cache and refresh map cards">
+                <span>🔄</span> Refresh Map Cards
+              </button>
+            </div>
+            <div id="map_shadow_container" class="panel-field" style="padding-top: 12px;">
+              <label for="postModeBgOpacity">Map Shadow</label>
+              <div class="spin-control-row">
+                <span id="postModeBgOpacityVal" class="slider-value">0.00</span>
+                <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01" class="spin-slider">
+              </div>
+              <div class="panel-field" style="margin-top: 12px;">
+                <div class="spin-type-toggles" style="justify-content: flex-start;">
+                  <label class="spin-type-option">
+                    <input type="radio" name="mapShadowMode" value="post_mode_only" id="mapShadowModePostOnly" />
+                    <span>Post Mode Only</span>
+                  </label>
+                  <label class="spin-type-option">
+                    <input type="radio" name="mapShadowMode" value="always" id="mapShadowModeAlways" />
+                    <span>Always</span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="tab-settings" class="tab-panel active">
@@ -365,13 +404,6 @@
                 <span class="slider"></span>
               </label>
             </div>
-          </div>
-        </div>
-        <div id="post-mode-background-field" class="panel-field">
-          <label for="postModeBgOpacity">Post Mode Shadow</label>
-          <div class="spin-control-row">
-            <span id="postModeBgOpacityVal" class="slider-value">0.00</span>
-            <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01" class="spin-slider">
           </div>
         </div>
         <div class="settings-paypal-container">
@@ -418,7 +450,7 @@
             <div class="cats" id="messagesCats" aria-label="Message Categories"></div>
           </div>
         </div>
-      </form>
+      </div>
   </div>
   </div>
 
