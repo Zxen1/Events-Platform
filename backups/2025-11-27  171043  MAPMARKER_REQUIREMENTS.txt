@@ -1,0 +1,126 @@
+MAPMARKER REQUIREMENTS
+======================
+
+1. Mapmarker icons use the posts subcategory icons at 30x30 (except multi post)
+
+2. Hovering on a mapmarker changes it to 30x30 thumbnail (except multi post)
+
+3. The centre of the mapmarker is at latlng and never reloads to prevent flicker
+
+4. When a mapmarker is clicked, it animate grows to 50x50 thumbnail or multi post icon
+
+5. There is zero delay when changing hover state of mapmarkers and there is no need to move into a blank area to reset
+
+6. There must be only one source of truth for hover/click triggers and that must be the mapmarker or map card.
+
+7. Map cards are just decorations that sit behind the mapmarkers. The z-indexes for all components should be listed in the zindex table of style.css
+
+8. Ask questions every step of the way to add to this list. Never guess. Do not name functions or anything before asking what to name things.
+
+IMPLEMENTATION NOTES:
+=====================
+
+- Map cards will be dealt with AFTER mapmarkers are working properly
+- Everything will be sprite-based to avoid DOM conflicts and flickering
+- Preload all icons and map card pills once at the beginning of first map load for faster/smoother loading
+- Function names: prefix all with "mapmarker" (e.g., mapmarkerInit, mapmarkerHandleHover, etc.)
+
+SPRITE ELEMENTS - 10 COMPONENTS
+==================================
+
+The map marker system uses 10 sprite elements rendered via Mapbox's `symbol-sort-key` system (not CSS z-index). 
+The sort-key numbers correspond to the element order (1-10), where lower numbers render below higher numbers.
+
+PILL IMAGES:
+- Small base pill: `150x40-pill-70.webp` (150×40px)
+- Small accent/hover pill: `225x60-pill-2f3b73.webp` (resized to 150×40px for small cards)
+- Big map card pill: `225x60-pill-2f3b73.webp` (225×60px)
+
+MULTI-POST ICON:
+- `multi-post-icon-50.webp` - Used for multi-post markers
+  - Small map cards: 30×30px
+  - Big map cards: 50×50px
+
+NOTE: Pill image paths should not be hardcoded - please confirm if these should be stored in the database or configuration.
+
+10 SPRITE ELEMENTS WITH SORT-KEYS (also represents layer order priority):
+
+| # | Element Name | Dimensions | symbol-sort-key | Layer | Layer Order Priority | Notes |
+|---|--------------|------------|----------------|-------|---------------------|--------|
+| 1 | Small map card base pill | 150×40px | 1 | small-map-card-pill | 1 (bottom) | Default pill background |
+| 2 | Small map card accent pill | 150×40px | 2 | big-map-card-pill | 2 | Hover/clicked pill (resized from 225×60) |
+| 3 | Small map card label | 2 lines, 100px max width | 3 | small-map-card-label | 1 (bottom) | Post title (2 lines) |
+| 4 | Small multi-post map card label | 2 lines, 100px max width | 4 | small-map-card-label | 1 (bottom) | Number of posts + venue name |
+| 5 | Big map card pill | 225×60px | 5 | big-map-card-pill | 1 (bottom) | Large pill background |
+| 6 | Big map card label | 3 lines, 145px max width | 6 | small-map-card-label | 1 (bottom) | Post title + venue name |
+| 7 | Big multi-post map card label | 3 lines, 145px max width | 7 | small-map-card-label | 1 (bottom) | Number of posts + venue + city + country |
+| 8 | Mapmarker icon | 30×30px | 8 | mapmarker-icon | 3 (top) | Single post icon - MUST be added/moved after label layers |
+| 9 | Multi-post mapmarker icon | 30×30px (small) / 50×50px (big) | 9 | mapmarker-icon | 3 (top) | Uses `multi-post-icon-50.webp` - MUST be added/moved after label layers |
+| 10 | Mapmarker thumbnail | 50×50px | 10 | mapmarker-icon (future) | 3 (top) | Post thumbnail image |
+
+ANIMATION NOTE:
+- Animation grow has never worked, so these 10 elements will be used as-is (no size transitions)
+
+SPRITE Z-INDEX SYSTEM:
+- CRITICAL: Layer order OVERRIDES sort-key in Mapbox GL. Layers added/moved later always render on top, regardless of sort-key values.
+- All elements use Mapbox `symbol-sort-key` for z-index/stacking order (1-10, lower numbers render below)
+- `symbol-z-order` is set to `'auto'` to allow sort-key to control stacking (not 'viewport-y')
+- Layer order is PRIMARY: mapmarker-icon layer MUST be added/moved AFTER small-map-card-pill layers to render on top
+- Sort-key is SECONDARY: Only works when layers are in correct order or within the same layer
+- When cards stack, features with higher feature IDs should render on top of features with lower IDs
+- IMPORTANT: Always move mapmarker-icon layer after label layers using map.moveLayer() to ensure correct stacking
+
+MULTI-POST MARKERS:
+- Always use multi-post icon (never thumbnails)
+- Simply grow from 30px to 50px on click
+- No thumbnail switching for multi-post markers
+
+THUMBNAIL LOADING:
+- Use picsum CDN for 50x50 thumbnails for mapmarkers (temporary, will use Cloudflare later)
+- Thumbnails are 50x50 but displayed at 30x30 on hover, 50x50 when clicked/active
+- Thumbnails should ONLY load on hover/click (lazy loading, no preloading)
+- Icons must remain visible until thumbnails are fully loaded to prevent flicker
+- Cloudflare will eventually provide multiple sized thumbnails (post card size, post size, 50x50 for mapmarkers)
+
+ASSET PRELOADING:
+- Mapmarker icons and the two pill images should be preloaded when zoom level reaches 8 for the first time
+- This avoids initial website loading delays
+- Do NOT preload on initial page load, only when zoom >= 8 is reached
+
+SPRITE POSITIONING SPECIFICATION
+==================================
+
+ARCHITECTURE:
+- All 10 elements use separate sprites (no composite sprites)
+- Each sprite has its own precise hit area matching visual size
+- Labels never trigger events (they're visual only, part of pill layers)
+
+VERTICAL POSITIONING:
+- All elements are vertically centered to lat/lng point
+
+HORIZONTAL POSITIONING (left edge distances from lat/lng):
+- Icons (30×30px): Center at 0px (centered on lat/lng)
+- Small pills (150×40px): Left edge at -20px from lat/lng
+- Big pills (225×60px): Left edge at -35px from lat/lng
+- Small labels (100×30px invisible rectangle): Left edge at 20px from lat/lng
+- Big labels (155×50px invisible rectangle): Left edge at 30px from lat/lng
+
+TRIGGER LAYERS:
+- Icons: Only trigger when pills are hidden (map_card_display === 'hover_only')
+- Pills: Trigger when visible (map_card_display === 'always')
+- Labels: Never trigger (visual only)
+
+INTERACTIVE LAYERS CONFIGURATION:
+- When map_card_display === 'hover_only': Only mapmarker-icon layer (pills hidden, icon visible)
+- When map_card_display === 'always': Only pill layers (pills visible, icons not interactive)
+
+ALIGNMENT RULES:
+- No offsets (icon-translate, icon-offset, text-offset are removed)
+- All elements anchor to same lat/lng point
+- Horizontal positioning via anchor point positioning only
+
+BIDIRECTIONAL INTERACTION:
+- Map markers ↔ Post cards: Hover and click work both ways
+- Post card hover/click highlights corresponding map marker
+- Map marker hover/click highlights corresponding post card
+
