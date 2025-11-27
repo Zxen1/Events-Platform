@@ -18439,6 +18439,11 @@ function makePosts(){
           ? `post:${post.id}::${key}::${entry.index}`
           : `post:${post.id}::${entry.index}`;
         const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
+        // Big label: 3 lines - title (2 lines) + venue name (1 line)
+        const bigLabelTitleLines = splitTextAcrossLines(post.title || '', 145, 2);
+        while(bigLabelTitleLines.length < 2){ bigLabelTitleLines.push(''); }
+        const bigLabelVenue = venueName ? shortenMarkerLabelText(venueName, 145) : '';
+        const bigLabel = bigLabelVenue ? `${bigLabelTitleLines[0]}\n${bigLabelTitleLines[1]}\n${bigLabelVenue}` : `${bigLabelTitleLines[0]}\n${bigLabelTitleLines[1]}`;
         return {
           type:'Feature',
           id: featureId,
@@ -18447,6 +18452,7 @@ function makePosts(){
             featureId,
             title: post.title,
             label: combinedLabel,
+            bigLabel: bigLabel,
             labelLine1: labelLines.line1,
             labelLine2: labelLines.line2,
             venueName,
@@ -18485,6 +18491,11 @@ function makePosts(){
         const multiCountLabel = `${multiCount} posts here`;
         const multiPostText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
         const combinedLabel = multiPostText ? `${multiCountLabel}\n${multiPostText}` : multiCountLabel;
+        // Big label: 3 lines - "X posts here" + venue name + city + country
+        const bigLabelVenue = venueName ? shortenMarkerLabelText(venueName, 145) : '';
+        const bigLabelCityCountry = post.city && post.country ? `${post.city}, ${post.country}` : (post.city || post.country || '');
+        const bigLabelCityCountryShort = bigLabelCityCountry ? shortenMarkerLabelText(bigLabelCityCountry, 145) : '';
+        const bigLabel = [multiCountLabel, bigLabelVenue, bigLabelCityCountryShort].filter(Boolean).join('\n');
         // Include venueKey in sprite source to ensure unique sprite IDs for different venues
         // Even if they have same icon, count, and venue name
         const featureId = `venue:${group.key}::${post.id}`;
@@ -18498,10 +18509,12 @@ function makePosts(){
             featureId,
             title: multiCountLabel,
             label: combinedLabel,
+            bigLabel: bigLabel,
             labelLine1: multiCountLabel,
             labelLine2: multiPostText,
             venueName,
             city: post.city,
+            country: post.country,
             cat: post.category,
             sub: multiIconId,
             baseSub,
@@ -18660,10 +18673,11 @@ function makePosts(){
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
+      // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -18758,6 +18772,60 @@ function makePosts(){
           console.error('Failed to update label text layer:', e);
         }
       }
+      
+      // Add big map card text labels (3 lines, 145px max width, sort-keys 6, 7)
+      // Big labels: left edge at 35px from lat/lng (inside big pill, which goes from -35px to 190px)
+      // text-offset uses em units, not pixels. With text-size 12, 35px = 35/12 = 2.92em
+      // Big labels only show when isHighlighted is true (when big pill is visible)
+      const bigLabelTextAreaWidthPx = 145; // For big map cards
+      const bigLabelOffsetEm = 35 / textSize; // 35px in em units
+      const bigLabelTextLayerId = 'big-map-card-label';
+      const bigLabelFilter = ['all', ...markerLabelBaseConditions, highlightedStateExpression];
+      if(!map.getLayer(bigLabelTextLayerId)){
+        try{
+          map.addLayer({
+            id: bigLabelTextLayerId,
+            type:'symbol',
+            source:'posts',
+            filter: bigLabelFilter,
+            minzoom: markerLabelMinZoom,
+            maxzoom: 24,
+            layout:{
+              'text-field': ['coalesce', ['get', 'bigLabel'], ''],
+              'text-size': textSize,
+              'text-line-height': 1.2,
+              'text-max-width': bigLabelTextAreaWidthPx,
+              'text-anchor': 'left',
+              'text-justify': 'left',
+              'text-offset': [bigLabelOffsetEm, 0],
+              'text-allow-overlap': true,
+              'text-ignore-placement': true,
+              'text-pitch-alignment': 'viewport',
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 7, 6]
+            },
+            paint:{
+              'text-color': '#ffffff',
+              'text-opacity': mapCardDisplay === 'hover_only' ? 0 : 1,
+              'text-halo-color': 'rgba(0,0,0,0.4)',
+              'text-halo-width': 1,
+              'text-halo-blur': 1
+            }
+          });
+        }catch(e){
+          console.error('Failed to add big label text layer:', e);
+        }
+      }
+      if(map.getLayer(bigLabelTextLayerId)){
+        try{ 
+          // Only update properties that can change (filter and sort-key based on data)
+          map.setFilter(bigLabelTextLayerId, bigLabelFilter);
+          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 7, 6]);
+        }catch(e){
+          console.error('Failed to update big label text layer:', e);
+        }
+      }
+      
       // Create marker-icon layer (sprites are already loaded above)
       const markerIconFilter = ['all',
         ['!',['has','point_count']],
@@ -18827,6 +18895,9 @@ function makePosts(){
         if(map.getLayer('small-map-card-label')){
           try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
         }
+        if(map.getLayer('big-map-card-label')){
+          try{ map.setPaintProperty('big-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
+        }
         // marker-icon visibility/opacity handled in final ordering section
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
@@ -18843,13 +18914,22 @@ function makePosts(){
           map.moveLayer('mapmarker-icon'); // Move icons to top
         }catch(e){}
       }
-      // Move label layer to be above pills but below icons
+      // Move label layers to be above pills but below icons
       if(map.getLayer('small-map-card-label')){
         try{
           if(map.getLayer('mapmarker-icon')){
             map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
           } else {
             map.moveLayer('small-map-card-label'); // Move to top if no icon layer
+          }
+        }catch(e){}
+      }
+      if(map.getLayer('big-map-card-label')){
+        try{
+          if(map.getLayer('mapmarker-icon')){
+            map.moveLayer('big-map-card-label', 'mapmarker-icon'); // Big labels below icons
+          } else {
+            map.moveLayer('big-map-card-label'); // Move to top if no icon layer
           }
         }catch(e){}
       }
