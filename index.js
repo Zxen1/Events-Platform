@@ -3058,17 +3058,12 @@ let __notifyMapOnInteraction = null;
       }
     };
     
-    // Add postcard hover handlers using event delegation on document
-    document.addEventListener('mouseenter', (e) => {
-      if(e.target.closest && e.target.closest('.post-card')){
-        handlePostcardHover(e);
-      }
-    }, true);
-    document.addEventListener('mouseleave', (e) => {
-      if(e.target.closest && e.target.closest('.post-card')){
-        handlePostcardLeave(e);
-      }
-    }, true);
+    // Add postcard hover handlers using event delegation on .post-board
+    const postsWideElForHover = document.querySelector('.post-board');
+    if(postsWideElForHover){
+      postsWideElForHover.addEventListener('mouseenter', handlePostcardHover, true);
+      postsWideElForHover.addEventListener('mouseleave', handlePostcardLeave, true);
+    }
 
     function hashString(str){
       let hash = 0;
@@ -18671,6 +18666,20 @@ function makePosts(){
           }catch(e){}
         }
       }
+      
+      // Ensure pill sprites are loaded before creating layers
+      const pillSprites = await ensureMarkerLabelPillSprites();
+      if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
+        try{
+          map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+        }catch(e){}
+      }
+      if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+        try{
+          map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+        }catch(e){}
+      }
+      
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
       const markerLabelBaseConditions = [
