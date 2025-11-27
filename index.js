@@ -3037,6 +3037,38 @@ let __notifyMapOnInteraction = null;
       });
       updateMapFeatureHighlights(highlightTargets);
     }
+    
+    // Add postcard hover handlers to trigger mapcard highlight
+    const handlePostcardHover = (e) => {
+      const postcard = e.target.closest('.post-card');
+      if(!postcard || !postcard.dataset || !postcard.dataset.id) return;
+      const id = String(postcard.dataset.id);
+      hoveredPostIds = [{ id: id, venueKey: null }];
+      updateSelectedMarkerRing();
+    };
+    
+    const handlePostcardLeave = (e) => {
+      const postcard = e.target.closest('.post-card');
+      if(!postcard) return;
+      // Only clear if we're actually leaving the postcard (not moving to a child)
+      const relatedTarget = e.relatedTarget;
+      if(!relatedTarget || !postcard.contains(relatedTarget)){
+        hoveredPostIds = [];
+        updateSelectedMarkerRing();
+      }
+    };
+    
+    // Add postcard hover handlers using event delegation on document
+    document.addEventListener('mouseenter', (e) => {
+      if(e.target.closest && e.target.closest('.post-card')){
+        handlePostcardHover(e);
+      }
+    }, true);
+    document.addEventListener('mouseleave', (e) => {
+      if(e.target.closest && e.target.closest('.post-card')){
+        handlePostcardLeave(e);
+      }
+    }, true);
 
     function hashString(str){
       let hash = 0;
@@ -18651,12 +18683,16 @@ function makePosts(){
       const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      // Small pill: Use expression to switch between default and accent sprites based on isHighlighted, opacity always 1
+      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+      // Small pill: Use expression to switch between default and accent sprites based on isHighlighted
+      // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
+      // In always mode, always show (opacity 1)
       const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
-      const smallPillOpacity = 1;
+      const smallPillOpacity = mapCardDisplay === 'hover_only' 
+        ? ['case', highlightedStateExpression, 1, 0]
+        : 1;
       // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
       // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
@@ -18824,12 +18860,16 @@ function makePosts(){
       
       function updateMapCardLayerOpacity(displayMode){
         if(!map) return;
-        // Small pill always has opacity 1 (sprite switching handles visibility via expression)
-        // For hover_only mode, the sprite expression will handle showing/hiding via icon-image switching
+        const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+        // Small pill: in hover_only mode, only show when highlighted; in always mode, always show
         if(map.getLayer('small-map-card-pill')){
-          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', 1); }catch(e){}
+          const smallPillOpacity = displayMode === 'hover_only' 
+            ? ['case', highlightedStateExpression, 1, 0]
+            : 1;
+          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
         }
         // Hide labels in hover_only mode (same as pills)
+        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
         if(map.getLayer('small-map-card-label')){
           try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
         }
