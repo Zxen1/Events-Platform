@@ -1598,8 +1598,8 @@ button[aria-expanded="true"] .results-arrow{
   gap:16px;
   max-width:400px;
   width:100%;
-  background:#1a1a1a;
-  border:1px solid var(--border);
+  background:#222222;
+  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:16px;
   box-shadow:0 8px 24px rgba(0,0,0,0.4);
@@ -7140,8 +7140,8 @@ html, body { cursor: auto !important; }
             #tab-forms .category-edit-panel,
             #tab-forms .subcategory-edit-panel,
             #tab-forms .field-edit-panel{
-              background:#1a1a1a;
-              border:1px solid var(--border);
+              background:#222222;
+              border:1px solid rgba(255,255,255,0.15);
               border-radius:8px;
               padding:16px;
               box-shadow:0 8px 24px rgba(0,0,0,0.4);
@@ -8992,6 +8992,11 @@ html, body { cursor: auto !important; }
               max-width:400px;
               width:100%;
               box-sizing:border-box;
+              background:#222222;
+              border:1px solid rgba(255,255,255,0.15);
+              border-radius:8px;
+              padding:16px;
+              box-shadow:0 8px 24px rgba(0,0,0,0.4);
             }
             
             #tab-messages .iconpicker-container{
