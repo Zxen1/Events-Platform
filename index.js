@@ -18702,18 +18702,9 @@ function makePosts(){
         if(!layerExists){
           return;
         }
+        // Only update properties that can change (filter and opacity)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', finalIconSize); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-offset', finalIconOffset); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-z-order','auto'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
       
       // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
@@ -18758,28 +18749,9 @@ function makePosts(){
       }
       if(map.getLayer(labelTextLayerId)){
         try{ 
+          // Only update properties that can change (filter and sort-key based on data)
           map.setFilter(labelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(labelTextLayerId, 'text-field', ['coalesce', ['get', 'label'], '']);
-          map.setLayoutProperty(labelTextLayerId, 'text-size', textSize);
-          map.setLayoutProperty(labelTextLayerId, 'text-line-height', 1.2);
-          map.setLayoutProperty(labelTextLayerId, 'text-max-width', 100);
-          map.setLayoutProperty(labelTextLayerId, 'text-anchor', 'left');
-          map.setLayoutProperty(labelTextLayerId, 'text-offset', [smallLabelOffsetEm, 0]);
-          map.setLayoutProperty(labelTextLayerId, 'text-allow-overlap', true);
-          map.setLayoutProperty(labelTextLayerId, 'text-ignore-placement', true);
-          map.setLayoutProperty(labelTextLayerId, 'text-pitch-alignment', 'viewport');
-          map.setLayoutProperty(labelTextLayerId, 'symbol-z-order', 'auto');
           map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
-          map.setLayerZoomRange(labelTextLayerId, markerLabelMinZoom, 24);
-          // Move label text layer to be right after big-map-card-pill layer so it renders above pills
-          // Layer order determines rendering: later layers render on top
-          try{ 
-            if(map.getLayer('big-map-card-pill')){
-              map.moveLayer(labelTextLayerId, 'big-map-card-pill');
-            } else if(map.getLayer('small-map-card-pill')){
-              map.moveLayer(labelTextLayerId, 'small-map-card-pill');
-            }
-          }catch(e){}
         }catch(e){
           console.error('Failed to update label text layer:', e);
         }
@@ -18825,28 +18797,13 @@ function makePosts(){
       }
       if(map.getLayer(markerIconLayerId)){
         try{
-          map.setLayoutProperty(markerIconLayerId, 'visibility', 'visible');
-          map.setPaintProperty(markerIconLayerId, 'icon-opacity', 1);
+          // Only update properties that can change (filter and icon-image based on data)
           map.setFilter(markerIconLayerId, markerIconFilter);
           map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-          map.setLayoutProperty(markerIconLayerId, 'icon-anchor', 'center');
-          map.setLayoutProperty(markerIconLayerId, 'icon-offset', [0, 0]);
-          map.setLayoutProperty(markerIconLayerId, 'symbol-z-order', 'auto');
-          map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', 8);
         }catch(e){}
       }
       
-      ALL_MARKER_LAYER_IDS.forEach(id=>{
-        if(id !== 'mapmarker-icon' && map.getLayer(id)){
-          try{ map.moveLayer(id); }catch(e){}
-        }
-      });
-      // Move marker-icon layer to top (above map cards)
-      if(map.getLayer('mapmarker-icon')){
-        try{ 
-          map.moveLayer('mapmarker-icon');
-        }catch(e){}
-      }
+      // Layer ordering will be set at the end after all layers are created
       [
         ['small-map-card-pill','icon-opacity-transition'],
         ['big-map-card-pill','icon-opacity-transition']
@@ -18864,27 +18821,30 @@ function makePosts(){
         if(map.getLayer('small-map-card-pill')){
           try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', markerLabelBaseOpacity); }catch(e){}
         }
-        // Ensure marker-icon is always visible at 100% opacity
-        if(map.getLayer('mapmarker-icon')){
-          try{ 
-            map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
-            map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
-          }catch(e){}
-        }
+        // marker-icon visibility/opacity handled in final ordering section
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
       window.getMapInstance = () => map; // Expose map instance getter
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Ensure marker-icon layer is visible and on top after map card setup
+      // Final layer ordering (bottom to top): pills -> labels -> icons
+      // Ensure marker-icon layer is visible and on top
       if(map.getLayer('mapmarker-icon')){
         try{
           map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
           map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
-          map.setLayoutProperty('mapmarker-icon', 'symbol-sort-key', 8);
-          map.setLayoutProperty('mapmarker-icon', 'symbol-z-order', 'auto');
-          map.moveLayer('mapmarker-icon'); // Move to top
+          map.moveLayer('mapmarker-icon'); // Move icons to top
+        }catch(e){}
+      }
+      // Move label layer to be above pills but below icons
+      if(map.getLayer('small-map-card-label')){
+        try{
+          if(map.getLayer('mapmarker-icon')){
+            map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
+          } else {
+            map.moveLayer('small-map-card-label'); // Move to top if no icon layer
+          }
         }catch(e){}
       }
       
