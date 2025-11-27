@@ -1736,10 +1736,6 @@ let __notifyMapOnInteraction = null;
           throw err; // Or handle the error appropriately without using defaults
         }
       })();
-      let markersLoaded = false;
-      window.__markersLoaded = false;
-      const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
-      const SPRITE_MARKER_CLASS = 'map--sprite-markers';
 
       // --- Section 5: Marker Clustering (Balloons) ---
       // Balloon icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
@@ -5635,8 +5631,6 @@ function makePosts(){
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
       const isMidZoom = false;
       const isSpriteZoom = false;
-      container.classList.toggle(MID_ZOOM_MARKER_CLASS, isMidZoom);
-      container.classList.toggle(SPRITE_MARKER_CLASS, isSpriteZoom);
     }
 
     function updateLayerVisibility(zoom){
@@ -5669,13 +5663,6 @@ function makePosts(){
       updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
       if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= 12){
-      }
-      if(!markersLoaded){
-        const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-        if(Number.isFinite(preloadCandidate) && preloadCandidate >= 7.8){
-          markersLoaded = true;
-          window.__markersLoaded = true;
-        }
       }
     }
 
@@ -17103,7 +17090,6 @@ function makePosts(){
             patchMapboxStyleArtifacts(map);
           }
         });
-        ensureMapIcon = attachIconLoader(map);
         const pendingStyleImageRequests = new Map();
         const handleStyleImageMissing = (evt) => {
           const imageId = evt && evt.id;
@@ -17121,7 +17107,7 @@ function makePosts(){
           if(pendingStyleImageRequests.has(imageId)){
             return;
           }
-          const result = generateMarkerImageFromId(imageId, map, { ensureIcon: ensureMapIcon });
+          const result = null;
           if(result && typeof result.then === 'function'){
             const task = result.then(output => {
               if(!output){
@@ -17294,15 +17280,12 @@ function makePosts(){
         }
       });
       map.on('zoomend', ()=>{
-        if(markersLoaded) return;
         if(!map || typeof map.getZoom !== 'function') return;
         let currentZoom = NaN;
         try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
         if(!Number.isFinite(currentZoom) || currentZoom < 7.8){
           return;
         }
-        markersLoaded = true;
-        window.__markersLoaded = true;
       });
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
@@ -17325,13 +17308,6 @@ function makePosts(){
         updatePostPanel();
         applyFilters();
         updateZoomState(getZoomFromEvent());
-        if(!markersLoaded){
-          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-          if(Number.isFinite(zoomLevel) && zoomLevel >= 7.8){
-            markersLoaded = true;
-            window.__markersLoaded = true;
-          }
-        }
         checkLoadPosts();
       });
 
@@ -17643,10 +17619,8 @@ function makePosts(){
       };
     }
 
-      if(!map){
-        return;
-      }
-      if(addingPostSource){
+    function renderLists(list){
+      if(spinning || !postsLoaded) return;
         pendingAddPostSource = true;
         return;
       }
