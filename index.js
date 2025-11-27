@@ -1299,11 +1299,19 @@ let __notifyMapOnInteraction = null;
     ];
     
     // Load hover pill if available, otherwise use accent as fallback
+    // Make hover pill loading resilient - if it fails, fallback to accent
+    let hoverPromise = null;
     if(hoverUrl){
-      imagePromises.push(loadMarkerLabelImage(hoverUrl));
+      hoverPromise = loadMarkerLabelImage(hoverUrl).catch(err => {
+        console.warn('Failed to load hover pill image, using accent as fallback:', err);
+        return null; // Will fallback to accentImg
+      });
     }
     
-    const promise = Promise.all(imagePromises).then(([baseImg, accentImg, hoverImg]) => {
+    const promise = Promise.all([
+      ...imagePromises,
+      hoverPromise || Promise.resolve(null)
+    ]).then(([baseImg, accentImg, hoverImg]) => {
       return { 
         base: baseImg, 
         highlight: accentImg,
@@ -2657,14 +2665,14 @@ let __notifyMapOnInteraction = null;
       const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
       const expandedPostId = openPostId || clickedPostId;
       
-      // Reset all features to not expanded
+      // Reset all features to not active
       highlightedFeatureKeys.forEach(entry => {
         try{ 
-          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
+          map.setFeatureState({ source: entry.source, id: entry.id }, { isActive: false }); 
         }catch(err){}
       });
       
-      // Set expanded state for clicked/open post
+      // Set active state for clicked/open post
       if(expandedPostId){
         const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
         if(entries && entries.length){
@@ -2674,7 +2682,7 @@ let __notifyMapOnInteraction = null;
             const featureId = entry.id;
             if(featureId !== undefined && featureId !== null){
               try{ 
-                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true }); 
+                map.setFeatureState({ source: source, id: featureId }, { isActive: true }); 
               }catch(err){}
             }
           });
@@ -18751,6 +18759,7 @@ function makePosts(){
       const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       // Small pill: Switch to hover pill sprite when highlighted, otherwise use base sprite
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
@@ -18759,8 +18768,8 @@ function makePosts(){
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
-      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      // Big pill should only show when post is active/clicked (isActive), not on hover
+      const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
       const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
       // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
@@ -18812,7 +18821,7 @@ function makePosts(){
         // Update properties that can change (filter, opacity, and icon-image for small pill)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        // Update icon-image for small pill layer (always uses small-map-card-pill, never switches)
+        // Update icon-image for small pill layer (switches to hover pill when highlighted)
         if(id === 'small-map-card-pill' && iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
         }
@@ -18900,7 +18909,7 @@ function makePosts(){
             },
             paint:{
               'text-color': '#ffffff',
-              'text-opacity': ['case', highlightedStateExpression, 1, 0], // Only show when highlighted/active
+              'text-opacity': ['case', activeStateExpression, 1, 0], // Only show when active/clicked (isActive), not on hover
               'text-halo-color': 'rgba(0,0,0,0.4)',
               'text-halo-width': 1,
               'text-halo-blur': 1
