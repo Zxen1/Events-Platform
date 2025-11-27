@@ -18690,14 +18690,11 @@ function makePosts(){
       const markerLabelBaseOpacity = ['case', hoveredStateExpression, 0, baseOpacityWhenNotHovered];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Big pill: hover shows small (0.6667 = 150×40px), active shows big (1.0 = 225×60px)
-      // When hovered but not active: 0.6667, when hovered AND active: 1.0
-      const bigPillSizeExpression = ['case', activeStateExpression, 1.0, 0.6667];
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-30, 0], iconSize: bigPillSizeExpression }
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-30, 0] }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconOffset, iconSize }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         const finalIconOffset = iconOffset || [0, 0];
         let layerExists = !!map.getLayer(id);
