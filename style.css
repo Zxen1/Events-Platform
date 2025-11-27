@@ -1721,6 +1721,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:row;
   align-items:center;
   gap:12px;
+  flex-wrap:wrap;
 }
 
 #tab-map .iconpicker-button{
@@ -7583,7 +7584,26 @@ html, body { cursor: auto !important; }
             }
             
             /* Map and Messages tab iconpicker popup - same z-index as formbuilder */
-            #tab-map .icon-picker-popup,
+            #tab-map .icon-picker-popup{
+              position:absolute;
+              top:100%;
+              left:0;
+              margin-top:8px;
+              border-radius:10px;
+              border:1px solid var(--border);
+              background:rgba(10,10,20,0.95);
+              box-shadow:0 18px 40px rgba(0,0,0,0.45);
+              padding:12px;
+              z-index:var(--forms-layer-popover, 80);
+              width:400px;
+              max-width:400px;
+              min-width:400px;
+              max-height:400px;
+              overflow-y:auto;
+              overflow-x:hidden;
+            }
+            
+            
             #tab-messages .icon-picker-popup{
               position:absolute;
               top:100%;
