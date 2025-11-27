@@ -1364,12 +1364,31 @@ let __notifyMapOnInteraction = null;
     });
   }
 
-  function closeWelcomeModalIfOpen(){
-    const welcome = document.getElementById('welcome-modal');
-    if(welcome && welcome.classList.contains('show')){
-      closePanel(welcome);
-    }
+const panelStack = [];
+
+function openPanel(panel){
+  if(!panel) return;
+  panel.classList.add('show');
+  panel.removeAttribute('hidden');
+  if(!panelStack.includes(panel)){
+    panelStack.push(panel);
   }
+}
+
+function closePanel(panel){
+  if(!panel) return;
+  panel.classList.remove('show');
+  panel.setAttribute('hidden', '');
+  const idx = panelStack.indexOf(panel);
+  if(idx !== -1) panelStack.splice(idx, 1);
+}
+
+function closeWelcomeModalIfOpen(){
+  const welcome = document.getElementById('welcome-modal');
+  if(welcome && welcome.classList.contains('show')){
+    closePanel(welcome);
+  }
+}
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -2167,7 +2186,6 @@ let __notifyMapOnInteraction = null;
     let touchMarker = null;
     let activePostId = null;
     let selectedVenueKey = null;
-    const panelStack = [];
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
     const $ = (sel, root=document) => root.querySelector(sel);
@@ -15419,6 +15437,61 @@ function makePosts(){
           updateModeToggle();
         }
       });
+
+      const filterBtn = $('#filterBtn');
+      const memberBtn = $('#memberBtn');
+      const adminBtn = $('#adminBtn');
+      const fullscreenBtn = $('#fullscreenBtn');
+      const filterPanel = document.getElementById('filterPanel');
+      const memberPanel = document.getElementById('memberPanel');
+      const adminPanel = document.getElementById('adminPanel');
+
+      if(filterBtn && filterPanel){
+        filterBtn.addEventListener('click', () => {
+          const isOpen = filterPanel.classList.contains('show');
+          if(isOpen){
+            closePanel(filterPanel);
+          } else {
+            openPanel(filterPanel);
+          }
+        });
+      }
+
+      if(memberBtn && memberPanel){
+        memberBtn.addEventListener('click', () => {
+          const isOpen = memberPanel.classList.contains('show');
+          if(isOpen){
+            closePanel(memberPanel);
+          } else {
+            openPanel(memberPanel);
+          }
+        });
+      }
+
+      if(adminBtn && adminPanel){
+        adminBtn.addEventListener('click', () => {
+          const isOpen = adminPanel.classList.contains('show');
+          if(isOpen){
+            closePanel(adminPanel);
+          } else {
+            openPanel(adminPanel);
+          }
+        });
+      }
+
+      if(fullscreenBtn){
+        fullscreenBtn.addEventListener('click', () => {
+          if(!document.fullscreenElement){
+            document.documentElement.requestFullscreen().catch(err => {
+              console.error('Error attempting to enable fullscreen:', err);
+            });
+          } else {
+            document.exitFullscreen().catch(err => {
+              console.error('Error attempting to exit fullscreen:', err);
+            });
+          }
+        });
+      }
 
     function buildDetail(p, existingCard = null, isRecentsBoard = false){
       const locationList = Array.isArray(p.locations) ? p.locations : [];
