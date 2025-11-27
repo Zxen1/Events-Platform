@@ -2098,12 +2098,6 @@ let __notifyMapOnInteraction = null;
                 });
               });
               
-              // Initialize icon folder input
-              const iconFolderInput = document.getElementById('adminIconFolder');
-              if(iconFolderInput){
-                iconFolderInput.value = window.iconFolder;
-              }
-              
               // Initialize admin icon folder input
               const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
               if(adminIconFolderInput){
@@ -21969,16 +21963,6 @@ function openPanel(m){
         if(!isNaN(speedValue)) settings.spin_speed = speedValue;
       }
       
-      // Include icon folder setting
-      const iconFolderInput = document.getElementById('adminIconFolder');
-      if(iconFolderInput){
-        const iconFolderValue = iconFolderInput.value.trim();
-        if(iconFolderValue){
-          settings.icon_folder = iconFolderValue;
-          window.iconFolder = iconFolderValue;
-        }
-      }
-      
       // Include admin icon folder setting
       const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
       if(adminIconFolderInput){
@@ -22118,18 +22102,6 @@ function openPanel(m){
         autoSaveMapSettings();
       });
     });
-    
-    // Auto-save icon folder setting on blur
-    const iconFolderInput = document.getElementById('adminIconFolder');
-    if(iconFolderInput && !iconFolderInput.dataset.autoSaveAdded){
-      iconFolderInput.dataset.autoSaveAdded = 'true';
-      iconFolderInput.addEventListener('blur', ()=>{
-        autoSaveMapSettings();
-      });
-      iconFolderInput.addEventListener('change', ()=>{
-        autoSaveMapSettings();
-      });
-    }
     
     // Auto-save admin icon folder setting on blur
     const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
