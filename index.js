@@ -1191,8 +1191,8 @@ let __notifyMapOnInteraction = null;
   function getMarkerLabelLines(p){
     const title = p && p.title ? p.title : '';
     // Use 100px width for small map cards (non-multi-post venue cards only)
-    const isMultiVenue = Boolean(p && (p.isMultiVenue || (p.multiCount && Number(p.multiCount) > 1) || (Array.isArray(p.multiPostIds) && p.multiPostIds.length > 1)));
-    const widthForLines = isMultiVenue ? markerLabelTextAreaWidthPx : markerLabelTextAreaWidthPxSmall;
+    const isMultiPost = Boolean(p && (p.isMultiPost || (p.multiCount && Number(p.multiCount) > 1) || (Array.isArray(p.multiPostIds) && p.multiPostIds.length > 1)));
+    const widthForLines = isMultiPost ? markerLabelTextAreaWidthPx : markerLabelTextAreaWidthPxSmall;
     const markerTitleLines = splitTextAcrossLines(title, widthForLines, 2);
     while(markerTitleLines.length < 2){ markerTitleLines.push(''); }
     const cardTitleLines = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
@@ -18456,7 +18456,7 @@ function makePosts(){
             baseSub,
             venueKey: key,
             locationIndex: entry.index,
-            isMultiVenue: false
+            isMultiPost: false
           },
           geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
         };
@@ -18507,7 +18507,7 @@ function makePosts(){
             baseSub,
             venueKey: group.key,
             locationIndex: entry.index,
-            isMultiVenue: true,
+            isMultiPost: true,
             multiCount,
             multiPostIds: multiIds
           },
@@ -18527,7 +18527,7 @@ function makePosts(){
                 f.geometry.coordinates.length >= 2 && feature.geometry.coordinates.length >= 2 &&
                 Math.abs(f.geometry.coordinates[0] - feature.geometry.coordinates[0]) < 0.0001 &&
                 Math.abs(f.geometry.coordinates[1] - feature.geometry.coordinates[1]) < 0.0001 &&
-                f.properties && f.properties.isMultiVenue && feature.properties && feature.properties.isMultiVenue
+                f.properties && f.properties.isMultiPost && feature.properties && feature.properties.isMultiPost
               );
               if(!existing){
                 features.push(feature);
@@ -18743,7 +18743,7 @@ function makePosts(){
               'text-ignore-placement': true,
               'text-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiVenue'], 4, 3]
+              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 4, 3]
             },
             paint:{
               'text-color': '#ffffff',
@@ -18769,7 +18769,7 @@ function makePosts(){
           map.setLayoutProperty(labelTextLayerId, 'text-ignore-placement', true);
           map.setLayoutProperty(labelTextLayerId, 'text-pitch-alignment', 'viewport');
           map.setLayoutProperty(labelTextLayerId, 'symbol-z-order', 'auto');
-          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiVenue'], 4, 3]);
+          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
           map.setLayerZoomRange(labelTextLayerId, markerLabelMinZoom, 24);
           // Move label text layer to be right after big-map-card-pill layer so it renders above pills
           // Layer order determines rendering: later layers render on top
@@ -18903,7 +18903,7 @@ function makePosts(){
           if(!normalizedMultiCount){
             normalizedMultiCount = normalizedMultiIds.length;
           }
-          const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiVenue ? 2 : 0);
+          const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiPost ? 2 : 0);
           const isMultiPost = helperMultiCount > 1;
           const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
           
