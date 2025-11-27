@@ -1252,7 +1252,6 @@ let __notifyMapOnInteraction = null;
     function shouldAttachPointer(layer){
       if (!layer || layer.type !== 'symbol') return false;
       if (POINTER_READY_IDS.has(layer.id)) return true;
-      if (typeof layer.source === 'string' && layer.source === 'posts') return true;
       if (layer.metadata && layer.metadata.cursor === 'pointer') return true;
       return false;
     }
@@ -5551,10 +5550,6 @@ function makePosts(){
       hideResultIndicators();
       if(typeof updateResetBtn === 'function'){ updateResetBtn(); }
       if(map){
-        const postsSource = map.getSource && map.getSource('posts');
-        if(postsSource && typeof postsSource.setData === 'function'){
-          postsSource.setData(EMPTY_FEATURE_COLLECTION);
-        }
       }
       updateLayerVisibility(lastKnownZoom);
     }
@@ -17467,156 +17462,6 @@ function makePosts(){
       return entries.filter(entry => entry.key);
     }
 
-    function postsToGeoJSON(list){
-      const features = [];
-      if(!Array.isArray(list) || !list.length){
-        return { type:'FeatureCollection', features };
-      }
-
-      const venueGroups = new Map();
-      const orphanEntries = [];
-
-      list.forEach(p => {
-        if(!p) return;
-        const entries = collectLocationEntries(p);
-        entries.forEach(entry => {
-          if(!entry) return;
-          const key = entry.key;
-          const post = entry.post || p;
-          if(!key){
-            orphanEntries.push({ post, entry });
-            return;
-          }
-          let group = venueGroups.get(key);
-          if(!group){
-            group = { key, entries: [], postIds: new Set() };
-            venueGroups.set(key, group);
-          }
-          group.entries.push({ post, entry });
-          if(post && post.id !== undefined && post.id !== null){
-            const strId = String(post.id);
-            if(strId) group.postIds.add(strId);
-          }
-        });
-      });
-
-      const buildSingleFeature = ({ post, entry }) => {
-        if(!post || !entry) return null;
-        const key = entry.key || '';
-        const baseSub = slugify(post.subcategory);
-        const combinedLabel = post.title || '';
-        const featureId = key
-          ? `post:${post.id}::${key}::${entry.index}`
-          : `post:${post.id}::${entry.index}`;
-        const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
-        return {
-          type:'Feature',
-          id: featureId,
-          properties:{
-            id: post.id,
-            featureId,
-            title: post.title,
-            label: combinedLabel,
-            labelLine1: labelLines.line1,
-            labelLine2: labelLines.line2,
-            venueName,
-            city: post.city,
-            cat: post.category,
-            sub: baseSub,
-            baseSub,
-            venueKey: key,
-            locationIndex: entry.index,
-            isMultiPost: false
-          },
-          geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
-        };
-      };
-
-      const buildMultiFeature = (group) => {
-        if(!group || !group.entries.length) return null;
-        const multiCount = group.postIds.size;
-        if(multiCount <= 1){
-          return group.entries.map(buildSingleFeature).filter(Boolean);
-        }
-        const primary = group.entries[0];
-        if(!primary || !primary.post || !primary.entry) return null;
-        const { post, entry } = primary;
-        const baseSub = slugify(post.subcategory);
-        const multiIconId = 'multi-post-icon';
-        const venueName = (() => {
-          for(const item of group.entries){
-            const candidate = item && item.entry && item.entry.loc && item.entry.loc.venue;
-            if(candidate){
-              return candidate;
-            }
-          }
-          return getPrimaryVenueName(post);
-        })() || '';
-        const multiCountLabel = `${multiCount} posts here`;
-        const multiPostText = shortenText(venueName, 100);
-        const combinedLabel = multiPostText ? `${multiCountLabel}\n${multiPostText}` : multiCountLabel;
-        // Include venueKey in sprite source to ensure unique sprite IDs for different venues
-        // Even if they have same icon, count, and venue name
-        const featureId = `venue:${group.key}::${post.id}`;
-        const coordinates = [entry.lng, entry.lat];
-        const multiIds = Array.from(group.postIds);
-        return [{
-          type:'Feature',
-          id: featureId,
-          properties:{
-            id: post.id,
-            featureId,
-            title: multiCountLabel,
-            label: combinedLabel,
-            labelLine1: multiCountLabel,
-            labelLine2: multiPostText,
-            venueName,
-            city: post.city,
-            cat: post.category,
-            sub: multiIconId,
-            baseSub,
-            venueKey: group.key,
-            locationIndex: entry.index,
-            isMultiPost: true,
-            multiCount,
-            multiPostIds: multiIds
-          },
-          geometry:{ type:'Point', coordinates }
-        }];
-      };
-
-      venueGroups.forEach(group => {
-        const result = buildMultiFeature(group);
-        if(Array.isArray(result)){
-          result.forEach(feature => { 
-            if(feature) {
-              // Prevent duplicate multi-post features - check if feature with same coordinates already exists
-              const existing = features.find(f => 
-                f && f.geometry && feature.geometry &&
-                Array.isArray(f.geometry.coordinates) && Array.isArray(feature.geometry.coordinates) &&
-                f.geometry.coordinates.length >= 2 && feature.geometry.coordinates.length >= 2 &&
-                Math.abs(f.geometry.coordinates[0] - feature.geometry.coordinates[0]) < 0.0001 &&
-                Math.abs(f.geometry.coordinates[1] - feature.geometry.coordinates[1]) < 0.0001 &&
-                f.properties && f.properties.isMultiPost && feature.properties && feature.properties.isMultiPost
-              );
-              if(!existing){
-                features.push(feature);
-              }
-            }
-          });
-        }
-      });
-
-      orphanEntries.forEach(item => {
-        const feature = buildSingleFeature(item);
-        if(feature) features.push(feature);
-      });
-
-      return {
-        type:'FeatureCollection',
-        features
-      };
-    }
 
     function renderLists(list){
       if(spinning || !postsLoaded) return;
@@ -17635,7 +17480,6 @@ function makePosts(){
         }
         if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
         
-        const postsData = postsToGeoJSON(arr);
         const boundsForCount = getVisibleMarkerBoundsForCount();
         const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
         
@@ -17654,7 +17498,6 @@ function makePosts(){
       }
       if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
 
-      const postsData = postsToGeoJSON(arr);
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
 
