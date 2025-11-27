@@ -1719,7 +1719,7 @@ button[aria-expanded="true"] .results-arrow{
   position:relative;
   display:flex;
   flex-direction:row;
-  align-items:center;
+  align-items:flex-start;
   gap:12px;
   flex-wrap:wrap;
 }
@@ -7586,9 +7586,9 @@ html, body { cursor: auto !important; }
             /* Map and Messages tab iconpicker popup - same z-index as formbuilder */
             #tab-map .icon-picker-popup{
               position:absolute;
-              top:100%;
+              top:calc(100% + 10px);
               left:0;
-              margin-top:8px;
+              margin-top:0;
               border-radius:10px;
               border:1px solid var(--border);
               background:rgba(10,10,20,0.95);

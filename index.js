@@ -9272,7 +9272,10 @@ function makePosts(){
           const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
           const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
           let left = triggerRect.left - containerRect.left;
-          let top = triggerRect.bottom - containerRect.top + 8;
+          // Use 10px spacing for map tab, 8px for others
+          const isMapTab = container.closest('#tab-map') !== null;
+          const spacing = isMapTab ? 10 : 8;
+          let top = triggerRect.bottom - containerRect.top + spacing;
           popup.style.left = '0px';
           popup.style.top = '0px';
           const popupRect = popup.getBoundingClientRect();
@@ -9284,9 +9287,9 @@ function makePosts(){
           if(overflowLeft < 8){
             left += 8 - overflowLeft;
           }
-          const desiredBottom = triggerRect.bottom + 8 + popupRect.height;
+          const desiredBottom = triggerRect.bottom + spacing + popupRect.height;
           if(desiredBottom > viewportHeight - 12){
-            const altTop = triggerRect.top - containerRect.top - popupRect.height - 8;
+            const altTop = triggerRect.top - containerRect.top - popupRect.height - spacing;
             if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
               top = Math.max(0, altTop);
             }
