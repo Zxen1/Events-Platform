@@ -1214,17 +1214,7 @@ let __notifyMapOnInteraction = null;
     return lines.line1;
   }
 
-  const MARKER_LABEL_BG_ID = 'small-map-card-pill';
-  const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
-  const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
-  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
-  const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-pill', 'big-map-card-pill'];
-  // Mapbox GL JS enforces a hard limit on the number of images that can be
-  // registered with a style (currently ~1000).
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
-  const markerLabelCompositeStore = new Map();
-  let markerLabelPillImagePromise = null;
-  let markerLabelPillSpriteCache = null;
 
   function nowTimestamp(){
     try{
@@ -1236,217 +1226,11 @@ let __notifyMapOnInteraction = null;
   }
 
 
-  // --- Section 3: Map Card System ---
-  function loadMarkerLabelImage(url){
-    return new Promise((resolve, reject) => {
-      if(!url){
-        reject(new Error('Missing URL'));
-        return;
-      }
-      const img = new Image();
-      try{ img.crossOrigin = 'anonymous'; }catch(err){}
-      img.decoding = 'async';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Failed to load ${url}`));
-      img.src = url;
-      if(img.complete){
-        setTimeout(() => {
-          if(img.naturalWidth > 0 && img.naturalHeight > 0){
-            resolve(img);
-          }
-        }, 0);
-      }
-    });
-  }
-
-  // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds)
-  async function ensureMarkerLabelPillImage(){
-    if(markerLabelPillImagePromise){
-      return markerLabelPillImagePromise;
-    }
-    const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
-    const promise = Promise.all([
-      loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl).catch(() => null)
-    ]).then(([baseImg, accentImg]) => {
-      if(!baseImg){
-        return null;
-      }
-      return { base: baseImg, highlight: accentImg };
-    }).catch(err => {
-      console.error(err);
-      return null;
-    });
-    markerLabelPillImagePromise = promise;
-    promise.then(result => {
-      if(!result){
-        markerLabelPillImagePromise = null;
-      }
-    }).catch(() => {
-      markerLabelPillImagePromise = null;
-    });
-    return markerLabelPillImagePromise;
-  }
-
-  function computeMarkerLabelCanvasDimensions(sourceImage){
-    const rawWidth = sourceImage && (sourceImage.naturalWidth || sourceImage.width)
-      ? (sourceImage.naturalWidth || sourceImage.width)
-      : basePillWidthPx;
-    const rawHeight = sourceImage && (sourceImage.naturalHeight || sourceImage.height)
-      ? (sourceImage.naturalHeight || sourceImage.height)
-      : basePillHeightPx;
-    const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : basePillWidthPx));
-    const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : basePillHeightPx));
-    const pixelRatio = canvasWidth / basePillWidthPx;
-    return { canvasWidth, canvasHeight, pixelRatio };
-  }
-
-  function drawMarkerLabelComposite(ctx, image, x, y, width, height){
-    if(!ctx || !image){
-      return;
-    }
-    const scale = window.devicePixelRatio || 1;
-    ctx.save();
-    ctx.scale(scale, scale);
-    try{
-      ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
-    }catch(err){
-      console.error(err);
-    }
-    ctx.restore();
-  }
-
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
-    if(!sourceImage){
-      return null;
-    }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage);
-    const canvas = document.createElement('canvas');
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    const ctx = canvas.getContext('2d');
-    if(!ctx){
-      return null;
-    }
-    try{
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      const scale = window.devicePixelRatio || 1;
-      ctx.save();
-      ctx.scale(scale, scale);
-      ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
-      ctx.restore();
-    }catch(err){
-      console.error(err);
-      return null;
-    }
-    if(tintColor){
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.globalAlpha = tintAlpha;
-      ctx.fillStyle = tintColor;
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-    }
-    let imageData = null;
-    try{
-      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    }catch(err){
-      console.error(err);
-      imageData = null;
-    }
-    if(!imageData){
-      return null;
-    }
-    return {
-      image: imageData,
-      options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
-    };
-  }
-
-  async function ensureMarkerLabelPillSprites(){
-    if(markerLabelPillSpriteCache){
-      return markerLabelPillSpriteCache;
-    }
-    const assets = await ensureMarkerLabelPillImage();
-    if(!assets || !assets.base){
-      return null;
-    }
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9);
-    let accentSprite = null;
-    if(assets.highlight){
-      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1);
-    }
-    if(!accentSprite){
-      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1);
-    }
-    if(!baseSprite){
-      return null;
-    }
-    markerLabelPillSpriteCache = {
-      base: baseSprite,
-      highlight: accentSprite || baseSprite
-    };
-    return markerLabelPillSpriteCache;
-  }
-
-
   async function generateMarkerImageFromId(id, mapInstance, options = {}){
     if(!id){
       return null;
     }
     const targetMap = mapInstance || map;
-    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
-      const sprites = await ensureMarkerLabelPillSprites();
-      if(!sprites){
-        return {
-          image: createTransparentPlaceholder(basePillWidthPx, basePillHeightPx),
-          options: { pixelRatio: 1 }
-        };
-      }
-      return id === MARKER_LABEL_BG_ID ? sprites.base : (sprites.highlight || sprites.base);
-    }
-    if(id && id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
-      const isAccent = id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
-      const baseId = isAccent ? id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : id;
-      const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
-      if(!spriteId){
-        return null;
-      }
-      const meta = markerLabelCompositeStore && markerLabelCompositeStore.get ? markerLabelCompositeStore.get(spriteId) : null;
-      if(!meta){
-        return null;
-      }
-      if(typeof ensureMarkerLabelCompositeAssets === 'function'){
-      const assets = await ensureMarkerLabelCompositeAssets(targetMap, spriteId, meta);
-      if(!assets || !assets.base){
-        return null;
-      }
-        const updatedMeta = markerLabelCompositeStore.get(spriteId) || assets.meta || meta;
-        if(isAccent){
-          const image = updatedMeta && (updatedMeta.highlightImage || updatedMeta.image);
-          if(!image){
-            return null;
-          }
-          return {
-            image,
-            options: updatedMeta.highlightOptions || updatedMeta.options || {}
-          };
-        }
-        if(updatedMeta && updatedMeta.image){
-          return {
-            image: updatedMeta.image,
-            options: updatedMeta.options || {}
-          };
-        }
-        return null;
-      }
-      return null;
-    }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
       const size = id === 'mx-federal-5' ? 2 : 4;
@@ -1962,21 +1746,6 @@ let __notifyMapOnInteraction = null;
                   try{
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance){
-                      // Clear JavaScript sprite cache
-                      markerLabelPillSpriteCache = null;
-                      // Clear sprite cache function if available
-                      if(typeof window.clearMarkerLabelPillSpriteCache === 'function'){
-                        window.clearMarkerLabelPillSpriteCache(mapInstance);
-                      }
-                      // Remove all marker-label images from Mapbox cache
-                      const markerLabelImageIds = [MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID];
-                      markerLabelImageIds.forEach(id => {
-                        try{
-                          if(mapInstance.hasImage && mapInstance.hasImage(id)){
-                            mapInstance.removeImage(id);
-                          }
-                        }catch(e){}
-                      });
                       // Trigger repaint to regenerate
                       if(mapInstance.triggerRepaint){
                         mapInstance.triggerRepaint();
@@ -2914,7 +2683,7 @@ let __notifyMapOnInteraction = null;
       if(mapCardDisplay === 'hover_only'){
         return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
       }
-      return ['mapmarker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
+      return ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill']; // All layers clickable when cards are visible
     };
     window.__overCard = window.__overCard || false;
 
@@ -18706,7 +18475,13 @@ function makePosts(){
         const iconUrl = subcategoryMarkers[iconId];
         if(iconUrl && !map.hasImage(iconId)){
           try{
-            const img = await loadMarkerLabelImage(iconUrl);
+            const img = await new Promise((resolve, reject) => {
+              const image = new Image();
+              try{ image.crossOrigin = 'anonymous'; }catch(e){}
+              image.onload = () => resolve(image);
+              image.onerror = () => reject(new Error(`Failed to load ${iconUrl}`));
+              image.src = iconUrl;
+            });
             if(img){
               let deviceScale = 2;
               try{
@@ -18735,7 +18510,6 @@ function makePosts(){
         }
       }
       
-      // Pill sprites are loaded via styleimagemissing handler - no manual pre-loading needed
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
       const markerLabelBaseConditions = [
@@ -18744,16 +18518,9 @@ function makePosts(){
       ];
       const markerLabelFilter = ['all', ...markerLabelBaseConditions];
 
-      const markerLabelIconImage = MARKER_LABEL_BG_ID;
-      const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
-
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Use base sprite
-      // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
-      // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = MARKER_LABEL_BG_ID;
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
@@ -18767,8 +18534,8 @@ function makePosts(){
       // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
-        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: smallPillIconImageExpression, iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
+        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: 'small-map-card-pill', iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: 'big-map-card-pill', iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -18785,7 +18552,7 @@ function makePosts(){
               minzoom: layerMinZoom,
               maxzoom: 24,
               layout:{
-                'icon-image': iconImage || markerLabelIconImage,
+                'icon-image': iconImage,
                 'icon-size': finalIconSize,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
