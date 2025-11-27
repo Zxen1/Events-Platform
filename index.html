@@ -363,6 +363,67 @@
                 </div>
               </div>
             </div>
+            <div class="panel-field" style="padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 24px;">
+              <label style="font-weight: 600; margin-bottom: 16px; display: block;">System Images</label>
+              <div class="system-image-picker-container">
+                <div class="panel-field system-image-picker-field">
+                  <label for="systemImageSmallMapCardPill">Small Map Card Pill</label>
+                  <div class="image-picker-wrapper">
+                    <input type="file" id="systemImageSmallMapCardPill" accept="image/*" class="image-picker-input" data-setting-key="small_map_card_pill" style="display: none;" />
+                    <div class="image-picker-display">
+                      <img id="systemImageSmallMapCardPillPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 150px; max-height: 40px; margin-bottom: 8px;" />
+                      <div class="image-picker-controls">
+                        <button type="button" class="image-picker-browse-btn" data-target="systemImageSmallMapCardPill">Browse</button>
+                        <input type="text" id="systemImageSmallMapCardPillPath" class="image-picker-path" placeholder="assets/system-images/150x40-pill-70.webp" readonly />
+                        <button type="button" class="image-picker-clear-btn" data-target="systemImageSmallMapCardPill" style="display: none;">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label for="systemImageBigMapCardPill">Big Map Card Pill</label>
+                  <div class="image-picker-wrapper">
+                    <input type="file" id="systemImageBigMapCardPill" accept="image/*" class="image-picker-input" data-setting-key="big_map_card_pill" style="display: none;" />
+                    <div class="image-picker-display">
+                      <img id="systemImageBigMapCardPillPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 225px; max-height: 60px; margin-bottom: 8px;" />
+                      <div class="image-picker-controls">
+                        <button type="button" class="image-picker-browse-btn" data-target="systemImageBigMapCardPill">Browse</button>
+                        <input type="text" id="systemImageBigMapCardPillPath" class="image-picker-path" placeholder="assets/system-images/225x60-pill-2f3b73.webp" readonly />
+                        <button type="button" class="image-picker-clear-btn" data-target="systemImageBigMapCardPill" style="display: none;">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label for="systemImageHoverMapCardPill">Hover Map Card Pill</label>
+                  <div class="image-picker-wrapper">
+                    <input type="file" id="systemImageHoverMapCardPill" accept="image/*" class="image-picker-input" data-setting-key="hover_map_card_pill" style="display: none;" />
+                    <div class="image-picker-display">
+                      <img id="systemImageHoverMapCardPillPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 150px; max-height: 40px; margin-bottom: 8px;" />
+                      <div class="image-picker-controls">
+                        <button type="button" class="image-picker-browse-btn" data-target="systemImageHoverMapCardPill">Browse</button>
+                        <input type="text" id="systemImageHoverMapCardPillPath" class="image-picker-path" placeholder="assets/system-images/150x40-pill-2f3b73.webp" readonly />
+                        <button type="button" class="image-picker-clear-btn" data-target="systemImageHoverMapCardPill" style="display: none;">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label for="systemImageMultiPostIcon">Multi Post Icon</label>
+                  <div class="image-picker-wrapper">
+                    <input type="file" id="systemImageMultiPostIcon" accept="image/*" class="image-picker-input" data-setting-key="multi_post_icon" style="display: none;" />
+                    <div class="image-picker-display">
+                      <img id="systemImageMultiPostIconPreview" src="" alt="Preview" class="image-picker-preview" style="display: none; max-width: 50px; max-height: 50px; margin-bottom: 8px;" />
+                      <div class="image-picker-controls">
+                        <button type="button" class="image-picker-browse-btn" data-target="systemImageMultiPostIcon">Browse</button>
+                        <input type="text" id="systemImageMultiPostIconPath" class="image-picker-path" placeholder="assets/system-images/multi-post-icon-50.webp" readonly />
+                        <button type="button" class="image-picker-clear-btn" data-target="systemImageMultiPostIcon" style="display: none;">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="tab-settings" class="tab-panel active">
@@ -424,6 +485,10 @@
           <div class="panel-field">
             <label for="adminAdminIconFolder">Admin Icon Folder</label>
             <input type="text" id="adminAdminIconFolder" autocomplete="off" placeholder="assets/admin-icons" />
+          </div>
+          <div class="panel-field">
+            <label for="adminSystemImagesFolder">System Images Folder</label>
+            <input type="text" id="adminSystemImagesFolder" autocomplete="off" placeholder="assets/system-images" />
           </div>
         </div>
         <div class="panel-field">

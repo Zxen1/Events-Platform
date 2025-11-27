@@ -1264,6 +1264,7 @@ let __notifyMapOnInteraction = null;
     // Load from admin settings - no hardcoded defaults
     let baseUrl = null;
     let accentUrl = null;
+    let hoverUrl = null;
     
     try {
       const response = await fetch('/gateway.php?action=get-admin-settings');
@@ -1275,6 +1276,9 @@ let __notifyMapOnInteraction = null;
           }
           if(data.settings.big_map_card_pill){
             accentUrl = data.settings.big_map_card_pill;
+          }
+          if(data.settings.hover_map_card_pill){
+            hoverUrl = data.settings.hover_map_card_pill;
           }
         }
       }
@@ -1288,11 +1292,29 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillImagePromise;
     }
     
-    const promise = Promise.all([
+    // Load base and accent images (required)
+    const loadPromises = [
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl)
-    ]).then(([baseImg, accentImg]) => {
-      return { base: baseImg, highlight: accentImg };
+    ];
+    
+    // Load hover image if available (optional)
+    if(hoverUrl){
+      loadPromises.push(loadMarkerLabelImage(hoverUrl));
+    }
+    
+    const promise = Promise.all(loadPromises).then((images) => {
+      const result = { 
+        base: images[0], 
+        highlight: images[1] 
+      };
+      // Use hover image if available, otherwise fall back to accent
+      if(images[2]){
+        result.hover = images[2];
+      } else {
+        result.hover = images[1]; // Fall back to accent
+      }
+      return result;
     });
     markerLabelPillImagePromise = promise;
     return markerLabelPillImagePromise;
@@ -1374,9 +1396,12 @@ let __notifyMapOnInteraction = null;
     const baseSprite = buildMarkerLabelPillSprite(assets.base, null, 1, false);
     // Accent sprite: use image as-is, no tinting
     const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    // Hover sprite: use hover image if available, otherwise use accent
+    const hoverSprite = assets.hover ? buildMarkerLabelPillSprite(assets.hover, null, 1, false) : accentSprite;
     markerLabelPillSpriteCache = {
       base: baseSprite,
-      highlight: accentSprite
+      highlight: accentSprite,
+      hover: hoverSprite
     };
     return markerLabelPillSpriteCache;
   }
@@ -1750,6 +1775,120 @@ let __notifyMapOnInteraction = null;
         }
       })();
       
+      // Initialize system image pickers
+      function initializeSystemImagePickers(settings){
+        const imagePickers = [
+          { id: 'systemImageSmallMapCardPill', settingKey: 'small_map_card_pill', previewId: 'systemImageSmallMapCardPillPreview', pathId: 'systemImageSmallMapCardPillPath' },
+          { id: 'systemImageBigMapCardPill', settingKey: 'big_map_card_pill', previewId: 'systemImageBigMapCardPillPreview', pathId: 'systemImageBigMapCardPillPath' },
+          { id: 'systemImageHoverMapCardPill', settingKey: 'hover_map_card_pill', previewId: 'systemImageHoverMapCardPillPreview', pathId: 'systemImageHoverMapCardPillPath' },
+          { id: 'systemImageMultiPostIcon', settingKey: 'multi_post_icon', previewId: 'systemImageMultiPostIconPreview', pathId: 'systemImageMultiPostIconPath' }
+        ];
+        
+        imagePickers.forEach(picker => {
+          const fileInput = document.getElementById(picker.id);
+          const previewImg = document.getElementById(picker.previewId);
+          const pathInput = document.getElementById(picker.pathId);
+          const browseBtn = document.querySelector(`[data-target="${picker.id}"]`);
+          const clearBtn = document.querySelector(`.image-picker-clear-btn[data-target="${picker.id}"]`);
+          
+          if(!fileInput || !previewImg || !pathInput || !browseBtn) return;
+          
+          // Load initial value from settings
+          const initialPath = settings[picker.settingKey] || '';
+          if(initialPath){
+            pathInput.value = initialPath;
+            previewImg.src = initialPath;
+            previewImg.style.display = 'block';
+            if(clearBtn) clearBtn.style.display = 'block';
+          }
+          
+          // Browse button click handler
+          browseBtn.addEventListener('click', () => {
+            fileInput.click();
+          });
+          
+          // File input change handler
+          fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if(!file) return;
+            
+            // Validate it's an image
+            if(!file.type.startsWith('image/')){
+              alert('Please select an image file.');
+              fileInput.value = '';
+              return;
+            }
+            
+            // Get system images folder
+            const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+            const systemImagesFolder = systemImagesFolderInput?.value.trim() || 'assets/system-images';
+            
+            // Create a path based on the folder and filename
+            const fileName = file.name;
+            const imagePath = `${systemImagesFolder}/${fileName}`;
+            
+            // Show preview using FileReader
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              previewImg.src = event.target.result;
+              previewImg.style.display = 'block';
+              pathInput.value = imagePath;
+              if(clearBtn) clearBtn.style.display = 'block';
+              
+              // Save to database
+              const settingsToSave = {};
+              settingsToSave[picker.settingKey] = imagePath;
+              
+              fetch('/gateway.php?action=save-admin-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(settingsToSave)
+              }).then(() => {
+                // Clear sprite cache to force reload
+                if(typeof window.markerLabelPillImagePromise !== 'undefined'){
+                  window.markerLabelPillImagePromise = null;
+                }
+                if(typeof window.markerLabelPillSpriteCache !== 'undefined'){
+                  window.markerLabelPillSpriteCache = null;
+                }
+                
+                // Refresh map cards if map is loaded
+                const refreshBtn = document.getElementById('refreshMapCardsBtn');
+                if(refreshBtn){
+                  console.log('System image updated. Click "Refresh Map Cards" to see changes.');
+                }
+              }).catch(err => {
+                console.error('Failed to save image path:', err);
+              });
+            };
+            reader.readAsDataURL(file);
+          });
+          
+          // Clear button handler
+          if(clearBtn){
+            clearBtn.addEventListener('click', () => {
+              fileInput.value = '';
+              previewImg.src = '';
+              previewImg.style.display = 'none';
+              pathInput.value = '';
+              clearBtn.style.display = 'none';
+              
+              // Save empty value to database
+              const settingsToSave = {};
+              settingsToSave[picker.settingKey] = '';
+              
+              fetch('/gateway.php?action=save-admin-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(settingsToSave)
+              }).catch(err => {
+                console.error('Failed to clear image path:', err);
+              });
+            });
+          }
+        });
+      }
+      
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
@@ -2009,6 +2148,17 @@ let __notifyMapOnInteraction = null;
               const adminIconFolderInput = document.getElementById('adminAdminIconFolder');
               if(adminIconFolderInput){
                 adminIconFolderInput.value = window.adminIconFolder || 'assets/admin-icons';
+              }
+              
+              // Initialize system images folder input
+              const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+              if(systemImagesFolderInput){
+                systemImagesFolderInput.value = data.settings.system_images_folder || 'assets/system-images';
+              }
+              
+              // Initialize system image pickers
+              if(typeof initializeSystemImagePickers === 'function'){
+                initializeSystemImagePickers(data.settings);
               }
               
               // Initialize general website settings
@@ -21833,6 +21983,15 @@ function openPanel(m){
         }
       }
       
+      // Include system images folder setting
+      const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+      if(systemImagesFolderInput){
+        const systemImagesFolderValue = systemImagesFolderInput.value.trim();
+        if(systemImagesFolderValue){
+          settings.system_images_folder = systemImagesFolderValue;
+        }
+      }
+      
       try {
         await fetch('/gateway.php?action=save-admin-settings', {
           method: 'POST',
@@ -21975,6 +22134,44 @@ function openPanel(m){
       });
       adminIconFolderInput.addEventListener('change', ()=>{
         autoSaveMapSettings();
+      });
+    }
+    
+    // Auto-save system images folder setting on blur
+    const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+    if(systemImagesFolderInput && !systemImagesFolderInput.dataset.autoSaveAdded){
+      systemImagesFolderInput.dataset.autoSaveAdded = 'true';
+      systemImagesFolderInput.addEventListener('blur', async ()=>{
+        const settings = {};
+        const folderValue = systemImagesFolderInput.value.trim();
+        if(folderValue){
+          settings.system_images_folder = folderValue;
+          try {
+            await fetch('/gateway.php?action=save-admin-settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify(settings)
+            });
+          } catch(err){
+            console.warn('Auto-save failed:', err);
+          }
+        }
+      });
+      systemImagesFolderInput.addEventListener('change', async ()=>{
+        const settings = {};
+        const folderValue = systemImagesFolderInput.value.trim();
+        if(folderValue){
+          settings.system_images_folder = folderValue;
+          try {
+            await fetch('/gateway.php?action=save-admin-settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify(settings)
+            });
+          } catch(err){
+            console.warn('Auto-save failed:', err);
+          }
+        }
       });
     }
     

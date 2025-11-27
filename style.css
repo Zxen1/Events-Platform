@@ -1592,6 +1592,86 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 
+/* System Image Picker Styles */
+.system-image-picker-container{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.system-image-picker-field{
+  margin-bottom:0;
+}
+
+.image-picker-wrapper{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.image-picker-display{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+
+.image-picker-preview{
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:4px;
+  background:rgba(0,0,0,0.3);
+  object-fit:contain;
+}
+
+.image-picker-controls{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+
+.image-picker-browse-btn{
+  background:rgba(46,58,114,0.8);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.2);
+  padding:6px 12px;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:14px;
+  white-space:nowrap;
+  transition:background 0.2s ease;
+}
+
+.image-picker-browse-btn:hover{
+  background:rgba(46,58,114,1);
+}
+
+.image-picker-path{
+  flex:1;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  color:#fff;
+  padding:6px 8px;
+  border-radius:4px;
+  font-size:13px;
+  min-width:0;
+}
+
+.image-picker-clear-btn{
+  background:rgba(200,50,50,0.8);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.2);
+  padding:6px 12px;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:14px;
+  white-space:nowrap;
+  transition:background 0.2s ease;
+}
+
+.image-picker-clear-btn:hover{
+  background:rgba(200,50,50,1);
+}
+
 /* Remove borders from all text/email/password inputs in settings tab */
 #tab-settings .panel-field input[type="text"],
 #tab-settings .panel-field input[type="email"],
