@@ -2601,7 +2601,7 @@ let __notifyMapOnInteraction = null;
       // Reset all features to not expanded
       highlightedFeatureKeys.forEach(entry => {
         try{ 
-          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
+          map.setFeatureState({ source: entry.source, id: entry.id }, { isActive: false }); 
         }catch(err){}
       });
       
@@ -2615,7 +2615,7 @@ let __notifyMapOnInteraction = null;
             const featureId = entry.id;
             if(featureId !== undefined && featureId !== null){
               try{ 
-                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true }); 
+                map.setFeatureState({ source: source, id: featureId }, { isActive: true }); 
               }catch(err){}
             }
           });
@@ -18680,19 +18680,20 @@ function makePosts(){
       const markerLabelIconImage = MARKER_LABEL_BG_ID;
       const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
 
-      const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      const hoveredStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
+      // Hovered layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
+      const markerLabelHighlightOpacity = ['case', hoveredStateExpression, 1, 0];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
+      const baseOpacityWhenNotHovered = mapCardDisplay === 'hover_only' ? 0 : 1;
+      // Base layer should be invisible (0) when hovered (accent shows), visible when not hovered
+      const markerLabelBaseOpacity = ['case', hoveredStateExpression, 0, baseOpacityWhenNotHovered];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
-      // Big pills: left edge at -35px from lat/lng (225×60px)
-      // Each card's elements use the same cardSortKey from feature properties so cards render as units
-      const bigPillSizeExpression = ['case', highlightedStateExpression, 1.0, 0.6667];
+      // Big pills: left edge at -30px from lat/lng (225×60px when active)
+      // Hover shows small pill (0.6667 = 150×40px), active shows big pill (1.0 = 225×60px)
+      const bigPillSizeExpression = ['case', activeStateExpression, 1.0, 0.6667];
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
         { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-30, 0], iconSize: bigPillSizeExpression }
@@ -18796,7 +18797,8 @@ function makePosts(){
       const bigLabelTextAreaWidthPx = 145; // For big map cards
       const bigLabelOffsetEm = 35 / textSize; // 35px in em units
       const bigLabelTextLayerId = 'big-map-card-label';
-      const bigLabelFilter = ['all', ...markerLabelBaseConditions, highlightedStateExpression];
+      // Big labels only show when active (isActive is true, when post is open)
+      const bigLabelFilter = ['all', ...markerLabelBaseConditions, activeStateExpression];
       if(!map.getLayer(bigLabelTextLayerId)){
         try{
           map.addLayer({
