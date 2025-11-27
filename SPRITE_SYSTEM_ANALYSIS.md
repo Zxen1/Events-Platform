@@ -1,5 +1,7 @@
 # Sprite System Analysis - Redundancies, Conflicts, and Overrides
 
+**NOTE: 33 redundant lines were removed to fix conflicting sprite code.**
+
 ## Why Code Existed Twice
 
 The duplicate layer positioning code existed because:
