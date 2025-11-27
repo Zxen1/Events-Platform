@@ -1370,7 +1370,9 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
+    // Base sprite: use image as-is, no tinting
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, null, 1, false);
+    // Accent sprite: use image as-is, no tinting
     const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
     markerLabelPillSpriteCache = {
       base: baseSprite,
