@@ -1387,13 +1387,10 @@ let __notifyMapOnInteraction = null;
     }
     try{
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      const scale = window.devicePixelRatio || 1;
-      ctx.save();
-      ctx.scale(scale, scale);
+      // Draw image at full size (no devicePixelRatio scaling to avoid size mismatch)
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
-      ctx.restore();
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
     }catch(err){
       console.error(err);
       return null;
@@ -2091,12 +2088,11 @@ let __notifyMapOnInteraction = null;
                           try {
                             const smallPillLayer = mapInstance.getLayer('small-map-card-pill');
                             if(smallPillLayer){
-                              // Force refresh by updating the expression (even if same value)
-                              const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-                              const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
-                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', smallPillIconImageExpression);
+                              // Small pill always uses 'small-map-card-pill' sprite (never switches)
+                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', 'small-map-card-pill');
                               // Also force opacity refresh
                               const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+                              const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
                               const smallPillOpacity = mapCardDisplay === 'hover_only' 
                                 ? ['case', highlightedStateExpression, 1, 0]
                                 : 1;
@@ -2109,7 +2105,9 @@ let __notifyMapOnInteraction = null;
                             const bigPillLayer = mapInstance.getLayer('big-map-card-pill');
                             if(bigPillLayer){
                               mapInstance.setLayoutProperty('big-map-card-pill', 'icon-image', 'big-map-card-pill');
-                              const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+                              // Big pill only shows when active (clicked/open), not on hover
+                              const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
+                              const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
                               mapInstance.setLayoutProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity);
                               console.log('[Pill Update] Updated big-map-card-pill layer properties');
                             } else {
@@ -19405,22 +19403,24 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Use expression to switch between default and accent sprites based on isHighlighted
+      // Small pill: Always uses 'small-map-card-pill' sprite (never switches)
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
+      const smallPillIconImageExpression = 'small-map-card-pill';
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
-      // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      // Big pill layer should be visible (opacity 1) when post is active (clicked/open), invisible (0) when not active
+      // Use isActive feature state for active posts, not isHighlighted (hover)
+      const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
+      const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: smallPillIconImageExpression, iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: 'big-map-card-pill', iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
