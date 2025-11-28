@@ -10262,9 +10262,9 @@ function makePosts(){
           }
         }
         iconPicker.append(preview, iconPickerButton);
-        // Use system image picker for messages tab category logos (uses system-images folder)
-        if(typeof window.attachSystemImagePicker === 'function'){
-          window.attachSystemImagePicker(iconPickerButton, iconPicker, {
+        // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
+        if(typeof window.attachIconPicker === 'function'){
+          window.attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
             onSelect: value => {
               updateCategoryIconDisplay(value);
@@ -10639,16 +10639,19 @@ function makePosts(){
     
 
           subIconPicker.append(subPreview, subIconButton);
-          attachIconPicker(subIconButton, subIconPicker, {
-            getCurrentPath: ()=> applyNormalizeIconPath(getSubcategoryIconPath(c, currentSubName)),
-            onSelect: value => {
-              updateSubIconDisplay(value);
-              notifyFormbuilderChange();
-            },
-            label: `Choose icon for ${sub}`,
-            parentMenu: subContent,
-            parentCategoryMenu: menu
-          });
+          // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
+          if(typeof window.attachIconPicker === 'function'){
+            window.attachIconPicker(subIconButton, subIconPicker, {
+              getCurrentPath: ()=> applyNormalizeIconPath(getSubcategoryIconPath(c, currentSubName)),
+              onSelect: value => {
+                updateSubIconDisplay(value);
+                notifyFormbuilderChange();
+              },
+              label: `Choose icon for ${sub}`,
+              parentMenu: subContent,
+              parentCategoryMenu: menu
+            });
+          }
 
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
