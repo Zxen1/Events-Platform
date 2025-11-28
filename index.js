@@ -19391,18 +19391,21 @@ function makePosts(){
         console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
       }
       
-      // Only add sprites if they don't already exist (prevents redundant additions)
+      // Remove existing sprites before adding to prevent size mismatch errors
+      // Then add sprites (removing first ensures we can update them with new dimensions)
       if(pillSprites && pillSprites.base && pillSprites.base.image){
         try {
-          if(!map.hasImage(MARKER_LABEL_BG_ID)){
-            // Convert ImageData to Canvas if needed
-            const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
-            if(imageToAdd){
-              map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
-              console.log('[addPostSource] Added small-map-card-pill sprite');
-            } else {
-              console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
-            }
+          // Remove existing sprite if it exists (prevents size mismatch)
+          if(map.hasImage(MARKER_LABEL_BG_ID)){
+            map.removeImage(MARKER_LABEL_BG_ID);
+          }
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
+          if(imageToAdd){
+            map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
+            console.log('[addPostSource] Added small-map-card-pill sprite');
+          } else {
+            console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
@@ -19413,15 +19416,17 @@ function makePosts(){
       
       if(pillSprites && pillSprites.highlight && pillSprites.highlight.image){
         try {
-          if(!map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-            // Convert ImageData to Canvas if needed
-            const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
-            if(imageToAdd){
-              map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
-              console.log('[addPostSource] Added big-map-card-pill sprite');
-            } else {
-              console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
-            }
+          // Remove existing sprite if it exists (prevents size mismatch)
+          if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+            map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
+          }
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
+          if(imageToAdd){
+            map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
+            console.log('[addPostSource] Added big-map-card-pill sprite');
+          } else {
+            console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
@@ -19433,15 +19438,17 @@ function makePosts(){
       // Add hover pill sprite if available
       if(pillSprites && pillSprites.hover && pillSprites.hover.image){
         try {
-          if(!map.hasImage(MARKER_LABEL_BG_HOVER_ID)){
-            // Convert ImageData to Canvas if needed
-            const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
-            if(imageToAdd){
-              map.addImage(MARKER_LABEL_BG_HOVER_ID, imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
-              console.log('[addPostSource] Added hover-map-card-pill sprite');
-            } else {
-              console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
-            }
+          // Remove existing sprite if it exists (prevents size mismatch)
+          if(map.hasImage(MARKER_LABEL_BG_HOVER_ID)){
+            map.removeImage(MARKER_LABEL_BG_HOVER_ID);
+          }
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
+          if(imageToAdd){
+            map.addImage(MARKER_LABEL_BG_HOVER_ID, imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
+            console.log('[addPostSource] Added hover-map-card-pill sprite');
+          } else {
+            console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding hover-map-card-pill sprite:', e);
@@ -19474,6 +19481,17 @@ function makePosts(){
       const markerLabelHighlightOpacity = ['case', expandedStateExpressionForPills, 1, 0];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      // Helper expression to convert post ID (string or number) to numeric sort offset
+      // Uses properties.id which is the post.id (may be string like "SV77" or number)
+      // If it's a string, extract numeric part or use string length as fallback
+      // Mapbox expressions: ['get', 'id'] gets properties.id (not feature.id)
+      const postIdToNumericOffset = ['*', 
+        ['coalesce', 
+          ['to-number', ['get', 'id']], // Try to convert properties.id to number
+          ['length', ['get', 'id']] // Fallback: use string length if conversion fails
+        ], 
+        0.0001
+      ];
       // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
@@ -19501,8 +19519,8 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': ['+', sortKey, ['*', ['to-number', ['get', 'id']], 0.0001]] // Per-card z-index: base sort-key + post ID offset (extract numeric post ID from properties)
+              'symbol-z-order': 'viewport-y',
+              'symbol-sort-key': ['+', sortKey, postIdToNumericOffset] // Per-card z-index: base sort-key + post ID offset
               },
               paint:{
                 'icon-translate': finalIconOffset,
@@ -19563,13 +19581,13 @@ function makePosts(){
               'text-allow-overlap': true,
               'text-ignore-placement': true,
               'text-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
+              'symbol-z-order': 'viewport-y',
               'symbol-sort-key': ['+', ['case', 
                 ['all', expandedStateExpressionForLabels, ['get', 'isMultiPost']], 7, // Big multi-post label
                 expandedStateExpressionForLabels, 6, // Big single-post label
                 ['get', 'isMultiPost'], 4, // Small multi-post label
                 3 // Small single-post label
-              ], ['*', ['to-number', ['get', 'id']], 0.0001]] // Per-card z-index: base sort-key + post ID offset
+              ], postIdToNumericOffset] // Per-card z-index: base sort-key + post ID offset
             },
             paint:{
               'text-color': '#ffffff',
@@ -19590,12 +19608,12 @@ function makePosts(){
         try{ 
           // Only update properties that can change (filter and sort-key based on data)
           map.setFilter(labelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', 
-            ['all', expandedStateExpression, ['get', 'isMultiPost']], 7, // Big multi-post label
-            expandedStateExpression, 6, // Big single-post label
+          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['+', ['case', 
+            ['all', expandedStateExpressionForLabels, ['get', 'isMultiPost']], 7, // Big multi-post label
+            expandedStateExpressionForLabels, 6, // Big single-post label
             ['get', 'isMultiPost'], 4, // Small multi-post label
             3 // Small single-post label
-          ]);
+          ], postIdToNumericOffset]); // Per-card z-index: base sort-key + post ID offset
         }catch(e){
           console.error('Failed to update label text layer:', e);
         }
@@ -19633,11 +19651,11 @@ function makePosts(){
               'icon-anchor': 'center',
               'icon-offset': [0, 0],
               'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
+              'symbol-z-order': 'viewport-y',
               'symbol-sort-key': ['+', ['case', 
                 ['get', 'isMultiPost'], 9, // Multi-post icon
                 8 // Single post icon
-              ], ['*', ['to-number', ['get', 'id']], 0.0001]], // Per-card z-index: base sort-key + post ID offset
+              ], postIdToNumericOffset], // Per-card z-index: base sort-key + post ID offset
               'visibility': 'visible'
             },
             paint:{
@@ -19655,7 +19673,7 @@ function makePosts(){
           map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', ['+', ['case', 
                 ['get', 'isMultiPost'], 9, // Multi-post icon
                 8 // Single post icon
-              ], ['*', ['to-number', ['get', 'id']], 0.0001]]); // Per-card z-index: base sort-key + post ID offset
+              ], postIdToNumericOffset]); // Per-card z-index: base sort-key + post ID offset
         }catch(e){}
       }
       
