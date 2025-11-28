@@ -1834,9 +1834,17 @@ let __notifyMapOnInteraction = null;
                   // Update local settings immediately
                   settings[picker.settingKey] = value;
                   
-                  // Update map in real-time (before saving to DB)
-                  const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
-                  if(mapInstance){
+                  // Get map instance - try multiple methods
+                  let mapInstance = null;
+                  if(typeof window.getMapInstance === 'function'){
+                    mapInstance = window.getMapInstance();
+                  } else if(typeof map !== 'undefined' && map){
+                    mapInstance = map;
+                  } else if(typeof window.map !== 'undefined' && window.map){
+                    mapInstance = window.map;
+                  }
+                  
+                  if(mapInstance && typeof mapInstance.hasImage === 'function'){
                     try{
                       // Handle cluster/balloon icon update
                       if(picker.settingKey === 'marker_cluster_icon'){
@@ -1844,7 +1852,7 @@ let __notifyMapOnInteraction = null;
                         const BALLOON_LAYER_ID = 'post-balloons';
                         
                         // Remove old balloon icon sprite
-                        if(mapInstance.hasImage && mapInstance.hasImage(BALLOON_IMAGE_ID)){
+                        if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
                           try {
                             mapInstance.removeImage(BALLOON_IMAGE_ID);
                           } catch(err) {
@@ -1852,127 +1860,95 @@ let __notifyMapOnInteraction = null;
                           }
                         }
                         
-                        // Load and add new balloon icon sprite
-                        const loadBalloonIcon = () => {
-                          return new Promise((resolve) => {
-                            if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
-                              resolve();
-                              return;
+                        // Load new image directly
+                        const img = await loadMarkerLabelImage(value);
+                        if(img && img.width > 0 && img.height > 0){
+                          const pixelRatio = img.width >= 256 ? 2 : 1;
+                          mapInstance.addImage(BALLOON_IMAGE_ID, img, { pixelRatio });
+                          
+                          // Force layer refresh
+                          try {
+                            const layer = mapInstance.getLayer(BALLOON_LAYER_ID);
+                            if(layer){
+                              mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'icon-image', BALLOON_IMAGE_ID);
                             }
-                            const handleImage = (image) => {
-                              if(!image){
-                                console.error('Failed to load balloon icon image');
-                                resolve();
-                                return;
-                              }
-                              try{
-                                if(image.width > 0 && image.height > 0){
-                                  const pixelRatio = image.width >= 256 ? 2 : 1;
-                                  // Remove if exists (in case it wasn't removed above)
-                                  if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
-                                    mapInstance.removeImage(BALLOON_IMAGE_ID);
-                                  }
-                                  mapInstance.addImage(BALLOON_IMAGE_ID, image, { pixelRatio });
-                                  console.log('Balloon icon updated successfully');
-                                } else {
-                                  console.error('Invalid image dimensions:', image.width, image.height);
-                                }
-                              }catch(err){ 
-                                console.error('Error adding balloon icon:', err); 
-                              }
-                              resolve();
-                            };
-                            try{
-                              if(typeof mapInstance.loadImage === 'function'){
-                                mapInstance.loadImage(value, (err, image) => {
-                                  if(err){ 
-                                    console.error('Error loading balloon icon:', err); 
-                                    resolve(); 
-                                    return; 
-                                  }
-                                  handleImage(image);
-                                });
-                                return;
-                              }
-                            }catch(err){ 
-                              console.error('Error in loadImage:', err); 
-                              resolve(); 
-                              return; 
-                            }
-                            if(typeof Image !== 'undefined'){
-                              const img = new Image();
-                              img.crossOrigin = 'anonymous';
-                              img.onload = () => handleImage(img);
-                              img.onerror = (err) => {
-                                console.error('Error loading image via Image object:', err);
-                                resolve();
-                              };
-                              img.src = value;
-                              return;
-                            }
-                            resolve();
-                          });
-                        };
-                        
-                        await loadBalloonIcon();
-                        
-                        // Force layer refresh - wait a moment for Mapbox to process the new sprite
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                        
-                        try {
-                          const layer = mapInstance.getLayer(BALLOON_LAYER_ID);
-                          if(layer){
-                            // Force refresh by updating the icon-image property
-                            mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'icon-image', BALLOON_IMAGE_ID);
-                            
-                            // Also trigger a repaint
-                            if(mapInstance.triggerRepaint){
-                              mapInstance.triggerRepaint();
-                            }
-                            
-                            // Force style update if available
-                            if(mapInstance.style && typeof mapInstance.style._update === 'function'){
-                              mapInstance.style._update();
-                            }
-                            
-                            console.log('Balloon layer refreshed with new icon');
-                          } else {
-                            console.warn('Balloon layer not found, cannot refresh');
+                          } catch(err) {
+                            console.error('Error refreshing balloon layer:', err);
                           }
-                        } catch(err) {
-                          console.error('Error refreshing balloon layer:', err);
                         }
-                      } else {
-                        // Handle pill image updates
-                        // Clear sprite cache to force reload with new image
+                      } 
+                      // Handle pill image updates
+                      else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
+                        // Clear caches
                         markerLabelPillImagePromise = null;
                         markerLabelPillSpriteCache = null;
                         
-                        // Remove old sprites
-                        if(mapInstance.hasImage && mapInstance.hasImage('small-map-card-pill')){
-                          mapInstance.removeImage('small-map-card-pill');
-                        }
-                        if(mapInstance.hasImage && mapInstance.hasImage('big-map-card-pill')){
-                          mapInstance.removeImage('big-map-card-pill');
-                        }
+                        // Get current settings (use updated value for the changed one)
+                        const baseUrl = picker.settingKey === 'small_map_card_pill' ? value : (settings.small_map_card_pill || null);
+                        const accentUrl = picker.settingKey === 'big_map_card_pill' ? value : (settings.big_map_card_pill || null);
+                        const hoverUrl = picker.settingKey === 'hover_map_card_pill' ? value : (settings.hover_map_card_pill || null);
                         
-                        // Load new sprites with updated image
-                        const pillSprites = await ensureMarkerLabelPillSprites();
-                        if(pillSprites && pillSprites.base){
-                          mapInstance.addImage('small-map-card-pill', pillSprites.base.image, pillSprites.base.options || {});
-                        }
-                        if(pillSprites && pillSprites.highlight){
-                          mapInstance.addImage('big-map-card-pill', pillSprites.highlight.image, pillSprites.highlight.options || {});
+                        if(baseUrl && accentUrl){
+                          // Load images directly with updated values
+                          const [baseImg, accentImg, hoverImg] = await Promise.all([
+                            loadMarkerLabelImage(baseUrl),
+                            loadMarkerLabelImage(accentUrl),
+                            hoverUrl ? loadMarkerLabelImage(hoverUrl).catch(() => null) : Promise.resolve(null)
+                          ]);
+                          
+                          // Build sprites directly
+                          const baseSprite = buildMarkerLabelPillSprite(baseImg, null, 1, false);
+                          const accentSprite = buildMarkerLabelPillSprite(accentImg, null, 1, true);
+                          const hoverSprite = hoverImg ? buildMarkerLabelPillSprite(hoverImg, null, 1, false) : accentSprite;
+                          
+                          // Remove old sprites
+                          if(mapInstance.hasImage('small-map-card-pill')){
+                            mapInstance.removeImage('small-map-card-pill');
+                          }
+                          if(mapInstance.hasImage('big-map-card-pill')){
+                            mapInstance.removeImage('big-map-card-pill');
+                          }
+                          
+                          // Add new sprites
+                          if(baseSprite){
+                            mapInstance.addImage('small-map-card-pill', baseSprite.image, baseSprite.options || {});
+                          }
+                          if(accentSprite){
+                            mapInstance.addImage('big-map-card-pill', accentSprite.image, accentSprite.options || {});
+                          }
                         }
                       }
+                      // Handle multi-post icon update
+                      else if(picker.settingKey === 'multi_post_icon'){
+                        // Update global reference
+                        if(window.subcategoryMarkers){
+                          window.subcategoryMarkers['multi-post-icon'] = value;
+                        }
+                        
+                        // Note: Multi-post icons are used in composite sprites, so we need to refresh markers
+                        // This will be handled when markers are next rendered
+                        console.log('Multi-post icon updated - markers will use new icon on next render');
+                      }
                       
-                      // Trigger repaint to show changes immediately
-                      if(mapInstance.triggerRepaint){
-                        mapInstance.triggerRepaint();
+                      // Force map repaint
+                      try {
+                        if(mapInstance.triggerRepaint){
+                          mapInstance.triggerRepaint();
+                        } else if(mapInstance.style && typeof mapInstance.style._update === 'function'){
+                          mapInstance.style._update();
+                        } else {
+                          // Fallback: trigger a move event to force repaint
+                          const center = mapInstance.getCenter();
+                          mapInstance.setCenter(center);
+                        }
+                      } catch(err) {
+                        console.error('Error triggering map repaint:', err);
                       }
                     }catch(err){
                       console.error('Error updating map sprites:', err);
                     }
+                  } else {
+                    console.warn('Map instance not available for real-time update');
                   }
                   
                   // Save to admin_settings (after updating map for real-time effect)
