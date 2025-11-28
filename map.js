@@ -3404,6 +3404,10 @@
         // marker-icon visibility/opacity handled in final ordering section
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
+      window.updateMarkerLabelHighlightIconSize = updateMarkerLabelHighlightIconSize;
+      window.updateMapFeatureHighlights = updateMapFeatureHighlights;
+      window.loadPostMarkers = loadPostMarkers;
+      window.addPostSource = addPostSource;
       window.getMapInstance = () => map; // Expose map instance getter
       
       updateMapCardLayerOpacity(mapCardDisplay);
@@ -3826,11 +3830,8 @@
   window.initMap = initMap;
 
   // Expose other map functions that may be called from index.js
-  window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
-  window.updateMarkerLabelHighlightIconSize = updateMarkerLabelHighlightIconSize;
-  window.updateMapFeatureHighlights = updateMapFeatureHighlights;
-  window.loadPostMarkers = loadPostMarkers;
-  window.addPostSource = addPostSource;
+  // Note: updateMapCardLayerOpacity, updateMarkerLabelHighlightIconSize, updateMapFeatureHighlights,
+  // loadPostMarkers, and addPostSource are exposed inside initMap (after map is initialized)
   window.syncGeocoderProximityToMap = syncGeocoderProximityToMap;
   window.clearMapGeocoder = clearMapGeocoder;
   window.setupSeedLayers = setupSeedLayers;

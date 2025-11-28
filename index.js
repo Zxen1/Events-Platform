@@ -920,7 +920,7 @@ let __notifyMapOnInteraction = null;
     }
   }
 
-  (function(){
+(function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = localStorage.getItem('mode') || 'map';
@@ -19428,7 +19428,7 @@ function openPostModal(id){
       localStorage.setItem('mode', mode);
       localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
     });
-  })();
+})();
 
 // 0577 helpers (safety)
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
