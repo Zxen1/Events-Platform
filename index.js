@@ -1930,7 +1930,14 @@ let __notifyMapOnInteraction = null;
                             hoverSprite: !!hoverSprite
                           });
                           
-                          // Add new sprites
+                          // Update cache with new sprites (so addPostSource uses them)
+                          markerLabelPillSpriteCache = {
+                            base: baseSprite,
+                            highlight: accentSprite,
+                            hover: hoverSprite
+                          };
+                          
+                          // Add new sprites to map
                           if(baseSprite){
                             mapInstance.addImage('small-map-card-pill', baseSprite.image, baseSprite.options || {});
                             console.log('[Pill Update] Added new small-map-card-pill sprite');
@@ -1959,17 +1966,8 @@ let __notifyMapOnInteraction = null;
                             console.warn('[Pill Update] Could not update layers:', e);
                           }
                           
-                          // Force style update
-                          try {
-                            if(mapInstance.style && typeof mapInstance.style._update === 'function'){
-                              mapInstance.style._update();
-                              console.log('[Pill Update] Style updated');
-                            }
-                          } catch(e) {
-                            console.warn('[Pill Update] Could not update style:', e);
-                          }
-                          
                           // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
+                          // Note: addPostSource will check if sprites exist and skip re-adding, so this is safe
                           console.log('[Pill Update] Regenerating markers...');
                           if(typeof window.addPostSource === 'function'){
                             try {
@@ -19168,31 +19166,21 @@ function makePosts(){
       }
       
       // Ensure pill sprites are loaded before creating layers
-      // Always reload to get latest images (in case they were updated)
-      markerLabelPillImagePromise = null;
-      markerLabelPillSpriteCache = null;
-      const pillSprites = await ensureMarkerLabelPillSprites();
-      
-      // Remove old sprites if they exist, then add new ones
-      if(map.hasImage(MARKER_LABEL_BG_ID)){
-        try {
-          map.removeImage(MARKER_LABEL_BG_ID);
-        } catch(e) {}
-      }
-      if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-        try {
-          map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
-        } catch(e) {}
+      // Only reload if cache is empty (to avoid redundant reloads when already updated)
+      let pillSprites = markerLabelPillSpriteCache;
+      if(!pillSprites){
+        pillSprites = await ensureMarkerLabelPillSprites();
       }
       
-      if(pillSprites && pillSprites.base){
+      // Add sprites to map only if they don't already exist (prevents conflicts)
+      if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
         try{
           map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
         }catch(e){
           console.error('Error adding small-map-card-pill sprite:', e);
         }
       }
-      if(pillSprites && pillSprites.highlight){
+      if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
         try{
           map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
         }catch(e){
