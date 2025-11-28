@@ -19562,8 +19562,15 @@ function makePosts(){
             // Convert ImageData to Canvas if needed
             const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
             if(imageToAdd){
-              map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
-              console.log('[addPostSource] Added small-map-card-pill sprite');
+              // Validate dimensions before adding (prevents RangeError: mismatched image size)
+              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+              if(width > 0 && height > 0){
+                map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
+                console.log('[addPostSource] Added small-map-card-pill sprite', width, 'x', height);
+              } else {
+                console.error('[addPostSource] Invalid image dimensions for base sprite:', width, 'x', height);
+              }
             } else {
               console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
             }
@@ -19581,8 +19588,15 @@ function makePosts(){
             // Convert ImageData to Canvas if needed
             const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
             if(imageToAdd){
-              map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
-              console.log('[addPostSource] Added big-map-card-pill sprite');
+              // Validate dimensions before adding
+              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+              if(width > 0 && height > 0){
+                map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
+                console.log('[addPostSource] Added big-map-card-pill sprite', width, 'x', height);
+              } else {
+                console.error('[addPostSource] Invalid image dimensions for highlight sprite:', width, 'x', height);
+              }
             } else {
               console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
             }
@@ -19600,8 +19614,15 @@ function makePosts(){
           if(!map.hasImage('hover-map-card-pill')){
             const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
             if(imageToAdd){
-              map.addImage('hover-map-card-pill', imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
-              console.log('[addPostSource] Added hover-map-card-pill sprite');
+              // Validate dimensions before adding
+              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+              if(width > 0 && height > 0){
+                map.addImage('hover-map-card-pill', imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
+                console.log('[addPostSource] Added hover-map-card-pill sprite', width, 'x', height);
+              } else {
+                console.error('[addPostSource] Invalid image dimensions for hover sprite:', width, 'x', height);
+              }
             } else {
               console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
             }
@@ -19627,12 +19648,16 @@ function makePosts(){
       // Small pill: Uses 'small-map-card-pill' sprite by default, switches to 'hover-map-card-pill' on hover
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = [
-        'case',
-        highlightedStateExpression,
-        map.hasImage('hover-map-card-pill') ? 'hover-map-card-pill' : 'small-map-card-pill',
-        'small-map-card-pill'
-      ];
+      // Check if hover pill exists BEFORE creating expression (can't call map.hasImage inside expression)
+      const hasHoverPill = map.hasImage('hover-map-card-pill');
+      const smallPillIconImageExpression = hasHoverPill
+        ? [
+            'case',
+            highlightedStateExpression,
+            'hover-map-card-pill',
+            'small-map-card-pill'
+          ]
+        : 'small-map-card-pill'; // Fallback to base pill if hover pill doesn't exist
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
