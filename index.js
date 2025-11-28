@@ -19452,8 +19452,8 @@ function makePosts(){
         : 1;
       // Big pill layer should be visible (opacity 1) when post is active (clicked/open), invisible (0) when not active
       // Use isExpanded feature state for active posts (set when post is clicked/open), not isHighlighted (hover)
-      const expandedStateExpression = ['boolean', ['feature-state', 'isExpanded'], false];
-      const markerLabelHighlightOpacity = ['case', expandedStateExpression, 1, 0];
+      const expandedStateExpressionForPills = ['boolean', ['feature-state', 'isExpanded'], false];
+      const markerLabelHighlightOpacity = ['case', expandedStateExpressionForPills, 1, 0];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
@@ -19483,8 +19483,8 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
-                'symbol-sort-key': sortKey
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': ['+', sortKey, ['*', ['id'], 0.0001]] // Per-card z-index: base sort-key + feature ID offset
               },
               paint:{
                 'icon-translate': finalIconOffset,
@@ -19514,12 +19514,16 @@ function makePosts(){
         }
       });
       
-      // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
+      // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4, 6, 7)
       // Labels must be in the SAME layer as pills for sort-keys to work (sort-keys only work within same layer)
       // Small labels: left edge at 20px from lat/lng (inside pill, which goes from -20px to 130px)
-      // text-offset uses em units, not pixels. With text-size 12, 20px = 20/12 = 1.67em
+      // Big labels: left edge at 30px from lat/lng (inside big pill, which goes from -35px to 190px)
+      // text-offset uses em units, not pixels. With text-size 12, 20px = 20/12 = 1.67em, 30px = 30/12 = 2.5em
       const textSize = 12;
       const smallLabelOffsetEm = 20 / textSize; // 20px in em units
+      const bigLabelOffsetEm = 30 / textSize; // 30px in em units
+      const expandedStateExpressionForLabels = ['boolean', ['feature-state', 'isExpanded'], false];
+      // Label text: Use big label (3 lines, 145px max width, sort-key 6 or 7) when expanded, small label (2 lines, 100px max width, sort-key 3 or 4) when not expanded
       const labelTextLayerId = 'small-map-card-label';
       if(!map.getLayer(labelTextLayerId)){
         try{
@@ -19534,19 +19538,27 @@ function makePosts(){
               'text-field': ['coalesce', ['get', 'label'], ''],
               'text-size': textSize,
               'text-line-height': 1.2,
-              'text-max-width': 100,
+              'text-max-width': ['case', expandedStateExpressionForLabels, 145, 100],
               'text-anchor': 'left',
               'text-justify': 'left',
-              'text-offset': [smallLabelOffsetEm, 0],
+              'text-offset': ['case', expandedStateExpressionForLabels, [bigLabelOffsetEm, 0], [smallLabelOffsetEm, 0]],
               'text-allow-overlap': true,
               'text-ignore-placement': true,
               'text-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 4, 3]
+              'symbol-sort-key': ['+', ['case', 
+                ['all', expandedStateExpressionForLabels, ['get', 'isMultiPost']], 7, // Big multi-post label
+                expandedStateExpressionForLabels, 6, // Big single-post label
+                ['get', 'isMultiPost'], 4, // Small multi-post label
+                3 // Small single-post label
+              ], ['*', ['id'], 0.0001]] // Per-card z-index: base sort-key + feature ID offset
             },
             paint:{
               'text-color': '#ffffff',
-              'text-opacity': mapCardDisplay === 'hover_only' ? 0 : 1,
+              'text-opacity': ['case', 
+                expandedStateExpression, ['case', mapCardDisplay === 'hover_only' ? ['boolean', ['feature-state', 'isHighlighted'], false] : true, 1, 0], // Big labels: show when expanded (and highlighted in hover_only mode)
+                mapCardDisplay === 'hover_only' ? 0 : 1 // Small labels: show always in always mode, hide in hover_only mode
+              ],
               'text-halo-color': 'rgba(0,0,0,0.4)',
               'text-halo-width': 1,
               'text-halo-blur': 1
@@ -19560,7 +19572,12 @@ function makePosts(){
         try{ 
           // Only update properties that can change (filter and sort-key based on data)
           map.setFilter(labelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
+          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', 
+            ['all', expandedStateExpression, ['get', 'isMultiPost']], 7, // Big multi-post label
+            expandedStateExpression, 6, // Big single-post label
+            ['get', 'isMultiPost'], 4, // Small multi-post label
+            3 // Small single-post label
+          ]);
         }catch(e){
           console.error('Failed to update label text layer:', e);
         }
@@ -19570,12 +19587,23 @@ function makePosts(){
         ['!',['has','point_count']],
         ['has','title']
       ];
+      // Icon/thumbnail expression: Use thumbnail (50x50) when expanded, icon (30x30) when not expanded
+      // Multi-post markers always use multi-post icon, never thumbnails
+      const expandedStateExpression = ['boolean', ['feature-state', 'isExpanded'], false];
       const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-        ['case',
-          ['==', ['var','iconId'], ''],
-          MULTI_POST_MARKER_ICON_ID,
-          ['var','iconId']
+        ['let', 'isMulti', ['get', 'isMultiPost'],
+          ['case',
+            ['==', ['var','iconId'], ''],
+            MULTI_POST_MARKER_ICON_ID, // Multi-post icon
+            ['all', expandedStateExpressionForIcons, ['!', ['var', 'isMulti']], ['coalesce', ['get', 'thumbnail_url'], ['get', 'thumb_url'], ['var', 'iconId']]], // Thumbnail when expanded (single post only)
+            ['var','iconId'] // Regular icon when not expanded
+          ]
         ]
+      ];
+      // Icon size: 50x50 (1.67x) when expanded, 30x30 (1x) when not expanded
+      const markerIconSizeExpression = ['case', 
+        ['all', expandedStateExpressionForIcons, ['!', ['get', 'isMultiPost']]], 1.67, // 50/30 = 1.67
+        1 // 30/30 = 1
       ];
       const markerIconLayerId = 'mapmarker-icon';
       if(!map.getLayer(markerIconLayerId)){
@@ -19588,14 +19616,18 @@ function makePosts(){
             minzoom: MARKER_MIN_ZOOM,
             layout:{
               'icon-image': markerIconImageExpression,
-              'icon-size': 1,
+              'icon-size': markerIconSizeExpression,
               'icon-allow-overlap': true,
               'icon-ignore-placement': true,
               'icon-anchor': 'center',
               'icon-offset': [0, 0],
               'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': 8,
+              'symbol-sort-key': ['+', ['case', 
+                ['all', expandedStateExpressionForIcons, ['!', ['get', 'isMultiPost']]], 10, // Thumbnail (50x50)
+                ['get', 'isMultiPost'], 9, // Multi-post icon
+                8 // Single post icon
+              ], ['*', ['id'], 0.0001]], // Per-card z-index: base sort-key + feature ID offset
               'visibility': 'visible'
             },
             paint:{
@@ -19606,9 +19638,15 @@ function makePosts(){
       }
       if(map.getLayer(markerIconLayerId)){
         try{
-          // Only update properties that can change (filter and icon-image based on data)
+          // Only update properties that can change (filter, icon-image, icon-size based on data and state)
           map.setFilter(markerIconLayerId, markerIconFilter);
           map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+          map.setLayoutProperty(markerIconLayerId, 'icon-size', markerIconSizeExpression);
+          map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', ['+', ['case', 
+                ['all', expandedStateExpressionForIcons, ['!', ['get', 'isMultiPost']]], 10, // Thumbnail (50x50)
+                ['get', 'isMultiPost'], 9, // Multi-post icon
+                8 // Single post icon
+              ], ['*', ['id'], 0.0001]]); // Per-card z-index: base sort-key + feature ID offset
         }catch(e){}
       }
       
@@ -19632,9 +19670,10 @@ function makePosts(){
             : 1;
           try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
         }
-        // Big pill: always show when highlighted, hide when not highlighted
+        // Big pill: only show when expanded (active/clicked), not on hover
         if(map.getLayer('big-map-card-pill')){
-          const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+          const expandedStateExpression = ['boolean', ['feature-state', 'isExpanded'], false];
+          const markerLabelHighlightOpacity = ['case', expandedStateExpression, 1, 0];
           try{ map.setPaintProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity); }catch(e){}
         }
         // Hide labels in hover_only mode (same as pills)
