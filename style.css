@@ -7611,9 +7611,9 @@ html, body { cursor: auto !important; }
             
             #tab-messages .icon-picker-popup{
               position:absolute;
-              top:calc(100% + 10px);
+              top:100%;
               left:0;
-              margin-top:0;
+              margin-top:8px;
               border-radius:10px;
               border:1px solid var(--border);
               background:rgba(10,10,20,0.95);
