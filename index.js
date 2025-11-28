@@ -1264,11 +1264,11 @@ let __notifyMapOnInteraction = null;
         // Try to await the cached promise - if it's already resolved, this will return immediately
         // If it was rejected, this will throw and we'll clear the cache
         await Promise.resolve(markerLabelPillImagePromise);
-        return markerLabelPillImagePromise;
+      return markerLabelPillImagePromise;
       } catch(err) {
         // Cached promise was rejected - clear it and try again
         markerLabelPillImagePromise = null;
-      }
+    }
     }
     
     // Load from admin settings - no hardcoded defaults
@@ -1352,6 +1352,27 @@ let __notifyMapOnInteraction = null;
   }
 
 
+  // Shared function to convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
+  function convertImageDataToCanvas(imageData){
+    if(!imageData) return null;
+    if(!(imageData instanceof ImageData)){
+      return imageData; // Already a Canvas or Image
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      const ctx = canvas.getContext('2d');
+      if(ctx){
+        ctx.putImageData(imageData, 0, 0);
+      }
+      return canvas;
+    } catch(e){
+      console.error('Error converting ImageData to Canvas:', e);
+      return null;
+    }
+  }
+
   function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
     if(!sourceImage){
       return null;
@@ -1366,10 +1387,13 @@ let __notifyMapOnInteraction = null;
     }
     try{
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      // Draw image at full size (no scaling) - Mapbox handles pixel ratio via options
+      const scale = window.devicePixelRatio || 1;
+      ctx.save();
+      ctx.scale(scale, scale);
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
+      ctx.restore();
     }catch(err){
       console.error(err);
       return null;
@@ -1382,9 +1406,18 @@ let __notifyMapOnInteraction = null;
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
-    // Return Canvas directly (Mapbox accepts Canvas objects)
+    let imageData = null;
+    try{
+      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    }catch(err){
+      console.error(err);
+      imageData = null;
+    }
+    if(!imageData){
+      return null;
+    }
     return {
-      image: canvas,
+      image: imageData,
       options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
     };
   }
@@ -2020,27 +2053,6 @@ let __notifyMapOnInteraction = null;
                             }
                           } catch(e) {
                             console.warn('[Pill Update] Error removing sprites before re-adding:', e);
-                          }
-                          
-                          // Helper function to convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
-                          function convertImageDataToCanvas(imageData){
-                            if(!imageData) return null;
-                            if(!(imageData instanceof ImageData)){
-                              return imageData; // Already a Canvas or Image
-                            }
-                            try {
-                              const canvas = document.createElement('canvas');
-                              canvas.width = imageData.width;
-                              canvas.height = imageData.height;
-                              const ctx = canvas.getContext('2d');
-                              if(ctx){
-                                ctx.putImageData(imageData, 0, 0);
-                              }
-                              return canvas;
-                            } catch(e){
-                              console.error('[Pill Update] Error converting ImageData to Canvas:', e);
-                              return null;
-                            }
                           }
                           
                           if(baseSprite && baseSprite.image){
@@ -2716,16 +2728,16 @@ let __notifyMapOnInteraction = null;
 
         async function ensureBalloonIconImage(mapInstance){
           // Load balloon icon URL from admin_settings - no fallbacks
-          try {
-            const response = await fetch('/gateway.php?action=get-admin-settings');
-            if(response.ok){
-              const data = await response.json();
+            try {
+              const response = await fetch('/gateway.php?action=get-admin-settings');
+              if(response.ok){
+                const data = await response.json();
               if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
                 BALLOON_IMAGE_URL = data.settings.marker_cluster_icon.trim();
+                }
               }
-            }
-          } catch(err) {
-            console.error('Failed to load marker cluster icon setting:', err);
+            } catch(err) {
+              console.error('Failed to load marker cluster icon setting:', err);
           }
           
           return new Promise(resolve => {
@@ -15536,10 +15548,10 @@ function makePosts(){
                 logo.classList.remove('has-icon');
               }
               
-              // Save to admin_settings
-              const settingKey = `msg_category_${cat.key}_icon`;
-              fetch('/gateway.php?action=save-admin-settings', {
-                method: 'POST',
+                // Save to admin_settings
+                const settingKey = `msg_category_${cat.key}_icon`;
+                fetch('/gateway.php?action=save-admin-settings', {
+                  method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ [settingKey]: value || '' })
               }).then((response) => {
@@ -19331,7 +19343,7 @@ function makePosts(){
         }
       }
       
-      // Always ensure sprites are added to map (remove old ones first if they exist)
+      // Always ensure sprites are added to map (only add if they don't exist to avoid redundant operations)
       // CRITICAL: Mapbox requires Image/Canvas objects, not ImageData
       if(!pillSprites){
         console.error('[addPostSource] CRITICAL: pillSprites is null/undefined - pills will not be visible!');
@@ -19341,46 +19353,18 @@ function makePosts(){
         console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
       }
       
-      // Helper function to convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
-      function convertImageDataToCanvas(imageData){
-        if(!imageData) return null;
-        if(!(imageData instanceof ImageData)){
-          // Already a Canvas or Image, return as-is
-          return imageData;
-        }
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = imageData.width;
-          canvas.height = imageData.height;
-          const ctx = canvas.getContext('2d');
-          if(ctx){
-            ctx.putImageData(imageData, 0, 0);
-          }
-          return canvas;
-        } catch(e){
-          console.error('[addPostSource] Error converting ImageData to Canvas:', e);
-          return null;
-        }
-      }
-      
+      // Only add sprites if they don't already exist (prevents redundant additions)
       if(pillSprites && pillSprites.base && pillSprites.base.image){
         try {
-          // Remove if exists to ensure clean update
-          if(map.hasImage(MARKER_LABEL_BG_ID)){
-            map.removeImage(MARKER_LABEL_BG_ID);
-            console.log('[addPostSource] Removed existing small-map-card-pill sprite before re-adding');
-          }
-          // Convert ImageData to Canvas if needed
-          const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
-          if(imageToAdd){
-            map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
-            const hasImage = map.hasImage(MARKER_LABEL_BG_ID);
-            console.log('[addPostSource] Added small-map-card-pill sprite, hasImage check:', hasImage);
-            if(!hasImage){
-              console.error('[addPostSource] CRITICAL: Sprite was added but hasImage returns false!');
+          if(!map.hasImage(MARKER_LABEL_BG_ID)){
+            // Convert ImageData to Canvas if needed
+            const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
+            if(imageToAdd){
+              map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
+              console.log('[addPostSource] Added small-map-card-pill sprite');
+            } else {
+              console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
             }
-          } else {
-            console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
@@ -19391,22 +19375,15 @@ function makePosts(){
       
       if(pillSprites && pillSprites.highlight && pillSprites.highlight.image){
         try {
-          // Remove if exists to ensure clean update
-          if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-            map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
-            console.log('[addPostSource] Removed existing big-map-card-pill sprite before re-adding');
-          }
-          // Convert ImageData to Canvas if needed
-          const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
-          if(imageToAdd){
-            map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
-            const hasImage = map.hasImage(MARKER_LABEL_BG_ACCENT_ID);
-            console.log('[addPostSource] Added big-map-card-pill sprite, hasImage check:', hasImage);
-            if(!hasImage){
-              console.error('[addPostSource] CRITICAL: Sprite was added but hasImage returns false!');
+          if(!map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+            // Convert ImageData to Canvas if needed
+            const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
+            if(imageToAdd){
+              map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
+              console.log('[addPostSource] Added big-map-card-pill sprite');
+            } else {
+              console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
             }
-          } else {
-            console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
@@ -19483,12 +19460,10 @@ function makePosts(){
         if(!layerExists){
           return;
         }
-        // Update properties that can change (filter, opacity, and icon-image for small pill)
+        // Only update properties that can change (filter and icon-image for small pill)
+        // Note: icon-opacity, icon-translate, icon-translate-anchor, and symbol-z-order are set in layer config
+        // and don't need to be updated unless they actually change
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate', finalIconOffset); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate-anchor', 'viewport'); }catch(e){}
-        try{ map.setLayoutProperty(id,'symbol-z-order', 'viewport-y'); }catch(e){}
         // Update icon-image for small pill layer (uses expression to switch sprites)
         if(id === 'small-map-card-pill' && iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
