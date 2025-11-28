@@ -1940,6 +1940,25 @@ let __notifyMapOnInteraction = null;
                             console.log('[Pill Update] Added new big-map-card-pill sprite');
                           }
                           
+                          // Update the layer's icon-image property to force refresh
+                          try {
+                            const smallPillLayer = mapInstance.getLayer('small-map-card-pill');
+                            if(smallPillLayer){
+                              // Force refresh by updating the expression
+                              const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+                              const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
+                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', smallPillIconImageExpression);
+                              console.log('[Pill Update] Updated small-map-card-pill layer');
+                            }
+                            const bigPillLayer = mapInstance.getLayer('big-map-card-pill');
+                            if(bigPillLayer){
+                              mapInstance.setLayoutProperty('big-map-card-pill', 'icon-image', 'big-map-card-pill');
+                              console.log('[Pill Update] Updated big-map-card-pill layer');
+                            }
+                          } catch(e) {
+                            console.warn('[Pill Update] Could not update layers:', e);
+                          }
+                          
                           // Force style update
                           try {
                             if(mapInstance.style && typeof mapInstance.style._update === 'function'){
@@ -1983,6 +2002,47 @@ let __notifyMapOnInteraction = null;
                           console.log('[Multi-Post Icon] Updated window.subcategoryMarkers');
                         } else {
                           console.warn('[Multi-Post Icon] window.subcategoryMarkers not found!');
+                        }
+                        
+                        // Remove old multi-post icon sprite if it exists
+                        const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
+                        try {
+                          if(mapInstance.hasImage(MULTI_POST_MARKER_ICON_ID)){
+                            mapInstance.removeImage(MULTI_POST_MARKER_ICON_ID);
+                            console.log('[Multi-Post Icon] Removed old sprite');
+                          }
+                        } catch(e) {
+                          console.warn('[Multi-Post Icon] Error removing old sprite:', e);
+                        }
+                        
+                        // Load and add new multi-post icon sprite
+                        try {
+                          const img = await loadMarkerLabelImage(value);
+                          if(img && img.width > 0 && img.height > 0){
+                            let deviceScale = 2;
+                            try {
+                              const ratio = window.devicePixelRatio;
+                              if(Number.isFinite(ratio) && ratio > 0){
+                                deviceScale = ratio;
+                              }
+                            } catch(err) {
+                              deviceScale = 2;
+                            }
+                            const markerIconBaseSizePx = 30; // 30x30 for small
+                            const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
+                            const canvas = document.createElement('canvas');
+                            canvas.width = iconSize;
+                            canvas.height = iconSize;
+                            const ctx = canvas.getContext('2d');
+                            if(ctx){
+                              ctx.drawImage(img, 0, 0, iconSize, iconSize);
+                              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                              mapInstance.addImage(MULTI_POST_MARKER_ICON_ID, imageData, { pixelRatio: deviceScale });
+                              console.log('[Multi-Post Icon] Added new sprite');
+                            }
+                          }
+                        } catch(e) {
+                          console.error('[Multi-Post Icon] Error loading/adding sprite:', e);
                         }
                         
                         // Regenerate markers to use new multi-post icon (this will regenerate composite sprites)
@@ -19108,16 +19168,36 @@ function makePosts(){
       }
       
       // Ensure pill sprites are loaded before creating layers
+      // Always reload to get latest images (in case they were updated)
+      markerLabelPillImagePromise = null;
+      markerLabelPillSpriteCache = null;
       const pillSprites = await ensureMarkerLabelPillSprites();
-      if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
+      
+      // Remove old sprites if they exist, then add new ones
+      if(map.hasImage(MARKER_LABEL_BG_ID)){
+        try {
+          map.removeImage(MARKER_LABEL_BG_ID);
+        } catch(e) {}
+      }
+      if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+        try {
+          map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
+        } catch(e) {}
+      }
+      
+      if(pillSprites && pillSprites.base){
         try{
           map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
-        }catch(e){}
+        }catch(e){
+          console.error('Error adding small-map-card-pill sprite:', e);
+        }
       }
-      if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+      if(pillSprites && pillSprites.highlight){
         try{
           map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
-        }catch(e){}
+        }catch(e){
+          console.error('Error adding big-map-card-pill sprite:', e);
+        }
       }
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
