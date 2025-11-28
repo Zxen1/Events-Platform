@@ -19555,25 +19555,33 @@ function makePosts(){
         console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
       }
       
+      // Remove existing images first to prevent dimension mismatch errors
       // Only add sprites if they don't already exist (prevents redundant additions)
       if(pillSprites && pillSprites.base && pillSprites.base.image){
         try {
-          if(!map.hasImage(MARKER_LABEL_BG_ID)){
-            // Convert ImageData to Canvas if needed
-            const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
-            if(imageToAdd){
-              // Validate dimensions before adding (prevents RangeError: mismatched image size)
-              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
-              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
-              if(width > 0 && height > 0){
-                map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
-                console.log('[addPostSource] Added small-map-card-pill sprite', width, 'x', height);
-              } else {
-                console.error('[addPostSource] Invalid image dimensions for base sprite:', width, 'x', height);
-              }
-            } else {
-              console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
+          // Remove existing image first to prevent dimension mismatch
+          if(map.hasImage(MARKER_LABEL_BG_ID)){
+            try {
+              map.removeImage(MARKER_LABEL_BG_ID);
+            } catch(removeErr) {
+              // Ignore remove errors
             }
+          }
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
+          if(imageToAdd){
+            // Validate dimensions before adding (prevents RangeError: mismatched image size)
+            const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+            const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+            if(width > 0 && height > 0){
+              // Don't pass pixelRatio option - let Mapbox handle it automatically
+              map.addImage(MARKER_LABEL_BG_ID, imageToAdd);
+              console.log('[addPostSource] Added small-map-card-pill sprite', width, 'x', height);
+            } else {
+              console.error('[addPostSource] Invalid image dimensions for base sprite:', width, 'x', height);
+            }
+          } else {
+            console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
@@ -19584,22 +19592,29 @@ function makePosts(){
       
       if(pillSprites && pillSprites.highlight && pillSprites.highlight.image){
         try {
-          if(!map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-            // Convert ImageData to Canvas if needed
-            const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
-            if(imageToAdd){
-              // Validate dimensions before adding
-              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
-              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
-              if(width > 0 && height > 0){
-                map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
-                console.log('[addPostSource] Added big-map-card-pill sprite', width, 'x', height);
-              } else {
-                console.error('[addPostSource] Invalid image dimensions for highlight sprite:', width, 'x', height);
-              }
-            } else {
-              console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
+          // Remove existing image first to prevent dimension mismatch
+          if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+            try {
+              map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
+            } catch(removeErr) {
+              // Ignore remove errors
             }
+          }
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
+          if(imageToAdd){
+            // Validate dimensions before adding
+            const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+            const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+            if(width > 0 && height > 0){
+              // Don't pass pixelRatio option - let Mapbox handle it automatically
+              map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd);
+              console.log('[addPostSource] Added big-map-card-pill sprite', width, 'x', height);
+            } else {
+              console.error('[addPostSource] Invalid image dimensions for highlight sprite:', width, 'x', height);
+            }
+          } else {
+            console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
@@ -19611,21 +19626,28 @@ function makePosts(){
       // Add hover pill sprite if available
       if(pillSprites && pillSprites.hover && pillSprites.hover.image){
         try {
-          if(!map.hasImage('hover-map-card-pill')){
-            const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
-            if(imageToAdd){
-              // Validate dimensions before adding
-              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
-              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
-              if(width > 0 && height > 0){
-                map.addImage('hover-map-card-pill', imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
-                console.log('[addPostSource] Added hover-map-card-pill sprite', width, 'x', height);
-              } else {
-                console.error('[addPostSource] Invalid image dimensions for hover sprite:', width, 'x', height);
-              }
-            } else {
-              console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
+          // Remove existing image first to prevent dimension mismatch
+          if(map.hasImage('hover-map-card-pill')){
+            try {
+              map.removeImage('hover-map-card-pill');
+            } catch(removeErr) {
+              // Ignore remove errors
             }
+          }
+          const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
+          if(imageToAdd){
+            // Validate dimensions before adding
+            const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+            const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+            if(width > 0 && height > 0){
+              // Don't pass pixelRatio option - let Mapbox handle it automatically
+              map.addImage('hover-map-card-pill', imageToAdd);
+              console.log('[addPostSource] Added hover-map-card-pill sprite', width, 'x', height);
+            } else {
+              console.error('[addPostSource] Invalid image dimensions for hover sprite:', width, 'x', height);
+            }
+          } else {
+            console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding hover-map-card-pill sprite:', e);

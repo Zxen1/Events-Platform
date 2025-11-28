@@ -142,8 +142,8 @@
     
     /* Container-based stacking system for map cards */
     /* Containers group all elements (pill, label, icon) together to prevent penetration */
-    .small-map-card-container,
-    .big-map-card-container{
+    .mapmarker-overlay .small-map-card-container,
+    .mapmarker-overlay .big-map-card-container{
       position: absolute;
       left: 0;
       top: 0;
@@ -153,12 +153,12 @@
     }
     
     /* Small map card container - lower z-index, renders below big cards */
-    .small-map-card-container{
+    .mapmarker-overlay .small-map-card-container{
       z-index: 1;
     }
     
     /* Big map card container - higher z-index, renders above small cards */
-    .big-map-card-container{
+    .mapmarker-overlay .big-map-card-container{
       z-index: 2;
     }
     
