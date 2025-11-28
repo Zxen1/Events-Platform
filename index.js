@@ -1884,12 +1884,50 @@ let __notifyMapOnInteraction = null;
                         markerLabelPillSpriteCache = null;
                         
                         // Get current settings (use updated value for the changed one)
-                        const baseUrl = picker.settingKey === 'small_map_card_pill' ? value : (settings.small_map_card_pill || null);
-                        const accentUrl = picker.settingKey === 'big_map_card_pill' ? value : (settings.big_map_card_pill || null);
-                        const hoverUrl = picker.settingKey === 'hover_map_card_pill' ? value : (settings.hover_map_card_pill || null);
+                        // First check local settings, then fetch from DB if needed
+                        let baseUrl = picker.settingKey === 'small_map_card_pill' ? value : (settings.small_map_card_pill || null);
+                        let accentUrl = picker.settingKey === 'big_map_card_pill' ? value : (settings.big_map_card_pill || null);
+                        let hoverUrl = picker.settingKey === 'hover_map_card_pill' ? value : (settings.hover_map_card_pill || null);
+                        
+                        // If we don't have all required URLs, fetch from DB
+                        if(!baseUrl || !accentUrl){
+                          console.log('[Pill Update] Missing URLs, fetching from DB...', { baseUrl, accentUrl, hoverUrl, settingKey: picker.settingKey });
+                          try {
+                            const response = await fetch('/gateway.php?action=get-admin-settings');
+                            if(response.ok){
+                              const data = await response.json();
+                              if(data.success && data.settings){
+                                if(!baseUrl && data.settings.small_map_card_pill){
+                                  baseUrl = data.settings.small_map_card_pill;
+                                  settings.small_map_card_pill = baseUrl;
+                                }
+                                if(!accentUrl && data.settings.big_map_card_pill){
+                                  accentUrl = data.settings.big_map_card_pill;
+                                  settings.big_map_card_pill = accentUrl;
+                                }
+                                if(!hoverUrl && data.settings.hover_map_card_pill){
+                                  hoverUrl = data.settings.hover_map_card_pill;
+                                  settings.hover_map_card_pill = hoverUrl;
+                                }
+                                // Override with new value for the one being updated
+                                if(picker.settingKey === 'small_map_card_pill') baseUrl = value;
+                                if(picker.settingKey === 'big_map_card_pill') accentUrl = value;
+                                if(picker.settingKey === 'hover_map_card_pill') hoverUrl = value;
+                              }
+                            }
+                          } catch(e) {
+                            console.error('[Pill Update] Error fetching from DB:', e);
+                          }
+                        } else {
+                          // Override with new value for the one being updated
+                          if(picker.settingKey === 'small_map_card_pill') baseUrl = value;
+                          if(picker.settingKey === 'big_map_card_pill') accentUrl = value;
+                          if(picker.settingKey === 'hover_map_card_pill') hoverUrl = value;
+                        }
+                        
+                        console.log('[Pill Update] Starting update for', picker.settingKey, 'with URLs:', { baseUrl, accentUrl, hoverUrl });
                         
                         if(baseUrl && accentUrl){
-                          console.log('[Pill Update] Starting update for', picker.settingKey);
                           
                           // Remove old base sprites FIRST (before loading new images)
                           try {
@@ -1919,16 +1957,36 @@ let __notifyMapOnInteraction = null;
                             hoverImg: hoverImg ? `${hoverImg.width}x${hoverImg.height}` : 'null'
                           });
                           
+                          // Validate images before building sprites
+                          if(!baseImg || !baseImg.width || baseImg.height === 0){
+                            console.error('[Pill Update] Invalid base image:', baseImg);
+                            return;
+                          }
+                          if(!accentImg || !accentImg.width || accentImg.height === 0){
+                            console.error('[Pill Update] Invalid accent image:', accentImg);
+                            return;
+                          }
+                          
                           // Build sprites directly
                           const baseSprite = buildMarkerLabelPillSprite(baseImg, null, 1, false);
                           const accentSprite = buildMarkerLabelPillSprite(accentImg, null, 1, true);
                           const hoverSprite = hoverImg ? buildMarkerLabelPillSprite(hoverImg, null, 1, false) : accentSprite;
                           
                           console.log('[Pill Update] Sprites built:', { 
-                            baseSprite: !!baseSprite, 
-                            accentSprite: !!accentSprite,
-                            hoverSprite: !!hoverSprite
+                            baseSprite: baseSprite ? (baseSprite.image ? 'valid' : 'missing image') : 'null',
+                            accentSprite: accentSprite ? (accentSprite.image ? 'valid' : 'missing image') : 'null',
+                            hoverSprite: hoverSprite ? (hoverSprite.image ? 'valid' : 'missing image') : 'null'
                           });
+                          
+                          // Validate sprites before using
+                          if(!baseSprite || !baseSprite.image){
+                            console.error('[Pill Update] Failed to build base sprite');
+                            return;
+                          }
+                          if(!accentSprite || !accentSprite.image){
+                            console.error('[Pill Update] Failed to build accent sprite');
+                            return;
+                          }
                           
                           // Update BOTH caches with new sprites (so any subsequent calls use updated values)
                           // Update image promise cache with resolved promise containing new images
@@ -19227,23 +19285,51 @@ function makePosts(){
       // Only reload if cache is empty (to avoid redundant reloads when already updated)
       let pillSprites = markerLabelPillSpriteCache;
       if(!pillSprites){
-        pillSprites = await ensureMarkerLabelPillSprites();
+        try {
+          pillSprites = await ensureMarkerLabelPillSprites();
+        } catch(e) {
+          console.error('[addPostSource] Error loading pill sprites:', e);
+          pillSprites = null;
+        }
       }
       
-      // Add sprites to map only if they don't already exist (prevents conflicts)
-      if(pillSprites && pillSprites.base && !map.hasImage(MARKER_LABEL_BG_ID)){
-        try{
-          map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+      // Always ensure sprites are added to map (remove old ones first if they exist)
+      if(pillSprites && pillSprites.base){
+        try {
+          // Remove if exists to ensure clean update
+          if(map.hasImage(MARKER_LABEL_BG_ID)){
+            map.removeImage(MARKER_LABEL_BG_ID);
+          }
+          if(pillSprites.base.image){
+            map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+            console.log('[addPostSource] Added small-map-card-pill sprite');
+          } else {
+            console.error('[addPostSource] base sprite has no image data');
+          }
         }catch(e){
-          console.error('Error adding small-map-card-pill sprite:', e);
+          console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
         }
+      } else {
+        console.warn('[addPostSource] No base pill sprite available');
       }
-      if(pillSprites && pillSprites.highlight && !map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-        try{
-          map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+      
+      if(pillSprites && pillSprites.highlight){
+        try {
+          // Remove if exists to ensure clean update
+          if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+            map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
+          }
+          if(pillSprites.highlight.image){
+            map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+            console.log('[addPostSource] Added big-map-card-pill sprite');
+          } else {
+            console.error('[addPostSource] highlight sprite has no image data');
+          }
         }catch(e){
-          console.error('Error adding big-map-card-pill sprite:', e);
+          console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
         }
+      } else {
+        console.warn('[addPostSource] No highlight pill sprite available');
       }
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
