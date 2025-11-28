@@ -1216,6 +1216,7 @@ let __notifyMapOnInteraction = null;
 
   const MARKER_LABEL_BG_ID = 'small-map-card-pill';
   const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
+  const MARKER_LABEL_BG_HOVER_ID = 'hover-map-card-pill';
   const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-pill', 'big-map-card-pill'];
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
@@ -2048,6 +2049,9 @@ let __notifyMapOnInteraction = null;
                             if(mapInstance.hasImage('big-map-card-pill')){
                               mapInstance.removeImage('big-map-card-pill');
                             }
+                            if(mapInstance.hasImage('hover-map-card-pill')){
+                              mapInstance.removeImage('hover-map-card-pill');
+                            }
                           } catch(e) {
                             console.warn('[Pill Update] Error removing sprites before re-adding:', e);
                           }
@@ -2084,15 +2088,31 @@ let __notifyMapOnInteraction = null;
                             console.error('[Pill Update] accentSprite is invalid:', accentSprite);
                           }
                           
+                          // Add hover pill sprite if available
+                          if(hoverSprite && hoverSprite.image){
+                            try {
+                              const imageToAdd = convertImageDataToCanvas(hoverSprite.image);
+                              if(imageToAdd){
+                                mapInstance.addImage('hover-map-card-pill', imageToAdd, hoverSprite.options || { pixelRatio: 1 });
+                                console.log('[Pill Update] Added new hover-map-card-pill sprite');
+                              } else {
+                                console.error('[Pill Update] Failed to convert hoverSprite ImageData to Canvas');
+                              }
+                            } catch(e) {
+                              console.error('[Pill Update] Error adding hover-map-card-pill sprite:', e);
+                            }
+                          }
+                          
                           // Force map to recognize new sprites by updating layer properties
                           try {
                             const smallPillLayer = mapInstance.getLayer('small-map-card-pill');
                             if(smallPillLayer){
-                              // Small pill always uses 'small-map-card-pill' sprite (never switches)
-                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', 'small-map-card-pill');
+                              // Small pill switches to hover pill on hover, otherwise uses base pill
+                              const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+                              const smallPillIconImageExpression = ['case', highlightedStateExpression, 'hover-map-card-pill', 'small-map-card-pill'];
+                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', smallPillIconImageExpression);
                               // Also force opacity refresh
                               const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-                              const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
                               const smallPillOpacity = mapCardDisplay === 'hover_only' 
                                 ? ['case', highlightedStateExpression, 1, 0]
                                 : 1;
@@ -2106,8 +2126,8 @@ let __notifyMapOnInteraction = null;
                             if(bigPillLayer){
                               mapInstance.setLayoutProperty('big-map-card-pill', 'icon-image', 'big-map-card-pill');
                               // Big pill only shows when active (clicked/open), not on hover
-                              const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
-                              const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
+                              const expandedStateExpression = ['boolean', ['feature-state', 'isExpanded'], false];
+                              const markerLabelHighlightOpacity = ['case', expandedStateExpression, 1, 0];
                               mapInstance.setLayoutProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity);
                               console.log('[Pill Update] Updated big-map-card-pill layer properties');
                             } else {
@@ -9707,9 +9727,9 @@ function makePosts(){
           const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
           const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
           let left = triggerRect.left - containerRect.left;
-          // Use 10px spacing for map tab, 8px for others
-          const isMapTab = container.closest('#tab-map') !== null;
-          const spacing = isMapTab ? 10 : 8;
+          // Use 10px spacing for map and messages tabs, 8px for formbuilder
+          const isMapOrMessagesTab = container.closest('#tab-map, #tab-messages') !== null;
+          const spacing = isMapOrMessagesTab ? 10 : 8;
           let top = triggerRect.bottom - containerRect.top + spacing;
           popup.style.left = '0px';
           popup.style.top = '0px';
@@ -19392,6 +19412,24 @@ function makePosts(){
         console.warn('[addPostSource] No highlight pill sprite available - big pills will not be visible');
       }
       
+      // Add hover pill sprite if available
+      if(pillSprites && pillSprites.hover && pillSprites.hover.image){
+        try {
+          if(!map.hasImage(MARKER_LABEL_BG_HOVER_ID)){
+            // Convert ImageData to Canvas if needed
+            const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
+            if(imageToAdd){
+              map.addImage(MARKER_LABEL_BG_HOVER_ID, imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
+              console.log('[addPostSource] Added hover-map-card-pill sprite');
+            } else {
+              console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
+            }
+          }
+        }catch(e){
+          console.error('[addPostSource] Error adding hover-map-card-pill sprite:', e);
+        }
+      }
+      
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
       const markerLabelBaseConditions = [
@@ -19405,17 +19443,17 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Always uses 'small-map-card-pill' sprite (never switches)
+      // Small pill: Switch to hover pill on hover, otherwise use base pill
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = 'small-map-card-pill';
+      const smallPillIconImageExpression = ['case', highlightedStateExpression, MARKER_LABEL_BG_HOVER_ID, MARKER_LABEL_BG_ID];
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
       // Big pill layer should be visible (opacity 1) when post is active (clicked/open), invisible (0) when not active
-      // Use isActive feature state for active posts, not isHighlighted (hover)
-      const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
-      const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
+      // Use isExpanded feature state for active posts (set when post is clicked/open), not isHighlighted (hover)
+      const expandedStateExpression = ['boolean', ['feature-state', 'isExpanded'], false];
+      const markerLabelHighlightOpacity = ['case', expandedStateExpression, 1, 0];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
