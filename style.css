@@ -36,11 +36,17 @@
  *   10: panel resizers, various overlays
  *   5: mapmarker-overlay, various elements
  *   3: various elements
- *   2: post-cards, various elements
- *   1: form labels, form field headers, variant pricing labels, header-buttons
+ *   2: big-map-card-container (stacks above small-map-card-container)
+ *   1: small-map-card-container, form labels, form field headers, variant pricing labels, header-buttons
  *   0: base layer, various elements
  *   -1: some background elements
  *   auto: some elements
+ * 
+ * Map Card Container System:
+ *   - small-map-card-container: z-index 1 (renders below big cards)
+ *   - big-map-card-container: z-index 2 (renders above small cards)
+ *   - Containers use isolation: isolate to create stacking contexts
+ *   - This prevents elements from one card from penetrating cards above
  */
 
 /* Extracted from <styleid="hotfixes"> */
@@ -129,7 +135,55 @@
       z-index: 5;
       /* Mapbox positions this element - it updates transform to move marker on map */
     }
-    .mapmarker-overlay:has(.small-map-card){
+    .mapmarker-overlay:has(.small-map-card-container),
+    .mapmarker-overlay:has(.big-map-card-container){
+      pointer-events: auto;
+    }
+    
+    /* Container-based stacking system for map cards */
+    /* Containers group all elements (pill, label, icon) together to prevent penetration */
+    .small-map-card-container,
+    .big-map-card-container{
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      isolation: isolate; /* Creates new stacking context - prevents elements from penetrating */
+      contain: layout style paint; /* Optimizes rendering */
+    }
+    
+    /* Small map card container - lower z-index, renders below big cards */
+    .small-map-card-container{
+      z-index: 1;
+    }
+    
+    /* Big map card container - higher z-index, renders above small cards */
+    .big-map-card-container{
+      z-index: 2;
+    }
+    
+    /* Small map card should be positioned relative to container */
+    .small-map-card-container .small-map-card{
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    
+    /* Big map card should be positioned relative to container */
+    .big-map-card-container .big-map-card{
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    
+    /* All other elements inside containers are relative to container */
+    .small-map-card-container > *:not(.small-map-card),
+    .big-map-card-container > *:not(.big-map-card){
+      position: relative;
+    }
+    
+    .mapmarker-overlay .small-map-card-container,
+    .mapmarker-overlay .big-map-card-container{
       pointer-events: auto;
     }
     .mapmarker-overlay .small-map-card{
@@ -156,6 +210,33 @@
       z-index: 1;
       transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease;
     }
+    
+    /* Big map card container styles */
+    .big-map-card-container{
+      width: 225px;
+      height: 60px;
+      transform: translate3d(-90px, -50%, 0);
+    }
+    
+    .big-map-card{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      cursor: pointer;
+      border-radius: 999px;
+      background: rgba(46, 58, 114, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px 5px 5px;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+    
+    .big-map-card img{ display:block; }
     .small-map-card:hover:not(.is-clicked):not(.is-post-open){
       width: 150px;
       height: 40px;

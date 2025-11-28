@@ -3463,6 +3463,210 @@ let __notifyMapOnInteraction = null;
     }
 
     // --- Section 5: Small Map Card DOM Functions ---
+    
+    // Container-based stacking system for map cards
+    // These functions ensure all map card elements are grouped in containers to prevent penetration
+    
+    /**
+     * Ensures a small map card is wrapped in a container
+     * @param {HTMLElement} cardEl - The small-map-card element
+     * @returns {HTMLElement} - The container element
+     */
+    function ensureSmallMapCardContainer(cardEl){
+      if(!cardEl || !cardEl.classList || !cardEl.classList.contains('small-map-card')){
+        return null;
+      }
+      
+      // Check if already in a container
+      const existingContainer = cardEl.closest('.small-map-card-container');
+      if(existingContainer){
+        return existingContainer;
+      }
+      
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'small-map-card-container';
+      
+      // Move card into container
+      const parent = cardEl.parentNode;
+      if(parent){
+        parent.insertBefore(container, cardEl);
+        container.appendChild(cardEl);
+      }
+      
+      return container;
+    }
+    
+    /**
+     * Ensures a big map card is wrapped in a container
+     * @param {HTMLElement} cardEl - The big-map-card element
+     * @returns {HTMLElement} - The container element
+     */
+    function ensureBigMapCardContainer(cardEl){
+      if(!cardEl || !cardEl.classList || !cardEl.classList.contains('big-map-card')){
+        return null;
+      }
+      
+      // Check if already in a container
+      const existingContainer = cardEl.closest('.big-map-card-container');
+      if(existingContainer){
+        return existingContainer;
+      }
+      
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'big-map-card-container';
+      
+      // Move card into container
+      const parent = cardEl.parentNode;
+      if(parent){
+        parent.insertBefore(container, cardEl);
+        container.appendChild(cardEl);
+      }
+      
+      return container;
+    }
+    
+    /**
+     * Wraps all existing map cards in their respective containers
+     * Call this after map cards are created to ensure proper container structure
+     */
+    function wrapAllMapCardsInContainers(){
+      // Wrap all small map cards
+      document.querySelectorAll('.small-map-card').forEach(card => {
+        ensureSmallMapCardContainer(card);
+      });
+      
+      // Wrap all big map cards
+      document.querySelectorAll('.big-map-card').forEach(card => {
+        ensureBigMapCardContainer(card);
+      });
+    }
+    
+    /**
+     * Creates a small map card container with the card inside
+     * Use this when creating new small map cards
+     * @param {HTMLElement} overlayEl - The mapmarker-overlay element
+     * @param {Object} options - Options for the card
+     * @returns {HTMLElement} - The container element
+     */
+    function createSmallMapCardWithContainer(overlayEl, options = {}){
+      if(!overlayEl) return null;
+      
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'small-map-card-container';
+      
+      // Create card (this would be your existing card creation logic)
+      const card = document.createElement('div');
+      card.className = 'small-map-card';
+      if(options.id){
+        card.dataset.id = String(options.id);
+      }
+      if(options.venueKey){
+        card.dataset.venueKey = String(options.venueKey);
+      }
+      
+      // Add card to container
+      container.appendChild(card);
+      
+      // Add container to overlay
+      overlayEl.appendChild(container);
+      
+      return container;
+    }
+    
+    /**
+     * Creates a big map card container with the card inside
+     * Use this when creating new big map cards (when post is open)
+     * @param {HTMLElement} overlayEl - The mapmarker-overlay element
+     * @param {Object} options - Options for the card
+     * @returns {HTMLElement} - The container element
+     */
+    function createBigMapCardWithContainer(overlayEl, options = {}){
+      if(!overlayEl) return null;
+      
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'big-map-card-container';
+      
+      // Create card
+      const card = document.createElement('div');
+      card.className = 'big-map-card';
+      if(options.id){
+        card.dataset.id = String(options.id);
+      }
+      if(options.venueKey){
+        card.dataset.venueKey = String(options.venueKey);
+      }
+      
+      // Add card to container
+      container.appendChild(card);
+      
+      // Add container to overlay
+      overlayEl.appendChild(container);
+      
+      return container;
+    }
+    
+    // Expose functions globally
+    window.ensureSmallMapCardContainer = ensureSmallMapCardContainer;
+    window.ensureBigMapCardContainer = ensureBigMapCardContainer;
+    window.wrapAllMapCardsInContainers = wrapAllMapCardsInContainers;
+    window.createSmallMapCardWithContainer = createSmallMapCardWithContainer;
+    window.createBigMapCardWithContainer = createBigMapCardWithContainer;
+    
+    // Auto-wrap map cards when they're added to the DOM
+    if(typeof MutationObserver !== 'undefined'){
+      const mapCardObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
+            if(node.nodeType === 1){ // Element node
+              // Check if it's a map card
+              if(node.classList && node.classList.contains('small-map-card')){
+                ensureSmallMapCardContainer(node);
+              } else if(node.classList && node.classList.contains('big-map-card')){
+                ensureBigMapCardContainer(node);
+              }
+              // Check if it contains map cards
+              if(node.querySelectorAll){
+                node.querySelectorAll('.small-map-card').forEach(card => {
+                  ensureSmallMapCardContainer(card);
+                });
+                node.querySelectorAll('.big-map-card').forEach(card => {
+                  ensureBigMapCardContainer(card);
+                });
+              }
+            }
+          });
+        });
+      });
+      
+      // Observe the map container for new map cards
+      const mapContainer = document.querySelector('.mapboxgl-map');
+      if(mapContainer){
+        mapCardObserver.observe(mapContainer, {
+          childList: true,
+          subtree: true
+        });
+      }
+      
+      // Also observe document body for map cards added elsewhere
+      mapCardObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+      
+      // Wrap existing cards on load
+      if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(wrapAllMapCardsInContainers, 100);
+        });
+      } else {
+        setTimeout(wrapAllMapCardsInContainers, 100);
+      }
+    }
+    
     function enforceSmallMultiMapCardIcon(img, overlayEl){
       if(!img) return;
       // Get multi-post icon from database - no fallback
@@ -19390,6 +19594,23 @@ function makePosts(){
         console.warn('[addPostSource] No highlight pill sprite available - big pills will not be visible');
       }
       
+      // Add hover pill sprite if available
+      if(pillSprites && pillSprites.hover && pillSprites.hover.image){
+        try {
+          if(!map.hasImage('hover-map-card-pill')){
+            const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
+            if(imageToAdd){
+              map.addImage('hover-map-card-pill', imageToAdd, pillSprites.hover.options || { pixelRatio: 1 });
+              console.log('[addPostSource] Added hover-map-card-pill sprite');
+            } else {
+              console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
+            }
+          }
+        }catch(e){
+          console.error('[addPostSource] Error adding hover-map-card-pill sprite:', e);
+        }
+      }
+      
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
       const markerLabelBaseConditions = [
@@ -19403,10 +19624,15 @@ function makePosts(){
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      // Small pill: Always uses 'small-map-card-pill' sprite (never switches)
+      // Small pill: Uses 'small-map-card-pill' sprite by default, switches to 'hover-map-card-pill' on hover
       // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
       // In always mode, always show (opacity 1)
-      const smallPillIconImageExpression = 'small-map-card-pill';
+      const smallPillIconImageExpression = [
+        'case',
+        highlightedStateExpression,
+        map.hasImage('hover-map-card-pill') ? 'hover-map-card-pill' : 'small-map-card-pill',
+        'small-map-card-pill'
+      ];
       const smallPillOpacity = mapCardDisplay === 'hover_only' 
         ? ['case', highlightedStateExpression, 1, 0]
         : 1;
@@ -19525,6 +19751,56 @@ function makePosts(){
           console.error('Failed to update label text layer:', e);
         }
       }
+      
+      // Add big labels layer (sort-keys 6, 7) - only shows when post is open (active state)
+      // Big labels: 3 lines, 145px max width, left edge at 30px from lat/lng
+      const bigLabelOffsetEm = 30 / textSize; // 30px in em units
+      const bigLabelTextLayerId = 'big-map-card-label';
+      const activeStateExpressionForLabels = ['boolean', ['feature-state', 'isActive'], false];
+      if(!map.getLayer(bigLabelTextLayerId)){
+        try{
+          map.addLayer({
+            id: bigLabelTextLayerId,
+            type:'symbol',
+            source:'posts',
+            filter: markerLabelFilter,
+            minzoom: markerLabelMinZoom,
+            maxzoom: 24,
+            layout:{
+              'text-field': ['coalesce', ['get', 'label'], ''],
+              'text-size': textSize,
+              'text-line-height': 1.2,
+              'text-max-width': 145,
+              'text-anchor': 'left',
+              'text-justify': 'left',
+              'text-offset': [bigLabelOffsetEm, 0],
+              'text-allow-overlap': true,
+              'text-ignore-placement': true,
+              'text-pitch-alignment': 'viewport',
+              'symbol-z-order': 'auto',
+              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 7, 6]
+            },
+            paint:{
+              'text-color': '#ffffff',
+              'text-opacity': ['case', activeStateExpressionForLabels, 1, 0], // Only show when post is active/open
+              'text-halo-color': 'rgba(0,0,0,0.4)',
+              'text-halo-width': 1,
+              'text-halo-blur': 1
+            }
+          });
+          console.log('[addPostSource] Added big-map-card-label layer');
+        }catch(e){
+          console.error('Failed to add big label text layer:', e);
+        }
+      }
+      if(map.getLayer(bigLabelTextLayerId)){
+        try{ 
+          map.setFilter(bigLabelTextLayerId, markerLabelFilter);
+          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 7, 6]);
+        }catch(e){
+          console.error('Failed to update big label text layer:', e);
+        }
+      }
       // Create marker-icon layer (sprites are already loaded above)
       const markerIconFilter = ['all',
         ['!',['has','point_count']],
@@ -19592,15 +19868,22 @@ function makePosts(){
             : 1;
           try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
         }
-        // Big pill: always show when highlighted, hide when not highlighted
+        // Big pill: only show when post is active/open (not on hover)
         if(map.getLayer('big-map-card-pill')){
-          const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+          const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
+          const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
           try{ map.setPaintProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity); }catch(e){}
         }
         // Hide labels in hover_only mode (same as pills)
         const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
         if(map.getLayer('small-map-card-label')){
           try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
+        }
+        // Big labels: only show when post is active/open (not on hover)
+        if(map.getLayer('big-map-card-label')){
+          const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
+          const bigLabelOpacity = ['case', activeStateExpression, 1, 0];
+          try{ map.setPaintProperty('big-map-card-label', 'text-opacity', bigLabelOpacity); }catch(e){}
         }
         // marker-icon visibility/opacity handled in final ordering section
       }
