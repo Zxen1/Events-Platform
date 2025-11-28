@@ -3424,13 +3424,15 @@ let __notifyMapOnInteraction = null;
     }
     // Get interactive layers based on map card display mode
     // In hover_only mode, only marker-icon is clickable (map cards are hidden)
-    // In always mode, marker-icon and map card layers are clickable
+    // In always mode, marker-icon and small map card pill are clickable
+    // Big pill layer is NOT interactive - it's only a visual indicator for active posts
     const getMarkerInteractiveLayers = () => {
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
       if(mapCardDisplay === 'hover_only'){
         return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
       }
-      return ['mapmarker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
+      // Only small pill and icon are interactive - big pill is visual only
+      return ['mapmarker-icon', 'small-map-card-pill'];
     };
     window.__overCard = window.__overCard || false;
 
