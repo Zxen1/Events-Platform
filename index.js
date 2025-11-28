@@ -19823,6 +19823,8 @@ function makePosts(){
           ? `post:${post.id}::${key}::${entry.index}`
           : `post:${post.id}::${entry.index}`;
         const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
+        // Get thumbnail URL for big composites (thumbUrl is a global function)
+        const thumbnailUrl = typeof thumbUrl === 'function' ? thumbUrl(post) : null;
         return {
           type:'Feature',
           id: featureId,
@@ -19840,7 +19842,8 @@ function makePosts(){
             baseSub,
             venueKey: key,
             locationIndex: entry.index,
-            isMultiPost: false
+            isMultiPost: false,
+            thumbnailUrl
           },
           geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
         };
@@ -19874,6 +19877,8 @@ function makePosts(){
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
         const multiIds = Array.from(group.postIds);
+        // Get thumbnail URL for big composites (use first post's thumbnail)
+        const thumbnailUrl = typeof thumbUrl === 'function' ? thumbUrl(post) : null;
         return [{
           type:'Feature',
           id: featureId,
@@ -19893,7 +19898,8 @@ function makePosts(){
             locationIndex: entry.index,
             isMultiPost: true,
             multiCount,
-            multiPostIds: multiIds
+            multiPostIds: multiIds,
+            thumbnailUrl
           },
           geometry:{ type:'Point', coordinates }
         }];
@@ -19983,32 +19989,73 @@ function makePosts(){
           const iconId = props.sub || MULTI_POST_MARKER_ICON_ID;
           const thumbnailUrl = props.thumbnailUrl || null;
           
-          // Determine composite type
-          const compositeType = isMultiPost ? COMPOSITE_TYPE_SMALL_MULTI : COMPOSITE_TYPE_SMALL;
+          // Create multiple composite types for each feature:
+          // 1. Small composite (default)
+          // 2. Small hover composite (for hover state)
+          // 3. Big composite (for active/open state)
+          // 4. Big multi composite (if multi-post)
           
-          // Create composite and store ID in feature properties
-          const compositePromise = ensureMapCardComposite(map, {
-            type: compositeType,
+          const baseCompositeType = isMultiPost ? COMPOSITE_TYPE_SMALL_MULTI : COMPOSITE_TYPE_SMALL;
+          const hoverCompositeType = isMultiPost ? COMPOSITE_TYPE_HOVER_MULTI : COMPOSITE_TYPE_HOVER;
+          const bigCompositeType = isMultiPost ? COMPOSITE_TYPE_BIG_MULTI : COMPOSITE_TYPE_BIG;
+          
+          // Create base composite (small)
+          const baseCompositePromise = ensureMapCardComposite(map, {
+            type: baseCompositeType,
             labelText,
             iconId,
             isMultiPost,
-            thumbnailUrl
+            thumbnailUrl: null // Small composites don't use thumbnails
           }).then(result => {
             if(result && result.compositeId && props){
               props.compositeId = result.compositeId;
             }
             return result;
           }).catch(err => {
-            console.warn('[addPostSource] Failed to create composite:', err);
+            console.warn('[addPostSource] Failed to create base composite:', err);
             return null;
           });
           
-          compositePromises.push(compositePromise);
+          // Create hover composite
+          const hoverCompositePromise = ensureMapCardComposite(map, {
+            type: hoverCompositeType,
+            labelText,
+            iconId,
+            isMultiPost,
+            thumbnailUrl: null
+          }).then(result => {
+            if(result && result.compositeId && props){
+              props.hoverCompositeId = result.compositeId;
+            }
+            return result;
+          }).catch(err => {
+            console.warn('[addPostSource] Failed to create hover composite:', err);
+            return null;
+          });
+          
+          // Create big composite (for active/open state)
+          const bigCompositePromise = ensureMapCardComposite(map, {
+            type: bigCompositeType,
+            labelText,
+            iconId,
+            isMultiPost,
+            thumbnailUrl // Big composites use thumbnails
+          }).then(result => {
+            if(result && result.compositeId && props){
+              props.bigCompositeId = result.compositeId;
+            }
+            return result;
+          }).catch(err => {
+            console.warn('[addPostSource] Failed to create big composite:', err);
+            return null;
+          });
+          
+          compositePromises.push(baseCompositePromise, hoverCompositePromise, bigCompositePromise);
         }
         
-        // Wait for composites (limit to avoid blocking)
+        // Wait for composites (limit to avoid blocking - 200 features = 600 composites max)
         try {
-          await Promise.allSettled(compositePromises.slice(0, 200));
+          await Promise.allSettled(compositePromises.slice(0, 600));
         } catch(err){
           console.warn('[addPostSource] Error creating composites:', err);
         }
@@ -20221,30 +20268,20 @@ function makePosts(){
       // Small composites: left edge at -20px from lat/lng (150×40px)
       // Big composites: left edge at -35px from lat/lng (225×60px)
       
-      // Expression to get composite ID based on feature properties
-      // Format: marker-label-composite-{type}-{hash}
-      const getCompositeIdExpression = (type) => {
-        return ['concat', 
-          MARKER_LABEL_COMPOSITE_PREFIX,
-          type, '-',
-          ['to-string', ['get', 'compositeHash']]
-        ];
-      };
-      
-      // For now, use a fallback approach: create composites and reference them
-      // We'll use the compositeId stored in feature properties if available
+      // Composite icon expressions that switch based on feature state
+      // Small composite: use hover composite when highlighted, base composite otherwise
       const smallCompositeIconExpression = [
-        'coalesce',
-        ['get', 'compositeId'],
-        // Fallback to old system if composite not available
-        smallPillIconImageExpression
+        'case',
+        highlightedStateExpression,
+        ['coalesce', ['get', 'hoverCompositeId'], ['get', 'compositeId'], smallPillIconImageExpression],
+        ['coalesce', ['get', 'compositeId'], smallPillIconImageExpression]
       ];
       
+      // Big composite: use big composite when active, nothing otherwise (handled by opacity)
       const bigCompositeIconExpression = [
         'coalesce',
-        ['get', 'compositeId'],
-        // Fallback to old system if composite not available
-        'big-map-card-pill'
+        ['get', 'bigCompositeId'],
+        'big-map-card-pill' // Fallback to old system
       ];
       
       const labelLayersConfig = [
