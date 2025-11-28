@@ -488,24 +488,6 @@
 // 8. Map Source Integration (lines ~19001+)
 // ============================================================================
 
-  const markerIconSize = 1;
-  const markerIconBaseSizePx = 30;
-  const basePillWidthPx = 150;
-  const basePillHeightPx = 40;
-  let accentPillWidthPx = null;
-  let accentPillHeightPx = null;
-  const markerLabelTextGapPx = 5;
-  const markerLabelMarkerInsetPx = 5;
-  const markerLabelTextRightPaddingPx = 5;
-  const markerLabelTextPaddingPx = 10; // Fixed padding for labels (no icon reference)
-  const markerLabelTextAreaWidthPx = Math.max(0, basePillWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
-  const markerLabelTextAreaWidthPxSmall = 100; // For small map cards (non-multi-post venue)
-  const markerLabelTextSize = 12;
-  const markerLabelTextLineHeight = 1.2;
-  const markerLabelPillLeftOffsetPx = -20; // Left edge of pill is 20px left of lat/lng
-  const markerLabelTextLeftOffsetPx = 20; // Left edge of label is 20px right of lat/lng
-  const markerLabelEllipsisChar = '\u2026';
-  const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
 
   // --- Section 2: Text Measurement & Formatting Helpers ---
