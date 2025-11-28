@@ -924,6 +924,7 @@ let __notifyMapOnInteraction = null;
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = localStorage.getItem('mode') || 'map';
+    let historyWasActive = localStorage.getItem('historyActive') === 'true';
     const DEFAULT_SPIN_SPEED = 0.3;
     // Welcome message will be loaded from DB
 
@@ -981,31 +982,31 @@ let __notifyMapOnInteraction = null;
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = 0;
 
-      let spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
-          spinLoadStart = false,
-          spinLoadType = 'everyone',
-          spinLogoClick = true,
-          spinZoomMax = 4,
-          spinSpeed = 0.3,
-          spinEnabled = false,
-          mapCardDisplay = 'hover_only',
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
-      
-      // Set title immediately from localStorage to prevent flash
-      (function setTitleFromCache(){
-        const cachedSiteName = localStorage.getItem('site_name');
-        if(cachedSiteName){
-          let pageTitle = cachedSiteName;
-          const cachedTagline = localStorage.getItem('site_tagline');
-          if(cachedTagline){
-            pageTitle += ' - ' + cachedTagline;
-          }
-          document.title = pageTitle;
+    let spinning = false, expiredWasOn = false, dateStart = null, dateEnd = null,
+        spinLoadStart = false,
+        spinLoadType = 'everyone',
+        spinLogoClick = true,
+        spinZoomMax = 4,
+        spinSpeed = 0.3,
+        spinEnabled = false,
+        mapCardDisplay = 'hover_only',
+        mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
+    
+    // Set title immediately from localStorage to prevent flash
+    (function setTitleFromCache(){
+      const cachedSiteName = localStorage.getItem('site_name');
+      if(cachedSiteName){
+        let pageTitle = cachedSiteName;
+        const cachedTagline = localStorage.getItem('site_tagline');
+        if(cachedTagline){
+          pageTitle += ' - ' + cachedTagline;
         }
-      })();
-      
-      // Initialize system image pickers using iconpicker interface
-      function initializeSystemImagePickers(settings){
+        document.title = pageTitle;
+      }
+    })();
+    
+    // Initialize system image pickers using iconpicker interface
+    function initializeSystemImagePickers(settings){
         const imagePickers = [
           { buttonId: 'systemImageSmallMapCardPillButton', containerId: 'systemImageSmallMapCardPillContainer', previewId: 'systemImageSmallMapCardPillPreview', settingKey: 'small_map_card_pill', label: 'Small Map Card Pill' },
           { buttonId: 'systemImageBigMapCardPillButton', containerId: 'systemImageBigMapCardPillContainer', previewId: 'systemImageBigMapCardPillPreview', settingKey: 'big_map_card_pill', label: 'Big Map Card Pill' },
@@ -19427,7 +19428,8 @@ function openPostModal(id){
       localStorage.setItem('mode', mode);
       localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
     });
-  
+  })();
+
 // 0577 helpers (safety)
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }

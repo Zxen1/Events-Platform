@@ -15,10 +15,10 @@
       return;
     }
     
-    // Check for required dependencies (check window first, then global)
-    const getBaseFieldType = window.getBaseFieldType || (typeof getBaseFieldType !== "undefined" ? getBaseFieldType : null);
-    const getMessage = window.getMessage || (typeof getMessage !== "undefined" ? getMessage : null);
-    const normalizeFormbuilderSnapshot = window.normalizeFormbuilderSnapshot || (typeof normalizeFormbuilderSnapshot !== "undefined" ? normalizeFormbuilderSnapshot : null);
+    // Check for required dependencies (check window only to avoid ReferenceError)
+    const getBaseFieldType = (typeof window !== 'undefined' && typeof window.getBaseFieldType === 'function') ? window.getBaseFieldType : null;
+    const getMessage = (typeof window !== 'undefined' && typeof window.getMessage === 'function') ? window.getMessage : null;
+    const normalizeFormbuilderSnapshot = (typeof window !== 'undefined' && typeof window.normalizeFormbuilderSnapshot === 'function') ? window.normalizeFormbuilderSnapshot : null;
     
     if(!getBaseFieldType || !getMessage || !normalizeFormbuilderSnapshot){
       if(initAttempts < MAX_INIT_ATTEMPTS){
