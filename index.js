@@ -1889,130 +1889,120 @@ let __notifyMapOnInteraction = null;
                         const hoverUrl = picker.settingKey === 'hover_map_card_pill' ? value : (settings.hover_map_card_pill || null);
                         
                         if(baseUrl && accentUrl){
-                          // Remove all composite sprites that use pills (they need to be regenerated)
+                          console.log('[Pill Update] Starting update for', picker.settingKey);
+                          
+                          // Remove old base sprites FIRST (before loading new images)
                           try {
-                            // Try to get all image IDs from the style
-                            const style = mapInstance.style;
-                            if(style && style._loaded && style._spriteIds){
-                              const spriteIds = Array.from(style._spriteIds || []);
-                              spriteIds.forEach(spriteId => {
-                                if(typeof spriteId === 'string' && spriteId.includes('composite')){
-                                  try {
-                                    if(mapInstance.hasImage(spriteId)){
-                                      mapInstance.removeImage(spriteId);
-                                    }
-                                  } catch(e) {
-                                    // Ignore errors for individual sprite removal
-                                  }
-                                }
-                              });
-                            } else {
-                              // Fallback: try to access style's image registry
-                              if(style && style._images){
-                                const imageIds = Object.keys(style._images);
-                                imageIds.forEach(id => {
-                                  if(typeof id === 'string' && id.includes('composite')){
-                                    try {
-                                      if(mapInstance.hasImage(id)){
-                                        mapInstance.removeImage(id);
-                                      }
-                                    } catch(e) {
-                                      // Ignore errors
-                                    }
-                                  }
-                                });
-                              }
+                            if(mapInstance.hasImage('small-map-card-pill')){
+                              mapInstance.removeImage('small-map-card-pill');
+                              console.log('[Pill Update] Removed old small-map-card-pill');
+                            }
+                            if(mapInstance.hasImage('big-map-card-pill')){
+                              mapInstance.removeImage('big-map-card-pill');
+                              console.log('[Pill Update] Removed old big-map-card-pill');
                             }
                           } catch(e) {
-                            console.warn('Could not clear composite sprites:', e);
+                            console.error('[Pill Update] Error removing old sprites:', e);
                           }
                           
                           // Load images directly with updated values
+                          console.log('[Pill Update] Loading images from:', { baseUrl, accentUrl, hoverUrl });
                           const [baseImg, accentImg, hoverImg] = await Promise.all([
                             loadMarkerLabelImage(baseUrl),
                             loadMarkerLabelImage(accentUrl),
                             hoverUrl ? loadMarkerLabelImage(hoverUrl).catch(() => null) : Promise.resolve(null)
                           ]);
                           
+                          console.log('[Pill Update] Images loaded:', { 
+                            baseImg: baseImg ? `${baseImg.width}x${baseImg.height}` : 'null',
+                            accentImg: accentImg ? `${accentImg.width}x${accentImg.height}` : 'null',
+                            hoverImg: hoverImg ? `${hoverImg.width}x${hoverImg.height}` : 'null'
+                          });
+                          
                           // Build sprites directly
                           const baseSprite = buildMarkerLabelPillSprite(baseImg, null, 1, false);
                           const accentSprite = buildMarkerLabelPillSprite(accentImg, null, 1, true);
                           const hoverSprite = hoverImg ? buildMarkerLabelPillSprite(hoverImg, null, 1, false) : accentSprite;
                           
-                          // Remove old base sprites
-                          if(mapInstance.hasImage('small-map-card-pill')){
-                            mapInstance.removeImage('small-map-card-pill');
-                          }
-                          if(mapInstance.hasImage('big-map-card-pill')){
-                            mapInstance.removeImage('big-map-card-pill');
-                          }
+                          console.log('[Pill Update] Sprites built:', { 
+                            baseSprite: !!baseSprite, 
+                            accentSprite: !!accentSprite,
+                            hoverSprite: !!hoverSprite
+                          });
                           
                           // Add new sprites
                           if(baseSprite){
                             mapInstance.addImage('small-map-card-pill', baseSprite.image, baseSprite.options || {});
+                            console.log('[Pill Update] Added new small-map-card-pill sprite');
                           }
                           if(accentSprite){
                             mapInstance.addImage('big-map-card-pill', accentSprite.image, accentSprite.options || {});
+                            console.log('[Pill Update] Added new big-map-card-pill sprite');
                           }
                           
-                          // Regenerate markers to use new pill sprites
-                          if(typeof addPostSource === 'function'){
+                          // Force style update
+                          try {
+                            if(mapInstance.style && typeof mapInstance.style._update === 'function'){
+                              mapInstance.style._update();
+                              console.log('[Pill Update] Style updated');
+                            }
+                          } catch(e) {
+                            console.warn('[Pill Update] Could not update style:', e);
+                          }
+                          
+                          // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
+                          console.log('[Pill Update] Regenerating markers...');
+                          if(typeof window.addPostSource === 'function'){
+                            try {
+                              window.addPostSource();
+                              console.log('[Pill Update] Markers regenerated successfully');
+                            } catch(e) {
+                              console.error('[Pill Update] Error regenerating markers:', e);
+                            }
+                          } else if(typeof addPostSource === 'function'){
                             try {
                               addPostSource();
+                              console.log('[Pill Update] Markers regenerated successfully');
                             } catch(e) {
-                              console.error('Error regenerating markers:', e);
+                              console.error('[Pill Update] Error regenerating markers:', e);
                             }
+                          } else {
+                            console.error('[Pill Update] addPostSource function not found!');
                           }
+                        } else {
+                          console.warn('[Pill Update] Missing URLs:', { baseUrl, accentUrl });
                         }
                       }
                       // Handle multi-post icon update
                       else if(picker.settingKey === 'multi_post_icon'){
+                        console.log('[Multi-Post Icon] Updating to:', value);
+                        
                         // Update global reference
                         if(window.subcategoryMarkers){
                           window.subcategoryMarkers['multi-post-icon'] = value;
+                          console.log('[Multi-Post Icon] Updated window.subcategoryMarkers');
+                        } else {
+                          console.warn('[Multi-Post Icon] window.subcategoryMarkers not found!');
                         }
                         
-                        // Remove composite sprites that use multi-post icon
-                        try {
-                          const style = mapInstance.style;
-                          if(style && style._loaded && style._spriteIds){
-                            const spriteIds = Array.from(style._spriteIds || []);
-                            spriteIds.forEach(spriteId => {
-                              if(typeof spriteId === 'string' && spriteId.includes('composite')){
-                                try {
-                                  if(mapInstance.hasImage(spriteId)){
-                                    mapInstance.removeImage(spriteId);
-                                  }
-                                } catch(e) {
-                                  // Ignore errors
-                                }
-                              }
-                            });
-                          } else if(style && style._images){
-                            const imageIds = Object.keys(style._images);
-                            imageIds.forEach(id => {
-                              if(typeof id === 'string' && id.includes('composite')){
-                                try {
-                                  if(mapInstance.hasImage(id)){
-                                    mapInstance.removeImage(id);
-                                  }
-                                } catch(e) {
-                                  // Ignore errors
-                                }
-                              }
-                            });
+                        // Regenerate markers to use new multi-post icon (this will regenerate composite sprites)
+                        console.log('[Multi-Post Icon] Regenerating markers...');
+                        if(typeof window.addPostSource === 'function'){
+                          try {
+                            window.addPostSource();
+                            console.log('[Multi-Post Icon] Markers regenerated successfully');
+                          } catch(e) {
+                            console.error('[Multi-Post Icon] Error regenerating markers:', e);
                           }
-                        } catch(e) {
-                          console.warn('Could not clear composite sprites:', e);
-                        }
-                        
-                        // Regenerate markers to use new multi-post icon
-                        if(typeof addPostSource === 'function'){
+                        } else if(typeof addPostSource === 'function'){
                           try {
                             addPostSource();
+                            console.log('[Multi-Post Icon] Markers regenerated successfully');
                           } catch(e) {
-                            console.error('Error regenerating markers:', e);
+                            console.error('[Multi-Post Icon] Error regenerating markers:', e);
                           }
+                        } else {
+                          console.error('[Multi-Post Icon] addPostSource function not found!');
                         }
                       }
                       

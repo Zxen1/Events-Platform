@@ -2756,6 +2756,8 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   background:#222222;
   border:1px solid rgba(255,255,255,0.1);
+  bottom:auto;
+  top:calc(100% + 4px);
 }
 #filterPanel .sort-field .options-menu .sort-option{
   background:rgba(0,0,0,0.2);
