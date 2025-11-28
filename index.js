@@ -1408,16 +1408,29 @@ let __notifyMapOnInteraction = null;
       return markerLabelPillSpriteCache;
     }
     const assets = await ensureMarkerLabelPillImage();
-    // Base sprite: use image as-is, no tinting
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, null, 1, false);
-    // Accent sprite: use image as-is, no tinting
-    const accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    if(!assets || !assets.base){
+      return null;
+    }
+    // Base sprite: apply black tint with 0.9 alpha (matches reference file)
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
+    let accentSprite = null;
+    // Accent sprite: use highlight image without tint, or fallback to tinted base
+    if(assets.highlight){
+      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    }
+    if(!accentSprite){
+      // Fallback: tint base image with blue color (matches reference file)
+      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1, true);
+    }
+    if(!baseSprite){
+      return null;
+    }
     // Hover sprite: use hover image if available, otherwise use accent
     const hoverSprite = assets.hover ? buildMarkerLabelPillSprite(assets.hover, null, 1, false) : accentSprite;
     markerLabelPillSpriteCache = {
       base: baseSprite,
-      highlight: accentSprite,
-      hover: hoverSprite
+      highlight: accentSprite || baseSprite,
+      hover: hoverSprite || accentSprite || baseSprite
     };
     return markerLabelPillSpriteCache;
   }
@@ -1967,9 +1980,15 @@ let __notifyMapOnInteraction = null;
                             return;
                           }
                           
-                          // Build sprites directly
-                          const baseSprite = buildMarkerLabelPillSprite(baseImg, null, 1, false);
-                          const accentSprite = buildMarkerLabelPillSprite(accentImg, null, 1, true);
+                          // Build sprites directly (matching reference file approach)
+                          // Base sprite: apply black tint with 0.9 alpha
+                          const baseSprite = buildMarkerLabelPillSprite(baseImg, 'rgba(0,0,0,1)', 0.9, false);
+                          // Accent sprite: use highlight image without tint, or fallback to tinted base
+                          let accentSprite = buildMarkerLabelPillSprite(accentImg, null, 1, true);
+                          if(!accentSprite){
+                            accentSprite = buildMarkerLabelPillSprite(baseImg, '#2f3b73', 1, true);
+                          }
+                          // Hover sprite: use hover image if available, otherwise use accent
                           const hoverSprite = hoverImg ? buildMarkerLabelPillSprite(hoverImg, null, 1, false) : accentSprite;
                           
                           console.log('[Pill Update] Sprites built:', { 
@@ -1996,11 +2015,11 @@ let __notifyMapOnInteraction = null;
                             hover: hoverImg || accentImg
                           });
                           
-                          // Update sprite cache with new sprites
+                          // Update sprite cache with new sprites (with fallbacks like reference file)
                           markerLabelPillSpriteCache = {
                             base: baseSprite,
-                            highlight: accentSprite,
-                            hover: hoverSprite
+                            highlight: accentSprite || baseSprite,
+                            hover: hoverSprite || accentSprite || baseSprite
                           };
                           
                           // Add new sprites to map (remove first to ensure clean update)
