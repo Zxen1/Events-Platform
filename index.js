@@ -1839,21 +1839,59 @@ let __notifyMapOnInteraction = null;
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify(settingsToSave)
-                  }).then(() => {
-                    // Update local settings
-                    settings[picker.settingKey] = value;
-                    
-                    // Clear sprite cache to force reload
-                    if(typeof window.markerLabelPillImagePromise !== 'undefined'){
-                      window.markerLabelPillImagePromise = null;
+                  }).then((response) => {
+                    if(!response.ok){
+                      throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    if(typeof window.markerLabelPillSpriteCache !== 'undefined'){
-                      window.markerLabelPillSpriteCache = null;
+                    return response.json();
+                  }).then((data) => {
+                    if(data.success){
+                      // Update local settings
+                      settings[picker.settingKey] = value;
+                      
+                      // Clear sprite cache to force reload
+                      markerLabelPillImagePromise = null;
+                      markerLabelPillSpriteCache = null;
+                      
+                      // Auto-refresh map cards if map is loaded
+                      const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
+                      if(mapInstance){
+                        // Remove old sprites
+                        try{
+                          if(mapInstance.hasImage && mapInstance.hasImage('small-map-card-pill')){
+                            mapInstance.removeImage('small-map-card-pill');
+                          }
+                          if(mapInstance.hasImage && mapInstance.hasImage('big-map-card-pill')){
+                            mapInstance.removeImage('big-map-card-pill');
+                          }
+                        }catch(e){}
+                        
+                        // Trigger reload of sprites
+                        (async () => {
+                          try{
+                            const pillSprites = await ensureMarkerLabelPillSprites();
+                            if(pillSprites && pillSprites.base && !mapInstance.hasImage('small-map-card-pill')){
+                              mapInstance.addImage('small-map-card-pill', pillSprites.base.image, pillSprites.base.options || {});
+                            }
+                            if(pillSprites && pillSprites.highlight && !mapInstance.hasImage('big-map-card-pill')){
+                              mapInstance.addImage('big-map-card-pill', pillSprites.highlight.image, pillSprites.highlight.options || {});
+                            }
+                            if(mapInstance.triggerRepaint){
+                              mapInstance.triggerRepaint();
+                            }
+                          }catch(err){
+                            console.error('Error refreshing map cards:', err);
+                          }
+                        })();
+                      }
+                      
+                      console.log(`${picker.label} updated and map refreshed.`);
+                    } else {
+                      throw new Error(data.message || 'Save failed');
                     }
-                    
-                    console.log(`${picker.label} updated. Click "Refresh Map Cards" to see changes.`);
                   }).catch(err => {
                     console.error(`Failed to save ${picker.label}:`, err);
+                    alert(`Failed to save ${picker.label}: ${err.message}`);
                   });
                 }
               },
@@ -15094,21 +15132,62 @@ function makePosts(){
           window.attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: () => cat.icon,
             onSelect: (value) => {
+              // Update preview immediately
               if(value){
                 previewImg.src = value;
                 preview.classList.add('has-image');
                 previewLabel.textContent = '';
                 iconPickerButton.textContent = 'Change Icon';
-                cat.icon = value;
-                logoImg.src = value;
-                // Save to admin_settings
-                const settingKey = `msg_category_${cat.key}_icon`;
-                fetch('/gateway.php?action=save-admin-settings', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ [settingKey]: value })
-                }).catch(err => console.error('Failed to save category icon:', err));
+              } else {
+                previewImg.src = '';
+                preview.classList.remove('has-image');
+                previewLabel.textContent = 'No Icon';
+                iconPickerButton.textContent = 'Choose Icon';
               }
+              
+              // Update category icon
+              cat.icon = value || '';
+              
+              // Update logo in menu header
+              const existingLogoImg = logo.querySelector('img');
+              if(value){
+                if(existingLogoImg){
+                  existingLogoImg.src = value;
+                } else {
+                  const newLogoImg = document.createElement('img');
+                  newLogoImg.src = value;
+                  newLogoImg.alt = '';
+                  logo.appendChild(newLogoImg);
+                }
+                logo.classList.add('has-icon');
+              } else {
+                if(existingLogoImg){
+                  existingLogoImg.remove();
+                }
+                logo.classList.remove('has-icon');
+              }
+              
+              // Save to admin_settings
+              const settingKey = `msg_category_${cat.key}_icon`;
+              fetch('/gateway.php?action=save-admin-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ [settingKey]: value || '' })
+              }).then((response) => {
+                if(!response.ok){
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+              }).then((data) => {
+                if(data.success){
+                  console.log(`Message category icon saved: ${settingKey} = ${value || '(empty)'}`);
+                } else {
+                  throw new Error(data.message || 'Save failed');
+                }
+              }).catch(err => {
+                console.error('Failed to save category icon:', err);
+                alert(`Failed to save icon: ${err.message}`);
+              });
             },
             label: `Choose icon for ${cat.name}`,
             parentMenu: content,
