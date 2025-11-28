@@ -2898,10 +2898,16 @@
           bearing: startBearing,
           attributionControl:true
         });
-        // Add error handler for token/auth errors
+        // Add error handler for token/auth errors (only log once per error type)
+        let lastErrorLogged = null;
         map.on('error', (e) => {
-          if(e && e.error && (e.error.message || '').includes('token') || (e.error.message || '').includes('Unauthorized')){
-            console.error('Mapbox authentication error:', e.error);
+          if(e && e.error){
+            const errorMsg = e.error.message || '';
+            const isTokenError = errorMsg.includes('token') || errorMsg.includes('Unauthorized');
+            if(isTokenError && lastErrorLogged !== errorMsg){
+              console.error('Mapbox authentication error:', e.error);
+              lastErrorLogged = errorMsg;
+            }
           }
         });
         try{ ensurePlaceholderSprites(map); }catch(err){}
@@ -3082,7 +3088,7 @@
               return;
             }
           }catch(err){
-            console.error(err);
+            // Silently handle - image check errors are expected during style loading
           }
           if(pendingStyleImageRequests.has(imageId)){
             return;

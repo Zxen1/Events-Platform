@@ -348,6 +348,8 @@ function setupMessageObserver(){
 
 // Make message functions globally available
 window.getMessage = getMessage;
+window.getBaseFieldType = getBaseFieldType;
+window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 window.getMessageSync = getMessageSync;
 window.loadMessagesFromDatabase = loadMessagesFromDatabase;
 window.replacePlaceholders = replacePlaceholders;
@@ -3182,14 +3184,36 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         return canvas;
       }
 
-      // Remaining icon loader code continues here...
-      allowEmptyBlocks: true,
-      emptyBlockChance: 0.25,
-      ensureAtLeastOne: true,
-      allowDoubleSessions: true,
-      timeGenerator: randomSessionTime
-    });
-  }
+      // Return icon loader function
+      return async function ensureIcon(iconId){
+        if(!iconId || typeof iconId !== 'string') return false;
+        if(pending.has(iconId)){
+          try{ await pending.get(iconId); }catch(err){}
+          return true;
+        }
+        const task = (async () => {
+          const { urls, shouldLookupLocal } = urlsFor(iconId);
+          if(!urls.length) return false;
+          try{
+            for(const url of urls){
+              const img = await loadImageCompat(url);
+              const ratio = pickPixelRatio(url, img);
+              if(mapInstance && typeof mapInstance.addImage === 'function'){
+                mapInstance.addImage(iconId, img, { pixelRatio: ratio });
+              }
+            }
+            return true;
+          }catch(err){
+            return false;
+          }finally{
+            pending.delete(iconId);
+          }
+        })();
+        pending.set(iconId, task);
+        try{ await task; }catch(err){}
+        return true;
+      };
+    }
 
   function derivePostDatesFromLocations(locations){
     if(!Array.isArray(locations) || !locations.length){
@@ -16528,9 +16552,12 @@ function makePosts(){
       const shouldLoadPosts = pendingPostLoad;
       pendingPostLoad = false;
       if(shouldLoadPosts){
+        const map = getMap();
+        const scheduleCheckLoadPosts = window.scheduleCheckLoadPosts || (() => {});
         scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
         return;
       }
+      const applyFilters = window.applyFilters || (() => {});
       applyFilters();
     }
 
@@ -19400,7 +19427,6 @@ function openPostModal(id){
       localStorage.setItem('mode', mode);
       localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
     });
-  })();
   
 // 0577 helpers (safety)
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
@@ -19486,7 +19512,7 @@ function savePanelState(m){
   if(pwd.className) confirm.className = pwd.className;
   confirm.required = true;
   pwd.insertAdjacentElement('afterend', confirm);
-})();
+}
 // === End Added Confirm Password Field ===
 
 // Filter out auth inputs from triggering dirty state
@@ -19511,83 +19537,6 @@ function formChangedWrapper(event){
   }
   formChanged();
 }
-
-form.addEventListener('input', formChangedWrapper, true);
-    form.addEventListener('change', formChangedWrapper, true);
-    if(saveButton){
-      saveButton.addEventListener('click', e=>{
-        e.preventDefault();
-        pendingCloseTarget = null;
-        handleSave({ closeAfter:false });
-      });
-    }
-    if(discardButton){
-      discardButton.addEventListener('click', e=>{
-        e.preventDefault();
-        pendingCloseTarget = null;
-        discardChanges({ closeAfter:false });
-      });
-    }
-    if(promptCancelButton){
-      promptCancelButton.addEventListener('click', e=>{
-        e.preventDefault();
-        cancelPrompt();
-      });
-    }
-    if(promptSaveButton){
-      promptSaveButton.addEventListener('click', e=>{
-        e.preventDefault();
-        handleSave({ closeAfter:true });
-      });
-    }
-    if(promptDiscardButton){
-      promptDiscardButton.addEventListener('click', e=>{
-        e.preventDefault();
-        discardChanges({ closeAfter:true });
-      });
-    }
-    if(prompt){
-      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
-        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
-      }
-      if(!promptKeydownListener){
-        promptKeydownListener = event => handlePromptKeydown(event, {
-          prompt,
-          cancelButton: promptCancelButton,
-          cancelPrompt
-        });
-      }
-      promptKeydownTarget = prompt;
-      prompt.addEventListener('keydown', promptKeydownListener);
-      prompt.addEventListener('click', e=>{
-        if(e.target === prompt) cancelPrompt();
-      });
-    }
-    initialized = true;
-    refreshSavedState();
-  }
-
-  ensureElements();
-  attachListeners();
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(()=>{
-      ensureElements();
-      attachListeners();
-      const draft = loadDraft();
-      if(draft){ applyState(draft); }
-      refreshSavedState();
-    }, 0);
-  });
-
-  function isPromptOpen(){
-    return !!(prompt && prompt.classList.contains('show'));
-  }
-
-  return {
-    handlePanelClose(_panelEl){ return false; },
-    handleEscape(_panelEl){ return false; }
-  };
-})();
 
 // Extracted from <script>
 (function(){
