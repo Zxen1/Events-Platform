@@ -19966,6 +19966,54 @@ function makePosts(){
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
       const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      
+      // Create composite sprites for features BEFORE setting source data
+      // This allows us to add compositeId to feature properties
+      const zoomForComposites = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      if(Number.isFinite(zoomForComposites) && zoomForComposites >= MARKER_ZOOM_THRESHOLD){
+        const featuresToProcess = Array.isArray(postsData.features) ? postsData.features : [];
+        const compositePromises = [];
+        
+        for(const feature of featuresToProcess){
+          if(!feature || !feature.properties || feature.properties.point_count) continue;
+          
+          const props = feature.properties;
+          const isMultiPost = props.isMultiPost === true;
+          const labelText = props.label || '';
+          const iconId = props.sub || MULTI_POST_MARKER_ICON_ID;
+          const thumbnailUrl = props.thumbnailUrl || null;
+          
+          // Determine composite type
+          const compositeType = isMultiPost ? COMPOSITE_TYPE_SMALL_MULTI : COMPOSITE_TYPE_SMALL;
+          
+          // Create composite and store ID in feature properties
+          const compositePromise = ensureMapCardComposite(map, {
+            type: compositeType,
+            labelText,
+            iconId,
+            isMultiPost,
+            thumbnailUrl
+          }).then(result => {
+            if(result && result.compositeId && props){
+              props.compositeId = result.compositeId;
+            }
+            return result;
+          }).catch(err => {
+            console.warn('[addPostSource] Failed to create composite:', err);
+            return null;
+          });
+          
+          compositePromises.push(compositePromise);
+        }
+        
+        // Wait for composites (limit to avoid blocking)
+        try {
+          await Promise.allSettled(compositePromises.slice(0, 200));
+        } catch(err){
+          console.warn('[addPostSource] Error creating composites:', err);
+        }
+      }
+      
       const existing = map.getSource('posts');
       if(!existing){
         map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
@@ -20168,12 +20216,60 @@ function makePosts(){
       const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      // Small pills: left edge at -20px from lat/lng (150×40px)
-      // Big pills: left edge at -35px from lat/lng (225×60px)
-      const labelLayersConfig = [
-        { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: smallPillIconImageExpression, iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: 'big-map-card-pill', iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
+      
+      // Composite sprite layers: Use composite sprites that combine pill + label + icon
+      // Small composites: left edge at -20px from lat/lng (150×40px)
+      // Big composites: left edge at -35px from lat/lng (225×60px)
+      
+      // Expression to get composite ID based on feature properties
+      // Format: marker-label-composite-{type}-{hash}
+      const getCompositeIdExpression = (type) => {
+        return ['concat', 
+          MARKER_LABEL_COMPOSITE_PREFIX,
+          type, '-',
+          ['to-string', ['get', 'compositeHash']]
+        ];
+      };
+      
+      // For now, use a fallback approach: create composites and reference them
+      // We'll use the compositeId stored in feature properties if available
+      const smallCompositeIconExpression = [
+        'coalesce',
+        ['get', 'compositeId'],
+        // Fallback to old system if composite not available
+        smallPillIconImageExpression
       ];
+      
+      const bigCompositeIconExpression = [
+        'coalesce',
+        ['get', 'compositeId'],
+        // Fallback to old system if composite not available
+        'big-map-card-pill'
+      ];
+      
+      const labelLayersConfig = [
+        { 
+          id:'small-map-card-composite', 
+          source:'posts', 
+          sortKey: 1, 
+          filter: markerLabelFilter, 
+          iconImage: smallCompositeIconExpression, 
+          iconOpacity: smallPillOpacity, 
+          minZoom: markerLabelMinZoom, 
+          iconOffset: [-20, 0] 
+        },
+        { 
+          id:'big-map-card-composite', 
+          source:'posts', 
+          sortKey: 2, 
+          filter: markerLabelFilter, 
+          iconImage: bigCompositeIconExpression, 
+          iconOpacity: markerLabelHighlightOpacity, 
+          minZoom: markerLabelMinZoom, 
+          iconOffset: [-35, 0] 
+        }
+      ];
+      
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         const finalIconSize = iconSize !== undefined ? iconSize : 1;
@@ -20212,121 +20308,29 @@ function makePosts(){
         if(!layerExists){
           return;
         }
-        // Only update properties that can change (filter and icon-image for small pill)
-        // Note: icon-opacity, icon-translate, icon-translate-anchor, and symbol-z-order are set in layer config
-        // and don't need to be updated unless they actually change
+        // Update filter and icon-image
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-        // Update icon-image for small pill layer (uses expression to switch sprites)
-        if(id === 'small-map-card-pill' && iconImage){
-          try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
-        }
-        // Update icon-image for big pill layer (always uses big-map-card-pill sprite)
-        if(id === 'big-map-card-pill' && iconImage){
+        if(iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
         }
       });
       
-      // Add text labels to the marker-label layer (same layer as pills, sort-keys 3, 4)
-      // Labels must be in the SAME layer as pills for sort-keys to work (sort-keys only work within same layer)
-      // Small labels: left edge at 20px from lat/lng (inside pill, which goes from -20px to 130px)
-      // text-offset uses em units, not pixels. With text-size 12, 20px = 20/12 = 1.67em
-      const textSize = 12;
-      const smallLabelOffsetEm = 20 / textSize; // 20px in em units
-      const labelTextLayerId = 'small-map-card-label';
-      if(!map.getLayer(labelTextLayerId)){
-        try{
-          map.addLayer({
-            id: labelTextLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerLabelFilter,
-            minzoom: markerLabelMinZoom,
-            maxzoom: 24,
-            layout:{
-              'text-field': ['coalesce', ['get', 'label'], ''],
-              'text-size': textSize,
-              'text-line-height': 1.2,
-              'text-max-width': 100,
-              'text-anchor': 'left',
-              'text-justify': 'left',
-              'text-offset': [smallLabelOffsetEm, 0],
-              'text-allow-overlap': true,
-              'text-ignore-placement': true,
-              'text-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 4, 3]
-            },
-            paint:{
-              'text-color': '#ffffff',
-              'text-opacity': mapCardDisplay === 'hover_only' ? 0 : 1,
-              'text-halo-color': 'rgba(0,0,0,0.4)',
-              'text-halo-width': 1,
-              'text-halo-blur': 1
-            }
-          });
-        }catch(e){
-          console.error('Failed to add label text layer:', e);
+      // Keep old layers for backward compatibility (hide them)
+      const oldLayers = ['small-map-card-pill', 'big-map-card-pill'];
+      oldLayers.forEach(layerId => {
+        if(map.getLayer(layerId)){
+          try{ map.setLayoutProperty(layerId, 'visibility', 'none'); }catch(e){}
         }
-      }
-      if(map.getLayer(labelTextLayerId)){
-        try{ 
-          // Only update properties that can change (filter and sort-key based on data)
-          map.setFilter(labelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(labelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 4, 3]);
-        }catch(e){
-          console.error('Failed to update label text layer:', e);
-        }
-      }
+      });
       
-      // Add big labels layer (sort-keys 6, 7) - only shows when post is open (active state)
-      // Big labels: 3 lines, 145px max width, left edge at 30px from lat/lng
-      const bigLabelOffsetEm = 30 / textSize; // 30px in em units
-      const bigLabelTextLayerId = 'big-map-card-label';
-      const activeStateExpressionForLabels = ['boolean', ['feature-state', 'isActive'], false];
-      if(!map.getLayer(bigLabelTextLayerId)){
-        try{
-          map.addLayer({
-            id: bigLabelTextLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerLabelFilter,
-            minzoom: markerLabelMinZoom,
-            maxzoom: 24,
-            layout:{
-              'text-field': ['coalesce', ['get', 'label'], ''],
-              'text-size': textSize,
-              'text-line-height': 1.2,
-              'text-max-width': 145,
-              'text-anchor': 'left',
-              'text-justify': 'left',
-              'text-offset': [bigLabelOffsetEm, 0],
-              'text-allow-overlap': true,
-              'text-ignore-placement': true,
-              'text-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': ['case', ['get', 'isMultiPost'], 7, 6]
-            },
-            paint:{
-              'text-color': '#ffffff',
-              'text-opacity': ['case', activeStateExpressionForLabels, 1, 0], // Only show when post is active/open
-              'text-halo-color': 'rgba(0,0,0,0.4)',
-              'text-halo-width': 1,
-              'text-halo-blur': 1
-            }
-          });
-          console.log('[addPostSource] Added big-map-card-label layer');
-        }catch(e){
-          console.error('Failed to add big label text layer:', e);
+      // Text labels are now part of composite sprites, so we hide the old text layers
+      // Keep them for backward compatibility but hide them
+      const oldTextLayers = ['small-map-card-label', 'big-map-card-label'];
+      oldTextLayers.forEach(layerId => {
+        if(map.getLayer(layerId)){
+          try{ map.setLayoutProperty(layerId, 'visibility', 'none'); }catch(e){}
         }
-      }
-      if(map.getLayer(bigLabelTextLayerId)){
-        try{ 
-          map.setFilter(bigLabelTextLayerId, markerLabelFilter);
-          map.setLayoutProperty(bigLabelTextLayerId, 'symbol-sort-key', ['case', ['get', 'isMultiPost'], 7, 6]);
-        }catch(e){
-          console.error('Failed to update big label text layer:', e);
-        }
-      }
+      });
       // Create marker-icon layer (sprites are already loaded above)
       const markerIconFilter = ['all',
         ['!',['has','point_count']],
@@ -20376,8 +20380,8 @@ function makePosts(){
       
       // Layer ordering will be set at the end after all layers are created
       [
-        ['small-map-card-pill','icon-opacity-transition'],
-        ['big-map-card-pill','icon-opacity-transition']
+        ['small-map-card-composite','icon-opacity-transition'],
+        ['big-map-card-composite','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
@@ -20387,30 +20391,26 @@ function makePosts(){
       function updateMapCardLayerOpacity(displayMode){
         if(!map) return;
         const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-        // Small pill: in hover_only mode, only show when highlighted; in always mode, always show
-        if(map.getLayer('small-map-card-pill')){
-          const smallPillOpacity = displayMode === 'hover_only' 
+        // Small composite: in hover_only mode, only show when highlighted; in always mode, always show
+        if(map.getLayer('small-map-card-composite')){
+          const smallCompositeOpacity = displayMode === 'hover_only' 
             ? ['case', highlightedStateExpression, 1, 0]
             : 1;
-          try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
+          try{ map.setPaintProperty('small-map-card-composite', 'icon-opacity', smallCompositeOpacity); }catch(e){}
         }
-        // Big pill: only show when post is active/open (not on hover)
-        if(map.getLayer('big-map-card-pill')){
+        // Big composite: only show when post is active/open (not on hover)
+        if(map.getLayer('big-map-card-composite')){
           const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
-          const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
-          try{ map.setPaintProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity); }catch(e){}
+          const bigCompositeOpacity = ['case', activeStateExpression, 1, 0];
+          try{ map.setPaintProperty('big-map-card-composite', 'icon-opacity', bigCompositeOpacity); }catch(e){}
         }
-        // Hide labels in hover_only mode (same as pills)
-        const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
-        if(map.getLayer('small-map-card-label')){
-          try{ map.setPaintProperty('small-map-card-label', 'text-opacity', baseOpacityWhenNotHighlighted); }catch(e){}
-        }
-        // Big labels: only show when post is active/open (not on hover)
-        if(map.getLayer('big-map-card-label')){
-          const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
-          const bigLabelOpacity = ['case', activeStateExpression, 1, 0];
-          try{ map.setPaintProperty('big-map-card-label', 'text-opacity', bigLabelOpacity); }catch(e){}
-        }
+        // Keep old layers hidden (backward compatibility)
+        const oldLayers = ['small-map-card-pill', 'big-map-card-pill', 'small-map-card-label', 'big-map-card-label'];
+        oldLayers.forEach(layerId => {
+          if(map.getLayer(layerId)){
+            try{ map.setLayoutProperty(layerId, 'visibility', 'none'); }catch(e){}
+          }
+        });
         // marker-icon visibility/opacity handled in final ordering section
       }
       window.updateMapCardLayerOpacity = updateMapCardLayerOpacity;
@@ -20418,7 +20418,7 @@ function makePosts(){
       
       updateMapCardLayerOpacity(mapCardDisplay);
       
-      // Final layer ordering (bottom to top): pills -> labels -> icons
+      // Final layer ordering (bottom to top): composites -> icons
       // Ensure marker-icon layer is visible and on top
       if(map.getLayer('mapmarker-icon')){
         try{
@@ -20427,13 +20427,20 @@ function makePosts(){
           map.moveLayer('mapmarker-icon'); // Move icons to top
         }catch(e){}
       }
-      // Move label layer to be above pills but below icons
-      if(map.getLayer('small-map-card-label')){
+      // Move composite layers to be below icons
+      if(map.getLayer('small-map-card-composite')){
         try{
           if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('small-map-card-label', 'mapmarker-icon'); // Labels below icons
+            map.moveLayer('small-map-card-composite', 'mapmarker-icon'); // Composites below icons
           } else {
-            map.moveLayer('small-map-card-label'); // Move to top if no icon layer
+            map.moveLayer('small-map-card-composite'); // Move to top if no icon layer
+          }
+        }catch(e){}
+      }
+      if(map.getLayer('big-map-card-composite')){
+        try{
+          if(map.getLayer('mapmarker-icon')){
+            map.moveLayer('big-map-card-composite', 'mapmarker-icon'); // Composites below icons
           }
         }catch(e){}
       }
