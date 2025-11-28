@@ -61,6 +61,7 @@
   const getZOOM_VISIBILITY_PRECISION = () => getDependency('ZOOM_VISIBILITY_PRECISION', 1000);
   const getMID_ZOOM_MARKER_CLASS = () => getDependency('MID_ZOOM_MARKER_CLASS', 'mid-zoom-marker');
   const getSPRITE_MARKER_CLASS = () => getDependency('SPRITE_MARKER_CLASS', 'sprite-marker');
+  const getMARKER_ZOOM_THRESHOLD = () => getDependency('MARKER_ZOOM_THRESHOLD', 8);
 // ============================================================================
 // MAP MARKERS & MAP CARDS SYSTEM
 // ============================================================================
@@ -1762,7 +1763,7 @@
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
         let BALLOON_IMAGE_URL = null; // Loaded from admin_settings
         const BALLOON_MIN_ZOOM = 0;
-        const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
+        const BALLOON_MAX_ZOOM = getMARKER_ZOOM_THRESHOLD();
         let balloonLayersVisible = true;
 
         async function ensureBalloonIconImage(mapInstance){
@@ -2921,12 +2922,12 @@
         const scheduleIdle = getDependency('scheduleIdle', (fn, delay) => setTimeout(fn, delay));
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
-      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      const MARKER_MIN_ZOOM = getMARKER_ZOOM_THRESHOLD();
       
       // Create composite sprites for features BEFORE setting source data
       // This allows us to add compositeId to feature properties
       const zoomForComposites = typeof map.getZoom === 'function' ? map.getZoom() : 0;
-      if(Number.isFinite(zoomForComposites) && zoomForComposites >= MARKER_ZOOM_THRESHOLD){
+      if(Number.isFinite(zoomForComposites) && zoomForComposites >= getMARKER_ZOOM_THRESHOLD()){
         const featuresToProcess = Array.isArray(postsData.features) ? postsData.features : [];
         const compositePromises = [];
         

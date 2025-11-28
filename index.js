@@ -349,7 +349,7 @@ function setupMessageObserver(){
 // Make message functions globally available
 window.getMessage = getMessage;
 window.getBaseFieldType = getBaseFieldType;
-window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
+// Note: normalizeFormbuilderSnapshot is exposed inside the IIFE at line 2562
 window.getMessageSync = getMessageSync;
 window.loadMessagesFromDatabase = loadMessagesFromDatabase;
 window.replacePlaceholders = replacePlaceholders;
