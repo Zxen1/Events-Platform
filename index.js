@@ -19077,11 +19077,11 @@ function openPostModal(id){
     }
 
     if(mapEl){
-          setTimeout(()=>{
-            loadMapbox().then(()=>{
-              updateVenue(0);
-              if(venueMenu && venueBtn && venueOptions){
-                venueOptions.querySelectorAll('button').forEach(btn=>{
+      setTimeout(()=>{
+        loadMapbox().then(()=>{
+          updateVenue(0);
+          if(venueMenu && venueBtn && venueOptions){
+            venueOptions.querySelectorAll('button').forEach(btn=>{
                   const btnIndex = parseInt(btn.dataset.index, 10);
                   const isVisible = !btn.hidden && !btn.disabled;
                   btn.classList.toggle('selected', isVisible && btnIndex === currentVenueIndex);
@@ -19140,9 +19140,9 @@ function openPostModal(id){
                     }
                   }
                 });
-                document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target) && venueBtn && !venueBtn.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
-              }
-              if(sessBtn && sessMenu){
+            document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target) && venueBtn && !venueBtn.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
+          }
+          if(sessBtn && sessMenu){
                 if(!sessDropdown._sessionOutsideHandler){
                   const outsideHandler = e=>{
                     if(sessDropdown && !sessDropdown.contains(e.target) && sessBtn && !sessBtn.contains(e.target)){
@@ -19154,10 +19154,9 @@ function openPostModal(id){
                   document.addEventListener('click', outsideHandler);
                 }
               }
-              if(map && typeof map.resize === 'function') map.resize();
-            }).catch(err => console.error(err));
-          },0);
-        }
+            if(map && typeof map.resize === 'function') map.resize();
+        }).catch(err => console.error(err));
+      },0);
     }
 
     function inBounds(p){
