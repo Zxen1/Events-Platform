@@ -2114,13 +2114,20 @@ let __notifyMapOnInteraction = null;
           el.style.removeProperty('background');
         }
       };
+      const highlightTargets = [];
       const applyHighlightBackground = (el)=>{
         if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
         if(!Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          const strId = el.dataset.id || '';
+          const normalizedVenue = el.dataset.venueKey || null;
           highlightTargets.push({ id: strId, venueKey: normalizedVenue || null });
         }
-      });
-      updateMapFeatureHighlights(highlightTargets);
+      };
+      document.querySelectorAll('.post-card').forEach(applyHighlightBackground);
+      const updateMapFeatureHighlights = window.updateMapFeatureHighlights;
+      if(updateMapFeatureHighlights){
+        updateMapFeatureHighlights(highlightTargets);
+      }
     }
     
     // Add postcard hover handlers to trigger mapcard highlight

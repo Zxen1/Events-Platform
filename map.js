@@ -487,8 +487,7 @@
 // 7. Marker Data Building & Collections (lines ~3448-6663)
 // 8. Map Source Integration (lines ~19001+)
 // ============================================================================
-
-  let markerLabelMeasureContext = null;
+// Note: markerLabelMeasureContext is already declared above (line 98) - no duplicate needed
 
   // --- Section 2: Text Measurement & Formatting Helpers ---
   function ensureMarkerLabelMeasureContext(){
