@@ -3190,14 +3190,32 @@ let __notifyMapOnInteraction = null;
       const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
       const expandedPostId = openPostId || clickedPostId;
       
-      // Reset all features to not expanded
+      // Reset all features to not expanded FIRST (always do this, even if no post is open)
       highlightedFeatureKeys.forEach(entry => {
         try{ 
           map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
         }catch(err){}
       });
       
-      // Set expanded state for clicked/open post
+      // Also reset all features in the posts source to ensure nothing is left expanded
+      if(map.getSource('posts')){
+        try {
+          const source = map.getSource('posts');
+          if(source && source._data && source._data.features){
+            source._data.features.forEach(feature => {
+              if(feature && feature.id !== undefined && feature.id !== null){
+                try {
+                  map.setFeatureState({ source: 'posts', id: feature.id }, { isExpanded: false });
+                }catch(err){}
+              }
+            });
+          }
+        }catch(err){
+          console.warn('[updateMarkerLabelHighlightIconSize] Error resetting all features:', err);
+        }
+      }
+      
+      // Set expanded state for clicked/open post (only if there is one)
       if(expandedPostId){
         const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
         if(entries && entries.length){
@@ -19484,7 +19502,7 @@ function makePosts(){
                 'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
-              'symbol-sort-key': ['+', sortKey, ['*', ['id'], 0.0001]] // Per-card z-index: base sort-key + feature ID offset
+              'symbol-sort-key': ['+', sortKey, ['*', ['to-number', ['get', 'id']], 0.0001]] // Per-card z-index: base sort-key + post ID offset (extract numeric post ID from properties)
               },
               paint:{
                 'icon-translate': finalIconOffset,
@@ -19551,12 +19569,12 @@ function makePosts(){
                 expandedStateExpressionForLabels, 6, // Big single-post label
                 ['get', 'isMultiPost'], 4, // Small multi-post label
                 3 // Small single-post label
-              ], ['*', ['id'], 0.0001]] // Per-card z-index: base sort-key + feature ID offset
+              ], ['*', ['to-number', ['get', 'id']], 0.0001]] // Per-card z-index: base sort-key + post ID offset
             },
             paint:{
               'text-color': '#ffffff',
               'text-opacity': ['case', 
-                expandedStateExpression, ['case', mapCardDisplay === 'hover_only' ? ['boolean', ['feature-state', 'isHighlighted'], false] : true, 1, 0], // Big labels: show when expanded (and highlighted in hover_only mode)
+                expandedStateExpressionForLabels, ['case', mapCardDisplay === 'hover_only' ? ['boolean', ['feature-state', 'isHighlighted'], false] : true, 1, 0], // Big labels: show when expanded (and highlighted in hover_only mode)
                 mapCardDisplay === 'hover_only' ? 0 : 1 // Small labels: show always in always mode, hide in hover_only mode
               ],
               'text-halo-color': 'rgba(0,0,0,0.4)',
@@ -19619,7 +19637,7 @@ function makePosts(){
               'symbol-sort-key': ['+', ['case', 
                 ['get', 'isMultiPost'], 9, // Multi-post icon
                 8 // Single post icon
-              ], ['*', ['id'], 0.0001]], // Per-card z-index: base sort-key + feature ID offset
+              ], ['*', ['to-number', ['get', 'id']], 0.0001]], // Per-card z-index: base sort-key + post ID offset
               'visibility': 'visible'
             },
             paint:{
@@ -19637,7 +19655,7 @@ function makePosts(){
           map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', ['+', ['case', 
                 ['get', 'isMultiPost'], 9, // Multi-post icon
                 8 // Single post icon
-              ], ['*', ['id'], 0.0001]]); // Per-card z-index: base sort-key + feature ID offset
+              ], ['*', ['to-number', ['get', 'id']], 0.0001]]); // Per-card z-index: base sort-key + post ID offset
         }catch(e){}
       }
       
