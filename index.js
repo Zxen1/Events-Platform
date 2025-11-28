@@ -984,30 +984,30 @@ let __notifyMapOnInteraction = null;
     startBearing = window.startBearing = 0;
 
     let spinning = false, expiredWasOn = false, dateStart = null, dateEnd = null,
-        spinLoadStart = false,
-        spinLoadType = 'everyone',
-        spinLogoClick = true,
-        spinZoomMax = 4,
-        spinSpeed = 0.3,
-        spinEnabled = false,
-        mapCardDisplay = 'hover_only',
-        mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
-    
-    // Set title immediately from localStorage to prevent flash
-    (function setTitleFromCache(){
-      const cachedSiteName = localStorage.getItem('site_name');
-      if(cachedSiteName){
-        let pageTitle = cachedSiteName;
-        const cachedTagline = localStorage.getItem('site_tagline');
-        if(cachedTagline){
-          pageTitle += ' - ' + cachedTagline;
+          spinLoadStart = false,
+          spinLoadType = 'everyone',
+          spinLogoClick = true,
+          spinZoomMax = 4,
+          spinSpeed = 0.3,
+          spinEnabled = false,
+          mapCardDisplay = 'hover_only',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
+      
+      // Set title immediately from localStorage to prevent flash
+      (function setTitleFromCache(){
+        const cachedSiteName = localStorage.getItem('site_name');
+        if(cachedSiteName){
+          let pageTitle = cachedSiteName;
+          const cachedTagline = localStorage.getItem('site_tagline');
+          if(cachedTagline){
+            pageTitle += ' - ' + cachedTagline;
+          }
+          document.title = pageTitle;
         }
-        document.title = pageTitle;
-      }
-    })();
-    
-    // Initialize system image pickers using iconpicker interface
-    function initializeSystemImagePickers(settings){
+      })();
+      
+      // Initialize system image pickers using iconpicker interface
+      function initializeSystemImagePickers(settings){
         const imagePickers = [
           { buttonId: 'systemImageSmallMapCardPillButton', containerId: 'systemImageSmallMapCardPillContainer', previewId: 'systemImageSmallMapCardPillPreview', settingKey: 'small_map_card_pill', label: 'Small Map Card Pill' },
           { buttonId: 'systemImageBigMapCardPillButton', containerId: 'systemImageBigMapCardPillContainer', previewId: 'systemImageBigMapCardPillPreview', settingKey: 'big_map_card_pill', label: 'Big Map Card Pill' },
@@ -2130,7 +2130,7 @@ let __notifyMapOnInteraction = null;
       document.querySelectorAll('.post-card').forEach(applyHighlightBackground);
       const updateMapFeatureHighlights = window.updateMapFeatureHighlights;
       if(updateMapFeatureHighlights){
-        updateMapFeatureHighlights(highlightTargets);
+      updateMapFeatureHighlights(highlightTargets);
       }
     }
     
@@ -3197,16 +3197,16 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           const { urls, shouldLookupLocal } = urlsFor(iconId);
           if(!urls.length) return false;
           try{
-            for(const url of urls){
+          for(const url of urls){
               const img = await loadImageCompat(url);
               const ratio = pickPixelRatio(url, img);
               if(mapInstance && typeof mapInstance.addImage === 'function'){
                 mapInstance.addImage(iconId, img, { pixelRatio: ratio });
               }
             }
-            return true;
+              return true;
           }catch(err){
-            return false;
+          return false;
           }finally{
             pending.delete(iconId);
           }
@@ -3215,7 +3215,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ await task; }catch(err){}
         return true;
       };
-    }
+  }
 
   function derivePostDatesFromLocations(locations){
     if(!Array.isArray(locations) || !locations.length){
@@ -16526,12 +16526,12 @@ function makePosts(){
         return await window.initMap();
       }
       console.error('map.js not loaded - initMap not available');
-    }
+              }
     
     // Helper to get map instance (for backward compatibility)
     function getMap(){
       return window.getMapInstance ? window.getMapInstance() : null;
-    }
+      }
     
 
       if(fromCurrent){
@@ -19069,14 +19069,14 @@ function openPostModal(id){
         runNext();
       }
 
-      window.updateVenue = updateVenue;
-      window.ensureMapForVenue = ensureMapForVenue;
-      if(typeof window.__wrapForInputYield === 'function'){
-        window.__wrapForInputYield('updateVenue');
-        window.__wrapForInputYield('ensureMapForVenue');
-      }
+    window.updateVenue = updateVenue;
+    window.ensureMapForVenue = ensureMapForVenue;
+    if(typeof window.__wrapForInputYield === 'function'){
+      window.__wrapForInputYield('updateVenue');
+      window.__wrapForInputYield('ensureMapForVenue');
+    }
 
-        if(mapEl){
+    if(mapEl){
           setTimeout(()=>{
             loadMapbox().then(()=>{
               updateVenue(0);
@@ -19430,7 +19430,7 @@ function openPostModal(id){
       localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
     });
 })();
-
+  
 // 0577 helpers (safety)
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
