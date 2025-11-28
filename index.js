@@ -1235,13 +1235,17 @@ let __notifyMapOnInteraction = null;
                           } catch(e) {
                             console.warn('[Pill Update] Error removing sprites before re-adding:', e);
                           }
+                        }
+                      } catch(err) {
+                        console.error('Failed to load marker cluster icon setting:', err);
+                      }
+                  }
                 }
               }
-            } catch(err) {
-              console.error('Failed to load marker cluster icon setting:', err);
+            });
           }
-          
-          return new Promise(resolve => {
+        });
+      }
             if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
               resolve();
               return;
