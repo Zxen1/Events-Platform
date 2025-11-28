@@ -19587,24 +19587,17 @@ function makePosts(){
         ['!',['has','point_count']],
         ['has','title']
       ];
-      // Icon/thumbnail expression: Use thumbnail (50x50) when expanded, icon (30x30) when not expanded
-      // Multi-post markers always use multi-post icon, never thumbnails
-      const expandedStateExpression = ['boolean', ['feature-state', 'isExpanded'], false];
+      // Icon expression: Use regular icon for now (thumbnails need to be loaded as sprites first)
+      // Multi-post markers always use multi-post icon
       const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-        ['let', 'isMulti', ['get', 'isMultiPost'],
-          ['case',
-            ['==', ['var','iconId'], ''],
-            MULTI_POST_MARKER_ICON_ID, // Multi-post icon
-            ['all', expandedStateExpressionForIcons, ['!', ['var', 'isMulti']], ['coalesce', ['get', 'thumbnail_url'], ['get', 'thumb_url'], ['var', 'iconId']]], // Thumbnail when expanded (single post only)
-            ['var','iconId'] // Regular icon when not expanded
-          ]
+        ['case',
+          ['==', ['var','iconId'], ''],
+          MULTI_POST_MARKER_ICON_ID, // Multi-post icon
+          ['var','iconId'] // Regular icon
         ]
       ];
-      // Icon size: 50x50 (1.67x) when expanded, 30x30 (1x) when not expanded
-      const markerIconSizeExpression = ['case', 
-        ['all', expandedStateExpressionForIcons, ['!', ['get', 'isMultiPost']]], 1.67, // 50/30 = 1.67
-        1 // 30/30 = 1
-      ];
+      // Icon size: 1x (30x30) for all icons (thumbnails will be added later when sprite loading is implemented)
+      const markerIconSizeExpression = 1;
       const markerIconLayerId = 'mapmarker-icon';
       if(!map.getLayer(markerIconLayerId)){
         try{
@@ -19624,7 +19617,6 @@ function makePosts(){
               'icon-pitch-alignment': 'viewport',
               'symbol-z-order': 'auto',
               'symbol-sort-key': ['+', ['case', 
-                ['all', expandedStateExpressionForIcons, ['!', ['get', 'isMultiPost']]], 10, // Thumbnail (50x50)
                 ['get', 'isMultiPost'], 9, // Multi-post icon
                 8 // Single post icon
               ], ['*', ['id'], 0.0001]], // Per-card z-index: base sort-key + feature ID offset
@@ -19643,7 +19635,6 @@ function makePosts(){
           map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
           map.setLayoutProperty(markerIconLayerId, 'icon-size', markerIconSizeExpression);
           map.setLayoutProperty(markerIconLayerId, 'symbol-sort-key', ['+', ['case', 
-                ['all', expandedStateExpressionForIcons, ['!', ['get', 'isMultiPost']]], 10, // Thumbnail (50x50)
                 ['get', 'isMultiPost'], 9, // Multi-post icon
                 8 // Single post icon
               ], ['*', ['id'], 0.0001]]); // Per-card z-index: base sort-key + feature ID offset
