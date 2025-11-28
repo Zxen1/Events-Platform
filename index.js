@@ -1834,29 +1834,97 @@ let __notifyMapOnInteraction = null;
                   // Update local settings immediately
                   settings[picker.settingKey] = value;
                   
-                  // Clear sprite cache to force reload with new image
-                  markerLabelPillImagePromise = null;
-                  markerLabelPillSpriteCache = null;
-                  
                   // Update map in real-time (before saving to DB)
                   const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                   if(mapInstance){
                     try{
-                      // Remove old sprites
-                      if(mapInstance.hasImage && mapInstance.hasImage('small-map-card-pill')){
-                        mapInstance.removeImage('small-map-card-pill');
-                      }
-                      if(mapInstance.hasImage && mapInstance.hasImage('big-map-card-pill')){
-                        mapInstance.removeImage('big-map-card-pill');
-                      }
-                      
-                      // Load new sprites with updated image
-                      const pillSprites = await ensureMarkerLabelPillSprites();
-                      if(pillSprites && pillSprites.base){
-                        mapInstance.addImage('small-map-card-pill', pillSprites.base.image, pillSprites.base.options || {});
-                      }
-                      if(pillSprites && pillSprites.highlight){
-                        mapInstance.addImage('big-map-card-pill', pillSprites.highlight.image, pillSprites.highlight.options || {});
+                      // Handle cluster/balloon icon update
+                      if(picker.settingKey === 'marker_cluster_icon'){
+                        // Update global BALLOON_IMAGE_URL
+                        if(typeof window.BALLOON_IMAGE_URL !== 'undefined'){
+                          window.BALLOON_IMAGE_URL = value;
+                        }
+                        
+                        // Remove old balloon icon sprite
+                        const BALLOON_IMAGE_ID = 'seed-balloon-icon';
+                        if(mapInstance.hasImage && mapInstance.hasImage(BALLOON_IMAGE_ID)){
+                          mapInstance.removeImage(BALLOON_IMAGE_ID);
+                        }
+                        
+                        // Load and add new balloon icon sprite
+                        const loadBalloonIcon = () => {
+                          return new Promise((resolve) => {
+                            if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
+                              resolve();
+                              return;
+                            }
+                            const handleImage = (image) => {
+                              if(!image){
+                                resolve();
+                                return;
+                              }
+                              try{
+                                if(image.width > 0 && image.height > 0){
+                                  const pixelRatio = image.width >= 256 ? 2 : 1;
+                                  mapInstance.addImage(BALLOON_IMAGE_ID, image, { pixelRatio });
+                                }
+                              }catch(err){ 
+                                console.error('Error adding balloon icon:', err); 
+                              }
+                              resolve();
+                            };
+                            try{
+                              if(typeof mapInstance.loadImage === 'function'){
+                                mapInstance.loadImage(value, (err, image) => {
+                                  if(err){ 
+                                    console.error('Error loading balloon icon:', err); 
+                                    resolve(); 
+                                    return; 
+                                  }
+                                  handleImage(image);
+                                });
+                                return;
+                              }
+                            }catch(err){ 
+                              console.error('Error in loadImage:', err); 
+                              resolve(); 
+                              return; 
+                            }
+                            if(typeof Image !== 'undefined'){
+                              const img = new Image();
+                              img.crossOrigin = 'anonymous';
+                              img.onload = () => handleImage(img);
+                              img.onerror = () => resolve();
+                              img.src = value;
+                              return;
+                            }
+                            resolve();
+                          });
+                        };
+                        
+                        await loadBalloonIcon();
+                      } else {
+                        // Handle pill image updates
+                        // Clear sprite cache to force reload with new image
+                        markerLabelPillImagePromise = null;
+                        markerLabelPillSpriteCache = null;
+                        
+                        // Remove old sprites
+                        if(mapInstance.hasImage && mapInstance.hasImage('small-map-card-pill')){
+                          mapInstance.removeImage('small-map-card-pill');
+                        }
+                        if(mapInstance.hasImage && mapInstance.hasImage('big-map-card-pill')){
+                          mapInstance.removeImage('big-map-card-pill');
+                        }
+                        
+                        // Load new sprites with updated image
+                        const pillSprites = await ensureMarkerLabelPillSprites();
+                        if(pillSprites && pillSprites.base){
+                          mapInstance.addImage('small-map-card-pill', pillSprites.base.image, pillSprites.base.options || {});
+                        }
+                        if(pillSprites && pillSprites.highlight){
+                          mapInstance.addImage('big-map-card-pill', pillSprites.highlight.image, pillSprites.highlight.options || {});
+                        }
                       }
                       
                       // Trigger repaint to show changes immediately
