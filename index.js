@@ -922,6 +922,7 @@ let __notifyMapOnInteraction = null;
 
 (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
+    const MARKER_ZOOM_THRESHOLD = 8; // Should match map.js
 
     let mode = localStorage.getItem('mode') || 'map';
     let historyWasActive = localStorage.getItem('historyActive') === 'true';
