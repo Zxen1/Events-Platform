@@ -2034,10 +2034,36 @@ let __notifyMapOnInteraction = null;
                             console.warn('[Pill Update] Error removing sprites before re-adding:', e);
                           }
                           
+                          // Helper function to convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
+                          function convertImageDataToCanvas(imageData){
+                            if(!imageData) return null;
+                            if(!(imageData instanceof ImageData)){
+                              return imageData; // Already a Canvas or Image
+                            }
+                            try {
+                              const canvas = document.createElement('canvas');
+                              canvas.width = imageData.width;
+                              canvas.height = imageData.height;
+                              const ctx = canvas.getContext('2d');
+                              if(ctx){
+                                ctx.putImageData(imageData, 0, 0);
+                              }
+                              return canvas;
+                            } catch(e){
+                              console.error('[Pill Update] Error converting ImageData to Canvas:', e);
+                              return null;
+                            }
+                          }
+                          
                           if(baseSprite && baseSprite.image){
                             try {
-                              mapInstance.addImage('small-map-card-pill', baseSprite.image, baseSprite.options || {});
-                              console.log('[Pill Update] Added new small-map-card-pill sprite');
+                              const imageToAdd = convertImageDataToCanvas(baseSprite.image);
+                              if(imageToAdd){
+                                mapInstance.addImage('small-map-card-pill', imageToAdd, baseSprite.options || { pixelRatio: 1 });
+                                console.log('[Pill Update] Added new small-map-card-pill sprite');
+                              } else {
+                                console.error('[Pill Update] Failed to convert baseSprite ImageData to Canvas');
+                              }
                             } catch(e) {
                               console.error('[Pill Update] Error adding small-map-card-pill sprite:', e);
                             }
@@ -2047,8 +2073,13 @@ let __notifyMapOnInteraction = null;
                           
                           if(accentSprite && accentSprite.image){
                             try {
-                              mapInstance.addImage('big-map-card-pill', accentSprite.image, accentSprite.options || {});
-                              console.log('[Pill Update] Added new big-map-card-pill sprite');
+                              const imageToAdd = convertImageDataToCanvas(accentSprite.image);
+                              if(imageToAdd){
+                                mapInstance.addImage('big-map-card-pill', imageToAdd, accentSprite.options || { pixelRatio: 1 });
+                                console.log('[Pill Update] Added new big-map-card-pill sprite');
+                              } else {
+                                console.error('[Pill Update] Failed to convert accentSprite ImageData to Canvas');
+                              }
                             } catch(e) {
                               console.error('[Pill Update] Error adding big-map-card-pill sprite:', e);
                             }
@@ -19313,6 +19344,7 @@ function makePosts(){
       }
       
       // Always ensure sprites are added to map (remove old ones first if they exist)
+      // CRITICAL: Mapbox requires Image/Canvas objects, not ImageData
       if(!pillSprites){
         console.error('[addPostSource] CRITICAL: pillSprites is null/undefined - pills will not be visible!');
       } else if(!pillSprites.base){
@@ -19321,22 +19353,46 @@ function makePosts(){
         console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
       }
       
-      if(pillSprites && pillSprites.base){
+      // Helper function to convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
+      function convertImageDataToCanvas(imageData){
+        if(!imageData) return null;
+        if(!(imageData instanceof ImageData)){
+          // Already a Canvas or Image, return as-is
+          return imageData;
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = imageData.width;
+          canvas.height = imageData.height;
+          const ctx = canvas.getContext('2d');
+          if(ctx){
+            ctx.putImageData(imageData, 0, 0);
+          }
+          return canvas;
+        } catch(e){
+          console.error('[addPostSource] Error converting ImageData to Canvas:', e);
+          return null;
+        }
+      }
+      
+      if(pillSprites && pillSprites.base && pillSprites.base.image){
         try {
           // Remove if exists to ensure clean update
           if(map.hasImage(MARKER_LABEL_BG_ID)){
             map.removeImage(MARKER_LABEL_BG_ID);
             console.log('[addPostSource] Removed existing small-map-card-pill sprite before re-adding');
           }
-          if(pillSprites.base.image){
-            map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
+          if(imageToAdd){
+            map.addImage(MARKER_LABEL_BG_ID, imageToAdd, pillSprites.base.options || { pixelRatio: 1 });
             const hasImage = map.hasImage(MARKER_LABEL_BG_ID);
             console.log('[addPostSource] Added small-map-card-pill sprite, hasImage check:', hasImage);
             if(!hasImage){
               console.error('[addPostSource] CRITICAL: Sprite was added but hasImage returns false!');
             }
           } else {
-            console.error('[addPostSource] base sprite has no image data');
+            console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
@@ -19345,22 +19401,24 @@ function makePosts(){
         console.warn('[addPostSource] No base pill sprite available - small pills will not be visible');
       }
       
-      if(pillSprites && pillSprites.highlight){
+      if(pillSprites && pillSprites.highlight && pillSprites.highlight.image){
         try {
           // Remove if exists to ensure clean update
           if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
             map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
             console.log('[addPostSource] Removed existing big-map-card-pill sprite before re-adding');
           }
-          if(pillSprites.highlight.image){
-            map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
+          // Convert ImageData to Canvas if needed
+          const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
+          if(imageToAdd){
+            map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd, pillSprites.highlight.options || { pixelRatio: 1 });
             const hasImage = map.hasImage(MARKER_LABEL_BG_ACCENT_ID);
             console.log('[addPostSource] Added big-map-card-pill sprite, hasImage check:', hasImage);
             if(!hasImage){
               console.error('[addPostSource] CRITICAL: Sprite was added but hasImage returns false!');
             }
           } else {
-            console.error('[addPostSource] highlight sprite has no image data');
+            console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
           }
         }catch(e){
           console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
@@ -19419,12 +19477,13 @@ function makePosts(){
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'left',
-                'icon-offset': finalIconOffset,
                 'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'auto',
+                'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
               },
               paint:{
+                'icon-translate': finalIconOffset,
+                'icon-translate-anchor': 'viewport',
                 'icon-opacity': iconOpacity || 1
               }
             });
@@ -19439,6 +19498,9 @@ function makePosts(){
         // Update properties that can change (filter, opacity, and icon-image for small pill)
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate', finalIconOffset); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate-anchor', 'viewport'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order', 'viewport-y'); }catch(e){}
         // Update icon-image for small pill layer (uses expression to switch sprites)
         if(id === 'small-map-card-pill' && iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
