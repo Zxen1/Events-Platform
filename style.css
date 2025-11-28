@@ -7623,16 +7623,18 @@ html, body { cursor: auto !important; }
               overflow-x:hidden;
             }
             
-            /* Vertical layout with filenames for map and messages tabs */
+            /* Vertical layout with filenames for map, messages, and forms tabs */
             #tab-map .icon-picker-grid,
-            #tab-messages .icon-picker-grid{
+            #tab-messages .icon-picker-grid,
+            #tab-forms .icon-picker-grid{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
             
             #tab-map .icon-picker-option,
-            #tab-messages .icon-picker-option{
+            #tab-messages .icon-picker-option,
+            #tab-forms .icon-picker-option{
               display:flex;
               flex-direction:row;
               align-items:center;
@@ -7648,14 +7650,17 @@ html, body { cursor: auto !important; }
             
             #tab-map .icon-picker-option:hover,
             #tab-messages .icon-picker-option:hover,
+            #tab-forms .icon-picker-option:hover,
             #tab-map .icon-picker-option:focus-visible,
-            #tab-messages .icon-picker-option:focus-visible{
+            #tab-messages .icon-picker-option:focus-visible,
+            #tab-forms .icon-picker-option:focus-visible{
               background:rgba(255,255,255,0.1);
               border:none;
             }
             
             #tab-map .icon-picker-option img,
-            #tab-messages .icon-picker-option img{
+            #tab-messages .icon-picker-option img,
+            #tab-forms .icon-picker-option img{
               width:50px;
               height:50px;
               object-fit:contain;
@@ -7663,7 +7668,8 @@ html, body { cursor: auto !important; }
             }
             
             #tab-map .icon-picker-option .icon-filename,
-            #tab-messages .icon-picker-option .icon-filename{
+            #tab-messages .icon-picker-option .icon-filename,
+            #tab-forms .icon-picker-option .icon-filename{
               font-size:12px;
               color:rgba(255,255,255,0.9);
               text-align:left;
@@ -7673,18 +7679,13 @@ html, body { cursor: auto !important; }
             }
             
             #tab-map .icon-picker-option--clear,
-            #tab-messages .icon-picker-option--clear{
+            #tab-messages .icon-picker-option--clear,
+            #tab-forms .icon-picker-option--clear{
               justify-content:center;
               flex-direction:column;
               text-align:center;
             }
-            #tab-forms .icon-picker-grid{
-              display:grid;
-              grid-template-columns:repeat(auto-fill,minmax(52px,1fr));
-              gap:10px;
-            }
             #tab-forms .icon-picker-error{
-              grid-column: 1 / -1;
               padding:24px;
               text-align:center;
               color:#fff;
@@ -7699,30 +7700,6 @@ html, body { cursor: auto !important; }
               font-family:monospace;
               color:#0ea5e9;
               font-size:13px;
-            }
-            #tab-forms .icon-picker-option{
-              display:inline-flex;
-              align-items:center;
-              justify-content:center;
-              width:52px;
-              height:52px;
-              border-radius:10px;
-              border:1px solid rgba(255,255,255,0.15);
-              background:rgba(255,255,255,0.05);
-              color:var(--button-text);
-              cursor:pointer;
-              transition:border-color .2s,background .2s,box-shadow .2s,transform .1s;
-            }
-            #tab-forms .icon-picker-option img{
-              max-width:80%;
-              max-height:80%;
-              object-fit:contain;
-            }
-            #tab-forms .icon-picker-option:hover,
-            #tab-forms .icon-picker-option:focus-visible{
-              border-color:var(--btn-hover, #2e3a72);
-              background:rgba(46,58,114,0.25);
-              outline:none;
             }
             #tab-forms .icon-picker-option.selected{
               border-color:var(--btn-hover, #2e3a72);

@@ -1840,15 +1840,16 @@ let __notifyMapOnInteraction = null;
                     try{
                       // Handle cluster/balloon icon update
                       if(picker.settingKey === 'marker_cluster_icon'){
-                        // Update global BALLOON_IMAGE_URL
-                        if(typeof window.BALLOON_IMAGE_URL !== 'undefined'){
-                          window.BALLOON_IMAGE_URL = value;
-                        }
+                        const BALLOON_IMAGE_ID = 'seed-balloon-icon';
+                        const BALLOON_LAYER_ID = 'post-balloons';
                         
                         // Remove old balloon icon sprite
-                        const BALLOON_IMAGE_ID = 'seed-balloon-icon';
                         if(mapInstance.hasImage && mapInstance.hasImage(BALLOON_IMAGE_ID)){
-                          mapInstance.removeImage(BALLOON_IMAGE_ID);
+                          try {
+                            mapInstance.removeImage(BALLOON_IMAGE_ID);
+                          } catch(err) {
+                            console.error('Error removing old balloon icon:', err);
+                          }
                         }
                         
                         // Load and add new balloon icon sprite
@@ -1860,13 +1861,21 @@ let __notifyMapOnInteraction = null;
                             }
                             const handleImage = (image) => {
                               if(!image){
+                                console.error('Failed to load balloon icon image');
                                 resolve();
                                 return;
                               }
                               try{
                                 if(image.width > 0 && image.height > 0){
                                   const pixelRatio = image.width >= 256 ? 2 : 1;
+                                  // Remove if exists (in case it wasn't removed above)
+                                  if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
+                                    mapInstance.removeImage(BALLOON_IMAGE_ID);
+                                  }
                                   mapInstance.addImage(BALLOON_IMAGE_ID, image, { pixelRatio });
+                                  console.log('Balloon icon updated successfully');
+                                } else {
+                                  console.error('Invalid image dimensions:', image.width, image.height);
                                 }
                               }catch(err){ 
                                 console.error('Error adding balloon icon:', err); 
@@ -1894,7 +1903,10 @@ let __notifyMapOnInteraction = null;
                               const img = new Image();
                               img.crossOrigin = 'anonymous';
                               img.onload = () => handleImage(img);
-                              img.onerror = () => resolve();
+                              img.onerror = (err) => {
+                                console.error('Error loading image via Image object:', err);
+                                resolve();
+                              };
                               img.src = value;
                               return;
                             }
@@ -1903,6 +1915,33 @@ let __notifyMapOnInteraction = null;
                         };
                         
                         await loadBalloonIcon();
+                        
+                        // Force layer refresh - wait a moment for Mapbox to process the new sprite
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        
+                        try {
+                          const layer = mapInstance.getLayer(BALLOON_LAYER_ID);
+                          if(layer){
+                            // Force refresh by updating the icon-image property
+                            mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'icon-image', BALLOON_IMAGE_ID);
+                            
+                            // Also trigger a repaint
+                            if(mapInstance.triggerRepaint){
+                              mapInstance.triggerRepaint();
+                            }
+                            
+                            // Force style update if available
+                            if(mapInstance.style && typeof mapInstance.style._update === 'function'){
+                              mapInstance.style._update();
+                            }
+                            
+                            console.log('Balloon layer refreshed with new icon');
+                          } else {
+                            console.warn('Balloon layer not found, cannot refresh');
+                          }
+                        } catch(err) {
+                          console.error('Error refreshing balloon layer:', err);
+                        }
                       } else {
                         // Handle pill image updates
                         // Clear sprite cache to force reload with new image
@@ -9515,8 +9554,8 @@ function makePosts(){
               optionsList.push({ value: applyNormalizeIconPath(path) });
             }
           });
-          // Check if we're in map or messages tab for vertical layout
-          const isMapOrMessagesTab = container.closest('#tab-map, #tab-messages') !== null;
+          // Check if we're in map, messages, or forms tab for vertical layout with filenames
+          const isMapMessagesOrFormsTab = container.closest('#tab-map, #tab-messages, #tab-forms') !== null;
           
           for(const entry of optionsList){
             const btn = document.createElement('button');
@@ -9533,8 +9572,8 @@ function makePosts(){
               img.alt = '';
               btn.appendChild(img);
               
-              // Add filename for map and messages tabs
-              if(isMapOrMessagesTab){
+              // Add filename for map, messages, and forms tabs
+              if(isMapMessagesOrFormsTab){
                 const filename = document.createElement('div');
                 filename.className = 'icon-filename';
                 // Extract filename from path
