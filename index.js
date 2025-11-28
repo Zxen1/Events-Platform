@@ -1851,9 +1851,9 @@ let __notifyMapOnInteraction = null;
             button.textContent = 'Change Icon';
           }
           
-          // Attach icon picker functionality
-          if(typeof window.attachIconPicker === 'function'){
-            window.attachIconPicker(button, container, {
+          // Attach system image picker functionality (uses system-images folder)
+          if(typeof window.attachSystemImagePicker === 'function'){
+            window.attachSystemImagePicker(button, container, {
               getCurrentPath: () => settings[picker.settingKey] || '',
               onSelect: async (value) => {
                 if(value){
@@ -10114,9 +10114,24 @@ function makePosts(){
         return { open: openPicker, close: closePicker };
       };
       
-      // Make icon picker functions globally available for Messages tab
+      // System Image Picker - for system images (map tab pills, messages tab category logos)
+      // Uses system-images folder by default (not icons-30 folder)
+      const attachSystemImagePicker = (trigger, container, options = {})=>{
+        const opts = options || {};
+        // Default to system-images folder unless explicitly overridden
+        const defaultSystemImagesFolder = window.systemImagesFolder || 'assets/system-images';
+        const systemImageOptions = {
+          ...opts,
+          iconFolder: opts.iconFolder !== undefined ? opts.iconFolder : defaultSystemImagesFolder,
+          useIconFolder: opts.useIconFolder !== false
+        };
+        return attachIconPicker(trigger, container, systemImageOptions);
+      };
+      
+      // Make icon picker functions globally available
       window.loadIconsFromFolder = loadIconsFromFolder;
-      window.attachIconPicker = attachIconPicker;
+      window.attachIconPicker = attachIconPicker; // For formbuilder (uses icons-30 folder)
+      window.attachSystemImagePicker = attachSystemImagePicker; // For system images (uses system-images folder)
       
       const frag = document.createDocumentFragment();
       const sortedCategoryEntries = getSortedCategoryEntries(categories);
@@ -10247,16 +10262,19 @@ function makePosts(){
           }
         }
         iconPicker.append(preview, iconPickerButton);
-        attachIconPicker(iconPickerButton, iconPicker, {
-          getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
-          onSelect: value => {
-            updateCategoryIconDisplay(value);
-            notifyFormbuilderChange();
-          },
-          label: `Choose icon for ${c.name}`,
-          parentMenu: content,
-          parentCategoryMenu: menu
-        });
+        // Use system image picker for messages tab category logos (uses system-images folder)
+        if(typeof window.attachSystemImagePicker === 'function'){
+          window.attachSystemImagePicker(iconPickerButton, iconPicker, {
+            getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
+            onSelect: value => {
+              updateCategoryIconDisplay(value);
+              notifyFormbuilderChange();
+            },
+            label: `Choose icon for ${c.name}`,
+            parentMenu: content,
+            parentCategoryMenu: menu
+          });
+        }
 
         let addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
@@ -19555,69 +19573,61 @@ function makePosts(){
         console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
       }
       
-      // Remove existing images first to prevent dimension mismatch errors
-      // Only add sprites if they don't already exist (prevents redundant additions)
+      // Only add sprites if they don't already exist (prevents RangeError: mismatched image size)
+      // CRITICAL: Never remove and re-add images - Mapbox throws dimension mismatch errors
       if(pillSprites && pillSprites.base && pillSprites.base.image){
-        try {
-          // Remove existing image first to prevent dimension mismatch
-          if(map.hasImage(MARKER_LABEL_BG_ID)){
-            try {
-              map.removeImage(MARKER_LABEL_BG_ID);
-            } catch(removeErr) {
-              // Ignore remove errors
-            }
-          }
-          // Convert ImageData to Canvas if needed
-          const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
-          if(imageToAdd){
-            // Validate dimensions before adding (prevents RangeError: mismatched image size)
-            const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
-            const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
-            if(width > 0 && height > 0){
-              // Don't pass pixelRatio option - let Mapbox handle it automatically
-              map.addImage(MARKER_LABEL_BG_ID, imageToAdd);
-              console.log('[addPostSource] Added small-map-card-pill sprite', width, 'x', height);
+        // Skip if image already exists - prevents dimension mismatch errors
+        if(!map.hasImage(MARKER_LABEL_BG_ID)){
+          try {
+            // Convert ImageData to Canvas if needed
+            const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
+            if(imageToAdd){
+              // Validate dimensions before adding
+              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+              if(width > 0 && height > 0){
+                map.addImage(MARKER_LABEL_BG_ID, imageToAdd);
+                console.log('[addPostSource] Added small-map-card-pill sprite', width, 'x', height);
+              } else {
+                console.error('[addPostSource] Invalid image dimensions for base sprite:', width, 'x', height);
+              }
             } else {
-              console.error('[addPostSource] Invalid image dimensions for base sprite:', width, 'x', height);
+              console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
             }
-          } else {
-            console.error('[addPostSource] Failed to convert base sprite ImageData to Canvas');
+          }catch(e){
+            console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
           }
-        }catch(e){
-          console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
+        } else {
+          console.log('[addPostSource] small-map-card-pill sprite already exists, skipping');
         }
       } else {
         console.warn('[addPostSource] No base pill sprite available - small pills will not be visible');
       }
       
       if(pillSprites && pillSprites.highlight && pillSprites.highlight.image){
-        try {
-          // Remove existing image first to prevent dimension mismatch
-          if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-            try {
-              map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
-            } catch(removeErr) {
-              // Ignore remove errors
-            }
-          }
-          // Convert ImageData to Canvas if needed
-          const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
-          if(imageToAdd){
-            // Validate dimensions before adding
-            const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
-            const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
-            if(width > 0 && height > 0){
-              // Don't pass pixelRatio option - let Mapbox handle it automatically
-              map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd);
-              console.log('[addPostSource] Added big-map-card-pill sprite', width, 'x', height);
+        // Skip if image already exists - prevents dimension mismatch errors
+        if(!map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
+          try {
+            // Convert ImageData to Canvas if needed
+            const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
+            if(imageToAdd){
+              // Validate dimensions before adding
+              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+              if(width > 0 && height > 0){
+                map.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd);
+                console.log('[addPostSource] Added big-map-card-pill sprite', width, 'x', height);
+              } else {
+                console.error('[addPostSource] Invalid image dimensions for highlight sprite:', width, 'x', height);
+              }
             } else {
-              console.error('[addPostSource] Invalid image dimensions for highlight sprite:', width, 'x', height);
+              console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
             }
-          } else {
-            console.error('[addPostSource] Failed to convert highlight sprite ImageData to Canvas');
+          }catch(e){
+            console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
           }
-        }catch(e){
-          console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
+        } else {
+          console.log('[addPostSource] big-map-card-pill sprite already exists, skipping');
         }
       } else {
         console.warn('[addPostSource] No highlight pill sprite available - big pills will not be visible');
@@ -19625,32 +19635,28 @@ function makePosts(){
       
       // Add hover pill sprite if available
       if(pillSprites && pillSprites.hover && pillSprites.hover.image){
-        try {
-          // Remove existing image first to prevent dimension mismatch
-          if(map.hasImage('hover-map-card-pill')){
-            try {
-              map.removeImage('hover-map-card-pill');
-            } catch(removeErr) {
-              // Ignore remove errors
-            }
-          }
-          const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
-          if(imageToAdd){
-            // Validate dimensions before adding
-            const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
-            const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
-            if(width > 0 && height > 0){
-              // Don't pass pixelRatio option - let Mapbox handle it automatically
-              map.addImage('hover-map-card-pill', imageToAdd);
-              console.log('[addPostSource] Added hover-map-card-pill sprite', width, 'x', height);
+        // Skip if image already exists - prevents dimension mismatch errors
+        if(!map.hasImage('hover-map-card-pill')){
+          try {
+            const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
+            if(imageToAdd){
+              // Validate dimensions before adding
+              const width = imageToAdd.width || (imageToAdd instanceof ImageData ? imageToAdd.width : 0);
+              const height = imageToAdd.height || (imageToAdd instanceof ImageData ? imageToAdd.height : 0);
+              if(width > 0 && height > 0){
+                map.addImage('hover-map-card-pill', imageToAdd);
+                console.log('[addPostSource] Added hover-map-card-pill sprite', width, 'x', height);
+              } else {
+                console.error('[addPostSource] Invalid image dimensions for hover sprite:', width, 'x', height);
+              }
             } else {
-              console.error('[addPostSource] Invalid image dimensions for hover sprite:', width, 'x', height);
+              console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
             }
-          } else {
-            console.error('[addPostSource] Failed to convert hover sprite ImageData to Canvas');
+          }catch(e){
+            console.error('[addPostSource] Error adding hover-map-card-pill sprite:', e);
           }
-        }catch(e){
-          console.error('[addPostSource] Error adding hover-map-card-pill sprite:', e);
+        } else {
+          console.log('[addPostSource] hover-map-card-pill sprite already exists, skipping');
         }
       }
       
