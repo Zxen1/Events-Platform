@@ -19313,15 +19313,28 @@ function makePosts(){
       }
       
       // Always ensure sprites are added to map (remove old ones first if they exist)
+      if(!pillSprites){
+        console.error('[addPostSource] CRITICAL: pillSprites is null/undefined - pills will not be visible!');
+      } else if(!pillSprites.base){
+        console.error('[addPostSource] CRITICAL: pillSprites.base is null/undefined - small pills will not be visible!');
+      } else if(!pillSprites.highlight){
+        console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
+      }
+      
       if(pillSprites && pillSprites.base){
         try {
           // Remove if exists to ensure clean update
           if(map.hasImage(MARKER_LABEL_BG_ID)){
             map.removeImage(MARKER_LABEL_BG_ID);
+            console.log('[addPostSource] Removed existing small-map-card-pill sprite before re-adding');
           }
           if(pillSprites.base.image){
             map.addImage(MARKER_LABEL_BG_ID, pillSprites.base.image, pillSprites.base.options || {});
-            console.log('[addPostSource] Added small-map-card-pill sprite');
+            const hasImage = map.hasImage(MARKER_LABEL_BG_ID);
+            console.log('[addPostSource] Added small-map-card-pill sprite, hasImage check:', hasImage);
+            if(!hasImage){
+              console.error('[addPostSource] CRITICAL: Sprite was added but hasImage returns false!');
+            }
           } else {
             console.error('[addPostSource] base sprite has no image data');
           }
@@ -19329,7 +19342,7 @@ function makePosts(){
           console.error('[addPostSource] Error adding small-map-card-pill sprite:', e);
         }
       } else {
-        console.warn('[addPostSource] No base pill sprite available');
+        console.warn('[addPostSource] No base pill sprite available - small pills will not be visible');
       }
       
       if(pillSprites && pillSprites.highlight){
@@ -19337,10 +19350,15 @@ function makePosts(){
           // Remove if exists to ensure clean update
           if(map.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
             map.removeImage(MARKER_LABEL_BG_ACCENT_ID);
+            console.log('[addPostSource] Removed existing big-map-card-pill sprite before re-adding');
           }
           if(pillSprites.highlight.image){
             map.addImage(MARKER_LABEL_BG_ACCENT_ID, pillSprites.highlight.image, pillSprites.highlight.options || {});
-            console.log('[addPostSource] Added big-map-card-pill sprite');
+            const hasImage = map.hasImage(MARKER_LABEL_BG_ACCENT_ID);
+            console.log('[addPostSource] Added big-map-card-pill sprite, hasImage check:', hasImage);
+            if(!hasImage){
+              console.error('[addPostSource] CRITICAL: Sprite was added but hasImage returns false!');
+            }
           } else {
             console.error('[addPostSource] highlight sprite has no image data');
           }
@@ -19348,7 +19366,7 @@ function makePosts(){
           console.error('[addPostSource] Error adding big-map-card-pill sprite:', e);
         }
       } else {
-        console.warn('[addPostSource] No highlight pill sprite available');
+        console.warn('[addPostSource] No highlight pill sprite available - big pills will not be visible');
       }
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
@@ -19373,16 +19391,13 @@ function makePosts(){
         : 1;
       // Highlight layer should be visible (opacity 1) when isHighlighted is true, invisible (0) when false
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const baseOpacityWhenNotHighlighted = mapCardDisplay === 'hover_only' ? 0 : 1;
-      // Base layer should be invisible (0) when highlighted (accent shows), visible when not highlighted
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, baseOpacityWhenNotHighlighted];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       // Small pills: left edge at -20px from lat/lng (150×40px)
       // Big pills: left edge at -35px from lat/lng (225×60px)
       const labelLayersConfig = [
         { id:'small-map-card-pill', source:'posts', sortKey: 1, filter: markerLabelFilter, iconImage: smallPillIconImageExpression, iconOpacity: smallPillOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] },
-        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-20, 0] }
+        { id:'big-map-card-pill', source:'posts', sortKey: 2, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom, iconOffset: [-35, 0] }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom, iconSize, iconOffset }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19426,6 +19441,10 @@ function makePosts(){
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         // Update icon-image for small pill layer (uses expression to switch sprites)
         if(id === 'small-map-card-pill' && iconImage){
+          try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
+        }
+        // Update icon-image for big pill layer (always uses big-map-card-pill sprite)
+        if(id === 'big-map-card-pill' && iconImage){
           try{ map.setLayoutProperty(id, 'icon-image', iconImage); }catch(e){}
         }
       });
@@ -19547,6 +19566,11 @@ function makePosts(){
             ? ['case', highlightedStateExpression, 1, 0]
             : 1;
           try{ map.setPaintProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity); }catch(e){}
+        }
+        // Big pill: always show when highlighted, hide when not highlighted
+        if(map.getLayer('big-map-card-pill')){
+          const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+          try{ map.setPaintProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity); }catch(e){}
         }
         // Hide labels in hover_only mode (same as pills)
         const baseOpacityWhenNotHighlighted = displayMode === 'hover_only' ? 0 : 1;
