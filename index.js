@@ -1824,14 +1824,51 @@ let __notifyMapOnInteraction = null;
           if(typeof window.attachIconPicker === 'function'){
             window.attachIconPicker(button, container, {
               getCurrentPath: () => settings[picker.settingKey] || '',
-              onSelect: (value) => {
+              onSelect: async (value) => {
                 if(value){
                   if(previewImg) previewImg.src = value;
                   preview.classList.add('has-image');
                   if(previewLabel) previewLabel.textContent = '';
                   button.textContent = 'Change Icon';
                   
-                  // Save to admin_settings
+                  // Update local settings immediately
+                  settings[picker.settingKey] = value;
+                  
+                  // Clear sprite cache to force reload with new image
+                  markerLabelPillImagePromise = null;
+                  markerLabelPillSpriteCache = null;
+                  
+                  // Update map in real-time (before saving to DB)
+                  const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
+                  if(mapInstance){
+                    try{
+                      // Remove old sprites
+                      if(mapInstance.hasImage && mapInstance.hasImage('small-map-card-pill')){
+                        mapInstance.removeImage('small-map-card-pill');
+                      }
+                      if(mapInstance.hasImage && mapInstance.hasImage('big-map-card-pill')){
+                        mapInstance.removeImage('big-map-card-pill');
+                      }
+                      
+                      // Load new sprites with updated image
+                      const pillSprites = await ensureMarkerLabelPillSprites();
+                      if(pillSprites && pillSprites.base){
+                        mapInstance.addImage('small-map-card-pill', pillSprites.base.image, pillSprites.base.options || {});
+                      }
+                      if(pillSprites && pillSprites.highlight){
+                        mapInstance.addImage('big-map-card-pill', pillSprites.highlight.image, pillSprites.highlight.options || {});
+                      }
+                      
+                      // Trigger repaint to show changes immediately
+                      if(mapInstance.triggerRepaint){
+                        mapInstance.triggerRepaint();
+                      }
+                    }catch(err){
+                      console.error('Error updating map sprites:', err);
+                    }
+                  }
+                  
+                  // Save to admin_settings (after updating map for real-time effect)
                   const settingsToSave = {};
                   settingsToSave[picker.settingKey] = value;
                   
@@ -1846,46 +1883,7 @@ let __notifyMapOnInteraction = null;
                     return response.json();
                   }).then((data) => {
                     if(data.success){
-                      // Update local settings
-                      settings[picker.settingKey] = value;
-                      
-                      // Clear sprite cache to force reload
-                      markerLabelPillImagePromise = null;
-                      markerLabelPillSpriteCache = null;
-                      
-                      // Auto-refresh map cards if map is loaded
-                      const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
-                      if(mapInstance){
-                        // Remove old sprites
-                        try{
-                          if(mapInstance.hasImage && mapInstance.hasImage('small-map-card-pill')){
-                            mapInstance.removeImage('small-map-card-pill');
-                          }
-                          if(mapInstance.hasImage && mapInstance.hasImage('big-map-card-pill')){
-                            mapInstance.removeImage('big-map-card-pill');
-                          }
-                        }catch(e){}
-                        
-                        // Trigger reload of sprites
-                        (async () => {
-                          try{
-                            const pillSprites = await ensureMarkerLabelPillSprites();
-                            if(pillSprites && pillSprites.base && !mapInstance.hasImage('small-map-card-pill')){
-                              mapInstance.addImage('small-map-card-pill', pillSprites.base.image, pillSprites.base.options || {});
-                            }
-                            if(pillSprites && pillSprites.highlight && !mapInstance.hasImage('big-map-card-pill')){
-                              mapInstance.addImage('big-map-card-pill', pillSprites.highlight.image, pillSprites.highlight.options || {});
-                            }
-                            if(mapInstance.triggerRepaint){
-                              mapInstance.triggerRepaint();
-                            }
-                          }catch(err){
-                            console.error('Error refreshing map cards:', err);
-                          }
-                        })();
-                      }
-                      
-                      console.log(`${picker.label} updated and map refreshed.`);
+                      console.log(`${picker.label} saved to database.`);
                     } else {
                       throw new Error(data.message || 'Save failed');
                     }
