@@ -1366,13 +1366,10 @@ let __notifyMapOnInteraction = null;
     }
     try{
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      const scale = window.devicePixelRatio || 1;
-      ctx.save();
-      ctx.scale(scale, scale);
+      // Draw image at full size (no scaling) - Mapbox handles pixel ratio via options
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
-      ctx.restore();
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
     }catch(err){
       console.error(err);
       return null;
@@ -1385,18 +1382,9 @@ let __notifyMapOnInteraction = null;
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
-    let imageData = null;
-    try{
-      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    }catch(err){
-      console.error(err);
-      imageData = null;
-    }
-    if(!imageData){
-      return null;
-    }
+    // Return Canvas directly (Mapbox accepts Canvas objects)
     return {
-      image: imageData,
+      image: canvas,
       options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
     };
   }
