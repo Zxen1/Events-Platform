@@ -1739,7 +1739,7 @@ let __notifyMapOnInteraction = null;
    * @returns {Promise<Object>} { compositeId, spriteId, meta }
    */
   async function ensureMapCardComposite(mapInstance, options){
-    const { type, labelText, iconId, isMultiPost = false, thumbnailUrl = null } = options;
+    const { type, labelText, iconId, isMultiPost = false, thumbnailUrl = null, keepRelated = [] } = options;
     
     if(!mapInstance || !type || !labelText || !iconId){
       console.error('[Composite] Missing required parameters:', { type, labelText, iconId });
@@ -1813,12 +1813,21 @@ let __notifyMapOnInteraction = null;
           throw new Error('Failed to create composite');
         }
         
-        // Enforce budget before adding
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [spriteId], reserve: 1 });
+        // Enforce budget before adding - keep this spriteId and all related ones
+        const keepIds = [spriteId, ...keepRelated].filter(id => id && typeof id === 'string');
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: keepIds, reserve: 1 });
         
-        // Add to map
+        // Add to map (check first to avoid duplicate add errors)
         const imageToAdd = convertImageDataToCanvas(composite.image);
         if(imageToAdd){
+          // Remove existing image if present (shouldn't happen, but safety check)
+          if(mapInstance.hasImage(compositeId)){
+            try {
+              mapInstance.removeImage(compositeId);
+            } catch(err){
+              console.warn('[Composite] Error removing existing image before add:', err);
+            }
+          }
           mapInstance.addImage(compositeId, imageToAdd, composite.options || {});
         }
         
@@ -20017,13 +20026,20 @@ function makePosts(){
           const hoverCompositeType = isMultiPost ? COMPOSITE_TYPE_HOVER_MULTI : COMPOSITE_TYPE_HOVER;
           const bigCompositeType = isMultiPost ? COMPOSITE_TYPE_BIG_MULTI : COMPOSITE_TYPE_BIG;
           
+          // Generate all three spriteIds upfront so we can keep them all during budget enforcement
+          const baseSpriteId = markerLabelCompositeId(baseCompositeType, labelText, iconId, null);
+          const hoverSpriteId = markerLabelCompositeId(hoverCompositeType, labelText, iconId, null);
+          const bigSpriteId = markerLabelCompositeId(bigCompositeType, labelText, iconId, thumbnailUrl);
+          const allRelatedSpriteIds = [baseSpriteId, hoverSpriteId, bigSpriteId];
+          
           // Create base composite (small)
           const baseCompositePromise = ensureMapCardComposite(map, {
             type: baseCompositeType,
             labelText,
             iconId,
             isMultiPost,
-            thumbnailUrl: null // Small composites don't use thumbnails
+            thumbnailUrl: null, // Small composites don't use thumbnails
+            keepRelated: [hoverSpriteId, bigSpriteId] // Protect related composites
           }).then(result => {
             if(result && result.compositeId && props){
               props.compositeId = result.compositeId;
@@ -20040,7 +20056,8 @@ function makePosts(){
             labelText,
             iconId,
             isMultiPost,
-            thumbnailUrl: null
+            thumbnailUrl: null,
+            keepRelated: [baseSpriteId, bigSpriteId] // Protect related composites
           }).then(result => {
             if(result && result.compositeId && props){
               props.hoverCompositeId = result.compositeId;
@@ -20057,7 +20074,8 @@ function makePosts(){
             labelText,
             iconId,
             isMultiPost,
-            thumbnailUrl // Big composites use thumbnails
+            thumbnailUrl, // Big composites use thumbnails
+            keepRelated: [baseSpriteId, hoverSpriteId] // Protect related composites
           }).then(result => {
             if(result && result.compositeId && props){
               props.bigCompositeId = result.compositeId;
