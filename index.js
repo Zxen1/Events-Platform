@@ -1930,40 +1930,98 @@ let __notifyMapOnInteraction = null;
                             hoverSprite: !!hoverSprite
                           });
                           
-                          // Update cache with new sprites (so addPostSource uses them)
+                          // Update BOTH caches with new sprites (so any subsequent calls use updated values)
+                          // Update image promise cache with resolved promise containing new images
+                          markerLabelPillImagePromise = Promise.resolve({
+                            base: baseImg,
+                            highlight: accentImg,
+                            hover: hoverImg || accentImg
+                          });
+                          
+                          // Update sprite cache with new sprites
                           markerLabelPillSpriteCache = {
                             base: baseSprite,
                             highlight: accentSprite,
                             hover: hoverSprite
                           };
                           
-                          // Add new sprites to map
-                          if(baseSprite){
-                            mapInstance.addImage('small-map-card-pill', baseSprite.image, baseSprite.options || {});
-                            console.log('[Pill Update] Added new small-map-card-pill sprite');
-                          }
-                          if(accentSprite){
-                            mapInstance.addImage('big-map-card-pill', accentSprite.image, accentSprite.options || {});
-                            console.log('[Pill Update] Added new big-map-card-pill sprite');
+                          // Add new sprites to map (remove first to ensure clean update)
+                          try {
+                            if(mapInstance.hasImage('small-map-card-pill')){
+                              mapInstance.removeImage('small-map-card-pill');
+                            }
+                            if(mapInstance.hasImage('big-map-card-pill')){
+                              mapInstance.removeImage('big-map-card-pill');
+                            }
+                          } catch(e) {
+                            console.warn('[Pill Update] Error removing sprites before re-adding:', e);
                           }
                           
-                          // Update the layer's icon-image property to force refresh
+                          if(baseSprite && baseSprite.image){
+                            try {
+                              mapInstance.addImage('small-map-card-pill', baseSprite.image, baseSprite.options || {});
+                              console.log('[Pill Update] Added new small-map-card-pill sprite');
+                            } catch(e) {
+                              console.error('[Pill Update] Error adding small-map-card-pill sprite:', e);
+                            }
+                          } else {
+                            console.error('[Pill Update] baseSprite is invalid:', baseSprite);
+                          }
+                          
+                          if(accentSprite && accentSprite.image){
+                            try {
+                              mapInstance.addImage('big-map-card-pill', accentSprite.image, accentSprite.options || {});
+                              console.log('[Pill Update] Added new big-map-card-pill sprite');
+                            } catch(e) {
+                              console.error('[Pill Update] Error adding big-map-card-pill sprite:', e);
+                            }
+                          } else {
+                            console.error('[Pill Update] accentSprite is invalid:', accentSprite);
+                          }
+                          
+                          // Force map to recognize new sprites by updating layer properties
                           try {
                             const smallPillLayer = mapInstance.getLayer('small-map-card-pill');
                             if(smallPillLayer){
-                              // Force refresh by updating the expression
+                              // Force refresh by updating the expression (even if same value)
                               const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
                               const smallPillIconImageExpression = ['case', highlightedStateExpression, 'big-map-card-pill', 'small-map-card-pill'];
                               mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', smallPillIconImageExpression);
-                              console.log('[Pill Update] Updated small-map-card-pill layer');
+                              // Also force opacity refresh
+                              const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+                              const smallPillOpacity = mapCardDisplay === 'hover_only' 
+                                ? ['case', highlightedStateExpression, 1, 0]
+                                : 1;
+                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity);
+                              console.log('[Pill Update] Updated small-map-card-pill layer properties');
+                            } else {
+                              console.warn('[Pill Update] small-map-card-pill layer not found');
                             }
+                            
                             const bigPillLayer = mapInstance.getLayer('big-map-card-pill');
                             if(bigPillLayer){
                               mapInstance.setLayoutProperty('big-map-card-pill', 'icon-image', 'big-map-card-pill');
-                              console.log('[Pill Update] Updated big-map-card-pill layer');
+                              const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+                              mapInstance.setLayoutProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity);
+                              console.log('[Pill Update] Updated big-map-card-pill layer properties');
+                            } else {
+                              console.warn('[Pill Update] big-map-card-pill layer not found');
                             }
                           } catch(e) {
-                            console.warn('[Pill Update] Could not update layers:', e);
+                            console.error('[Pill Update] Error updating layers:', e);
+                          }
+                          
+                          // Force style update to ensure sprites are recognized
+                          try {
+                            if(mapInstance.style && typeof mapInstance.style._update === 'function'){
+                              mapInstance.style._update();
+                            }
+                            // Also try triggering a repaint
+                            if(mapInstance.triggerRepaint){
+                              mapInstance.triggerRepaint();
+                            }
+                          } catch(e) {
+                            console.warn('[Pill Update] Could not update style:', e);
                           }
                           
                           // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
