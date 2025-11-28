@@ -2,33 +2,16 @@
   "use strict";
   
   // Wait for DOM and dependencies
-  let initAttempts = 0;
-  const MAX_INIT_ATTEMPTS = 200; // 20 seconds max (200 * 100ms)
-  
   function init(){
-    initAttempts++;
-    
     if(typeof window === "undefined" || typeof document === "undefined"){
-      if(initAttempts < MAX_INIT_ATTEMPTS){
-        setTimeout(init, 100);
-      }
+      setTimeout(init, 100);
       return;
     }
     
-    // Check for required dependencies (check window only to avoid ReferenceError)
-    const getBaseFieldType = (typeof window !== 'undefined' && typeof window.getBaseFieldType === 'function') ? window.getBaseFieldType : null;
-    const getMessage = (typeof window !== 'undefined' && typeof window.getMessage === 'function') ? window.getMessage : null;
-    const normalizeFormbuilderSnapshot = (typeof window !== 'undefined' && typeof window.normalizeFormbuilderSnapshot === 'function') ? window.normalizeFormbuilderSnapshot : null;
-    
-    if(!getBaseFieldType || !getMessage || !normalizeFormbuilderSnapshot){
-      if(initAttempts < MAX_INIT_ATTEMPTS){
-        if(initAttempts % 10 === 0){ // Only log every 10 attempts (once per second)
-          console.warn("Member forms: Waiting for dependencies...", { attempt: initAttempts, hasGetBaseFieldType: !!getBaseFieldType, hasGetMessage: !!getMessage, hasNormalizeFormbuilderSnapshot: !!normalizeFormbuilderSnapshot });
-        }
-        setTimeout(init, 100);
-      } else {
-        console.error("Member forms: Failed to initialize - dependencies not available after", MAX_INIT_ATTEMPTS, "attempts");
-      }
+    // Check for required dependencies
+    if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
+      console.warn("Member forms: Waiting for dependencies...");
+      setTimeout(init, 100);
       return;
     }
     
@@ -39,14 +22,8 @@
         ? window.__persistedFormbuilderSnapshotPromise
         : null;
     if(!snapshotPromise){
-      if(initAttempts < MAX_INIT_ATTEMPTS){
-        if(initAttempts % 10 === 0){ // Only log every 10 attempts
-          console.warn("Member forms: Waiting for formbuilder snapshot promise...", { attempt: initAttempts });
-        }
-        setTimeout(init, 100);
-      } else {
-        console.error("Member forms: Failed to initialize - snapshot promise not available after", MAX_INIT_ATTEMPTS, "attempts");
-      }
+      console.warn("Member forms: Waiting for formbuilder snapshot promise...");
+      setTimeout(init, 100);
       return;
     }
     
