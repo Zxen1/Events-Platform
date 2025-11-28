@@ -1693,8 +1693,11 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .system-image-picker-container .iconpicker-preview img{
-  width:30px;
-  height:30px;
+  max-width:30px;
+  max-height:30px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
 }
 
 .system-image-picker-container .icon-picker-popup{
@@ -7661,8 +7664,10 @@ html, body { cursor: auto !important; }
             #tab-map .icon-picker-option img,
             #tab-messages .icon-picker-option img,
             #tab-forms .icon-picker-option img{
-              width:50px;
-              height:50px;
+              max-width:50px;
+              max-height:50px;
+              width:auto;
+              height:auto;
               object-fit:contain;
               flex-shrink:0;
             }
