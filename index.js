@@ -3630,14 +3630,32 @@ let __notifyMapOnInteraction = null;
       const clickedPostId = activePostId !== undefined && activePostId !== null ? String(activePostId) : '';
       const expandedPostId = openPostId || clickedPostId;
       
-      // Reset all features to not expanded
+      // Reset all features to not expanded/active
       highlightedFeatureKeys.forEach(entry => {
         try{ 
-          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false }); 
+          map.setFeatureState({ source: entry.source, id: entry.id }, { isExpanded: false, isActive: false }); 
         }catch(err){}
       });
       
-      // Set expanded state for clicked/open post
+      // Also reset all features in markerFeatureIndex to ensure clean state
+      if(markerFeatureIndex instanceof Map){
+        markerFeatureIndex.forEach((entries, postId) => {
+          if(entries && Array.isArray(entries)){
+            entries.forEach(entry => {
+              if(!entry) return;
+              const source = entry.source || 'posts';
+              const featureId = entry.id;
+              if(featureId !== undefined && featureId !== null && String(postId) !== String(expandedPostId)){
+                try{ 
+                  map.setFeatureState({ source: source, id: featureId }, { isExpanded: false, isActive: false }); 
+                }catch(err){}
+              }
+            });
+          }
+        });
+      }
+      
+      // Set expanded and active state for clicked/open post
       if(expandedPostId){
         const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(expandedPostId) : null;
         if(entries && entries.length){
@@ -3647,7 +3665,7 @@ let __notifyMapOnInteraction = null;
             const featureId = entry.id;
             if(featureId !== undefined && featureId !== null){
               try{ 
-                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true }); 
+                map.setFeatureState({ source: source, id: featureId }, { isExpanded: true, isActive: true }); 
               }catch(err){}
             }
           });
@@ -27621,4 +27639,5 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
  
+
 
