@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 04:28 AM
+-- Generation Time: Nov 30, 2025 at 04:32 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -672,6 +672,7 @@ CREATE TABLE `posts` (
   `moderation_status` enum('pending','clean','blurred','hidden') DEFAULT 'pending',
   `flag_reason` text DEFAULT NULL,
   `checkout_title` varchar(255) DEFAULT NULL,
+  `payment_status` enum('pending','paid','failed','refunded') DEFAULT 'pending',
   `expires_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
