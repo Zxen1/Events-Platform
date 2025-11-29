@@ -18932,12 +18932,22 @@ function makePosts(){
       // Helper to update visibility of post cards based on filter
       const updateCardVisibility = (container) => {
         if(!container) return;
+        // Hide regular post cards
         container.querySelectorAll('.post-card').forEach(card => {
           const cardId = card.dataset.id;
           if(cardId && !filteredIds.has(cardId)){
             card.style.display = 'none';
           } else {
             card.style.display = '';
+          }
+        });
+        // Also hide open posts that are outside the filter
+        container.querySelectorAll('.open-post').forEach(openPost => {
+          const postId = openPost.dataset.id;
+          if(postId && !filteredIds.has(postId)){
+            openPost.style.display = 'none';
+          } else {
+            openPost.style.display = '';
           }
         });
       };
@@ -21057,12 +21067,22 @@ function openPostModal(id){
       // Ensure post cards outside filter are hidden (backup for all code paths)
       const filteredIds = new Set(filtered.map(p => String(p.id)));
       if(postsWideEl){
+        // Hide regular post cards
         postsWideEl.querySelectorAll('.post-card').forEach(card => {
           const cardId = card.dataset.id;
           if(cardId && !filteredIds.has(cardId)){
             card.style.display = 'none';
           } else {
             card.style.display = '';
+          }
+        });
+        // Also hide open posts that are outside the filter
+        postsWideEl.querySelectorAll('.open-post').forEach(openPost => {
+          const postId = openPost.dataset.id;
+          if(postId && !filteredIds.has(postId)){
+            openPost.style.display = 'none';
+          } else {
+            openPost.style.display = '';
           }
         });
       }
