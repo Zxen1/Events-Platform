@@ -265,9 +265,10 @@
       `;
     }
     
+    // Icon is at center (0,0 = lat/lng), pill extends to the right
     return `
-      <div class="map-card map-card-${state}" data-id="${post.id}" data-state="${state}">
-        <img class="map-card-icon" src="${iconUrl}" alt="" width="${iconSize}" height="${iconSize}">
+      <img class="map-card-icon" src="${iconUrl}" alt="" width="${iconSize}" height="${iconSize}">
+      <div class="map-card-pill map-card-${state}" data-id="${post.id}" data-state="${state}">
         <div class="map-card-labels">
           ${labelHTML}
         </div>
@@ -298,13 +299,11 @@
     el.className = 'map-card-container';
     el.innerHTML = createMapCardHTML(post, 'small');
     
-    // Create Mapbox Marker
-    // Anchor 'left' + offset [-20, 0] positions pill so icon center is at lat/lng
-    // (pill left edge at -20px, icon at 5px padding + 15px half-width = icon center at 0)
+    // Create Mapbox Marker - icon centered at lat/lng, pill extends right
     const marker = new mapboxgl.Marker({
       element: el,
-      anchor: 'left',
-      offset: [-20, 0]
+      anchor: 'center',
+      offset: [0, 0]
     })
       .setLngLat([lng, lat])
       .addTo(map);
@@ -385,28 +384,28 @@
     
     entry.state = newState;
     
-    // Find the map-card element inside the container
-    const cardEl = entry.element.querySelector('.map-card');
-    if (cardEl) {
-      // Update the class
-      cardEl.classList.remove('map-card-small', 'map-card-hover', 'map-card-big');
-      cardEl.classList.add(`map-card-${newState}`);
-      cardEl.setAttribute('data-state', newState);
+    // Update pill element
+    const pillEl = entry.element.querySelector('.map-card-pill');
+    if (pillEl) {
+      pillEl.classList.remove('map-card-small', 'map-card-hover', 'map-card-big');
+      pillEl.classList.add(`map-card-${newState}`);
+      pillEl.setAttribute('data-state', newState);
       
       // Update inline background-image to match new state
       const pillUrl = getPillUrl(newState);
-      cardEl.style.backgroundImage = `url('${pillUrl}')`;
-      
-      // Update icon size for big state
-      const iconEl = cardEl.querySelector('.map-card-icon');
-      if (iconEl) {
-        const iconSize = newState === 'big' ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
-        iconEl.width = iconSize;
-        iconEl.height = iconSize;
-      }
-      
-      // Update labels for big state
-      const labelsEl = cardEl.querySelector('.map-card-labels');
+      pillEl.style.backgroundImage = `url('${pillUrl}')`;
+    }
+    
+    // Update icon size (icon is sibling of pill, direct child of container)
+    const iconEl = entry.element.querySelector('.map-card-icon');
+    if (iconEl) {
+      const iconSize = newState === 'big' ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
+      iconEl.width = iconSize;
+      iconEl.height = iconSize;
+    }
+    
+    // Update labels for big state
+    const labelsEl = entry.element.querySelector('.map-card-labels');
       if (labelsEl) {
         const labels = getMarkerLabelLines(entry.post, newState === 'big');
         if (newState === 'big') {
@@ -457,8 +456,6 @@
       if (id !== postId && entry.state === 'big') {
         updateMapCardState(id, 'small');
         entry.element.classList.remove('is-active');
-        // Reset offset to small position (-20px)
-        entry.marker.setOffset([-20, 0]);
       }
     });
     // Then activate this one
@@ -466,8 +463,6 @@
     if (entry) {
       updateMapCardState(postId, 'big');
       entry.element.classList.add('is-active');
-      // Change offset to big position (-30px for big icon center at lat/lng)
-      entry.marker.setOffset([-30, 0]);
     }
   }
   
@@ -480,8 +475,6 @@
     if (!entry || entry.state !== 'big') return;
     updateMapCardState(postId, 'small');
     entry.element.classList.remove('is-active');
-    // Reset offset to small position
-    entry.marker.setOffset([-20, 0]);
   }
   
   /**
@@ -536,58 +529,78 @@
     const bigPillUrl = getPillUrl('big');
     
     const css = `
-      /* Map Card Container - z-index for stacking */
+      /* Map Card Container - icon centered at lat/lng, pill to the right */
       .map-card-container {
         cursor: pointer;
         z-index: 1;
+        display: flex;
+        align-items: center;
       }
       .map-card-container:hover { z-index: 10; }
       .map-card-container.is-active { z-index: 100; }
       
-      /* Hover Only Mode - hide cards unless hovered or active */
-      body[data-map-card-display="hover_only"] .map-card-container .map-card {
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.15s ease;
-      }
-      body[data-map-card-display="hover_only"] .map-card-container:hover .map-card,
-      body[data-map-card-display="hover_only"] .map-card-container.is-active .map-card,
-      body[data-map-card-display="hover_only"] .map-card-container.is-hovered .map-card {
-        opacity: 1;
-        pointer-events: auto;
+      /* Icon - always at center (lat/lng) */
+      .map-card-icon {
+        border-radius: 50%;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 2;
       }
       
-      /* Map Card - pill background with icon + labels inside */
-      .map-card {
+      /* Pill - extends to the right of icon */
+      .map-card-pill {
+        position: absolute;
+        left: 0;
         display: flex;
         align-items: center;
-        padding-left: 5px;
-        gap: 5px;
+        padding-left: ${SMALL_ICON_SIZE + 5}px;
+        background-repeat: no-repeat;
       }
       
-      /* States - just swap background and size */
-      .map-card-small,
+      /* Small pill state */
+      .map-card-small {
+        width: ${SMALL_PILL_WIDTH}px;
+        height: ${SMALL_PILL_HEIGHT}px;
+        margin-left: -${SMALL_ICON_SIZE / 2}px;
+        background-image: url('${smallPillUrl}');
+        background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+      }
+      
+      /* Hover pill state */
       .map-card-hover {
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
-        background: url('${smallPillUrl}') no-repeat;
+        margin-left: -${SMALL_ICON_SIZE / 2}px;
+        background-image: url('${hoverPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
       }
-      .map-card-hover {
-        background-image: url('${hoverPillUrl}');
-      }
+      
+      /* Big pill state */
       .map-card-big {
         width: ${BIG_PILL_WIDTH}px;
         height: ${BIG_PILL_HEIGHT}px;
-        background: url('${bigPillUrl}') no-repeat;
+        margin-left: -${BIG_ICON_SIZE / 2}px;
+        padding-left: ${BIG_ICON_SIZE + 5}px;
+        background-image: url('${bigPillUrl}');
         background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
       }
       
-      /* Icon */
-      .map-card-icon { border-radius: 50%; flex-shrink: 0; }
-      
       /* Labels */
-      .map-card-labels { display: flex; flex-direction: column; overflow: hidden; }
+      .map-card-labels {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      
+      /* Hover Only Mode - hide pill, keep icon */
+      body[data-map-card-display="hover_only"] .map-card-pill {
+        display: none;
+      }
+      body[data-map-card-display="hover_only"] .map-card-container:hover .map-card-pill,
+      body[data-map-card-display="hover_only"] .map-card-container.is-active .map-card-pill,
+      body[data-map-card-display="hover_only"] .map-card-container.is-hovered .map-card-pill {
+        display: flex;
+      }
       
       /* Text styling */
       .map-card-title {
@@ -626,24 +639,23 @@
     if (existing) existing.remove();
     injectMapCardStyles();
     
-    // Also update inline styles on existing markers for immediate effect
+    // Update inline styles on existing markers
     const smallPillUrl = getPillUrl('small');
     const hoverPillUrl = getPillUrl('hover');
     const bigPillUrl = getPillUrl('big');
     
     mapCardMarkers.forEach((entry) => {
-      const cardEl = entry.element.querySelector('.map-card');
-      if (cardEl) {
-        // Force update background-image based on current state
+      const pillEl = entry.element.querySelector('.map-card-pill');
+      if (pillEl) {
         switch (entry.state) {
           case 'big':
-            cardEl.style.backgroundImage = `url('${bigPillUrl}')`;
+            pillEl.style.backgroundImage = `url('${bigPillUrl}')`;
             break;
           case 'hover':
-            cardEl.style.backgroundImage = `url('${hoverPillUrl}')`;
+            pillEl.style.backgroundImage = `url('${hoverPillUrl}')`;
             break;
           default:
-            cardEl.style.backgroundImage = `url('${smallPillUrl}')`;
+            pillEl.style.backgroundImage = `url('${smallPillUrl}')`;
         }
       }
     });

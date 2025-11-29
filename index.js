@@ -16860,13 +16860,9 @@ function makePosts(){
             const id = cardEl.getAttribute('data-id');
             if(!id) return;
             
-            // Add clicked state to corresponding mapcard
-            const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-            if(mapCard){
-              document.querySelectorAll('.small-map-card').forEach(card => {
-                card.classList.remove('is-clicked');
-              });
-              mapCard.classList.add('is-clicked');
+            // Set active state on corresponding mapcard via MapCards API
+            if(window.MapCards && window.MapCards.setMapCardActive){
+              window.MapCards.setMapCardActive(id);
             }
             
             callWhenDefined('openPost', (fn)=>{
@@ -16893,13 +16889,9 @@ function makePosts(){
             if(id){
               e.preventDefault();
               
-              // Add clicked state to corresponding mapcard
-              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-              if(mapCard){
-                document.querySelectorAll('.small-map-card').forEach(card => {
-                  card.classList.remove('is-clicked');
-                });
-                mapCard.classList.add('is-clicked');
+              // Set active state on corresponding mapcard via MapCards API
+              if(window.MapCards && window.MapCards.setMapCardActive){
+                window.MapCards.setMapCardActive(id);
               }
               
               callWhenDefined('openPost', (fn)=>{
@@ -18582,18 +18574,10 @@ function makePosts(){
           const isMultiPost = helperMultiCount > 1;
           const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
           
-            // Add clicked state to mapcard and update icon-size
+            // Set active state on mapcard via MapCards API
             if(id !== undefined && id !== null){
-              const mapCard = document.querySelector(`.small-map-card[data-id="${id}"]`);
-              if(mapCard){
-                document.querySelectorAll('.small-map-card').forEach(card => {
-                  card.classList.remove('is-clicked');
-                });
-                mapCard.classList.add('is-clicked');
-              }
-              // Update icon-size for expanded state
-              if(typeof updateMarkerLabelHighlightIconSize === 'function'){
-                updateMarkerLabelHighlightIconSize();
+              if(window.MapCards && window.MapCards.setMapCardActive){
+                window.MapCards.setMapCardActive(id);
               }
             }
           
@@ -18701,16 +18685,20 @@ function makePosts(){
         const openPostEl = document.querySelector('.open-post[data-id]');
         const openPostId = openPostEl && openPostEl.dataset ? String(openPostEl.dataset.id || '') : '';
         
-        // Remove all click and post-open states
-        document.querySelectorAll('.small-map-card').forEach(card => {
-          card.classList.remove('is-clicked', 'is-post-open');
-        });
-        
-        // Add post-open state to mapcard if post is open
-        if(openPostId){
-          const mapCard = document.querySelector(`.small-map-card[data-id="${openPostId}"]`);
-          if(mapCard){
-            mapCard.classList.add('is-post-open');
+        // Use MapCards API for state management
+        if(window.MapCards){
+          if(openPostId){
+            window.MapCards.setMapCardActive(openPostId);
+          } else {
+            // Remove all active states
+            const markers = window.MapCards.getAllMapCardMarkers ? window.MapCards.getAllMapCardMarkers() : null;
+            if(markers){
+              markers.forEach((entry, id) => {
+                if(entry.state === 'big'){
+                  window.MapCards.removeMapCardActive(id);
+                }
+              });
+            }
           }
         }
       }
@@ -18720,21 +18708,18 @@ function makePosts(){
       
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
-        const targetEl = originalTarget && typeof originalTarget.closest === 'function'
-          ? originalTarget.closest('.mapmarker-overlay, .small-map-card')
+        // Check for clicks on map card markers (new Marker system)
+        const mapCardContainer = originalTarget && typeof originalTarget.closest === 'function'
+          ? originalTarget.closest('.map-card-container')
           : null;
-        if(targetEl){
-          const smallMapCard = targetEl.classList.contains('small-map-card') 
-            ? targetEl 
-            : targetEl.querySelector('.small-map-card');
-          if(smallMapCard && smallMapCard.dataset && smallMapCard.dataset.id){
-            const pid = smallMapCard.dataset.id;
-            
-            // Add clicked state
-            document.querySelectorAll('.small-map-card').forEach(card => {
-              card.classList.remove('is-clicked');
-            });
-            smallMapCard.classList.add('is-clicked');
+        if(mapCardContainer){
+          const pillEl = mapCardContainer.querySelector('.map-card-pill');
+          const pid = pillEl && pillEl.dataset ? pillEl.dataset.id : null;
+          if(pid){
+            // Set active state via MapCards API
+            if(window.MapCards && window.MapCards.setMapCardActive){
+              window.MapCards.setMapCardActive(pid);
+            }
             
             callWhenDefined('openPost', (fn)=>{
               requestAnimationFrame(() => {
@@ -18753,10 +18738,7 @@ function makePosts(){
         }
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
-          // Clicked elsewhere - remove click states
-          document.querySelectorAll('.small-map-card').forEach(card => {
-            card.classList.remove('is-clicked');
-          });
+          // Clicked elsewhere - clear active states
           updateSelectedMarkerRing();
           touchMarker = null;
           hoveredPostIds = [];
@@ -18765,10 +18747,7 @@ function makePosts(){
         } else {
           const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
           if(!clickedMarkerLabel){
-            // Clicked elsewhere - remove click states
-            document.querySelectorAll('.small-map-card').forEach(card => {
-              card.classList.remove('is-clicked');
-            });
+            // Clicked elsewhere - clear active states
             touchMarker = null;
             hoveredPostIds = [];
             updateSelectedMarkerRing();
