@@ -13099,8 +13099,7 @@ function makePosts(){
               console.log('[Admin Checkout Edit Panel]', {
                 fieldKey: safeField.key,
                 fieldTypeKey: safeField.fieldTypeKey,
-                checkoutOptions: safeField.checkoutOptions,
-                originalField: field ? { checkoutOptions: field.checkoutOptions } : null
+                checkoutOptions: safeField.checkoutOptions
               });
               
               // Ensure we have 3 slots
