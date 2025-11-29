@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 02:57 AM
+-- Generation Time: Nov 30, 2025 at 03:43 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -651,12 +651,10 @@ CREATE TABLE `posts` (
   `member_id` int(11) NOT NULL,
   `member_name` varchar(255) DEFAULT NULL,
   `subcategory_key` varchar(255) NOT NULL,
-  `status` enum('active','expired','draft') DEFAULT 'draft',
+  `visibility` enum('paused','active','expired') DEFAULT 'paused',
   `moderation_status` enum('pending','clean','blurred','hidden') DEFAULT 'pending',
   `flag_reason` text DEFAULT NULL,
-  `payment_plan` enum('free','standard','featured') DEFAULT 'free',
-  `paid_amount` decimal(10,2) DEFAULT 0.00,
-  `paid_currency` varchar(10) DEFAULT NULL,
+  `checkout_title` varchar(255) DEFAULT NULL,
   `expires_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -941,7 +939,7 @@ ALTER TABLE `posts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_member_id` (`member_id`),
   ADD KEY `idx_subcategory_key` (`subcategory_key`),
-  ADD KEY `idx_status` (`status`,`moderation_status`);
+  ADD KEY `idx_status` (`visibility`,`moderation_status`);
 
 --
 -- Indexes for table `post_map_cards`
