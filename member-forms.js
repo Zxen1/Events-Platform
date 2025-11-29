@@ -456,9 +456,16 @@
       if(!snapshot || typeof snapshot !== 'object'){
         throw new Error('Invalid snapshot provided to applyMemberSnapshot');
       }
-      const normalized = normalizeFormbuilderSnapshot(snapshot);
-      memberSnapshot = normalized;
-      memberCategories = Array.isArray(memberSnapshot.categories) ? memberSnapshot.categories : [];
+      // Use already-restored categories from window.categories if available (they have checkoutOptions preserved)
+      // Otherwise normalize the snapshot
+      if(window.categories && Array.isArray(window.categories) && window.categories.length > 0){
+        memberCategories = window.categories;
+        memberSnapshot = snapshot; // Keep original snapshot for other data
+      } else {
+        const normalized = normalizeFormbuilderSnapshot(snapshot);
+        memberSnapshot = normalized;
+        memberCategories = Array.isArray(memberSnapshot.categories) ? memberSnapshot.categories : [];
+      }
       currencyCodes = collectCurrencyCodes(memberSnapshot);
       // Set window.currencyCodes for use in other parts of the application
       window.currencyCodes = currencyCodes;
