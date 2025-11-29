@@ -18926,9 +18926,29 @@ function makePosts(){
     function renderLists(list){
       if(spinning || !postsLoaded) return;
       
-      // If there's an open post, skip the full re-render to avoid flashing/reloading cards
+      // Build set of filtered post IDs for quick lookup
+      const filteredIds = new Set(list.map(p => String(p.id)));
+      
+      // Helper to update visibility of post cards based on filter
+      const updateCardVisibility = (container) => {
+        if(!container) return;
+        container.querySelectorAll('.post-card').forEach(card => {
+          const cardId = card.dataset.id;
+          if(cardId && !filteredIds.has(cardId)){
+            card.style.display = 'none';
+          } else {
+            card.style.display = '';
+          }
+        });
+      };
+      
+      // If there's an open post, update visibility of existing cards instead of full re-render
       const existingOpenPost = postsWideEl.querySelector('.open-post');
       if(existingOpenPost){
+        // Hide/show post cards based on filtered list
+        updateCardVisibility(postsWideEl);
+        updateCardVisibility(resultsEl);
+        
         // Just update the sorted list and counts without rebuilding the DOM
         const sort = currentSort;
         const arr = list.slice();
@@ -21033,6 +21053,19 @@ function openPostModal(id){
       syncMarkerSources(filtered);
       updateLayerVisibility(lastKnownZoom);
       filtersInitialized = true;
+      
+      // Ensure post cards outside filter are hidden (backup for all code paths)
+      const filteredIds = new Set(filtered.map(p => String(p.id)));
+      if(postsWideEl){
+        postsWideEl.querySelectorAll('.post-card').forEach(card => {
+          const cardId = card.dataset.id;
+          if(cardId && !filteredIds.has(cardId)){
+            card.style.display = 'none';
+          } else {
+            card.style.display = '';
+          }
+        });
+      }
     }
 
     function applyFilters(render = true){
