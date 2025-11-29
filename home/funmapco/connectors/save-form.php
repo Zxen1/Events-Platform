@@ -927,7 +927,9 @@ try {
                 }
                 // Save field_type_edits JSON if fields were provided
                 if ($hasFieldsForThisSub && in_array('field_type_edits', $subcategoryColumns, true)) {
+                    error_log("DEBUG: field_type_edits for '$subName' before encoding: " . json_encode($fieldTypeEdits));
                     $fieldTypeEditsJson = !empty($fieldTypeEdits) ? json_encode($fieldTypeEdits, JSON_UNESCAPED_UNICODE) : null;
+                    error_log("DEBUG: field_type_edits JSON for '$subName': " . ($fieldTypeEditsJson ?? 'NULL'));
                     $updateParts[] = 'field_type_edits = :field_type_edits';
                     $params[':field_type_edits'] = $fieldTypeEditsJson;
                 }
