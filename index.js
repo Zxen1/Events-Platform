@@ -21040,6 +21040,7 @@ function openPostModal(id){
         hideResultIndicators();
         return;
       }
+      updatePostPanel(); // Ensure postPanel has current map bounds before filtering
       updateFilterCounts();
       refreshMarkers(render);
     }
