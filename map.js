@@ -11,6 +11,21 @@
   const MARKER_COMPOSITE_BIG_ICON_SIZE = 50; // 50x50px for big cards
   const MARKER_COMPOSITE_SMALL_ICON_SIZE = 30; // 30x30px for small cards
   
+  // Pill sprite constants
+  const MARKER_LABEL_BG_ID = 'small-map-card-pill';
+  const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
+  const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-composite', 'big-map-card-composite'];
+  
+  // Pill dimensions - access from global scope if available, otherwise use defaults
+  const basePillWidthPx = (typeof window !== 'undefined' && typeof window.basePillWidthPx !== 'undefined') ? window.basePillWidthPx : 150;
+  const basePillHeightPx = (typeof window !== 'undefined' && typeof window.basePillHeightPx !== 'undefined') ? window.basePillHeightPx : 40;
+  const accentPillWidthPx = (typeof window !== 'undefined' && typeof window.accentPillWidthPx !== 'undefined') ? window.accentPillWidthPx : null;
+  const accentPillHeightPx = (typeof window !== 'undefined' && typeof window.accentPillHeightPx !== 'undefined') ? window.accentPillHeightPx : null;
+  
+  // Pill sprite cache
+  let markerLabelPillImagePromise = null;
+  let markerLabelPillSpriteCache = null;
+  
   // Store for composite sprites: Map<spriteId, { image, options, meta }>
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map(); // Track pending composite creation
@@ -42,6 +57,242 @@
       hashNum = hashNum & hashNum; // Convert to 32-bit integer
     }
     return `${MARKER_LABEL_COMPOSITE_PREFIX}${type}-${Math.abs(hashNum).toString(36)}`;
+  }
+  
+  /**
+   * Load an image from a URL
+   * @param {string} url - Image URL
+   * @returns {Promise<Image>} Promise that resolves to loaded image
+   */
+  function loadMarkerLabelImage(url){
+    return new Promise((resolve, reject) => {
+      if(!url){
+        reject(new Error('Missing URL'));
+        return;
+      }
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(err){}
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load ${url}`));
+      img.src = url;
+      if(img.complete){
+        setTimeout(() => {
+          if(img.naturalWidth > 0 && img.naturalHeight > 0){
+            resolve(img);
+          }
+        }, 0);
+      }
+    });
+  }
+  
+  /**
+   * Convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
+   * @param {ImageData|Canvas|Image} imageData - Image data to convert
+   * @returns {Canvas|Image|null} Canvas element or original image
+   */
+  function convertImageDataToCanvas(imageData){
+    if(!imageData) return null;
+    if(!(imageData instanceof ImageData)){
+      return imageData; // Already a Canvas or Image
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      const ctx = canvas.getContext('2d');
+      if(ctx){
+        ctx.putImageData(imageData, 0, 0);
+      }
+      return canvas;
+    } catch(e){
+      // Error converting ImageData to Canvas
+      return null;
+    }
+  }
+  
+  /**
+   * Compute canvas dimensions for marker label pills
+   * @param {Image} sourceImage - Source image
+   * @param {boolean} isAccent - Whether this is an accent (big) pill
+   * @returns {Object} Dimensions object
+   */
+  function computeMarkerLabelCanvasDimensions(sourceImage, isAccent = false){
+    if(isAccent){
+      const width = accentPillWidthPx !== null ? accentPillWidthPx : (sourceImage && (sourceImage.naturalWidth || sourceImage.width) ? (sourceImage.naturalWidth || sourceImage.width) : basePillWidthPx);
+      const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
+      const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
+      const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
+      const pixelRatio = 1;
+      return { canvasWidth, canvasHeight, pixelRatio };
+    }
+    const canvasWidth = basePillWidthPx;
+    const canvasHeight = basePillHeightPx;
+    const pixelRatio = 1;
+    return { canvasWidth, canvasHeight, pixelRatio };
+  }
+  
+  /**
+   * Build a marker label pill sprite from source image
+   * @param {Image} sourceImage - Source image
+   * @param {string|null} tintColor - Tint color (null for no tint)
+   * @param {number} tintAlpha - Tint alpha (0-1)
+   * @param {boolean} isAccent - Whether this is an accent (big) pill
+   * @returns {Object|null} Sprite object with image and options
+   */
+  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
+    if(!sourceImage){
+      return null;
+    }
+    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    const ctx = canvas.getContext('2d');
+    if(!ctx){
+      return null;
+    }
+    try{
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
+    }catch(err){
+      return null;
+    }
+    if(tintColor){
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.globalAlpha = tintAlpha;
+      ctx.fillStyle = tintColor;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    let imageData = null;
+    try{
+      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    }catch(err){
+      imageData = null;
+    }
+    if(!imageData){
+      return null;
+    }
+    return {
+      image: imageData,
+      options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
+    };
+  }
+  
+  /**
+   * Load pill images from admin settings
+   * @returns {Promise<Object>} Promise that resolves to images object
+   */
+  async function ensureMarkerLabelPillImage(){
+    if(markerLabelPillImagePromise){
+      try {
+        await Promise.resolve(markerLabelPillImagePromise);
+        return markerLabelPillImagePromise;
+      } catch(err) {
+        markerLabelPillImagePromise = null;
+      }
+    }
+    
+    let baseUrl = null;
+    let accentUrl = null;
+    let hoverUrl = null;
+    
+    try {
+      const response = await fetch('/gateway.php?action=get-admin-settings');
+      if(response.ok){
+        const data = await response.json();
+        if(data.success && data.settings){
+          if(data.settings.small_map_card_pill){
+            baseUrl = data.settings.small_map_card_pill;
+          }
+          if(data.settings.big_map_card_pill){
+            accentUrl = data.settings.big_map_card_pill;
+          }
+          if(data.settings.hover_map_card_pill){
+            hoverUrl = data.settings.hover_map_card_pill;
+          }
+        }
+      }
+    } catch(err) {
+      // Failed to load pill image settings
+    }
+    
+    if(!baseUrl || !accentUrl){
+      const error = new Error('Pill image URLs not found in database settings');
+      return Promise.reject(error);
+    }
+    
+    const loadPromises = [
+      loadMarkerLabelImage(baseUrl),
+      loadMarkerLabelImage(accentUrl)
+    ];
+    
+    if(hoverUrl){
+      loadPromises.push(loadMarkerLabelImage(hoverUrl));
+    }
+    
+    const promise = Promise.all(loadPromises).then((images) => {
+      const result = { 
+        base: images[0], 
+        highlight: images[1] 
+      };
+      if(images[2]){
+        result.hover = images[2];
+      } else {
+        result.hover = images[1];
+      }
+      return result;
+    }).catch((err) => {
+      markerLabelPillImagePromise = null;
+      throw err;
+    });
+    
+    markerLabelPillImagePromise = promise;
+    return markerLabelPillImagePromise;
+  }
+  
+  /**
+   * Ensure pill sprites are loaded and cached
+   * @returns {Promise<Object|null>} Promise that resolves to pill sprites object
+   */
+  async function ensureMarkerLabelPillSprites(){
+    if(markerLabelPillSpriteCache){
+      return markerLabelPillSpriteCache;
+    }
+    const assets = await ensureMarkerLabelPillImage();
+    if(!assets || !assets.base){
+      return null;
+    }
+    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
+    let accentSprite = null;
+    if(assets.highlight){
+      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
+    }
+    if(!accentSprite){
+      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1, true);
+    }
+    if(!baseSprite){
+      return null;
+    }
+    const hoverSprite = assets.hover ? buildMarkerLabelPillSprite(assets.hover, null, 1, false) : accentSprite;
+    markerLabelPillSpriteCache = {
+      base: baseSprite,
+      highlight: accentSprite || baseSprite,
+      hover: hoverSprite || accentSprite || baseSprite
+    };
+    return markerLabelPillSpriteCache;
+  }
+  
+  /**
+   * Clear pill sprite cache (for refreshing after settings update)
+   */
+  function clearMarkerLabelPillSpriteCache(){
+    markerLabelPillSpriteCache = null;
+    markerLabelPillImagePromise = null;
   }
   
   /**
@@ -136,12 +387,12 @@
       return null;
     }
     
-    // Access dimensions from global scope (defined in index.js)
-    const basePillWidth = typeof basePillWidthPx !== 'undefined' ? basePillWidthPx : 150;
-    const basePillHeight = typeof basePillHeightPx !== 'undefined' ? basePillHeightPx : 40;
-    const accentPillWidth = typeof accentPillWidthPx !== 'undefined' ? accentPillWidthPx : null;
-    const accentPillHeight = typeof accentPillHeightPx !== 'undefined' ? accentPillHeightPx : null;
-    const textSize = typeof markerLabelTextSize !== 'undefined' ? markerLabelTextSize : 12;
+    // Use local dimensions constants
+    const basePillWidth = basePillWidthPx;
+    const basePillHeight = basePillHeightPx;
+    const accentPillWidth = accentPillWidthPx;
+    const accentPillHeight = accentPillHeightPx;
+    const textSize = (typeof window !== 'undefined' && typeof window.markerLabelTextSize !== 'undefined') ? window.markerLabelTextSize : 12;
     
     // Determine dimensions based on type
     let canvasWidth, canvasHeight, iconSize, iconX, iconY, labelX, labelY, labelMaxWidth;
@@ -301,11 +552,7 @@
    * @returns {Promise<HTMLImageElement>}
    */
   async function loadCompositeIcon(iconId, type, thumbnailUrl, isMultiPost){
-    // Access loadMarkerLabelImage from global scope (defined in index.js)
-    if(typeof loadMarkerLabelImage !== 'function'){
-      // loadMarkerLabelImage not available
-      return null;
-    }
+    // Use local loadMarkerLabelImage function
     
     // For big cards with thumbnail URL, load thumbnail
     if((type === COMPOSITE_TYPE_BIG || type === COMPOSITE_TYPE_BIG_MULTI) && thumbnailUrl){
@@ -356,10 +603,7 @@
     }
     
     // Access dependencies from global scope
-    if(typeof ensureMarkerLabelPillSprites !== 'function'){
-      // ensureMarkerLabelPillSprites not available
-      return null;
-    }
+    // Use local ensureMarkerLabelPillSprites function
     if(typeof convertImageDataToCanvas !== 'function'){
       // convertImageDataToCanvas not available
       return null;
@@ -636,10 +880,7 @@
     }
     
     // Access convertImageDataToCanvas from global scope
-    if(typeof convertImageDataToCanvas !== 'function'){
-      // convertImageDataToCanvas not available
-      return;
-    }
+    // Use local convertImageDataToCanvas function
     
     // Add base pill sprite - ALWAYS remove existing first to prevent dimension mismatch
     if(pillSprites.base && pillSprites.base.image){
@@ -1031,6 +1272,11 @@
     updateMapCardLayerOpacity,
     createMarkerIconLayer,
     orderMapLayers,
+    ensureMarkerLabelPillSprites,
+    clearMarkerLabelPillSpriteCache,
+    loadMarkerLabelImage,
+    convertImageDataToCanvas,
+    buildMarkerLabelPillSprite,
     // Expose constants for use in index.js
     COMPOSITE_TYPE_SMALL,
     COMPOSITE_TYPE_SMALL_MULTI,
@@ -1038,7 +1284,10 @@
     COMPOSITE_TYPE_HOVER_MULTI,
     COMPOSITE_TYPE_BIG,
     COMPOSITE_TYPE_BIG_MULTI,
-    markerLabelCompositeId
+    markerLabelCompositeId,
+    MARKER_LABEL_BG_ID,
+    MARKER_LABEL_BG_ACCENT_ID,
+    VISIBLE_MARKER_LABEL_LAYERS
   };
   
 })();

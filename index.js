@@ -1214,14 +1214,13 @@ let __notifyMapOnInteraction = null;
     return lines.line1;
   }
 
-  const MARKER_LABEL_BG_ID = 'small-map-card-pill';
-  const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
-  // Old layers are now hidden - using composite layers instead
-  const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-composite', 'big-map-card-composite'];
+  // Map card constants - now in map.js, access via window.MapCardComposites
+  const MARKER_LABEL_BG_ID = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ID) || 'small-map-card-pill';
+  const MARKER_LABEL_BG_ACCENT_ID = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ACCENT_ID) || 'big-map-card-pill';
+  const VISIBLE_MARKER_LABEL_LAYERS = (window.MapCardComposites && window.MapCardComposites.VISIBLE_MARKER_LABEL_LAYERS) || ['small-map-card-composite', 'big-map-card-composite'];
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
-  let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
     try{
@@ -1234,225 +1233,19 @@ let __notifyMapOnInteraction = null;
 
 
   // --- Section 3: Map Card System ---
-  function loadMarkerLabelImage(url){
-    return new Promise((resolve, reject) => {
-      if(!url){
-        reject(new Error('Missing URL'));
-        return;
-      }
-      const img = new Image();
-      try{ img.crossOrigin = 'anonymous'; }catch(err){}
-      img.decoding = 'async';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Failed to load ${url}`));
-      img.src = url;
-      if(img.complete){
-        setTimeout(() => {
-          if(img.naturalWidth > 0 && img.naturalHeight > 0){
-            resolve(img);
-          }
-        }, 0);
-      }
-    });
-  }
-
-  // MAP CARD BACKGROUND SYSTEM: Provides pill images (map card backgrounds)
-  // Uses these images directly via ensureMarkerLabelPillSprites()
-  async function ensureMarkerLabelPillImage(){
-    // If we have a cached promise, try to use it, but clear cache if it was rejected
-    if(markerLabelPillImagePromise){
-      try {
-        // Try to await the cached promise - if it's already resolved, this will return immediately
-        // If it was rejected, this will throw and we'll clear the cache
-        await Promise.resolve(markerLabelPillImagePromise);
-      return markerLabelPillImagePromise;
-      } catch(err) {
-        // Cached promise was rejected - clear it and try again
-        markerLabelPillImagePromise = null;
-    }
-    }
-    
-    // Load from admin settings - no hardcoded defaults
-    let baseUrl = null;
-    let accentUrl = null;
-    let hoverUrl = null;
-    
-    try {
-      const response = await fetch('/gateway.php?action=get-admin-settings');
-      if(response.ok){
-        const data = await response.json();
-        if(data.success && data.settings){
-          if(data.settings.small_map_card_pill){
-            baseUrl = data.settings.small_map_card_pill;
-          }
-          if(data.settings.big_map_card_pill){
-            accentUrl = data.settings.big_map_card_pill;
-          }
-          if(data.settings.hover_map_card_pill){
-            hoverUrl = data.settings.hover_map_card_pill;
-          }
-        }
-      }
-    } catch(err) {
-      console.error('Failed to load pill image settings:', err);
-    }
-    
-    if(!baseUrl || !accentUrl){
-      const error = new Error('Pill image URLs not found in database settings');
-      // Don't cache rejected promises - allow retry on next call
-      return Promise.reject(error);
-    }
-    
-    // Load base and accent images (required)
-    const loadPromises = [
-      loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl)
-    ];
-    
-    // Load hover image if available (optional)
-    if(hoverUrl){
-      loadPromises.push(loadMarkerLabelImage(hoverUrl));
-    }
-    
-    const promise = Promise.all(loadPromises).then((images) => {
-      const result = { 
-        base: images[0], 
-        highlight: images[1] 
-      };
-      // Use hover image if available, otherwise fall back to accent
-      if(images[2]){
-        result.hover = images[2];
-      } else {
-        result.hover = images[1]; // Fall back to accent
-      }
-      return result;
-    }).catch((err) => {
-      // Clear cache on error to allow retry
-      markerLabelPillImagePromise = null;
-      throw err;
-    });
-    
-    // Cache the promise (will be cleared if it rejects)
-    markerLabelPillImagePromise = promise;
-    return markerLabelPillImagePromise;
-  }
-
-  function computeMarkerLabelCanvasDimensions(sourceImage, isAccent = false){
-    if(isAccent){
-      const width = accentPillWidthPx !== null ? accentPillWidthPx : (sourceImage && (sourceImage.naturalWidth || sourceImage.width) ? (sourceImage.naturalWidth || sourceImage.width) : basePillWidthPx);
-      const height = accentPillHeightPx !== null ? accentPillHeightPx : (sourceImage && (sourceImage.naturalHeight || sourceImage.height) ? (sourceImage.naturalHeight || sourceImage.height) : basePillHeightPx);
-      const canvasWidth = Math.max(1, Math.round(Number.isFinite(width) && width > 0 ? width : basePillWidthPx));
-      const canvasHeight = Math.max(1, Math.round(Number.isFinite(height) && height > 0 ? height : basePillHeightPx));
-      const pixelRatio = 1;
-      return { canvasWidth, canvasHeight, pixelRatio };
-    }
-    const canvasWidth = basePillWidthPx;
-    const canvasHeight = basePillHeightPx;
-    const pixelRatio = 1;
-    return { canvasWidth, canvasHeight, pixelRatio };
-  }
-
-
-  // Shared function to convert ImageData to Canvas (Mapbox requires Image/Canvas, not ImageData)
-  function convertImageDataToCanvas(imageData){
-    if(!imageData) return null;
-    if(!(imageData instanceof ImageData)){
-      return imageData; // Already a Canvas or Image
-    }
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = imageData.width;
-      canvas.height = imageData.height;
-      const ctx = canvas.getContext('2d');
-      if(ctx){
-        ctx.putImageData(imageData, 0, 0);
-      }
-      return canvas;
-    } catch(e){
-      console.error('Error converting ImageData to Canvas:', e);
-      return null;
-    }
-  }
-
-  function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1, isAccent = false){
-    if(!sourceImage){
-      return null;
-    }
-    const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(sourceImage, isAccent);
-    const canvas = document.createElement('canvas');
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    const ctx = canvas.getContext('2d');
-    if(!ctx){
-      return null;
-    }
-    try{
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      // Draw image at full size (no devicePixelRatio scaling to avoid size mismatch)
-      ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
-    }catch(err){
-      console.error(err);
-      return null;
-    }
-    if(tintColor){
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.globalAlpha = tintAlpha;
-      ctx.fillStyle = tintColor;
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-    }
-    let imageData = null;
-    try{
-      imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    }catch(err){
-      console.error(err);
-      imageData = null;
-    }
-    if(!imageData){
-      return null;
-    }
-    return {
-      image: imageData,
-      options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
-    };
-  }
-
-  let markerLabelPillSpriteCache = null;
-
-  async function ensureMarkerLabelPillSprites(){
-    if(markerLabelPillSpriteCache){
-      return markerLabelPillSpriteCache;
-    }
-    const assets = await ensureMarkerLabelPillImage();
-    if(!assets || !assets.base){
-      return null;
-    }
-    // Base sprite: apply black tint with 0.9 alpha (matches reference file)
-    const baseSprite = buildMarkerLabelPillSprite(assets.base, 'rgba(0,0,0,1)', 0.9, false);
-    let accentSprite = null;
-    // Accent sprite: use highlight image without tint, or fallback to tinted base
-    if(assets.highlight){
-      accentSprite = buildMarkerLabelPillSprite(assets.highlight, null, 1, true);
-    }
-    if(!accentSprite){
-      // Fallback: tint base image with blue color (matches reference file)
-      accentSprite = buildMarkerLabelPillSprite(assets.base, '#2f3b73', 1, true);
-    }
-    if(!baseSprite){
-      return null;
-    }
-    // Hover sprite: use hover image if available, otherwise use accent
-    const hoverSprite = assets.hover ? buildMarkerLabelPillSprite(assets.hover, null, 1, false) : accentSprite;
-    markerLabelPillSpriteCache = {
-      base: baseSprite,
-      highlight: accentSprite || baseSprite,
-      hover: hoverSprite || accentSprite || baseSprite
-    };
-    return markerLabelPillSpriteCache;
-  }
+  // Pill sprite functions moved to map.js - use window.MapCardComposites functions
+  const loadMarkerLabelImage = window.MapCardComposites && window.MapCardComposites.loadMarkerLabelImage 
+    ? window.MapCardComposites.loadMarkerLabelImage 
+    : function(url){ return Promise.reject(new Error('map.js not loaded')); };
+  const convertImageDataToCanvas = window.MapCardComposites && window.MapCardComposites.convertImageDataToCanvas 
+    ? window.MapCardComposites.convertImageDataToCanvas 
+    : function(imageData){ return imageData; };
+  const buildMarkerLabelPillSprite = window.MapCardComposites && window.MapCardComposites.buildMarkerLabelPillSprite 
+    ? window.MapCardComposites.buildMarkerLabelPillSprite 
+    : function(){ return null; };
+  const ensureMarkerLabelPillSprites = window.MapCardComposites && window.MapCardComposites.ensureMarkerLabelPillSprites 
+    ? window.MapCardComposites.ensureMarkerLabelPillSprites 
+    : async function(){ return null; };
 
 
   // --- Section 4: Composite Sprite System for Map Cards ---
@@ -1463,7 +1256,9 @@ let __notifyMapOnInteraction = null;
       return null;
     }
     const targetMap = mapInstance || map;
-    if(id === MARKER_LABEL_BG_ID || id === MARKER_LABEL_BG_ACCENT_ID){
+    const MARKER_LABEL_BG_ID_LOCAL = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ID) || 'small-map-card-pill';
+    const MARKER_LABEL_BG_ACCENT_ID_LOCAL = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ACCENT_ID) || 'big-map-card-pill';
+    if(id === MARKER_LABEL_BG_ID_LOCAL || id === MARKER_LABEL_BG_ACCENT_ID_LOCAL){
       const sprites = await ensureMarkerLabelPillSprites();
       if(id === MARKER_LABEL_BG_ID){
         return sprites.base;
@@ -1916,9 +1711,10 @@ let __notifyMapOnInteraction = null;
                       } 
                       // Handle pill image updates
                       else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
-                        // Clear caches
-                        markerLabelPillImagePromise = null;
-                        markerLabelPillSpriteCache = null;
+                        // Clear caches in map.js
+                        if(window.MapCardComposites && typeof window.MapCardComposites.clearMarkerLabelPillSpriteCache === 'function'){
+                          window.MapCardComposites.clearMarkerLabelPillSpriteCache();
+                        }
                         
                         // Get current settings (use updated value for the changed one)
                         // First check local settings, then fetch from DB if needed
@@ -2009,22 +1805,8 @@ let __notifyMapOnInteraction = null;
                             return;
                           }
                           
-                          // Update BOTH caches with new sprites (so any subsequent calls use updated values)
-                          // Update image promise cache with resolved promise containing new images
-                          markerLabelPillImagePromise = Promise.resolve({
-                            base: baseImg,
-                            highlight: accentImg,
-                            hover: hoverImg || accentImg
-                          });
-                          
-                          // Update sprite cache with new sprites (with fallbacks like reference file)
-                          markerLabelPillSpriteCache = {
-                            base: baseSprite,
-                            highlight: accentSprite || baseSprite,
-                            hover: hoverSprite || accentSprite || baseSprite
-                          };
-                          
                           // Use map.js function to add updated pill sprites
+                          // Note: Cache is managed internally by map.js
                           if(window.MapCardComposites && typeof window.MapCardComposites.addPillSpritesToMap === 'function'){
                             window.MapCardComposites.addPillSpritesToMap(mapInstance, {
                               base: baseSprite,
@@ -2355,11 +2137,9 @@ let __notifyMapOnInteraction = null;
                   try{
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance){
-                      // Clear JavaScript sprite cache
-                      markerLabelPillSpriteCache = null;
-                      // Clear sprite cache function if available
-                      if(typeof window.clearMarkerLabelPillSpriteCache === 'function'){
-                        window.clearMarkerLabelPillSpriteCache(mapInstance);
+                      // Clear sprite cache in map.js
+                      if(window.MapCardComposites && typeof window.MapCardComposites.clearMarkerLabelPillSpriteCache === 'function'){
+                        window.MapCardComposites.clearMarkerLabelPillSpriteCache();
                       }
                       // Remove all marker-label images from Mapbox cache
                       const markerLabelImageIds = [MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID];
@@ -19511,11 +19291,11 @@ function makePosts(){
       }
       
       // Ensure pill sprites are loaded before creating layers
-      // Only reload if cache is empty (to avoid redundant reloads when already updated)
-      let pillSprites = markerLabelPillSpriteCache;
-      if(!pillSprites){
+      // Use map.js function
+      let pillSprites = null;
+      if(window.MapCardComposites && typeof window.MapCardComposites.ensureMarkerLabelPillSprites === 'function'){
         try {
-          pillSprites = await ensureMarkerLabelPillSprites();
+          pillSprites = await window.MapCardComposites.ensureMarkerLabelPillSprites();
         } catch(e) {
           console.error('[addPostSource] Error loading pill sprites:', e);
           pillSprites = null;
