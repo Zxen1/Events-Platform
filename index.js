@@ -16599,13 +16599,7 @@ function makePosts(){
         } else if(!fromHistory && !fromMap && !originEl){
           entryPoint = 'ad-board'; // Ad board calls without originEl
         }
-        console.log(`[openPost] Entry Point: ${entryPoint}`, {
-          id,
-          fromHistory,
-          fromMap,
-          hasOriginEl: !!originEl,
-          originElClass: originEl ? originEl.className : null
-        });
+        // Entry point logging removed
         
         lockMap(false);
         touchMarker = null;
@@ -16641,16 +16635,7 @@ function makePosts(){
         const earlyScrollHeight = container.scrollHeight;
         const earlyClientHeight = container.clientHeight;
         
-        console.log(`[openPost] Container selected: ${container.id || container.className}`, {
-          containerId: container.id,
-          containerClass: container.className,
-          isRecentsBoard: container.id === 'recentsBoard',
-          isPostBoard: container === postsWideEl,
-          earlyScrollTop,
-          earlyScrollHeight,
-          earlyClientHeight,
-          wasScrolled: earlyScrollTop > 0
-        });
+        // Container selection logging removed
 
         const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
         if(alreadyOpen){
@@ -16902,30 +16887,7 @@ function makePosts(){
             const scrollSuccess = afterScroll <= 5;
             
             // Enhanced logging with inline values for easy reading
-            const containerName = container.id || container.className;
-            const scrollElementName = scrollElement === container ? 'container' : (scrollElement.className || 'posts');
-            const openPostOffsetTop = openPostEl ? openPostEl.offsetTop : null;
-            console.log(
-              `[openPost] Scroll attempt ${attempt} (${entryPoint}): ${scrollSuccess ? '✓ SUCCESS' : '✗ FAILED'}`,
-              `\n  Container: ${containerName}`,
-              `\n  Scroll element: ${scrollElementName}${scrollElement !== container ? ' (child)' : ' (container)'}`,
-              `\n  Open-post found: ${!!openPostEl}${openPostEl ? ` (offsetTop: ${openPostOffsetTop}px)` : ''}`,
-              `\n  Before: ${beforeScroll}px → After: ${afterScroll}px`,
-              `\n  Dimensions: ${clientHeight}px viewport / ${scrollHeight}px content (${canScroll ? 'scrollable' : 'not scrollable'})`,
-              {
-                container: containerName,
-                scrollElement: scrollElementName,
-                hasOpenPost: !!openPostEl,
-                openPostOffsetTop,
-                beforeScroll,
-                afterScroll,
-                scrollSuccess,
-                scrollHeight,
-                clientHeight,
-                canScroll,
-                scrollTopProperty: typeof scrollElement.scrollTop
-              }
-            );
+            // Scroll logging removed - errors/warnings still logged below
             
             if(!scrollSuccess && attempt === 3){
               console.error(
@@ -16979,24 +16941,7 @@ function makePosts(){
         // Capture early scroll from actual scroll element too
         const earlyActualScrollTop = actualScrollElement.scrollTop;
         
-        console.log(
-          `[openPost] Starting scroll sequence for ${entryPoint}`,
-          `\n  Container: ${containerName}`,
-          `\n  Scroll element: ${scrollElementName}${actualScrollElement !== container ? ' (child)' : ' (container)'}`,
-          `\n  Early scroll (before DOM ops): container=${earlyScrollTop}px, scrollEl=${earlyActualScrollTop}px${earlyActualScrollTop > 0 ? ' ⚠️ WAS SCROLLED' : ''}`,
-          `\n  Current position (after DOM ops): ${initialScrollTop}px`,
-          `\n  Dimensions: ${initialClientHeight}px viewport / ${initialScrollHeight}px content`,
-          {
-            container: containerName,
-            scrollElement: scrollElementName,
-            earlyScrollTop,
-            earlyActualScrollTop,
-            initialScrollTop,
-            scrollHeight: initialScrollHeight,
-            clientHeight: initialClientHeight,
-            needsScroll: earlyActualScrollTop > 0 || initialScrollTop > 0
-          }
-        );
+        // Scroll sequence logging removed
         
         // Scroll to top BEFORE animation to prevent flicker
         const openPostEl = container.querySelector(`.open-post[data-id="${id}"]`);
@@ -17040,21 +16985,7 @@ function makePosts(){
                 const success = finalScrollTop <= 5; // Allow 5px tolerance
                 const finalScrollElementName = finalScrollElement === container ? 'container' : (finalScrollElement.className || 'posts');
                 
-                console.log(
-                  `[openPost] ${success ? '✅ SUCCESS' : '❌ FAILED'}: Scroll sequence complete for ${entryPoint}`,
-                  `\n  Container: ${containerName}`,
-                  `\n  Scroll element: ${finalScrollElementName}${finalScrollElement !== container ? ' (child)' : ' (container)'}`,
-                  `\n  Final position: ${finalScrollTop}px (${success ? 'scrolled to top' : 'NOT at top'})`,
-                  `\n  Dimensions: ${finalClientHeight}px viewport / ${finalScrollHeight}px content`,
-                  {
-                    container: containerName,
-                    scrollElement: finalScrollElementName,
-                    finalScrollTop,
-                    success,
-                    scrollHeight: finalScrollHeight,
-                    clientHeight: finalClientHeight
-                  }
-                );
+                // Scroll sequence completion logging removed
                 
                 // Now that scroll is complete, trigger the animation
                 clearTimeout(fallbackTimeout);
