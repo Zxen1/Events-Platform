@@ -1007,14 +1007,14 @@ let __notifyMapOnInteraction = null;
 // ============================================================================
 // MAP MARKERS & MAP CARDS SYSTEM
 // ============================================================================
-// All code related to map markers (icons), marker clustering (balloons), and map cards (pills) is organized here.
+// All code related to map markers (icons), marker clustering, and map cards (pills) is organized here.
 // Note: Markers are icons centered over lat/lng coordinates. Pills are map card backgrounds.
-// Balloons are clustering icons used at low zoom levels.
+// Clusters are grouping icons used at low zoom levels.
 // Sections:
 // 1. Constants & Configuration (lines ~1005-1202)
 // 2. Text Measurement & Formatting Helpers (lines ~1022-1183)
 // 3. Map Card System (lines ~1387-1547) - Map card background images (pills)
-// 5. Marker Clustering (Balloons) (lines ~2546-2912) - Balloon icons that cluster nearby markers
+// 5. Marker Clustering (lines ~2546-2912) - Cluster icons that group nearby markers
 // 6. Small Map Card DOM Functions (lines ~3219-3447)
 // 7. Marker Data Building & Collections (lines ~3448-6663)
 // 8. Map Source Integration (lines ~19001+)
@@ -1199,7 +1199,7 @@ let __notifyMapOnInteraction = null;
       'big-map-card-pill', // Obsolete but kept for cleanup
       'small-map-card-composite', // Active composite layer
       'big-map-card-composite', // Active composite layer
-      'post-balloons'
+      'post-clusters'
     ]);
 
     function shouldAttachPointer(layer){
@@ -1483,19 +1483,19 @@ let __notifyMapOnInteraction = null;
                     
                     // Now refresh map with saved value
                     if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
-                      // Handle cluster/balloon icon update
-                      const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-                      const BALLOON_LAYER_ID = 'post-balloons';
-                      if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
-                        mapInstance.removeImage(BALLOON_IMAGE_ID);
+                      // Handle cluster icon update
+                      const CLUSTER_ICON_ID = 'cluster-icon';
+                      const CLUSTER_LAYER_ID = 'post-clusters';
+                      if(mapInstance.hasImage(CLUSTER_ICON_ID)){
+                        mapInstance.removeImage(CLUSTER_ICON_ID);
                       }
                       const img = await loadMarkerLabelImage(value);
                       if(img && img.width > 0 && img.height > 0){
                         const pixelRatio = img.width >= 256 ? 2 : 1;
-                        mapInstance.addImage(BALLOON_IMAGE_ID, img, { pixelRatio });
-                        const layer = mapInstance.getLayer(BALLOON_LAYER_ID);
+                        mapInstance.addImage(CLUSTER_ICON_ID, img, { pixelRatio });
+                        const layer = mapInstance.getLayer(CLUSTER_LAYER_ID);
                         if(layer){
-                          mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'icon-image', BALLOON_IMAGE_ID);
+                          mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'icon-image', CLUSTER_ICON_ID);
                         }
                       }
                     } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
@@ -1925,25 +1925,25 @@ let __notifyMapOnInteraction = null;
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
 
-      // --- Section 5: Marker Clustering (Balloons) ---
-      // Balloon icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
-      const BALLOON_SOURCE_ID = 'post-balloon-source';
-        const BALLOON_LAYER_ID = 'post-balloons';
-        const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
-        const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        let BALLOON_IMAGE_URL = null; // Loaded from admin_settings
-        const BALLOON_MIN_ZOOM = 0;
-        const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
-        let balloonLayersVisible = true;
+      // --- Section 5: Marker Clustering ---
+      // Cluster icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
+      const CLUSTER_SOURCE_ID = 'post-cluster-source';
+        const CLUSTER_LAYER_ID = 'post-clusters';
+        const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID];
+        const CLUSTER_ICON_ID = 'cluster-icon';
+        let CLUSTER_ICON_URL = null; // Loaded from admin_settings
+        const CLUSTER_MIN_ZOOM = 0;
+        const CLUSTER_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
+        let clusterLayersVisible = true;
 
-        async function ensureBalloonIconImage(mapInstance){
-          // Load balloon icon URL from admin_settings - no fallbacks
+        async function ensureClusterIconImage(mapInstance){
+          // Load cluster icon URL from admin_settings - no fallbacks
             try {
               const response = await fetch('/gateway.php?action=get-admin-settings');
               if(response.ok){
                 const data = await response.json();
               if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
-                BALLOON_IMAGE_URL = data.settings.marker_cluster_icon.trim();
+                CLUSTER_ICON_URL = data.settings.marker_cluster_icon.trim();
                 }
               }
             } catch(err) {
@@ -1955,7 +1955,7 @@ let __notifyMapOnInteraction = null;
               resolve();
               return;
             }
-            if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
+            if(mapInstance.hasImage(CLUSTER_ICON_ID)){
               resolve();
               return;
             }
@@ -1965,16 +1965,16 @@ let __notifyMapOnInteraction = null;
                 return;
               }
               try{
-                if(!mapInstance.hasImage(BALLOON_IMAGE_ID) && image.width > 0 && image.height > 0){
+                if(!mapInstance.hasImage(CLUSTER_ICON_ID) && image.width > 0 && image.height > 0){
                   const pixelRatio = image.width >= 256 ? 2 : 1;
-                  mapInstance.addImage(BALLOON_IMAGE_ID, image, { pixelRatio });
+                  mapInstance.addImage(CLUSTER_ICON_ID, image, { pixelRatio });
                 }
               }catch(err){ console.error(err); }
               resolve();
             };
             try{
               if(typeof mapInstance.loadImage === 'function'){
-                mapInstance.loadImage(BALLOON_IMAGE_URL, (err, image)=>{
+                mapInstance.loadImage(CLUSTER_ICON_URL, (err, image)=>{
                   if(err){ console.error(err); resolve(); return; }
                   handleImage(image);
                 });
@@ -1986,14 +1986,14 @@ let __notifyMapOnInteraction = null;
               img.crossOrigin = 'anonymous';
               img.onload = ()=>handleImage(img);
               img.onerror = ()=>resolve();
-              img.src = BALLOON_IMAGE_URL;
+              img.src = CLUSTER_ICON_URL;
               return;
             }
             resolve();
           });
         }
 
-        function formatBalloonCount(count){
+        function formatClusterCount(count){
           if(!Number.isFinite(count) || count <= 0){
             return '0';
           }
@@ -2010,7 +2010,7 @@ let __notifyMapOnInteraction = null;
           return String(count);
         }
 
-        function getBalloonGridSize(zoom){
+        function getClusterGridSize(zoom){
           const z = Number.isFinite(zoom) ? zoom : 0;
           if(z >= 7.5) return 0.5;
           if(z >= 6) return 1;
@@ -2019,16 +2019,16 @@ let __notifyMapOnInteraction = null;
           return 10;
         }
 
-        const clampBalloonLat = (lat)=> Math.max(-85, Math.min(85, lat));
+        const clampClusterLat = (lat)=> Math.max(-85, Math.min(85, lat));
 
-        function groupPostsForBalloonZoom(postsSource, zoom){
-          const gridSizeRaw = getBalloonGridSize(zoom);
+        function groupPostsForClusterZoom(postsSource, zoom){
+          const gridSizeRaw = getClusterGridSize(zoom);
           const gridSize = gridSizeRaw > 0 ? gridSizeRaw : 5;
           const groups = new Map();
           postsSource.forEach(post => {
             if(!post || !Number.isFinite(post.lng) || !Number.isFinite(post.lat)) return;
             const lng = Number(post.lng);
-            const lat = clampBalloonLat(Number(post.lat));
+            const lat = clampClusterLat(Number(post.lat));
             const col = Math.floor((lng + 180) / gridSize);
             const row = Math.floor((lat + 90) / gridSize);
             const key = `${col}|${row}`;
@@ -2045,18 +2045,18 @@ let __notifyMapOnInteraction = null;
           return { groups };
         }
 
-        let lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
+        let lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
-        function buildBalloonFeatureCollection(zoom){
-          const allowInitialize = true; // ensure balloons have data even before marker zoom threshold
+        function buildClusterFeatureCollection(zoom){
+          const allowInitialize = true; // ensure clusters have data even before marker zoom threshold
           const postsSource = getAllPostsCache({ allowInitialize });
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
-            const groupingKey = getBalloonBucketKey(zoom);
-            lastBalloonGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
+            const groupingKey = getClusterBucketKey(zoom);
+            lastClusterGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
             return { type:'FeatureCollection', features: [] };
           }
-          const { groups } = groupPostsForBalloonZoom(postsSource, zoom);
+          const { groups } = groupPostsForClusterZoom(postsSource, zoom);
           const features = [];
           groups.forEach((bucket, key) => {
             if(!bucket || bucket.count <= 0) return;
@@ -2066,18 +2066,18 @@ let __notifyMapOnInteraction = null;
               type:'Feature',
               properties:{
                 count: bucket.count,
-                label: formatBalloonCount(bucket.count),
+                label: formatClusterCount(bucket.count),
                 bucket: key
               },
               geometry:{ type:'Point', coordinates:[avgLng, avgLat] }
             });
           });
-          const groupingKey = getBalloonBucketKey(zoom);
-          lastBalloonGroupingDetails = { key: groupingKey, zoom, groups };
+          const groupingKey = getClusterBucketKey(zoom);
+          lastClusterGroupingDetails = { key: groupingKey, zoom, groups };
           return { type:'FeatureCollection', features };
         }
 
-        function computeChildBalloonTarget(bucket, currentZoom, maxAllowedZoom){
+        function computeChildClusterTarget(bucket, currentZoom, maxAllowedZoom){
           if(!bucket || !Array.isArray(bucket.posts) || bucket.posts.length <= 1){
             return null;
           }
@@ -2093,7 +2093,7 @@ let __notifyMapOnInteraction = null;
             if(!(candidateZoom > safeCurrent)){
               continue;
             }
-            const { groups } = groupPostsForBalloonZoom(bucket.posts, candidateZoom);
+            const { groups } = groupPostsForClusterZoom(bucket.posts, candidateZoom);
             const childBuckets = Array.from(groups.values()).filter(child => child && child.count > 0);
             if(childBuckets.length <= 1){
               continue;
@@ -2119,35 +2119,35 @@ let __notifyMapOnInteraction = null;
           return null;
         }
 
-        let lastBalloonBucketKey = null;
+        let lastClusterBucketKey = null;
 
-        function getBalloonBucketKey(zoom){
-          const size = getBalloonGridSize(zoom);
+        function getClusterBucketKey(zoom){
+          const size = getClusterGridSize(zoom);
           return Number.isFinite(size) ? size.toFixed(2) : 'default';
         }
 
-        function updateBalloonSourceForZoom(zoom){
+        function updateClusterSourceForZoom(zoom){
           if(!map) return;
-          const source = map.getSource && map.getSource(BALLOON_SOURCE_ID);
+          const source = map.getSource && map.getSource(CLUSTER_SOURCE_ID);
           if(!source || typeof source.setData !== 'function') return;
           const zoomValue = Number.isFinite(zoom) ? zoom : (typeof map.getZoom === 'function' ? map.getZoom() : 0);
-          const bucketKey = getBalloonBucketKey(zoomValue);
-          if(lastBalloonBucketKey === bucketKey) return;
+          const bucketKey = getClusterBucketKey(zoomValue);
+          if(lastClusterBucketKey === bucketKey) return;
           try{
-            const data = buildBalloonFeatureCollection(zoomValue);
+            const data = buildClusterFeatureCollection(zoomValue);
             source.setData(data);
-            lastBalloonBucketKey = bucketKey;
+            lastClusterBucketKey = bucketKey;
           }catch(err){ console.error(err); }
         }
 
-        function resetBalloonSourceState(){
-          lastBalloonBucketKey = null;
-          lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
+        function resetClusterSourceState(){
+          lastClusterBucketKey = null;
+          lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
         }
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
-          // Ensure balloon layers are ready even at low zoom on initial load
+          // Ensure cluster layers are ready even at low zoom on initial load
           const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
           if(!Number.isFinite(currentZoom)){
             if(!mapInstance.__seedLayerZoomGate){
@@ -2168,36 +2168,36 @@ let __notifyMapOnInteraction = null;
             mapInstance.off('zoomend', mapInstance.__seedLayerZoomGate);
             mapInstance.__seedLayerZoomGate = null;
           }
-          ensureBalloonIconImage(mapInstance).then(()=>{
+          ensureClusterIconImage(mapInstance).then(()=>{
             try{
-              if(mapInstance.getLayer(BALLOON_LAYER_ID)) mapInstance.removeLayer(BALLOON_LAYER_ID);
+              if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
             }catch(err){ console.error(err); }
 
-            let balloonSource = null;
+            let clusterSource = null;
             try{
-              balloonSource = mapInstance.getSource && mapInstance.getSource(BALLOON_SOURCE_ID);
-            }catch(err){ balloonSource = null; }
+              clusterSource = mapInstance.getSource && mapInstance.getSource(CLUSTER_SOURCE_ID);
+            }catch(err){ clusterSource = null; }
             const emptyData = (typeof EMPTY_FEATURE_COLLECTION !== 'undefined') ? EMPTY_FEATURE_COLLECTION : { type:'FeatureCollection', features: [] };
             try{
-              if(balloonSource && typeof balloonSource.setData === 'function'){
-                balloonSource.setData(emptyData);
+              if(clusterSource && typeof clusterSource.setData === 'function'){
+                clusterSource.setData(emptyData);
               } else {
-                if(balloonSource){
-                  try{ mapInstance.removeSource(BALLOON_SOURCE_ID); }catch(removeErr){ console.error(removeErr); }
+                if(clusterSource){
+                  try{ mapInstance.removeSource(CLUSTER_SOURCE_ID); }catch(removeErr){ console.error(removeErr); }
                 }
-                mapInstance.addSource(BALLOON_SOURCE_ID, { type:'geojson', data: emptyData });
+                mapInstance.addSource(CLUSTER_SOURCE_ID, { type:'geojson', data: emptyData });
               }
             }catch(err){ console.error(err); }
 
             try{
               mapInstance.addLayer({
-                id: BALLOON_LAYER_ID,
+                id: CLUSTER_LAYER_ID,
                 type: 'symbol',
-                source: BALLOON_SOURCE_ID,
-                minzoom: BALLOON_MIN_ZOOM,
-                maxzoom: BALLOON_MAX_ZOOM,
+                source: CLUSTER_SOURCE_ID,
+                minzoom: CLUSTER_MIN_ZOOM,
+                maxzoom: CLUSTER_MAX_ZOOM,
                 layout: {
-                  'icon-image': BALLOON_IMAGE_ID,
+                  'icon-image': CLUSTER_ICON_ID,
                   'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
                   'icon-allow-overlap': true,
                   'icon-ignore-placement': true,
@@ -2221,18 +2221,18 @@ let __notifyMapOnInteraction = null;
               });
             }catch(err){ console.error(err); }
 
-            resetBalloonSourceState();
-            const currentZoomValue = mapInstance.getZoom ? mapInstance.getZoom() : BALLOON_MIN_ZOOM;
-            updateBalloonSourceForZoom(currentZoomValue);
-            const shouldShow = Number.isFinite(currentZoomValue) ? currentZoomValue < BALLOON_MAX_ZOOM : true;
+            resetClusterSourceState();
+            const currentZoomValue = mapInstance.getZoom ? mapInstance.getZoom() : CLUSTER_MIN_ZOOM;
+            updateClusterSourceForZoom(currentZoomValue);
+            const shouldShow = Number.isFinite(currentZoomValue) ? currentZoomValue < CLUSTER_MAX_ZOOM : true;
             try{
-              mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
+              mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
             }catch(err){}
-            balloonLayersVisible = shouldShow;
+            clusterLayersVisible = shouldShow;
           });
 
-          if(!mapInstance.__seedBalloonEventsBound){
-            const handleBalloonClick = (e)=>{
+          if(!mapInstance.__clusterEventsBound){
+            const handleClusterClick = (e)=>{
               if(e && typeof e.preventDefault === 'function') e.preventDefault();
               const feature = e && e.features && e.features[0];
               if(!feature) return;
@@ -2241,18 +2241,18 @@ let __notifyMapOnInteraction = null;
               const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
               const maxZoom = typeof mapInstance.getMaxZoom === 'function' ? mapInstance.getMaxZoom() : 22;
               const maxAllowedZoom = Number.isFinite(maxZoom)
-                ? Math.min(maxZoom, BALLOON_MAX_ZOOM)
-                : BALLOON_MAX_ZOOM;
+                ? Math.min(maxZoom, CLUSTER_MAX_ZOOM)
+                : CLUSTER_MAX_ZOOM;
               const safeCurrentZoom = Number.isFinite(currentZoom) ? currentZoom : 0;
               const bucketKey = feature.properties && feature.properties.bucket;
-              const grouping = lastBalloonGroupingDetails && lastBalloonGroupingDetails.groups instanceof Map
-                ? lastBalloonGroupingDetails.groups
+              const grouping = lastClusterGroupingDetails && lastClusterGroupingDetails.groups instanceof Map
+                ? lastClusterGroupingDetails.groups
                 : null;
               const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
               const childZoomLimit = Number.isFinite(maxZoom)
                 ? Math.min(maxZoom, Math.max(maxAllowedZoom, 12))
                 : 12;
-              const childTarget = computeChildBalloonTarget(bucketData, safeCurrentZoom, childZoomLimit);
+              const childTarget = computeChildClusterTarget(bucketData, safeCurrentZoom, childZoomLimit);
               const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
@@ -2298,10 +2298,10 @@ let __notifyMapOnInteraction = null;
                 }
               }catch(err){ console.error(err); }
             };
-            mapInstance.on('click', BALLOON_LAYER_ID, handleBalloonClick);
-            mapInstance.on('mouseenter', BALLOON_LAYER_ID, ()=>{ mapInstance.getCanvas().style.cursor = 'pointer'; });
-            mapInstance.on('mouseleave', BALLOON_LAYER_ID, ()=>{ mapInstance.getCanvas().style.cursor = 'grab'; });
-            mapInstance.__seedBalloonEventsBound = true;
+            mapInstance.on('click', CLUSTER_LAYER_ID, handleClusterClick);
+            mapInstance.on('mouseenter', CLUSTER_LAYER_ID, ()=>{ mapInstance.getCanvas().style.cursor = 'pointer'; });
+            mapInstance.on('mouseleave', CLUSTER_LAYER_ID, ()=>{ mapInstance.getCanvas().style.cursor = 'grab'; });
+            mapInstance.__clusterEventsBound = true;
           }
           if(mapInstance === map){
             updateLayerVisibility(lastKnownZoom);
@@ -2678,7 +2678,7 @@ let __notifyMapOnInteraction = null;
     }
 
 
-    function updateSelectedMarkerRing(){
+    function syncPostCardHighlights(){
       const highlightClass = 'is-map-highlight';
       const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && el.classList.contains('post-card'));
       const restoreHighlightBackground = (el)=>{
@@ -2783,7 +2783,7 @@ let __notifyMapOnInteraction = null;
       if(!postcard || !postcard.dataset || !postcard.dataset.id) return;
       const id = String(postcard.dataset.id);
       hoveredPostIds = [{ id: id, venueKey: null }];
-      updateSelectedMarkerRing();
+      syncPostCardHighlights();
       // Sync map card hover state (use findMarkerByPostId for multi-post support)
       if(window.MapCards){
         const markerInfo = window.MapCards.findMarkerByPostId ? window.MapCards.findMarkerByPostId(id) : null;
@@ -2801,7 +2801,7 @@ let __notifyMapOnInteraction = null;
       if(!relatedTarget || !postcard.contains(relatedTarget)){
         const id = postcard.dataset.id;
         hoveredPostIds = [];
-        updateSelectedMarkerRing();
+        syncPostCardHighlights();
         // Remove map card hover state (use findMarkerByPostId for multi-post support)
         if(window.MapCards && id){
           const markerInfo = window.MapCards.findMarkerByPostId ? window.MapCards.findMarkerByPostId(id) : null;
@@ -3903,11 +3903,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         const key = venueKey(lng, lat);
         if(selectedVenueKey !== key){
           selectedVenueKey = key;
-          updateSelectedMarkerRing();
+          syncPostCardHighlights();
         }
       } else if(selectedVenueKey !== null){
         selectedVenueKey = null;
-        updateSelectedMarkerRing();
+        syncPostCardHighlights();
       }
     }
 
@@ -6207,7 +6207,7 @@ function makePosts(){
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
       invalidateMarkerDataCache();
-      resetBalloonSourceState();
+      resetClusterSourceState();
       if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
@@ -6266,19 +6266,19 @@ function makePosts(){
         : NaN;
       const hasBucket = Number.isFinite(zoomBucket);
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
-      const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
+      const shouldShowClusters = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : clusterLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
         MARKER_LAYER_IDS.forEach(id => {
           setLayerVisibility(id, shouldShowMarkers);
         });
         markerLayersVisible = shouldShowMarkers;
       }
-      if(balloonLayersVisible !== shouldShowBalloons){
-        BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
-        balloonLayersVisible = shouldShowBalloons;
+      if(clusterLayersVisible !== shouldShowClusters){
+        CLUSTER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowClusters));
+        clusterLayersVisible = shouldShowClusters;
       }
-      if(shouldShowBalloons && Number.isFinite(zoomValue)){
-        updateBalloonSourceForZoom(zoomValue);
+      if(shouldShowClusters && Number.isFinite(zoomValue)){
+        updateClusterSourceForZoom(zoomValue);
       }
     }
 
@@ -6294,7 +6294,7 @@ function makePosts(){
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
       updateMarkerZoomClasses(lastKnownZoom);
-      updateBalloonSourceForZoom(lastKnownZoom);
+      updateClusterSourceForZoom(lastKnownZoom);
       if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
@@ -16377,7 +16377,7 @@ function makePosts(){
         const p = getPostByIdAnywhere(id); if(!p) return;
         activePostId = id;
         selectedVenueKey = null;
-        updateSelectedMarkerRing();
+        syncPostCardHighlights();
 
         if(!fromHistory){
           if(document.body.classList.contains('show-history')){
@@ -16810,7 +16810,7 @@ function makePosts(){
         }
         activePostId = null;
         selectedVenueKey = null;
-        updateSelectedMarkerRing();
+        syncPostCardHighlights();
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
@@ -18081,7 +18081,7 @@ function makePosts(){
           const zoom = map.getZoom();
           const pitch = map.getPitch();
           const bearing = map.getBearing();
-          updateBalloonSourceForZoom(zoom);
+          updateClusterSourceForZoom(zoom);
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         };
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
@@ -18447,6 +18447,13 @@ function makePosts(){
           // Skip if marker already exists
           if(window.MapCards.getMapCardMarker(props.id)) return;
           
+          // Parse multiPostIds - GeoJSON may stringify arrays
+          let multiPostIds = props.multiPostIds || [];
+          if(typeof multiPostIds === 'string'){
+            try { multiPostIds = JSON.parse(multiPostIds); } catch(e) { multiPostIds = []; }
+          }
+          if(!Array.isArray(multiPostIds)) multiPostIds = [];
+          
           const post = {
             id: props.id,
             title: props.title || '',
@@ -18454,7 +18461,7 @@ function makePosts(){
             venue: props.venue || '',
             city: props.city || '',
             isMultiPost: props.isMultiPost || false,
-            multiPostIds: props.multiPostIds || [],
+            multiPostIds: multiPostIds,
             multiCount: props.multiCount || 0,
             locations: props.locations || [],
             thumbnailUrl: typeof thumbUrl === 'function' ? thumbUrl(props) : null
@@ -18573,7 +18580,7 @@ function makePosts(){
               if(id !== undefined && id !== null){
                 activePostId = id;
                 selectedVenueKey = venueKey;
-                updateSelectedMarkerRing();
+                syncPostCardHighlights();
               }
               const p = posts.find(x=>x.id===id);
               if(p){
@@ -18602,7 +18609,7 @@ function makePosts(){
               touchMarker = id;
               if(id !== undefined && id !== null){
                 hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-                updateSelectedMarkerRing();
+                syncPostCardHighlights();
               }
               return;
             }
@@ -18612,7 +18619,7 @@ function makePosts(){
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
-            updateSelectedMarkerRing();
+            syncPostCardHighlights();
           }
           const coords = f.geometry && f.geometry.coordinates;
           const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
@@ -18741,10 +18748,10 @@ function makePosts(){
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
           // Clicked elsewhere - clear active states
-          updateSelectedMarkerRing();
+          syncPostCardHighlights();
           touchMarker = null;
           hoveredPostIds = [];
-          updateSelectedMarkerRing();
+          syncPostCardHighlights();
           updateMapCardStates();
         } else {
           const clickedMarkerLabel = feats.some(f => getMarkerInteractiveLayers().includes(f.layer && f.layer.id));
@@ -18752,13 +18759,13 @@ function makePosts(){
             // Clicked elsewhere - clear active states
             touchMarker = null;
             hoveredPostIds = [];
-            updateSelectedMarkerRing();
+            syncPostCardHighlights();
             updateMapCardStates();
           }
         }
       });
 
-      updateSelectedMarkerRing();
+      syncPostCardHighlights();
 
       // Set pointer cursor when hovering over markers (dynamic based on mapCardDisplay)
       // Store cursor handler functions so we can remove only these specific handlers
@@ -18819,7 +18826,7 @@ function makePosts(){
           if(id !== undefined && id !== null && String(id) !== currentHoveredId){
             currentHoveredId = String(id);
             hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-            updateSelectedMarkerRing();
+            syncPostCardHighlights();
           }
         } else {
           // Not over any marker - clear hover after a short delay
@@ -18831,7 +18838,7 @@ function makePosts(){
             if(recheckFeatures.length === 0){
               currentHoveredId = null;
               hoveredPostIds = [];
-              updateSelectedMarkerRing();
+              syncPostCardHighlights();
             }
             hoverCheckTimeout = null;
           }, 50);
@@ -18854,7 +18861,7 @@ function makePosts(){
         if(id !== undefined && id !== null){
           currentHoveredId = String(id);
           hoveredPostIds = [{ id: String(id), venueKey: venueKey }];
-          updateSelectedMarkerRing();
+          syncPostCardHighlights();
         }
       };
 
@@ -18867,7 +18874,7 @@ function makePosts(){
           hoverCheckTimeout = setTimeout(() => {
             currentHoveredId = null;
             hoveredPostIds = [];
-            updateSelectedMarkerRing();
+            syncPostCardHighlights();
             hoverCheckTimeout = null;
           }, 50);
         }
@@ -18893,7 +18900,7 @@ function makePosts(){
       map.on('mousemove', 'mapmarker-icon', handleMapMouseMove);
 
 
-      // Maintain pointer cursor for balloons and surface multi-post cards when applicable
+      // Maintain pointer cursor for clusters and surface multi-post cards when applicable
         postSourceEventsBound = true;
       }
       } catch (err) {
@@ -19323,7 +19330,7 @@ function openPostModal(id){
       const p = getPostByIdAnywhere(id);
       if(!p) return;
       activePostId = id;
-      updateSelectedMarkerRing();
+      syncPostCardHighlights();
       const container = document.getElementById('post-modal-container');
       if(!container) return;
       const modal = container.querySelector('.post-modal');

@@ -360,8 +360,8 @@
           }
           window.hoveredPostIds = allPostIds;
         }
-        if (typeof window.updateSelectedMarkerRing === 'function') {
-          window.updateSelectedMarkerRing();
+        if (typeof window.syncPostCardHighlights === 'function') {
+          window.syncPostCardHighlights();
         }
       }
     });
@@ -373,8 +373,8 @@
         if (window.hoveredPostIds !== undefined) {
           window.hoveredPostIds = [];
         }
-        if (typeof window.updateSelectedMarkerRing === 'function') {
-          window.updateSelectedMarkerRing();
+        if (typeof window.syncPostCardHighlights === 'function') {
+          window.syncPostCardHighlights();
         }
       }
     });
