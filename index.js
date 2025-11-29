@@ -1461,280 +1461,59 @@ let __notifyMapOnInteraction = null;
                     mapInstance = window.map;
                   }
                   
-                  if(mapInstance && typeof mapInstance.hasImage === 'function'){
-                    try{
-                      // Handle cluster/balloon icon update
-                      if(picker.settingKey === 'marker_cluster_icon'){
-                        const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-                        const BALLOON_LAYER_ID = 'post-balloons';
-                        
-                        // Remove old balloon icon sprite
-                        if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
-                          try {
-                            mapInstance.removeImage(BALLOON_IMAGE_ID);
-                          } catch(err) {
-                            console.error('Error removing old balloon icon:', err);
-                          }
-                        }
-                        
-                        // Load new image directly
-                        let img = null;
-                        try {
-                          img = await loadMarkerLabelImage(value);
-                        } catch(err) {
-                          console.error('Error loading balloon icon:', err);
-                        }
-                        if(img && img.width > 0 && img.height > 0){
-                          const pixelRatio = img.width >= 256 ? 2 : 1;
-                          mapInstance.addImage(BALLOON_IMAGE_ID, img, { pixelRatio });
-                          
-                          // Force layer refresh
-                          try {
-                            const layer = mapInstance.getLayer(BALLOON_LAYER_ID);
-                            if(layer){
-                              mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'icon-image', BALLOON_IMAGE_ID);
-                            }
-                          } catch(err) {
-                            console.error('Error refreshing balloon layer:', err);
-                          }
-                        }
-                      } 
-                      // Handle pill image updates
-                      else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
-                        // Clear caches in map.js (NO FALLBACKS)
-                        window.MapCardComposites.clearMarkerLabelPillSpriteCache();
-                        
-                        // Get current settings (use updated value for the changed one)
-                        // First check local settings, then fetch from DB if needed
-                        let baseUrl = picker.settingKey === 'small_map_card_pill' ? value : (settings.small_map_card_pill || null);
-                        let accentUrl = picker.settingKey === 'big_map_card_pill' ? value : (settings.big_map_card_pill || null);
-                        let hoverUrl = picker.settingKey === 'hover_map_card_pill' ? value : (settings.hover_map_card_pill || null);
-                        
-                        // If we don't have all required URLs, fetch from DB
-                        if(!baseUrl || !accentUrl){
-                          // Fetching pill URLs from DB
-                          try {
-                            const response = await fetch('/gateway.php?action=get-admin-settings');
-                            if(response.ok){
-                              const data = await response.json();
-                              if(data.success && data.settings){
-                                if(!baseUrl && data.settings.small_map_card_pill){
-                                  baseUrl = data.settings.small_map_card_pill;
-                                  settings.small_map_card_pill = baseUrl;
-                                }
-                                if(!accentUrl && data.settings.big_map_card_pill){
-                                  accentUrl = data.settings.big_map_card_pill;
-                                  settings.big_map_card_pill = accentUrl;
-                                }
-                                if(!hoverUrl && data.settings.hover_map_card_pill){
-                                  hoverUrl = data.settings.hover_map_card_pill;
-                                  settings.hover_map_card_pill = hoverUrl;
-                                }
-                                // Override with new value for the one being updated
-                                if(picker.settingKey === 'small_map_card_pill') baseUrl = value;
-                                if(picker.settingKey === 'big_map_card_pill') accentUrl = value;
-                                if(picker.settingKey === 'hover_map_card_pill') hoverUrl = value;
-                              }
-                            }
-                          } catch(e) {
-                            console.error('[Pill Update] Error fetching from DB:', e);
-                          }
-                        } else {
-                          // Override with new value for the one being updated
-                          if(picker.settingKey === 'small_map_card_pill') baseUrl = value;
-                          if(picker.settingKey === 'big_map_card_pill') accentUrl = value;
-                          if(picker.settingKey === 'hover_map_card_pill') hoverUrl = value;
-                        }
-                        
-                          // Starting pill update
-                        
-                        if(baseUrl && accentUrl){
-                          // Load images directly with updated values
-                          // Note: Old sprites will be removed by map.js function before adding new ones
-                          // Loading pill images (NO FALLBACKS - errors will be thrown)
-                          const [baseImg, accentImg, hoverImg] = await Promise.allSettled([
-                            loadMarkerLabelImage(baseUrl),
-                            loadMarkerLabelImage(accentUrl),
-                            hoverUrl ? loadMarkerLabelImage(hoverUrl) : Promise.resolve(null)
-                          ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
-                          
-                          // Pill images loaded
-                          
-                          // Validate images before building sprites
-                          if(!baseImg || !baseImg.width || baseImg.height === 0){
-                            console.error('[Pill Update] Invalid base image:', baseImg);
-                            return;
-                          }
-                          if(!accentImg || !accentImg.width || accentImg.height === 0){
-                            console.error('[Pill Update] Invalid accent image:', accentImg);
-                            return;
-                          }
-                          
-                          // Build sprites directly (matching reference file approach)
-                          // Base sprite: apply black tint with 0.9 alpha
-                          const baseSprite = buildMarkerLabelPillSprite(baseImg, 'rgba(0,0,0,1)', 0.9, false);
-                          // Accent sprite: use highlight image without tint, or fallback to tinted base
-                          let accentSprite = buildMarkerLabelPillSprite(accentImg, null, 1, true);
-                          if(!accentSprite){
-                            accentSprite = buildMarkerLabelPillSprite(baseImg, '#2f3b73', 1, true);
-                          }
-                          // Hover sprite: use hover image if available, otherwise use accent
-                          const hoverSprite = hoverImg ? buildMarkerLabelPillSprite(hoverImg, null, 1, false) : accentSprite;
-                          
-                          // Pill sprites built
-                          
-                          // Validate sprites before using
-                          if(!baseSprite || !baseSprite.image){
-                            console.error('[Pill Update] Failed to build base sprite');
-                            return;
-                          }
-                          if(!accentSprite || !accentSprite.image){
-                            console.error('[Pill Update] Failed to build accent sprite');
-                            return;
-                          }
-                          
-                          // Use map.js function to add updated pill sprites (NO FALLBACKS)
-                          // Note: Cache is managed internally by map.js
-                          window.MapCardComposites.addPillSpritesToMap(mapInstance, {
-                            base: baseSprite,
-                            highlight: accentSprite,
-                            hover: hoverSprite
-                          }, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
-                          
-                          // Update composite layer opacity if needed (NO FALLBACKS)
-                          const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-                          window.MapCardComposites.updateMapCardLayerOpacity(mapInstance, mapCardDisplay);
-                          
-                          // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
-                          // Note: addPostSource will check if sprites exist and skip re-adding, so this is safe
-                          // Regenerating markers with new pill sprites
-                          if(typeof window.addPostSource === 'function'){
-                            try {
-                              window.addPostSource();
-                            } catch(e) {
-                              console.error('[Pill Update] Error regenerating markers:', e);
-                            }
-                          } else if(typeof addPostSource === 'function'){
-                            try {
-                              addPostSource();
-                            } catch(e) {
-                              console.error('[Pill Update] Error regenerating markers:', e);
-                            }
-                          }
-                        } else {
-                          // Missing pill URLs
-                        }
-                      }
-                      // Handle multi-post icon update
-                      else if(picker.settingKey === 'multi_post_icon'){
-                        // Updating multi-post icon
-                        
-                        // Update global reference
-                        if(window.subcategoryMarkers){
-                          window.subcategoryMarkers['multi-post-icon'] = value;
-                        }
-                        
-                        // Remove old multi-post icon sprite if it exists
-                        const MULTI_POST_MARKER_ICON_ID_LOCAL = window.MapCardComposites.MULTI_POST_MARKER_ICON_ID;
-                        try {
-                          if(mapInstance.hasImage(MULTI_POST_MARKER_ICON_ID_LOCAL)){
-                            mapInstance.removeImage(MULTI_POST_MARKER_ICON_ID_LOCAL);
-                          }
-                        } catch(e) {
-                          // Error removing old sprite
-                        }
-                        
-                        // Load and add new multi-post icon sprite
-                        try {
-                          const img = await loadMarkerLabelImage(value);
-                          if(img && img.width > 0 && img.height > 0){
-                            let deviceScale = 2;
-                            try {
-                              const ratio = window.devicePixelRatio;
-                              if(Number.isFinite(ratio) && ratio > 0){
-                                deviceScale = ratio;
-                              }
-                            } catch(err) {
-                              deviceScale = 2;
-                            }
-                            const markerIconBaseSizePx = 30; // 30x30 for small
-                            const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
-                            const canvas = document.createElement('canvas');
-                            canvas.width = iconSize;
-                            canvas.height = iconSize;
-                            const ctx = canvas.getContext('2d');
-                            if(ctx){
-                              ctx.drawImage(img, 0, 0, iconSize, iconSize);
-                              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                              mapInstance.addImage(MULTI_POST_MARKER_ICON_ID_LOCAL, imageData, { pixelRatio: deviceScale });
-                              console.log('[Multi-Post Icon] Added new sprite');
-                            }
-                          }
-                        } catch(e) {
-                          console.error('[Multi-Post Icon] Error loading/adding sprite:', e);
-                        }
-                        
-                        // Regenerate markers to use new multi-post icon (this will regenerate composite sprites)
-                        // Regenerating markers with new multi-post icon
-                        if(typeof window.addPostSource === 'function'){
-                          try {
-                            window.addPostSource();
-                          } catch(e) {
-                            console.error('[Multi-Post Icon] Error regenerating markers:', e);
-                          }
-                        } else if(typeof addPostSource === 'function'){
-                          try {
-                            addPostSource();
-                          } catch(e) {
-                            console.error('[Multi-Post Icon] Error regenerating markers:', e);
-                          }
-                        }
-                      }
-                      
-                      // Force map repaint
-                      try {
-                        if(mapInstance.triggerRepaint){
-                          mapInstance.triggerRepaint();
-                        } else if(mapInstance.style && typeof mapInstance.style._update === 'function'){
-                          mapInstance.style._update();
-                        } else {
-                          // Fallback: trigger a move event to force repaint
-                          const center = mapInstance.getCenter();
-                          mapInstance.setCenter(center);
-                        }
-                      } catch(err) {
-                        console.error('Error triggering map repaint:', err);
-                      }
-                    }catch(err){
-                      console.error('Error updating map sprites:', err);
-                    }
-                  } else {
-                    console.warn('Map instance not available for real-time update');
-                  }
-                  
-                  // Save to admin_settings (after updating map for real-time effect)
+                  // Save to admin_settings FIRST
                   const settingsToSave = {};
                   settingsToSave[picker.settingKey] = value;
                   
-                  fetch('/gateway.php?action=save-admin-settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(settingsToSave)
-                  }).then((response) => {
+                  try {
+                    const response = await fetch('/gateway.php?action=save-admin-settings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                      body: JSON.stringify(settingsToSave)
+                    });
                     if(!response.ok){
                       throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return response.json();
-                  }).then((data) => {
-                    if(data.success){
-                      console.log(`${picker.label} saved to database.`);
-                    } else {
+                    const data = await response.json();
+                    if(!data.success){
                       throw new Error(data.message || 'Save failed');
                     }
-                  }).catch(err => {
-                    console.error(`Failed to save ${picker.label}:`, err);
+                    console.log(`${picker.label} saved to database.`);
+                    
+                    // Now refresh map with saved value
+                    if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
+                      // Handle cluster/balloon icon update
+                      const BALLOON_IMAGE_ID = 'seed-balloon-icon';
+                      const BALLOON_LAYER_ID = 'post-balloons';
+                      if(mapInstance.hasImage(BALLOON_IMAGE_ID)){
+                        mapInstance.removeImage(BALLOON_IMAGE_ID);
+                      }
+                      const img = await loadMarkerLabelImage(value);
+                      if(img && img.width > 0 && img.height > 0){
+                        const pixelRatio = img.width >= 256 ? 2 : 1;
+                        mapInstance.addImage(BALLOON_IMAGE_ID, img, { pixelRatio });
+                        const layer = mapInstance.getLayer(BALLOON_LAYER_ID);
+                        if(layer){
+                          mapInstance.setLayoutProperty(BALLOON_LAYER_ID, 'icon-image', BALLOON_IMAGE_ID);
+                        }
+                      }
+                    } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
+                      // Refresh map card styles with new pill from DB
+                      window.MapCardComposites.clearMarkerLabelPillSpriteCache();
+                    } else if(picker.settingKey === 'multi_post_icon'){
+                      // Refresh marker icons
+                      if(window.subcategoryMarkers){
+                        window.subcategoryMarkers['multi-post-icon'] = value;
+                      }
+                      window.MapCardComposites.clearMarkerLabelPillSpriteCache();
+                      if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
+                        window.MapCards.refreshAllMarkerIcons();
+                      }
+                    }
+                  } catch(err) {
+                    console.error(`Failed to save/update ${picker.label}:`, err);
                     alert(`Failed to save ${picker.label}: ${err.message}`);
-                  });
+                  }
                 }
               },
               label: `Choose icon for ${picker.label}`,
