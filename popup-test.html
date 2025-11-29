@@ -11,15 +11,11 @@
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     
     /* Map card popup styling */
-    .mapboxgl-popup {
-      pointer-events: none;
-    }
     .mapboxgl-popup-content {
       padding: 0 !important;
       background: none !important;
       box-shadow: none !important;
       border-radius: 0 !important;
-      pointer-events: none;
     }
     .mapboxgl-popup-tip {
       display: none !important;
@@ -27,7 +23,6 @@
     
     /* Small map card */
     .map-card {
-      pointer-events: auto;
       width: 150px;
       height: 40px;
       background-image: url('assets/system-images/150x40-pill-2f3b73.webp');
@@ -99,7 +94,7 @@
     
     const map = new mapboxgl.Map({
       container: 'map',
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/streets-v12',
       center: [-0.1276, 51.5074], // London
       zoom: 10
     });
@@ -169,6 +164,13 @@
         
         popups.push(popup);
         
+        // Add a small red dot marker at exact lat/lng for position reference
+        const markerEl = document.createElement('div');
+        markerEl.style.cssText = 'width:8px;height:8px;background:red;border-radius:50%;border:1px solid white;';
+        new mapboxgl.Marker({ element: markerEl })
+          .setLngLat([point.lng, point.lat])
+          .addTo(map);
+        
         // Add click handler for active state toggle
         const el = popup.getElement();
         if (el) {
@@ -182,24 +184,46 @@
       });
       
       console.log(`Created ${popups.length} popups`);
-      
-      // Forward wheel events from popups to map for zoom
-      document.querySelectorAll('.map-card').forEach(card => {
-        card.addEventListener('wheel', (e) => {
-          e.preventDefault();
-          // Forward to map canvas
-          const canvas = map.getCanvas();
-          const wheelEvent = new WheelEvent('wheel', {
-            deltaX: e.deltaX,
-            deltaY: e.deltaY,
-            deltaMode: e.deltaMode,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            bubbles: true
-          });
-          canvas.dispatchEvent(wheelEvent);
-        }, { passive: false });
-      });
+    });
+    
+    // Allow zoom and pan through popups
+    // Wheel zoom - use map API directly instead of forwarding events
+    document.addEventListener('wheel', (e) => {
+      if (e.target.closest('.mapboxgl-popup')) {
+        e.preventDefault();
+        const currentZoom = map.getZoom();
+        const zoomDelta = e.deltaY > 0 ? -0.5 : 0.5;
+        map.easeTo({ 
+          zoom: currentZoom + zoomDelta,
+          duration: 100
+        });
+      }
+    }, { passive: false });
+    
+    // Drag pan - handle mousedown on popup, then pan map
+    let isDragging = false;
+    let dragStart = null;
+    
+    document.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.mapboxgl-popup') && e.button === 0) {
+        isDragging = true;
+        dragStart = { x: e.clientX, y: e.clientY };
+        e.preventDefault();
+      }
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging && dragStart) {
+        const dx = dragStart.x - e.clientX;
+        const dy = dragStart.y - e.clientY;
+        map.panBy([dx, dy], { duration: 0 });
+        dragStart = { x: e.clientX, y: e.clientY };
+      }
+    });
+    
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      dragStart = null;
     });
     
     // FPS counter
