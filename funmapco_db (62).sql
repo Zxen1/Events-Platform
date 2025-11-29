@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 03:43 AM
+-- Generation Time: Nov 30, 2025 at 04:08 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -271,6 +271,28 @@ INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/icons-30/Buy-and-sell-category-icon-30.webp', '#2ECC71', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (5, 'For Hire', 'for-hire', 2, 0, 'assets/icons-30/For-hire-category-icon-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (47, 'Test', 'test', 6, 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', NULL, '2025-11-17 04:45:27', '2025-11-17 04:45:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `checkout_options`
+--
+
+CREATE TABLE `checkout_options` (
+  `id` int(11) NOT NULL,
+  `checkout_key` varchar(100) NOT NULL,
+  `checkout_title` varchar(255) NOT NULL,
+  `checkout_description` text DEFAULT NULL,
+  `checkout_price` decimal(10,2) NOT NULL,
+  `checkout_currency` varchar(10) NOT NULL,
+  `checkout_duration_days` int(11) NOT NULL,
+  `checkout_tier` enum('standard','featured') DEFAULT 'standard',
+  `checkout_sidebar_ad` tinyint(1) DEFAULT 0,
+  `sort_order` tinyint(3) UNSIGNED DEFAULT 1,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -845,6 +867,13 @@ ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `checkout_options`
+--
+ALTER TABLE `checkout_options`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `checkout_key` (`checkout_key`);
+
+--
 -- Indexes for table `commissions`
 --
 ALTER TABLE `commissions`
@@ -1012,6 +1041,12 @@ ALTER TABLE `banned_words`
 --
 ALTER TABLE `categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+
+--
+-- AUTO_INCREMENT for table `checkout_options`
+--
+ALTER TABLE `checkout_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `commissions`
