@@ -1041,178 +1041,28 @@ let __notifyMapOnInteraction = null;
   let markerLabelMeasureContext = null;
 
   // --- Section 2: Text Measurement & Formatting Helpers ---
-  function ensureMarkerLabelMeasureContext(){
-    if(markerLabelMeasureContext){
-      return markerLabelMeasureContext;
-    }
-    const canvas = document.createElement('canvas');
-    markerLabelMeasureContext = canvas.getContext('2d');
-    return markerLabelMeasureContext;
-  }
-
-  function markerLabelMeasureFont(){
-    return `${markerLabelTextSize}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
-  }
-
-  function shortenMarkerLabelText(text, widthPx = markerLabelTextAreaWidthPx){
-    const raw = (text ?? '').toString().trim();
-    if(!raw){
-      return '';
-    }
-    const ctx = ensureMarkerLabelMeasureContext();
-    if(!ctx){
-      return raw;
-    }
-    ctx.font = markerLabelMeasureFont();
-    const maxWidth = widthPx;
-    if(maxWidth <= 0){
-      return raw;
-    }
-    if(ctx.measureText(raw).width <= maxWidth){
-      return raw;
-    }
-    const ellipsis = markerLabelEllipsisChar;
-    let low = 0;
-    let high = raw.length;
-    let best = ellipsis;
-    while(low <= high){
-      const mid = Math.floor((low + high) / 2);
-      if(mid <= 0){
-        high = mid - 1;
-        continue;
-      }
-      const candidate = raw.slice(0, mid).trimEnd() + ellipsis;
-      if(ctx.measureText(candidate).width <= maxWidth){
-        best = candidate;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return best;
-  }
-
-  function splitTextAcrossLines(text, widthPx, maxLines){
-    const normalized = (text ?? '').toString().replace(/\s+/g, ' ').trim();
-    if(!normalized){
-      return [];
-    }
-    if(!Number.isFinite(widthPx) || widthPx <= 0 || maxLines <= 0){
-      return [normalized];
-    }
-    const ctx = ensureMarkerLabelMeasureContext();
-    if(!ctx){
-      return [normalized];
-    }
-    ctx.font = markerLabelMeasureFont();
-    if(ctx.measureText(normalized).width <= widthPx){
-      return [normalized];
-    }
-    const lines = [];
-    let remaining = normalized;
-    const ellipsis = markerLabelEllipsisChar;
-    
-    // First line: don't break words
-    if(lines.length < maxLines && remaining){
-      const words = remaining.split(/\s+/);
-      let firstLine = '';
-      let firstLineWords = [];
-      
-      for(let i = 0; i < words.length; i++){
-        const testLine = firstLineWords.length > 0 
-          ? firstLineWords.join(' ') + ' ' + words[i]
-          : words[i];
-        if(ctx.measureText(testLine).width <= widthPx){
-          firstLineWords.push(words[i]);
-          firstLine = testLine;
-        } else {
-          break;
-        }
-      }
-      
-      if(firstLineWords.length > 0){
-        lines.push(firstLine);
-        remaining = words.slice(firstLineWords.length).join(' ');
-      } else {
-        // If even the first word is too long, put it on second line
-        remaining = remaining;
-      }
-    }
-    
-    // Second line: can break words, add ellipses if incomplete
-    if(lines.length < maxLines && remaining){
-      if(ctx.measureText(remaining).width <= widthPx){
-        lines.push(remaining);
-      } else {
-        // Need to truncate with ellipses
-        let low = 0;
-        let high = remaining.length;
-        let best = ellipsis;
-        while(low <= high){
-          const mid = Math.floor((low + high) / 2);
-          if(mid <= 0){
-            high = mid - 1;
-            continue;
-          }
-          const candidate = remaining.slice(0, mid) + ellipsis;
-          if(ctx.measureText(candidate).width <= widthPx){
-            best = candidate;
-            low = mid + 1;
-          } else {
-            high = mid - 1;
-          }
-        }
-        lines.push(best);
-      }
-    }
-    
-    return lines;
-  }
-
-  function getPrimaryVenueName(p){
-    if(!p) return '';
-    const activeKey = typeof selectedVenueKey === 'string' && selectedVenueKey ? selectedVenueKey : null;
-    if(activeKey && Array.isArray(p.locations) && p.locations.length){
-      const match = p.locations.find(loc => loc && toVenueCoordKey(loc.lng, loc.lat) === activeKey && loc.venue);
-      if(match && match.venue){
-        return match.venue;
-      }
-    }
-    const loc = Array.isArray(p.locations) && p.locations.length ? p.locations[0] : null;
-    if(loc && loc.venue){
-      return loc.venue;
-    }
-    if(p.venue){
-      return p.venue;
-    }
-    return p.city || '';
-  }
-
-  function getMarkerLabelLines(p){
-    const title = p && p.title ? p.title : '';
-    // Use 100px width for small map cards (non-multi-post venue cards only)
-    const isMultiPost = Boolean(p && (p.isMultiPost || (p.multiCount && Number(p.multiCount) > 1) || (Array.isArray(p.multiPostIds) && p.multiPostIds.length > 1)));
-    const widthForLines = isMultiPost ? markerLabelTextAreaWidthPx : markerLabelTextAreaWidthPxSmall;
-    const markerTitleLines = splitTextAcrossLines(title, widthForLines, 2);
-    while(markerTitleLines.length < 2){ markerTitleLines.push(''); }
-    const cardTitleLines = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
-    while(cardTitleLines.length < 2){ cardTitleLines.push(''); }
-    const venueRaw = getPrimaryVenueName(p);
-    return {
-      line1: markerTitleLines[0] || '',
-      line2: markerTitleLines[1] || '',
-      cardTitleLines,
-      venueLine: venueRaw ? shortenMarkerLabelText(venueRaw, mapCardTitleWidthPx) : ''
-    };
-  }
-
-  function buildMarkerLabelText(p, overrideLines){
-    const lines = overrideLines || getMarkerLabelLines(p);
-    if(lines.line2){
-      return `${lines.line1}\n${lines.line2}`;
-    }
-    return lines.line1;
-  }
+  // Moved to map.js - use window.MapCardComposites functions
+  const ensureMarkerLabelMeasureContext = window.MapCardComposites && window.MapCardComposites.ensureMarkerLabelMeasureContext 
+    ? window.MapCardComposites.ensureMarkerLabelMeasureContext 
+    : function(){ return null; };
+  const markerLabelMeasureFont = window.MapCardComposites && window.MapCardComposites.markerLabelMeasureFont 
+    ? window.MapCardComposites.markerLabelMeasureFont 
+    : function(){ return '12px "Open Sans", "Arial Unicode MS Regular", sans-serif'; };
+  const shortenMarkerLabelText = window.MapCardComposites && window.MapCardComposites.shortenMarkerLabelText 
+    ? window.MapCardComposites.shortenMarkerLabelText 
+    : function(text){ return String(text || ''); };
+  const splitTextAcrossLines = window.MapCardComposites && window.MapCardComposites.splitTextAcrossLines 
+    ? window.MapCardComposites.splitTextAcrossLines 
+    : function(text){ return [String(text || '')]; };
+  const getPrimaryVenueName = window.MapCardComposites && window.MapCardComposites.getPrimaryVenueName 
+    ? window.MapCardComposites.getPrimaryVenueName 
+    : function(p){ return (p && p.venue) ? p.venue : (p && p.city) ? p.city : ''; };
+  const getMarkerLabelLines = window.MapCardComposites && window.MapCardComposites.getMarkerLabelLines 
+    ? window.MapCardComposites.getMarkerLabelLines 
+    : function(p){ return { line1: (p && p.title) ? p.title : '', line2: '', cardTitleLines: [], venueLine: '' }; };
+  const buildMarkerLabelText = window.MapCardComposites && window.MapCardComposites.buildMarkerLabelText 
+    ? window.MapCardComposites.buildMarkerLabelText 
+    : function(p){ return (p && p.title) ? p.title : ''; };
 
   // Map card constants - now in map.js, access via window.MapCardComposites
   const MARKER_LABEL_BG_ID = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ID) || 'small-map-card-pill';
@@ -1251,51 +1101,10 @@ let __notifyMapOnInteraction = null;
   // --- Section 4: Composite Sprite System for Map Cards ---
   // Moved to map.js - all map card composite code is now in map.js
 
-  async function generateMarkerImageFromId(id, mapInstance, options = {}){
-    if(!id){
-      return null;
-    }
-    const targetMap = mapInstance || map;
-    const MARKER_LABEL_BG_ID_LOCAL = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ID) || 'small-map-card-pill';
-    const MARKER_LABEL_BG_ACCENT_ID_LOCAL = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ACCENT_ID) || 'big-map-card-pill';
-    if(id === MARKER_LABEL_BG_ID_LOCAL || id === MARKER_LABEL_BG_ACCENT_ID_LOCAL){
-      const sprites = await ensureMarkerLabelPillSprites();
-      if(id === MARKER_LABEL_BG_ID){
-        return sprites.base;
-      }
-      return sprites.highlight;
-    }
-    const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
-    if(placeholders.includes(id)){
-      const size = id === 'mx-federal-5' ? 2 : 4;
-      const placeholderOptions = { pixelRatio: 1 };
-      if(id !== 'mx-federal-5'){
-        placeholderOptions.sdf = true;
-      }
-      return {
-        image: createTransparentPlaceholder(size),
-        options: placeholderOptions
-      };
-    }
-    const ensureIcon = options && typeof options.ensureIcon === 'function' ? options.ensureIcon : null;
-    if(ensureIcon){
-      try{
-        await ensureIcon(id);
-      }catch(err){
-        console.error(err);
-      }
-      if(targetMap && typeof targetMap.hasImage === 'function'){
-        try{
-          if(targetMap.hasImage(id)){
-            return null;
-          }
-        }catch(err){
-          console.error(err);
-        }
-      }
-    }
-    return null;
-  }
+  // Moved to map.js - use window.MapCardComposites.generateMarkerImageFromId
+  const generateMarkerImageFromId = window.MapCardComposites && window.MapCardComposites.generateMarkerImageFromId 
+    ? window.MapCardComposites.generateMarkerImageFromId 
+    : async function(){ return null; };
 
 
 
@@ -1851,10 +1660,10 @@ let __notifyMapOnInteraction = null;
                         }
                         
                         // Remove old multi-post icon sprite if it exists
-                        const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
+                        const MULTI_POST_MARKER_ICON_ID_LOCAL = (window.MapCardComposites && window.MapCardComposites.MULTI_POST_MARKER_ICON_ID) || 'multi-post-icon';
                         try {
-                          if(mapInstance.hasImage(MULTI_POST_MARKER_ICON_ID)){
-                            mapInstance.removeImage(MULTI_POST_MARKER_ICON_ID);
+                          if(mapInstance.hasImage(MULTI_POST_MARKER_ICON_ID_LOCAL)){
+                            mapInstance.removeImage(MULTI_POST_MARKER_ICON_ID_LOCAL);
                           }
                         } catch(e) {
                           // Error removing old sprite
@@ -1882,7 +1691,7 @@ let __notifyMapOnInteraction = null;
                             if(ctx){
                               ctx.drawImage(img, 0, 0, iconSize, iconSize);
                               const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                              mapInstance.addImage(MULTI_POST_MARKER_ICON_ID, imageData, { pixelRatio: deviceScale });
+                              mapInstance.addImage(MULTI_POST_MARKER_ICON_ID_LOCAL, imageData, { pixelRatio: deviceScale });
                               console.log('[Multi-Post Icon] Added new sprite');
                             }
                           }
@@ -3118,15 +2927,10 @@ let __notifyMapOnInteraction = null;
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
     // Get interactive layers based on map card display mode
-    // In hover_only mode, only marker-icon is clickable (map cards are hidden)
-    // In always mode, marker-icon and map card layers are clickable
-    const getMarkerInteractiveLayers = () => {
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      if(mapCardDisplay === 'hover_only'){
-        return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
-      }
-      return ['mapmarker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
-    };
+    // Moved to map.js - use window.MapCardComposites.getMarkerInteractiveLayers
+    const getMarkerInteractiveLayers = window.MapCardComposites && window.MapCardComposites.getMarkerInteractiveLayers 
+      ? window.MapCardComposites.getMarkerInteractiveLayers 
+      : function(){ return ['mapmarker-icon']; };
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -3134,277 +2938,39 @@ let __notifyMapOnInteraction = null;
     }
 
 
-    const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
-
-
-    function registerOverlayCleanup(overlayEl, fn){
-      if(!overlayEl || typeof fn !== 'function') return;
-      const list = Array.isArray(overlayEl.__cleanupFns)
-        ? overlayEl.__cleanupFns
-        : (overlayEl.__cleanupFns = []);
-      list.push(fn);
-    }
-
-    function runOverlayCleanup(target){
-      if(!target) return;
-      const el = typeof target.getElement === 'function' ? target.getElement() : target;
-      if(!el) return;
-      const fns = Array.isArray(el.__cleanupFns) ? el.__cleanupFns.slice() : [];
-      if(!fns.length) return;
-      el.__cleanupFns = [];
-      fns.forEach(fn => {
-        try{ fn(); }catch(err){}
-      });
-    }
-
-    // --- Section 5: Small Map Card DOM Functions ---
+    // Moved to map.js - use window.MapCardComposites functions
+    const MULTI_POST_MARKER_ICON_ID = (window.MapCardComposites && window.MapCardComposites.MULTI_POST_MARKER_ICON_ID) || 'multi-post-icon';
+    const registerOverlayCleanup = window.MapCardComposites && window.MapCardComposites.registerOverlayCleanup 
+      ? window.MapCardComposites.registerOverlayCleanup 
+      : function(){};
+    const runOverlayCleanup = window.MapCardComposites && window.MapCardComposites.runOverlayCleanup 
+      ? window.MapCardComposites.runOverlayCleanup 
+      : function(){};
+    const ensureSmallMapCardContainer = window.MapCardComposites && window.MapCardComposites.ensureSmallMapCardContainer 
+      ? window.MapCardComposites.ensureSmallMapCardContainer 
+      : function(){ return null; };
+    const ensureBigMapCardContainer = window.MapCardComposites && window.MapCardComposites.ensureBigMapCardContainer 
+      ? window.MapCardComposites.ensureBigMapCardContainer 
+      : function(){ return null; };
+    const wrapAllMapCardsInContainers = window.MapCardComposites && window.MapCardComposites.wrapAllMapCardsInContainers 
+      ? window.MapCardComposites.wrapAllMapCardsInContainers 
+      : function(){};
+    const createSmallMapCardWithContainer = window.MapCardComposites && window.MapCardComposites.createSmallMapCardWithContainer 
+      ? window.MapCardComposites.createSmallMapCardWithContainer 
+      : function(){ return null; };
+    const createBigMapCardWithContainer = window.MapCardComposites && window.MapCardComposites.createBigMapCardWithContainer 
+      ? window.MapCardComposites.createBigMapCardWithContainer 
+      : function(){ return null; };
+    const enforceSmallMultiMapCardIcon = window.MapCardComposites && window.MapCardComposites.enforceSmallMultiMapCardIcon 
+      ? window.MapCardComposites.enforceSmallMultiMapCardIcon 
+      : function(){};
     
-    // Container-based stacking system for map cards
-    // These functions ensure all map card elements are grouped in containers to prevent penetration
-    
-    /**
-     * Ensures a small map card is wrapped in a container
-     * @param {HTMLElement} cardEl - The small-map-card element
-     * @returns {HTMLElement} - The container element
-     */
-    function ensureSmallMapCardContainer(cardEl){
-      if(!cardEl || !cardEl.classList || !cardEl.classList.contains('small-map-card')){
-        return null;
-      }
-      
-      // Check if already in a container
-      const existingContainer = cardEl.closest('.small-map-card-container');
-      if(existingContainer){
-        return existingContainer;
-      }
-      
-      // Create container
-      const container = document.createElement('div');
-      container.className = 'small-map-card-container';
-      
-      // Move card into container
-      const parent = cardEl.parentNode;
-      if(parent){
-        parent.insertBefore(container, cardEl);
-        container.appendChild(cardEl);
-      }
-      
-      return container;
-    }
-    
-    /**
-     * Ensures a big map card is wrapped in a container
-     * @param {HTMLElement} cardEl - The big-map-card element
-     * @returns {HTMLElement} - The container element
-     */
-    function ensureBigMapCardContainer(cardEl){
-      if(!cardEl || !cardEl.classList || !cardEl.classList.contains('big-map-card')){
-        return null;
-      }
-      
-      // Check if already in a container
-      const existingContainer = cardEl.closest('.big-map-card-container');
-      if(existingContainer){
-        return existingContainer;
-      }
-      
-      // Create container
-      const container = document.createElement('div');
-      container.className = 'big-map-card-container';
-      
-      // Move card into container
-      const parent = cardEl.parentNode;
-      if(parent){
-        parent.insertBefore(container, cardEl);
-        container.appendChild(cardEl);
-      }
-      
-      return container;
-    }
-    
-    /**
-     * Wraps all existing map cards in their respective containers
-     * Call this after map cards are created to ensure proper container structure
-     */
-    function wrapAllMapCardsInContainers(){
-      // Wrap all small map cards
-      document.querySelectorAll('.small-map-card').forEach(card => {
-        ensureSmallMapCardContainer(card);
-      });
-      
-      // Wrap all big map cards
-      document.querySelectorAll('.big-map-card').forEach(card => {
-        ensureBigMapCardContainer(card);
-      });
-    }
-    
-    /**
-     * Creates a small map card container with the card inside
-     * Use this when creating new small map cards
-     * @param {HTMLElement} overlayEl - The mapmarker-overlay element
-     * @param {Object} options - Options for the card
-     * @returns {HTMLElement} - The container element
-     */
-    function createSmallMapCardWithContainer(overlayEl, options = {}){
-      if(!overlayEl) return null;
-      
-      // Create container
-      const container = document.createElement('div');
-      container.className = 'small-map-card-container';
-      
-      // Create card (this would be your existing card creation logic)
-      const card = document.createElement('div');
-      card.className = 'small-map-card';
-      if(options.id){
-        card.dataset.id = String(options.id);
-      }
-      if(options.venueKey){
-        card.dataset.venueKey = String(options.venueKey);
-      }
-      
-      // Add card to container
-      container.appendChild(card);
-      
-      // Add container to overlay
-      overlayEl.appendChild(container);
-      
-      return container;
-    }
-    
-    /**
-     * Creates a big map card container with the card inside
-     * Use this when creating new big map cards (when post is open)
-     * @param {HTMLElement} overlayEl - The mapmarker-overlay element
-     * @param {Object} options - Options for the card
-     * @returns {HTMLElement} - The container element
-     */
-    function createBigMapCardWithContainer(overlayEl, options = {}){
-      if(!overlayEl) return null;
-      
-      // Create container
-      const container = document.createElement('div');
-      container.className = 'big-map-card-container';
-      
-      // Create card
-      const card = document.createElement('div');
-      card.className = 'big-map-card';
-      if(options.id){
-        card.dataset.id = String(options.id);
-      }
-      if(options.venueKey){
-        card.dataset.venueKey = String(options.venueKey);
-      }
-      
-      // Add card to container
-      container.appendChild(card);
-      
-      // Add container to overlay
-      overlayEl.appendChild(container);
-      
-      return container;
-    }
-    
-    // Expose functions globally
+    // Expose functions globally for backward compatibility
     window.ensureSmallMapCardContainer = ensureSmallMapCardContainer;
     window.ensureBigMapCardContainer = ensureBigMapCardContainer;
     window.wrapAllMapCardsInContainers = wrapAllMapCardsInContainers;
     window.createSmallMapCardWithContainer = createSmallMapCardWithContainer;
     window.createBigMapCardWithContainer = createBigMapCardWithContainer;
-    
-    // Auto-wrap map cards when they're added to the DOM
-    if(typeof MutationObserver !== 'undefined'){
-      const mapCardObserver = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-          mutation.addedNodes.forEach(node => {
-            if(node.nodeType === 1){ // Element node
-              // Check if it's a map card
-              if(node.classList && node.classList.contains('small-map-card')){
-                ensureSmallMapCardContainer(node);
-              } else if(node.classList && node.classList.contains('big-map-card')){
-                ensureBigMapCardContainer(node);
-              }
-              // Check if it contains map cards
-              if(node.querySelectorAll){
-                node.querySelectorAll('.small-map-card').forEach(card => {
-                  ensureSmallMapCardContainer(card);
-                });
-                node.querySelectorAll('.big-map-card').forEach(card => {
-                  ensureBigMapCardContainer(card);
-                });
-              }
-            }
-          });
-        });
-      });
-      
-      // Observe the map container for new map cards
-      const mapContainer = document.querySelector('.mapboxgl-map');
-      if(mapContainer){
-        mapCardObserver.observe(mapContainer, {
-          childList: true,
-          subtree: true
-        });
-      }
-      
-      // Also observe document body for map cards added elsewhere
-      mapCardObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-      });
-      
-      // Wrap existing cards on load
-      if(document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', () => {
-          setTimeout(wrapAllMapCardsInContainers, 100);
-        });
-      } else {
-        setTimeout(wrapAllMapCardsInContainers, 100);
-      }
-    }
-    
-    function enforceSmallMultiMapCardIcon(img, overlayEl){
-      if(!img) return;
-      // Get multi-post icon from database - no fallback
-      const targetSrc = window.subcategoryMarkers && window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] ? window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] : null;
-      if(!targetSrc) return; // No icon available from database
-      const apply = ()=>{
-        const currentSrc = img.getAttribute('src') || '';
-        if(currentSrc !== targetSrc){
-          img.setAttribute('src', targetSrc);
-        }
-      };
-      apply();
-      const onLoad = ()=> apply();
-      const onError = ()=> apply();
-      img.addEventListener('load', onLoad);
-      img.addEventListener('error', onError);
-      if(overlayEl){
-        registerOverlayCleanup(overlayEl, ()=>{
-          img.removeEventListener('load', onLoad);
-          img.removeEventListener('error', onError);
-        });
-      }
-      if(typeof MutationObserver === 'function'){
-        const observer = new MutationObserver(()=>{
-          if(!img.isConnected){
-            observer.disconnect();
-            return;
-          }
-          apply();
-        });
-        try{
-          observer.observe(img, { attributes: true, attributeFilter: ['src'] });
-        }catch(err){
-          try{ observer.disconnect(); }catch(e){}
-          return;
-        }
-        if(overlayEl){
-          registerOverlayCleanup(overlayEl, ()=>{
-            try{ observer.disconnect(); }catch(e){}
-          });
-        }
-      }
-    }
 
     function escapeAttrValue(value){
       const raw = String(value);
