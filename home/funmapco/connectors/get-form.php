@@ -936,18 +936,39 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
                 $fieldTypeKey = isset($matchingFieldType['field_type_key']) ? trim((string) $matchingFieldType['field_type_key']) : '';
                 $isCheckout = ($fieldTypeKey === 'checkout');
+                
+                // Debug: log field_type_edits for checkout fields
+                if ($isCheckout) {
+                    error_log("DEBUG get-form.php: Processing checkout field at index $index for subcategory '{$sub['subcategory_key']}'. fieldTypeEdits keys: " . implode(', ', array_keys($fieldTypeEdits)) . ", fieldEdit: " . ($fieldEdit ? json_encode($fieldEdit) : 'null'));
+                }
+                
                 $customName = null;
                 $customOptions = null;
                 $customCheckoutOptions = null;
-                if (($isEditable || $isCheckout) && $fieldEdit && is_array($fieldEdit)) {
+                
+                // Load customizations for editable fields
+                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
                     if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
                         $customOptions = $fieldEdit['options'];
                     }
-                    if (isset($fieldEdit['checkoutOptions']) && is_array($fieldEdit['checkoutOptions'])) {
+                }
+                
+                // For checkout fields, always check field_type_edits for checkoutOptions (even if not formbuilder_editable)
+                // Check both the exact index and try to find checkoutOptions anywhere in field_type_edits
+                if ($isCheckout) {
+                    if ($fieldEdit && is_array($fieldEdit) && isset($fieldEdit['checkoutOptions']) && is_array($fieldEdit['checkoutOptions'])) {
                         $customCheckoutOptions = $fieldEdit['checkoutOptions'];
+                    } else {
+                        // Index might not match - search all entries for checkoutOptions
+                        foreach ($fieldTypeEdits as $editData) {
+                            if (is_array($editData) && isset($editData['checkoutOptions']) && is_array($editData['checkoutOptions']) && !empty($editData['checkoutOptions'])) {
+                                $customCheckoutOptions = $editData['checkoutOptions'];
+                                break;
+                            }
+                        }
                     }
                 }
                 
