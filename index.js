@@ -13583,6 +13583,8 @@ function makePosts(){
               fieldRequiredInput,
               dropdownOptionsContainer,
               dropdownOptionsList,
+              checkoutOptionsContainer,
+              checkoutOptionsList,
               deleteFieldBtn,
               closeEditPanel,
               openEditPanel,
@@ -13632,7 +13634,7 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, checkoutOptionsContainer, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             header.append(fieldDragHandle);
             header.append(fieldEditBtn);
