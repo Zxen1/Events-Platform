@@ -4644,6 +4644,13 @@ body.hide-ads .ad-board{
   margin:0;
   padding:0;
 }
+/* Checkout field wrapper */
+#tab-forms .form-container .form-field--checkout,
+#memberPanel .member-create-fields .form-field--checkout{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+}
 /* Checkout options - similar to radio but with more info */
 #tab-forms .form-container .form-checkout-group,
 #memberPanel .member-create-fields .form-checkout-group{
@@ -4651,6 +4658,8 @@ body.hide-ads .ad-board{
   flex-direction:column;
   gap:10px;
   width:100%;
+  max-width:100%;
+  box-sizing:border-box;
 }
 #tab-forms .form-container .form-checkout-option,
 #memberPanel .member-create-fields .form-checkout-option{
@@ -4662,6 +4671,9 @@ body.hide-ads .ad-board{
   border-radius:6px;
   cursor:pointer;
   transition:border-color .2s ease, background-color .2s ease;
+  box-sizing:border-box;
+  max-width:100%;
+  overflow:hidden;
 }
 #tab-forms .form-container .form-checkout-option:hover,
 #memberPanel .member-create-fields .form-checkout-option:hover{
@@ -4682,9 +4694,11 @@ body.hide-ads .ad-board{
 #tab-forms .form-container .form-checkout-option-content,
 #memberPanel .member-create-fields .form-checkout-option-content{
   flex:1;
+  min-width:0;
   display:flex;
   flex-direction:column;
   gap:4px;
+  overflow:hidden;
 }
 #tab-forms .form-container .form-checkout-option-title,
 #memberPanel .member-create-fields .form-checkout-option-title{
@@ -4707,6 +4721,8 @@ body.hide-ads .ad-board{
   font-size:13px;
   color:var(--text-muted, #999);
   line-height:1.4;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
 }
 #tab-forms .form-container .form-checkout-placeholder,
 #memberPanel .member-create-fields .form-checkout-placeholder{
