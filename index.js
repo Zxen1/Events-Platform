@@ -1709,6 +1709,11 @@ let __notifyMapOnInteraction = null;
                     mapCardDisplay = radio.value;
                     document.body.setAttribute('data-map-card-display', mapCardDisplay);
                     
+                    // Clear all hover states when switching modes
+                    if(window.MapCards && window.MapCards.clearAllMapCardHoverStates){
+                      window.MapCards.clearAllMapCardHoverStates();
+                    }
+                    
                     // Update map immediately (no reload required)
                     if(typeof window.updateMapCardLayerOpacity === 'function'){
                       window.updateMapCardLayerOpacity(mapCardDisplay);
@@ -2779,9 +2784,12 @@ let __notifyMapOnInteraction = null;
       const id = String(postcard.dataset.id);
       hoveredPostIds = [{ id: id, venueKey: null }];
       updateSelectedMarkerRing();
-      // Sync map card hover state
-      if(window.MapCards && window.MapCards.setMapCardHover){
-        window.MapCards.setMapCardHover(id);
+      // Sync map card hover state (use findMarkerByPostId for multi-post support)
+      if(window.MapCards){
+        const markerInfo = window.MapCards.findMarkerByPostId ? window.MapCards.findMarkerByPostId(id) : null;
+        if(markerInfo && window.MapCards.setMapCardHover){
+          window.MapCards.setMapCardHover(markerInfo.markerId);
+        }
       }
     };
     
@@ -2794,9 +2802,12 @@ let __notifyMapOnInteraction = null;
         const id = postcard.dataset.id;
         hoveredPostIds = [];
         updateSelectedMarkerRing();
-        // Remove map card hover state
-        if(window.MapCards && window.MapCards.removeMapCardHover && id){
-          window.MapCards.removeMapCardHover(id);
+        // Remove map card hover state (use findMarkerByPostId for multi-post support)
+        if(window.MapCards && id){
+          const markerInfo = window.MapCards.findMarkerByPostId ? window.MapCards.findMarkerByPostId(id) : null;
+          if(markerInfo && window.MapCards.removeMapCardHover){
+            window.MapCards.removeMapCardHover(markerInfo.markerId);
+          }
         }
       }
     };

@@ -475,11 +475,14 @@
    * @param {string|number} postId - Post ID
    */
   function setMapCardActive(postId) {
-    // First, deactivate all other cards
+    // First, deactivate all other cards and clear all hover states
     mapCardMarkers.forEach((entry, id) => {
+      entry.element.classList.remove('is-hovered');
       if (id !== postId && entry.state === 'big') {
         updateMapCardState(id, 'small');
         entry.element.classList.remove('is-active');
+      } else if (entry.state === 'hover') {
+        updateMapCardState(id, 'small');
       }
     });
     // Then activate this one
@@ -487,6 +490,7 @@
     if (entry) {
       updateMapCardState(postId, 'big');
       entry.element.classList.add('is-active');
+      entry.element.classList.remove('is-hovered');
     }
   }
   
@@ -501,6 +505,20 @@
     entry.element.classList.remove('is-active');
   }
   
+  /**
+   * Clear all hover states from all map cards
+   */
+  function clearAllMapCardHoverStates() {
+    mapCardMarkers.forEach((entry, id) => {
+      if (entry.element.classList.contains('is-hovered') || entry.state === 'hover') {
+        entry.element.classList.remove('is-hovered');
+        if (entry.state === 'hover') {
+          updateMapCardState(id, 'small');
+        }
+      }
+    });
+  }
+
   /**
    * Remove a map card marker
    * @param {string|number} postId - Post ID
@@ -538,6 +556,30 @@
    */
   function getAllMapCardMarkers() {
     return mapCardMarkers;
+  }
+  
+  /**
+   * Find marker by any post ID (checks multiPostIds for multi-post markers)
+   * @param {string|number} postId - Post ID to find
+   * @returns {object|null} - { markerId, entry } or null if not found
+   */
+  function findMarkerByPostId(postId) {
+    const targetId = String(postId);
+    for (const [markerId, entry] of mapCardMarkers) {
+      const post = entry.post;
+      // Check primary ID
+      if (String(markerId) === targetId) {
+        return { markerId, entry };
+      }
+      // Check multiPostIds
+      if (post && Array.isArray(post.multiPostIds)) {
+        const found = post.multiPostIds.some(id => String(id) === targetId);
+        if (found) {
+          return { markerId, entry };
+        }
+      }
+    }
+    return null;
   }
 
   // ==================== CSS INJECTION ====================
@@ -703,6 +745,7 @@
     clearAllMapCardMarkers,
     getMapCardMarker,
     getAllMapCardMarkers,
+    findMarkerByPostId,
     
     // State management
     updateMapCardState,
@@ -710,6 +753,7 @@
     removeMapCardHover,
     setMapCardActive,
     removeMapCardActive,
+    clearAllMapCardHoverStates,
     
     // Text utilities (for compatibility)
     shortenText,
