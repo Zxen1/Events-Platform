@@ -546,7 +546,7 @@
         gap: 8px;
         padding-left: 8px;
         background-repeat: no-repeat;
-        transition: all 0.15s ease, transform 0.15s ease;
+        transition: all 0.15s ease;
       }
       
       /* Small State - left edge 20px left of lat/lng */
@@ -555,7 +555,7 @@
         height: ${SMALL_PILL_HEIGHT}px;
         background-image: url('${smallPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
-        transform: translateX(-20px);
+        margin-left: -20px;
       }
       
       /* Hover State - same position as small */
@@ -564,7 +564,7 @@
         height: ${SMALL_PILL_HEIGHT}px;
         background-image: url('${hoverPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
-        transform: translateX(-20px);
+        margin-left: -20px;
       }
       
       /* Big/Active State - left edge 35px left of lat/lng */
@@ -573,7 +573,7 @@
         height: ${BIG_PILL_HEIGHT}px;
         background-image: url('${bigPillUrl}');
         background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
-        transform: translateX(-35px);
+        margin-left: -35px;
       }
       
       /* Icon */
