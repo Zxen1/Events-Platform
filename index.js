@@ -1702,45 +1702,6 @@ let __notifyMapOnInteraction = null;
               document.body.setAttribute('data-map-card-display', mapCardDisplay);
               
               // Add refresh map cards button handler
-              const refreshMapCardsBtn = document.getElementById('refreshMapCardsBtn');
-              if(refreshMapCardsBtn){
-                refreshMapCardsBtn.addEventListener('click', async () => {
-                  try{
-                    const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
-                    if(mapInstance){
-                      // Clear sprite cache in map.js (NO FALLBACKS)
-                      window.MapCardComposites.clearMarkerLabelPillSpriteCache();
-                      // Remove all marker-label images from Mapbox cache
-                      const markerLabelImageIds = [MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID];
-                      markerLabelImageIds.forEach(id => {
-                        try{
-                          if(mapInstance.hasImage && mapInstance.hasImage(id)){
-                            mapInstance.removeImage(id);
-                          }
-                        }catch(e){}
-                      });
-                      // Trigger repaint to regenerate
-                      if(mapInstance.triggerRepaint){
-                        mapInstance.triggerRepaint();
-                      }
-                      // Show feedback
-                      const originalText = refreshMapCardsBtn.innerHTML;
-                      refreshMapCardsBtn.innerHTML = '<span>✓</span> Refreshed!';
-                      refreshMapCardsBtn.disabled = true;
-                      setTimeout(() => {
-                        refreshMapCardsBtn.innerHTML = originalText;
-                        refreshMapCardsBtn.disabled = false;
-                      }, 2000);
-                    } else {
-                      alert('Map instance not available. Please wait for the map to load.');
-                    }
-                  }catch(err){
-                    console.error('Error refreshing map cards:', err);
-                    alert('Error refreshing map cards. Check console for details.');
-                  }
-                });
-              }
-              
               // Add change listeners for map card display radios
               mapCardDisplayRadios.forEach(radio => {
                 radio.addEventListener('change', async () => {
@@ -18475,7 +18436,8 @@ function makePosts(){
             isMultiPost: props.isMultiPost || false,
             multiPostIds: props.multiPostIds || [],
             multiCount: props.multiCount || 0,
-            locations: props.locations || []
+            locations: props.locations || [],
+            thumbnailUrl: typeof thumbUrl === 'function' ? thumbUrl(props) : null
           };
           
           window.MapCards.createMapCardMarker(map, post, {

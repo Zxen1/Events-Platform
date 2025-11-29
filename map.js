@@ -214,15 +214,15 @@
   }
   
   /**
-   * Get icon URL for a post
+   * Get small icon URL (subcategory icon)
    * @param {Object} post - Post object with sub property
    * @returns {string} URL to icon image
    */
-  function getIconUrl(post) {
+  function getSmallIconUrl(post) {
     const subcategoryMarkers = window.subcategoryMarkers || {};
     const adminSettings = window.adminSettings || {};
     
-    // Multi-post markers use the multi-post icon (check subcategoryMarkers first - it's updated immediately)
+    // Multi-post markers use the multi-post icon
     if (post.isMultiPost) {
       return subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || 
              adminSettings.multi_post_icon || 
@@ -238,6 +238,30 @@
   }
   
   /**
+   * Get big icon URL (thumbnail for single posts, multi-post icon for multi)
+   * @param {Object} post - Post object with thumbnailUrl
+   * @returns {string} URL to thumbnail or icon
+   */
+  function getBigIconUrl(post) {
+    // Multi-post markers keep the multi-post icon
+    if (post.isMultiPost) {
+      return getSmallIconUrl(post);
+    }
+    // Single posts show thumbnail
+    return post.thumbnailUrl || getSmallIconUrl(post);
+  }
+  
+  /**
+   * Get icon URL based on state
+   * @param {Object} post - Post object
+   * @param {string} state - 'small', 'hover', or 'big'
+   * @returns {string} URL to icon/thumbnail
+   */
+  function getIconUrl(post, state = 'small') {
+    return state === 'big' ? getBigIconUrl(post) : getSmallIconUrl(post);
+  }
+  
+  /**
    * Create map card HTML
    * @param {Object} post - Post data
    * @param {string} state - 'small', 'hover', or 'big'
@@ -246,7 +270,7 @@
   function createMapCardHTML(post, state = 'small') {
     const isActive = state === 'big';
     const labels = getMarkerLabelLines(post, isActive);
-    const iconUrl = getIconUrl(post);
+    const iconUrl = getIconUrl(post, state);
     const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
     
     let labelHTML = '';
@@ -396,12 +420,13 @@
       pillEl.style.backgroundImage = `url('${pillUrl}')`;
     }
     
-    // Update icon size (icon is sibling of pill, direct child of container)
+    // Update icon (size and image - thumbnail for big, category icon for small)
     const iconEl = entry.element.querySelector('.map-card-icon');
     if (iconEl) {
       const iconSize = newState === 'big' ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
       iconEl.width = iconSize;
       iconEl.height = iconSize;
+      iconEl.src = getIconUrl(entry.post, newState);
     }
     
     // Update labels for big state
@@ -789,7 +814,7 @@
     mapCardMarkers.forEach((entry) => {
       const iconEl = entry.element.querySelector('.map-card-icon');
       if (iconEl) {
-        iconEl.src = getIconUrl(entry.post);
+        iconEl.src = getIconUrl(entry.post, entry.state);
       }
     });
   }
