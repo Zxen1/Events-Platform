@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 28, 2025 at 03:25 AM
+-- Generation Time: Nov 30, 2025 at 02:24 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -200,27 +200,33 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (7, 'welcome_enabled', 'false', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-24 17:00:24'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-25 17:21:34'),
-(11, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-24 17:10:53'),
+(10, 'map_shadow', '0.43', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-29 08:36:16'),
+(11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-29 00:49:18'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (14, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-11-24 04:52:26'),
-(15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-24 04:52:39'),
+(15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-27 21:47:01'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 15:20:41'),
-(17, 'spin_zoom_max', '6', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-24 02:33:28'),
-(18, 'spin_speed', '0.8', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-24 14:55:15'),
+(17, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-27 21:47:29'),
+(18, 'spin_speed', '0.3', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-11-29 06:54:01'),
 (19, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (20, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (21, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (22, 'paypal_secret', NULL, 'string', 'PayPal Secret Key', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (23, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-11-27 05:55:00'),
-(26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-11-25 17:21:32'),
-(27, 'small_map_card_pill', 'assets/system-images/150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-25 16:59:56'),
-(28, 'big_map_card_pill', 'assets/system-images/225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-25 16:59:26'),
-(29, 'multi_post_icon', 'assets/system-images/multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-11-25 16:59:26'),
-(30, 'hover_map_card_pill', 'assets/system-images/150x40-pill-2f3b73.webp', 'string', 'Path to hover map card pill image (150×40px)', '2025-11-27 16:24:58', '2025-11-27 16:24:58');
+(25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-11-29 09:48:35'),
+(26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-11-29 09:08:25'),
+(27, 'small_map_card_pill', 'assets/system-images/150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-29 08:35:15'),
+(28, 'big_map_card_pill', 'assets/system-images/225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-29 09:22:12'),
+(29, 'multi_post_icon', 'assets/system-images/multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-11-29 08:35:50'),
+(30, 'hover_map_card_pill', 'assets/system-images/150x40-pill-2f3b73.webp', 'string', 'Path to hover map card pill image (150×40px)', '2025-11-27 16:24:58', '2025-11-29 08:35:38'),
+(31, 'msg_category_user_icon', 'assets/system-images/user-messages.svg', 'string', 'Path to user messages category icon', '2025-11-27 21:40:22', '2025-11-28 00:05:28'),
+(32, 'msg_category_member_icon', 'assets/system-images/member-messages.svg', 'string', 'Path to member messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
+(33, 'msg_category_admin_icon', 'assets/system-images/admin-messages.svg', 'string', 'Path to admin messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
+(34, 'msg_category_email_icon', 'assets/system-images/email-messages.svg', 'string', 'Path to email messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
+(35, 'marker_cluster_icon', 'assets/system-images/red-balloon-40.png', 'string', 'Path to marker cluster/balloon icon', '2025-11-27 21:40:22', '2025-11-29 06:55:06'),
+(1657, 'system_images_folder', 'assets/system-images', 'string', NULL, '2025-11-27 21:47:00', '2025-11-27 21:47:00');
 
 -- --------------------------------------------------------
 
@@ -259,7 +265,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `created_at`, `updated_at`) VALUES
-(1, 'What\'s On', 'whats-on', 1, 0, 'assets/icons-30/whats-on-category-icon-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-14 09:08:51'),
+(1, 'What\'s On', 'whats-on', 1, 0, 'assets/icons-30/whats-on-category-icon-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-28 10:50:27'),
 (2, 'Opportunities', 'opportunities', 4, 0, 'assets/icons-30/opportunities-category-icon-30.webp', '#F1C40F', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (3, 'Learning', 'learning', 3, 0, 'assets/icons-30/learning-category-icon-30.webp', '#3498DB', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/icons-30/Buy-and-sell-category-icon-30.webp', '#2ECC71', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
@@ -424,23 +430,6 @@ INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placehold
 (14, 'Variant Pricing', 'variant-pricing', 'prices', 'variant-pricing [fieldset=5]', NULL, NULL, NULL, NULL, 0, 14, '2025-10-29 19:03:05', '2025-11-06 02:20:00'),
 (15, 'Checkout', 'checkout', 'pay me', 'checkout-details [fieldset=8]', NULL, NULL, NULL, NULL, 0, 15, '2025-10-29 19:03:05', '2025-11-06 02:29:44'),
 (16, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 'venues [fieldset=1]', 'sessions [fieldset=2]', 'ticket-pricing [fieldset=3]', NULL, NULL, 0, 16, '2025-10-29 19:03:05', '2025-11-06 02:25:18');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `field_values`
---
-
-CREATE TABLE `field_values` (
-  `id` int(11) NOT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `post_title` varchar(255) DEFAULT NULL,
-  `field_id` int(11) DEFAULT NULL,
-  `field_key` varchar(255) DEFAULT NULL,
-  `value` text DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
 
@@ -673,6 +662,55 @@ CREATE TABLE `posts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `post_details`
+--
+
+CREATE TABLE `post_details` (
+  `id` int(11) NOT NULL,
+  `post_id` int(11) DEFAULT NULL,
+  `post_title` varchar(255) DEFAULT NULL,
+  `field_id` int(11) DEFAULT NULL,
+  `field_key` varchar(255) DEFAULT NULL,
+  `value` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `post_map_cards`
+--
+
+CREATE TABLE `post_map_cards` (
+  `id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `subcategory_key` varchar(255) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_text` varchar(500) DEFAULT NULL,
+  `custom_textarea` text DEFAULT NULL,
+  `custom_dropdown` varchar(255) DEFAULT NULL,
+  `custom_radio` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `venue_name` varchar(255) DEFAULT NULL,
+  `address_line` varchar(500) DEFAULT NULL,
+  `latitude` decimal(10,7) NOT NULL,
+  `longitude` decimal(10,7) NOT NULL,
+  `website_url` varchar(500) DEFAULT NULL,
+  `tickets_url` varchar(500) DEFAULT NULL,
+  `coupon_code` varchar(100) DEFAULT NULL,
+  `checkout_option` varchar(50) DEFAULT NULL,
+  `checkout_currency` varchar(10) DEFAULT NULL,
+  `checkout_price` decimal(10,2) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `post_revisions`
 --
 
@@ -857,14 +895,6 @@ ALTER TABLE `field_types`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `field_values`
---
-ALTER TABLE `field_values`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `post_id` (`post_id`),
-  ADD KEY `field_id` (`field_id`);
-
---
 -- Indexes for table `layout_containers`
 --
 ALTER TABLE `layout_containers`
@@ -927,6 +957,23 @@ ALTER TABLE `posts`
   ADD KEY `member_id` (`member_id`);
 
 --
+-- Indexes for table `post_details`
+--
+ALTER TABLE `post_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `post_id` (`post_id`),
+  ADD KEY `field_id` (`field_id`);
+
+--
+-- Indexes for table `post_map_cards`
+--
+ALTER TABLE `post_map_cards`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_post_id` (`post_id`),
+  ADD KEY `idx_subcategory_key` (`subcategory_key`),
+  ADD KEY `idx_lat_lng` (`latitude`,`longitude`);
+
+--
 -- Indexes for table `post_revisions`
 --
 ALTER TABLE `post_revisions`
@@ -975,7 +1022,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1648;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2032;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1018,12 +1065,6 @@ ALTER TABLE `fieldsets`
 --
 ALTER TABLE `field_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `field_values`
---
-ALTER TABLE `field_values`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`
@@ -1071,6 +1112,18 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `post_details`
+--
+ALTER TABLE `post_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `post_map_cards`
+--
+ALTER TABLE `post_map_cards`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
