@@ -347,9 +347,18 @@
     el.addEventListener('mouseenter', () => {
       if (entry.state !== 'big') {
         setMapCardHover(post.id);
-        // Trigger global hover update
+        // Trigger global hover update - include ALL posts for multi-post cards
         if (window.hoveredPostIds !== undefined) {
-          window.hoveredPostIds = [{ id: String(post.id), venueKey: null }];
+          const allPostIds = [{ id: String(post.id), venueKey: null }];
+          // Add all multiPostIds if this is a multi-post marker
+          if (post.isMultiPost && Array.isArray(post.multiPostIds)) {
+            post.multiPostIds.forEach(pid => {
+              if (pid && String(pid) !== String(post.id)) {
+                allPostIds.push({ id: String(pid), venueKey: null });
+              }
+            });
+          }
+          window.hoveredPostIds = allPostIds;
         }
         if (typeof window.updateSelectedMarkerRing === 'function') {
           window.updateSelectedMarkerRing();
