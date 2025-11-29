@@ -7734,6 +7734,13 @@ function makePosts(){
           safeField.name = resolvedFieldTypeName;
         }
       }
+      
+      // Preserve checkoutOptions for checkout field type
+      if(fieldTypeKey === 'checkout' || safeField.type === 'checkout'){
+        if(!Array.isArray(safeField.checkoutOptions)){
+          safeField.checkoutOptions = [];
+        }
+      }
         if(fieldTypeKey === 'location'){
           if(!safeField.placeholder || !safeField.placeholder.trim()){
             safeField.placeholder = 'Search for a location';
@@ -13061,8 +13068,14 @@ function makePosts(){
               const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
               
               // Get current selected options from field
+              // Check both checkoutOptions and options (for backwards compatibility)
               if(!Array.isArray(safeField.checkoutOptions)){
-                safeField.checkoutOptions = [];
+                if(Array.isArray(safeField.options) && safeField.type === 'checkout'){
+                  // Migrate from old options format
+                  safeField.checkoutOptions = safeField.options.slice();
+                } else {
+                  safeField.checkoutOptions = [];
+                }
               }
               
               // Ensure we have 3 slots
