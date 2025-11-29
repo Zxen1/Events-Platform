@@ -736,7 +736,15 @@ try {
                     if ($key) {
                         $fieldsByTypeKey[$key] = $field;
                     }
+                    // Debug: log checkout fields
+                    if (($field['fieldTypeKey'] ?? $field['key'] ?? '') === 'checkout') {
+                        error_log("DEBUG: Found checkout field in sanitizedFields. Keys: " . implode(', ', array_keys($field)) . ". Has checkoutOptions: " . (isset($field['checkoutOptions']) ? 'yes' : 'no'));
+                        if (isset($field['checkoutOptions'])) {
+                            error_log("DEBUG: checkoutOptions value: " . json_encode($field['checkoutOptions']));
+                        }
+                    }
                 }
+                error_log("DEBUG: fieldsByTypeKey keys: " . implode(', ', array_keys($fieldsByTypeKey)));
                 
                 // Iterate through fieldTypeIds (CSV order) and match with fields
                 foreach ($fieldTypeIds as $csvIndex => $fieldTypeId) {
@@ -781,14 +789,24 @@ try {
                     }
                     
                     // For checkout field type, save selected checkout options
-                    if ($fieldTypeKey === 'checkout' && isset($fieldData['checkoutOptions'])) {
-                        $checkoutOptions = is_array($fieldData['checkoutOptions']) ? $fieldData['checkoutOptions'] : [];
-                        // Filter out empty strings
-                        $checkoutOptions = array_values(array_filter($checkoutOptions, function($opt) {
-                            return $opt !== '' && $opt !== null;
-                        }));
-                        if (!empty($checkoutOptions)) {
-                            $editData['checkoutOptions'] = $checkoutOptions;
+                    if ($fieldTypeKey === 'checkout') {
+                        error_log("DEBUG: Processing checkout field type at index $csvIndex for subcategory $subKey");
+                        if (isset($fieldData['checkoutOptions'])) {
+                            $checkoutOptions = is_array($fieldData['checkoutOptions']) ? $fieldData['checkoutOptions'] : [];
+                            error_log("DEBUG: checkoutOptions from fieldData: " . json_encode($checkoutOptions));
+                            // Filter out empty strings
+                            $checkoutOptions = array_values(array_filter($checkoutOptions, function($opt) {
+                                return $opt !== '' && $opt !== null;
+                            }));
+                            error_log("DEBUG: checkoutOptions after filter: " . json_encode($checkoutOptions));
+                            if (!empty($checkoutOptions)) {
+                                $editData['checkoutOptions'] = $checkoutOptions;
+                                error_log("DEBUG: Added checkoutOptions to editData: " . json_encode($editData));
+                            } else {
+                                error_log("DEBUG: checkoutOptions is empty after filtering");
+                            }
+                        } else {
+                            error_log("DEBUG: checkoutOptions not set in fieldData. fieldData keys: " . implode(', ', array_keys($fieldData)));
                         }
                     }
                     
@@ -1426,12 +1444,16 @@ function sanitizeField(array $field): array
     
     // Include checkoutOptions for checkout field type
     if (isset($field['checkoutOptions']) && is_array($field['checkoutOptions'])) {
+        error_log("DEBUG sanitizeField: Found checkoutOptions in field. Raw: " . json_encode($field['checkoutOptions']));
         $safe['checkoutOptions'] = array_values(array_filter(
             array_map(function($opt) {
                 return is_string($opt) ? trim($opt) : '';
             }, $field['checkoutOptions']),
             function($opt) { return $opt !== ''; }
         ));
+        error_log("DEBUG sanitizeField: Sanitized checkoutOptions: " . json_encode($safe['checkoutOptions']));
+    } elseif ($safe['type'] === 'checkout' || ($safe['fieldTypeKey'] ?? '') === 'checkout') {
+        error_log("DEBUG sanitizeField: Checkout field but no checkoutOptions. Field keys: " . implode(', ', array_keys($field)));
     }
 
     return $safe;
