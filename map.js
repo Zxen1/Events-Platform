@@ -298,11 +298,11 @@
     el.className = 'map-card-container';
     el.innerHTML = createMapCardHTML(post, 'small');
     
-    // Create Mapbox Marker
+    // Create Mapbox Marker - anchor at lat/lng, CSS transform handles offset
     const marker = new mapboxgl.Marker({
       element: el,
       anchor: 'left',
-      offset: [15, 0]
+      offset: [0, 0]
     })
       .setLngLat([lng, lat])
       .addTo(map);
@@ -448,10 +448,15 @@
     mapCardMarkers.forEach((entry, id) => {
       if (id !== postId && entry.state === 'big') {
         updateMapCardState(id, 'small');
+        entry.element.classList.remove('is-active');
       }
     });
     // Then activate this one
-    updateMapCardState(postId, 'big');
+    const entry = mapCardMarkers.get(postId);
+    if (entry) {
+      updateMapCardState(postId, 'big');
+      entry.element.classList.add('is-active');
+    }
   }
   
   /**
@@ -462,6 +467,7 @@
     const entry = mapCardMarkers.get(postId);
     if (!entry || entry.state !== 'big') return;
     updateMapCardState(postId, 'small');
+    entry.element.classList.remove('is-active');
   }
   
   /**
@@ -516,9 +522,21 @@
     const bigPillUrl = getPillUrl('big');
     
     const css = `
-      /* Map Card Container */
+      /* Map Card Container - z-index controls stacking */
       .map-card-container {
         cursor: pointer;
+        position: relative;
+        z-index: 1;
+      }
+      
+      /* Hover state brings card forward */
+      .map-card-container:hover {
+        z-index: 10;
+      }
+      
+      /* Active state brings card to top */
+      .map-card-container.is-active {
+        z-index: 100;
       }
       
       /* Base Map Card */
@@ -528,31 +546,34 @@
         gap: 8px;
         padding-left: 8px;
         background-repeat: no-repeat;
-        transition: all 0.15s ease;
+        transition: all 0.15s ease, transform 0.15s ease;
       }
       
-      /* Small State */
+      /* Small State - left edge 20px left of lat/lng */
       .map-card-small {
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
         background-image: url('${smallPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+        transform: translateX(-20px);
       }
       
-      /* Hover State */
+      /* Hover State - same position as small */
       .map-card-hover {
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
         background-image: url('${hoverPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+        transform: translateX(-20px);
       }
       
-      /* Big/Active State */
+      /* Big/Active State - left edge 35px left of lat/lng */
       .map-card-big {
         width: ${BIG_PILL_WIDTH}px;
         height: ${BIG_PILL_HEIGHT}px;
         background-image: url('${bigPillUrl}');
         background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
+        transform: translateX(-35px);
       }
       
       /* Icon */
@@ -701,10 +722,10 @@
     MULTI_POST_MARKER_ICON_ID: MULTI_POST_MARKER_ICON_ID,
     
     // Stub functions - old composite system replaced by Markers
-    loadMarkerLabelImage: function() { return Promise.resolve(null); },
+    loadMarkerLabelImage: loadMarkerLabelImageCompat,
     convertImageDataToCanvas: function() { return null; },
-    buildMarkerLabelPillSprite: function() { return null; },
-    ensureMarkerLabelPillSprites: function() { return Promise.resolve(null); },
+    buildMarkerLabelPillSprite: function() { return { image: null, options: {} }; },
+    ensureMarkerLabelPillSprites: function() { return Promise.resolve({ base: {}, highlight: {}, hover: {} }); },
     generateMarkerImageFromId: function() { return null; },
     clearMarkerLabelPillSpriteCache: function() {
       // When pills change, reload admin settings and refresh CSS
@@ -713,7 +734,10 @@
         refreshMapCardStyles();
       });
     },
-    addPillSpritesToMap: function() {},
+    addPillSpritesToMap: function() {
+      // In Marker system, pills are CSS - just refresh styles
+      refreshMapCardStyles();
+    },
     updateMapCardLayerOpacity: function() {},
     createMapCardCompositeLayers: function() {},
     createMarkerIconLayer: function() {},
@@ -722,5 +746,35 @@
     createMapCardCompositesForFeatures: function() { return []; },
     getMarkerInteractiveLayers: function() { return []; }
   };
+  
+  // Compatibility helper - load image for admin preview
+  function loadMarkerLabelImageCompat(url) {
+    return new Promise((resolve, reject) => {
+      if (!url) {
+        reject(new Error('Missing URL'));
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to load ' + url));
+      img.src = url;
+    });
+  }
+  
+  /**
+   * Refresh all marker icons (after admin changes multi-post icon)
+   */
+  function refreshAllMarkerIcons() {
+    mapCardMarkers.forEach((entry) => {
+      const iconEl = entry.element.querySelector('.map-card-icon');
+      if (iconEl) {
+        iconEl.src = getIconUrl(entry.post);
+      }
+    });
+  }
+  
+  // Expose refresh function
+  window.MapCards.refreshAllMarkerIcons = refreshAllMarkerIcons;
 
 })();
