@@ -18983,6 +18983,37 @@ function makePosts(){
         
         sortedPostList = arr;
         updateResultCount(markerTotal);
+        
+        // Show/hide empty state message based on visible cards
+        let existingEmptyWrap = postsWideEl.querySelector('.post-board-empty');
+        if(markerTotal === 0){
+          // Show empty state if not already showing
+          if(!existingEmptyWrap){
+            existingEmptyWrap = document.createElement('div');
+            existingEmptyWrap.className = 'post-board-empty';
+            const summaryEl = $('#filterSummary');
+            const summaryText = summaryEl ? summaryEl.textContent.trim() : '';
+            const summaryCopy = document.createElement('div');
+            summaryCopy.className = 'filter-summary post-board-empty-summary';
+            summaryCopy.textContent = summaryText || 'No results match your filters.';
+            existingEmptyWrap.appendChild(summaryCopy);
+            const emptyImg = document.createElement('img');
+            emptyImg.src = 'assets/monkeys/Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png';
+            emptyImg.alt = 'Cute little monkey in red cape pointing up';
+            emptyImg.className = 'post-board-empty-image';
+            existingEmptyWrap.appendChild(emptyImg);
+            const emptyMsg = document.createElement('p');
+            emptyMsg.className = 'post-board-empty-message';
+            emptyMsg.dataset.messageKey = 'msg_posts_empty_state';
+            emptyMsg.textContent = 'There are no posts here. Try moving the map or changing your filter settings.';
+            existingEmptyWrap.appendChild(emptyMsg);
+            postsWideEl.appendChild(existingEmptyWrap);
+          }
+          existingEmptyWrap.style.display = '';
+        } else if(existingEmptyWrap){
+          existingEmptyWrap.style.display = 'none';
+        }
+        
         return;
       }
       
@@ -21152,6 +21183,35 @@ function openPostModal(id){
             openPost.style.display = '';
           }
         });
+        
+        // Show/hide empty state based on visible filtered posts
+        let existingEmptyWrap = postsWideEl.querySelector('.post-board-empty');
+        if(filtered.length === 0){
+          if(!existingEmptyWrap){
+            existingEmptyWrap = document.createElement('div');
+            existingEmptyWrap.className = 'post-board-empty';
+            const summaryEl = $('#filterSummary');
+            const summaryText = summaryEl ? summaryEl.textContent.trim() : '';
+            const summaryCopy = document.createElement('div');
+            summaryCopy.className = 'filter-summary post-board-empty-summary';
+            summaryCopy.textContent = summaryText || 'No results match your filters.';
+            existingEmptyWrap.appendChild(summaryCopy);
+            const emptyImg = document.createElement('img');
+            emptyImg.src = 'assets/monkeys/Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png';
+            emptyImg.alt = 'Cute little monkey in red cape pointing up';
+            emptyImg.className = 'post-board-empty-image';
+            existingEmptyWrap.appendChild(emptyImg);
+            const emptyMsg = document.createElement('p');
+            emptyMsg.className = 'post-board-empty-message';
+            emptyMsg.dataset.messageKey = 'msg_posts_empty_state';
+            emptyMsg.textContent = 'There are no posts here. Try moving the map or changing your filter settings.';
+            existingEmptyWrap.appendChild(emptyMsg);
+            postsWideEl.appendChild(existingEmptyWrap);
+          }
+          existingEmptyWrap.style.display = '';
+        } else if(existingEmptyWrap){
+          existingEmptyWrap.style.display = 'none';
+        }
       }
     }
 
