@@ -6,7 +6,6 @@
 
   // Constants
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
-  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '-accent';
   const MARKER_LABEL_COMPOSITE_LIMIT = 900; // Mapbox limit is ~1000, reserve 100 for other images
   const MARKER_COMPOSITE_BIG_ICON_SIZE = 50; // 50x50px for big cards
   const MARKER_COMPOSITE_SMALL_ICON_SIZE = 30; // 30x30px for small cards
@@ -602,16 +601,10 @@
       return null;
     }
     
-    // Access dependencies from global scope
-    // Use local ensureMarkerLabelPillSprites function
-    if(typeof convertImageDataToCanvas !== 'function'){
-      // convertImageDataToCanvas not available
-      return null;
-    }
-    if(typeof nowTimestamp !== 'function'){
-      // nowTimestamp not available
-      return null;
-    }
+    // Helper function for timestamps (fallback if not in global scope)
+    const nowTimestamp = (typeof window !== 'undefined' && typeof window.nowTimestamp === 'function') 
+      ? window.nowTimestamp 
+      : function(){ return Date.now(); };
     
     // Generate sprite ID
     const spriteId = markerLabelCompositeId(type, labelText, iconId, thumbnailUrl);
@@ -875,104 +868,27 @@
    * @param {string} MARKER_LABEL_BG_ACCENT_ID - Accent pill sprite ID
    */
   function addPillSpritesToMap(mapInstance, pillSprites, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID){
-    if(!mapInstance || !pillSprites){
-      return;
-    }
+    if(!mapInstance || !pillSprites) return;
     
-    // Access convertImageDataToCanvas from global scope
-    // Use local convertImageDataToCanvas function
-    
-    // Add base pill sprite - ALWAYS remove existing first to prevent dimension mismatch
-    if(pillSprites.base && pillSprites.base.image){
+    // Helper to add a single pill sprite
+    const addPillSprite = (sprite, spriteId) => {
+      if(!sprite || !sprite.image) return;
       try {
-        // CRITICAL: Always remove existing image first to prevent RangeError: mismatched image size
-        if(mapInstance.hasImage(MARKER_LABEL_BG_ID)){
-          try {
-            mapInstance.removeImage(MARKER_LABEL_BG_ID);
-          } catch(err){
-            // Ignore removal errors
-          }
+        // Remove existing image first to prevent dimension mismatch
+        if(mapInstance.hasImage(spriteId)){
+          try { mapInstance.removeImage(spriteId); } catch(err){}
         }
-        
-        // Convert ImageData to Canvas if needed
-        const imageToAdd = convertImageDataToCanvas(pillSprites.base.image);
-        if(imageToAdd){
-          // Validate dimensions before adding
-          const width = imageToAdd.width || 0;
-          const height = imageToAdd.height || 0;
-          if(width > 0 && height > 0){
-            mapInstance.addImage(MARKER_LABEL_BG_ID, imageToAdd);
-          } else {
-            // Invalid image dimensions for base sprite
-          }
-        } else {
-          // Failed to convert base sprite ImageData to Canvas
+        const imageToAdd = convertImageDataToCanvas(sprite.image);
+        if(imageToAdd && imageToAdd.width > 0 && imageToAdd.height > 0){
+          mapInstance.addImage(spriteId, imageToAdd);
         }
-      }catch(e){
-        // Error adding small-map-card-pill sprite
-      }
-    }
+      } catch(e){}
+    };
     
-    // Add highlight pill sprite - ALWAYS remove existing first to prevent dimension mismatch
-    if(pillSprites.highlight && pillSprites.highlight.image){
-      try {
-        // CRITICAL: Always remove existing image first to prevent RangeError: mismatched image size
-        if(mapInstance.hasImage(MARKER_LABEL_BG_ACCENT_ID)){
-          try {
-            mapInstance.removeImage(MARKER_LABEL_BG_ACCENT_ID);
-          } catch(err){
-            // Ignore removal errors
-          }
-        }
-        
-        // Convert ImageData to Canvas if needed
-        const imageToAdd = convertImageDataToCanvas(pillSprites.highlight.image);
-        if(imageToAdd){
-          // Validate dimensions before adding
-          const width = imageToAdd.width || 0;
-          const height = imageToAdd.height || 0;
-          if(width > 0 && height > 0){
-            mapInstance.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd);
-          } else {
-            // Invalid image dimensions for highlight sprite
-          }
-        } else {
-          // Failed to convert highlight sprite ImageData to Canvas
-        }
-      }catch(e){
-        // Error adding big-map-card-pill sprite
-      }
-    }
-    
-    // Add hover pill sprite - ALWAYS remove existing first to prevent dimension mismatch
-    if(pillSprites.hover && pillSprites.hover.image){
-      try {
-        // CRITICAL: Always remove existing image first to prevent RangeError: mismatched image size
-        if(mapInstance.hasImage('hover-map-card-pill')){
-          try {
-            mapInstance.removeImage('hover-map-card-pill');
-          } catch(err){
-            // Ignore removal errors
-          }
-        }
-        
-        const imageToAdd = convertImageDataToCanvas(pillSprites.hover.image);
-        if(imageToAdd){
-          // Validate dimensions before adding
-          const width = imageToAdd.width || 0;
-          const height = imageToAdd.height || 0;
-          if(width > 0 && height > 0){
-            mapInstance.addImage('hover-map-card-pill', imageToAdd);
-          } else {
-            // Invalid image dimensions for hover sprite
-          }
-        } else {
-          // Failed to convert hover sprite ImageData to Canvas
-        }
-      }catch(e){
-        // Error adding hover-map-card-pill sprite
-      }
-    }
+    // Add all pill sprites
+    addPillSprite(pillSprites.base, MARKER_LABEL_BG_ID);
+    addPillSprite(pillSprites.highlight, MARKER_LABEL_BG_ACCENT_ID);
+    addPillSprite(pillSprites.hover, 'hover-map-card-pill');
   }
   
   /**
@@ -995,7 +911,9 @@
     const markerLabelHighlightIconImage = MARKER_LABEL_BG_ACCENT_ID;
     
     const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-    const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+    const mapCardDisplay = (typeof document !== 'undefined' && document.body) 
+      ? (document.body.getAttribute('data-map-card-display') || 'always')
+      : 'always';
     
     // Small pill: Uses 'small-map-card-pill' sprite by default, switches to 'hover-map-card-pill' on hover
     // In hover_only mode, only show when highlighted (opacity 0 when not highlighted, 1 when highlighted)
@@ -1452,245 +1370,12 @@
     return lines.line1;
   }
   
-  // === Map Card Container Functions ===
+  // === Map Marker Functions ===
   
   const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
   
-  function registerOverlayCleanup(overlayEl, fn){
-    if(!overlayEl || typeof fn !== 'function') return;
-    const list = Array.isArray(overlayEl.__cleanupFns)
-      ? overlayEl.__cleanupFns
-      : (overlayEl.__cleanupFns = []);
-    list.push(fn);
-  }
-  
-  function runOverlayCleanup(target){
-    if(!target) return;
-    const el = typeof target.getElement === 'function' ? target.getElement() : target;
-    if(!el) return;
-    const fns = Array.isArray(el.__cleanupFns) ? el.__cleanupFns.slice() : [];
-    if(!fns.length) return;
-    el.__cleanupFns = [];
-    fns.forEach(fn => {
-      try{ fn(); }catch(err){}
-    });
-  }
-  
-  function ensureSmallMapCardContainer(cardEl){
-    if(!cardEl || !cardEl.classList || !cardEl.classList.contains('small-map-card')){
-      return null;
-    }
-    
-    // Check if already in a container
-    const existingContainer = cardEl.closest('.small-map-card-container');
-    if(existingContainer){
-      return existingContainer;
-    }
-    
-    // Create container
-    const container = document.createElement('div');
-    container.className = 'small-map-card-container';
-    
-    // Move card into container
-    const parent = cardEl.parentNode;
-    if(parent){
-      parent.insertBefore(container, cardEl);
-      container.appendChild(cardEl);
-    }
-    
-    return container;
-  }
-  
-  function ensureBigMapCardContainer(cardEl){
-    if(!cardEl || !cardEl.classList || !cardEl.classList.contains('big-map-card')){
-      return null;
-    }
-    
-    // Check if already in a container
-    const existingContainer = cardEl.closest('.big-map-card-container');
-    if(existingContainer){
-      return existingContainer;
-    }
-    
-    // Create container
-    const container = document.createElement('div');
-    container.className = 'big-map-card-container';
-    
-    // Move card into container
-    const parent = cardEl.parentNode;
-    if(parent){
-      parent.insertBefore(container, cardEl);
-      container.appendChild(cardEl);
-    }
-    
-    return container;
-  }
-  
-  function wrapAllMapCardsInContainers(){
-    // Wrap all small map cards
-    document.querySelectorAll('.small-map-card').forEach(card => {
-      ensureSmallMapCardContainer(card);
-    });
-    
-    // Wrap all big map cards
-    document.querySelectorAll('.big-map-card').forEach(card => {
-      ensureBigMapCardContainer(card);
-    });
-  }
-  
-  function createSmallMapCardWithContainer(overlayEl, options = {}){
-    if(!overlayEl) return null;
-    
-    // Create container
-    const container = document.createElement('div');
-    container.className = 'small-map-card-container';
-    
-    // Create card (this would be your existing card creation logic)
-    const card = document.createElement('div');
-    card.className = 'small-map-card';
-    if(options.id){
-      card.dataset.id = String(options.id);
-    }
-    if(options.venueKey){
-      card.dataset.venueKey = String(options.venueKey);
-    }
-    
-    // Add card to container
-    container.appendChild(card);
-    
-    // Add container to overlay
-    overlayEl.appendChild(container);
-    
-    return container;
-  }
-  
-  function createBigMapCardWithContainer(overlayEl, options = {}){
-    if(!overlayEl) return null;
-    
-    // Create container
-    const container = document.createElement('div');
-    container.className = 'big-map-card-container';
-    
-    // Create card
-    const card = document.createElement('div');
-    card.className = 'big-map-card';
-    if(options.id){
-      card.dataset.id = String(options.id);
-    }
-    if(options.venueKey){
-      card.dataset.venueKey = String(options.venueKey);
-    }
-    
-    // Add card to container
-    container.appendChild(card);
-    
-    // Add container to overlay
-    overlayEl.appendChild(container);
-    
-    return container;
-  }
-  
-  function enforceSmallMultiMapCardIcon(img, overlayEl){
-    if(!img) return;
-    // Get multi-post icon from database - no fallback
-    const targetSrc = window.subcategoryMarkers && window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] ? window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] : null;
-    if(!targetSrc) return; // No icon available from database
-    const apply = ()=>{
-      const currentSrc = img.getAttribute('src') || '';
-      if(currentSrc !== targetSrc){
-        img.setAttribute('src', targetSrc);
-      }
-    };
-    apply();
-    const onLoad = ()=> apply();
-    const onError = ()=> apply();
-    img.addEventListener('load', onLoad);
-    img.addEventListener('error', onError);
-    if(overlayEl){
-      registerOverlayCleanup(overlayEl, ()=>{
-        img.removeEventListener('load', onLoad);
-        img.removeEventListener('error', onError);
-      });
-    }
-    if(typeof MutationObserver === 'function'){
-      const observer = new MutationObserver(()=>{
-        if(!img.isConnected){
-          observer.disconnect();
-          return;
-        }
-        apply();
-      });
-      try{
-        observer.observe(img, { attributes: true, attributeFilter: ['src'] });
-      }catch(err){
-        try{ observer.disconnect(); }catch(e){}
-        return;
-      }
-      if(overlayEl){
-        registerOverlayCleanup(overlayEl, ()=>{
-          try{ observer.disconnect(); }catch(e){}
-        });
-      }
-    }
-  }
-  
-  // Auto-wrap map cards when they're added to the DOM
-  if(typeof MutationObserver !== 'undefined'){
-    const mapCardObserver = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-          if(node.nodeType === 1){ // Element node
-            // Check if it's a map card
-            if(node.classList && node.classList.contains('small-map-card')){
-              ensureSmallMapCardContainer(node);
-            } else if(node.classList && node.classList.contains('big-map-card')){
-              ensureBigMapCardContainer(node);
-            }
-            // Check if it contains map cards
-            if(node.querySelectorAll){
-              node.querySelectorAll('.small-map-card').forEach(card => {
-                ensureSmallMapCardContainer(card);
-              });
-              node.querySelectorAll('.big-map-card').forEach(card => {
-                ensureBigMapCardContainer(card);
-              });
-            }
-          }
-        });
-      });
-    });
-    
-    // Observe the map container for new map cards
-    const mapContainer = document.querySelector('.mapboxgl-map');
-    if(mapContainer){
-      mapCardObserver.observe(mapContainer, {
-        childList: true,
-        subtree: true
-      });
-    }
-    
-    // Also observe document body for map cards added elsewhere
-    mapCardObserver.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    // Wrap existing cards on load
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(wrapAllMapCardsInContainers, 100);
-      });
-    } else {
-      setTimeout(wrapAllMapCardsInContainers, 100);
-    }
-  }
-  
-  // === Map Marker Functions ===
-  
   async function generateMarkerImageFromId(id, mapInstance, options = {}){
-    if(!id){
-      return null;
-    }
+    if(!id) return null;
     const map = (typeof window !== 'undefined' && typeof window.getMapInstance === 'function') ? window.getMapInstance() : null;
     const targetMap = mapInstance || map;
     const MARKER_LABEL_BG_ID_LOCAL = MARKER_LABEL_BG_ID;
@@ -1704,26 +1389,15 @@
     }
     const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
     if(placeholders.includes(id)){
-      const createTransparentPlaceholder = (width, height) => {
-        const canvas = document.createElement('canvas');
-        const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
-        const h = Math.max(1, Number.isFinite(height) ? height : (Number.isFinite(width) ? width : (width || 2)));
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if(ctx){
-          ctx.clearRect(0, 0, w, h);
-        }
-        return canvas;
-      };
       const size = id === 'mx-federal-5' ? 2 : 4;
-      const placeholderOptions = { pixelRatio: 1 };
-      if(id !== 'mx-federal-5'){
-        placeholderOptions.sdf = true;
-      }
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if(ctx) ctx.clearRect(0, 0, size, size);
       return {
-        image: createTransparentPlaceholder(size),
-        options: placeholderOptions
+        image: canvas,
+        options: { pixelRatio: 1, ...(id !== 'mx-federal-5' ? { sdf: true } : {}) }
       };
     }
     const ensureIcon = options && typeof options.ensureIcon === 'function' ? options.ensureIcon : null;
@@ -1744,14 +1418,6 @@
       }
     }
     return null;
-  }
-  
-  function getMarkerInteractiveLayers(){
-    const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-    if(mapCardDisplay === 'hover_only'){
-      return ['mapmarker-icon']; // Only mapmarker-icon is clickable when cards are hidden
-    }
-    return ['mapmarker-icon', ...VISIBLE_MARKER_LABEL_LAYERS]; // All layers clickable when cards are visible
   }
   
   // Expose functions globally
@@ -1788,18 +1454,8 @@
     getPrimaryVenueName,
     ensureMarkerLabelMeasureContext,
     markerLabelMeasureFont,
-    // Expose map card container functions
-    ensureSmallMapCardContainer,
-    ensureBigMapCardContainer,
-    wrapAllMapCardsInContainers,
-    createSmallMapCardWithContainer,
-    createBigMapCardWithContainer,
-    enforceSmallMultiMapCardIcon,
-    registerOverlayCleanup,
-    runOverlayCleanup,
     // Expose map marker functions
     generateMarkerImageFromId,
-    getMarkerInteractiveLayers,
     MULTI_POST_MARKER_ICON_ID
   };
   
