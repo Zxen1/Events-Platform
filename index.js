@@ -8916,26 +8916,8 @@ function makePosts(){
 
           header.append(fieldEditUI.editBtn, fieldEditUI.editPanel);
 
-          const handleHeaderClick = event => {
-            if(event.defaultPrevented) return;
-            const origin = event.target;
-            if(!origin) return;
-            if(origin.closest('.formbuilder-drag-handle')) return;
-            if(origin.closest('.field-edit-btn')) return;
-            if(origin.closest('.field-edit-panel')) return;
-            event.stopPropagation();
-            document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-              if(panel !== fieldEditUI.editPanel){
-                panel.hidden = true;
-              }
-            });
-            if(typeof closeFieldEditPanels === 'function'){
-              closeFieldEditPanels({ exceptPanel: fieldEditUI.editPanel, exceptButton: fieldEditUI.editBtn });
-            }
-            fieldEditUI.openEditPanel();
-          };
-
-          header.addEventListener('click', handleHeaderClick);
+          // Edit panel only opens via the edit button click (handled in createFieldEditUI)
+          // No automatic opening on header click
         }
 
         wrapper.append(header, control);
@@ -13649,25 +13631,14 @@ function makePosts(){
             row.append(header);
             row._header = header;
 
-            const activateFieldEditPanel = event => {
-              if(event.defaultPrevented) return;
-              const origin = event.target;
-              if(!origin) return;
-              if(origin.closest('.formbuilder-drag-handle')) return;
-              if(origin.closest('.field-edit-panel')) return;
-              if(origin.closest('.field-edit-btn')) return;
-              event.stopPropagation();
-              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
-                if(panel !== editPanel){
-                  panel.hidden = true;
-                }
-              });
-              closeFieldEditPanels({ exceptPanel: editPanel, exceptButton: fieldEditBtn });
-              openEditPanel();
+            // Edit panel only opens via the edit button click (handled in createFieldEditUI)
+            // Stop propagation on row/header clicks to prevent bubbling
+            const stopRowPropagation = event => {
+              if(event.target && event.target.closest('.field-edit-btn')) return;
+              if(event.target && event.target.closest('.field-edit-panel')) return;
             };
-
-            header.addEventListener('click', activateFieldEditPanel);
-            row.addEventListener('click', activateFieldEditPanel);
+            header.addEventListener('click', stopRowPropagation);
+            row.addEventListener('click', stopRowPropagation);
 
             const updateFieldSummary = ()=>{
               const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
@@ -14665,6 +14636,14 @@ function makePosts(){
       }
       initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
       FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
+      
+      // Update checkout options from snapshot
+      if(Array.isArray(normalized.checkoutOptions)){
+        initialFormbuilderSnapshot.checkoutOptions = normalized.checkoutOptions.map(opt => ({ ...opt }));
+        CHECKOUT_OPTIONS.splice(0, CHECKOUT_OPTIONS.length, ...initialFormbuilderSnapshot.checkoutOptions);
+        window.CHECKOUT_OPTIONS = CHECKOUT_OPTIONS;
+      }
+      
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
