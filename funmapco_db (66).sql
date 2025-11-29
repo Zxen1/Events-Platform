@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 04:32 AM
+-- Generation Time: Nov 30, 2025 at 04:42 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -703,9 +703,9 @@ CREATE TABLE `post_map_cards` (
   `website_url` varchar(500) DEFAULT NULL,
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
-  `checkout_option` varchar(50) DEFAULT NULL,
-  `checkout_currency` varchar(10) DEFAULT NULL,
-  `checkout_price` decimal(10,2) DEFAULT NULL,
+  `checkout_title` varchar(255) DEFAULT NULL,
+  `session_summary` varchar(255) DEFAULT NULL,
+  `price_summary` varchar(255) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
