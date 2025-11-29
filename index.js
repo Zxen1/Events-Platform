@@ -18070,6 +18070,13 @@ function makePosts(){
           }
         }
         checkLoadPosts();
+        
+        // Ensure map cards are created after initial load completes
+        requestAnimationFrame(() => {
+          if(postsLoaded && markersLoaded){
+            applyFilters();
+          }
+        });
       });
 
       map.on('style.load', ()=>{
@@ -21061,6 +21068,66 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
+      
+      // Ensure map card markers are created/updated
+      const currentZoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      if(Number.isFinite(currentZoom) && currentZoom >= MARKER_ZOOM_THRESHOLD && window.MapCards){
+        const collections = getMarkerCollections(filtered);
+        const featuresToProcess = Array.isArray(collections.postsData.features) ? collections.postsData.features : [];
+        
+        // Build set of feature IDs to keep
+        const newFeatureIds = new Set();
+        featuresToProcess.forEach(feature => {
+          if(!feature || !feature.properties || feature.properties.point_count) return;
+          newFeatureIds.add(feature.properties.id);
+        });
+        
+        // Remove markers that are no longer in the feature set
+        const existingMarkers = window.MapCards.getAllMapCardMarkers();
+        existingMarkers.forEach((entry, postId) => {
+          if(!newFeatureIds.has(postId)){
+            window.MapCards.removeMapCardMarker(postId);
+          }
+        });
+        
+        // Create markers for features that don't have one
+        featuresToProcess.forEach(feature => {
+          if(!feature || !feature.properties || feature.properties.point_count) return;
+          const props = feature.properties;
+          const coords = feature.geometry && feature.geometry.coordinates;
+          if(!Array.isArray(coords) || coords.length < 2) return;
+          if(window.MapCards.getMapCardMarker(props.id)) return;
+          
+          // Parse multiPostIds - GeoJSON may stringify arrays
+          let multiPostIds = props.multiPostIds || [];
+          if(typeof multiPostIds === 'string'){
+            try { multiPostIds = JSON.parse(multiPostIds); } catch(e) { multiPostIds = []; }
+          }
+          if(!Array.isArray(multiPostIds)) multiPostIds = [];
+          
+          const post = {
+            id: props.id,
+            title: props.title || '',
+            sub: props.sub || null,
+            venue: props.venue || '',
+            city: props.city || '',
+            isMultiPost: props.isMultiPost || false,
+            multiPostIds: multiPostIds,
+            multiCount: props.multiCount || 0,
+            locations: props.locations || [],
+            thumbnailUrl: typeof thumbUrl === 'function' ? thumbUrl(props) : null
+          };
+          
+          window.MapCards.createMapCardMarker(map, post, {
+            lng: coords[0],
+            lat: coords[1]
+          });
+        });
+      } else if(window.MapCards && currentZoom < MARKER_ZOOM_THRESHOLD){
+        // Clear all markers if below threshold
+        window.MapCards.clearAllMapCardMarkers();
+      }
+      
       updateLayerVisibility(lastKnownZoom);
       filtersInitialized = true;
       
