@@ -528,37 +528,42 @@
     const bigPillUrl = getPillUrl('big');
     
     const css = `
-      /* Map Card Container - icon centered at lat/lng, pill to the right */
+      /* Container = lat/lng point (0,0) - zero size anchor */
       .map-card-container {
+        position: relative;
+        width: 0;
+        height: 0;
         cursor: pointer;
         z-index: 1;
-        display: flex;
-        align-items: center;
       }
       .map-card-container:hover { z-index: 10; }
       .map-card-container.is-active { z-index: 100; }
       
-      /* Icon - always at center (lat/lng) */
+      /* Icon - center at lat/lng (0,0) */
       .map-card-icon {
+        position: absolute;
+        left: -${SMALL_ICON_SIZE / 2}px;
+        top: -${SMALL_ICON_SIZE / 2}px;
         border-radius: 50%;
-        flex-shrink: 0;
-        position: relative;
         z-index: 2;
       }
+      .map-card-container.is-active .map-card-icon {
+        left: -${BIG_ICON_SIZE / 2}px;
+        top: -${BIG_ICON_SIZE / 2}px;
+      }
       
-      /* Pill - positioned relative to icon center (lat/lng) */
+      /* Pill - all positions from lat/lng (0,0) */
       .map-card-pill {
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
         display: flex;
         align-items: center;
         background-repeat: no-repeat;
       }
       
-      /* Small pill state - left edge at -20px, labels start at +20px */
+      /* Small pill: left at -20, labels at +20 */
       .map-card-small {
         left: -20px;
+        top: -${SMALL_PILL_HEIGHT / 2}px;
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
         padding-left: 40px;
@@ -566,9 +571,10 @@
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
       }
       
-      /* Hover pill state - same as small */
+      /* Hover pill: same as small */
       .map-card-hover {
         left: -20px;
+        top: -${SMALL_PILL_HEIGHT / 2}px;
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
         padding-left: 40px;
@@ -576,9 +582,10 @@
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
       }
       
-      /* Big pill state - left edge at -30px, labels start at +30px */
+      /* Big pill: left at -30, labels at +30 */
       .map-card-big {
         left: -30px;
+        top: -${BIG_PILL_HEIGHT / 2}px;
         width: ${BIG_PILL_WIDTH}px;
         height: ${BIG_PILL_HEIGHT}px;
         padding-left: 60px;
