@@ -222,10 +222,10 @@
     const subcategoryMarkers = window.subcategoryMarkers || {};
     const adminSettings = window.adminSettings || {};
     
-    // Multi-post markers use the multi-post icon
+    // Multi-post markers use the multi-post icon (check subcategoryMarkers first - it's updated immediately)
     if (post.isMultiPost) {
-      return adminSettings.multi_post_icon || 
-             subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || 
+      return subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || 
+             adminSettings.multi_post_icon || 
              'assets/system-images/multi-post-icon-30.webp';
     }
     
@@ -392,6 +392,10 @@
       cardEl.classList.remove('map-card-small', 'map-card-hover', 'map-card-big');
       cardEl.classList.add(`map-card-${newState}`);
       cardEl.setAttribute('data-state', newState);
+      
+      // Update inline background-image to match new state
+      const pillUrl = getPillUrl(newState);
+      cardEl.style.backgroundImage = `url('${pillUrl}')`;
       
       // Update icon size for big state
       const iconEl = cardEl.querySelector('.map-card-icon');

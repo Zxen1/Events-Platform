@@ -1498,14 +1498,21 @@ let __notifyMapOnInteraction = null;
                         }
                       }
                     } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
-                      // Refresh map card styles with new pill from DB
-                      window.MapCardComposites.clearMarkerLabelPillSpriteCache();
+                      // Update window.adminSettings immediately for instant effect
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings[picker.settingKey] = value;
+                      // Refresh map card styles
+                      if(window.MapCards && window.MapCards.refreshMapCardStyles){
+                        window.MapCards.refreshMapCardStyles();
+                      }
                     } else if(picker.settingKey === 'multi_post_icon'){
-                      // Refresh marker icons
+                      // Update both stores immediately
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings.multi_post_icon = value;
                       if(window.subcategoryMarkers){
                         window.subcategoryMarkers['multi-post-icon'] = value;
                       }
-                      window.MapCardComposites.clearMarkerLabelPillSpriteCache();
+                      // Refresh marker icons
                       if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
                         window.MapCards.refreshAllMarkerIcons();
                       }
