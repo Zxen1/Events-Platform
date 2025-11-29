@@ -862,7 +862,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
 
         // Load field_type_edits JSON if available
         $fieldTypeEdits = [];
-        if ($hasFieldTypeEdits && isset($sub['field_type_edits']) && is_array($sub['field_type_edits'])) {
+        if (isset($sub['field_type_edits']) && is_array($sub['field_type_edits'])) {
             $fieldTypeEdits = $sub['field_type_edits'];
         }
         
