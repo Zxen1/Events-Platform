@@ -13095,6 +13095,14 @@ function makePosts(){
               }
               
               
+              // Debug: log what we have
+              console.log('[Admin Checkout Edit Panel]', {
+                fieldKey: safeField.key,
+                fieldTypeKey: safeField.fieldTypeKey,
+                checkoutOptions: safeField.checkoutOptions,
+                originalField: field ? { checkoutOptions: field.checkoutOptions } : null
+              });
+              
               // Ensure we have 3 slots
               while(safeField.checkoutOptions.length < 3){
                 safeField.checkoutOptions.push('');
