@@ -22778,22 +22778,6 @@ form.addEventListener('input', formChangedWrapper, true);
     }
 
     // Only save form data if there's actual form data (not just empty object)
-    // Debug: log checkout options in payload
-    if(payload && payload.categories){
-      payload.categories.forEach(cat => {
-        if(cat.subs){
-          cat.subs.forEach(sub => {
-            if(sub.fields){
-              sub.fields.forEach(field => {
-                if((field.type === 'checkout' || field.fieldTypeKey === 'checkout') && field.checkoutOptions){
-                  console.log(`[Save Debug] Subcategory "${sub.name}" checkout field has checkoutOptions:`, field.checkoutOptions);
-                }
-              });
-            }
-          });
-        }
-      });
-    }
     let response;
     try {
       // Only send form data if there's something to save
