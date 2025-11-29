@@ -1216,7 +1216,8 @@ let __notifyMapOnInteraction = null;
 
   const MARKER_LABEL_BG_ID = 'small-map-card-pill';
   const MARKER_LABEL_BG_ACCENT_ID = 'big-map-card-pill';
-  const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-pill', 'big-map-card-pill'];
+  // Old layers are now hidden - using composite layers instead
+  const VISIBLE_MARKER_LABEL_LAYERS = ['small-map-card-composite', 'big-map-card-composite'];
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
@@ -1613,8 +1614,10 @@ let __notifyMapOnInteraction = null;
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
     const POINTER_READY_IDS = new Set([
-      'small-map-card-pill',
-      'big-map-card-pill',
+      'small-map-card-pill', // Obsolete but kept for cleanup
+      'big-map-card-pill', // Obsolete but kept for cleanup
+      'small-map-card-composite', // Active composite layer
+      'big-map-card-composite', // Active composite layer
       'post-balloons'
     ]);
 
@@ -1962,22 +1965,8 @@ let __notifyMapOnInteraction = null;
                         console.log('[Pill Update] Starting update for', picker.settingKey, 'with URLs:', { baseUrl, accentUrl, hoverUrl });
                         
                         if(baseUrl && accentUrl){
-                          
-                          // Remove old base sprites FIRST (before loading new images)
-                          try {
-                            if(mapInstance.hasImage('small-map-card-pill')){
-                              mapInstance.removeImage('small-map-card-pill');
-                              console.log('[Pill Update] Removed old small-map-card-pill');
-                            }
-                            if(mapInstance.hasImage('big-map-card-pill')){
-                              mapInstance.removeImage('big-map-card-pill');
-                              console.log('[Pill Update] Removed old big-map-card-pill');
-                            }
-                          } catch(e) {
-                            console.error('[Pill Update] Error removing old sprites:', e);
-                          }
-                          
                           // Load images directly with updated values
+                          // Note: Old sprites will be removed by map.js function before adding new ones
                           console.log('[Pill Update] Loading images from:', { baseUrl, accentUrl, hoverUrl });
                           const [baseImg, accentImg, hoverImg] = await Promise.all([
                             loadMarkerLabelImage(baseUrl),
@@ -2043,113 +2032,19 @@ let __notifyMapOnInteraction = null;
                             hover: hoverSprite || accentSprite || baseSprite
                           };
                           
-                          // Add new sprites to map - ALWAYS remove existing first to prevent dimension mismatch
-                          if(baseSprite && baseSprite.image){
-                            try {
-                              // CRITICAL: Always remove existing image first to prevent RangeError: mismatched image size
-                              if(mapInstance.hasImage('small-map-card-pill')){
-                                try {
-                                  mapInstance.removeImage('small-map-card-pill');
-                                } catch(err){
-                                  // Ignore removal errors
-                                }
-                              }
-                              
-                              const imageToAdd = convertImageDataToCanvas(baseSprite.image);
-                              if(imageToAdd){
-                                const width = imageToAdd.width || 0;
-                                const height = imageToAdd.height || 0;
-                                if(width > 0 && height > 0){
-                                  mapInstance.addImage('small-map-card-pill', imageToAdd, baseSprite.options || { pixelRatio: 1 });
-                                  console.log('[Pill Update] Added new small-map-card-pill sprite', width, 'x', height);
-                                } else {
-                                  console.error('[Pill Update] Invalid dimensions for base sprite:', width, 'x', height);
-                                }
-                              } else {
-                                console.error('[Pill Update] Failed to convert baseSprite ImageData to Canvas');
-                              }
-                            } catch(e) {
-                              console.error('[Pill Update] Error adding small-map-card-pill sprite:', e);
-                            }
-                          } else {
-                            console.error('[Pill Update] baseSprite is invalid:', baseSprite);
+                          // Use map.js function to add updated pill sprites
+                          if(window.MapCardComposites && typeof window.MapCardComposites.addPillSpritesToMap === 'function'){
+                            window.MapCardComposites.addPillSpritesToMap(mapInstance, {
+                              base: baseSprite,
+                              highlight: accentSprite,
+                              hover: hoverSprite
+                            }, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
                           }
                           
-                          if(accentSprite && accentSprite.image){
-                            try {
-                              // CRITICAL: Always remove existing image first to prevent RangeError: mismatched image size
-                              if(mapInstance.hasImage('big-map-card-pill')){
-                                try {
-                                  mapInstance.removeImage('big-map-card-pill');
-                                } catch(err){
-                                  // Ignore removal errors
-                                }
-                              }
-                              
-                              const imageToAdd = convertImageDataToCanvas(accentSprite.image);
-                              if(imageToAdd){
-                                const width = imageToAdd.width || 0;
-                                const height = imageToAdd.height || 0;
-                                if(width > 0 && height > 0){
-                                  mapInstance.addImage('big-map-card-pill', imageToAdd, accentSprite.options || { pixelRatio: 1 });
-                                  console.log('[Pill Update] Added new big-map-card-pill sprite', width, 'x', height);
-                                } else {
-                                  console.error('[Pill Update] Invalid dimensions for accent sprite:', width, 'x', height);
-                                }
-                              } else {
-                                console.error('[Pill Update] Failed to convert accentSprite ImageData to Canvas');
-                              }
-                            } catch(e) {
-                              console.error('[Pill Update] Error adding big-map-card-pill sprite:', e);
-                            }
-                          } else {
-                            console.error('[Pill Update] accentSprite is invalid:', accentSprite);
-                          }
-                          
-                          // Force map to recognize new sprites by updating layer properties
-                          try {
-                            const smallPillLayer = mapInstance.getLayer('small-map-card-pill');
-                            if(smallPillLayer){
-                              // Small pill always uses 'small-map-card-pill' sprite (never switches)
-                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-image', 'small-map-card-pill');
-                              // Also force opacity refresh
-                              const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-                              const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-                              const smallPillOpacity = mapCardDisplay === 'hover_only' 
-                                ? ['case', highlightedStateExpression, 1, 0]
-                                : 1;
-                              mapInstance.setLayoutProperty('small-map-card-pill', 'icon-opacity', smallPillOpacity);
-                              console.log('[Pill Update] Updated small-map-card-pill layer properties');
-                            } else {
-                              console.warn('[Pill Update] small-map-card-pill layer not found');
-                            }
-                            
-                            const bigPillLayer = mapInstance.getLayer('big-map-card-pill');
-                            if(bigPillLayer){
-                              mapInstance.setLayoutProperty('big-map-card-pill', 'icon-image', 'big-map-card-pill');
-                              // Big pill only shows when active (clicked/open), not on hover
-                              const activeStateExpression = ['boolean', ['feature-state', 'isActive'], false];
-                              const markerLabelHighlightOpacity = ['case', activeStateExpression, 1, 0];
-                              mapInstance.setLayoutProperty('big-map-card-pill', 'icon-opacity', markerLabelHighlightOpacity);
-                              console.log('[Pill Update] Updated big-map-card-pill layer properties');
-                            } else {
-                              console.warn('[Pill Update] big-map-card-pill layer not found');
-                            }
-                          } catch(e) {
-                            console.error('[Pill Update] Error updating layers:', e);
-                          }
-                          
-                          // Force style update to ensure sprites are recognized
-                          try {
-                            if(mapInstance.style && typeof mapInstance.style._update === 'function'){
-                              mapInstance.style._update();
-                            }
-                            // Also try triggering a repaint
-                            if(mapInstance.triggerRepaint){
-                              mapInstance.triggerRepaint();
-                            }
-                          } catch(e) {
-                            console.warn('[Pill Update] Could not update style:', e);
+                          // Update composite layer opacity if needed
+                          const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
+                          if(window.MapCardComposites && typeof window.MapCardComposites.updateMapCardLayerOpacity === 'function'){
+                            window.MapCardComposites.updateMapCardLayerOpacity(mapInstance, mapCardDisplay);
                           }
                           
                           // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
@@ -2532,8 +2427,8 @@ let __notifyMapOnInteraction = null;
                     // Update hover handlers - always use marker-icon only for precise hover zone
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance && typeof window.handleMarkerHover === 'function' && typeof window.handleMarkerHoverEnd === 'function'){
-                      // Remove old hover handlers from all possible layers
-                      const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+                      // Remove old hover handlers from all possible layers (including obsolete ones for cleanup)
+                      const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill', 'small-map-card-composite', 'big-map-card-composite'];
                       allPossibleLayers.forEach(layer => {
                         try {
                           mapInstance.off('mouseenter', layer, window.handleMarkerHover);
@@ -3183,7 +3078,7 @@ let __notifyMapOnInteraction = null;
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
     let hoveredPostIds = [];
-    // Function to update icon-size for big-map-card-pill layer based on click/open state
+    // Function to update feature states (isExpanded, isActive) for map card composites based on click/open state
     function updateMarkerLabelHighlightIconSize(){
       if(!map || typeof map.setFeatureState !== 'function') return;
       
@@ -19877,8 +19772,8 @@ function makePosts(){
         };
       // Attach click handlers to interactive layers (dynamic based on mapCardDisplay)
       const attachClickHandlers = () => {
-        // Remove old handlers from all possible layers
-        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+        // Remove old handlers from all possible layers (including obsolete ones for cleanup)
+        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill', 'small-map-card-composite', 'big-map-card-composite'];
         allPossibleLayers.forEach(layer => {
           try {
             map.off('click', layer, handleMarkerClick);
@@ -19987,8 +19882,8 @@ function makePosts(){
         map.getCanvas().style.cursor = 'grab';
       };
       const attachCursorHandlers = () => {
-        // Remove only our cursor handlers from all possible layers
-        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill'];
+        // Remove only our cursor handlers from all possible layers (including obsolete ones for cleanup)
+        const allPossibleLayers = ['mapmarker-icon', 'small-map-card-pill', 'big-map-card-pill', 'small-map-card-composite', 'big-map-card-composite'];
         allPossibleLayers.forEach(layer => {
           try {
             map.off('mouseenter', layer, cursorEnterHandler);
