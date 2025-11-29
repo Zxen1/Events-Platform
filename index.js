@@ -2729,9 +2729,11 @@ let __notifyMapOnInteraction = null;
         const openEl = document.querySelector('.post-board .open-post[data-id]');
         fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
       }
+      // Use window.hoveredPostIds if set (from map.js), otherwise local variable
+      const currentHoveredIds = Array.isArray(window.hoveredPostIds) ? window.hoveredPostIds : hoveredPostIds;
       const idsToHighlight = Array.from(new Set([
         fallbackId,
-        ...hoveredPostIds.map(entry => entry.id)
+        ...currentHoveredIds.map(entry => entry.id)
       ].filter(Boolean)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
@@ -2764,7 +2766,7 @@ let __notifyMapOnInteraction = null;
         }
       });
       // Also include hovered posts with their venue keys
-      hoveredPostIds.forEach(entry => {
+      currentHoveredIds.forEach(entry => {
         if(!entry || !entry.id) return;
         const strId = String(entry.id);
         const normalizedVenue = entry.venueKey ? String(entry.venueKey).trim() : '';
@@ -2783,6 +2785,7 @@ let __notifyMapOnInteraction = null;
       if(!postcard || !postcard.dataset || !postcard.dataset.id) return;
       const id = String(postcard.dataset.id);
       hoveredPostIds = [{ id: id, venueKey: null }];
+      window.hoveredPostIds = hoveredPostIds;
       syncPostCardHighlights();
       // Sync map card hover state (use findMarkerByPostId for multi-post support)
       if(window.MapCards){
@@ -2801,6 +2804,7 @@ let __notifyMapOnInteraction = null;
       if(!relatedTarget || !postcard.contains(relatedTarget)){
         const id = postcard.dataset.id;
         hoveredPostIds = [];
+        window.hoveredPostIds = hoveredPostIds;
         syncPostCardHighlights();
         // Remove map card hover state (use findMarkerByPostId for multi-post support)
         if(window.MapCards && id){
@@ -2811,6 +2815,10 @@ let __notifyMapOnInteraction = null;
         }
       }
     };
+    
+    // Expose hover state and sync function to window for map.js access
+    window.hoveredPostIds = hoveredPostIds;
+    window.syncPostCardHighlights = syncPostCardHighlights;
     
     // Add postcard hover handlers using event delegation on .post-board
     const postsWideElForHover = document.querySelector('.post-board');
