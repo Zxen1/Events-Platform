@@ -3357,23 +3357,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return sanitized;
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
-    // Debug: check if initial snapshot fields have checkoutOptions
-    if(Array.isArray(categories)){
-      categories.forEach(cat => {
-        if(cat && cat.subFields){
-          Object.keys(cat.subFields).forEach(subKey => {
-            const fields = cat.subFields[subKey];
-            if(Array.isArray(fields)){
-              fields.forEach(field => {
-                if((field && field.type === 'checkout') || (field && field.fieldTypeKey === 'checkout')){
-                  console.log('[Initial Snapshot] Field has checkoutOptions:', field.checkoutOptions, 'for subcategory:', subKey);
-                }
-              });
-            }
-          });
-        }
-      });
-    }
     // versionPriceCurrencies now come from backend via currency field options
     window.currencyCodes = Array.isArray(initialFormbuilderSnapshot.versionPriceCurrencies) ? initialFormbuilderSnapshot.versionPriceCurrencies : [];
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
@@ -13658,15 +13641,7 @@ function makePosts(){
           }
 
           const createFieldRow = (field)=>{
-            // Debug: check if field has checkoutOptions when creating row
-            if((field && field.type === 'checkout') || (field && field.fieldTypeKey === 'checkout')){
-              console.log('[createFieldRow] Checkout field has checkoutOptions:', field.checkoutOptions);
-            }
             const safeField = ensureFieldDefaults(field);
-            // Debug: check if safeField preserved checkoutOptions
-            if((safeField && safeField.type === 'checkout') || (safeField && safeField.fieldTypeKey === 'checkout')){
-              console.log('[createFieldRow] safeField checkoutOptions after ensureFieldDefaults:', safeField.checkoutOptions);
-            }
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
 
@@ -14722,21 +14697,6 @@ function makePosts(){
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
       }
-      // Debug: check if fields have checkoutOptions after cloning
-      categories.forEach(cat => {
-        if(cat && cat.subFields){
-          Object.keys(cat.subFields).forEach(subKey => {
-            const fields = cat.subFields[subKey];
-            if(Array.isArray(fields)){
-              fields.forEach(field => {
-                if((field && field.type === 'checkout') || (field && field.fieldTypeKey === 'checkout')){
-                  console.log('[restoreFormbuilderSnapshot] Field after clone has checkoutOptions:', field.checkoutOptions, 'for subcategory:', subKey);
-                }
-              });
-            }
-          });
-        }
-      });
       categories.forEach(cat => {
         if(!cat || typeof cat !== 'object') return;
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){

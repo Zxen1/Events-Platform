@@ -456,14 +456,17 @@
       if(!snapshot || typeof snapshot !== 'object'){
         throw new Error('Invalid snapshot provided to applyMemberSnapshot');
       }
+      // Normalize snapshot to get all data (icon paths, etc.)
+      const normalized = normalizeFormbuilderSnapshot(snapshot);
+      memberSnapshot = normalized;
+      
       // Use already-restored categories from window.categories if available (they have checkoutOptions preserved)
-      // Otherwise normalize the snapshot
+      // Otherwise use normalized categories
       if(window.categories && Array.isArray(window.categories) && window.categories.length > 0){
         memberCategories = window.categories;
-        memberSnapshot = snapshot; // Keep original snapshot for other data
+        // Update memberSnapshot.categories to match (for consistency)
+        memberSnapshot.categories = window.categories;
       } else {
-        const normalized = normalizeFormbuilderSnapshot(snapshot);
-        memberSnapshot = normalized;
         memberCategories = Array.isArray(memberSnapshot.categories) ? memberSnapshot.categories : [];
       }
       currencyCodes = collectCurrencyCodes(memberSnapshot);
@@ -649,6 +652,15 @@
                 return '';
               })
             : [];
+        }
+        
+        // Preserve checkoutOptions for checkout fields
+        if(safe.type === 'checkout' || field.type === 'checkout' || field.fieldTypeKey === 'checkout'){
+          if(Array.isArray(field.checkoutOptions)){
+            safe.checkoutOptions = field.checkoutOptions.slice();
+          } else {
+            safe.checkoutOptions = [];
+          }
         }
       }
       return safe;
