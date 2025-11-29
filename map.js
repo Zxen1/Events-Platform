@@ -556,32 +556,32 @@
         background-repeat: no-repeat;
       }
       
-      /* Small pill state - left edge 20px left of lat/lng */
+      /* Small pill state - left edge at -20px, labels start at +20px */
       .map-card-small {
         left: -20px;
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
-        padding-left: ${SMALL_ICON_SIZE + 5}px;
+        padding-left: 40px;
         background-image: url('${smallPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
       }
       
-      /* Hover pill state - same positioning as small */
+      /* Hover pill state - same as small */
       .map-card-hover {
         left: -20px;
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
-        padding-left: ${SMALL_ICON_SIZE + 5}px;
+        padding-left: 40px;
         background-image: url('${hoverPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
       }
       
-      /* Big pill state - left edge 30px left of lat/lng */
+      /* Big pill state - left edge at -30px, labels start at +30px */
       .map-card-big {
         left: -30px;
         width: ${BIG_PILL_WIDTH}px;
         height: ${BIG_PILL_HEIGHT}px;
-        padding-left: ${BIG_ICON_SIZE + 5}px;
+        padding-left: 60px;
         background-image: url('${bigPillUrl}');
         background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
       }
