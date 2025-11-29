@@ -162,6 +162,40 @@
   
   // ==================== MAP CARD CREATION ====================
   
+  // Admin settings cache
+  let adminSettingsLoaded = false;
+  let adminSettingsPromise = null;
+  
+  /**
+   * Load admin settings from server
+   * @returns {Promise<Object>} Admin settings object
+   */
+  function loadAdminSettings() {
+    if (adminSettingsPromise) return adminSettingsPromise;
+    
+    adminSettingsPromise = fetch('/gateway.php?action=get-admin-settings')
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to load admin settings');
+        return response.json();
+      })
+      .then(data => {
+        if (data.success && data.settings) {
+          window.adminSettings = data.settings;
+          adminSettingsLoaded = true;
+          return data.settings;
+        }
+        throw new Error('Invalid admin settings response');
+      })
+      .catch(err => {
+        console.warn('[MapCards] Failed to load admin settings:', err);
+        window.adminSettings = {};
+        adminSettingsLoaded = true;
+        return {};
+      });
+    
+    return adminSettingsPromise;
+  }
+  
   /**
    * Get pill image URL based on state
    * @param {string} state - 'small', 'hover', or 'big'
@@ -270,6 +304,55 @@
       lat
     };
     mapCardMarkers.set(post.id, entry);
+    
+    // Attach hover handlers
+    el.addEventListener('mouseenter', () => {
+      if (entry.state !== 'big') {
+        setMapCardHover(post.id);
+        // Trigger global hover update
+        if (window.hoveredPostIds !== undefined) {
+          window.hoveredPostIds = [{ id: String(post.id), venueKey: null }];
+        }
+        if (typeof window.updateSelectedMarkerRing === 'function') {
+          window.updateSelectedMarkerRing();
+        }
+      }
+    });
+    
+    el.addEventListener('mouseleave', () => {
+      if (entry.state !== 'big') {
+        removeMapCardHover(post.id);
+        // Clear global hover
+        if (window.hoveredPostIds !== undefined) {
+          window.hoveredPostIds = [];
+        }
+        if (typeof window.updateSelectedMarkerRing === 'function') {
+          window.updateSelectedMarkerRing();
+        }
+      }
+    });
+    
+    // Attach click handler
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      // Set active state
+      setMapCardActive(post.id);
+      
+      // Update global state
+      if (window.activePostId !== undefined) {
+        window.activePostId = post.id;
+      }
+      
+      // Open the post
+      if (typeof window.openPost === 'function') {
+        window.openPost(post.id, false, true, null);
+      } else if (window.callWhenDefined && typeof window.callWhenDefined === 'function') {
+        window.callWhenDefined('openPost', (fn) => {
+          fn(post.id, false, true, null);
+        });
+      }
+    });
     
     return entry;
   }
@@ -504,6 +587,7 @@
     refreshMapCardStyles,
     getPillUrl,
     getIconUrl,
+    loadAdminSettings,
     
     // Constants
     MULTI_POST_MARKER_ICON_ID,
@@ -513,11 +597,16 @@
     BIG_PILL_HEIGHT
   };
   
-  // Auto-inject styles when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectMapCardStyles);
-  } else {
+  // Load admin settings and inject styles when DOM is ready
+  async function initMapCards() {
+    await loadAdminSettings();
     injectMapCardStyles();
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMapCards);
+  } else {
+    initMapCards();
   }
 
   // ==================== COMPATIBILITY LAYER ====================
@@ -542,13 +631,16 @@
     VISIBLE_MARKER_LABEL_LAYERS: [],
     MULTI_POST_MARKER_ICON_ID: MULTI_POST_MARKER_ICON_ID,
     
-    // Stub functions that do nothing (old composite system not used)
+    // Stub functions - old composite system replaced by Markers
     loadMarkerLabelImage: function() { return Promise.resolve(null); },
     convertImageDataToCanvas: function() { return null; },
     buildMarkerLabelPillSprite: function() { return null; },
     ensureMarkerLabelPillSprites: function() { return Promise.resolve(null); },
     generateMarkerImageFromId: function() { return null; },
-    clearMarkerLabelPillSpriteCache: function() {},
+    clearMarkerLabelPillSpriteCache: function() {
+      // When pills change, refresh the CSS
+      refreshMapCardStyles();
+    },
     addPillSpritesToMap: function() {},
     updateMapCardLayerOpacity: function() {},
     createMapCardCompositeLayers: function() {},

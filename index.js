@@ -18645,22 +18645,39 @@ function makePosts(){
       }
       const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       
-      // Create composite sprites for features BEFORE setting source data
-      // This allows us to add compositeId to feature properties
-      const zoomForComposites = typeof map.getZoom === 'function' ? map.getZoom() : 0;
-      if(Number.isFinite(zoomForComposites) && zoomForComposites >= MARKER_ZOOM_THRESHOLD){
+      // NEW MARKER SYSTEM: Create DOM Markers instead of composites
+      // Clear existing markers first
+      if(window.MapCards && typeof window.MapCards.clearAllMapCardMarkers === 'function'){
+        window.MapCards.clearAllMapCardMarkers();
+      }
+      
+      // Create markers for visible features at zoom >= 8
+      const currentZoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      if(Number.isFinite(currentZoom) && currentZoom >= MARKER_ZOOM_THRESHOLD && window.MapCards){
         const featuresToProcess = Array.isArray(postsData.features) ? postsData.features : [];
         
-        // Use map.js function to create composites (NO FALLBACKS)
-        const compositePromises = window.MapCardComposites.createMapCardCompositesForFeatures(
-          map, 
-          featuresToProcess, 
-          MULTI_POST_MARKER_ICON_ID, 
-          MARKER_ZOOM_THRESHOLD
-        );
-        
-        // Wait for composites (limit to avoid blocking - 200 features = 600 composites max)
-        await Promise.allSettled(compositePromises.slice(0, 600));
+        featuresToProcess.forEach(feature => {
+          if(!feature || !feature.properties || feature.properties.point_count) return;
+          
+          const props = feature.properties;
+          const coords = feature.geometry && feature.geometry.coordinates;
+          if(!Array.isArray(coords) || coords.length < 2) return;
+          
+          const post = {
+            id: props.id,
+            title: props.title || '',
+            sub: props.sub || null,
+            venue: props.venue || '',
+            city: props.city || '',
+            isMultiPost: props.isMultiPost || false,
+            locations: props.locations || []
+          };
+          
+          window.MapCards.createMapCardMarker(map, post, {
+            lng: coords[0],
+            lat: coords[1]
+          });
+        });
       }
       
       const existing = map.getSource('posts');
@@ -18718,53 +18735,18 @@ function makePosts(){
         }
       }
       
-      // Ensure pill sprites are loaded before creating layers (NO FALLBACKS)
-      // Use map.js function
-      const pillSprites = await window.MapCardComposites.ensureMarkerLabelPillSprites();
-      
-      // Always ensure sprites are added to map (only add if they don't exist to avoid redundant operations)
-      // CRITICAL: Mapbox requires Image/Canvas objects, not ImageData
-      if(!pillSprites){
-        throw new Error('[addPostSource] CRITICAL: pillSprites is null/undefined - pills will not be visible!');
-      }
-      if(!pillSprites.base){
-        throw new Error('[addPostSource] CRITICAL: pillSprites.base is null/undefined - small pills will not be visible!');
-      }
-      if(!pillSprites.highlight){
-        throw new Error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
-      }
-      
-      // Use map.js function to add pill sprites (NO FALLBACKS)
-      window.MapCardComposites.addPillSpritesToMap(map, pillSprites, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
+      // NEW MARKER SYSTEM: Pills are CSS background-images, not Mapbox sprites
+      // No need to load pill sprites or create composite layers
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
-      // Use map.js function to create map card composite layers (NO FALLBACKS)
-      window.MapCardComposites.createMapCardCompositeLayers(map, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID, MARKER_MIN_ZOOM);
+      // Expose map instance getter
+      window.getMapInstance = () => map;
       
-      // Create marker-icon layer (NO FALLBACKS)
-      window.MapCardComposites.createMarkerIconLayer(map, MULTI_POST_MARKER_ICON_ID, MARKER_MIN_ZOOM);
-      
-      // Layer ordering will be set at the end after all layers are created
-      [
-        ['small-map-card-composite','icon-opacity-transition'],
-        ['big-map-card-composite','icon-opacity-transition']
-      ].forEach(([layer, prop])=>{
-        if(map.getLayer(layer)){
-          try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
-        }
-      });
-      
-      // Use map.js function for updateMapCardLayerOpacity (NO FALLBACKS)
-      const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      window.updateMapCardLayerOpacity = (displayMode) => {
-        window.MapCardComposites.updateMapCardLayerOpacity(map, displayMode);
+      // updateMapCardLayerOpacity is now a no-op (Markers use CSS)
+      window.updateMapCardLayerOpacity = function(displayMode) {
+        // Markers handle visibility via CSS, not Mapbox layer opacity
       };
-      window.updateMapCardLayerOpacity(mapCardDisplay);
-      window.getMapInstance = () => map; // Expose map instance getter
-      
-      // Use map.js function to order layers correctly (NO FALLBACKS)
-      window.MapCardComposites.orderMapLayers(map);
       
       if(!postSourceEventsBound){
 
