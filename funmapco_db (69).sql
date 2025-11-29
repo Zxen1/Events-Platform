@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 05:39 AM
+-- Generation Time: Nov 30, 2025 at 05:45 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -293,6 +293,24 @@ CREATE TABLE `checkout_options` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `checkout_options`
+--
+
+INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_price`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 0.00, 'USD', 30, 'standard', 0, 1, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 10.00, 'USD', 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 15.00, 'USD', 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 20.00, 'USD', 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 0.00, 'USD', 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 18.00, 'USD', 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 27.00, 'USD', 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 36.00, 'USD', 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 0.00, 'USD', 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 80.00, 'USD', 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 120.00, 'USD', 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
+(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 160.00, 'USD', 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21');
 
 -- --------------------------------------------------------
 
@@ -1072,7 +1090,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `checkout_options`
 --
 ALTER TABLE `checkout_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `commissions`
