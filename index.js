@@ -1928,7 +1928,7 @@ let __notifyMapOnInteraction = null;
                         
                         // If we don't have all required URLs, fetch from DB
                         if(!baseUrl || !accentUrl){
-                          console.log('[Pill Update] Missing URLs, fetching from DB...', { baseUrl, accentUrl, hoverUrl, settingKey: picker.settingKey });
+                          // Fetching pill URLs from DB
                           try {
                             const response = await fetch('/gateway.php?action=get-admin-settings');
                             if(response.ok){
@@ -1962,23 +1962,19 @@ let __notifyMapOnInteraction = null;
                           if(picker.settingKey === 'hover_map_card_pill') hoverUrl = value;
                         }
                         
-                        console.log('[Pill Update] Starting update for', picker.settingKey, 'with URLs:', { baseUrl, accentUrl, hoverUrl });
+                          // Starting pill update
                         
                         if(baseUrl && accentUrl){
                           // Load images directly with updated values
                           // Note: Old sprites will be removed by map.js function before adding new ones
-                          console.log('[Pill Update] Loading images from:', { baseUrl, accentUrl, hoverUrl });
+                          // Loading pill images
                           const [baseImg, accentImg, hoverImg] = await Promise.all([
                             loadMarkerLabelImage(baseUrl),
                             loadMarkerLabelImage(accentUrl),
                             hoverUrl ? loadMarkerLabelImage(hoverUrl).catch(() => null) : Promise.resolve(null)
                           ]);
                           
-                          console.log('[Pill Update] Images loaded:', { 
-                            baseImg: baseImg ? `${baseImg.width}x${baseImg.height}` : 'null',
-                            accentImg: accentImg ? `${accentImg.width}x${accentImg.height}` : 'null',
-                            hoverImg: hoverImg ? `${hoverImg.width}x${hoverImg.height}` : 'null'
-                          });
+                          // Pill images loaded
                           
                           // Validate images before building sprites
                           if(!baseImg || !baseImg.width || baseImg.height === 0){
@@ -2001,11 +1997,7 @@ let __notifyMapOnInteraction = null;
                           // Hover sprite: use hover image if available, otherwise use accent
                           const hoverSprite = hoverImg ? buildMarkerLabelPillSprite(hoverImg, null, 1, false) : accentSprite;
                           
-                          console.log('[Pill Update] Sprites built:', { 
-                            baseSprite: baseSprite ? (baseSprite.image ? 'valid' : 'missing image') : 'null',
-                            accentSprite: accentSprite ? (accentSprite.image ? 'valid' : 'missing image') : 'null',
-                            hoverSprite: hoverSprite ? (hoverSprite.image ? 'valid' : 'missing image') : 'null'
-                          });
+                          // Pill sprites built
                           
                           // Validate sprites before using
                           if(!baseSprite || !baseSprite.image){
@@ -2049,38 +2041,31 @@ let __notifyMapOnInteraction = null;
                           
                           // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
                           // Note: addPostSource will check if sprites exist and skip re-adding, so this is safe
-                          console.log('[Pill Update] Regenerating markers...');
+                          // Regenerating markers with new pill sprites
                           if(typeof window.addPostSource === 'function'){
                             try {
                               window.addPostSource();
-                              console.log('[Pill Update] Markers regenerated successfully');
                             } catch(e) {
                               console.error('[Pill Update] Error regenerating markers:', e);
                             }
                           } else if(typeof addPostSource === 'function'){
                             try {
                               addPostSource();
-                              console.log('[Pill Update] Markers regenerated successfully');
                             } catch(e) {
                               console.error('[Pill Update] Error regenerating markers:', e);
                             }
-                          } else {
-                            console.error('[Pill Update] addPostSource function not found!');
                           }
                         } else {
-                          console.warn('[Pill Update] Missing URLs:', { baseUrl, accentUrl });
+                          // Missing pill URLs
                         }
                       }
                       // Handle multi-post icon update
                       else if(picker.settingKey === 'multi_post_icon'){
-                        console.log('[Multi-Post Icon] Updating to:', value);
+                        // Updating multi-post icon
                         
                         // Update global reference
                         if(window.subcategoryMarkers){
                           window.subcategoryMarkers['multi-post-icon'] = value;
-                          console.log('[Multi-Post Icon] Updated window.subcategoryMarkers');
-                        } else {
-                          console.warn('[Multi-Post Icon] window.subcategoryMarkers not found!');
                         }
                         
                         // Remove old multi-post icon sprite if it exists
@@ -2088,10 +2073,9 @@ let __notifyMapOnInteraction = null;
                         try {
                           if(mapInstance.hasImage(MULTI_POST_MARKER_ICON_ID)){
                             mapInstance.removeImage(MULTI_POST_MARKER_ICON_ID);
-                            console.log('[Multi-Post Icon] Removed old sprite');
                           }
                         } catch(e) {
-                          console.warn('[Multi-Post Icon] Error removing old sprite:', e);
+                          // Error removing old sprite
                         }
                         
                         // Load and add new multi-post icon sprite
@@ -2125,23 +2109,19 @@ let __notifyMapOnInteraction = null;
                         }
                         
                         // Regenerate markers to use new multi-post icon (this will regenerate composite sprites)
-                        console.log('[Multi-Post Icon] Regenerating markers...');
+                        // Regenerating markers with new multi-post icon
                         if(typeof window.addPostSource === 'function'){
                           try {
                             window.addPostSource();
-                            console.log('[Multi-Post Icon] Markers regenerated successfully');
                           } catch(e) {
                             console.error('[Multi-Post Icon] Error regenerating markers:', e);
                           }
                         } else if(typeof addPostSource === 'function'){
                           try {
                             addPostSource();
-                            console.log('[Multi-Post Icon] Markers regenerated successfully');
                           } catch(e) {
                             console.error('[Multi-Post Icon] Error regenerating markers:', e);
                           }
-                        } else {
-                          console.error('[Multi-Post Icon] addPostSource function not found!');
                         }
                       }
                       
@@ -19046,7 +19026,7 @@ function makePosts(){
           try {
             window.MapCardComposites.clearMapCardComposites(map);
           } catch(err){
-            console.warn('[Zoom Cleanup] Error clearing composites:', err);
+            // Error clearing composites on zoom
           }
         }
         
@@ -19467,7 +19447,7 @@ function makePosts(){
           try {
             await Promise.allSettled(compositePromises.slice(0, 600));
           } catch(err){
-            console.warn('[addPostSource] Error creating composites:', err);
+            // Error creating composites
           }
         }
       }

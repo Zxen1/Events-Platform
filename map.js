@@ -132,7 +132,7 @@
     const { type, pillImage, labelText, iconImage, isMultiPost = false, thumbnailUrl = null } = options;
     
     if(!pillImage || !type){
-      console.error('[Composite] Missing required options:', { type, hasPill: !!pillImage });
+      // Missing required composite options
       return null;
     }
     
@@ -174,7 +174,7 @@
     canvas.height = canvasHeight;
     const ctx = canvas.getContext('2d');
     if(!ctx){
-      console.error('[Composite] Failed to get canvas context');
+      // Failed to get canvas context
       return null;
     }
     
@@ -198,7 +198,7 @@
         ctx.drawImage(pillImage, 0, 0, canvasWidth, canvasHeight);
       }
     } catch(err){
-      console.error('[Composite] Error drawing pill:', err);
+        // Error drawing pill
       return null;
     }
     
@@ -216,7 +216,7 @@
           ctx.drawImage(iconImage, iconDrawX, iconDrawY, iconDrawSize, iconDrawSize);
         }
       } catch(err){
-        console.error('[Composite] Error drawing icon:', err);
+        // Error drawing icon
         // Continue without icon
       }
     }
@@ -226,7 +226,7 @@
       try {
         drawCompositeText(ctx, labelText, labelX, labelY, labelMaxWidth, '#ffffff', textSize);
       } catch(err){
-        console.error('[Composite] Error drawing text:', err);
+        // Error drawing text
         // Continue without text
       }
     }
@@ -236,7 +236,7 @@
     try {
       imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
     } catch(err){
-      console.error('[Composite] Error getting ImageData:', err);
+      // Error getting ImageData
       return null;
     }
     
@@ -286,7 +286,7 @@
           }
           markerLabelCompositeStore.delete(entry.spriteId);
         } catch(err){
-          console.warn('[Composite Budget] Error removing composite:', err);
+          // Error removing composite from budget
         }
       }
     }
@@ -303,7 +303,7 @@
   async function loadCompositeIcon(iconId, type, thumbnailUrl, isMultiPost){
     // Access loadMarkerLabelImage from global scope (defined in index.js)
     if(typeof loadMarkerLabelImage !== 'function'){
-      console.error('[Composite] loadMarkerLabelImage not available');
+      // loadMarkerLabelImage not available
       return null;
     }
     
@@ -312,7 +312,7 @@
       try {
         return await loadMarkerLabelImage(thumbnailUrl);
       } catch(err){
-        console.warn('[Composite] Failed to load thumbnail, falling back to icon:', err);
+        // Failed to load thumbnail, falling back to icon
       }
     }
     
@@ -322,7 +322,7 @@
       try {
         return await loadMarkerLabelImage(iconUrl);
       } catch(err){
-        console.warn('[Composite] Failed to load icon:', err);
+        // Failed to load icon
       }
     }
     
@@ -351,21 +351,21 @@
     const { type, labelText, iconId, isMultiPost = false, thumbnailUrl = null, keepRelated = [] } = options;
     
     if(!mapInstance || !type || !labelText || !iconId){
-      console.error('[Composite] Missing required parameters:', { type, labelText, iconId });
+      // Missing required composite parameters
       return null;
     }
     
     // Access dependencies from global scope
     if(typeof ensureMarkerLabelPillSprites !== 'function'){
-      console.error('[Composite] ensureMarkerLabelPillSprites not available');
+      // ensureMarkerLabelPillSprites not available
       return null;
     }
     if(typeof convertImageDataToCanvas !== 'function'){
-      console.error('[Composite] convertImageDataToCanvas not available');
+      // convertImageDataToCanvas not available
       return null;
     }
     if(typeof nowTimestamp !== 'function'){
-      console.error('[Composite] nowTimestamp not available');
+      // nowTimestamp not available
       return null;
     }
     
@@ -467,7 +467,7 @@
                 }
                 mapInstance.addImage(compositeId, imageToAdd, composite.options || {});
               } catch(retryErr){
-                console.error('[Composite] Error adding composite image after retry:', retryErr);
+                // Error adding composite image after retry
                 throw retryErr;
               }
             }
@@ -489,7 +489,7 @@
         
         return { compositeId, spriteId, meta };
       } catch(err){
-        console.error('[Composite] Error creating composite:', err);
+        // Error creating composite
         throw err;
       } finally {
         markerLabelCompositePending.delete(spriteId);
@@ -518,7 +518,7 @@
         }
         markerLabelCompositeStore.delete(spriteId);
       } catch(err){
-        console.warn('[Composite Clear] Error removing composite:', err);
+        // Error removing composite during clear
       }
     }
     
@@ -577,7 +577,7 @@
         }
         return result;
       }).catch(err => {
-        console.warn('[MapCards] Failed to create base composite:', err);
+        // Failed to create base composite
         return null;
       });
       
@@ -595,7 +595,7 @@
         }
         return result;
       }).catch(err => {
-        console.warn('[MapCards] Failed to create hover composite:', err);
+        // Failed to create hover composite
         return null;
       });
       
@@ -613,7 +613,7 @@
         }
         return result;
       }).catch(err => {
-        console.warn('[MapCards] Failed to create big composite:', err);
+        // Failed to create big composite
         return null;
       });
       
@@ -637,7 +637,7 @@
     
     // Access convertImageDataToCanvas from global scope
     if(typeof convertImageDataToCanvas !== 'function'){
-      console.error('[MapCards] convertImageDataToCanvas not available');
+      // convertImageDataToCanvas not available
       return;
     }
     
@@ -662,13 +662,13 @@
           if(width > 0 && height > 0){
             mapInstance.addImage(MARKER_LABEL_BG_ID, imageToAdd);
           } else {
-            console.error('[MapCards] Invalid image dimensions for base sprite:', width, 'x', height);
+            // Invalid image dimensions for base sprite
           }
         } else {
-          console.error('[MapCards] Failed to convert base sprite ImageData to Canvas');
+          // Failed to convert base sprite ImageData to Canvas
         }
       }catch(e){
-        console.error('[MapCards] Error adding small-map-card-pill sprite:', e);
+        // Error adding small-map-card-pill sprite
       }
     }
     
@@ -693,13 +693,13 @@
           if(width > 0 && height > 0){
             mapInstance.addImage(MARKER_LABEL_BG_ACCENT_ID, imageToAdd);
           } else {
-            console.error('[MapCards] Invalid image dimensions for highlight sprite:', width, 'x', height);
+            // Invalid image dimensions for highlight sprite
           }
         } else {
-          console.error('[MapCards] Failed to convert highlight sprite ImageData to Canvas');
+          // Failed to convert highlight sprite ImageData to Canvas
         }
       }catch(e){
-        console.error('[MapCards] Error adding big-map-card-pill sprite:', e);
+        // Error adding big-map-card-pill sprite
       }
     }
     
@@ -723,13 +723,13 @@
           if(width > 0 && height > 0){
             mapInstance.addImage('hover-map-card-pill', imageToAdd);
           } else {
-            console.error('[MapCards] Invalid image dimensions for hover sprite:', width, 'x', height);
+            // Invalid image dimensions for hover sprite
           }
         } else {
-          console.error('[MapCards] Failed to convert hover sprite ImageData to Canvas');
+          // Failed to convert hover sprite ImageData to Canvas
         }
       }catch(e){
-        console.error('[MapCards] Error adding hover-map-card-pill sprite:', e);
+        // Error adding hover-map-card-pill sprite
       }
     }
   }
