@@ -432,6 +432,7 @@
   function setMapCardHover(postId) {
     const entry = mapCardMarkers.get(postId);
     if (!entry || entry.state === 'big') return; // Don't change if already active
+    entry.element.classList.add('is-hovered');
     updateMapCardState(postId, 'hover');
   }
   
@@ -442,6 +443,7 @@
   function removeMapCardHover(postId) {
     const entry = mapCardMarkers.get(postId);
     if (!entry || entry.state === 'big') return; // Don't change if active
+    entry.element.classList.remove('is-hovered');
     updateMapCardState(postId, 'small');
   }
   
@@ -541,6 +543,19 @@
       }
       .map-card-container:hover { z-index: 10; }
       .map-card-container.is-active { z-index: 100; }
+      
+      /* Hover Only Mode - hide cards unless hovered or active */
+      body[data-map-card-display="hover_only"] .map-card-container .map-card {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+      body[data-map-card-display="hover_only"] .map-card-container:hover .map-card,
+      body[data-map-card-display="hover_only"] .map-card-container.is-active .map-card,
+      body[data-map-card-display="hover_only"] .map-card-container.is-hovered .map-card {
+        opacity: 1;
+        pointer-events: auto;
+      }
       
       /* Map Card - pill background with icon + labels inside */
       .map-card {
