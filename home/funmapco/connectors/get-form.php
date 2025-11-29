@@ -971,6 +971,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // Add checkout options if available
                 if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
                     $builtField['checkoutOptions'] = $customCheckoutOptions;
+                    error_log("DEBUG get-form.php: Added checkoutOptions to field '{$builtField['key']}' for subcategory '{$sub['subcategory_key']}': " . json_encode($customCheckoutOptions));
+                } elseif ($isCheckout) {
+                    error_log("DEBUG get-form.php: Checkout field '{$builtField['key']}' for subcategory '{$sub['subcategory_key']}' has NO checkoutOptions. fieldEdit: " . json_encode($fieldEdit) . ", customCheckoutOptions: " . ($customCheckoutOptions !== null ? json_encode($customCheckoutOptions) : 'null'));
                 }
                 
                 $builtFields[] = $builtField;
