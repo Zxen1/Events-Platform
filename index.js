@@ -13094,16 +13094,6 @@ function makePosts(){
                 }
               }
               
-              // Debug: log field data to see what we're working with
-              if(safeField.checkoutOptions.length === 0 || safeField.checkoutOptions.every(v => !v || v === '')){
-                console.log('[Admin Checkout Field Debug]', {
-                  fieldType: safeField.type,
-                  fieldTypeKey: safeField.fieldTypeKey,
-                  checkoutOptions: safeField.checkoutOptions,
-                  options: safeField.options,
-                  fullField: safeField
-                });
-              }
               
               // Ensure we have 3 slots
               while(safeField.checkoutOptions.length < 3){
@@ -14602,8 +14592,13 @@ function makePosts(){
                 cloned.fields = field.fields;
               }
               // Preserve checkoutOptions for checkout field type
+              // Filter out empty strings - only send actual selections
               if(Array.isArray(field && field.checkoutOptions)){
-                cloned.checkoutOptions = field.checkoutOptions.slice();
+                const filtered = field.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
+                if(filtered.length > 0){
+                  cloned.checkoutOptions = filtered;
+                }
+                // If all empty, don't include checkoutOptions at all (let PHP handle empty case)
               }
               return cloned;
             });
