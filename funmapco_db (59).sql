@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 02:24 AM
+-- Generation Time: Nov 30, 2025 at 02:33 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -645,36 +645,20 @@ CREATE TABLE `moderation_log` (
 
 CREATE TABLE `posts` (
   `id` int(11) NOT NULL,
-  `subcategory_id` int(11) DEFAULT NULL,
-  `subcategory_name` varchar(255) DEFAULT NULL,
-  `member_id` int(11) DEFAULT NULL,
-  `member_name` varchar(255) DEFAULT NULL,
-  `title` varchar(255) DEFAULT NULL,
   `post_key` varchar(255) DEFAULT NULL,
-  `status` enum('active','expired','draft') DEFAULT 'active',
-  `moderation_status` enum('clean','blurred') DEFAULT 'clean',
+  `member_id` int(11) NOT NULL,
+  `member_name` varchar(255) DEFAULT NULL,
+  `subcategory_key` varchar(255) NOT NULL,
+  `status` enum('active','expired','draft') DEFAULT 'draft',
+  `moderation_status` enum('pending','clean','blurred','hidden') DEFAULT 'pending',
   `flag_reason` text DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `post_details`
---
-
-CREATE TABLE `post_details` (
-  `id` int(11) NOT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `post_title` varchar(255) DEFAULT NULL,
-  `field_id` int(11) DEFAULT NULL,
-  `field_key` varchar(255) DEFAULT NULL,
-  `value` text DEFAULT NULL,
+  `payment_plan` enum('free','standard','featured') DEFAULT 'free',
+  `paid_amount` decimal(10,2) DEFAULT 0.00,
+  `paid_currency` varchar(10) DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -953,16 +937,9 @@ ALTER TABLE `moderation_log`
 --
 ALTER TABLE `posts`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `subcategory_id` (`subcategory_id`),
-  ADD KEY `member_id` (`member_id`);
-
---
--- Indexes for table `post_details`
---
-ALTER TABLE `post_details`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `post_id` (`post_id`),
-  ADD KEY `field_id` (`field_id`);
+  ADD KEY `idx_member_id` (`member_id`),
+  ADD KEY `idx_subcategory_key` (`subcategory_key`),
+  ADD KEY `idx_status` (`status`,`moderation_status`);
 
 --
 -- Indexes for table `post_map_cards`
@@ -1112,12 +1089,6 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `post_details`
---
-ALTER TABLE `post_details`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
