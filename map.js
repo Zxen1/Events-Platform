@@ -520,4 +520,43 @@
     injectMapCardStyles();
   }
 
+  // ==================== COMPATIBILITY LAYER ====================
+  // Provide old window.MapCardComposites interface for index.js until it's updated
+  
+  window.MapCardComposites = {
+    // Text utilities (mapped to new functions)
+    ensureMarkerLabelMeasureContext: ensureMeasureContext,
+    markerLabelMeasureFont: measureFont,
+    shortenMarkerLabelText: shortenText,
+    splitTextAcrossLines: splitTextLines,
+    getPrimaryVenueName: getPrimaryVenueName,
+    getMarkerLabelLines: getMarkerLabelLines,
+    buildMarkerLabelText: function(p) {
+      const lines = getMarkerLabelLines(p);
+      return lines.line2 ? `${lines.line1}\n${lines.line2}` : lines.line1;
+    },
+    
+    // Constants
+    MARKER_LABEL_BG_ID: 'small-map-card-pill',
+    MARKER_LABEL_BG_ACCENT_ID: 'big-map-card-pill',
+    VISIBLE_MARKER_LABEL_LAYERS: [],
+    MULTI_POST_MARKER_ICON_ID: MULTI_POST_MARKER_ICON_ID,
+    
+    // Stub functions that do nothing (old composite system not used)
+    loadMarkerLabelImage: function() { return Promise.resolve(null); },
+    convertImageDataToCanvas: function() { return null; },
+    buildMarkerLabelPillSprite: function() { return null; },
+    ensureMarkerLabelPillSprites: function() { return Promise.resolve(null); },
+    generateMarkerImageFromId: function() { return null; },
+    clearMarkerLabelPillSpriteCache: function() {},
+    addPillSpritesToMap: function() {},
+    updateMapCardLayerOpacity: function() {},
+    createMapCardCompositeLayers: function() {},
+    createMarkerIconLayer: function() {},
+    orderMapLayers: function() {},
+    clearMapCardComposites: function() {},
+    createMapCardCompositesForFeatures: function() { return []; },
+    getMarkerInteractiveLayers: function() { return []; }
+  };
+
 })();
