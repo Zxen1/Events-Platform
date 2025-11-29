@@ -747,9 +747,10 @@ try {
                     $fieldTypeKey = $fieldTypeDef['key'] ?? null;
                     if (!$fieldTypeKey) continue;
                     
-                    // Check if this field type is editable
+                    // Check if this field type is editable (checkout is always editable for checkoutOptions)
                     $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
-                    if (!$isEditable) continue;
+                    $isCheckout = ($fieldTypeKey === 'checkout');
+                    if (!$isEditable && !$isCheckout) continue;
                     
                     // Find matching field data
                     $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
@@ -1414,6 +1415,23 @@ function sanitizeField(array $field): array
     }
     if (isset($field['helpText'])) {
         $safe['helpText'] = sanitizeString($field['helpText'], 512);
+    }
+    
+    // Include fieldTypeKey for matching during field_type_edits build
+    if (isset($field['fieldTypeKey'])) {
+        $safe['fieldTypeKey'] = sanitizeString($field['fieldTypeKey'], 128);
+    } elseif (isset($field['key'])) {
+        $safe['fieldTypeKey'] = sanitizeString($field['key'], 128);
+    }
+    
+    // Include checkoutOptions for checkout field type
+    if (isset($field['checkoutOptions']) && is_array($field['checkoutOptions'])) {
+        $safe['checkoutOptions'] = array_values(array_filter(
+            array_map(function($opt) {
+                return is_string($opt) ? trim($opt) : '';
+            }, $field['checkoutOptions']),
+            function($opt) { return $opt !== ''; }
+        ));
     }
 
     return $safe;

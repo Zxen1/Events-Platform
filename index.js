@@ -14561,6 +14561,10 @@ function makePosts(){
               if(Array.isArray(field && field.fields)){
                 cloned.fields = field.fields;
               }
+              // Preserve checkoutOptions for checkout field type
+              if(Array.isArray(field && field.checkoutOptions)){
+                cloned.checkoutOptions = field.checkoutOptions.slice();
+              }
               return cloned;
             });
           } else {
