@@ -3216,12 +3216,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       );
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
+      const normalizedCheckoutOptions = normalizeCheckoutOptions(snapshot && snapshot.checkout_options);
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        fieldTypes: normalizedFieldTypes
+        fieldTypes: normalizedFieldTypes,
+        checkoutOptions: normalizedCheckoutOptions
       };
     }
 
@@ -3369,6 +3371,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
     initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+    const CHECKOUT_OPTIONS = window.CHECKOUT_OPTIONS = Array.isArray(initialFormbuilderSnapshot.checkoutOptions)
+      ? initialFormbuilderSnapshot.checkoutOptions.map(opt => ({ ...opt }))
+      : [];
+    window.__formbuilderSnapshot = initialFormbuilderSnapshot;
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       if(!match){
@@ -3660,6 +3666,29 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return normalized;
     }
+
+    function normalizeCheckoutOptions(options){
+      if(!Array.isArray(options)){
+        return [];
+      }
+      return options.map(opt => {
+        if(!opt || typeof opt !== 'object'){
+          return null;
+        }
+        return {
+          id: typeof opt.id === 'number' ? opt.id : (parseInt(opt.id, 10) || 0),
+          checkout_key: typeof opt.checkout_key === 'string' ? opt.checkout_key : '',
+          checkout_title: typeof opt.checkout_title === 'string' ? opt.checkout_title : '',
+          checkout_description: typeof opt.checkout_description === 'string' ? opt.checkout_description : '',
+          checkout_price: typeof opt.checkout_price === 'number' ? opt.checkout_price : parseFloat(opt.checkout_price) || 0,
+          checkout_currency: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
+          checkout_duration_days: typeof opt.checkout_duration_days === 'number' ? opt.checkout_duration_days : parseInt(opt.checkout_duration_days, 10) || 30,
+          checkout_tier: typeof opt.checkout_tier === 'string' ? opt.checkout_tier : 'standard',
+          checkout_sidebar_ad: !!opt.checkout_sidebar_ad
+        };
+      }).filter(Boolean);
+    }
+
     function lookupIconPath(map, id, name){
       const idKey = toIconIdKey(id);
       if(idKey && Object.prototype.hasOwnProperty.call(map, idKey)){
@@ -8739,6 +8768,84 @@ function makePosts(){
             addressInput.setAttribute('aria-labelledby', labelId);
           }
           control = locationWrapper;
+        } else if(field.type === 'checkout' || baseType === 'checkout'){
+          wrapper.classList.add('form-field--checkout');
+          const checkoutGroup = document.createElement('div');
+          checkoutGroup.className = 'form-checkout-group';
+          const groupName = `${baseId}-checkout`;
+          
+          // Get selected checkout options from field.options or field.checkoutOptions
+          let selectedOptions = [];
+          if(Array.isArray(field.checkoutOptions)){
+            selectedOptions = field.checkoutOptions;
+          } else if(Array.isArray(field.options)){
+            selectedOptions = field.options;
+          }
+          
+          // Get all checkout options from global
+          const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
+          
+          // Filter to only show selected options (by checkout_key or id)
+          const optionsToShow = selectedOptions.length > 0
+            ? allCheckoutOptions.filter(opt => 
+                selectedOptions.some(sel => 
+                  (typeof sel === 'string' && sel === opt.checkout_key) ||
+                  (typeof sel === 'object' && (sel.checkout_key === opt.checkout_key || sel.id === opt.id))
+                )
+              )
+            : allCheckoutOptions.slice(0, 3);
+          
+          if(optionsToShow.length){
+            optionsToShow.forEach((option, optionIndex) => {
+              const radioLabel = document.createElement('label');
+              radioLabel.className = 'form-checkout-option';
+              
+              const radio = document.createElement('input');
+              radio.type = 'radio';
+              radio.name = groupName;
+              radio.value = option.checkout_key || '';
+              radio.id = `${baseId}-checkout-${optionIndex}`;
+              if(optionIndex === 0) radio.checked = true;
+              if(field.required && optionIndex === 0) radio.required = true;
+              
+              const optionContent = document.createElement('div');
+              optionContent.className = 'form-checkout-option-content';
+              
+              const titleRow = document.createElement('div');
+              titleRow.className = 'form-checkout-option-title';
+              
+              const titleText = document.createElement('span');
+              titleText.className = 'form-checkout-option-name';
+              titleText.textContent = option.checkout_title || 'Untitled';
+              
+              const priceText = document.createElement('span');
+              priceText.className = 'form-checkout-option-price';
+              const priceValue = parseFloat(option.checkout_price) || 0;
+              const currency = option.checkout_currency || 'USD';
+              priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
+              
+              titleRow.appendChild(titleText);
+              titleRow.appendChild(priceText);
+              optionContent.appendChild(titleRow);
+              
+              if(option.checkout_description){
+                const descText = document.createElement('div');
+                descText.className = 'form-checkout-option-description';
+                descText.textContent = option.checkout_description;
+                optionContent.appendChild(descText);
+              }
+              
+              radioLabel.appendChild(radio);
+              radioLabel.appendChild(optionContent);
+              checkoutGroup.appendChild(radioLabel);
+            });
+          } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'form-checkout-placeholder';
+            placeholder.textContent = 'No checkout options configured.';
+            checkoutGroup.appendChild(placeholder);
+          }
+          control = checkoutGroup;
         } else {
           const input = document.createElement('input');
           input.type = 'text';
@@ -12948,6 +13055,83 @@ function makePosts(){
               editMenu.append(dropdownOptionsContainer);
             }
 
+            // Checkout options editor
+            const checkoutOptionsContainer = document.createElement('div');
+            checkoutOptionsContainer.className = 'checkout-options-editor';
+            checkoutOptionsContainer.hidden = true;
+            const checkoutOptionsLabel = document.createElement('div');
+            checkoutOptionsLabel.className = 'checkout-options-label';
+            checkoutOptionsLabel.textContent = 'Checkout Options (select up to 3)';
+            const checkoutOptionsList = document.createElement('div');
+            checkoutOptionsList.className = 'checkout-options-list';
+            checkoutOptionsContainer.append(checkoutOptionsLabel, checkoutOptionsList);
+            editMenu.append(checkoutOptionsContainer);
+
+            const renderCheckoutOptionsEditor = ()=>{
+              checkoutOptionsList.innerHTML = '';
+              const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
+              
+              // Get current selected options from field
+              if(!Array.isArray(safeField.checkoutOptions)){
+                safeField.checkoutOptions = [];
+              }
+              
+              // Ensure we have 3 slots
+              while(safeField.checkoutOptions.length < 3){
+                safeField.checkoutOptions.push('');
+              }
+              
+              for(let i = 0; i < 3; i++){
+                const optionRow = document.createElement('div');
+                optionRow.className = 'checkout-option-row';
+                
+                const optionLabel = document.createElement('label');
+                optionLabel.textContent = `Option ${i + 1}:`;
+                optionLabel.className = 'checkout-option-label';
+                
+                const select = document.createElement('select');
+                select.className = 'checkout-option-select';
+                
+                // Add empty option
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = '-- Select --';
+                select.appendChild(emptyOption);
+                
+                // Add all checkout options
+                allCheckoutOptions.forEach(opt => {
+                  const option = document.createElement('option');
+                  option.value = opt.checkout_key || '';
+                  const priceDisplay = parseFloat(opt.checkout_price) > 0 
+                    ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
+                    : ' — Free';
+                  option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
+                  select.appendChild(option);
+                });
+                
+                // Set current value
+                const currentValue = safeField.checkoutOptions[i] || '';
+                select.value = currentValue;
+                
+                select.addEventListener('change', ()=>{
+                  safeField.checkoutOptions[i] = select.value;
+                  notifyFormbuilderChange();
+                  renderForm({
+                    formFields: formPreviewFields,
+                    formId: formPreviewId,
+                    fields: fields,
+                    categoryName: c && c.name,
+                    subcategoryName: sub,
+                    fieldIdCounter: formPreviewFieldIdCounter,
+                    formLabel: 'Form Preview'
+                  });
+                });
+                
+                optionRow.append(optionLabel, select);
+                checkoutOptionsList.appendChild(optionRow);
+              }
+            };
+
             let draggedOptionRow = null;
 
             const ensureDropdownSeeds = ()=>{
@@ -13182,6 +13366,7 @@ function makePosts(){
               const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
               const showVariantPricing = fieldTypeKey === 'variant-pricing';
               const showVenueSession = fieldTypeKey === 'venue-ticketing';
+              const showCheckout = fieldTypeKey === 'checkout';
               // Check if this field type is editable - must have a valid fieldTypeKey
               let isEditable = false;
               if(fieldTypeKey && fieldTypeKey !== ''){
@@ -13199,6 +13384,10 @@ function makePosts(){
                 notifyFormbuilderChange();
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
+              checkoutOptionsContainer.hidden = !showCheckout;
+              if(showCheckout){
+                renderCheckoutOptionsEditor();
+              }
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){

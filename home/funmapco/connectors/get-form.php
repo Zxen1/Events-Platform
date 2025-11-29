@@ -129,6 +129,17 @@ try {
         // Continue without fieldsets
     }
 
+    // Fetch checkout options from database
+    $checkoutOptions = [];
+    try {
+        $checkoutColumns = fetchTableColumns($pdo, 'checkout_options');
+        if ($checkoutColumns) {
+            $checkoutOptions = fetchCheckoutOptions($pdo);
+        }
+    } catch (PDOException $e) {
+        // Continue without checkout options
+    }
+
     // Load icon_folder from admin_settings
     $iconFolder = 'assets/icons-30'; // Default fallback
     try {
@@ -145,6 +156,7 @@ try {
     $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes, $iconFolder);
     $snapshot['fieldTypes'] = $fieldTypes;
     $snapshot['field_types'] = $fieldTypes;
+    $snapshot['checkout_options'] = $checkoutOptions;
 
     echo json_encode([
         'success' => true,
@@ -680,6 +692,34 @@ function fetchAllFieldsets(PDO $pdo, array $columns): array
     }
     
     return $fieldsets;
+}
+
+function fetchCheckoutOptions(PDO $pdo): array
+{
+    $checkoutOptions = [];
+    
+    try {
+        $stmt = $pdo->query("SELECT * FROM checkout_options WHERE is_active = 1 ORDER BY sort_order ASC, id ASC");
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $option = [
+                'id' => isset($row['id']) ? (int)$row['id'] : null,
+                'checkout_key' => isset($row['checkout_key']) ? (string)$row['checkout_key'] : '',
+                'checkout_title' => isset($row['checkout_title']) ? (string)$row['checkout_title'] : '',
+                'checkout_description' => isset($row['checkout_description']) ? (string)$row['checkout_description'] : '',
+                'checkout_price' => isset($row['checkout_price']) ? (float)$row['checkout_price'] : 0,
+                'checkout_currency' => isset($row['checkout_currency']) ? (string)$row['checkout_currency'] : 'USD',
+                'checkout_duration_days' => isset($row['checkout_duration_days']) ? (int)$row['checkout_duration_days'] : 30,
+                'checkout_tier' => isset($row['checkout_tier']) ? (string)$row['checkout_tier'] : 'standard',
+                'checkout_sidebar_ad' => isset($row['checkout_sidebar_ad']) ? (bool)$row['checkout_sidebar_ad'] : false,
+                'sort_order' => isset($row['sort_order']) ? (int)$row['sort_order'] : 0,
+            ];
+            $checkoutOptions[] = $option;
+        }
+    } catch (PDOException $e) {
+        // Return empty array on error
+    }
+    
+    return $checkoutOptions;
 }
 
 function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = [], string $iconFolder = 'assets/icons-30'): array
