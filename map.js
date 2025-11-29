@@ -926,6 +926,101 @@
     });
   }
   
+  /**
+   * Create the marker-icon layer for click/hover interactions
+   * @param {Object} mapInstance - Mapbox map instance
+   * @param {string} MULTI_POST_MARKER_ICON_ID - Multi-post icon ID
+   * @param {number} MARKER_MIN_ZOOM - Minimum zoom level
+   */
+  function createMarkerIconLayer(mapInstance, MULTI_POST_MARKER_ICON_ID, MARKER_MIN_ZOOM){
+    if(!mapInstance) return;
+    
+    const markerIconFilter = ['all',
+      ['!',['has','point_count']],
+      ['has','title']
+    ];
+    const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
+      ['case',
+        ['==', ['var','iconId'], ''],
+        MULTI_POST_MARKER_ICON_ID,
+        ['var','iconId']
+      ]
+    ];
+    const markerIconLayerId = 'mapmarker-icon';
+    
+    if(!mapInstance.getLayer(markerIconLayerId)){
+      try{
+        mapInstance.addLayer({
+          id: markerIconLayerId,
+          type:'symbol',
+          source:'posts',
+          filter: markerIconFilter,
+          minzoom: MARKER_MIN_ZOOM,
+          layout:{
+            'icon-image': markerIconImageExpression,
+            'icon-size': 1,
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'icon-anchor': 'center',
+            'icon-offset': [0, 0],
+            'icon-pitch-alignment': 'viewport',
+            'symbol-z-order': 'auto',
+            'symbol-sort-key': 8,
+            'visibility': 'visible'
+          },
+          paint:{
+            'icon-opacity': 1
+          }
+        });
+      }catch(e){}
+    }
+    
+    if(mapInstance.getLayer(markerIconLayerId)){
+      try{
+        // Only update properties that can change (filter and icon-image based on data)
+        mapInstance.setFilter(markerIconLayerId, markerIconFilter);
+        mapInstance.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
+      }catch(e){}
+    }
+  }
+  
+  /**
+   * Order map layers correctly (composites below icons)
+   * @param {Object} mapInstance - Mapbox map instance
+   */
+  function orderMapLayers(mapInstance){
+    if(!mapInstance) return;
+    
+    // Final layer ordering (bottom to top): composites -> icons
+    // Ensure marker-icon layer is visible and on top
+    if(mapInstance.getLayer('mapmarker-icon')){
+      try{
+        mapInstance.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
+        mapInstance.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
+        mapInstance.moveLayer('mapmarker-icon'); // Move icons to top
+      }catch(e){}
+    }
+    
+    // Move composite layers to be below icons
+    if(mapInstance.getLayer('small-map-card-composite')){
+      try{
+        if(mapInstance.getLayer('mapmarker-icon')){
+          mapInstance.moveLayer('small-map-card-composite', 'mapmarker-icon'); // Composites below icons
+        } else {
+          mapInstance.moveLayer('small-map-card-composite'); // Move to top if no icon layer
+        }
+      }catch(e){}
+    }
+    
+    if(mapInstance.getLayer('big-map-card-composite')){
+      try{
+        if(mapInstance.getLayer('mapmarker-icon')){
+          mapInstance.moveLayer('big-map-card-composite', 'mapmarker-icon'); // Composites below icons
+        }
+      }catch(e){}
+    }
+  }
+  
   // Expose functions globally
   window.MapCardComposites = {
     ensureMapCardComposite,
@@ -934,6 +1029,8 @@
     addPillSpritesToMap,
     createMapCardCompositeLayers,
     updateMapCardLayerOpacity,
+    createMarkerIconLayer,
+    orderMapLayers,
     // Expose constants for use in index.js
     COMPOSITE_TYPE_SMALL,
     COMPOSITE_TYPE_SMALL_MULTI,

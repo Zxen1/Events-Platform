@@ -19542,52 +19542,19 @@ function makePosts(){
       // Use map.js function to create map card composite layers
       if(window.MapCardComposites && typeof window.MapCardComposites.createMapCardCompositeLayers === 'function'){
         window.MapCardComposites.createMapCardCompositeLayers(map, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID, MARKER_MIN_ZOOM);
-      }
-      // Create marker-icon layer (sprites are already loaded above)
-      const markerIconFilter = ['all',
-        ['!',['has','point_count']],
-        ['has','title']
-      ];
-      const markerIconImageExpression = ['let', 'iconId', ['coalesce', ['get','sub'], ''],
-        ['case',
-          ['==', ['var','iconId'], ''],
-          MULTI_POST_MARKER_ICON_ID,
-          ['var','iconId']
-        ]
-      ];
-      const markerIconLayerId = 'mapmarker-icon';
-      if(!map.getLayer(markerIconLayerId)){
-        try{
-          map.addLayer({
-            id: markerIconLayerId,
-            type:'symbol',
-            source:'posts',
-            filter: markerIconFilter,
-            minzoom: MARKER_MIN_ZOOM,
-            layout:{
-              'icon-image': markerIconImageExpression,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'center',
-              'icon-offset': [0, 0],
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'auto',
-              'symbol-sort-key': 8,
-              'visibility': 'visible'
-            },
-            paint:{
-              'icon-opacity': 1
-            }
-          });
-        }catch(e){}
-      }
-      if(map.getLayer(markerIconLayerId)){
-        try{
-          // Only update properties that can change (filter and icon-image based on data)
-          map.setFilter(markerIconLayerId, markerIconFilter);
-          map.setLayoutProperty(markerIconLayerId, 'icon-image', markerIconImageExpression);
-        }catch(e){}
+        
+        // Create marker-icon layer only when map card system is available (for click/hover interactions)
+        if(typeof window.MapCardComposites.createMarkerIconLayer === 'function'){
+          window.MapCardComposites.createMarkerIconLayer(map, MULTI_POST_MARKER_ICON_ID, MARKER_MIN_ZOOM);
+        }
+      } else {
+        // Hide/remove marker-icon layer if map card system is not available
+        const markerIconLayerId = 'mapmarker-icon';
+        if(map.getLayer(markerIconLayerId)){
+          try{
+            map.setLayoutProperty(markerIconLayerId, 'visibility', 'none');
+          }catch(e){}
+        }
       }
       
       // Layer ordering will be set at the end after all layers are created
@@ -19610,31 +19577,9 @@ function makePosts(){
       }
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Final layer ordering (bottom to top): composites -> icons
-      // Ensure marker-icon layer is visible and on top
-      if(map.getLayer('mapmarker-icon')){
-        try{
-          map.setLayoutProperty('mapmarker-icon', 'visibility', 'visible');
-          map.setPaintProperty('mapmarker-icon', 'icon-opacity', 1);
-          map.moveLayer('mapmarker-icon'); // Move icons to top
-        }catch(e){}
-      }
-      // Move composite layers to be below icons
-      if(map.getLayer('small-map-card-composite')){
-        try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('small-map-card-composite', 'mapmarker-icon'); // Composites below icons
-          } else {
-            map.moveLayer('small-map-card-composite'); // Move to top if no icon layer
-          }
-        }catch(e){}
-      }
-      if(map.getLayer('big-map-card-composite')){
-        try{
-          if(map.getLayer('mapmarker-icon')){
-            map.moveLayer('big-map-card-composite', 'mapmarker-icon'); // Composites below icons
-          }
-        }catch(e){}
+      // Use map.js function to order layers correctly
+      if(window.MapCardComposites && typeof window.MapCardComposites.orderMapLayers === 'function'){
+        window.MapCardComposites.orderMapLayers(map);
       }
       
       if(!postSourceEventsBound){
