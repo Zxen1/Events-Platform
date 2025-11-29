@@ -13059,6 +13059,8 @@ function makePosts(){
             const checkoutOptionsContainer = document.createElement('div');
             checkoutOptionsContainer.className = 'checkout-options-editor';
             checkoutOptionsContainer.hidden = true;
+            // Prevent clicks from opening edit panel
+            checkoutOptionsContainer.addEventListener('click', (e) => e.stopPropagation());
             const checkoutOptionsLabel = document.createElement('div');
             checkoutOptionsLabel.className = 'checkout-options-label';
             checkoutOptionsLabel.textContent = 'Checkout Options (select up to 3)';
@@ -13096,6 +13098,10 @@ function makePosts(){
                 
                 const select = document.createElement('select');
                 select.className = 'checkout-option-select';
+                
+                // Prevent clicks from opening edit panel
+                select.addEventListener('click', (e) => e.stopPropagation());
+                select.addEventListener('mousedown', (e) => e.stopPropagation());
                 
                 // Add empty option
                 const emptyOption = document.createElement('option');
