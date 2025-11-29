@@ -14627,13 +14627,13 @@ function makePosts(){
                 cloned.fields = field.fields;
               }
               // Preserve checkoutOptions for checkout field type
-              // Filter out empty strings - only send actual selections
+              // Always preserve for member forms (even if empty), filter for saving
               if(Array.isArray(field && field.checkoutOptions)){
-                const filtered = field.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
-                if(filtered.length > 0){
-                  cloned.checkoutOptions = filtered;
-                }
-                // If all empty, don't include checkoutOptions at all (let PHP handle empty case)
+                // Always preserve the array (member forms need it to know which options to show)
+                cloned.checkoutOptions = field.checkoutOptions.slice();
+              } else if(field && (field.type === 'checkout' || field.fieldTypeKey === 'checkout')){
+                // Initialize empty array for checkout fields if missing
+                cloned.checkoutOptions = [];
               }
               return cloned;
             });
