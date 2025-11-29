@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 04:24 AM
+-- Generation Time: Nov 30, 2025 at 04:28 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -377,11 +377,7 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `options`, `created_at`, 
 (20, 'website', 'url', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
 (21, 'variant', 'text', NULL, '2025-10-30 18:33:09', '2025-10-30 18:33:09'),
 (22, 'subvariant', 'text', NULL, '2025-10-30 18:33:09', '2025-10-30 18:33:09'),
-(23, 'item-price', 'decimal(10,2)', NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35'),
-(25, 'checkout-price', 'decimal(10,2)', NULL, '2025-10-30 19:09:49', '2025-11-06 13:07:35'),
-(24, 'checkout-title', 'text', NULL, '2025-10-30 19:02:46', '2025-11-30 02:56:16'),
-(26, 'checkout-description', 'textarea', NULL, '2025-11-30 02:56:16', '2025-11-30 02:56:16'),
-(27, 'checkout-duration', 'text', NULL, '2025-11-30 02:56:16', '2025-11-30 02:56:16');
+(23, 'item-price', 'decimal(10,2)', NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
 
 -- --------------------------------------------------------
 
@@ -408,8 +404,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `description`, `field_id`, `field
 (2, 'sessions', 'Fields for session date and time.', '8,9', 'session-date,session-time', '2025-10-25 16:56:09', '2025-11-06 13:15:47'),
 (3, 'ticket-pricing', 'Fields for seating area, pricing tier, ticket price, and currency.', '10,11,12,13', 'seating-area,pricing-tier,ticket-price,currency', '2025-10-25 16:56:09', '2025-11-06 13:16:06'),
 (4, 'location', 'Fields for location details including address and coordinates.', '5,6,7', 'address-line,latitude,longitude', '2025-10-29 22:59:10', '2025-11-06 13:16:16'),
-(5, 'variant-pricing', 'Fields for managing variants, subvariants, and item pricing.', '21,22,23', 'variant,subvariant,item-price', '2025-10-30 18:39:14', '2025-11-06 13:16:26'),
-(8, 'checkout-details', 'Fields for checkout options, currency, and price.', '24,26,13,25,27', 'checkout-title,checkout-description,currency,checkout-price,checkout-duration', '2025-10-30 19:09:49', '2025-11-30 02:56:16');
+(5, 'variant-pricing', 'Fields for managing variants, subvariants, and item pricing.', '21,22,23', 'variant,subvariant,item-price', '2025-10-30 18:39:14', '2025-11-06 13:16:26');
 
 -- --------------------------------------------------------
 
