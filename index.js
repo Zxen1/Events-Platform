@@ -13065,7 +13065,12 @@ function makePosts(){
             const checkoutOptionsList = document.createElement('div');
             checkoutOptionsList.className = 'checkout-options-list';
             checkoutOptionsContainer.append(checkoutOptionsLabel, checkoutOptionsList);
-            editMenu.append(checkoutOptionsContainer);
+            
+            // Only add to edit panel if explicitly requested (for form preview)
+            // Otherwise it will be added to the field row later
+            if(attachDropdownToPanel === true){
+              editMenu.append(checkoutOptionsContainer);
+            }
 
             const renderCheckoutOptionsEditor = ()=>{
               checkoutOptionsList.innerHTML = '';
@@ -13684,6 +13689,7 @@ function makePosts(){
             fieldEditUI.runSummaryUpdater();
 
             row.append(dropdownOptionsContainer);
+            row.append(checkoutOptionsContainer);
 
             const handleDeleteField = async ()=>{
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';

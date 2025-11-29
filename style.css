@@ -8770,7 +8770,7 @@ html, body { cursor: auto !important; }
               gap:10px;
             }
             #tab-forms .checkout-options-editor[hidden]{
-              display:none;
+              display:none !important;
             }
             #tab-forms .checkout-options-label{
               font-size:14px;
