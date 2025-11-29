@@ -406,20 +406,19 @@
     
     // Update labels for big state
     const labelsEl = entry.element.querySelector('.map-card-labels');
-      if (labelsEl) {
-        const labels = getMarkerLabelLines(entry.post, newState === 'big');
-        if (newState === 'big') {
-          labelsEl.innerHTML = `
-            <div class="map-card-title">${labels.line1}</div>
-            ${labels.line2 ? `<div class="map-card-title">${labels.line2}</div>` : ''}
-            ${labels.venueLine ? `<div class="map-card-venue">${labels.venueLine}</div>` : ''}
-          `;
-        } else {
-          labelsEl.innerHTML = `
-            <div class="map-card-title">${labels.line1}</div>
-            ${labels.line2 ? `<div class="map-card-title">${labels.line2}</div>` : ''}
-          `;
-        }
+    if (labelsEl) {
+      const labels = getMarkerLabelLines(entry.post, newState === 'big');
+      if (newState === 'big') {
+        labelsEl.innerHTML = `
+          <div class="map-card-title">${labels.line1}</div>
+          ${labels.line2 ? `<div class="map-card-title">${labels.line2}</div>` : ''}
+          ${labels.venueLine ? `<div class="map-card-venue">${labels.venueLine}</div>` : ''}
+        `;
+      } else {
+        labelsEl.innerHTML = `
+          <div class="map-card-title">${labels.line1}</div>
+          ${labels.line2 ? `<div class="map-card-title">${labels.line2}</div>` : ''}
+        `;
       }
     }
   }

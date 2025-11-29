@@ -1041,19 +1041,20 @@ let __notifyMapOnInteraction = null;
   let markerLabelMeasureContext = null;
 
   // --- Section 2: Text Measurement & Formatting Helpers ---
-  // Moved to map.js - use window.MapCardComposites functions (NO FALLBACKS - errors will be thrown if map.js not loaded)
-  const ensureMarkerLabelMeasureContext = window.MapCardComposites.ensureMarkerLabelMeasureContext;
-  const markerLabelMeasureFont = window.MapCardComposites.markerLabelMeasureFont;
-  const shortenMarkerLabelText = window.MapCardComposites.shortenMarkerLabelText;
-  const splitTextAcrossLines = window.MapCardComposites.splitTextAcrossLines;
-  const getPrimaryVenueName = window.MapCardComposites.getPrimaryVenueName;
-  const getMarkerLabelLines = window.MapCardComposites.getMarkerLabelLines;
-  const buildMarkerLabelText = window.MapCardComposites.buildMarkerLabelText;
+  // Moved to map.js - use window.MapCardComposites functions (graceful fallback if map.js fails)
+  const mapComposites = window.MapCardComposites || {};
+  const ensureMarkerLabelMeasureContext = mapComposites.ensureMarkerLabelMeasureContext || function(){};
+  const markerLabelMeasureFont = mapComposites.markerLabelMeasureFont || '11px "Open Sans", sans-serif';
+  const shortenMarkerLabelText = mapComposites.shortenMarkerLabelText || function(t){ return t; };
+  const splitTextAcrossLines = mapComposites.splitTextAcrossLines || function(t){ return [t]; };
+  const getPrimaryVenueName = mapComposites.getPrimaryVenueName || function(){ return ''; };
+  const getMarkerLabelLines = mapComposites.getMarkerLabelLines || function(){ return { line1: '', line2: '', venueLine: '' }; };
+  const buildMarkerLabelText = mapComposites.buildMarkerLabelText || function(){ return ''; };
 
-  // Map card constants - now in map.js, access via window.MapCardComposites (NO FALLBACKS)
-  const MARKER_LABEL_BG_ID = window.MapCardComposites.MARKER_LABEL_BG_ID;
-  const MARKER_LABEL_BG_ACCENT_ID = window.MapCardComposites.MARKER_LABEL_BG_ACCENT_ID;
-  const VISIBLE_MARKER_LABEL_LAYERS = window.MapCardComposites.VISIBLE_MARKER_LABEL_LAYERS;
+  // Map card constants - now in map.js, access via window.MapCardComposites (graceful fallback)
+  const MARKER_LABEL_BG_ID = mapComposites.MARKER_LABEL_BG_ID || 'small-map-card-pill';
+  const MARKER_LABEL_BG_ACCENT_ID = mapComposites.MARKER_LABEL_BG_ACCENT_ID || 'big-map-card-pill';
+  const VISIBLE_MARKER_LABEL_LAYERS = mapComposites.VISIBLE_MARKER_LABEL_LAYERS || [];
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
   const MARKER_SPRITE_RETAIN_ZOOM = 12;

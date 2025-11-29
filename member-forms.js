@@ -1,17 +1,26 @@
 (function(){
   "use strict";
   
-  // Wait for DOM and dependencies
+  // Wait for DOM and dependencies (max 50 retries = 5 seconds)
+  let initRetries = 0;
+  const MAX_INIT_RETRIES = 50;
+  
   function init(){
     if(typeof window === "undefined" || typeof document === "undefined"){
-      setTimeout(init, 100);
+      if(++initRetries < MAX_INIT_RETRIES){
+        setTimeout(init, 100);
+      }
       return;
     }
     
     // Check for required dependencies
     if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
-      console.warn("Member forms: Waiting for dependencies...");
-      setTimeout(init, 100);
+      if(++initRetries < MAX_INIT_RETRIES){
+        console.warn("Member forms: Waiting for dependencies...");
+        setTimeout(init, 100);
+      } else {
+        console.error("Member forms: Dependencies not available after timeout. Form features disabled.");
+      }
       return;
     }
     
@@ -22,8 +31,12 @@
         ? window.__persistedFormbuilderSnapshotPromise
         : null;
     if(!snapshotPromise){
-      console.warn("Member forms: Waiting for formbuilder snapshot promise...");
-      setTimeout(init, 100);
+      if(++initRetries < MAX_INIT_RETRIES){
+        console.warn("Member forms: Waiting for formbuilder snapshot promise...");
+        setTimeout(init, 100);
+      } else {
+        console.error("Member forms: Snapshot promise not available after timeout. Form features disabled.");
+      }
       return;
     }
     
