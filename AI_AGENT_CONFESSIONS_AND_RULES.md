@@ -209,6 +209,17 @@ Mapbox layers in rendering order (bottom to top):
 - Ask for clarification when needed
 - Do not deviate from instructions
 
+### Rule 11: NO FALLBACKS OR CACHING THAT HIDES ERRORS
+**CRITICAL:** Never create fallback functions, default values, or caching mechanisms that hide errors.
+- All errors must be visible and thrown immediately
+- Do not create fallback functions that return null/empty values instead of throwing
+- Do not cache results in ways that prevent seeing errors
+- If a dependency (like map.js) is missing, throw an error - do not silently fail
+- Fallbacks and cache are major problems for debugging - we need to see ALL errors
+- Example: `const fn = window.MapCardComposites?.fn || function(){}` is FORBIDDEN
+- Example: `const fn = window.MapCardComposites?.fn || function(){ return null; }` is FORBIDDEN
+- Correct: `const fn = window.MapCardComposites.fn` (will throw if missing, which is desired)
+
 ---
 
 ## LIMITATIONS: WHAT AI AGENTS CANNOT DO

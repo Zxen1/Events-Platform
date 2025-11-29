@@ -1041,33 +1041,19 @@ let __notifyMapOnInteraction = null;
   let markerLabelMeasureContext = null;
 
   // --- Section 2: Text Measurement & Formatting Helpers ---
-  // Moved to map.js - use window.MapCardComposites functions
-  const ensureMarkerLabelMeasureContext = window.MapCardComposites && window.MapCardComposites.ensureMarkerLabelMeasureContext 
-    ? window.MapCardComposites.ensureMarkerLabelMeasureContext 
-    : function(){ return null; };
-  const markerLabelMeasureFont = window.MapCardComposites && window.MapCardComposites.markerLabelMeasureFont 
-    ? window.MapCardComposites.markerLabelMeasureFont 
-    : function(){ return '12px "Open Sans", "Arial Unicode MS Regular", sans-serif'; };
-  const shortenMarkerLabelText = window.MapCardComposites && window.MapCardComposites.shortenMarkerLabelText 
-    ? window.MapCardComposites.shortenMarkerLabelText 
-    : function(text){ return String(text || ''); };
-  const splitTextAcrossLines = window.MapCardComposites && window.MapCardComposites.splitTextAcrossLines 
-    ? window.MapCardComposites.splitTextAcrossLines 
-    : function(text){ return [String(text || '')]; };
-  const getPrimaryVenueName = window.MapCardComposites && window.MapCardComposites.getPrimaryVenueName 
-    ? window.MapCardComposites.getPrimaryVenueName 
-    : function(p){ return (p && p.venue) ? p.venue : (p && p.city) ? p.city : ''; };
-  const getMarkerLabelLines = window.MapCardComposites && window.MapCardComposites.getMarkerLabelLines 
-    ? window.MapCardComposites.getMarkerLabelLines 
-    : function(p){ return { line1: (p && p.title) ? p.title : '', line2: '', cardTitleLines: [], venueLine: '' }; };
-  const buildMarkerLabelText = window.MapCardComposites && window.MapCardComposites.buildMarkerLabelText 
-    ? window.MapCardComposites.buildMarkerLabelText 
-    : function(p){ return (p && p.title) ? p.title : ''; };
+  // Moved to map.js - use window.MapCardComposites functions (NO FALLBACKS - errors will be thrown if map.js not loaded)
+  const ensureMarkerLabelMeasureContext = window.MapCardComposites.ensureMarkerLabelMeasureContext;
+  const markerLabelMeasureFont = window.MapCardComposites.markerLabelMeasureFont;
+  const shortenMarkerLabelText = window.MapCardComposites.shortenMarkerLabelText;
+  const splitTextAcrossLines = window.MapCardComposites.splitTextAcrossLines;
+  const getPrimaryVenueName = window.MapCardComposites.getPrimaryVenueName;
+  const getMarkerLabelLines = window.MapCardComposites.getMarkerLabelLines;
+  const buildMarkerLabelText = window.MapCardComposites.buildMarkerLabelText;
 
-  // Map card constants - now in map.js, access via window.MapCardComposites
-  const MARKER_LABEL_BG_ID = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ID) || 'small-map-card-pill';
-  const MARKER_LABEL_BG_ACCENT_ID = (window.MapCardComposites && window.MapCardComposites.MARKER_LABEL_BG_ACCENT_ID) || 'big-map-card-pill';
-  const VISIBLE_MARKER_LABEL_LAYERS = (window.MapCardComposites && window.MapCardComposites.VISIBLE_MARKER_LABEL_LAYERS) || ['small-map-card-composite', 'big-map-card-composite'];
+  // Map card constants - now in map.js, access via window.MapCardComposites (NO FALLBACKS)
+  const MARKER_LABEL_BG_ID = window.MapCardComposites.MARKER_LABEL_BG_ID;
+  const MARKER_LABEL_BG_ACCENT_ID = window.MapCardComposites.MARKER_LABEL_BG_ACCENT_ID;
+  const VISIBLE_MARKER_LABEL_LAYERS = window.MapCardComposites.VISIBLE_MARKER_LABEL_LAYERS;
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000).
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
@@ -1083,28 +1069,18 @@ let __notifyMapOnInteraction = null;
 
 
   // --- Section 3: Map Card System ---
-  // Pill sprite functions moved to map.js - use window.MapCardComposites functions
-  const loadMarkerLabelImage = window.MapCardComposites && window.MapCardComposites.loadMarkerLabelImage 
-    ? window.MapCardComposites.loadMarkerLabelImage 
-    : function(url){ return Promise.reject(new Error('map.js not loaded')); };
-  const convertImageDataToCanvas = window.MapCardComposites && window.MapCardComposites.convertImageDataToCanvas 
-    ? window.MapCardComposites.convertImageDataToCanvas 
-    : function(imageData){ return imageData; };
-  const buildMarkerLabelPillSprite = window.MapCardComposites && window.MapCardComposites.buildMarkerLabelPillSprite 
-    ? window.MapCardComposites.buildMarkerLabelPillSprite 
-    : function(){ return null; };
-  const ensureMarkerLabelPillSprites = window.MapCardComposites && window.MapCardComposites.ensureMarkerLabelPillSprites 
-    ? window.MapCardComposites.ensureMarkerLabelPillSprites 
-    : async function(){ return null; };
+  // Pill sprite functions moved to map.js - use window.MapCardComposites functions (NO FALLBACKS)
+  const loadMarkerLabelImage = window.MapCardComposites.loadMarkerLabelImage;
+  const convertImageDataToCanvas = window.MapCardComposites.convertImageDataToCanvas;
+  const buildMarkerLabelPillSprite = window.MapCardComposites.buildMarkerLabelPillSprite;
+  const ensureMarkerLabelPillSprites = window.MapCardComposites.ensureMarkerLabelPillSprites;
 
 
   // --- Section 4: Composite Sprite System for Map Cards ---
   // Moved to map.js - all map card composite code is now in map.js
 
-  // Moved to map.js - use window.MapCardComposites.generateMarkerImageFromId
-  const generateMarkerImageFromId = window.MapCardComposites && window.MapCardComposites.generateMarkerImageFromId 
-    ? window.MapCardComposites.generateMarkerImageFromId 
-    : async function(){ return null; };
+  // Moved to map.js - use window.MapCardComposites.generateMarkerImageFromId (NO FALLBACKS)
+  const generateMarkerImageFromId = window.MapCardComposites.generateMarkerImageFromId;
 
 
 
@@ -1502,7 +1478,12 @@ let __notifyMapOnInteraction = null;
                         }
                         
                         // Load new image directly
-                        const img = await loadMarkerLabelImage(value);
+                        let img = null;
+                        try {
+                          img = await loadMarkerLabelImage(value);
+                        } catch(err) {
+                          console.error('Error loading balloon icon:', err);
+                        }
                         if(img && img.width > 0 && img.height > 0){
                           const pixelRatio = img.width >= 256 ? 2 : 1;
                           mapInstance.addImage(BALLOON_IMAGE_ID, img, { pixelRatio });
@@ -1520,10 +1501,8 @@ let __notifyMapOnInteraction = null;
                       } 
                       // Handle pill image updates
                       else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
-                        // Clear caches in map.js
-                        if(window.MapCardComposites && typeof window.MapCardComposites.clearMarkerLabelPillSpriteCache === 'function'){
-                          window.MapCardComposites.clearMarkerLabelPillSpriteCache();
-                        }
+                        // Clear caches in map.js (NO FALLBACKS)
+                        window.MapCardComposites.clearMarkerLabelPillSpriteCache();
                         
                         // Get current settings (use updated value for the changed one)
                         // First check local settings, then fetch from DB if needed
@@ -1572,12 +1551,12 @@ let __notifyMapOnInteraction = null;
                         if(baseUrl && accentUrl){
                           // Load images directly with updated values
                           // Note: Old sprites will be removed by map.js function before adding new ones
-                          // Loading pill images
-                          const [baseImg, accentImg, hoverImg] = await Promise.all([
+                          // Loading pill images (NO FALLBACKS - errors will be thrown)
+                          const [baseImg, accentImg, hoverImg] = await Promise.allSettled([
                             loadMarkerLabelImage(baseUrl),
                             loadMarkerLabelImage(accentUrl),
-                            hoverUrl ? loadMarkerLabelImage(hoverUrl).catch(() => null) : Promise.resolve(null)
-                          ]);
+                            hoverUrl ? loadMarkerLabelImage(hoverUrl) : Promise.resolve(null)
+                          ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
                           
                           // Pill images loaded
                           
@@ -1614,21 +1593,17 @@ let __notifyMapOnInteraction = null;
                             return;
                           }
                           
-                          // Use map.js function to add updated pill sprites
+                          // Use map.js function to add updated pill sprites (NO FALLBACKS)
                           // Note: Cache is managed internally by map.js
-                          if(window.MapCardComposites && typeof window.MapCardComposites.addPillSpritesToMap === 'function'){
-                            window.MapCardComposites.addPillSpritesToMap(mapInstance, {
-                              base: baseSprite,
-                              highlight: accentSprite,
-                              hover: hoverSprite
-                            }, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
-                          }
+                          window.MapCardComposites.addPillSpritesToMap(mapInstance, {
+                            base: baseSprite,
+                            highlight: accentSprite,
+                            hover: hoverSprite
+                          }, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
                           
-                          // Update composite layer opacity if needed
+                          // Update composite layer opacity if needed (NO FALLBACKS)
                           const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-                          if(window.MapCardComposites && typeof window.MapCardComposites.updateMapCardLayerOpacity === 'function'){
-                            window.MapCardComposites.updateMapCardLayerOpacity(mapInstance, mapCardDisplay);
-                          }
+                          window.MapCardComposites.updateMapCardLayerOpacity(mapInstance, mapCardDisplay);
                           
                           // Regenerate ALL markers to use new pill sprites (this will regenerate composite sprites)
                           // Note: addPostSource will check if sprites exist and skip re-adding, so this is safe
@@ -1660,7 +1635,7 @@ let __notifyMapOnInteraction = null;
                         }
                         
                         // Remove old multi-post icon sprite if it exists
-                        const MULTI_POST_MARKER_ICON_ID_LOCAL = (window.MapCardComposites && window.MapCardComposites.MULTI_POST_MARKER_ICON_ID) || 'multi-post-icon';
+                        const MULTI_POST_MARKER_ICON_ID_LOCAL = window.MapCardComposites.MULTI_POST_MARKER_ICON_ID;
                         try {
                           if(mapInstance.hasImage(MULTI_POST_MARKER_ICON_ID_LOCAL)){
                             mapInstance.removeImage(MULTI_POST_MARKER_ICON_ID_LOCAL);
@@ -1946,10 +1921,8 @@ let __notifyMapOnInteraction = null;
                   try{
                     const mapInstance = typeof window.getMapInstance === 'function' ? window.getMapInstance() : null;
                     if(mapInstance){
-                      // Clear sprite cache in map.js
-                      if(window.MapCardComposites && typeof window.MapCardComposites.clearMarkerLabelPillSpriteCache === 'function'){
-                        window.MapCardComposites.clearMarkerLabelPillSpriteCache();
-                      }
+                      // Clear sprite cache in map.js (NO FALLBACKS)
+                      window.MapCardComposites.clearMarkerLabelPillSpriteCache();
                       // Remove all marker-label images from Mapbox cache
                       const markerLabelImageIds = [MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID];
                       markerLabelImageIds.forEach(id => {
@@ -2938,39 +2911,10 @@ let __notifyMapOnInteraction = null;
     }
 
 
-    // Moved to map.js - use window.MapCardComposites functions
-    const MULTI_POST_MARKER_ICON_ID = (window.MapCardComposites && window.MapCardComposites.MULTI_POST_MARKER_ICON_ID) || 'multi-post-icon';
-    const registerOverlayCleanup = window.MapCardComposites && window.MapCardComposites.registerOverlayCleanup 
-      ? window.MapCardComposites.registerOverlayCleanup 
-      : function(){};
-    const runOverlayCleanup = window.MapCardComposites && window.MapCardComposites.runOverlayCleanup 
-      ? window.MapCardComposites.runOverlayCleanup 
-      : function(){};
-    const ensureSmallMapCardContainer = window.MapCardComposites && window.MapCardComposites.ensureSmallMapCardContainer 
-      ? window.MapCardComposites.ensureSmallMapCardContainer 
-      : function(){ return null; };
-    const ensureBigMapCardContainer = window.MapCardComposites && window.MapCardComposites.ensureBigMapCardContainer 
-      ? window.MapCardComposites.ensureBigMapCardContainer 
-      : function(){ return null; };
-    const wrapAllMapCardsInContainers = window.MapCardComposites && window.MapCardComposites.wrapAllMapCardsInContainers 
-      ? window.MapCardComposites.wrapAllMapCardsInContainers 
-      : function(){};
-    const createSmallMapCardWithContainer = window.MapCardComposites && window.MapCardComposites.createSmallMapCardWithContainer 
-      ? window.MapCardComposites.createSmallMapCardWithContainer 
-      : function(){ return null; };
-    const createBigMapCardWithContainer = window.MapCardComposites && window.MapCardComposites.createBigMapCardWithContainer 
-      ? window.MapCardComposites.createBigMapCardWithContainer 
-      : function(){ return null; };
-    const enforceSmallMultiMapCardIcon = window.MapCardComposites && window.MapCardComposites.enforceSmallMultiMapCardIcon 
-      ? window.MapCardComposites.enforceSmallMultiMapCardIcon 
-      : function(){};
+    // Moved to map.js - use window.MapCardComposites functions (NO FALLBACKS)
+    const MULTI_POST_MARKER_ICON_ID = window.MapCardComposites.MULTI_POST_MARKER_ICON_ID;
     
-    // Expose functions globally for backward compatibility
-    window.ensureSmallMapCardContainer = ensureSmallMapCardContainer;
-    window.ensureBigMapCardContainer = ensureBigMapCardContainer;
-    window.wrapAllMapCardsInContainers = wrapAllMapCardsInContainers;
-    window.createSmallMapCardWithContainer = createSmallMapCardWithContainer;
-    window.createBigMapCardWithContainer = createBigMapCardWithContainer;
+    // Note: DOM-related map card container functions were removed from map.js and are not used here
 
     function escapeAttrValue(value){
       const raw = String(value);
@@ -18367,13 +18311,9 @@ function makePosts(){
         }
         updateZoomState(zoomValue);
         
-        // Clear composites when zoom < 8 (MARKER_ZOOM_THRESHOLD is 8)
-        if(window.MapCardComposites && typeof window.MapCardComposites.clearMapCardComposites === 'function' && Number.isFinite(zoomValue) && zoomValue < 8){
-          try {
-            window.MapCardComposites.clearMapCardComposites(map);
-          } catch(err){
-            // Error clearing composites on zoom
-          }
+        // Clear composites when zoom < 8 (MARKER_ZOOM_THRESHOLD is 8) (NO FALLBACKS)
+        if(Number.isFinite(zoomValue) && zoomValue < 8){
+          window.MapCardComposites.clearMapCardComposites(map);
         }
         
         if(!spinning){
@@ -18780,22 +18720,16 @@ function makePosts(){
       if(Number.isFinite(zoomForComposites) && zoomForComposites >= MARKER_ZOOM_THRESHOLD){
         const featuresToProcess = Array.isArray(postsData.features) ? postsData.features : [];
         
-        // Use map.js function to create composites
-        if(window.MapCardComposites && typeof window.MapCardComposites.createMapCardCompositesForFeatures === 'function'){
-          const compositePromises = window.MapCardComposites.createMapCardCompositesForFeatures(
-            map, 
-            featuresToProcess, 
-            MULTI_POST_MARKER_ICON_ID, 
-            MARKER_ZOOM_THRESHOLD
-          );
-          
-          // Wait for composites (limit to avoid blocking - 200 features = 600 composites max)
-          try {
-            await Promise.allSettled(compositePromises.slice(0, 600));
-          } catch(err){
-            // Error creating composites
-          }
-        }
+        // Use map.js function to create composites (NO FALLBACKS)
+        const compositePromises = window.MapCardComposites.createMapCardCompositesForFeatures(
+          map, 
+          featuresToProcess, 
+          MULTI_POST_MARKER_ICON_ID, 
+          MARKER_ZOOM_THRESHOLD
+        );
+        
+        // Wait for composites (limit to avoid blocking - 200 features = 600 composites max)
+        await Promise.allSettled(compositePromises.slice(0, 600));
       }
       
       const existing = map.getSource('posts');
@@ -18809,7 +18743,8 @@ function makePosts(){
       }
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
-        await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+        // NO FALLBACKS - errors will be thrown
+        await Promise.all(iconIds.map(id => ensureMapIcon(id)));
       }
       // Pre-load marker-icon sprites and add them to map
       const markerIconIds = new Set();
@@ -18822,86 +18757,62 @@ function makePosts(){
       markerIconIds.add(MULTI_POST_MARKER_ICON_ID);
       for(const iconId of markerIconIds){
         if(typeof ensureMapIcon === 'function'){
-          await ensureMapIcon(iconId).catch(()=>{});
+          // NO FALLBACKS - errors will be thrown
+          await ensureMapIcon(iconId);
         }
         const iconUrl = subcategoryMarkers[iconId];
         if(iconUrl && !map.hasImage(iconId)){
-          try{
-            const img = await loadMarkerLabelImage(iconUrl);
-            if(img){
-              let deviceScale = 2;
-              try{
-                const ratio = window.devicePixelRatio;
-                if(Number.isFinite(ratio) && ratio > 0){
-                  deviceScale = ratio;
-                }
-              }catch(err){
-                deviceScale = 2;
-              }
-              if(!Number.isFinite(deviceScale) || deviceScale <= 0){
-                deviceScale = 2;
-              }
-              const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
-              const canvas = document.createElement('canvas');
-              canvas.width = iconSize;
-              canvas.height = iconSize;
-              const ctx = canvas.getContext('2d');
-              if(ctx){
-                ctx.drawImage(img, 0, 0, iconSize, iconSize);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                map.addImage(iconId, imageData, { pixelRatio: deviceScale });
-              }
+          // Load marker icon (NO FALLBACKS - errors will be thrown)
+          const img = await loadMarkerLabelImage(iconUrl);
+          if(img){
+            let deviceScale = 2;
+            const ratio = window.devicePixelRatio;
+            if(Number.isFinite(ratio) && ratio > 0){
+              deviceScale = ratio;
             }
-          }catch(e){}
+            if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+              deviceScale = 2;
+            }
+            const iconSize = Math.round(markerIconBaseSizePx * deviceScale);
+            const canvas = document.createElement('canvas');
+            canvas.width = iconSize;
+            canvas.height = iconSize;
+            const ctx = canvas.getContext('2d');
+            if(ctx){
+              ctx.drawImage(img, 0, 0, iconSize, iconSize);
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              map.addImage(iconId, imageData, { pixelRatio: deviceScale });
+            }
+          }
         }
       }
       
-      // Ensure pill sprites are loaded before creating layers
+      // Ensure pill sprites are loaded before creating layers (NO FALLBACKS)
       // Use map.js function
-      let pillSprites = null;
-      if(window.MapCardComposites && typeof window.MapCardComposites.ensureMarkerLabelPillSprites === 'function'){
-        try {
-          pillSprites = await window.MapCardComposites.ensureMarkerLabelPillSprites();
-        } catch(e) {
-          console.error('[addPostSource] Error loading pill sprites:', e);
-          pillSprites = null;
-        }
-      }
+      const pillSprites = await window.MapCardComposites.ensureMarkerLabelPillSprites();
       
       // Always ensure sprites are added to map (only add if they don't exist to avoid redundant operations)
       // CRITICAL: Mapbox requires Image/Canvas objects, not ImageData
       if(!pillSprites){
-        console.error('[addPostSource] CRITICAL: pillSprites is null/undefined - pills will not be visible!');
-      } else if(!pillSprites.base){
-        console.error('[addPostSource] CRITICAL: pillSprites.base is null/undefined - small pills will not be visible!');
-      } else if(!pillSprites.highlight){
-        console.error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
+        throw new Error('[addPostSource] CRITICAL: pillSprites is null/undefined - pills will not be visible!');
+      }
+      if(!pillSprites.base){
+        throw new Error('[addPostSource] CRITICAL: pillSprites.base is null/undefined - small pills will not be visible!');
+      }
+      if(!pillSprites.highlight){
+        throw new Error('[addPostSource] CRITICAL: pillSprites.highlight is null/undefined - big pills will not be visible!');
       }
       
-      // Use map.js function to add pill sprites
-      if(window.MapCardComposites && typeof window.MapCardComposites.addPillSpritesToMap === 'function'){
-        window.MapCardComposites.addPillSpritesToMap(map, pillSprites, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
-      }
+      // Use map.js function to add pill sprites (NO FALLBACKS)
+      window.MapCardComposites.addPillSpritesToMap(map, pillSprites, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID);
       
       updateMapFeatureHighlights(lastHighlightedPostIds);
       
-      // Use map.js function to create map card composite layers
-      if(window.MapCardComposites && typeof window.MapCardComposites.createMapCardCompositeLayers === 'function'){
-        window.MapCardComposites.createMapCardCompositeLayers(map, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID, MARKER_MIN_ZOOM);
-        
-        // Create marker-icon layer only when map card system is available (for click/hover interactions)
-        if(typeof window.MapCardComposites.createMarkerIconLayer === 'function'){
-          window.MapCardComposites.createMarkerIconLayer(map, MULTI_POST_MARKER_ICON_ID, MARKER_MIN_ZOOM);
-        }
-      } else {
-        // Hide/remove marker-icon layer if map card system is not available
-        const markerIconLayerId = 'mapmarker-icon';
-        if(map.getLayer(markerIconLayerId)){
-          try{
-            map.setLayoutProperty(markerIconLayerId, 'visibility', 'none');
-          }catch(e){}
-        }
-      }
+      // Use map.js function to create map card composite layers (NO FALLBACKS)
+      window.MapCardComposites.createMapCardCompositeLayers(map, MARKER_LABEL_BG_ID, MARKER_LABEL_BG_ACCENT_ID, MARKER_MIN_ZOOM);
+      
+      // Create marker-icon layer (NO FALLBACKS)
+      window.MapCardComposites.createMarkerIconLayer(map, MULTI_POST_MARKER_ICON_ID, MARKER_MIN_ZOOM);
       
       // Layer ordering will be set at the end after all layers are created
       [
@@ -18913,20 +18824,16 @@ function makePosts(){
         }
       });
       
-      // Use map.js function for updateMapCardLayerOpacity
+      // Use map.js function for updateMapCardLayerOpacity (NO FALLBACKS)
       const mapCardDisplay = document.body.getAttribute('data-map-card-display') || 'always';
-      if(window.MapCardComposites && typeof window.MapCardComposites.updateMapCardLayerOpacity === 'function'){
-        window.updateMapCardLayerOpacity = (displayMode) => {
-          window.MapCardComposites.updateMapCardLayerOpacity(map, displayMode);
-        };
-        window.updateMapCardLayerOpacity(mapCardDisplay);
-      }
+      window.updateMapCardLayerOpacity = (displayMode) => {
+        window.MapCardComposites.updateMapCardLayerOpacity(map, displayMode);
+      };
+      window.updateMapCardLayerOpacity(mapCardDisplay);
       window.getMapInstance = () => map; // Expose map instance getter
       
-      // Use map.js function to order layers correctly
-      if(window.MapCardComposites && typeof window.MapCardComposites.orderMapLayers === 'function'){
-        window.MapCardComposites.orderMapLayers(map);
-      }
+      // Use map.js function to order layers correctly (NO FALLBACKS)
+      window.MapCardComposites.orderMapLayers(map);
       
       if(!postSourceEventsBound){
 
