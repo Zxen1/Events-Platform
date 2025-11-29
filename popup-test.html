@@ -186,46 +186,6 @@
       console.log(`Created ${popups.length} popups`);
     });
     
-    // Allow zoom and pan through popups
-    // Wheel zoom - use map API directly instead of forwarding events
-    document.addEventListener('wheel', (e) => {
-      if (e.target.closest('.mapboxgl-popup')) {
-        e.preventDefault();
-        const currentZoom = map.getZoom();
-        const zoomDelta = e.deltaY > 0 ? -0.5 : 0.5;
-        map.easeTo({ 
-          zoom: currentZoom + zoomDelta,
-          duration: 100
-        });
-      }
-    }, { passive: false });
-    
-    // Drag pan - handle mousedown on popup, then pan map
-    let isDragging = false;
-    let dragStart = null;
-    
-    document.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.mapboxgl-popup') && e.button === 0) {
-        isDragging = true;
-        dragStart = { x: e.clientX, y: e.clientY };
-        e.preventDefault();
-      }
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (isDragging && dragStart) {
-        const dx = dragStart.x - e.clientX;
-        const dy = dragStart.y - e.clientY;
-        map.panBy([dx, dy], { duration: 0 });
-        dragStart = { x: e.clientX, y: e.clientY };
-      }
-    });
-    
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-      dragStart = null;
-    });
-    
     // FPS counter
     let frameCount = 0;
     let lastTime = performance.now();
