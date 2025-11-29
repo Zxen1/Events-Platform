@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 30, 2025 at 04:42 AM
+-- Generation Time: Nov 30, 2025 at 04:59 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -681,6 +681,27 @@ CREATE TABLE `posts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `post_children`
+--
+
+CREATE TABLE `post_children` (
+  `id` int(11) NOT NULL,
+  `map_card_id` int(11) NOT NULL,
+  `session_date` date DEFAULT NULL,
+  `session_time` time DEFAULT NULL,
+  `seating_area` varchar(100) DEFAULT NULL,
+  `pricing_tier` varchar(100) DEFAULT NULL,
+  `variant_name` varchar(100) DEFAULT NULL,
+  `subvariant_name` varchar(100) DEFAULT NULL,
+  `price` decimal(10,2) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `post_map_cards`
 --
 
@@ -967,6 +988,13 @@ ALTER TABLE `posts`
   ADD KEY `idx_status` (`visibility`,`moderation_status`);
 
 --
+-- Indexes for table `post_children`
+--
+ALTER TABLE `post_children`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_map_card_id` (`map_card_id`);
+
+--
 -- Indexes for table `post_map_cards`
 --
 ALTER TABLE `post_map_cards`
@@ -1120,6 +1148,12 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `post_children`
+--
+ALTER TABLE `post_children`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
