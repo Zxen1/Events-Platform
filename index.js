@@ -8789,6 +8789,17 @@ function makePosts(){
             selectedOptions = field.options;
           }
           
+          // Debug: log field data to see what we're working with
+          if(selectedOptions.length === 0){
+            console.log('[Checkout Field Debug]', {
+              fieldType: field.type,
+              fieldTypeKey: field.fieldTypeKey,
+              checkoutOptions: field.checkoutOptions,
+              options: field.options,
+              fullField: field
+            });
+          }
+          
           // Get all checkout options from global
           const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
           
@@ -13076,6 +13087,17 @@ function makePosts(){
                 } else {
                   safeField.checkoutOptions = [];
                 }
+              }
+              
+              // Debug: log field data to see what we're working with
+              if(safeField.checkoutOptions.length === 0 || safeField.checkoutOptions.every(v => !v || v === '')){
+                console.log('[Admin Checkout Field Debug]', {
+                  fieldType: safeField.type,
+                  fieldTypeKey: safeField.fieldTypeKey,
+                  checkoutOptions: safeField.checkoutOptions,
+                  options: safeField.options,
+                  fullField: safeField
+                });
               }
               
               // Ensure we have 3 slots
