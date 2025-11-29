@@ -936,12 +936,16 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
                 $customName = null;
                 $customOptions = null;
+                $customCheckoutOptions = null;
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
                     if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
                         $customOptions = $fieldEdit['options'];
+                    }
+                    if (isset($fieldEdit['checkoutOptions']) && is_array($fieldEdit['checkoutOptions'])) {
+                        $customCheckoutOptions = $fieldEdit['checkoutOptions'];
                     }
                 }
                 
@@ -962,6 +966,11 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     $builtField['options'] = $field['options'];
                 }
                 
+                // Add checkout options if available
+                if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
+                    $builtField['checkoutOptions'] = $customCheckoutOptions;
+                }
+                
                 $builtFields[] = $builtField;
             }
             // Otherwise → create ONE field object using field_type properties, with all items as children
@@ -969,9 +978,13 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // Check if this field type is editable and has customizations
                 $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
                 $customName = null;
+                $customCheckoutOptions = null;
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
+                    }
+                    if (isset($fieldEdit['checkoutOptions']) && is_array($fieldEdit['checkoutOptions'])) {
+                        $customCheckoutOptions = $fieldEdit['checkoutOptions'];
                     }
                 }
                 
@@ -985,6 +998,11 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
                     'fields' => [],
                 ];
+                
+                // Add checkout options if available
+                if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
+                    $builtField['checkoutOptions'] = $customCheckoutOptions;
+                }
                 
                 // Add all fieldsets/fields as children
                 foreach ($itemIds as $item) {

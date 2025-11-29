@@ -4688,7 +4688,10 @@ body.hide-ads .ad-board{
 #tab-forms .form-container .form-checkout-option input[type="radio"],
 #memberPanel .member-create-fields .form-checkout-option input[type="radio"]{
   flex-shrink:0;
-  margin-top:3px;
+  width:auto;
+  height:auto;
+  margin:3px 0 0 0;
+  padding:0;
   cursor:pointer;
 }
 #tab-forms .form-container .form-checkout-option-content,

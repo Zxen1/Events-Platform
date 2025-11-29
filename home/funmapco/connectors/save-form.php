@@ -779,6 +779,18 @@ try {
                         }
                     }
                     
+                    // For checkout field type, save selected checkout options
+                    if ($fieldTypeKey === 'checkout' && isset($fieldData['checkoutOptions'])) {
+                        $checkoutOptions = is_array($fieldData['checkoutOptions']) ? $fieldData['checkoutOptions'] : [];
+                        // Filter out empty strings
+                        $checkoutOptions = array_values(array_filter($checkoutOptions, function($opt) {
+                            return $opt !== '' && $opt !== null;
+                        }));
+                        if (!empty($checkoutOptions)) {
+                            $editData['checkoutOptions'] = $checkoutOptions;
+                        }
+                    }
+                    
                     // Only add to JSON if there's something to save
                     if (!empty($editData)) {
                         $fieldTypeEdits[(string)$csvIndex] = $editData;
