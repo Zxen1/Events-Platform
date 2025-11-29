@@ -18252,6 +18252,15 @@ function makePosts(){
         }
       });
       map.on('zoomend', ()=>{
+        // Clear map card markers when zoom < 8
+        if(window.MapCards){
+          let zoomForMarkers = NaN;
+          try{ zoomForMarkers = map.getZoom(); }catch(err){ zoomForMarkers = NaN; }
+          if(Number.isFinite(zoomForMarkers) && zoomForMarkers < MARKER_ZOOM_THRESHOLD){
+            window.MapCards.clearAllMapCardMarkers();
+          }
+        }
+        
         if(markersLoaded) return;
         if(!map || typeof map.getZoom !== 'function') return;
         let currentZoom = NaN;
@@ -18646,22 +18655,37 @@ function makePosts(){
       const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       
       // NEW MARKER SYSTEM: Create DOM Markers instead of composites
-      // Clear existing markers first
-      if(window.MapCards && typeof window.MapCards.clearAllMapCardMarkers === 'function'){
-        window.MapCards.clearAllMapCardMarkers();
-      }
-      
-      // Create markers for visible features at zoom >= 8
       const currentZoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      
+      // Only show markers at zoom >= 8
       if(Number.isFinite(currentZoom) && currentZoom >= MARKER_ZOOM_THRESHOLD && window.MapCards){
         const featuresToProcess = Array.isArray(postsData.features) ? postsData.features : [];
         
+        // Build set of feature IDs to keep
+        const newFeatureIds = new Set();
+        featuresToProcess.forEach(feature => {
+          if(!feature || !feature.properties || feature.properties.point_count) return;
+          newFeatureIds.add(feature.properties.id);
+        });
+        
+        // Remove markers that are no longer in the feature set
+        const existingMarkers = window.MapCards.getAllMapCardMarkers();
+        existingMarkers.forEach((entry, postId) => {
+          if(!newFeatureIds.has(postId)){
+            window.MapCards.removeMapCardMarker(postId);
+          }
+        });
+        
+        // Create or update markers
         featuresToProcess.forEach(feature => {
           if(!feature || !feature.properties || feature.properties.point_count) return;
           
           const props = feature.properties;
           const coords = feature.geometry && feature.geometry.coordinates;
           if(!Array.isArray(coords) || coords.length < 2) return;
+          
+          // Skip if marker already exists
+          if(window.MapCards.getMapCardMarker(props.id)) return;
           
           const post = {
             id: props.id,
@@ -18670,6 +18694,8 @@ function makePosts(){
             venue: props.venue || '',
             city: props.city || '',
             isMultiPost: props.isMultiPost || false,
+            multiPostIds: props.multiPostIds || [],
+            multiCount: props.multiCount || 0,
             locations: props.locations || []
           };
           
@@ -18678,6 +18704,9 @@ function makePosts(){
             lat: coords[1]
           });
         });
+      } else if(window.MapCards){
+        // Below zoom 8 - clear all markers
+        window.MapCards.clearAllMapCardMarkers();
       }
       
       const existing = map.getSource('posts');

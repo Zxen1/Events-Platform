@@ -220,8 +220,21 @@
    */
   function getIconUrl(post) {
     const subcategoryMarkers = window.subcategoryMarkers || {};
+    const adminSettings = window.adminSettings || {};
+    
+    // Multi-post markers use the multi-post icon
+    if (post.isMultiPost) {
+      return adminSettings.multi_post_icon || 
+             subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || 
+             'assets/system-images/multi-post-icon-30.webp';
+    }
+    
+    // Single post markers use subcategory icon
     const iconId = post.sub || MULTI_POST_MARKER_ICON_ID;
-    return subcategoryMarkers[iconId] || subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || 'assets/system-images/multi-post-icon-30.webp';
+    return subcategoryMarkers[iconId] || 
+           subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] || 
+           adminSettings.multi_post_icon ||
+           'assets/system-images/multi-post-icon-30.webp';
   }
   
   /**
@@ -369,7 +382,41 @@
     if (entry.state === newState) return;
     
     entry.state = newState;
-    entry.element.innerHTML = createMapCardHTML(entry.post, newState);
+    
+    // Find the map-card element inside the container
+    const cardEl = entry.element.querySelector('.map-card');
+    if (cardEl) {
+      // Update the class
+      cardEl.classList.remove('map-card-small', 'map-card-hover', 'map-card-big');
+      cardEl.classList.add(`map-card-${newState}`);
+      cardEl.setAttribute('data-state', newState);
+      
+      // Update icon size for big state
+      const iconEl = cardEl.querySelector('.map-card-icon');
+      if (iconEl) {
+        const iconSize = newState === 'big' ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
+        iconEl.width = iconSize;
+        iconEl.height = iconSize;
+      }
+      
+      // Update labels for big state
+      const labelsEl = cardEl.querySelector('.map-card-labels');
+      if (labelsEl) {
+        const labels = getMarkerLabelLines(entry.post, newState === 'big');
+        if (newState === 'big') {
+          labelsEl.innerHTML = `
+            <div class="map-card-title">${labels.line1}</div>
+            ${labels.line2 ? `<div class="map-card-title">${labels.line2}</div>` : ''}
+            ${labels.venueLine ? `<div class="map-card-venue">${labels.venueLine}</div>` : ''}
+          `;
+        } else {
+          labelsEl.innerHTML = `
+            <div class="map-card-title">${labels.line1}</div>
+            ${labels.line2 ? `<div class="map-card-title">${labels.line2}</div>` : ''}
+          `;
+        }
+      }
+    }
   }
   
   /**
@@ -557,6 +604,28 @@
     const existing = document.getElementById('map-card-styles');
     if (existing) existing.remove();
     injectMapCardStyles();
+    
+    // Also update inline styles on existing markers for immediate effect
+    const smallPillUrl = getPillUrl('small');
+    const hoverPillUrl = getPillUrl('hover');
+    const bigPillUrl = getPillUrl('big');
+    
+    mapCardMarkers.forEach((entry) => {
+      const cardEl = entry.element.querySelector('.map-card');
+      if (cardEl) {
+        // Force update background-image based on current state
+        switch (entry.state) {
+          case 'big':
+            cardEl.style.backgroundImage = `url('${bigPillUrl}')`;
+            break;
+          case 'hover':
+            cardEl.style.backgroundImage = `url('${hoverPillUrl}')`;
+            break;
+          default:
+            cardEl.style.backgroundImage = `url('${smallPillUrl}')`;
+        }
+      }
+    });
   }
 
   // ==================== EXPOSE API ====================
@@ -638,8 +707,11 @@
     ensureMarkerLabelPillSprites: function() { return Promise.resolve(null); },
     generateMarkerImageFromId: function() { return null; },
     clearMarkerLabelPillSpriteCache: function() {
-      // When pills change, refresh the CSS
-      refreshMapCardStyles();
+      // When pills change, reload admin settings and refresh CSS
+      adminSettingsPromise = null; // Clear cache
+      loadAdminSettings().then(() => {
+        refreshMapCardStyles();
+      });
     },
     addPillSpritesToMap: function() {},
     updateMapCardLayerOpacity: function() {},
