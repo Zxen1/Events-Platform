@@ -2779,6 +2779,10 @@ let __notifyMapOnInteraction = null;
       const id = String(postcard.dataset.id);
       hoveredPostIds = [{ id: id, venueKey: null }];
       updateSelectedMarkerRing();
+      // Sync map card hover state
+      if(window.MapCards && window.MapCards.setMapCardHover){
+        window.MapCards.setMapCardHover(id);
+      }
     };
     
     const handlePostcardLeave = (e) => {
@@ -2787,8 +2791,13 @@ let __notifyMapOnInteraction = null;
       // Only clear if we're actually leaving the postcard (not moving to a child)
       const relatedTarget = e.relatedTarget;
       if(!relatedTarget || !postcard.contains(relatedTarget)){
+        const id = postcard.dataset.id;
         hoveredPostIds = [];
         updateSelectedMarkerRing();
+        // Remove map card hover state
+        if(window.MapCards && window.MapCards.removeMapCardHover && id){
+          window.MapCards.removeMapCardHover(id);
+        }
       }
     };
     
@@ -18650,12 +18659,31 @@ function makePosts(){
         
         // Use MapCards API for state management
         if(window.MapCards){
-          if(openPostId){
-            window.MapCards.setMapCardActive(openPostId);
-          } else {
-            // Remove all active states
-            const markers = window.MapCards.getAllMapCardMarkers ? window.MapCards.getAllMapCardMarkers() : null;
-            if(markers){
+          const markers = window.MapCards.getAllMapCardMarkers ? window.MapCards.getAllMapCardMarkers() : null;
+          if(markers){
+            let foundMarker = false;
+            // Find marker that contains the open post (check multiPostIds for multi-post markers)
+            if(openPostId){
+              markers.forEach((entry, markerId) => {
+                const post = entry.post;
+                const markerIds = [String(markerId)];
+                // Include all IDs from multiPostIds array
+                if(post && Array.isArray(post.multiPostIds)){
+                  post.multiPostIds.forEach(pid => {
+                    if(pid) markerIds.push(String(pid));
+                  });
+                }
+                // Check if open post is in this marker's IDs
+                if(markerIds.includes(openPostId)){
+                  window.MapCards.setMapCardActive(markerId);
+                  foundMarker = true;
+                } else if(entry.state === 'big'){
+                  window.MapCards.removeMapCardActive(markerId);
+                }
+              });
+            }
+            // If no open post, clear all active states
+            if(!openPostId || !foundMarker){
               markers.forEach((entry, id) => {
                 if(entry.state === 'big'){
                   window.MapCards.removeMapCardActive(id);
