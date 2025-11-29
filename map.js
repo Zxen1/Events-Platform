@@ -298,11 +298,13 @@
     el.className = 'map-card-container';
     el.innerHTML = createMapCardHTML(post, 'small');
     
-    // Create Mapbox Marker - anchor at lat/lng, CSS transform handles offset
+    // Create Mapbox Marker
+    // Anchor 'left' + offset [-20, 0] positions pill so icon center is at lat/lng
+    // (pill left edge at -20px, icon at 5px padding + 15px half-width = icon center at 0)
     const marker = new mapboxgl.Marker({
       element: el,
       anchor: 'left',
-      offset: [0, 0]
+      offset: [-20, 0]
     })
       .setLngLat([lng, lat])
       .addTo(map);
@@ -449,6 +451,8 @@
       if (id !== postId && entry.state === 'big') {
         updateMapCardState(id, 'small');
         entry.element.classList.remove('is-active');
+        // Reset offset to small position (-20px)
+        entry.marker.setOffset([-20, 0]);
       }
     });
     // Then activate this one
@@ -456,6 +460,8 @@
     if (entry) {
       updateMapCardState(postId, 'big');
       entry.element.classList.add('is-active');
+      // Change offset to big position (-30px for big icon center at lat/lng)
+      entry.marker.setOffset([-30, 0]);
     }
   }
   
@@ -468,6 +474,8 @@
     if (!entry || entry.state !== 'big') return;
     updateMapCardState(postId, 'small');
     entry.element.classList.remove('is-active');
+    // Reset offset to small position
+    entry.marker.setOffset([-20, 0]);
   }
   
   /**
@@ -522,74 +530,47 @@
     const bigPillUrl = getPillUrl('big');
     
     const css = `
-      /* Map Card Container - z-index controls stacking */
+      /* Map Card Container - z-index for stacking */
       .map-card-container {
         cursor: pointer;
-        position: relative;
         z-index: 1;
       }
+      .map-card-container:hover { z-index: 10; }
+      .map-card-container.is-active { z-index: 100; }
       
-      /* Hover state brings card forward */
-      .map-card-container:hover {
-        z-index: 10;
-      }
-      
-      /* Active state brings card to top */
-      .map-card-container.is-active {
-        z-index: 100;
-      }
-      
-      /* Base Map Card */
+      /* Map Card - pill background with icon + labels inside */
       .map-card {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding-left: 8px;
-        background-repeat: no-repeat;
-        transition: all 0.15s ease;
+        padding-left: 5px;
+        gap: 5px;
       }
       
-      /* Small State - left edge 20px left of lat/lng */
-      .map-card-small {
-        width: ${SMALL_PILL_WIDTH}px;
-        height: ${SMALL_PILL_HEIGHT}px;
-        background-image: url('${smallPillUrl}');
-        background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
-        margin-left: -20px;
-      }
-      
-      /* Hover State - same position as small */
+      /* States - just swap background and size */
+      .map-card-small,
       .map-card-hover {
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
-        background-image: url('${hoverPillUrl}');
+        background: url('${smallPillUrl}') no-repeat;
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
-        margin-left: -20px;
       }
-      
-      /* Big/Active State - left edge 35px left of lat/lng */
+      .map-card-hover {
+        background-image: url('${hoverPillUrl}');
+      }
       .map-card-big {
         width: ${BIG_PILL_WIDTH}px;
         height: ${BIG_PILL_HEIGHT}px;
-        background-image: url('${bigPillUrl}');
+        background: url('${bigPillUrl}') no-repeat;
         background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
-        margin-left: -35px;
       }
       
       /* Icon */
-      .map-card-icon {
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
+      .map-card-icon { border-radius: 50%; flex-shrink: 0; }
       
-      /* Labels Container */
-      .map-card-labels {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
+      /* Labels */
+      .map-card-labels { display: flex; flex-direction: column; overflow: hidden; }
       
-      /* Title Text */
+      /* Text styling */
       .map-card-title {
         color: #fff;
         font-family: "Open Sans", sans-serif;
