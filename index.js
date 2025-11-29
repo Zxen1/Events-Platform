@@ -7746,14 +7746,17 @@ function makePosts(){
       // Check both fieldTypeKey and type since member forms might not have fieldTypeKey
       const isCheckoutField = fieldTypeKey === 'checkout' || safeField.type === 'checkout' || safeField.fieldTypeKey === 'checkout';
       if(isCheckoutField){
-        // Preserve existing checkoutOptions if they exist
-        if(!Array.isArray(safeField.checkoutOptions)){
-          // Try to get from the original field object if it exists
-          if(field && typeof field === 'object' && Array.isArray(field.checkoutOptions)){
-            safeField.checkoutOptions = field.checkoutOptions.slice();
-          } else {
+        // Always prefer checkoutOptions from the original field object if it exists and has values
+        if(field && typeof field === 'object' && Array.isArray(field.checkoutOptions) && field.checkoutOptions.length > 0){
+          // Use the original field's checkoutOptions (filter out empty strings)
+          const validOptions = field.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
+          if(validOptions.length > 0){
+            safeField.checkoutOptions = validOptions.slice();
+          } else if(!Array.isArray(safeField.checkoutOptions)){
             safeField.checkoutOptions = [];
           }
+        } else if(!Array.isArray(safeField.checkoutOptions)){
+          safeField.checkoutOptions = [];
         }
       }
         if(fieldTypeKey === 'location'){
@@ -13094,13 +13097,6 @@ function makePosts(){
                 }
               }
               
-              
-              // Debug: log what we have
-              console.log('[Admin Checkout Edit Panel]', {
-                fieldKey: safeField.key,
-                fieldTypeKey: safeField.fieldTypeKey,
-                checkoutOptions: safeField.checkoutOptions
-              });
               
               // Ensure we have 3 slots
               while(safeField.checkoutOptions.length < 3){
