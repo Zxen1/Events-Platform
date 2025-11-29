@@ -1904,6 +1904,10 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
         if (in_array('field_type_key', $columns, true)) {
             $select[] = 'field_type_key';
         }
+        $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
+        if ($hasFormbuilderEditable) {
+            $select[] = 'formbuilder_editable';
+        }
 
         $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
             return '`' . str_replace('`', '``', $col) . '`';
@@ -1918,11 +1922,15 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
             $id = (int) $row['id'];
             $name = isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '';
             $key = isset($row['field_type_key']) ? sanitizeKey((string) $row['field_type_key']) : '';
-            $map[$id] = [
+            $entry = [
                 'id' => $id,
                 'name' => $name,
                 'key' => $key,
             ];
+            if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
+                $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
+            }
+            $map[$id] = $entry;
         }
 
         return $map;

@@ -934,10 +934,12 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 
                 // Check if this field type is editable and has customizations
                 $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
+                $fieldTypeKey = isset($matchingFieldType['field_type_key']) ? trim((string) $matchingFieldType['field_type_key']) : '';
+                $isCheckout = ($fieldTypeKey === 'checkout');
                 $customName = null;
                 $customOptions = null;
                 $customCheckoutOptions = null;
-                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                if (($isEditable || $isCheckout) && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
@@ -977,9 +979,11 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             else {
                 // Check if this field type is editable and has customizations
                 $isEditable = isset($matchingFieldType['formbuilder_editable']) && $matchingFieldType['formbuilder_editable'] === true;
+                $fieldTypeKey = isset($matchingFieldType['field_type_key']) ? trim((string) $matchingFieldType['field_type_key']) : '';
+                $isCheckout = ($fieldTypeKey === 'checkout');
                 $customName = null;
                 $customCheckoutOptions = null;
-                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                if (($isEditable || $isCheckout) && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
