@@ -7695,6 +7695,13 @@ function makePosts(){
       if(!safeField.fieldTypeKey && safeField.key){
         safeField.fieldTypeKey = safeField.key;
       }
+      // If type is 'checkout' but fieldTypeKey is missing, set it
+      if(safeField.type === 'checkout' && !safeField.fieldTypeKey){
+        safeField.fieldTypeKey = 'checkout';
+        if(!safeField.key){
+          safeField.key = 'checkout';
+        }
+      }
       // For brand new fields, default to first field type in list
       // Don't default to first field type - let user select
       // Only set defaults if field type is explicitly provided
@@ -7736,9 +7743,17 @@ function makePosts(){
       }
       
       // Preserve checkoutOptions for checkout field type
-      if(fieldTypeKey === 'checkout' || safeField.type === 'checkout'){
+      // Check both fieldTypeKey and type since member forms might not have fieldTypeKey
+      const isCheckoutField = fieldTypeKey === 'checkout' || safeField.type === 'checkout' || safeField.fieldTypeKey === 'checkout';
+      if(isCheckoutField){
+        // Preserve existing checkoutOptions if they exist
         if(!Array.isArray(safeField.checkoutOptions)){
-          safeField.checkoutOptions = [];
+          // Try to get from the original field object if it exists
+          if(field && typeof field === 'object' && Array.isArray(field.checkoutOptions)){
+            safeField.checkoutOptions = field.checkoutOptions.slice();
+          } else {
+            safeField.checkoutOptions = [];
+          }
         }
       }
         if(fieldTypeKey === 'location'){
@@ -8789,16 +8804,6 @@ function makePosts(){
             selectedOptions = field.options;
           }
           
-          // Debug: log field data to see what we're working with
-          if(selectedOptions.length === 0){
-            console.log('[Checkout Field Debug]', {
-              fieldType: field.type,
-              fieldTypeKey: field.fieldTypeKey,
-              checkoutOptions: field.checkoutOptions,
-              options: field.options,
-              fullField: field
-            });
-          }
           
           // Get all checkout options from global
           const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
