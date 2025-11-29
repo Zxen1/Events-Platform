@@ -13097,8 +13097,15 @@ function makePosts(){
                 }
               }
               
+              // Filter out empty strings to see if we have any real values
+              const validOptions = safeField.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
               
-              // Ensure we have 3 slots
+              // If we have valid options, preserve them before padding
+              // If not, we'll pad with empty strings (user hasn't selected yet)
+              const preservedOptions = validOptions.length > 0 ? validOptions.slice() : [];
+              
+              // Ensure we have 3 slots (pad with empty strings if needed)
+              safeField.checkoutOptions = preservedOptions.slice();
               while(safeField.checkoutOptions.length < 3){
                 safeField.checkoutOptions.push('');
               }
@@ -13634,7 +13641,15 @@ function makePosts(){
           }
 
           const createFieldRow = (field)=>{
+            // Debug: check if field has checkoutOptions when creating row
+            if((field && field.type === 'checkout') || (field && field.fieldTypeKey === 'checkout')){
+              console.log('[createFieldRow] Checkout field has checkoutOptions:', field.checkoutOptions);
+            }
             const safeField = ensureFieldDefaults(field);
+            // Debug: check if safeField preserved checkoutOptions
+            if((safeField && safeField.type === 'checkout') || (safeField && safeField.fieldTypeKey === 'checkout')){
+              console.log('[createFieldRow] safeField checkoutOptions after ensureFieldDefaults:', safeField.checkoutOptions);
+            }
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
 
