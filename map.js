@@ -1200,9 +1200,10 @@
       }
     }
     
-    // Show clusters
+    // Show clusters and log
     if (clusterLayer && typeof map.getLayer === 'function' && map.getLayer(CLUSTER_LAYER_ID)) {
       map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', 'visible');
+      console.log('[MarkerClusters] Layer set to visible with', data.features.length, 'features');
     }
   }
   
@@ -1372,42 +1373,43 @@
       });
     }
     
-    // Update clusters on zoom
-    map.on('zoom', () => {
-      const zoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
-      updateClusterSourceForZoom(map, zoom);
-    });
-    
-    // Also update on zoomend to catch final zoom state
+    // Update clusters on zoomend only (not during zoom animation) to improve performance
     map.on('zoomend', () => {
       const zoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
       updateClusterSourceForZoom(map, zoom);
     });
-    
-    // Listen for posts to load - check periodically
-    // Clusters update automatically via zoom events and refreshClusters calls
   }
+  
+  // Throttle refresh to avoid excessive calls
+  let refreshTimeout = null;
   
   /**
    * Refresh clusters (call when filters change or posts load)
    */
   function refreshClusters() {
-    const mapInstance = typeof window.getMapInstance === 'function' 
-      ? window.getMapInstance() 
-      : (typeof window.map !== 'undefined' ? window.map : null);
-    
-    if (!mapInstance) {
+    // Throttle to max once per 200ms
+    if (refreshTimeout) {
       return;
     }
     
-    // Force update by clearing cache
-    lastClusterZoom = null;
-    lastClusterFilterKey = null;
-    
-    const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
-    const posts = getFilteredPosts();
-    console.log('[MarkerClusters] Refreshing clusters - posts:', posts.length, 'zoom:', currentZoom.toFixed(2), 'postsLoaded:', window.postsLoaded);
-    updateClusterSourceForZoom(mapInstance, currentZoom);
+    refreshTimeout = setTimeout(() => {
+      refreshTimeout = null;
+      
+      const mapInstance = typeof window.getMapInstance === 'function' 
+        ? window.getMapInstance() 
+        : (typeof window.map !== 'undefined' ? window.map : null);
+      
+      if (!mapInstance) {
+        return;
+      }
+      
+      // Force update by clearing cache
+      lastClusterZoom = null;
+      lastClusterFilterKey = null;
+      
+      const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+      updateClusterSourceForZoom(mapInstance, currentZoom);
+    }, 200);
   }
   
   // ==================== EXPOSE CLUSTER API ====================
