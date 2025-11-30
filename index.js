@@ -21660,11 +21660,11 @@ function schedulePanelEntrance(content, force=false){
 }
 function openPanel(m){
   if(!m) return;
-  // Admin panel authentication check disabled for development
-  // if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
-  //   window.adminAuthManager.ensureAuthenticated();
-  //   return;
-  // }
+  // Require admin authentication to access admin panel
+  if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+    window.adminAuthManager.ensureAuthenticated();
+    return;
+  }
   
   // Initialize admin panel spin controls with current values
   if(m.id === 'adminPanel'){
@@ -23392,10 +23392,16 @@ const adminAuthManager = (()=>{
     // Re-fetch adminBtn each time to avoid stale reference
     const adminBtn = document.getElementById('adminBtn');
     if(adminBtn){
-      // Always show admin button
-      adminBtn.hidden = false;
-      adminBtn.style.display = 'flex';
-      adminBtn.setAttribute('aria-hidden', 'false');
+      // Only show admin button when authenticated as admin
+      if(authenticated){
+        adminBtn.hidden = false;
+        adminBtn.style.display = 'flex';
+        adminBtn.setAttribute('aria-hidden', 'false');
+      } else {
+        adminBtn.hidden = true;
+        adminBtn.style.display = 'none';
+        adminBtn.setAttribute('aria-hidden', 'true');
+      }
     }
   }
 
