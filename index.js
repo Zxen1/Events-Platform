@@ -2048,9 +2048,14 @@ let __notifyMapOnInteraction = null;
         let lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildClusterFeatureCollection(zoom){
-          // Always use filtered posts when posts are loaded (applyFilters sets filtered)
+          // Always use filtered posts when posts are loaded (respects filter panel)
           // Use all posts only before posts are loaded
-          const postsSource = postsLoaded ? filtered : (getAllPostsCache({ allowInitialize: true }) || []);
+          let postsSource;
+          if(postsLoaded && Array.isArray(filtered)){
+            postsSource = filtered;
+          } else {
+            postsSource = getAllPostsCache({ allowInitialize: true }) || [];
+          }
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getClusterBucketKey(zoom);
@@ -2131,7 +2136,7 @@ let __notifyMapOnInteraction = null;
           if(!map) return;
           const source = map.getSource && map.getSource(CLUSTER_SOURCE_ID);
           if(!source || typeof source.setData !== 'function') return;
-          const zoomValue = Number.isFinite(zoom) ? zoom : (typeof map.getZoom === 'function' ? map.getZoom() : 0);
+          const zoomValue = Number.isFinite(zoom) ? zoom : (map.getZoom?.() ?? 0);
           const bucketKey = getClusterBucketKey(zoomValue);
           if(!force && lastClusterBucketKey === bucketKey) return;
           try{
@@ -21326,7 +21331,8 @@ function openPostModal(id){
       resetClusterSourceState();
       if(map){
         const currentZoom = map.getZoom?.() ?? 0;
-        if(Number.isFinite(currentZoom) && currentZoom < MARKER_ZOOM_THRESHOLD){
+        if(Number.isFinite(currentZoom)){
+          // Always update clusters when filters change, regardless of zoom level
           updateClusterSourceForZoom(currentZoom, true);
         }
       }
