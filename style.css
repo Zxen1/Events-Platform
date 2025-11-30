@@ -6139,8 +6139,28 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .post-venue-menu,
+.post-body .post-venue-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  max-width:100%;
+  height:auto;
+  max-height:none;
+  overflow:auto;
+  background:#222222;
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index: var(--layer-menu);
+}
+
 .open-post .session-menu,
-.post-body .post-venue-menu,
 .post-body .session-menu{
   position:absolute;
   top:calc(100% + 4px);
@@ -6150,6 +6170,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:border-box;
   max-width:100%;
   height:auto;
+  min-height:calc(var(--calendar-height) + 20px);
   max-height:none;
   overflow:auto;
   background:#222222;
