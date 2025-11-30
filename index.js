@@ -1919,7 +1919,6 @@ let __notifyMapOnInteraction = null;
                 });
               }
             }
-          }
         } catch(err){
           console.error('Failed to load admin settings from database:', err);
         }
