@@ -5944,6 +5944,18 @@ function makePosts(){
           window.__markersLoaded = true;
         }
       }
+      
+      // Update marker clusters on zoom change
+      if(window.MarkerClusters && typeof window.MarkerClusters.updateClusterSourceForZoom === 'function'){
+        try{
+          const currentZoom = Number.isFinite(lastKnownZoom) ? lastKnownZoom : (map && typeof map.getZoom === 'function' ? map.getZoom() : 0);
+          if(Number.isFinite(currentZoom)){
+            window.MarkerClusters.updateClusterSourceForZoom(map, currentZoom);
+          }
+        }catch(err){
+          console.error('Failed to update clusters on zoom:', err);
+        }
+      }
     }
 
     function scheduleCheckLoadPosts(event){

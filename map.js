@@ -904,33 +904,24 @@
   
   /**
    * Get filtered posts from index.js
+   * MUST ONLY use filtered posts - no fallbacks
    * @returns {Array} Array of filtered posts
    */
   function getFilteredPosts() {
-    // Try to access filtered array from index.js
+    // Access filtered array from index.js function
     if (typeof window.getFilteredPosts === 'function') {
       const posts = window.getFilteredPosts();
-      if (Array.isArray(posts) && posts.length > 0) {
-        return posts;
+      if (Array.isArray(posts)) {
+        return posts; // Return even if empty - filters may have run and returned no results
       }
     }
     
-    // Fallback: try to access global filtered variable
-    if (typeof window.filtered !== 'undefined' && Array.isArray(window.filtered) && window.filtered.length > 0) {
+    // Try to access global filtered variable directly
+    if (typeof window.filtered !== 'undefined' && Array.isArray(window.filtered)) {
       return window.filtered;
     }
     
-    // Last resort: try to get from postsLoaded (all posts, not filtered)
-    // This is a fallback - clusters should use filtered posts, but if filters haven't run yet,
-    // we can use all posts as a temporary measure
-    if (window.postsLoaded && typeof window.getAllPostsCache === 'function') {
-      const cache = window.getAllPostsCache({ allowInitialize: true });
-      if (Array.isArray(cache) && cache.length > 0) {
-        console.warn('[MarkerClusters] Using all posts cache as fallback - filters may not have run yet');
-        return cache;
-      }
-    }
-    
+    // No fallbacks - return empty array if filtered posts not available
     return [];
   }
   
@@ -1138,23 +1129,25 @@
       return;
     }
     
-    // Check if posts are loaded - if not, don't update clusters yet
-    if (!window.postsLoaded) {
-      return; // Wait for posts to load
-    }
-    
     // Get filtered posts and create a key for caching
+    // Clusters should show immediately, even if posts aren't loaded yet
     const posts = getFilteredPosts();
     const filterKey = Array.isArray(posts) ? posts.length + '-' + (posts[0]?.id || '') : 'empty';
     const zoomKey = Math.floor(zoom * 10) / 10; // Round to 0.1 precision
     
-    // Log only on significant changes to reduce console noise
+    // Log only when posts change
     if (posts.length > 0 && (lastClusterFilterKey === null || lastClusterFilterKey !== filterKey)) {
       console.log('[MarkerClusters] Updating clusters - posts:', posts.length, 'zoom:', zoom.toFixed(2));
     }
     
-    if (!Array.isArray(posts) || posts.length === 0) {
-      // No posts, set empty data
+    // Always update clusters, even if empty (so they appear immediately)
+    // Empty clusters will just show nothing, which is fine
+    if (!Array.isArray(posts)) {
+      posts = [];
+    }
+    
+    // If no posts, set empty data but still update (so layer is ready)
+    if (posts.length === 0) {
       if (clusterSource && typeof clusterSource.setData === 'function') {
         clusterSource.setData({ type: 'FeatureCollection', features: [] });
       }
@@ -1278,9 +1271,17 @@
         }
       }
       
-      // Initial update
+      // Initial update - clusters should show immediately
       const currentZoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      console.log('[MarkerClusters] Initial update at zoom:', currentZoom);
       updateClusterSourceForZoom(map, currentZoom);
+      
+      // Force visibility to ensure clusters show
+      if (typeof map.getLayer === 'function' && map.getLayer(CLUSTER_LAYER_ID)) {
+        if (currentZoom < CLUSTER_MAX_ZOOM) {
+          map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', 'visible');
+        }
+      }
     }).catch(err => {
       console.warn('[MarkerClusters] Failed to setup cluster layers:', err);
     });
@@ -1355,14 +1356,18 @@
    */
   function initMarkerClusters(map) {
     if (!map) {
+      console.warn('[MarkerClusters] No map instance provided');
       return;
     }
+    
+    console.log('[MarkerClusters] Initializing clusters...');
     
     // Wait for map to be ready
     if (map.loaded()) {
       setupClusterLayers(map);
     } else {
       map.once('load', () => {
+        console.log('[MarkerClusters] Map loaded, setting up layers...');
         setupClusterLayers(map);
       });
     }
@@ -1378,10 +1383,13 @@
       const zoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
       updateClusterSourceForZoom(map, zoom);
     });
+    
+    // Listen for posts to load - check periodically
+    // Clusters update automatically via zoom events and refreshClusters calls
   }
   
   /**
-   * Refresh clusters (call when filters change)
+   * Refresh clusters (call when filters change or posts load)
    */
   function refreshClusters() {
     const mapInstance = typeof window.getMapInstance === 'function' 
@@ -1398,7 +1406,7 @@
     
     const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
     const posts = getFilteredPosts();
-    console.log('[MarkerClusters] Refreshing clusters - posts:', posts.length, 'zoom:', currentZoom.toFixed(2));
+    console.log('[MarkerClusters] Refreshing clusters - posts:', posts.length, 'zoom:', currentZoom.toFixed(2), 'postsLoaded:', window.postsLoaded);
     updateClusterSourceForZoom(mapInstance, currentZoom);
   }
   
