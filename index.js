@@ -17462,12 +17462,24 @@ function makePosts(){
         if(gEl){
           gEl.appendChild(gc.onAdd(map));
           // Prevent browser autofill on geocoder input
+          const disableAutofill = (input) => {
+            if(!input) return;
+            input.setAttribute('autocomplete', 'new-password');
+            input.setAttribute('data-lpignore', 'true');
+            input.setAttribute('data-form-type', 'other');
+            input.setAttribute('name', 'mapbox-search-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+          };
           const gcInput = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
-          if(gcInput){
-            gcInput.setAttribute('autocomplete', 'off');
-            gcInput.setAttribute('data-lpignore', 'true'); // LastPass
-            gcInput.setAttribute('data-form-type', 'other'); // Dashlane
-          }
+          disableAutofill(gcInput);
+          // Also watch for input creation in case it's async
+          const observer = new MutationObserver(() => {
+            const inp = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
+            if(inp && !inp.__autofillDisabled){
+              inp.__autofillDisabled = true;
+              disableAutofill(inp);
+            }
+          });
+          observer.observe(gEl, { childList: true, subtree: true });
         }
         geocoders.push(gc);
         if(idx === 1){
