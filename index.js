@@ -1,4 +1,56 @@
-﻿// === Shared login verifier ===
+﻿// === GLOBAL Admin Settings Cache ===
+// Single source of truth for admin settings - prevents multiple API calls
+let _adminSettingsCache = null;
+let _adminSettingsCachePromise = null;
+
+/**
+ * Get admin settings from cache or fetch from server (single API call)
+ * All functions needing admin settings should use this instead of direct fetch
+ */
+async function getAdminSettings(includeMessages = false) {
+  // Return cached data if available
+  if (_adminSettingsCache) {
+    return _adminSettingsCache;
+  }
+  
+  // Return pending promise if fetch is in progress
+  if (_adminSettingsCachePromise) {
+    return _adminSettingsCachePromise;
+  }
+  
+  // Start fetch with messages included (superset of data)
+  _adminSettingsCachePromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      _adminSettingsCache = result;
+      return result;
+    } catch (error) {
+      console.error('Failed to load admin settings:', error);
+      _adminSettingsCachePromise = null;
+      return { success: false, settings: {}, messages: [] };
+    }
+  })();
+  
+  return _adminSettingsCachePromise;
+}
+
+// Expose globally for map.js and other scripts
+window.getAdminSettings = getAdminSettings;
+
+// === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
@@ -102,12 +154,12 @@ function getSortedCategories(list) {
 }
 
 // === Message Utility Functions ===
-// Cache for loaded messages
+// Cache for loaded messages (processed from admin settings)
 let messageCache = null;
-let messageCachePromise = null;
 
 /**
  * Load messages from database and cache them
+ * Uses global getAdminSettings() cache to avoid duplicate API calls
  * @param {boolean} includeAdmin - If true, includes admin and email messages (for admin panel)
  * @returns {Promise<Object>} Object mapping message_key to message data
  */
@@ -117,79 +169,52 @@ async function loadMessagesFromDatabase(includeAdmin = false){
     return messageCache;
   }
   
-  // Prevent duplicate requests
-  if(messageCachePromise){
-    return messageCachePromise;
-  }
-  
-  messageCachePromise = (async () => {
-    try {
-      // Add timeout to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if(!response.ok){
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      
-      if(!result.success || !result.messages){
-        console.warn('Failed to load messages from database:', result.message || result.messages_error);
-        return {};
-      }
-      
-      // Flatten messages by message_key for easy lookup
-      const messagesMap = {};
-      result.messages.forEach(container => {
-        if(!container.messages || !Array.isArray(container.messages)) return;
-        
-        container.messages.forEach(message => {
-          // Filter visibility: users see only msg_user and msg_member, exclude msg_email
-          // Admin sees everything when includeAdmin is true
-          if(!includeAdmin){
-            const visibleContainers = ['msg_user', 'msg_member'];
-            if(!visibleContainers.includes(message.container_key || container.container_key)){
-              return; // Skip admin and email messages for regular users
-            }
-            // Also check is_visible flag
-            if(message.is_visible === false || message.is_visible === 0){
-              return; // Skip hidden messages
-            }
-          }
-          
-          // Only include active messages
-          if(message.is_active !== false && message.is_active !== 0){
-            messagesMap[message.message_key] = message;
-          }
-        });
-      });
-      
-      // Cache user-visible messages separately from admin messages
-      if(!includeAdmin){
-        messageCache = messagesMap;
-      }
-      
-      return messagesMap;
-    } catch(error){
-      if(error.name === 'AbortError'){
-        console.error('Message loading timed out after 10 seconds');
-      } else {
-        console.error('Error loading messages from database:', error);
-      }
-      // Return empty object on error - UI will use fallback text
+  try {
+    // Use global cached admin settings
+    const result = await getAdminSettings(true);
+    
+    if(!result.success || !result.messages){
+      console.warn('Failed to load messages from database:', result.message || result.messages_error);
       return {};
-    } finally {
-      messageCachePromise = null;
     }
-  })();
-  
-  return messageCachePromise;
+    
+    // Flatten messages by message_key for easy lookup
+    const messagesMap = {};
+    result.messages.forEach(container => {
+      if(!container.messages || !Array.isArray(container.messages)) return;
+      
+      container.messages.forEach(message => {
+        // Filter visibility: users see only msg_user and msg_member, exclude msg_email
+        // Admin sees everything when includeAdmin is true
+        if(!includeAdmin){
+          const visibleContainers = ['msg_user', 'msg_member'];
+          if(!visibleContainers.includes(message.container_key || container.container_key)){
+            return; // Skip admin and email messages for regular users
+          }
+          // Also check is_visible flag
+          if(message.is_visible === false || message.is_visible === 0){
+            return; // Skip hidden messages
+          }
+        }
+        
+        // Only include active messages
+        if(message.is_active !== false && message.is_active !== 0){
+          messagesMap[message.message_key] = message;
+        }
+      });
+    });
+    
+    // Cache user-visible messages separately from admin messages
+    if(!includeAdmin){
+      messageCache = messagesMap;
+    }
+    
+    return messagesMap;
+  } catch(error){
+    console.error('Error loading messages from database:', error);
+    // Return empty object on error - UI will use fallback text
+    return {};
+  }
 }
 
 /**
@@ -1535,16 +1560,11 @@ let __notifyMapOnInteraction = null;
         });
       }
       
-      // Load admin settings from database
+      // Load admin settings from database (uses global cache to avoid duplicate fetches)
       (async function loadAdminSettings(){
         try {
-          const response = await fetch('/gateway.php?action=get-admin-settings', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-          });
-          if(response.ok){
-            const data = await response.json();
-            if(data.success && data.settings){
+          const data = await getAdminSettings();
+          if(data.success && data.settings){
               // Update the local variables directly first
               spinLoadStart = data.settings.spin_on_load || false;
               spinLoadType = data.settings.spin_load_type || 'everyone';
@@ -1902,9 +1922,6 @@ let __notifyMapOnInteraction = null;
           }
         } catch(err){
           console.error('Failed to load admin settings from database:', err);
-          // Don't use defaults - error should be visible
-          // You may want to show an error message in the UI here
-          throw err; // Or handle the error appropriately without using defaults
         }
       })();
       let markersLoaded = false;
@@ -1937,17 +1954,14 @@ let __notifyMapOnInteraction = null;
         let clusterLayersVisible = true;
 
         async function ensureClusterIconImage(mapInstance){
-          // Load cluster icon URL from admin_settings - no fallbacks
-            try {
-              const response = await fetch('/gateway.php?action=get-admin-settings');
-              if(response.ok){
-                const data = await response.json();
-              if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
-                CLUSTER_ICON_URL = data.settings.marker_cluster_icon.trim();
-                }
-              }
-            } catch(err) {
-              console.error('Failed to load marker cluster icon setting:', err);
+          // Load cluster icon URL from admin_settings (uses global cache)
+          try {
+            const data = await getAdminSettings();
+            if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
+              CLUSTER_ICON_URL = data.settings.marker_cluster_icon.trim();
+            }
+          } catch(err) {
+            console.error('Failed to load marker cluster icon setting:', err);
           }
           
           return new Promise(resolve => {
@@ -14817,20 +14831,17 @@ function makePosts(){
       { name: 'Email Messages', key: 'email', icon: '', description: 'Email communications' }
     ];
     
-    // Load message category icons from admin_settings
+    // Load message category icons from admin_settings (uses global cache)
     async function loadMessageCategoryIcons(){
       try {
-        const response = await fetch('/gateway.php?action=get-admin-settings');
-        if(response.ok){
-          const data = await response.json();
-          if(data.success && data.settings){
-            MESSAGE_CATEGORIES.forEach(cat => {
-              const settingKey = `msg_category_${cat.key}_icon`;
-              if(data.settings[settingKey]){
-                cat.icon = data.settings[settingKey];
-              }
-            });
-          }
+        const data = await getAdminSettings();
+        if(data.success && data.settings){
+          MESSAGE_CATEGORIES.forEach(cat => {
+            const settingKey = `msg_category_${cat.key}_icon`;
+            if(data.settings[settingKey]){
+              cat.icon = data.settings[settingKey];
+            }
+          });
         }
       } catch(err) {
         console.error('Failed to load message category icons:', err);
@@ -15085,16 +15096,11 @@ function makePosts(){
       messagesCats.appendChild(frag);
     }
     
-    // Fetch and populate admin messages from database
+    // Fetch and populate admin messages from database (uses global cache)
     async function loadAdminMessages(){
       try {
-        // Fetch messages directly for messages tab to get full container structure
-        // This preserves the original container format needed by populateMessagesIntoContainers
-        const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
-        if(!response.ok){
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
+        // Use global cache - includes messages
+        const result = await getAdminSettings();
         
         if(result.success && result.messages){
           populateMessagesIntoContainers(result.messages);
@@ -15103,7 +15109,6 @@ function makePosts(){
         }
       } catch(error){
         console.error('Error loading admin messages:', error);
-        // Don't call updateAllMessageElements here - it would overwrite the messages tab
       }
     }
     

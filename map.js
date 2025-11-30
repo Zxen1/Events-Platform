@@ -162,17 +162,40 @@
   
   // ==================== MAP CARD CREATION ====================
   
-  // Admin settings cache
+  // Admin settings cache (uses global cache from index.js)
   let adminSettingsLoaded = false;
   let adminSettingsPromise = null;
   
   /**
-   * Load admin settings from server
+   * Load admin settings from server (uses global cache to avoid duplicate fetches)
    * @returns {Promise<Object>} Admin settings object
    */
   function loadAdminSettings() {
     if (adminSettingsPromise) return adminSettingsPromise;
     
+    // Use global cache from index.js if available
+    if (typeof window.getAdminSettings === 'function') {
+      adminSettingsPromise = window.getAdminSettings()
+        .then(data => {
+          if (data.success && data.settings) {
+            window.adminSettings = data.settings;
+            adminSettingsLoaded = true;
+            return data.settings;
+          }
+          window.adminSettings = {};
+          adminSettingsLoaded = true;
+          return {};
+        })
+        .catch(err => {
+          console.warn('[MapCards] Failed to load admin settings:', err);
+          window.adminSettings = {};
+          adminSettingsLoaded = true;
+          return {};
+        });
+      return adminSettingsPromise;
+    }
+    
+    // Fallback to direct fetch if global cache not available
     adminSettingsPromise = fetch('/gateway.php?action=get-admin-settings')
       .then(response => {
         if (!response.ok) throw new Error('Failed to load admin settings');
