@@ -4452,11 +4452,11 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
+  const MAPBOX_VENUE_CACHE_LIMIT = 40;
   const MAPBOX_VENUE_MIN_QUERY = 2;
-  // NO CACHING - Always fetch fresh venue data for development
+  const mapboxVenueCache = new Map();
 
   function mapboxVenueCacheKey(query, options={}){
-    // NO CACHING - this is now just for key generation if needed
     const normalized = (query || '').trim().toLowerCase();
     const limit = Number.isFinite(options.limit) ? options.limit : 0;
     const types = typeof options.types === 'string' ? options.types : '';
@@ -4470,7 +4470,14 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function rememberMapboxVenueResult(key, features){
-    // NO CACHING - disabled for development
+    if(!key) return;
+    try{
+      mapboxVenueCache.set(key, features);
+      if(mapboxVenueCache.size > MAPBOX_VENUE_CACHE_LIMIT){
+        const firstKey = mapboxVenueCache.keys().next().value;
+        if(firstKey) mapboxVenueCache.delete(firstKey);
+      }
+    }catch(err){}
   }
 
   function getMapboxVenueFeatureCenter(feature){
@@ -4719,7 +4726,11 @@ function uniqueTitle(seed, cityName, idx){
     const proximity = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
       ? { longitude: options.proximity.longitude, latitude: options.proximity.latitude }
       : null;
-    // NO CACHING - always fetch fresh venue data for development
+    const cacheKey = mapboxVenueCacheKey(normalized, { limit, types: resolvedTypes, proximity, language, country, bbox });
+    if(mapboxVenueCache.has(cacheKey)){
+      const cached = mapboxVenueCache.get(cacheKey);
+      return Array.isArray(cached) ? cached.map(cloneGeocoderFeature) : [];
+    }
     const params = new URLSearchParams({
       access_token: MAPBOX_TOKEN,
       autocomplete: 'true',
@@ -5847,25 +5858,32 @@ function makePosts(){
   return out;
 }
 
-    // NO CACHING - Always get fresh posts for development
+    // Posts cache is REQUIRED for performance - posts are generated once and reused
+    let ALL_POSTS_CACHE = null;
     let ALL_POSTS_BY_ID = null;
-    function rebuildAllPostsIndex(postsArray){
-      if(!Array.isArray(postsArray)){
+    function rebuildAllPostsIndex(cache){
+      if(!Array.isArray(cache)){
         ALL_POSTS_BY_ID = null;
         return;
       }
       const map = new Map();
-      postsArray.forEach(item => {
+      cache.forEach(item => {
         if(!item || item.id === undefined || item.id === null) return;
         map.set(String(item.id), item);
       });
       ALL_POSTS_BY_ID = map;
     }
     function getAllPostsCache(options = {}){
-      // NO CACHING - always return fresh posts
-      const freshPosts = makePosts();
-      rebuildAllPostsIndex(freshPosts);
-      return freshPosts;
+      const { allowInitialize = true } = options;
+      if(Array.isArray(ALL_POSTS_CACHE)){
+        return ALL_POSTS_CACHE;
+      }
+      if(!allowInitialize){
+        return null;
+      }
+      ALL_POSTS_CACHE = makePosts();
+      rebuildAllPostsIndex(ALL_POSTS_CACHE);
+      return ALL_POSTS_CACHE;
     }
     function getPostByIdAnywhere(id){
       if(id === undefined || id === null) return null;
@@ -5886,9 +5904,17 @@ function makePosts(){
     }
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
-    // NO CACHING - Marker data always computed fresh for development
+    // Marker data cache is REQUIRED for performance - prevents recalculating GeoJSON on every interaction
+    const markerDataCache = {
+      signature: null,
+      postsData: EMPTY_FEATURE_COLLECTION,
+      featureIndex: new Map()
+    };
+
     function invalidateMarkerDataCache(){
-      // No-op: no cache to invalidate
+      markerDataCache.signature = null;
+      markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
+      markerDataCache.featureIndex = new Map();
     }
 
     function markerSignatureForList(list){
@@ -5964,19 +5990,31 @@ function makePosts(){
     }
 
     function getMarkerCollections(list){
-      // NO CACHING - always compute fresh marker data for development
       const signature = markerSignatureForList(list);
+      if(markerDataCache.signature === signature && markerDataCache.postsData){
+        return {
+          postsData: markerDataCache.postsData,
+          signature,
+          changed: false,
+          featureIndex: markerDataCache.featureIndex
+        };
+      }
       if(!Array.isArray(list) || !list.length){
+        markerDataCache.signature = signature;
+        markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
+        markerDataCache.featureIndex = new Map();
         return {
           postsData: EMPTY_FEATURE_COLLECTION,
           signature,
           changed: true,
-          featureIndex: new Map()
+          featureIndex: markerDataCache.featureIndex
         };
       }
       const postsData = postsToGeoJSON(list);
-      const featureIndex = buildMarkerFeatureIndex(postsData);
-      return { postsData, signature, changed: true, featureIndex };
+      markerDataCache.signature = signature;
+      markerDataCache.postsData = postsData;
+      markerDataCache.featureIndex = buildMarkerFeatureIndex(postsData);
+      return { postsData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
     }
 
 
