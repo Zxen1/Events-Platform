@@ -875,4 +875,431 @@
   // Expose refresh function
   window.MapCards.refreshAllMarkerIcons = refreshAllMarkerIcons;
 
+  // ==================== MARKER CLUSTERING ====================
+  // Clusters group nearby markers at zoom levels below 8
+  
+  const CLUSTER_SOURCE_ID = 'post-clusters';
+  const CLUSTER_LAYER_ID = 'post-clusters';
+  const CLUSTER_MAX_ZOOM = 8; // Clusters show at zoom < 8, not at 8
+  const CLUSTER_GRID_SIZE = 50; // Grid size for clustering (pixels)
+  const CLUSTER_MIN_POINTS = 2; // Minimum points to form a cluster
+  
+  let clusterSource = null;
+  let clusterLayer = null;
+  let clusterIconImageId = 'cluster-icon';
+  let clusterIconUrl = null;
+  let lastClusterZoom = null;
+  let lastClusterFilterKey = null;
+  
+  /**
+   * Get filtered posts from index.js
+   * @returns {Array} Array of filtered posts
+   */
+  function getFilteredPosts() {
+    // Try to access filtered array from index.js
+    if (typeof window.getFilteredPosts === 'function') {
+      return window.getFilteredPosts();
+    }
+    // Fallback: try to access global filtered variable
+    if (typeof window.filtered !== 'undefined' && Array.isArray(window.filtered)) {
+      return window.filtered;
+    }
+    // Last resort: try to get from postsLoaded
+    if (window.postsLoaded && typeof window.getAllPostsCache === 'function') {
+      const cache = window.getAllPostsCache({ allowInitialize: true });
+      return Array.isArray(cache) ? cache : [];
+    }
+    return [];
+  }
+  
+  /**
+   * Get cluster icon URL from admin settings
+   * @returns {string} URL to cluster icon
+   */
+  function getClusterIconUrl() {
+    const adminSettings = window.adminSettings || {};
+    return adminSettings.marker_cluster_icon || 'assets/system-images/cluster-icon-50.webp';
+  }
+  
+  /**
+   * Load cluster icon image into map
+   * @param {Object} map - Mapbox map instance
+   * @returns {Promise} Resolves when image is loaded
+   */
+  function ensureClusterIconImage(map) {
+    if (!map || typeof map.hasImage !== 'function') {
+      return Promise.resolve();
+    }
+    
+    if (map.hasImage(clusterIconImageId)) {
+      return Promise.resolve();
+    }
+    
+    return new Promise((resolve, reject) => {
+      const url = getClusterIconUrl();
+      if (!url) {
+        reject(new Error('No cluster icon URL'));
+        return;
+      }
+      
+      map.loadImage(url, (error, image) => {
+        if (error) {
+          console.warn('[MarkerClusters] Failed to load cluster icon:', error);
+          reject(error);
+          return;
+        }
+        if (image && typeof map.addImage === 'function') {
+          map.addImage(clusterIconImageId, image);
+          clusterIconUrl = url;
+          resolve();
+        } else {
+          reject(new Error('Failed to add cluster icon image'));
+        }
+      });
+    });
+  }
+  
+  /**
+   * Format cluster count for display
+   * @param {number} count - Number of points in cluster
+   * @returns {string} Formatted count
+   */
+  function formatClusterCount(count) {
+    if (count >= 1000) {
+      return (count / 1000).toFixed(1) + 'k';
+    }
+    return String(count);
+  }
+  
+  /**
+   * Group posts into clusters based on zoom level
+   * @param {Array} posts - Array of post objects with lng, lat
+   * @param {number} zoom - Current zoom level
+   * @returns {Array} Array of cluster objects { lng, lat, count, pointIds }
+   */
+  function groupPostsForClusterZoom(posts, zoom) {
+    if (!Array.isArray(posts) || posts.length === 0) {
+      return [];
+    }
+    
+    // Calculate grid cell size based on zoom
+    // At zoom 0, grid is very large; at zoom 7.9, grid is smaller
+    const baseGridSize = CLUSTER_GRID_SIZE;
+    const zoomFactor = Math.pow(2, 8 - zoom); // Larger factor at lower zoom
+    const cellSize = baseGridSize * zoomFactor;
+    
+    // Group posts into grid cells
+    const grid = new Map();
+    
+    posts.forEach((post, index) => {
+      if (!post || !Number.isFinite(post.lng) || !Number.isFinite(post.lat)) {
+        return;
+      }
+      
+      // Calculate grid cell coordinates
+      const cellX = Math.floor(post.lng / cellSize);
+      const cellY = Math.floor(post.lat / cellSize);
+      const cellKey = `${cellX},${cellY}`;
+      
+      if (!grid.has(cellKey)) {
+        grid.set(cellKey, {
+          lng: 0,
+          lat: 0,
+          count: 0,
+          pointIds: []
+        });
+      }
+      
+      const cell = grid.get(cellKey);
+      cell.lng += post.lng;
+      cell.lat += post.lat;
+      cell.count++;
+      cell.pointIds.push(post.id || index);
+    });
+    
+    // Convert grid cells to clusters
+    const clusters = [];
+    grid.forEach((cell, cellKey) => {
+      if (cell.count >= CLUSTER_MIN_POINTS) {
+        // Calculate centroid
+        clusters.push({
+          lng: cell.lng / cell.count,
+          lat: cell.lat / cell.count,
+          count: cell.count,
+          pointIds: cell.pointIds
+        });
+      } else {
+        // Single points - add as individual markers (not clustered)
+        // We'll handle these separately if needed
+      }
+    });
+    
+    return clusters;
+  }
+  
+  /**
+   * Build GeoJSON feature collection for clusters
+   * @param {number} zoom - Current zoom level
+   * @returns {Object} GeoJSON feature collection
+   */
+  function buildClusterFeatureCollection(zoom) {
+    const posts = getFilteredPosts();
+    if (!Array.isArray(posts) || posts.length === 0) {
+      return { type: 'FeatureCollection', features: [] };
+    }
+    
+    const clusters = groupPostsForClusterZoom(posts, zoom);
+    
+    const features = clusters.map((cluster, index) => ({
+      type: 'Feature',
+      id: `cluster-${index}`,
+      geometry: {
+        type: 'Point',
+        coordinates: [cluster.lng, cluster.lat]
+      },
+      properties: {
+        cluster: true,
+        count: cluster.count,
+        pointIds: cluster.pointIds
+      }
+    }));
+    
+    return {
+      type: 'FeatureCollection',
+      features
+    };
+  }
+  
+  /**
+   * Update cluster source for current zoom level
+   * @param {Object} map - Mapbox map instance
+   * @param {number} zoom - Current zoom level
+   */
+  function updateClusterSourceForZoom(map, zoom) {
+    if (!map || !Number.isFinite(zoom)) {
+      return;
+    }
+    
+    // Only show clusters at zoom < 8
+    if (zoom >= CLUSTER_MAX_ZOOM) {
+      // Hide clusters
+      if (clusterLayer && typeof map.getLayer === 'function' && map.getLayer(CLUSTER_LAYER_ID)) {
+        map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', 'none');
+      }
+      return;
+    }
+    
+    // Get filtered posts and create a key for caching
+    const posts = getFilteredPosts();
+    const filterKey = Array.isArray(posts) ? posts.length + '-' + (posts[0]?.id || '') : 'empty';
+    const zoomKey = Math.floor(zoom * 10) / 10; // Round to 0.1 precision
+    
+    // Check if we need to update
+    if (lastClusterZoom === zoomKey && lastClusterFilterKey === filterKey) {
+      return; // No change needed
+    }
+    
+    lastClusterZoom = zoomKey;
+    lastClusterFilterKey = filterKey;
+    
+    // Build cluster data
+    const data = buildClusterFeatureCollection(zoom);
+    
+    // Update or create source
+    if (!clusterSource) {
+      if (typeof map.getSource === 'function' && map.getSource(CLUSTER_SOURCE_ID)) {
+        clusterSource = map.getSource(CLUSTER_SOURCE_ID);
+      } else {
+        map.addSource(CLUSTER_SOURCE_ID, {
+          type: 'geojson',
+          data: data
+        });
+        clusterSource = map.getSource(CLUSTER_SOURCE_ID);
+      }
+    } else {
+      if (typeof clusterSource.setData === 'function') {
+        clusterSource.setData(data);
+      }
+    }
+    
+    // Show clusters
+    if (clusterLayer && typeof map.getLayer === 'function' && map.getLayer(CLUSTER_LAYER_ID)) {
+      map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', 'visible');
+    }
+  }
+  
+  /**
+   * Setup cluster layers and event handlers
+   * @param {Object} map - Mapbox map instance
+   */
+  function setupClusterLayers(map) {
+    if (!map || typeof map.addLayer !== 'function') {
+      return;
+    }
+    
+    // Ensure cluster icon is loaded
+    ensureClusterIconImage(map).then(() => {
+      // Create cluster layer if it doesn't exist
+      if (!clusterLayer && typeof map.getLayer === 'function' && !map.getLayer(CLUSTER_LAYER_ID)) {
+        map.addLayer({
+          id: CLUSTER_LAYER_ID,
+          type: 'symbol',
+          source: CLUSTER_SOURCE_ID,
+          layout: {
+            'icon-image': clusterIconImageId,
+            'icon-size': 1,
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'text-field': '{count}',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+            'text-size': 14,
+            'text-offset': [0, 0],
+            'text-anchor': 'center',
+            'text-allow-overlap': true,
+            'text-ignore-placement': true
+          },
+          paint: {
+            'text-color': '#ffffff'
+          }
+        });
+        
+        clusterLayer = CLUSTER_LAYER_ID;
+        
+        // Add click handler
+        map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
+        map.on('mouseenter', CLUSTER_LAYER_ID, () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', CLUSTER_LAYER_ID, () => {
+          map.getCanvas().style.cursor = '';
+        });
+      }
+      
+      // Initial update
+      const currentZoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      updateClusterSourceForZoom(map, currentZoom);
+    }).catch(err => {
+      console.warn('[MarkerClusters] Failed to setup cluster layers:', err);
+    });
+  }
+  
+  /**
+   * Handle cluster click - zoom to level 8
+   * @param {Object} e - Mapbox click event
+   */
+  function handleClusterClick(e) {
+    if (!e || !e.lngLat) {
+      return;
+    }
+    
+    const mapInstance = typeof window.getMapInstance === 'function' 
+      ? window.getMapInstance() 
+      : (typeof window.map !== 'undefined' ? window.map : null);
+    
+    if (!mapInstance || typeof mapInstance.easeTo !== 'function') {
+      return;
+    }
+    
+    // Zoom to level 8 (where clusters disappear and individual markers show)
+    mapInstance.easeTo({
+      center: [e.lngLat.lng, e.lngLat.lat],
+      zoom: CLUSTER_MAX_ZOOM,
+      duration: 800,
+      essential: true
+    });
+  }
+  
+  /**
+   * Refresh cluster icon when admin settings change
+   */
+  function refreshClusterIcon() {
+    const mapInstance = typeof window.getMapInstance === 'function' 
+      ? window.getMapInstance() 
+      : (typeof window.map !== 'undefined' ? window.map : null);
+    
+    if (!mapInstance) {
+      return;
+    }
+    
+    const newUrl = getClusterIconUrl();
+    if (newUrl === clusterIconUrl) {
+      return; // No change
+    }
+    
+    // Remove old image
+    if (typeof mapInstance.hasImage === 'function' && mapInstance.hasImage(clusterIconImageId)) {
+      if (typeof mapInstance.removeImage === 'function') {
+        mapInstance.removeImage(clusterIconImageId);
+      }
+    }
+    
+    // Load new image
+    ensureClusterIconImage(mapInstance).then(() => {
+      // Icon will be updated on next cluster update
+      const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+      if (currentZoom < CLUSTER_MAX_ZOOM) {
+        lastClusterZoom = null; // Force update
+        updateClusterSourceForZoom(mapInstance, currentZoom);
+      }
+    }).catch(err => {
+      console.warn('[MarkerClusters] Failed to refresh cluster icon:', err);
+    });
+  }
+  
+  /**
+   * Initialize marker clusters
+   * @param {Object} map - Mapbox map instance
+   */
+  function initMarkerClusters(map) {
+    if (!map) {
+      return;
+    }
+    
+    // Wait for map to be ready
+    if (map.loaded()) {
+      setupClusterLayers(map);
+    } else {
+      map.once('load', () => {
+        setupClusterLayers(map);
+      });
+    }
+    
+    // Update clusters on zoom
+    map.on('zoom', () => {
+      const zoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      updateClusterSourceForZoom(map, zoom);
+    });
+    
+    // Update clusters when filters change (listen for custom event or poll)
+    // We'll update on zoom events which should catch filter changes
+    // Alternatively, we can expose a refresh function
+  }
+  
+  /**
+   * Refresh clusters (call when filters change)
+   */
+  function refreshClusters() {
+    const mapInstance = typeof window.getMapInstance === 'function' 
+      ? window.getMapInstance() 
+      : (typeof window.map !== 'undefined' ? window.map : null);
+    
+    if (!mapInstance) {
+      return;
+    }
+    
+    lastClusterZoom = null; // Force update
+    lastClusterFilterKey = null;
+    const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+    updateClusterSourceForZoom(mapInstance, currentZoom);
+  }
+  
+  // ==================== EXPOSE CLUSTER API ====================
+  
+  window.MarkerClusters = {
+    init: initMarkerClusters,
+    refresh: refreshClusters,
+    refreshClusterIcon: refreshClusterIcon,
+    updateClusterSourceForZoom: updateClusterSourceForZoom
+  };
+
 })();

@@ -1413,6 +1413,7 @@ let __notifyMapOnInteraction = null;
           { buttonId: 'systemImageBigMapCardPillButton', containerId: 'systemImageBigMapCardPillContainer', previewId: 'systemImageBigMapCardPillPreview', settingKey: 'big_map_card_pill', label: 'Big Map Card Pill' },
           { buttonId: 'systemImageHoverMapCardPillButton', containerId: 'systemImageHoverMapCardPillContainer', previewId: 'systemImageHoverMapCardPillPreview', settingKey: 'hover_map_card_pill', label: 'Hover Map Card Pill' },
           { buttonId: 'systemImageMultiPostIconButton', containerId: 'systemImageMultiPostIconContainer', previewId: 'systemImageMultiPostIconPreview', settingKey: 'multi_post_icon', label: 'Multi Post Icon' },
+          { buttonId: 'systemImageMarkerClusterButton', containerId: 'systemImageMarkerClusterContainer', previewId: 'systemImageMarkerClusterPreview', settingKey: 'marker_cluster_icon', label: 'Marker Cluster Icon' },
         ];
         
         imagePickers.forEach(picker => {
@@ -1495,6 +1496,14 @@ let __notifyMapOnInteraction = null;
                       // Refresh marker icons
                       if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
                         window.MapCards.refreshAllMarkerIcons();
+                      }
+                    } else if(picker.settingKey === 'marker_cluster_icon'){
+                      // Update admin settings immediately
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings.marker_cluster_icon = value;
+                      // Refresh cluster icons
+                      if(window.MarkerClusters && window.MarkerClusters.refreshClusterIcon){
+                        window.MarkerClusters.refreshClusterIcon();
                       }
                     }
                   } catch(err) {
@@ -1959,6 +1968,11 @@ let __notifyMapOnInteraction = null;
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
+    
+    // Expose filtered posts for marker clusters
+    window.getFilteredPosts = function() {
+      return Array.isArray(filtered) ? filtered : [];
+    };
     let filtersInitialized = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
@@ -17888,6 +17902,15 @@ function makePosts(){
         }
         checkLoadPosts();
         
+        // Initialize marker clusters
+        if(window.MarkerClusters && typeof window.MarkerClusters.init === 'function'){
+          try{
+            window.MarkerClusters.init(map);
+          }catch(err){
+            console.error('Failed to initialize marker clusters:', err);
+          }
+        }
+        
         // Ensure map cards are created after initial load completes
         requestAnimationFrame(() => {
           if(postsLoaded && markersLoaded){
@@ -20915,6 +20938,14 @@ function openPostModal(id){
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
       
+      // Refresh marker clusters when filters change
+      if(window.MarkerClusters && typeof window.MarkerClusters.refresh === 'function'){
+        try{
+          window.MarkerClusters.refresh();
+        }catch(err){
+          console.error('Failed to refresh marker clusters:', err);
+        }
+      }
       
       // Ensure map card markers are created/updated
       const currentZoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
