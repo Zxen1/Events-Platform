@@ -2048,9 +2048,9 @@ let __notifyMapOnInteraction = null;
         let lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildClusterFeatureCollection(zoom){
-          const allowInitialize = true; // ensure clusters have data even before marker zoom threshold
-          // Use filtered posts if posts are loaded (filters may have been applied), otherwise use all posts
-          const postsSource = (postsLoaded && Array.isArray(filtered)) ? filtered : (getAllPostsCache({ allowInitialize }) || []);
+          // Always use filtered posts when posts are loaded (applyFilters sets filtered)
+          // Use all posts only before posts are loaded
+          const postsSource = postsLoaded ? filtered : (getAllPostsCache({ allowInitialize: true }) || []);
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getClusterBucketKey(zoom);
@@ -21323,13 +21323,11 @@ function openPostModal(id){
       syncMarkerSources(filtered);
       
       // Reset cluster state and force update clusters when filters change
-      if(typeof resetClusterSourceState === 'function'){
-        resetClusterSourceState();
-        if(map && typeof updateClusterSourceForZoom === 'function'){
-          const currentZoom = map.getZoom?.() ?? 0;
-          if(Number.isFinite(currentZoom) && currentZoom < MARKER_ZOOM_THRESHOLD){
-            updateClusterSourceForZoom(currentZoom, true); // Force update when filters change
-          }
+      resetClusterSourceState();
+      if(map){
+        const currentZoom = map.getZoom?.() ?? 0;
+        if(Number.isFinite(currentZoom) && currentZoom < MARKER_ZOOM_THRESHOLD){
+          updateClusterSourceForZoom(currentZoom, true);
         }
       }
       
