@@ -12936,9 +12936,15 @@ function makePosts(){
               // (unless explicitly skipped via options)
               if(!options.skipAutoDelete){
                 const hasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
-                if(!hasFieldType && typeof deleteHandler === 'function'){
-                  // Remove the incomplete field silently (no confirmation)
-                  deleteHandler();
+                if(!hasFieldType){
+                  // Try to get delete handler from safeField
+                  const handler = typeof safeField.__handleDeleteField === 'function' 
+                    ? safeField.__handleDeleteField 
+                    : null;
+                  if(typeof handler === 'function'){
+                    // Remove the incomplete field silently (no confirmation)
+                    handler();
+                  }
                 }
               }
             };
@@ -13023,8 +13029,8 @@ function makePosts(){
               
               // Get current selected options from field (stores checkout_options IDs)
               if(!Array.isArray(safeField.checkoutOptions)){
-                safeField.checkoutOptions = [];
-              }
+                  safeField.checkoutOptions = [];
+                }
               
               // Filter out invalid values (empty, null, 0)
               const validOptions = safeField.checkoutOptions.filter(opt => opt !== '' && opt !== null && opt !== 0);
