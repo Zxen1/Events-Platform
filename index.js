@@ -22032,6 +22032,24 @@ function openPanel(m){
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   m.removeAttribute('inert');
+  // Re-enable member auth inputs when member panel opens
+  if(m.id === 'memberPanel'){
+    const loginPanel = document.getElementById('memberLoginPanel');
+    const registerPanel = document.getElementById('memberRegisterPanel');
+    // Remove inert from auth panels to ensure inputs are focusable
+    if(loginPanel && !loginPanel.hidden){
+      loginPanel.removeAttribute('inert');
+      loginPanel.querySelectorAll('input').forEach(input => {
+        input.disabled = false;
+      });
+    }
+    if(registerPanel && !registerPanel.hidden){
+      registerPanel.removeAttribute('inert');
+      registerPanel.querySelectorAll('input').forEach(input => {
+        input.disabled = false;
+      });
+    }
+  }
   if(m.id === 'welcome-modal'){
     const mc = document.querySelector('.map-controls-map');
     if(mc) mc.style.display = 'none';

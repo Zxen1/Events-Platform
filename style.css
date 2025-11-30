@@ -1509,6 +1509,12 @@ button[aria-expanded="true"] .results-arrow{
   outline:2px solid var(--btn-selected);
   outline-offset:2px;
   background:#1c1c1c;
+  caret-color:#fff;
+}
+
+.member-auth-panel input{
+  caret-color:#fff;
+  cursor:text;
 }
 
 .member-auth-panel .member-auth-submit{
