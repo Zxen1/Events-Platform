@@ -25653,8 +25653,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(Boolean)
         : []);
     const usernameLower = typeof username === 'string' ? username.toLowerCase() : '';
-    // Check singular 'role' field from backend (e.g. role: 'admin')
-    const singleRole = typeof extractedRole === 'string' ? extractedRole.toLowerCase() : '';
+    // Check singular 'role' field - backend returns it at TOP level of response, not inside user object
+    const topLevelRole = typeof verification.role === 'string' ? verification.role.toLowerCase() : '';
+    const singleRole = topLevelRole || (typeof extractedRole === 'string' ? extractedRole.toLowerCase() : '');
     let isAdmin = false;
     if(typeof payload.isAdmin === 'boolean'){
       isAdmin = payload.isAdmin;
