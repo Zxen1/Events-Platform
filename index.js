@@ -7231,6 +7231,9 @@ function makePosts(){
       if(!finalConfirmLabel){
         const confirmKey = confirmBtn.dataset.messageKey || 'msg_button_confirm';
         finalConfirmLabel = await getMessage(confirmKey, placeholders, true) || previousLabel || 'Confirm';
+      } else {
+        // Remove data-message-key to prevent MutationObserver from overwriting custom label
+        confirmBtn.removeAttribute('data-message-key');
       }
       confirmBtn.textContent = finalConfirmLabel;
 
@@ -7244,8 +7247,9 @@ function makePosts(){
           window.removeEventListener('keydown', onKeyDown, true);
           overlay.removeEventListener('click', onOverlayClick);
           confirmBtn.className = previousClassName || 'formbuilder-confirm-button formbuilder-confirm-delete';
-          // Restore previous label (which was already loaded from DB when overlay was created)
+          // Restore previous label and data-message-key for future uses
           confirmBtn.textContent = previousLabel || 'Delete';
+          confirmBtn.dataset.messageKey = 'msg_button_delete';
           if(previousFocused && typeof previousFocused.focus === 'function'){
             try{
               previousFocused.focus({ preventScroll: true });
