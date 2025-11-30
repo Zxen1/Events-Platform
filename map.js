@@ -1416,8 +1416,11 @@
       return;
     }
 
-    // Get filtered posts
+    // Get filtered posts, fall back to all posts if empty
     let posts = getFilteredPosts();
+    if (posts.length === 0) {
+      posts = getAllPosts();
+    }
     
     // Check if data actually changed
     const newSignature = createFilterSignature(posts);
