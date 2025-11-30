@@ -2049,7 +2049,8 @@ let __notifyMapOnInteraction = null;
 
         function buildClusterFeatureCollection(zoom){
           const allowInitialize = true; // ensure clusters have data even before marker zoom threshold
-          const postsSource = getAllPostsCache({ allowInitialize });
+          // Use filtered posts instead of all posts to respect filter panel
+          const postsSource = Array.isArray(filtered) && filtered.length > 0 ? filtered : (getAllPostsCache({ allowInitialize }) || []);
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getClusterBucketKey(zoom);
@@ -2240,42 +2241,40 @@ let __notifyMapOnInteraction = null;
               if(!Array.isArray(coords) || coords.length < 2) return;
               const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
               const maxZoom = typeof mapInstance.getMaxZoom === 'function' ? mapInstance.getMaxZoom() : 22;
-              const maxAllowedZoom = Number.isFinite(maxZoom)
-                ? Math.min(maxZoom, CLUSTER_MAX_ZOOM)
-                : CLUSTER_MAX_ZOOM;
               const safeCurrentZoom = Number.isFinite(currentZoom) ? currentZoom : 0;
+              
+              // Check if cluster has children
               const bucketKey = feature.properties && feature.properties.bucket;
               const grouping = lastClusterGroupingDetails && lastClusterGroupingDetails.groups instanceof Map
                 ? lastClusterGroupingDetails.groups
                 : null;
               const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
-              const childZoomLimit = Number.isFinite(maxZoom)
-                ? Math.min(maxZoom, Math.max(maxAllowedZoom, 12))
-                : 12;
-              const childTarget = computeChildClusterTarget(bucketData, safeCurrentZoom, childZoomLimit);
-              const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
-              const targetCenter = hasChildTarget
-                ? [childTarget.center[0], childTarget.center[1]]
-                : [coords[0], coords[1]];
-              const desiredLeafZoom = Number.isFinite(maxZoom) ? Math.min(12, maxZoom) : 12;
+              const maxAllowedZoom = Number.isFinite(maxZoom)
+                ? Math.min(maxZoom, CLUSTER_MAX_ZOOM)
+                : CLUSTER_MAX_ZOOM;
+              const childTarget = computeChildClusterTarget(bucketData, safeCurrentZoom, maxAllowedZoom);
+              const hasChildren = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
+              
               let finalZoom;
-              if(hasChildTarget){
+              let targetCenter = [coords[0], coords[1]];
+              
+              if(hasChildren){
+                // Has children: zoom to level that breaks them apart (but go directly, no nested clusters)
                 const childZoom = childTarget && Number.isFinite(childTarget.zoom)
-                  ? Math.min(childTarget.zoom, childZoomLimit)
-                  : NaN;
-                finalZoom = Number.isFinite(childZoom) ? childZoom : safeCurrentZoom;
-                if(finalZoom < safeCurrentZoom){
-                  finalZoom = safeCurrentZoom;
-                }
+                  ? Math.min(childTarget.zoom, maxAllowedZoom)
+                  : maxAllowedZoom;
+                finalZoom = Math.max(safeCurrentZoom, childZoom);
+                targetCenter = [childTarget.center[0], childTarget.center[1]];
               } else {
-                finalZoom = Number.isFinite(desiredLeafZoom) ? desiredLeafZoom : safeCurrentZoom;
-                if(finalZoom < safeCurrentZoom){
-                  finalZoom = safeCurrentZoom;
-                }
+                // Childless cluster: zoom to 12
+                const targetZoom12 = Number.isFinite(maxZoom) ? Math.min(12, maxZoom) : 12;
+                finalZoom = Math.max(safeCurrentZoom, targetZoom12);
               }
+              
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
               }
+              
               let currentPitch = null;
               try{
                 currentPitch = typeof mapInstance.getPitch === 'function' ? mapInstance.getPitch() : null;
@@ -21330,6 +21329,17 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
+      
+      // Reset cluster state and update clusters when filters change
+      if(typeof resetClusterSourceState === 'function'){
+        resetClusterSourceState();
+        if(map && typeof updateClusterSourceForZoom === 'function'){
+          const currentZoom = map.getZoom ? map.getZoom() : 0;
+          if(Number.isFinite(currentZoom) && currentZoom < MARKER_ZOOM_THRESHOLD){
+            updateClusterSourceForZoom(currentZoom);
+          }
+        }
+      }
       
       // Ensure map card markers are created/updated
       const currentZoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
