@@ -864,18 +864,16 @@
         if(postButton) postButton.disabled = true;
       }
       try{
-        // Try both possible locations for the snapshot promise
-        const snapshotPromise = (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) 
-          ? window.persistedFormbuilderSnapshotPromise 
-          : (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise)
-            ? window.__persistedFormbuilderSnapshotPromise
-            : null;
+        // LAZY LOADING: Use getFormbuilderSnapshotPromise() which loads on-demand
+        const getSnapshotPromise = (typeof window !== 'undefined' && typeof window.getFormbuilderSnapshotPromise === 'function')
+          ? window.getFormbuilderSnapshotPromise
+          : null;
         
-        if(!snapshotPromise){
-          throw new Error('Formbuilder snapshot promise not available');
+        if(!getSnapshotPromise){
+          throw new Error('Formbuilder snapshot loader not available');
         }
         
-        const backendSnapshot = await snapshotPromise;
+        const backendSnapshot = await getSnapshotPromise();
         
         // NO FALLBACKS - validate snapshot exists and is valid
         if(!backendSnapshot){

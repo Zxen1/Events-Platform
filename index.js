@@ -17155,9 +17155,8 @@ function makePosts(){
         if(m==='map'){
           document.body.classList.remove('show-history');
         }
-        if(m === 'map'){
-          startMainMapInit();
-        }
+        // ALWAYS initialize map - it's visible in background even in posts mode
+        startMainMapInit();
         const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
         if(shouldAdjustListHeight){
