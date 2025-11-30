@@ -2127,13 +2127,13 @@ let __notifyMapOnInteraction = null;
           return Number.isFinite(size) ? size.toFixed(2) : 'default';
         }
 
-        function updateClusterSourceForZoom(zoom){
+        function updateClusterSourceForZoom(zoom, force = false){
           if(!map) return;
           const source = map.getSource && map.getSource(CLUSTER_SOURCE_ID);
           if(!source || typeof source.setData !== 'function') return;
           const zoomValue = Number.isFinite(zoom) ? zoom : (typeof map.getZoom === 'function' ? map.getZoom() : 0);
           const bucketKey = getClusterBucketKey(zoomValue);
-          if(lastClusterBucketKey === bucketKey) return;
+          if(!force && lastClusterBucketKey === bucketKey) return;
           try{
             const data = buildClusterFeatureCollection(zoomValue);
             source.setData(data);
@@ -21322,13 +21322,13 @@ function openPostModal(id){
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
       
-      // Reset cluster state and update clusters when filters change
+      // Reset cluster state and force update clusters when filters change
       if(typeof resetClusterSourceState === 'function'){
         resetClusterSourceState();
         if(map && typeof updateClusterSourceForZoom === 'function'){
           const currentZoom = map.getZoom?.() ?? 0;
           if(Number.isFinite(currentZoom) && currentZoom < MARKER_ZOOM_THRESHOLD){
-            updateClusterSourceForZoom(currentZoom);
+            updateClusterSourceForZoom(currentZoom, true); // Force update when filters change
           }
         }
       }
