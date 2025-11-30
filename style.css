@@ -6150,6 +6150,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:border-box;
   max-width:100%;
   max-height:none;
+  min-height:250px;
   overflow:auto;
   background:#222222;
   border:1px solid var(--border);
