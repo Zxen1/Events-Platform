@@ -313,14 +313,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         $select[] = 's.`field_type_name`';
     }
     
-    $hasEditableFieldTypes = in_array('editable_field_types', $columns, true);
-    if ($hasEditableFieldTypes) {
-        $select[] = 's.`editable_field_types`';
-    }
-    
-    $hasCheckoutOptionsId = in_array('checkout_options_id', $columns, true);
-    if ($hasCheckoutOptionsId) {
-        $select[] = 's.`checkout_options_id`';
+    $hasFieldTypeEdits = in_array('field_type_edits', $columns, true);
+    if ($hasFieldTypeEdits) {
+        $select[] = 's.`field_type_edits`';
     }
     
     // Add fee columns
@@ -436,22 +431,13 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (isset($row['listing_days'])) {
             $result['listing_days'] = $row['listing_days'];
         }
-        if ($hasEditableFieldTypes && isset($row['editable_field_types'])) {
-            $editsJson = $row['editable_field_types'];
+        if ($hasFieldTypeEdits && isset($row['field_type_edits'])) {
+            $editsJson = $row['field_type_edits'];
             if (is_string($editsJson) && $editsJson !== '') {
                 $decoded = json_decode($editsJson, true);
                 if (is_array($decoded)) {
-                    $result['editable_field_types'] = $decoded;
+                    $result['field_type_edits'] = $decoded;
                 }
-            }
-        }
-        if ($hasCheckoutOptionsId && isset($row['checkout_options_id'])) {
-            $checkoutIdsCsv = $row['checkout_options_id'];
-            if (is_string($checkoutIdsCsv) && $checkoutIdsCsv !== '') {
-                $ids = array_filter(array_map('trim', explode(',', $checkoutIdsCsv)), function($id) {
-                    return $id !== '' && is_numeric($id);
-                });
-                $result['checkout_options_id'] = array_values(array_map('intval', $ids));
             }
         }
         
@@ -874,16 +860,10 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
         $fieldTypeNames = array_values(array_unique($fieldTypeNames));
 
-        // Load editable_field_types JSON if available
-        $editableFieldTypes = [];
-        if (isset($sub['editable_field_types']) && is_array($sub['editable_field_types'])) {
-            $editableFieldTypes = $sub['editable_field_types'];
-        }
-        
-        // Load checkout_options_id if available (array of checkout option IDs)
-        $checkoutOptionsIds = [];
-        if (isset($sub['checkout_options_id']) && is_array($sub['checkout_options_id'])) {
-            $checkoutOptionsIds = $sub['checkout_options_id'];
+        // Load field_type_edits JSON if available
+        $fieldTypeEdits = [];
+        if (isset($sub['field_type_edits']) && is_array($sub['field_type_edits'])) {
+            $fieldTypeEdits = $sub['field_type_edits'];
         }
         
         // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
@@ -893,7 +873,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
             
             // Get customizations for this field position if it's editable
-            $fieldEdit = isset($editableFieldTypes[(string)$index]) ? $editableFieldTypes[(string)$index] : null;
+            $fieldEdit = isset($fieldTypeEdits[(string)$index]) ? $fieldTypeEdits[(string)$index] : null;
             
             // Find the field_type by ID
             $matchingFieldType = null;
@@ -971,13 +951,19 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     }
                 }
                 
-                // For checkout fields, use checkout_options_id column (array of checkout option IDs)
+                // For checkout fields, always check field_type_edits for checkoutOptions (even if not formbuilder_editable)
+                // Check both the exact index and try to find checkoutOptions anywhere in field_type_edits
                 if ($isCheckout) {
-                    if (!empty($checkoutOptionsIds)) {
-                        $customCheckoutOptions = $checkoutOptionsIds;
+                    if ($fieldEdit && is_array($fieldEdit) && isset($fieldEdit['checkoutOptions']) && is_array($fieldEdit['checkoutOptions'])) {
+                        $customCheckoutOptions = $fieldEdit['checkoutOptions'];
                     } else {
-                        // Default to IDs 1, 2, 3 if no checkout options set
-                        $customCheckoutOptions = [1, 2, 3];
+                        // Index might not match - search all entries for checkoutOptions
+                        foreach ($fieldTypeEdits as $editData) {
+                            if (is_array($editData) && isset($editData['checkoutOptions']) && is_array($editData['checkoutOptions']) && !empty($editData['checkoutOptions'])) {
+                                $customCheckoutOptions = $editData['checkoutOptions'];
+                                break;
+                            }
+                        }
                     }
                 }
                 
@@ -1013,18 +999,12 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $isCheckout = ($fieldTypeKey === 'checkout');
                 $customName = null;
                 $customCheckoutOptions = null;
-                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                if (($isEditable || $isCheckout) && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
-                }
-                // For checkout fields, use checkout_options_id column
-                if ($isCheckout) {
-                    if (!empty($checkoutOptionsIds)) {
-                        $customCheckoutOptions = $checkoutOptionsIds;
-                    } else {
-                        // Default to IDs 1, 2, 3 if no checkout options set
-                        $customCheckoutOptions = [1, 2, 3];
+                    if (isset($fieldEdit['checkoutOptions']) && is_array($fieldEdit['checkoutOptions'])) {
+                        $customCheckoutOptions = $fieldEdit['checkoutOptions'];
                     }
                 }
                 

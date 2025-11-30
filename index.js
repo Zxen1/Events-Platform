@@ -7170,11 +7170,6 @@ function makePosts(){
       }
       if(confirmBtn && confirmBtn.parentNode){
         const replacement = confirmBtn.cloneNode(true);
-        // If custom label provided, remove data-message-key BEFORE adding to DOM
-        // to prevent MutationObserver from overwriting the custom label
-        if(confirmLabel){
-          replacement.removeAttribute('data-message-key');
-        }
         confirmBtn.parentNode.replaceChild(replacement, confirmBtn);
         confirmBtn = replacement;
       }
@@ -7236,9 +7231,6 @@ function makePosts(){
       if(!finalConfirmLabel){
         const confirmKey = confirmBtn.dataset.messageKey || 'msg_button_confirm';
         finalConfirmLabel = await getMessage(confirmKey, placeholders, true) || previousLabel || 'Confirm';
-      } else {
-        // Remove data-message-key to prevent MutationObserver from overwriting custom label
-        confirmBtn.removeAttribute('data-message-key');
       }
       confirmBtn.textContent = finalConfirmLabel;
 
@@ -7252,9 +7244,8 @@ function makePosts(){
           window.removeEventListener('keydown', onKeyDown, true);
           overlay.removeEventListener('click', onOverlayClick);
           confirmBtn.className = previousClassName || 'formbuilder-confirm-button formbuilder-confirm-delete';
-          // Restore previous label and data-message-key for future uses
+          // Restore previous label (which was already loaded from DB when overlay was created)
           confirmBtn.textContent = previousLabel || 'Delete';
-          confirmBtn.dataset.messageKey = 'msg_button_delete';
           if(previousFocused && typeof previousFocused.focus === 'function'){
             try{
               previousFocused.focus({ preventScroll: true });
@@ -7664,24 +7655,21 @@ function makePosts(){
         }
       }
       
-      // Preserve checkoutOptions for checkout field type (stores checkout_options IDs)
+      // Preserve checkoutOptions for checkout field type
       // Check both fieldTypeKey and type since member forms might not have fieldTypeKey
       const isCheckoutField = fieldTypeKey === 'checkout' || safeField.type === 'checkout' || safeField.fieldTypeKey === 'checkout';
       if(isCheckoutField){
         // Always prefer checkoutOptions from the original field object if it exists and has values
         if(field && typeof field === 'object' && Array.isArray(field.checkoutOptions) && field.checkoutOptions.length > 0){
-          // Use the original field's checkoutOptions (filter out invalid values)
-          // checkoutOptions should be numeric IDs from checkout_options table
-          const validOptions = field.checkoutOptions.filter(opt => opt !== '' && opt !== null && opt !== 0);
+          // Use the original field's checkoutOptions (filter out empty strings)
+          const validOptions = field.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
           if(validOptions.length > 0){
             safeField.checkoutOptions = validOptions.slice();
           } else if(!Array.isArray(safeField.checkoutOptions)){
-            // Set default checkout options for new checkout fields (IDs 1, 2, 3)
-            safeField.checkoutOptions = [1, 2, 3];
+            safeField.checkoutOptions = [];
           }
-        } else if(!Array.isArray(safeField.checkoutOptions) || safeField.checkoutOptions.length === 0){
-          // Set default checkout options for new checkout fields (IDs 1, 2, 3)
-          safeField.checkoutOptions = [1, 2, 3];
+        } else if(!Array.isArray(safeField.checkoutOptions)){
+          safeField.checkoutOptions = [];
         }
       }
         if(fieldTypeKey === 'location'){
@@ -8724,32 +8712,27 @@ function makePosts(){
           checkoutGroup.className = 'form-checkout-group';
           const groupName = `${baseId}-checkout`;
           
-          // Get selected checkout options from field.checkoutOptions (array of IDs)
-          let selectedOptionIds = [];
+          // Get selected checkout options from field.options or field.checkoutOptions
+          let selectedOptions = [];
           if(Array.isArray(field.checkoutOptions)){
-            // Filter out invalid values and convert to numbers
-            selectedOptionIds = field.checkoutOptions
-              .filter(opt => opt !== '' && opt !== null && opt !== 0)
-              .map(opt => typeof opt === 'number' ? opt : parseInt(opt, 10))
-              .filter(id => !isNaN(id) && id > 0);
+            selectedOptions = field.checkoutOptions;
+          } else if(Array.isArray(field.options)){
+            selectedOptions = field.options;
           }
+          
           
           // Get all checkout options from global
           const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
           
-          // Filter to only show selected options (by ID), preserving order
-          let optionsToShow = [];
-          if(selectedOptionIds.length > 0){
-            // Map IDs to checkout options, preserving selection order
-            selectedOptionIds.forEach(id => {
-              const found = allCheckoutOptions.find(opt => opt.id === id);
-              if(found) optionsToShow.push(found);
-            });
-          }
-          // Fallback to first 3 if nothing selected
-          if(optionsToShow.length === 0){
-            optionsToShow = allCheckoutOptions.slice(0, 3);
-          }
+          // Filter to only show selected options (by checkout_key or id)
+          const optionsToShow = selectedOptions.length > 0
+            ? allCheckoutOptions.filter(opt => 
+                selectedOptions.some(sel => 
+                  (typeof sel === 'string' && sel === opt.checkout_key) ||
+                  (typeof sel === 'object' && (sel.checkout_key === opt.checkout_key || sel.id === opt.id))
+                )
+              )
+            : allCheckoutOptions.slice(0, 3);
           
           if(optionsToShow.length){
             optionsToShow.forEach((option, optionIndex) => {
@@ -12835,10 +12818,6 @@ function makePosts(){
                   btn.setAttribute('aria-pressed', btn === optionBtn ? 'true' : 'false');
                 });
                 
-                // Clear pending flag now that field type is selected
-                if(safeField.__pending){
-                  delete safeField.__pending;
-                }
                 notifyFormbuilderChange();
                 updateFieldEditorsByType();
                 renderForm({
@@ -13020,22 +12999,28 @@ function makePosts(){
               checkoutOptionsList.innerHTML = '';
               const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
               
-              // Get current selected options from field (stores checkout_options IDs)
+              // Get current selected options from field
+              // Check both checkoutOptions and options (for backwards compatibility)
               if(!Array.isArray(safeField.checkoutOptions)){
-                safeField.checkoutOptions = [];
+                if(Array.isArray(safeField.options) && safeField.type === 'checkout'){
+                  // Migrate from old options format
+                  safeField.checkoutOptions = safeField.options.slice();
+                } else {
+                  safeField.checkoutOptions = [];
+                }
               }
               
-              // Filter out invalid values (empty, null, 0)
-              const validOptions = safeField.checkoutOptions.filter(opt => opt !== '' && opt !== null && opt !== 0);
+              // Filter out empty strings to see if we have any real values
+              const validOptions = safeField.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
               
               // If we have valid options, preserve them before padding
-              // If not, use defaults [1, 2, 3]
-              const preservedOptions = validOptions.length > 0 ? validOptions.slice() : [1, 2, 3];
+              // If not, we'll pad with empty strings (user hasn't selected yet)
+              const preservedOptions = validOptions.length > 0 ? validOptions.slice() : [];
               
-              // Ensure we have 3 slots (pad with 0 for empty slots)
+              // Ensure we have 3 slots (pad with empty strings if needed)
               safeField.checkoutOptions = preservedOptions.slice();
               while(safeField.checkoutOptions.length < 3){
-                safeField.checkoutOptions.push(0);
+                safeField.checkoutOptions.push('');
               }
               
               for(let i = 0; i < 3; i++){
@@ -13055,14 +13040,14 @@ function makePosts(){
                 
                 // Add empty option
                 const emptyOption = document.createElement('option');
-                emptyOption.value = '0';
+                emptyOption.value = '';
                 emptyOption.textContent = '-- Select --';
                 select.appendChild(emptyOption);
                 
-                // Add all checkout options (use ID as value)
+                // Add all checkout options
                 allCheckoutOptions.forEach(opt => {
                   const option = document.createElement('option');
-                  option.value = String(opt.id || 0);
+                  option.value = opt.checkout_key || '';
                   const priceDisplay = parseFloat(opt.checkout_price) > 0 
                     ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
                     : ' — Free';
@@ -13070,13 +13055,12 @@ function makePosts(){
                   select.appendChild(option);
                 });
                 
-                // Set current value (convert to string for comparison)
-                const currentValue = String(safeField.checkoutOptions[i] || 0);
+                // Set current value
+                const currentValue = safeField.checkoutOptions[i] || '';
                 select.value = currentValue;
                 
                 select.addEventListener('change', ()=>{
-                  // Store as number (checkout_options.id)
-                  safeField.checkoutOptions[i] = parseInt(select.value, 10) || 0;
+                  safeField.checkoutOptions[i] = select.value;
                   notifyFormbuilderChange();
                   renderForm({
                     formFields: formPreviewFields,
@@ -13762,8 +13746,6 @@ function makePosts(){
             });
             if(!confirmed) return;
             const newField = ensureFieldDefaults({});
-            // Mark field as pending until a type is selected
-            newField.__pending = true;
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
             if(!fieldRow || !fieldRow.row) return;
@@ -13771,7 +13753,7 @@ function makePosts(){
             fieldsList.appendChild(fieldRow.row);
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
             syncFieldOrderFromDom(fieldsList, fields);
-            // Don't notify change yet - wait until field type is selected
+            notifyFormbuilderChange();
             if(fieldRow && fieldRow.editPanel){
               closeFieldEditPanels({ exceptPanel: fieldRow.editPanel, exceptButton: fieldRow.editBtn });
               if(typeof fieldRow.openEditPanel === 'function'){
@@ -14495,17 +14477,7 @@ function makePosts(){
           const value = source[key];
           if(Array.isArray(value)){
             // Always include the key, even if the array is empty
-            // Filter out fields without a field type selected (incomplete/pending fields)
-            const validFields = value.filter(field => {
-              if(!field) return false;
-              // Skip pending fields (no type selected yet)
-              if(field.__pending) return false;
-              const hasFieldType = (field.key && field.key.trim()) || 
-                                   (field.fieldTypeKey && field.fieldTypeKey.trim()) ||
-                                   (field.type && field.type.trim() && field.type !== 'text');
-              return hasFieldType;
-            });
-            out[key] = validFields.length === 0 ? [] : validFields.map(field => {
+            out[key] = value.length === 0 ? [] : value.map(field => {
               const cloned = {
                 id: field && field.id,
                 key: field && typeof field.key === 'string' ? field.key : undefined,
@@ -14542,14 +14514,14 @@ function makePosts(){
               if(Array.isArray(field && field.fields)){
                 cloned.fields = field.fields;
               }
-              // Preserve checkoutOptions for checkout field type (stores checkout_options IDs)
-              // Filter out zeros and invalid values when cloning
+              // Preserve checkoutOptions for checkout field type
+              // Always preserve for member forms (even if empty), filter for saving
               if(Array.isArray(field && field.checkoutOptions)){
-                // Filter out zeros and invalid values (only keep valid IDs)
-                cloned.checkoutOptions = field.checkoutOptions.filter(opt => opt !== 0 && opt !== '' && opt !== null);
+                // Always preserve the array (member forms need it to know which options to show)
+                cloned.checkoutOptions = field.checkoutOptions.slice();
               } else if(field && (field.type === 'checkout' || field.fieldTypeKey === 'checkout')){
-                // Default to IDs [1, 2, 3] for new checkout fields
-                cloned.checkoutOptions = [1, 2, 3];
+                // Initialize empty array for checkout fields if missing
+                cloned.checkoutOptions = [];
               }
               return cloned;
             });
