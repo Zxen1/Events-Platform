@@ -6229,25 +6229,31 @@ function makePosts(){
     }
 
     function loadPosts(bounds){
+      console.log('[DEBUG loadPosts] called, spinning:', spinning, 'bounds:', bounds);
       if(spinning){
+        console.log('[DEBUG loadPosts] BLOCKED: spinning is true');
         pendingPostLoad = true;
         return;
       }
       const normalized = normalizeBounds(bounds);
       if(!normalized){
+        console.log('[DEBUG loadPosts] BLOCKED: normalized bounds is falsy');
         postLoadRequested = true;
         hideResultIndicators();
         return;
       }
       const key = boundsToKey(normalized);
       if(postsLoaded && lastLoadedBoundsKey === key){
+        console.log('[DEBUG loadPosts] SKIPPED: already loaded same bounds');
         applyFilters();
         return;
       }
       const cache = getAllPostsCache();
+      console.log('[DEBUG loadPosts] cache has', Array.isArray(cache) ? cache.length : 0, 'posts');
       const nextPosts = Array.isArray(cache)
         ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
         : [];
+      console.log('[DEBUG loadPosts] filtered to', nextPosts.length, 'posts in bounds');
       posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
@@ -6368,6 +6374,7 @@ function makePosts(){
     }
 
     function checkLoadPosts(event){
+      console.log('[DEBUG checkLoadPosts] called, map:', !!map, 'event:', event);
       if(!map) return;
       const zoomCandidate = getZoomFromEvent(event);
       updateZoomState(zoomCandidate);
@@ -6375,18 +6382,21 @@ function makePosts(){
       if(!Number.isFinite(zoomLevel)){
         zoomLevel = getZoomFromEvent();
       }
+      console.log('[DEBUG checkLoadPosts] zoomLevel:', zoomLevel, 'waitForInitialZoom:', waitForInitialZoom, 'MARKER_PRELOAD_ZOOM:', MARKER_PRELOAD_ZOOM);
       if(waitForInitialZoom){
         if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
           initialZoomStarted = false;
         } else {
+          console.log('[DEBUG checkLoadPosts] BLOCKED: waitForInitialZoom and zoom < threshold');
           postLoadRequested = true;
           hideResultIndicators();
           return;
         }
       }
       if(!Number.isFinite(zoomLevel)){
+        console.log('[DEBUG checkLoadPosts] BLOCKED: zoomLevel not finite');
         postLoadRequested = true;
         hideResultIndicators();
         return;
@@ -18225,10 +18235,12 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
+        console.log('[DEBUG map.on(load)] Map loaded! spinEnabled:', spinEnabled, 'lastKnownZoom:', lastKnownZoom);
         setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
+          console.log('[DEBUG map.on(load)] Starting spin');
           startSpin(true);
         }
         updatePostPanel();
@@ -18236,12 +18248,14 @@ function makePosts(){
         updateZoomState(getZoomFromEvent());
         if(!markersLoaded){
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+          console.log('[DEBUG map.on(load)] Checking markers, zoomLevel:', zoomLevel, 'MARKER_PRELOAD_ZOOM:', MARKER_PRELOAD_ZOOM);
           if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
             try{ loadPostMarkers(); }catch(err){ console.error(err); }
             markersLoaded = true;
             window.__markersLoaded = true;
           }
         }
+        console.log('[DEBUG map.on(load)] About to call checkLoadPosts');
         checkLoadPosts();
         
         // Ensure map cards are created after initial load completes
