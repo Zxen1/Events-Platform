@@ -1095,6 +1095,7 @@
             id: CLUSTER_ICON_LAYER_ID,
             type: 'symbol',
             source: CLUSTER_SOURCE_ID,
+            maxzoom: CLUSTER_MAX_ZOOM + 1,  // Hide at zoom 8+
             filter: ['has', 'point_count'],
             layout: {
               'icon-image': 'cluster-icon',
@@ -1122,6 +1123,7 @@
             id: CLUSTER_LAYER_ID,
             type: 'circle',
             source: CLUSTER_SOURCE_ID,
+            maxzoom: CLUSTER_MAX_ZOOM + 1,  // Hide at zoom 8+
             filter: ['has', 'point_count'],
             paint: {
               'circle-color': [
@@ -1155,6 +1157,7 @@
           id: CLUSTER_COUNT_LAYER_ID,
           type: 'symbol',
           source: CLUSTER_SOURCE_ID,
+          maxzoom: CLUSTER_MAX_ZOOM + 1,  // Hide at zoom 8+
           filter: ['has', 'point_count'],
           layout: {
             'text-field': ['get', 'point_count_abbreviated'],
@@ -1176,6 +1179,7 @@
     }
 
     // === SINGLE POST "CLUSTERS" (unclustered points shown with count "1") ===
+    // Only show at zoom < 8, after that map cards take over
     
     // Single post icon layer
     if (!hasSingleIconLayer && clusterIconLoaded) {
@@ -1184,6 +1188,7 @@
           id: SINGLE_ICON_LAYER_ID,
           type: 'symbol',
           source: CLUSTER_SOURCE_ID,
+          maxzoom: CLUSTER_MAX_ZOOM + 1,  // Hide at zoom 8+
           filter: ['!', ['has', 'point_count']],  // Unclustered points
           layout: {
             'icon-image': 'cluster-icon',
@@ -1213,6 +1218,7 @@
           id: SINGLE_COUNT_LAYER_ID,
           type: 'symbol',
           source: CLUSTER_SOURCE_ID,
+          maxzoom: CLUSTER_MAX_ZOOM + 1,  // Hide at zoom 8+
           filter: ['!', ['has', 'point_count']],  // Unclustered points
           layout: {
             'text-field': '1',  // Always show "1" for single posts
