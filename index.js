@@ -1482,12 +1482,21 @@ let __notifyMapOnInteraction = null;
                     console.log(`${picker.label} saved to database.`);
                     
                     // Now refresh map with saved value
-                    if(picker.settingKey === 'marker_cluster_icon'){
-                      // Update admin settings and refresh cluster icon via map.js
-                      if(!window.adminSettings) window.adminSettings = {};
-                      window.adminSettings.marker_cluster_icon = value;
-                      if(window.MarkerClusters && typeof window.MarkerClusters.refreshClusterIcon === 'function'){
-                        try{ window.MarkerClusters.refreshClusterIcon(); }catch(err){ console.error(err); }
+                    if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
+                      // Handle cluster icon update
+                      const CLUSTER_ICON_ID = 'cluster-icon';
+                      const CLUSTER_LAYER_ID = 'post-clusters';
+                      if(mapInstance.hasImage(CLUSTER_ICON_ID)){
+                        mapInstance.removeImage(CLUSTER_ICON_ID);
+                      }
+                      const img = await loadMarkerLabelImage(value);
+                      if(img && img.width > 0 && img.height > 0){
+                        const pixelRatio = img.width >= 256 ? 2 : 1;
+                        mapInstance.addImage(CLUSTER_ICON_ID, img, { pixelRatio });
+                        const layer = mapInstance.getLayer(CLUSTER_LAYER_ID);
+                        if(layer){
+                          mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'icon-image', CLUSTER_ICON_ID);
+                        }
                       }
                     } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
                       // Update window.adminSettings immediately for instant effect
@@ -1917,11 +1926,388 @@ let __notifyMapOnInteraction = null;
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
 
       // --- Section 5: Marker Clustering ---
-      // Cluster code now lives in map.js (window.MarkerClusters)
-      // Native Mapbox GPU-accelerated clustering for optimal performance
-      let clusterLayersVisible = true;
+      // Cluster icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
+      const CLUSTER_SOURCE_ID = 'post-cluster-source';
+        const CLUSTER_LAYER_ID = 'post-clusters';
+        const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID];
+        const CLUSTER_ICON_ID = 'cluster-icon';
+        let CLUSTER_ICON_URL = null; // Loaded from admin_settings
+        const CLUSTER_MIN_ZOOM = 0;
+        const CLUSTER_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
+        let clusterLayersVisible = true;
 
-      localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+        async function ensureClusterIconImage(mapInstance){
+          // Load cluster icon URL from admin_settings - no fallbacks
+            try {
+              const response = await fetch('/gateway.php?action=get-admin-settings');
+              if(response.ok){
+                const data = await response.json();
+              if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
+                CLUSTER_ICON_URL = data.settings.marker_cluster_icon.trim();
+                }
+              }
+            } catch(err) {
+              console.error('Failed to load marker cluster icon setting:', err);
+          }
+          
+          return new Promise(resolve => {
+            if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
+              resolve();
+              return;
+            }
+            if(mapInstance.hasImage(CLUSTER_ICON_ID)){
+              resolve();
+              return;
+            }
+            const handleImage = (image)=>{
+              if(!image){
+                resolve();
+                return;
+              }
+              try{
+                if(!mapInstance.hasImage(CLUSTER_ICON_ID) && image.width > 0 && image.height > 0){
+                  const pixelRatio = image.width >= 256 ? 2 : 1;
+                  mapInstance.addImage(CLUSTER_ICON_ID, image, { pixelRatio });
+                }
+              }catch(err){ console.error(err); }
+              resolve();
+            };
+            try{
+              if(typeof mapInstance.loadImage === 'function'){
+                mapInstance.loadImage(CLUSTER_ICON_URL, (err, image)=>{
+                  if(err){ console.error(err); resolve(); return; }
+                  handleImage(image);
+                });
+                return;
+              }
+            }catch(err){ console.error(err); resolve(); return; }
+            if(typeof Image !== 'undefined'){
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = ()=>handleImage(img);
+              img.onerror = ()=>resolve();
+              img.src = CLUSTER_ICON_URL;
+              return;
+            }
+            resolve();
+          });
+        }
+
+        function formatClusterCount(count){
+          if(!Number.isFinite(count) || count <= 0){
+            return '0';
+          }
+          if(count >= 1000000){
+            const value = count / 1000000;
+            const formatted = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+            return `${formatted}m`;
+          }
+          if(count >= 1000){
+            const value = count / 1000;
+            const formatted = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+            return `${formatted}k`;
+          }
+          return String(count);
+        }
+
+        function getClusterGridSize(zoom){
+          const z = Number.isFinite(zoom) ? zoom : 0;
+          if(z >= 7.5) return 0.5;
+          if(z >= 6) return 1;
+          if(z >= 4) return 2.5;
+          if(z >= 2) return 5;
+          return 10;
+        }
+
+        const clampClusterLat = (lat)=> Math.max(-85, Math.min(85, lat));
+
+        function groupPostsForClusterZoom(postsSource, zoom){
+          const gridSizeRaw = getClusterGridSize(zoom);
+          const gridSize = gridSizeRaw > 0 ? gridSizeRaw : 5;
+          const groups = new Map();
+          postsSource.forEach(post => {
+            if(!post || !Number.isFinite(post.lng) || !Number.isFinite(post.lat)) return;
+            const lng = Number(post.lng);
+            const lat = clampClusterLat(Number(post.lat));
+            const col = Math.floor((lng + 180) / gridSize);
+            const row = Math.floor((lat + 90) / gridSize);
+            const key = `${col}|${row}`;
+            let bucket = groups.get(key);
+            if(!bucket){
+              bucket = { count:0, sumLng:0, sumLat:0, posts: [] };
+              groups.set(key, bucket);
+            }
+            bucket.count += 1;
+            bucket.sumLng += lng;
+            bucket.sumLat += lat;
+            bucket.posts.push(post);
+          });
+          return { groups };
+        }
+
+        let lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
+
+        function buildClusterFeatureCollection(zoom){
+          const allowInitialize = true; // ensure clusters have data even before marker zoom threshold
+          const postsSource = getAllPostsCache({ allowInitialize });
+          if(!Array.isArray(postsSource) || postsSource.length === 0){
+            const emptyGroups = new Map();
+            const groupingKey = getClusterBucketKey(zoom);
+            lastClusterGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
+            return { type:'FeatureCollection', features: [] };
+          }
+          const { groups } = groupPostsForClusterZoom(postsSource, zoom);
+          const features = [];
+          groups.forEach((bucket, key) => {
+            if(!bucket || bucket.count <= 0) return;
+            const avgLng = bucket.sumLng / bucket.count;
+            const avgLat = bucket.sumLat / bucket.count;
+            features.push({
+              type:'Feature',
+              properties:{
+                count: bucket.count,
+                label: formatClusterCount(bucket.count),
+                bucket: key
+              },
+              geometry:{ type:'Point', coordinates:[avgLng, avgLat] }
+            });
+          });
+          const groupingKey = getClusterBucketKey(zoom);
+          lastClusterGroupingDetails = { key: groupingKey, zoom, groups };
+          return { type:'FeatureCollection', features };
+        }
+
+        function computeChildClusterTarget(bucket, currentZoom, maxAllowedZoom){
+          if(!bucket || !Array.isArray(bucket.posts) || bucket.posts.length <= 1){
+            return null;
+          }
+          const safeCurrent = Number.isFinite(currentZoom) ? currentZoom : 0;
+          const safeMax = Number.isFinite(maxAllowedZoom) ? maxAllowedZoom : safeCurrent;
+          if(!(safeMax > safeCurrent)){
+            return null;
+          }
+          const step = 0.25;
+          const maxIterations = Math.max(1, Math.ceil((safeMax - safeCurrent) / step) + 1);
+          for(let i=0;i<maxIterations;i++){
+            const candidateZoom = Math.min(safeMax, safeCurrent + (i + 1) * step);
+            if(!(candidateZoom > safeCurrent)){
+              continue;
+            }
+            const { groups } = groupPostsForClusterZoom(bucket.posts, candidateZoom);
+            const childBuckets = Array.from(groups.values()).filter(child => child && child.count > 0);
+            if(childBuckets.length <= 1){
+              continue;
+            }
+            let totalCount = 0;
+            let sumLng = 0;
+            let sumLat = 0;
+            childBuckets.forEach(child => {
+              const childCenterLng = child.sumLng / child.count;
+              const childCenterLat = child.sumLat / child.count;
+              totalCount += child.count;
+              sumLng += childCenterLng * child.count;
+              sumLat += childCenterLat * child.count;
+            });
+            if(totalCount <= 0){
+              continue;
+            }
+            return {
+              center: [sumLng / totalCount, sumLat / totalCount],
+              zoom: candidateZoom
+            };
+          }
+          return null;
+        }
+
+        let lastClusterBucketKey = null;
+
+        function getClusterBucketKey(zoom){
+          const size = getClusterGridSize(zoom);
+          return Number.isFinite(size) ? size.toFixed(2) : 'default';
+        }
+
+        function updateClusterSourceForZoom(zoom){
+          if(!map) return;
+          const source = map.getSource && map.getSource(CLUSTER_SOURCE_ID);
+          if(!source || typeof source.setData !== 'function') return;
+          const zoomValue = Number.isFinite(zoom) ? zoom : (typeof map.getZoom === 'function' ? map.getZoom() : 0);
+          const bucketKey = getClusterBucketKey(zoomValue);
+          if(lastClusterBucketKey === bucketKey) return;
+          try{
+            const data = buildClusterFeatureCollection(zoomValue);
+            source.setData(data);
+            lastClusterBucketKey = bucketKey;
+          }catch(err){ console.error(err); }
+        }
+
+        function resetClusterSourceState(){
+          lastClusterBucketKey = null;
+          lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
+        }
+
+        function setupSeedLayers(mapInstance){
+          if(!mapInstance) return;
+          // Ensure cluster layers are ready even at low zoom on initial load
+          const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+          if(!Number.isFinite(currentZoom)){
+            if(!mapInstance.__seedLayerZoomGate){
+              const handleZoomGate = ()=>{
+                const readyZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+                if(Number.isFinite(readyZoom)){
+                  mapInstance.off('zoomend', handleZoomGate);
+                  mapInstance.__seedLayerZoomGate = null;
+                  setupSeedLayers(mapInstance);
+                }
+              };
+              mapInstance.__seedLayerZoomGate = handleZoomGate;
+              mapInstance.on('zoomend', handleZoomGate);
+            }
+            return;
+          }
+          if(mapInstance.__seedLayerZoomGate){
+            mapInstance.off('zoomend', mapInstance.__seedLayerZoomGate);
+            mapInstance.__seedLayerZoomGate = null;
+          }
+          ensureClusterIconImage(mapInstance).then(()=>{
+            try{
+              if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
+            }catch(err){ console.error(err); }
+
+            let clusterSource = null;
+            try{
+              clusterSource = mapInstance.getSource && mapInstance.getSource(CLUSTER_SOURCE_ID);
+            }catch(err){ clusterSource = null; }
+            const emptyData = (typeof EMPTY_FEATURE_COLLECTION !== 'undefined') ? EMPTY_FEATURE_COLLECTION : { type:'FeatureCollection', features: [] };
+            try{
+              if(clusterSource && typeof clusterSource.setData === 'function'){
+                clusterSource.setData(emptyData);
+              } else {
+                if(clusterSource){
+                  try{ mapInstance.removeSource(CLUSTER_SOURCE_ID); }catch(removeErr){ console.error(removeErr); }
+                }
+                mapInstance.addSource(CLUSTER_SOURCE_ID, { type:'geojson', data: emptyData });
+              }
+            }catch(err){ console.error(err); }
+
+            try{
+              mapInstance.addLayer({
+                id: CLUSTER_LAYER_ID,
+                type: 'symbol',
+                source: CLUSTER_SOURCE_ID,
+                minzoom: CLUSTER_MIN_ZOOM,
+                maxzoom: CLUSTER_MAX_ZOOM,
+                layout: {
+                  'icon-image': CLUSTER_ICON_ID,
+                  'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
+                  'icon-allow-overlap': true,
+                  'icon-ignore-placement': true,
+                  'icon-anchor': 'bottom',
+                  'text-field': ['to-string', ['coalesce', ['get','label'], ['get','count']]],
+                  'text-size': 12,
+                  'text-offset': [0, -1.35],
+                  'text-font': ['Open Sans Bold','Arial Unicode MS Bold'],
+                  'text-allow-overlap': true,
+                  'text-ignore-placement': true,
+                  'symbol-z-order': 'viewport-y',
+                  'symbol-sort-key': 900
+                },
+                paint: {
+                  'text-color': '#ffffff',
+                  'text-halo-color': 'rgba(0,0,0,0.45)',
+                  'text-halo-width': 1.2,
+                  'icon-opacity': 0.95
+                },
+                metadata:{ cursor:'pointer' }
+              });
+            }catch(err){ console.error(err); }
+
+            resetClusterSourceState();
+            const currentZoomValue = mapInstance.getZoom ? mapInstance.getZoom() : CLUSTER_MIN_ZOOM;
+            updateClusterSourceForZoom(currentZoomValue);
+            const shouldShow = Number.isFinite(currentZoomValue) ? currentZoomValue < CLUSTER_MAX_ZOOM : true;
+            try{
+              mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
+            }catch(err){}
+            clusterLayersVisible = shouldShow;
+          });
+
+          if(!mapInstance.__clusterEventsBound){
+            const handleClusterClick = (e)=>{
+              if(e && typeof e.preventDefault === 'function') e.preventDefault();
+              const feature = e && e.features && e.features[0];
+              if(!feature) return;
+              const coords = feature.geometry && feature.geometry.coordinates;
+              if(!Array.isArray(coords) || coords.length < 2) return;
+              const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+              const maxZoom = typeof mapInstance.getMaxZoom === 'function' ? mapInstance.getMaxZoom() : 22;
+              const maxAllowedZoom = Number.isFinite(maxZoom)
+                ? Math.min(maxZoom, CLUSTER_MAX_ZOOM)
+                : CLUSTER_MAX_ZOOM;
+              const safeCurrentZoom = Number.isFinite(currentZoom) ? currentZoom : 0;
+              const bucketKey = feature.properties && feature.properties.bucket;
+              const grouping = lastClusterGroupingDetails && lastClusterGroupingDetails.groups instanceof Map
+                ? lastClusterGroupingDetails.groups
+                : null;
+              const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
+              const childZoomLimit = Number.isFinite(maxZoom)
+                ? Math.min(maxZoom, Math.max(maxAllowedZoom, 12))
+                : 12;
+              const childTarget = computeChildClusterTarget(bucketData, safeCurrentZoom, childZoomLimit);
+              const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
+              const targetCenter = hasChildTarget
+                ? [childTarget.center[0], childTarget.center[1]]
+                : [coords[0], coords[1]];
+              const desiredLeafZoom = Number.isFinite(maxZoom) ? Math.min(12, maxZoom) : 12;
+              let finalZoom;
+              if(hasChildTarget){
+                const childZoom = childTarget && Number.isFinite(childTarget.zoom)
+                  ? Math.min(childTarget.zoom, childZoomLimit)
+                  : NaN;
+                finalZoom = Number.isFinite(childZoom) ? childZoom : safeCurrentZoom;
+                if(finalZoom < safeCurrentZoom){
+                  finalZoom = safeCurrentZoom;
+                }
+              } else {
+                finalZoom = Number.isFinite(desiredLeafZoom) ? desiredLeafZoom : safeCurrentZoom;
+                if(finalZoom < safeCurrentZoom){
+                  finalZoom = safeCurrentZoom;
+                }
+              }
+              if(!Number.isFinite(finalZoom)){
+                finalZoom = safeCurrentZoom;
+              }
+              let currentPitch = null;
+              try{
+                currentPitch = typeof mapInstance.getPitch === 'function' ? mapInstance.getPitch() : null;
+              }catch(err){
+                currentPitch = null;
+              }
+              try{
+                const flight = { center: targetCenter, zoom: finalZoom, essential: true };
+                if(Number.isFinite(currentPitch)){
+                  flight.pitch = currentPitch;
+                }
+                if(typeof mapInstance.flyTo === 'function'){
+                  mapInstance.flyTo(Object.assign({}, flight, {
+                    speed: 1.35,
+                    curve: 1.5,
+                    easing: t => 1 - Math.pow(1 - t, 3)
+                  }));
+                } else {
+                  mapInstance.easeTo(Object.assign({}, flight, { duration: 650, easing: t => 1 - Math.pow(1 - t, 3) }));
+                }
+              }catch(err){ console.error(err); }
+            };
+            mapInstance.on('click', CLUSTER_LAYER_ID, handleClusterClick);
+            mapInstance.on('mouseenter', CLUSTER_LAYER_ID, ()=>{ mapInstance.getCanvas().style.cursor = 'pointer'; });
+            mapInstance.on('mouseleave', CLUSTER_LAYER_ID, ()=>{ mapInstance.getCanvas().style.cursor = 'grab'; });
+            mapInstance.__clusterEventsBound = true;
+          }
+          if(mapInstance === map){
+            updateLayerVisibility(lastKnownZoom);
+          }
+        }
+        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
       function updateLogoClickState(){
@@ -1987,10 +2373,6 @@ let __notifyMapOnInteraction = null;
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
     let hoveredPostIds = [];
-    
-    // Expose filtered posts for map.js clustering
-    window.getFilteredPosts = function() { return Array.isArray(filtered) ? filtered : []; };
-    window.getAllPostsCache = function() { return typeof getAllPostsCache === 'function' ? getAllPostsCache() : []; };
     // Function to update feature states (isExpanded, isActive) for map card composites based on click/open state
     function updateMarkerLabelHighlightIconSize(){
       if(!map || typeof map.setFeatureState !== 'function') return;
@@ -5862,10 +6244,7 @@ function makePosts(){
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
       invalidateMarkerDataCache();
-      // Refresh clusters with new posts
-      if(window.MarkerClusters && typeof window.MarkerClusters.refresh === 'function'){
-        try{ window.MarkerClusters.refresh(); }catch(err){}
-      }
+      resetClusterSourceState();
       if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
@@ -5931,8 +6310,13 @@ function makePosts(){
         });
         markerLayersVisible = shouldShowMarkers;
       }
-      // Native Mapbox clustering handles visibility automatically via clusterMaxZoom
-      clusterLayersVisible = shouldShowClusters;
+      if(clusterLayersVisible !== shouldShowClusters){
+        CLUSTER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowClusters));
+        clusterLayersVisible = shouldShowClusters;
+      }
+      if(shouldShowClusters && Number.isFinite(zoomValue)){
+        updateClusterSourceForZoom(zoomValue);
+      }
     }
 
     function updateZoomState(zoom){
@@ -5947,7 +6331,7 @@ function makePosts(){
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
       updateMarkerZoomClasses(lastKnownZoom);
-      // Native Mapbox clustering handles zoom updates automatically
+      updateClusterSourceForZoom(lastKnownZoom);
       if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
@@ -17899,10 +18283,7 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
-        // Initialize native Mapbox clustering from map.js
-        if(window.MarkerClusters && typeof window.MarkerClusters.init === 'function'){
-          try{ window.MarkerClusters.init(map); }catch(err){ console.error('[Clusters] Init failed:', err); }
-        }
+        setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
@@ -17930,10 +18311,7 @@ function makePosts(){
       });
 
       map.on('style.load', ()=>{
-        // Re-initialize native Mapbox clustering on style reload
-        if(window.MarkerClusters && typeof window.MarkerClusters.init === 'function'){
-          try{ window.MarkerClusters.init(map); }catch(err){ console.error('[Clusters] Reinit failed:', err); }
-        }
+        setupSeedLayers(map);
         updateLayerVisibility(lastKnownZoom);
       });
 
@@ -17949,7 +18327,7 @@ function makePosts(){
           const zoom = map.getZoom();
           const pitch = map.getPitch();
           const bearing = map.getBearing();
-          // Native Mapbox clustering handles zoom updates automatically
+          updateClusterSourceForZoom(zoom);
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         };
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
@@ -20952,11 +21330,6 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
-      
-      // Update clusters when filters change (native Mapbox clustering)
-      if(window.MarkerClusters && typeof window.MarkerClusters.refresh === 'function'){
-        try{ window.MarkerClusters.refresh(); }catch(err){}
-      }
       
       // Ensure map card markers are created/updated
       const currentZoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
