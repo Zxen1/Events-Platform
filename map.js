@@ -898,17 +898,28 @@
   function getFilteredPosts() {
     // Try to access filtered array from index.js
     if (typeof window.getFilteredPosts === 'function') {
-      return window.getFilteredPosts();
+      const posts = window.getFilteredPosts();
+      if (Array.isArray(posts) && posts.length > 0) {
+        return posts;
+      }
     }
+    
     // Fallback: try to access global filtered variable
-    if (typeof window.filtered !== 'undefined' && Array.isArray(window.filtered)) {
+    if (typeof window.filtered !== 'undefined' && Array.isArray(window.filtered) && window.filtered.length > 0) {
       return window.filtered;
     }
-    // Last resort: try to get from postsLoaded
+    
+    // Last resort: try to get from postsLoaded (all posts, not filtered)
+    // This is a fallback - clusters should use filtered posts, but if filters haven't run yet,
+    // we can use all posts as a temporary measure
     if (window.postsLoaded && typeof window.getAllPostsCache === 'function') {
       const cache = window.getAllPostsCache({ allowInitialize: true });
-      return Array.isArray(cache) ? cache : [];
+      if (Array.isArray(cache) && cache.length > 0) {
+        console.warn('[MarkerClusters] Using all posts cache as fallback - filters may not have run yet');
+        return cache;
+      }
     }
+    
     return [];
   }
   
@@ -1116,15 +1127,29 @@
       return;
     }
     
+    // Check if posts are loaded - if not, don't update clusters yet
+    if (!window.postsLoaded) {
+      return; // Wait for posts to load
+    }
+    
     // Get filtered posts and create a key for caching
     const posts = getFilteredPosts();
-    console.log('[MarkerClusters] Filtered posts count:', posts.length);
+    
+    // Only log if we have posts or if it's the first time
+    if (posts.length > 0) {
+      console.log('[MarkerClusters] Filtered posts count:', posts.length, 'at zoom', zoom.toFixed(2));
+    } else if (lastClusterFilterKey === null) {
+      console.log('[MarkerClusters] No filtered posts yet - waiting for filters to be applied');
+    }
     
     if (!Array.isArray(posts) || posts.length === 0) {
       // No posts, set empty data
       if (clusterSource && typeof clusterSource.setData === 'function') {
         clusterSource.setData({ type: 'FeatureCollection', features: [] });
       }
+      // Update cache to prevent repeated empty updates
+      lastClusterZoom = zoomKey;
+      lastClusterFilterKey = filterKey || 'empty';
       return;
     }
     
@@ -1336,9 +1361,11 @@
       updateClusterSourceForZoom(map, zoom);
     });
     
-    // Update clusters when filters change (listen for custom event or poll)
-    // We'll update on zoom events which should catch filter changes
-    // Alternatively, we can expose a refresh function
+    // Also update on zoomend to catch final zoom state
+    map.on('zoomend', () => {
+      const zoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      updateClusterSourceForZoom(map, zoom);
+    });
   }
   
   /**
@@ -1353,9 +1380,13 @@
       return;
     }
     
-    lastClusterZoom = null; // Force update
+    // Force update by clearing cache
+    lastClusterZoom = null;
     lastClusterFilterKey = null;
+    
     const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+    const posts = getFilteredPosts();
+    console.log('[MarkerClusters] Refreshing clusters - posts:', posts.length, 'zoom:', currentZoom.toFixed(2));
     updateClusterSourceForZoom(mapInstance, currentZoom);
   }
   
