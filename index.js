@@ -2048,9 +2048,9 @@ let __notifyMapOnInteraction = null;
         let lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildClusterFeatureCollection(zoom){
-          const allowInitialize = true; // ensure clusters have data even before marker zoom threshold
-          const postsSource = getAllPostsCache({ allowInitialize });
-          if(!Array.isArray(postsSource) || postsSource.length === 0){
+          // Use filtered posts only - no fallbacks to getAllPostsCache
+          const postsSource = Array.isArray(filtered) ? filtered : [];
+          if(postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getClusterBucketKey(zoom);
             lastClusterGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
@@ -2075,48 +2075,6 @@ let __notifyMapOnInteraction = null;
           const groupingKey = getClusterBucketKey(zoom);
           lastClusterGroupingDetails = { key: groupingKey, zoom, groups };
           return { type:'FeatureCollection', features };
-        }
-
-        function computeChildClusterTarget(bucket, currentZoom, maxAllowedZoom){
-          if(!bucket || !Array.isArray(bucket.posts) || bucket.posts.length <= 1){
-            return null;
-          }
-          const safeCurrent = Number.isFinite(currentZoom) ? currentZoom : 0;
-          const safeMax = Number.isFinite(maxAllowedZoom) ? maxAllowedZoom : safeCurrent;
-          if(!(safeMax > safeCurrent)){
-            return null;
-          }
-          const step = 0.25;
-          const maxIterations = Math.max(1, Math.ceil((safeMax - safeCurrent) / step) + 1);
-          for(let i=0;i<maxIterations;i++){
-            const candidateZoom = Math.min(safeMax, safeCurrent + (i + 1) * step);
-            if(!(candidateZoom > safeCurrent)){
-              continue;
-            }
-            const { groups } = groupPostsForClusterZoom(bucket.posts, candidateZoom);
-            const childBuckets = Array.from(groups.values()).filter(child => child && child.count > 0);
-            if(childBuckets.length <= 1){
-              continue;
-            }
-            let totalCount = 0;
-            let sumLng = 0;
-            let sumLat = 0;
-            childBuckets.forEach(child => {
-              const childCenterLng = child.sumLng / child.count;
-              const childCenterLat = child.sumLat / child.count;
-              totalCount += child.count;
-              sumLng += childCenterLng * child.count;
-              sumLat += childCenterLat * child.count;
-            });
-            if(totalCount <= 0){
-              continue;
-            }
-            return {
-              center: [sumLng / totalCount, sumLat / totalCount],
-              zoom: candidateZoom
-            };
-          }
-          return null;
         }
 
         let lastClusterBucketKey = null;
@@ -2169,57 +2127,57 @@ let __notifyMapOnInteraction = null;
             mapInstance.__seedLayerZoomGate = null;
           }
           ensureClusterIconImage(mapInstance).then(()=>{
-            try{
-              if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
-            }catch(err){ console.error(err); }
-
+            // Only create source/layer if they don't exist - prevents flickering
             let clusterSource = null;
             try{
               clusterSource = mapInstance.getSource && mapInstance.getSource(CLUSTER_SOURCE_ID);
             }catch(err){ clusterSource = null; }
-            const emptyData = (typeof EMPTY_FEATURE_COLLECTION !== 'undefined') ? EMPTY_FEATURE_COLLECTION : { type:'FeatureCollection', features: [] };
-            try{
-              if(clusterSource && typeof clusterSource.setData === 'function'){
-                clusterSource.setData(emptyData);
-              } else {
-                if(clusterSource){
-                  try{ mapInstance.removeSource(CLUSTER_SOURCE_ID); }catch(removeErr){ console.error(removeErr); }
-                }
+            
+            if(!clusterSource){
+              const emptyData = (typeof EMPTY_FEATURE_COLLECTION !== 'undefined') ? EMPTY_FEATURE_COLLECTION : { type:'FeatureCollection', features: [] };
+              try{
                 mapInstance.addSource(CLUSTER_SOURCE_ID, { type:'geojson', data: emptyData });
-              }
-            }catch(err){ console.error(err); }
+              }catch(err){ console.error(err); }
+            }
 
+            let clusterLayer = null;
             try{
-              mapInstance.addLayer({
-                id: CLUSTER_LAYER_ID,
-                type: 'symbol',
-                source: CLUSTER_SOURCE_ID,
-                minzoom: CLUSTER_MIN_ZOOM,
-                maxzoom: CLUSTER_MAX_ZOOM,
-                layout: {
-                  'icon-image': CLUSTER_ICON_ID,
-                  'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
-                  'icon-allow-overlap': true,
-                  'icon-ignore-placement': true,
-                  'icon-anchor': 'bottom',
-                  'text-field': ['to-string', ['coalesce', ['get','label'], ['get','count']]],
-                  'text-size': 12,
-                  'text-offset': [0, -1.35],
-                  'text-font': ['Open Sans Bold','Arial Unicode MS Bold'],
-                  'text-allow-overlap': true,
-                  'text-ignore-placement': true,
-                  'symbol-z-order': 'viewport-y',
-                  'symbol-sort-key': 900
-                },
-                paint: {
-                  'text-color': '#ffffff',
-                  'text-halo-color': 'rgba(0,0,0,0.45)',
-                  'text-halo-width': 1.2,
-                  'icon-opacity': 0.95
-                },
-                metadata:{ cursor:'pointer' }
-              });
-            }catch(err){ console.error(err); }
+              clusterLayer = mapInstance.getLayer && mapInstance.getLayer(CLUSTER_LAYER_ID);
+            }catch(err){ clusterLayer = null; }
+            
+            if(!clusterLayer){
+              try{
+                mapInstance.addLayer({
+                  id: CLUSTER_LAYER_ID,
+                  type: 'symbol',
+                  source: CLUSTER_SOURCE_ID,
+                  minzoom: CLUSTER_MIN_ZOOM,
+                  maxzoom: CLUSTER_MAX_ZOOM,
+                  layout: {
+                    'icon-image': CLUSTER_ICON_ID,
+                    'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    'icon-anchor': 'bottom',
+                    'text-field': ['to-string', ['coalesce', ['get','label'], ['get','count']]],
+                    'text-size': 12,
+                    'text-offset': [0, -1.35],
+                    'text-font': ['Open Sans Bold','Arial Unicode MS Bold'],
+                    'text-allow-overlap': true,
+                    'text-ignore-placement': true,
+                    'symbol-z-order': 'viewport-y',
+                    'symbol-sort-key': 900
+                  },
+                  paint: {
+                    'text-color': '#ffffff',
+                    'text-halo-color': 'rgba(0,0,0,0.45)',
+                    'text-halo-width': 1.2,
+                    'icon-opacity': 0.95
+                  },
+                  metadata:{ cursor:'pointer' }
+                });
+              }catch(err){ console.error(err); }
+            }
 
             resetClusterSourceState();
             const currentZoomValue = mapInstance.getZoom ? mapInstance.getZoom() : CLUSTER_MIN_ZOOM;
@@ -2238,44 +2196,9 @@ let __notifyMapOnInteraction = null;
               if(!feature) return;
               const coords = feature.geometry && feature.geometry.coordinates;
               if(!Array.isArray(coords) || coords.length < 2) return;
-              const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
-              const maxZoom = typeof mapInstance.getMaxZoom === 'function' ? mapInstance.getMaxZoom() : 22;
-              const maxAllowedZoom = Number.isFinite(maxZoom)
-                ? Math.min(maxZoom, CLUSTER_MAX_ZOOM)
-                : CLUSTER_MAX_ZOOM;
-              const safeCurrentZoom = Number.isFinite(currentZoom) ? currentZoom : 0;
-              const bucketKey = feature.properties && feature.properties.bucket;
-              const grouping = lastClusterGroupingDetails && lastClusterGroupingDetails.groups instanceof Map
-                ? lastClusterGroupingDetails.groups
-                : null;
-              const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
-              const childZoomLimit = Number.isFinite(maxZoom)
-                ? Math.min(maxZoom, Math.max(maxAllowedZoom, 12))
-                : 12;
-              const childTarget = computeChildClusterTarget(bucketData, safeCurrentZoom, childZoomLimit);
-              const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
-              const targetCenter = hasChildTarget
-                ? [childTarget.center[0], childTarget.center[1]]
-                : [coords[0], coords[1]];
-              const desiredLeafZoom = Number.isFinite(maxZoom) ? Math.min(12, maxZoom) : 12;
-              let finalZoom;
-              if(hasChildTarget){
-                const childZoom = childTarget && Number.isFinite(childTarget.zoom)
-                  ? Math.min(childTarget.zoom, childZoomLimit)
-                  : NaN;
-                finalZoom = Number.isFinite(childZoom) ? childZoom : safeCurrentZoom;
-                if(finalZoom < safeCurrentZoom){
-                  finalZoom = safeCurrentZoom;
-                }
-              } else {
-                finalZoom = Number.isFinite(desiredLeafZoom) ? desiredLeafZoom : safeCurrentZoom;
-                if(finalZoom < safeCurrentZoom){
-                  finalZoom = safeCurrentZoom;
-                }
-              }
-              if(!Number.isFinite(finalZoom)){
-                finalZoom = safeCurrentZoom;
-              }
+              // Always zoom directly to 12 - no nested clusters, no child targets
+              const finalZoom = 12;
+              const targetCenter = [coords[0], coords[1]];
               let currentPitch = null;
               try{
                 currentPitch = typeof mapInstance.getPitch === 'function' ? mapInstance.getPitch() : null;
@@ -21330,6 +21253,13 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       syncMarkerSources(filtered);
+      
+      // Update clusters when filters change
+      resetClusterSourceState();
+      const clusterZoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
+      if(Number.isFinite(clusterZoom) && clusterZoom < MARKER_ZOOM_THRESHOLD){
+        updateClusterSourceForZoom(clusterZoom);
+      }
       
       // Ensure map card markers are created/updated
       const currentZoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
