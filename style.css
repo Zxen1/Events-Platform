@@ -5709,7 +5709,7 @@ body.mode-map .post-board{
   width:100%;
   overflow:hidden;
   position:relative;
-  transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  transition:none;
   max-height:5000px;
   opacity:1;
   background:#1f2750;
@@ -6034,7 +6034,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   gap:var(--gap);
   width:100%;
   flex:1 1 auto;
-  max-height:250px;
+  max-height:none;
   overflow-y:auto;
 }
 
@@ -6149,7 +6149,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   min-width:0;
   box-sizing:border-box;
   max-width:100%;
-  max-height:min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
+  max-height:none;
   overflow:auto;
   background:#222222;
   border:1px solid var(--border);

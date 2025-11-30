@@ -16506,12 +16506,7 @@ function makePosts(){
       wrap.appendChild(cardEl);
       wrap.appendChild(postBody);
       
-      // Add click handler to card to toggle post body
-      cardEl.addEventListener('click', (e) => {
-        // Don't trigger if clicking on buttons or their children
-        if(e.target.closest('button, [role="button"], a, .fav, .share')) return;
-        wrap.classList.toggle('post-collapsed');
-      });
+      // Card click no longer toggles post body (removed per user request)
       
       // Set up favorites button handler for the card in open post
       const favBtnInCard = cardEl.querySelector('.fav');
@@ -19837,8 +19832,7 @@ function openPostModal(id){
             : descEl.classList.contains('expanded');
           setDescExpandedState(!isExpanded);
         };
-        descEl.addEventListener('click', handleDescToggle);
-        descEl.addEventListener('keydown', handleDescToggle);
+        // Description click no longer toggles collapsed state (removed per user request)
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
