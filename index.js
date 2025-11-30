@@ -21911,6 +21911,13 @@ function openPanel(m){
       });
     }
     
+    // IMPORTANT: Reset dirty state after initializing admin panel values
+    // This prevents showing "unsaved changes" when first opening the panel
+    setTimeout(() => {
+      if(window.adminPanelModule && typeof window.adminPanelModule.markSaved === 'function'){
+        window.adminPanelModule.markSaved();
+      }
+    }, 100);
   }
   
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
