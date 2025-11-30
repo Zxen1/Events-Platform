@@ -13510,7 +13510,8 @@ function makePosts(){
             actionFieldBtn.type = 'button';
             actionFieldBtn.className = 'delete-category-btn delete-field-btn';
             // Show "Add Field" for new fields without a type, "Delete Field" for existing
-            const hasFieldType = safeField.fieldTypeKey || safeField.key || safeField.type;
+            // Only count it as having a type if it's a real field type (not just default 'text')
+            const hasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
             actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
             actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
             actionFieldBtn.addEventListener('click', async event=>{
@@ -13540,6 +13541,9 @@ function makePosts(){
             deleteFieldRow.append(actionFieldBtn);
 
             editMenu.append(saveFieldRow, deleteFieldRow);
+            
+            // Update button text now that it's created (in case updateFieldEditorsByType was called before)
+            updateFieldEditorsByType();
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
