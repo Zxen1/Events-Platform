@@ -1,6 +1,10 @@
-// === Map Card Marker System ===
+// ============================================================================
+// MAP CARDS SECTION
+// ============================================================================
+// Map Card Marker System
 // Clean implementation using Mapbox Markers (DOM elements locked to map)
 // Replaces the old composite sprite system
+// ============================================================================
 
 (function() {
   'use strict';
@@ -875,8 +879,15 @@
   // Expose refresh function
   window.MapCards.refreshAllMarkerIcons = refreshAllMarkerIcons;
 
-  // ==================== MARKER CLUSTERING ====================
+  // ============================================================================
+  // END OF MAP CARDS SECTION
+  // ============================================================================
+
+  // ============================================================================
+  // MARKER CLUSTERING SECTION
+  // ============================================================================
   // Clusters group nearby markers at zoom levels below 8
+  // ============================================================================
   
   const CLUSTER_SOURCE_ID = 'post-clusters';
   const CLUSTER_LAYER_ID = 'post-clusters';
@@ -1134,12 +1145,12 @@
     
     // Get filtered posts and create a key for caching
     const posts = getFilteredPosts();
+    const filterKey = Array.isArray(posts) ? posts.length + '-' + (posts[0]?.id || '') : 'empty';
+    const zoomKey = Math.floor(zoom * 10) / 10; // Round to 0.1 precision
     
-    // Only log if we have posts or if it's the first time
-    if (posts.length > 0) {
-      console.log('[MarkerClusters] Filtered posts count:', posts.length, 'at zoom', zoom.toFixed(2));
-    } else if (lastClusterFilterKey === null) {
-      console.log('[MarkerClusters] No filtered posts yet - waiting for filters to be applied');
+    // Log only on significant changes to reduce console noise
+    if (posts.length > 0 && (lastClusterFilterKey === null || lastClusterFilterKey !== filterKey)) {
+      console.log('[MarkerClusters] Updating clusters - posts:', posts.length, 'zoom:', zoom.toFixed(2));
     }
     
     if (!Array.isArray(posts) || posts.length === 0) {
@@ -1153,9 +1164,6 @@
       return;
     }
     
-    const filterKey = Array.isArray(posts) ? posts.length + '-' + (posts[0]?.id || '') : 'empty';
-    const zoomKey = Math.floor(zoom * 10) / 10; // Round to 0.1 precision
-    
     // Check if we need to update
     if (lastClusterZoom === zoomKey && lastClusterFilterKey === filterKey) {
       return; // No change needed
@@ -1165,8 +1173,12 @@
     lastClusterFilterKey = filterKey;
     
     // Build cluster data
+    const startTime = performance.now();
     const data = buildClusterFeatureCollection(zoom);
-    console.log('[MarkerClusters] Built cluster data:', data.features.length, 'clusters');
+    const buildTime = performance.now() - startTime;
+    if (data.features.length > 0) {
+      console.log('[MarkerClusters] Built', data.features.length, 'clusters from', posts.length, 'posts in', buildTime.toFixed(2), 'ms');
+    }
     
     // Update or create source
     if (!clusterSource) {
