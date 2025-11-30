@@ -891,7 +891,7 @@
   const CLUSTER_COUNT_LAYER_ID = 'clusters-count';
   const CLUSTER_ICON_LAYER_ID = 'clusters-icon';
   const CLUSTER_MAX_ZOOM = 7;  // Stop clustering at zoom 7 (zoom 8+ = individual markers)
-  const CLUSTER_RADIUS = 60;   // Cluster radius in pixels
+  const CLUSTER_RADIUS = 20;   // Cluster radius in pixels (tighter = less geographic span)
   const CLUSTER_ZOOM_ON_CLICK = 12;  // Zoom level when clicking a cluster
 
   let mapInstance = null;
