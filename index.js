@@ -1,4 +1,4 @@
-﻿// === Shared login verifier ===
+// === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
@@ -2901,7 +2901,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Paris, France", c:[2.3522,48.8566]},
       {n:"Rio de Janeiro, Brazil", c:[-43.1729,-22.9068]},
       {n:"Cape Town, South Africa", c:[18.4241,-33.9249]},
-      {n:"Reykjavík, Iceland", c:[-21.8174,64.1265]},
+      {n:"Reykjav�k, Iceland", c:[-21.8174,64.1265]},
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
@@ -3983,7 +3983,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
-const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
+const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soir�e","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
 const __HOOK = ["at Dusk","of Ideas","in Motion","for Everyone","Remix","Live","Reborn","MKII","Redux","Infinite","Prime","Pulse","Wave","Future","Now","Unlocked","Extended","Panorama","Unbound","Edition","Run","Sequence"];
 function __rng(seed){ let s = seed|0; return ()=> (s = (s*1664525 + 1013904223)>>>0); }
 const __USED_BIGRAMS = new Set();
@@ -4047,7 +4047,7 @@ function uniqueTitle(seed, cityName, idx){
   const makeTitle = (r)=>{
     const templates = [
       ()=> `${pickFrom(r, ARTISTS)} Live on Stage`,
-      ()=> `${pickFrom(r, ARTISTS)} — ${pickFrom(r, TOUR_TAGS)}`,
+      ()=> `${pickFrom(r, ARTISTS)} � ${pickFrom(r, TOUR_TAGS)}`,
       ()=> `An Evening with ${pickFrom(r, ARTISTS)}`,
       ()=> `The ${pickFrom(r, N)} ${pickFrom(r, PLAY_FORMS)}`,
       ()=> `The ${pickFrom(r, A)} ${pickFrom(r, N)}`,
@@ -4058,7 +4058,7 @@ function uniqueTitle(seed, cityName, idx){
       ()=> `${pickFrom(r, N)} ${pickFrom(r, PLAY_FORMS)}`
     ];
     let t = templates[r()%templates.length]();
-    if ((r()%4)===0) t += ` — ${pickFrom(r, PROMOS)}`;
+    if ((r()%4)===0) t += ` � ${pickFrom(r, PROMOS)}`;
     return t.replace(/\s+/g,' ').trim();
   };
 
@@ -4433,7 +4433,7 @@ function uniqueTitle(seed, cityName, idx){
     if(localVenueKeySet.has(key)) return;
     localVenueKeySet.add(key);
     const contextParts = [address, city].filter(Boolean);
-    const placeName = contextParts.length ? `${name} — ${contextParts.join(', ')}` : name;
+    const placeName = contextParts.length ? `${name} � ${contextParts.join(', ')}` : name;
     const searchText = [name, address, city].filter(Boolean).join(' ').toLowerCase();
     localVenueIndex.push({
       search: searchText,
@@ -4966,983 +4966,14 @@ function uniqueTitle(seed, cityName, idx){
     return { element: msg, remove, reposition };
   }
 
-function makePosts(){
-  // OPTIMIZED: Reduced post counts for faster loading (was 1500+, now ~300)
-  const out = [];
-  const cityCounts = Object.create(null);
-  const MAX_POSTS_PER_CITY = 200;
-  const neighborhoodCache = new Map();
-  
-  // Fallback categories for dummy post generation when formbuilder hasn't loaded yet
-  const FALLBACK_CATEGORIES = [
-    { name: "What's On", subs: [{ name: 'Events' }, { name: 'Festivals' }, { name: 'Concerts' }, { name: 'Markets' }] },
-    { name: 'Learning', subs: [{ name: 'Classes' }, { name: 'Workshops' }, { name: 'Courses' }] },
-    { name: 'Opportunities', subs: [{ name: 'Jobs' }, { name: 'Volunteering' }, { name: 'Internships' }] },
-    { name: 'For Hire', subs: [{ name: 'Services' }, { name: 'Freelancers' }, { name: 'Contractors' }] },
-    { name: 'Buy & Sell', subs: [{ name: 'Products' }, { name: 'Tickets' }, { name: 'Goods' }] }
-  ];
-  
-  // Use real categories if available, otherwise fallback
-  const sourceCategories = (Array.isArray(categories) && categories.length > 0) ? categories : FALLBACK_CATEGORIES;
-  const eligibleCategories = sourceCategories.filter(cat => cat && Array.isArray(cat.subs) && cat.subs.length);
-
-  const pickCategory = ()=> eligibleCategories.length ? pick(eligibleCategories) : null;
-  const pickSubcategory = (cat)=> (cat && Array.isArray(cat.subs) && cat.subs.length)
-    ? pick(cat.subs)
-    : null;
-
-  function pushPost(post){
-    if(post && post.city){
-      const key = String(post.city);
-      cityCounts[key] = (cityCounts[key] || 0) + 1;
-    }
-    out.push(post);
-  }
-
-  function canAddCity(city){
-    if(!city) return true;
-    const key = String(city);
-    return (cityCounts[key] || 0) < MAX_POSTS_PER_CITY;
-  }
-
-  function inlandShiftFor(lng){
-    if(!Number.isFinite(lng)) return 0;
-    if(lng < -90) return 0.012;
-    if(lng < -30) return -0.012;
-    if(lng >= 120) return -0.012;
-    if(lng >= 60) return -0.009;
-    if(lng >= 20) return -0.008;
-    if(lng >= -10) return -0.006;
-    return -0.01;
-  }
-
-  function buildNeighborhoods(city, baseLng, baseLat){
-    const key = city || `${baseLng},${baseLat}`;
-    if(neighborhoodCache.has(key)){
-      return neighborhoodCache.get(key);
-    }
-    const latSign = Number.isFinite(baseLat) && baseLat < 0 ? -1 : 1;
-    const lngShift = inlandShiftFor(baseLng);
-    const neighborhoods = [
-      { lng: normalizeLongitude(baseLng), lat: clampLatitude(baseLat) },
-      { lng: normalizeLongitude(baseLng + lngShift), lat: clampLatitude(baseLat + 0.008 * latSign) },
-      { lng: normalizeLongitude(baseLng + lngShift * 0.6), lat: clampLatitude(baseLat - 0.007 * latSign) },
-      { lng: normalizeLongitude(baseLng + lngShift * -0.4), lat: clampLatitude(baseLat + 0.004 * latSign) }
-    ];
-    neighborhoodCache.set(key, neighborhoods);
-    return neighborhoods;
-  }
-
-  function jitterNeighborhoodPoint(point){
-    if(!point) return { lng: 0, lat: 0 };
-    const jitterRange = 0.004;
-    const lng = normalizeLongitude(point.lng + (rnd() - 0.5) * jitterRange * 2);
-    const lat = clampLatitude(point.lat + (rnd() - 0.5) * jitterRange * 2);
-    return { lng, lat };
-  }
-  // ---- OPTIMIZED: 30 posts at Federation Square (was 100) ----
-  const fsLng = 144.9695, fsLat = -37.8178;
-  const fsCity = "Federation Square, Melbourne";
-  for(let i=0;i<30;i++){
-    const cat = pickCategory();
-    const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
-    const id = 'FS'+i;
-    const title = `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    const location = createRandomLocation(fsCity, fsLng, fsLat, {
-      name: 'Federation Square',
-      address: 'Swanston St & Flinders St, Melbourne VIC 3000, Australia',
-      radius: 0.05
-    });
-    const locations = [location];
-    pushPost({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: fsCity,
-      lng: location.lng, lat: location.lat,
-      category: cat.name,
-      subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations,
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
-  }
-
-  // ---- OPTIMIZED: 30 posts in Tasmania (was 100) ----
-  const tasLng = 147.3272, tasLat = -42.8821;
-  const tasCity = "Hobart, Tasmania";
-  const todayTas = new Date(); todayTas.setHours(0,0,0,0);
-  for(let i=0;i<30;i++){
-    const cat = pickCategory();
-    const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
-    const id = 'TAS'+i;
-    const title = `${id} ${uniqueTitle(i*5311+23, tasCity, i)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    const offset = 1 + i%30;
-    const date = new Date(todayTas);
-    date.setDate(date.getDate() + (i<50 ? -offset : offset));
-    const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.05 });
-    const isoDate = toISODate(date);
-    location.dates = [{
-      date: date.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,''),
-      time: '09:00',
-      full: isoDate
-    }];
-    const locations = [location];
-    pushPost({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: tasCity,
-      lng: location.lng,
-      lat: location.lat,
-      category: cat.name,
-      subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations,
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
-  }
-
-  // ---- Restore world-wide posts ----
-  // A light list of hub cities for better realism
-  const hubs = [
-    {c:"New York, USA",      lng:-73.9857, lat:40.7484},
-    {c:"Los Angeles, USA",   lng:-118.2437, lat:34.0522},
-    {c:"London, UK",         lng:-0.1276, lat:51.5074},
-    {c:"Paris, France",      lng:2.3522, lat:48.8566},
-    {c:"Berlin, Germany",    lng:13.4050, lat:52.5200},
-    {c:"Madrid, Spain",      lng:-3.7038, lat:40.4168},
-    {c:"Rome, Italy",        lng:12.4964, lat:41.9028},
-    {c:"Amsterdam, NL",      lng:4.9041, lat:52.3676},
-    {c:"Dublin, Ireland",    lng:-6.2603, lat:53.3498},
-    {c:"Stockholm, Sweden",  lng:18.0686, lat:59.3293},
-    {c:"Copenhagen, Denmark",lng:12.5683, lat:55.6761},
-    {c:"Helsinki, Finland",  lng:24.9384, lat:60.1699},
-    {c:"Oslo, Norway",       lng:10.7522, lat:59.9139},
-    {c:"Reykjavík, Iceland", lng:-21.8277, lat:64.1265},
-    {c:"Moscow, Russia",     lng:37.6173, lat:55.7558},
-    {c:"Istanbul, Türkiye",  lng:28.9784, lat:41.0082},
-    {c:"Athens, Greece",     lng:23.7275, lat:37.9838},
-    {c:"Cairo, Egypt",       lng:31.2357, lat:30.0444},
-    {c:"Nairobi, Kenya",     lng:36.8219, lat:-1.2921},
-    {c:"Lagos, Nigeria",     lng:3.3792, lat:6.5244},
-    {c:"Johannesburg, SA",   lng:28.0473, lat:-26.2041},
-    {c:"Cape Town, SA",      lng:18.4241, lat:-33.9249},
-    {c:"Dubai, UAE",         lng:55.2708, lat:25.2048},
-    {c:"Mumbai, India",      lng:72.8777, lat:19.0760},
-    {c:"Delhi, India",       lng:77.1025, lat:28.7041},
-    {c:"Bangkok, Thailand",  lng:100.5018, lat:13.7563},
-    {c:"Singapore",          lng:103.8198, lat:1.3521},
-    {c:"Hong Kong, China",   lng:114.1694, lat:22.3193},
-    {c:"Tokyo, Japan",       lng:139.6917, lat:35.6895},
-    {c:"Seoul, South Korea", lng:126.9780, lat:37.5665},
-    {c:"Sydney, Australia",  lng:151.2093, lat:-33.8688},
-    {c:"Brisbane, Australia",lng:153.0251, lat:-27.4698},
-    {c:"Auckland, New Zealand", lng:174.7633, lat:-36.8485},
-    {c:"Toronto, Canada",    lng:-79.3832, lat:43.6532},
-    {c:"Vancouver, Canada",  lng:-123.1207, lat:49.2827},
-    {c:"Mexico City, Mexico",lng:-99.1332, lat:19.4326},
-    {c:"São Paulo, Brazil",  lng:-46.6333, lat:-23.5505},
-    {c:"Rio de Janeiro, Brazil", lng:-43.1729, lat:-22.9068},
-    {c:"Buenos Aires, Argentina", lng:-58.3816, lat:-34.6037},
-    {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489}
-  ];
-
-  // OPTIMIZED: Generate ~200 posts across hubs (was 900)
-  const TOTAL_WORLD = 200;
-  const worldCitySpecs = hubs.map(hub => ({
-    city: hub.c,
-    baseLng: hub.lng,
-    baseLat: hub.lat,
-    neighborhoods: buildNeighborhoods(hub.c, hub.lng, hub.lat),
-    generated: 0
-  }));
-  const shufflePool = (pool)=>{
-    if(!pool.length) return pool;
-    const order = shuffledIndices(pool.length);
-    return order.map(idx => pool[idx]);
-  };
-  let worldPool = shufflePool(worldCitySpecs.map((_, idx) => idx));
-  let worldPoolIndex = 0;
-  let worldProduced = 0;
-  const WORLD_ATTEMPT_MAX = TOTAL_WORLD * 6;
-  let worldAttempts = 0;
-  while(worldProduced < TOTAL_WORLD && worldPool.length && worldAttempts < WORLD_ATTEMPT_MAX){
-    if(worldPoolIndex >= worldPool.length){
-      const available = worldPool.filter(idx => canAddCity(worldCitySpecs[idx].city));
-      worldPool = shufflePool(available);
-      worldPoolIndex = 0;
-      if(!worldPool.length){
-        break;
-      }
-    }
-    const specIndex = worldPool[worldPoolIndex++];
-    const spec = worldCitySpecs[specIndex];
-    worldAttempts++;
-    if(!spec || !canAddCity(spec.city)){
-      continue;
-    }
-    const neighborhoods = spec.neighborhoods && spec.neighborhoods.length
-      ? spec.neighborhoods
-      : buildNeighborhoods(spec.city, spec.baseLng, spec.baseLat);
-    const generation = spec.generated || 0;
-    const basePoint = neighborhoods[generation % neighborhoods.length] || neighborhoods[0];
-    spec.generated = generation + 1;
-    const coords = jitterNeighborhoodPoint(basePoint);
-    const cityLabel = typeof spec.city === 'string' ? spec.city.split(',')[0].trim() || spec.city : spec.city;
-    const location = createRandomLocation(spec.city, coords.lng, coords.lat, {
-      name: `${cityLabel} District ${((generation % neighborhoods.length) + 1)}`,
-      address: spec.city,
-      radius: 0
-    });
-    const locations = [location];
-    const cat = pickCategory();
-    const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
-    const id = `WW${worldProduced}`;
-    const title = `${id} ${uniqueTitle(worldProduced*9343+19, spec.city, worldProduced)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    pushPost({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: spec.city,
-      lng: location.lng,
-      lat: location.lat,
-      category: cat.name,
-      subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations,
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
-    worldProduced++;
-  }
-
-  // ---- OPTIMIZED: 5 Sydney Opera House posts (was 10) ----
-  const operaCity = 'Sydney, Australia';
-  const operaVenueName = 'Sydney Opera House';
-  const operaAddress = 'Bennelong Point, Sydney NSW 2000, Australia';
-  const operaLng = 151.2153;
-  const operaLat = -33.8568;
-  for(let i=0;i<5;i++){
-    const cat = pickCategory();
-    const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
-    const id = 'SOH'+i;
-    const title = `${id} ${uniqueTitle(i*12007+7, operaCity, i)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    const location = {
-      venue: operaVenueName,
-      address: operaAddress,
-      lng: operaLng,
-      lat: operaLat,
-      dates: randomSchedule(),
-      price: randomPriceRange()
-    };
-    const locations = [location];
-    pushPost({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: operaCity,
-      lng: operaLng,
-      lat: operaLat,
-      category: cat.name,
-      subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations,
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
-  }
-
-  // ---- OPTIMIZED: 100 single-venue posts (was 400) ----
-  const coordKey = (lng, lat)=>{
-    if(!Number.isFinite(lng) || !Number.isFinite(lat)) return '';
-    return `${lng.toFixed(6)},${lat.toFixed(6)}`;
-  };
-  const existingCoordKeys = new Set(out.map(p => coordKey(p.lng, p.lat)).filter(Boolean));
-  const singleVenueBases = [
-    { city: "Anchorage, USA", lng: -149.9003, lat: 61.2181 },
-    { city: "Honolulu, USA", lng: -157.8583, lat: 21.3069 },
-    { city: "San Francisco, USA", lng: -122.4194, lat: 37.7749 },
-    { city: "Seattle, USA", lng: -122.3321, lat: 47.6062 },
-    { city: "Vancouver, Canada", lng: -123.1207, lat: 49.2827 },
-    { city: "Calgary, Canada", lng: -114.0719, lat: 51.0447 },
-    { city: "Toronto, Canada", lng: -79.3832, lat: 43.6532 },
-    { city: "Montreal, Canada", lng: -73.5673, lat: 45.5017 },
-    { city: "Boston, USA", lng: -71.0589, lat: 42.3601 },
-    { city: "New Orleans, USA", lng: -90.0715, lat: 29.9511 },
-    { city: "Chicago, USA", lng: -87.6298, lat: 41.8781 },
-    { city: "Miami, USA", lng: -80.1918, lat: 25.7617 },
-    { city: "Dallas, USA", lng: -96.7969, lat: 32.7767 },
-    { city: "Denver, USA", lng: -104.9903, lat: 39.7392 },
-    { city: "Phoenix, USA", lng: -112.0740, lat: 33.4484 },
-    { city: "Los Angeles, USA", lng: -118.2437, lat: 34.0522 },
-    { city: "Mexico City, Mexico", lng: -99.1332, lat: 19.4326 },
-    { city: "Guadalajara, Mexico", lng: -103.3496, lat: 20.6597 },
-    { city: "Bogotá, Colombia", lng: -74.0721, lat: 4.7110 },
-    { city: "Lima, Peru", lng: -77.0428, lat: -12.0464 },
-    { city: "Quito, Ecuador", lng: -78.4678, lat: -0.1807 },
-    { city: "Santiago, Chile", lng: -70.6693, lat: -33.4489 },
-    { city: "Buenos Aires, Argentina", lng: -58.3816, lat: -34.6037 },
-    { city: "Montevideo, Uruguay", lng: -56.1645, lat: -34.9011 },
-    { city: "São Paulo, Brazil", lng: -46.6333, lat: -23.5505 },
-    { city: "Rio de Janeiro, Brazil", lng: -43.1729, lat: -22.9068 },
-    { city: "Brasília, Brazil", lng: -47.8825, lat: -15.7942 },
-    { city: "Recife, Brazil", lng: -34.8770, lat: -8.0476 },
-    { city: "Fortaleza, Brazil", lng: -38.5434, lat: -3.7319 },
-    { city: "Caracas, Venezuela", lng: -66.9036, lat: 10.4806 },
-    { city: "San Juan, Puerto Rico", lng: -66.1057, lat: 18.4655 },
-    { city: "Reykjavík, Iceland", lng: -21.8277, lat: 64.1265 },
-    { city: "Oslo, Norway", lng: 10.7522, lat: 59.9139 },
-    { city: "Stockholm, Sweden", lng: 18.0686, lat: 59.3293 },
-    { city: "Helsinki, Finland", lng: 24.9384, lat: 60.1699 },
-    { city: "Copenhagen, Denmark", lng: 12.5683, lat: 55.6761 },
-    { city: "Edinburgh, UK", lng: -3.1883, lat: 55.9533 },
-    { city: "Dublin, Ireland", lng: -6.2603, lat: 53.3498 },
-    { city: "Glasgow, UK", lng: -4.2518, lat: 55.8642 },
-    { city: "London, UK", lng: -0.1276, lat: 51.5074 },
-    { city: "Manchester, UK", lng: -2.2426, lat: 53.4808 },
-    { city: "Paris, France", lng: 2.3522, lat: 48.8566 },
-    { city: "Lyon, France", lng: 4.8357, lat: 45.7640 },
-    { city: "Marseille, France", lng: 5.3698, lat: 43.2965 },
-    { city: "Madrid, Spain", lng: -3.7038, lat: 40.4168 },
-    { city: "Barcelona, Spain", lng: 2.1734, lat: 41.3851 },
-    { city: "Valencia, Spain", lng: -0.3763, lat: 39.4699 },
-    { city: "Lisbon, Portugal", lng: -9.1393, lat: 38.7223 },
-    { city: "Porto, Portugal", lng: -8.6291, lat: 41.1579 },
-    { city: "Brussels, Belgium", lng: 4.3517, lat: 50.8503 },
-    { city: "Amsterdam, Netherlands", lng: 4.9041, lat: 52.3676 },
-    { city: "Rotterdam, Netherlands", lng: 4.4792, lat: 51.9244 },
-    { city: "Berlin, Germany", lng: 13.4050, lat: 52.5200 },
-    { city: "Hamburg, Germany", lng: 9.9937, lat: 53.5511 },
-    { city: "Munich, Germany", lng: 11.5820, lat: 48.1351 },
-    { city: "Frankfurt, Germany", lng: 8.6821, lat: 50.1109 },
-    { city: "Prague, Czechia", lng: 14.4378, lat: 50.0755 },
-    { city: "Vienna, Austria", lng: 16.3738, lat: 48.2082 },
-    { city: "Zurich, Switzerland", lng: 8.5417, lat: 47.3769 },
-    { city: "Warsaw, Poland", lng: 21.0122, lat: 52.2297 },
-    { city: "Kraków, Poland", lng: 19.9440, lat: 50.0647 },
-    { city: "Budapest, Hungary", lng: 19.0402, lat: 47.4979 },
-    { city: "Bucharest, Romania", lng: 26.1025, lat: 44.4268 },
-    { city: "Athens, Greece", lng: 23.7275, lat: 37.9838 },
-    { city: "Istanbul, Türkiye", lng: 28.9784, lat: 41.0082 },
-    { city: "Ankara, Türkiye", lng: 32.8597, lat: 39.9334 },
-    { city: "Cairo, Egypt", lng: 31.2357, lat: 30.0444 },
-    { city: "Casablanca, Morocco", lng: -7.5898, lat: 33.5731 },
-    { city: "Marrakesh, Morocco", lng: -7.9811, lat: 31.6295 },
-    { city: "Algiers, Algeria", lng: 3.0588, lat: 36.7538 },
-    { city: "Tunis, Tunisia", lng: 10.1815, lat: 36.8065 },
-    { city: "Tripoli, Libya", lng: 13.1913, lat: 32.8872 },
-    { city: "Khartoum, Sudan", lng: 32.5599, lat: 15.5007 },
-    { city: "Addis Ababa, Ethiopia", lng: 38.7578, lat: 8.9806 },
-    { city: "Nairobi, Kenya", lng: 36.8219, lat: -1.2921 },
-    { city: "Kampala, Uganda", lng: 32.5825, lat: 0.3476 },
-    { city: "Dar es Salaam, Tanzania", lng: 39.2083, lat: -6.7924 },
-    { city: "Kigali, Rwanda", lng: 30.0588, lat: -1.9499 },
-    { city: "Lagos, Nigeria", lng: 3.3792, lat: 6.5244 },
-    { city: "Accra, Ghana", lng: -0.1869, lat: 5.6037 },
-    { city: "Abidjan, Côte d'Ivoire", lng: -4.0083, lat: 5.3599 },
-    { city: "Dakar, Senegal", lng: -17.4731, lat: 14.7167 },
-    { city: "Kinshasa, DR Congo", lng: 15.2663, lat: -4.4419 },
-    { city: "Luanda, Angola", lng: 13.2344, lat: -8.8383 },
-    { city: "Johannesburg, South Africa", lng: 28.0473, lat: -26.2041 },
-    { city: "Cape Town, South Africa", lng: 18.4241, lat: -33.9249 },
-    { city: "Windhoek, Namibia", lng: 17.0832, lat: -22.5609 },
-    { city: "Gaborone, Botswana", lng: 25.9089, lat: -24.6282 },
-    { city: "Harare, Zimbabwe", lng: 31.0530, lat: -17.8249 },
-    { city: "Maputo, Mozambique", lng: 32.5732, lat: -25.9692 },
-    { city: "Riyadh, Saudi Arabia", lng: 46.6753, lat: 24.7136 },
-    { city: "Jeddah, Saudi Arabia", lng: 39.1979, lat: 21.4858 },
-    { city: "Doha, Qatar", lng: 51.5310, lat: 25.2854 },
-    { city: "Dubai, UAE", lng: 55.2708, lat: 25.2048 },
-    { city: "Muscat, Oman", lng: 58.4059, lat: 23.5859 },
-    { city: "Kuwait City, Kuwait", lng: 47.9783, lat: 29.3759 },
-    { city: "Manama, Bahrain", lng: 50.5861, lat: 26.2285 },
-    { city: "Tehran, Iran", lng: 51.3890, lat: 35.6892 },
-    { city: "Baghdad, Iraq", lng: 44.3661, lat: 33.3152 },
-    { city: "Amman, Jordan", lng: 35.9239, lat: 31.9522 },
-    { city: "Beirut, Lebanon", lng: 35.5018, lat: 33.8938 },
-    { city: "Jerusalem", lng: 35.2137, lat: 31.7683 },
-    { city: "Mumbai, India", lng: 72.8777, lat: 19.0760 },
-    { city: "Delhi, India", lng: 77.1025, lat: 28.7041 },
-    { city: "Bengaluru, India", lng: 77.5946, lat: 12.9716 },
-    { city: "Hyderabad, India", lng: 78.4867, lat: 17.3850 },
-    { city: "Chennai, India", lng: 80.2707, lat: 13.0827 },
-    { city: "Kolkata, India", lng: 88.3639, lat: 22.5726 },
-    { city: "Kathmandu, Nepal", lng: 85.3240, lat: 27.7172 },
-    { city: "Dhaka, Bangladesh", lng: 90.4125, lat: 23.8103 },
-    { city: "Colombo, Sri Lanka", lng: 79.8612, lat: 6.9271 },
-    { city: "Bangkok, Thailand", lng: 100.5018, lat: 13.7563 },
-    { city: "Chiang Mai, Thailand", lng: 98.9931, lat: 18.7883 },
-    { city: "Vientiane, Laos", lng: 102.6341, lat: 17.9757 },
-    { city: "Phnom Penh, Cambodia", lng: 104.9282, lat: 11.5564 },
-    { city: "Ho Chi Minh City, Vietnam", lng: 106.6297, lat: 10.8231 },
-    { city: "Hanoi, Vietnam", lng: 105.8342, lat: 21.0278 },
-    { city: "Yangon, Myanmar", lng: 96.1951, lat: 16.8409 },
-    { city: "Singapore", lng: 103.8198, lat: 1.3521 },
-    { city: "Kuala Lumpur, Malaysia", lng: 101.6869, lat: 3.1390 },
-    { city: "Jakarta, Indonesia", lng: 106.8456, lat: -6.2088 },
-    { city: "Surabaya, Indonesia", lng: 112.7521, lat: -7.2575 },
-    { city: "Manila, Philippines", lng: 120.9842, lat: 14.5995 },
-    { city: "Cebu, Philippines", lng: 123.8854, lat: 10.3157 },
-    { city: "Hong Kong", lng: 114.1694, lat: 22.3193 },
-    { city: "Macau", lng: 113.5439, lat: 22.1987 },
-    { city: "Taipei, Taiwan", lng: 121.5654, lat: 25.0330 },
-    { city: "Seoul, South Korea", lng: 126.9780, lat: 37.5665 },
-    { city: "Busan, South Korea", lng: 129.0756, lat: 35.1796 },
-    { city: "Tokyo, Japan", lng: 139.6917, lat: 35.6895 },
-    { city: "Osaka, Japan", lng: 135.5023, lat: 34.6937 },
-    { city: "Nagoya, Japan", lng: 136.9066, lat: 35.1815 },
-    { city: "Sapporo, Japan", lng: 141.3544, lat: 43.0618 },
-    { city: "Beijing, China", lng: 116.4074, lat: 39.9042 },
-    { city: "Shanghai, China", lng: 121.4737, lat: 31.2304 },
-    { city: "Guangzhou, China", lng: 113.2644, lat: 23.1291 },
-    { city: "Shenzhen, China", lng: 114.0579, lat: 22.5431 },
-    { city: "Chengdu, China", lng: 104.0665, lat: 30.5728 },
-    { city: "Xi'an, China", lng: 108.9398, lat: 34.3416 },
-    { city: "Ulaanbaatar, Mongolia", lng: 106.9057, lat: 47.8864 },
-    { city: "Almaty, Kazakhstan", lng: 76.8860, lat: 43.2389 },
-    { city: "Bishkek, Kyrgyzstan", lng: 74.5698, lat: 42.8746 },
-    { city: "Tashkent, Uzbekistan", lng: 69.2401, lat: 41.2995 },
-    { city: "Astana, Kazakhstan", lng: 71.4704, lat: 51.1605 },
-    { city: "Moscow, Russia", lng: 37.6173, lat: 55.7558 },
-    { city: "Saint Petersburg, Russia", lng: 30.3351, lat: 59.9343 },
-    { city: "Novosibirsk, Russia", lng: 82.9346, lat: 55.0084 },
-    { city: "Yekaterinburg, Russia", lng: 60.5975, lat: 56.8389 },
-    { city: "Perth, Australia", lng: 115.8575, lat: -31.9505 },
-    { city: "Adelaide, Australia", lng: 138.6007, lat: -34.9285 },
-    { city: "Melbourne, Australia", lng: 144.9631, lat: -37.8136 },
-    { city: "Sydney, Australia", lng: 151.2093, lat: -33.8688 },
-    { city: "Brisbane, Australia", lng: 153.0251, lat: -27.4698 },
-    { city: "Hobart, Australia", lng: 147.3272, lat: -42.8821 },
-    { city: "Auckland, New Zealand", lng: 174.7633, lat: -36.8485 },
-    { city: "Wellington, New Zealand", lng: 174.7762, lat: -41.2865 },
-    { city: "Christchurch, New Zealand", lng: 172.6362, lat: -43.5321 },
-    { city: "Suva, Fiji", lng: 178.4419, lat: -18.1248 }
-  ];
-  const SINGLE_VENUE_POSTS = 100;
-  const singleVenueSpecs = singleVenueBases.map(base => ({
-    city: base.city,
-    baseLng: base.lng,
-    baseLat: base.lat,
-    neighborhoods: buildNeighborhoods(base.city, base.lng, base.lat),
-    generated: 0
-  }));
-  let singlePool = shufflePool(singleVenueSpecs.map((_, idx) => idx));
-  let singlePoolIndex = 0;
-  let singleProduced = 0;
-  const SINGLE_ATTEMPT_MAX = SINGLE_VENUE_POSTS * 8;
-  let singleAttempts = 0;
-  while(singleProduced < SINGLE_VENUE_POSTS && singlePool.length && singleAttempts < SINGLE_ATTEMPT_MAX){
-    if(singlePoolIndex >= singlePool.length){
-      const available = singlePool.filter(idx => canAddCity(singleVenueSpecs[idx].city));
-      singlePool = shufflePool(available);
-      singlePoolIndex = 0;
-      if(!singlePool.length){
-        break;
-      }
-    }
-    const specIndex = singlePool[singlePoolIndex++];
-    const spec = singleVenueSpecs[specIndex];
-    singleAttempts++;
-    if(!spec || !canAddCity(spec.city)){
-      continue;
-    }
-    const neighborhoods = spec.neighborhoods && spec.neighborhoods.length
-      ? spec.neighborhoods
-      : buildNeighborhoods(spec.city, spec.baseLng, spec.baseLat);
-    const generation = spec.generated || 0;
-    const venueIndex = generation % neighborhoods.length;
-    const cycle = Math.floor(generation / neighborhoods.length) + 1;
-    spec.generated = generation + 1;
-    const basePoint = neighborhoods[venueIndex] || neighborhoods[0];
-    let coords = jitterNeighborhoodPoint(basePoint);
-    let key = coordKey(coords.lng, coords.lat);
-    let coordAttempts = 0;
-    while((!key || existingCoordKeys.has(key)) && coordAttempts < 20){
-      coords = jitterNeighborhoodPoint(basePoint);
-      key = coordKey(coords.lng, coords.lat);
-      coordAttempts++;
-    }
-    if(!key || existingCoordKeys.has(key)){
-      continue;
-    }
-    const venueName = `${spec.city} Solo Venue ${cycle}-${venueIndex + 1}`;
-    const locationDetail = createRandomLocation(spec.city, coords.lng, coords.lat, {
-      name: venueName,
-      address: spec.city,
-      radius: 0
-    });
-    const locations = [locationDetail];
-    const finalKey = coordKey(locationDetail.lng, locationDetail.lat);
-    if(finalKey){
-      existingCoordKeys.add(finalKey);
-    }
-    const cat = pickCategory();
-    const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
-    const id = `SV${singleProduced}`;
-    const title = `${id} ${uniqueTitle(singleProduced*48271+131, spec.city, singleProduced)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    pushPost({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: spec.city,
-      lng: locationDetail.lng,
-      lat: locationDetail.lat,
-      category: cat.name,
-      subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations,
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
-    singleProduced++;
-  }
-
-  const MIN_MULTI_VENUE_DISTANCE_KM = 50;
-  const MAX_MULTI_VENUE_DISTANCE_KM = 4000;
-  const EARTH_RADIUS_KM = 6371;
-
-  function toRadians(degrees){
-    return (Number.isFinite(degrees) ? degrees : 0) * Math.PI / 180;
-  }
-
-  function haversineDistanceKm(a, b){
-    if(!a || !b) return Infinity;
-    const lat1 = toRadians(a.lat);
-    const lat2 = toRadians(b.lat);
-    const dLat = toRadians(b.lat - a.lat);
-    const dLng = toRadians(b.lng - a.lng);
-    const sinDLat = Math.sin(dLat / 2);
-    const sinDLng = Math.sin(dLng / 2);
-    const chord = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
-    const clampChord = Math.min(1, Math.max(0, chord));
-    return 2 * EARTH_RADIUS_KM * Math.atan2(Math.sqrt(clampChord), Math.sqrt(1 - clampChord));
-  }
-
-  function buildMultiPostPool(){
-    const cityLookup = singleVenueBases.reduce((acc, base)=>{
-      if(!base || !base.city) return acc;
-      if(Number.isFinite(base.lng) && Number.isFinite(base.lat)){
-        acc[base.city] = { lng: base.lng, lat: base.lat };
-      }
-      return acc;
-    }, Object.create(null));
-
-    const MULTI_REGION_CITY_LISTS = [
-      {
-        region: 'North America',
-        cityNames: [
-          'Anchorage, USA',
-          'Honolulu, USA',
-          'San Francisco, USA',
-          'Seattle, USA',
-          'Vancouver, Canada',
-          'Calgary, Canada',
-          'Toronto, Canada',
-          'Montreal, Canada',
-          'Boston, USA',
-          'New Orleans, USA',
-          'Chicago, USA',
-          'Miami, USA',
-          'Dallas, USA',
-          'Denver, USA',
-          'Phoenix, USA',
-          'Los Angeles, USA'
-        ]
-      },
-      {
-        region: 'Central & South America',
-        cityNames: [
-          'Mexico City, Mexico',
-          'Guadalajara, Mexico',
-          'Bogotá, Colombia',
-          'Lima, Peru',
-          'Quito, Ecuador',
-          'Santiago, Chile',
-          'Buenos Aires, Argentina',
-          'Montevideo, Uruguay',
-          'São Paulo, Brazil',
-          'Rio de Janeiro, Brazil',
-          'Brasília, Brazil',
-          'Recife, Brazil',
-          'Fortaleza, Brazil',
-          'Caracas, Venezuela',
-          'San Juan, Puerto Rico'
-        ]
-      },
-      {
-        region: 'Europe',
-        cityNames: [
-          'Reykjavík, Iceland',
-          'Oslo, Norway',
-          'Stockholm, Sweden',
-          'Helsinki, Finland',
-          'Copenhagen, Denmark',
-          'Edinburgh, UK',
-          'Dublin, Ireland',
-          'Glasgow, UK',
-          'London, UK',
-          'Manchester, UK',
-          'Paris, France',
-          'Lyon, France',
-          'Marseille, France',
-          'Madrid, Spain',
-          'Barcelona, Spain',
-          'Valencia, Spain',
-          'Lisbon, Portugal',
-          'Berlin, Germany',
-          'Hamburg, Germany',
-          'Munich, Germany',
-          'Frankfurt, Germany',
-          'Prague, Czechia',
-          'Vienna, Austria',
-          'Zurich, Switzerland',
-          'Warsaw, Poland',
-          'Kraków, Poland',
-          'Budapest, Hungary',
-          'Bucharest, Romania',
-          'Athens, Greece'
-        ]
-      },
-      {
-        region: 'Africa',
-        cityNames: [
-          'Cairo, Egypt',
-          'Casablanca, Morocco',
-          'Marrakesh, Morocco',
-          'Algiers, Algeria',
-          'Tunis, Tunisia',
-          'Tripoli, Libya',
-          'Khartoum, Sudan',
-          'Addis Ababa, Ethiopia',
-          'Nairobi, Kenya',
-          'Kampala, Uganda',
-          'Dar es Salaam, Tanzania',
-          'Kigali, Rwanda',
-          'Lagos, Nigeria',
-          'Accra, Ghana',
-          "Abidjan, Côte d'Ivoire",
-          'Dakar, Senegal',
-          'Kinshasa, DR Congo',
-          'Luanda, Angola',
-          'Johannesburg, South Africa',
-          'Cape Town, South Africa',
-          'Windhoek, Namibia',
-          'Gaborone, Botswana',
-          'Harare, Zimbabwe',
-          'Maputo, Mozambique'
-        ]
-      },
-      {
-        region: 'Middle East',
-        cityNames: [
-          'Riyadh, Saudi Arabia',
-          'Jeddah, Saudi Arabia',
-          'Doha, Qatar',
-          'Dubai, UAE',
-          'Muscat, Oman',
-          'Kuwait City, Kuwait',
-          'Manama, Bahrain',
-          'Tehran, Iran',
-          'Baghdad, Iraq',
-          'Amman, Jordan',
-          'Beirut, Lebanon',
-          'Jerusalem'
-        ]
-      },
-      {
-        region: 'Asia',
-        cityNames: [
-          'Mumbai, India',
-          'Delhi, India',
-          'Bengaluru, India',
-          'Hyderabad, India',
-          'Chennai, India',
-          'Kolkata, India',
-          'Kathmandu, Nepal',
-          'Dhaka, Bangladesh',
-          'Colombo, Sri Lanka',
-          'Bangkok, Thailand',
-          'Chiang Mai, Thailand',
-          'Vientiane, Laos',
-          'Phnom Penh, Cambodia',
-          'Ho Chi Minh City, Vietnam',
-          'Hanoi, Vietnam',
-          'Yangon, Myanmar',
-          'Singapore',
-          'Kuala Lumpur, Malaysia',
-          'Jakarta, Indonesia',
-          'Surabaya, Indonesia',
-          'Manila, Philippines',
-          'Cebu, Philippines',
-          'Hong Kong',
-          'Macau',
-          'Taipei, Taiwan',
-          'Seoul, South Korea',
-          'Busan, South Korea',
-          'Tokyo, Japan',
-          'Osaka, Japan',
-          'Nagoya, Japan',
-          'Sapporo, Japan',
-          'Beijing, China',
-          'Shanghai, China',
-          'Guangzhou, China',
-          'Shenzhen, China',
-          'Chengdu, China',
-          "Xi'an, China",
-          'Ulaanbaatar, Mongolia',
-          'Almaty, Kazakhstan',
-          'Bishkek, Kyrgyzstan',
-          'Tashkent, Uzbekistan',
-          'Astana, Kazakhstan',
-          'Moscow, Russia',
-          'Saint Petersburg, Russia',
-          'Novosibirsk, Russia',
-          'Yekaterinburg, Russia'
-        ]
-      },
-      {
-        region: 'Oceania',
-        cityNames: [
-          'Perth, Australia',
-          'Adelaide, Australia',
-          'Melbourne, Australia',
-          'Sydney, Australia',
-          'Brisbane, Australia',
-          'Hobart, Australia',
-          'Auckland, New Zealand',
-          'Wellington, New Zealand',
-          'Christchurch, New Zealand',
-          'Suva, Fiji'
-        ]
-      }
-    ];
-
-    const deterministicOffset = (label, axis)=>{
-      let hash = 0;
-      for(let i = 0; i < label.length; i++){
-        const charCode = label.charCodeAt(i);
-        hash = (hash * 33 + charCode + (axis + 1) * 131) & 0xffffffff;
-      }
-      const normalized = ((hash % 2001) / 2000) - 0.5;
-      return normalized * 0.002;
-    };
-
-    const pool = [];
-    const seen = new Set();
-
-    MULTI_REGION_CITY_LISTS.forEach(spec => {
-      if(!spec || !spec.region || !Array.isArray(spec.cityNames)) return;
-      spec.cityNames.forEach(cityName => {
-        if(!cityName) return;
-        const base = cityLookup[cityName];
-        if(!base) return;
-        const label = `${spec.region}:${cityName}`;
-        let lng = normalizeLongitude(base.lng + deterministicOffset(label, 0));
-        let lat = clampLatitude(base.lat + deterministicOffset(label, 1));
-        let key = toVenueCoordKey(lng, lat);
-        if(!key || seen.has(key)){
-          let attempts = 0;
-          let adjustment = 0.0003;
-          while(attempts < 5 && key && seen.has(key)){
-            const delta = adjustment * (attempts % 2 === 0 ? 1 : -1);
-            lng = normalizeLongitude(base.lng + delta);
-            lat = clampLatitude(base.lat + delta);
-            key = toVenueCoordKey(lng, lat);
-            attempts++;
-            adjustment += 0.0001;
-          }
-          if((!key || seen.has(key)) && toVenueCoordKey(base.lng, base.lat) && !seen.has(toVenueCoordKey(base.lng, base.lat))){
-            lng = normalizeLongitude(base.lng);
-            lat = clampLatitude(base.lat);
-            key = toVenueCoordKey(lng, lat);
-          }
-        }
-        if(!key || seen.has(key)){
-          return;
-        }
-        seen.add(key);
-        pool.push({
-          city: cityName,
-          region: spec.region,
-          lng,
-          lat
-        });
-      });
-    });
-    return pool;
-  }
-
-  function shuffledIndices(length){
-    const indices = Array.from({ length }, (_, idx) => idx);
-    for(let i = indices.length - 1; i > 0; i--){
-      const j = Math.floor(rnd() * (i + 1));
-      const tmp = indices[i];
-      indices[i] = indices[j];
-      indices[j] = tmp;
-    }
-    return indices;
-  }
-
-  function assignMultiPosts(postList, targetCount){
-    if(!Array.isArray(postList) || !postList.length || targetCount <= 0){
-      return 0;
-    }
-    const pool = buildMultiPostPool();
-    if(pool.length < 2){
-      return 0;
-    }
-    const venuesByRegion = pool.reduce((acc, venue) => {
-      if(!venue) return acc;
-      const key = venue.region || 'Global';
-      if(!acc[key]) acc[key] = [];
-      acc[key].push(venue);
-      return acc;
-    }, Object.create(null));
-    const regionKeys = Object.keys(venuesByRegion).filter(key => Array.isArray(venuesByRegion[key]) && venuesByRegion[key].length >= 2);
-    if(!regionKeys.length){
-      return 0;
-    }
-    const sampleVenueSet = (regionKey, desiredCount)=>{
-      const candidates = venuesByRegion[regionKey];
-      if(!Array.isArray(candidates) || candidates.length < desiredCount){
-        return null;
-      }
-      const maxAttempts = Math.max(20, candidates.length);
-      for(let attempt = 0; attempt < maxAttempts; attempt++){
-        const order = shuffledIndices(candidates.length);
-        const selection = [];
-        const used = new Set();
-        for(let i = 0; i < order.length && selection.length < desiredCount; i++){
-          const candidate = candidates[order[i]];
-          if(!candidate) continue;
-          const key = toVenueCoordKey(candidate.lng, candidate.lat);
-          if(!key || used.has(key)) continue;
-          let ok = true;
-          for(let s = 0; s < selection.length; s++){
-            const existing = selection[s];
-            const distance = haversineDistanceKm(existing, candidate);
-            if(distance < MIN_MULTI_VENUE_DISTANCE_KM || distance > MAX_MULTI_VENUE_DISTANCE_KM){
-              ok = false;
-              break;
-            }
-          }
-          if(ok){
-            selection.push(candidate);
-            used.add(key);
-          }
-        }
-        if(selection.length === desiredCount){
-          return selection;
-        }
-      }
-      return null;
-    };
-    const indices = shuffledIndices(postList.length);
-    let assigned = 0;
-    for(let idx = 0; idx < indices.length && assigned < targetCount; idx++){
-      const post = postList[indices[idx]];
-      if(!post){
-        continue;
-      }
-      const desiredBase = 2 + Math.floor(rnd() * 3);
-      let desired = desiredBase;
-      let venues = null;
-      let attempts = 0;
-      while(attempts < 60 && !venues){
-        const regionKey = regionKeys[Math.floor(rnd() * regionKeys.length)];
-        venues = sampleVenueSet(regionKey, desired);
-        if(!venues){
-          attempts++;
-          if(attempts % 10 === 0 && desired > 2){
-            desired--;
-          }
-        }
-      }
-      if(!venues || venues.length < 2){
-        for(let r = 0; r < regionKeys.length && (!venues || venues.length < 2); r++){
-          venues = sampleVenueSet(regionKeys[r], 2);
-        }
-      }
-      if(!venues || venues.length < 2){
-        continue;
-      }
-      const nextLocations = venues.map((venue, venueIdx) => {
-        const cityLabel = venue.city;
-        const venueLabel = `${cityLabel} · Spot ${venueIdx + 1}`;
-        return {
-          venue: venueLabel,
-          address: cityLabel,
-          lng: venue.lng,
-          lat: venue.lat,
-          dates: randomSchedule(),
-          price: randomPriceRange()
-        };
-      });
-      post.locations = nextLocations;
-      post.dates = derivePostDatesFromLocations(nextLocations);
-      const primary = nextLocations[0];
-      if(primary){
-        post.lng = primary.lng;
-        post.lat = primary.lat;
-        post.city = primary.address || primary.venue || post.city;
-      }
-      assigned++;
-    }
-    return assigned;
-  }
-
-  // OPTIMIZED: Reduced multi-post assignment target (was 1000, now 200 to match reduced post count)
-  assignMultiPosts(out, 200);
-
-  out.forEach(post => {
-    if(!post) return;
-    if(Array.isArray(post.locations) && post.locations.length){
-      post.dates = derivePostDatesFromLocations(post.locations);
-    } else if(Array.isArray(post.dates)){
-      post.dates = post.dates.slice().sort();
-    } else {
-      post.dates = [];
-    }
-  });
-
-  return out;
-}
+// Dummy post generation removed - posts are now fetched from database via fetchPostsFromDatabase()
+// makePosts function body removed
 
     let ALL_POSTS_CACHE = null;
     let ALL_POSTS_BY_ID = null;
+    let postsLoadingPromise = null;
+    let postsLoadAttempted = false;
+
     function rebuildAllPostsIndex(cache){
       if(!Array.isArray(cache)){
         ALL_POSTS_BY_ID = null;
@@ -5955,6 +4986,65 @@ function makePosts(){
       });
       ALL_POSTS_BY_ID = map;
     }
+
+    /**
+     * Fetch posts from database via list-posts connector
+     * Returns a promise that resolves to the posts array
+     */
+    async function fetchPostsFromDatabase(){
+      if(postsLoadingPromise){
+        return postsLoadingPromise;
+      }
+      postsLoadingPromise = (async ()=>{
+        try{
+          const response = await fetch('/gateway.php?action=list-posts');
+          if(!response.ok){
+            console.error('[Posts] Failed to fetch posts from database:', response.status);
+            return [];
+          }
+          const data = await response.json();
+          if(data && data.success && Array.isArray(data.posts)){
+            console.log('[Posts] Loaded', data.posts.length, 'posts from database');
+            return data.posts;
+          }
+          if(Array.isArray(data)){
+            // Direct array response (legacy format)
+            console.log('[Posts] Loaded', data.length, 'posts from database (legacy format)');
+            return data;
+          }
+          console.warn('[Posts] Unexpected response format from list-posts');
+          return [];
+        }catch(err){
+          console.error('[Posts] Error fetching posts from database:', err);
+          return [];
+        }finally{
+          postsLoadAttempted = true;
+        }
+      })();
+      return postsLoadingPromise;
+    }
+
+    /**
+     * Initialize posts cache from database
+     * Call this early in page load to preload posts
+     */
+    async function initializePostsCache(){
+      if(Array.isArray(ALL_POSTS_CACHE)){
+        return ALL_POSTS_CACHE;
+      }
+      const posts = await fetchPostsFromDatabase();
+      ALL_POSTS_CACHE = posts;
+      rebuildAllPostsIndex(ALL_POSTS_CACHE);
+      // Trigger marker refresh after posts load
+      if(typeof invalidateMarkerDataCache === 'function'){
+        invalidateMarkerDataCache();
+      }
+      return ALL_POSTS_CACHE;
+    }
+
+    // Start loading posts immediately
+    initializePostsCache();
+
     function getAllPostsCache(options = {}){
       const { allowInitialize = true } = options;
       if(Array.isArray(ALL_POSTS_CACHE)){
@@ -5963,9 +5053,24 @@ function makePosts(){
       if(!allowInitialize){
         return null;
       }
-      ALL_POSTS_CACHE = makePosts();
-      rebuildAllPostsIndex(ALL_POSTS_CACHE);
-      return ALL_POSTS_CACHE;
+      // Return empty array if posts haven't loaded yet
+      // The async initializePostsCache() will populate the cache
+      if(!postsLoadAttempted){
+        // Trigger load if not already in progress
+        initializePostsCache();
+        return [];
+      }
+      return ALL_POSTS_CACHE || [];
+    }
+
+    /**
+     * Get promise for posts cache (for async contexts)
+     */
+    function getPostsCachePromise(){
+      if(Array.isArray(ALL_POSTS_CACHE)){
+        return Promise.resolve(ALL_POSTS_CACHE);
+      }
+      return initializePostsCache();
     }
     function getPostByIdAnywhere(id){
       if(id === undefined || id === null) return null;
@@ -6239,31 +5344,25 @@ function makePosts(){
     }
 
     function loadPosts(bounds){
-      console.log('[DEBUG loadPosts] called, spinning:', spinning, 'bounds:', bounds);
       if(spinning){
-        console.log('[DEBUG loadPosts] BLOCKED: spinning is true');
         pendingPostLoad = true;
         return;
       }
       const normalized = normalizeBounds(bounds);
       if(!normalized){
-        console.log('[DEBUG loadPosts] BLOCKED: normalized bounds is falsy');
         postLoadRequested = true;
         hideResultIndicators();
         return;
       }
       const key = boundsToKey(normalized);
       if(postsLoaded && lastLoadedBoundsKey === key){
-        console.log('[DEBUG loadPosts] SKIPPED: already loaded same bounds');
         applyFilters();
         return;
       }
       const cache = getAllPostsCache();
-      console.log('[DEBUG loadPosts] cache has', Array.isArray(cache) ? cache.length : 0, 'posts');
       const nextPosts = Array.isArray(cache)
         ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
         : [];
-      console.log('[DEBUG loadPosts] filtered to', nextPosts.length, 'posts in bounds');
       posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
@@ -6384,7 +5483,6 @@ function makePosts(){
     }
 
     function checkLoadPosts(event){
-      console.log('[DEBUG checkLoadPosts] called, map:', !!map, 'event:', event);
       if(!map) return;
       const zoomCandidate = getZoomFromEvent(event);
       updateZoomState(zoomCandidate);
@@ -6392,21 +5490,18 @@ function makePosts(){
       if(!Number.isFinite(zoomLevel)){
         zoomLevel = getZoomFromEvent();
       }
-      console.log('[DEBUG checkLoadPosts] zoomLevel:', zoomLevel, 'waitForInitialZoom:', waitForInitialZoom, 'MARKER_PRELOAD_ZOOM:', MARKER_PRELOAD_ZOOM);
       if(waitForInitialZoom){
         if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
           initialZoomStarted = false;
         } else {
-          console.log('[DEBUG checkLoadPosts] BLOCKED: waitForInitialZoom and zoom < threshold');
           postLoadRequested = true;
           hideResultIndicators();
           return;
         }
       }
       if(!Number.isFinite(zoomLevel)){
-        console.log('[DEBUG checkLoadPosts] BLOCKED: zoomLevel not finite');
         postLoadRequested = true;
         hideResultIndicators();
         return;
@@ -8878,7 +7973,7 @@ function makePosts(){
               priceText.className = 'form-checkout-option-price';
               const priceValue = parseFloat(option.checkout_price) || 0;
               const currency = option.checkout_currency || 'USD';
-              priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
+              priceText.textContent = priceValue > 0 ? ` � $${priceValue.toFixed(2)} ${currency}` : ' � Free';
               
               titleRow.appendChild(titleText);
               titleRow.appendChild(priceText);
@@ -11879,7 +10974,7 @@ function makePosts(){
                   const dropdownIndicator = document.createElement('span');
                   dropdownIndicator.className = 'session-date-dropdown-indicator';
                   dropdownIndicator.setAttribute('aria-hidden', 'true');
-                  dropdownIndicator.textContent = '▾';
+                  dropdownIndicator.textContent = '?';
                   dateInputWrapper.appendChild(dropdownIndicator);
                   dateRow.appendChild(dateInputWrapper);
 
@@ -13166,8 +12261,8 @@ function makePosts(){
                   const option = document.createElement('option');
                   option.value = opt.checkout_key || '';
                   const priceDisplay = parseFloat(opt.checkout_price) > 0 
-                    ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
-                    : ' — Free';
+                    ? ` � $${parseFloat(opt.checkout_price).toFixed(2)}` 
+                    : ' � Free';
                   option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
                   select.appendChild(option);
                 });
@@ -16447,12 +15542,12 @@ function makePosts(){
         : [];
       const basePrice = loc0 && loc0.price !== undefined ? loc0.price : '';
       const defaultInfo = loc0Dates.length
-        ? `💲 ${basePrice} | 📅 ${loc0Dates[0].date} - ${loc0Dates[loc0Dates.length-1].date}${selectSuffix}`
-        : `💲 ${basePrice}${selectSuffix}`;
+        ? `?? ${basePrice} | ?? ${loc0Dates[0].date} - ${loc0Dates[loc0Dates.length-1].date}${selectSuffix}`
+        : `?? ${basePrice}${selectSuffix}`;
       const thumbSrc = thumbUrl(p);
       const posterName = p.member ? p.member.username : 'Anonymous';
       const postedTime = formatPostTimestamp(p.created);
-      const postedMeta = postedTime ? `Posted by ${posterName} · ${postedTime}` : `Posted by ${posterName}`;
+      const postedMeta = postedTime ? `Posted by ${posterName} � ${postedTime}` : `Posted by ${posterName}`;
       
       // Create wrapper for open post
       const wrap = document.createElement('div');
@@ -16914,7 +16009,7 @@ function makePosts(){
             
             if(!scrollSuccess && attempt === 3){
               console.error(
-                `[openPost] ⚠️ SCROLL FAILED after 3 attempts for ${entryPoint}!`,
+                `[openPost] ?? SCROLL FAILED after 3 attempts for ${entryPoint}!`,
                 `\n  Container: ${containerName}`,
                 `\n  Scroll element: ${scrollElementName}`,
                 `\n  Final position: ${afterScroll}px (expected: 0px)`,
@@ -17861,12 +16956,12 @@ function makePosts(){
             if(Number.isFinite(zoomLevel)){
               const zoomText = `Zoom ${zoomLevel.toFixed(2)}`;
               if(Number.isFinite(pitchLevel)){
-                zoomIndicatorEl.textContent = `${zoomText} • Pitch ${Math.round(pitchLevel)}°`;
+                zoomIndicatorEl.textContent = `${zoomText} � Pitch ${Math.round(pitchLevel)}�`;
               } else {
                 zoomIndicatorEl.textContent = zoomText;
               }
             } else {
-              zoomIndicatorEl.textContent = 'Zoom -- • Pitch --';
+              zoomIndicatorEl.textContent = 'Zoom -- � Pitch --';
             }
           }catch(err){}
         };
@@ -18245,12 +17340,10 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
-        console.log('[DEBUG map.on(load)] Map loaded! spinEnabled:', spinEnabled, 'lastKnownZoom:', lastKnownZoom);
         setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
-          console.log('[DEBUG map.on(load)] Starting spin');
           startSpin(true);
         }
         updatePostPanel();
@@ -18258,14 +17351,12 @@ function makePosts(){
         updateZoomState(getZoomFromEvent());
         if(!markersLoaded){
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-          console.log('[DEBUG map.on(load)] Checking markers, zoomLevel:', zoomLevel, 'MARKER_PRELOAD_ZOOM:', MARKER_PRELOAD_ZOOM);
           if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
             try{ loadPostMarkers(); }catch(err){ console.error(err); }
             markersLoaded = true;
             window.__markersLoaded = true;
           }
         }
-        console.log('[DEBUG map.on(load)] About to call checkLoadPosts');
         checkLoadPosts();
         
         // Ensure map cards are created after initial load completes
@@ -19410,8 +18501,8 @@ function makePosts(){
           <div class="title">${p.title}</div>
           <div class="info">
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
-            <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+            <div class="loc-line"><span class="badge" title="Venue">??</span><span>${p.city}</span></div>
+            <div class="date-line"><span class="badge" title="Dates">??</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
         <div class="card-actions">
@@ -19618,7 +18709,7 @@ function openPostModal(id){
         closeBtn.type='button';
         closeBtn.className='close-post';
         closeBtn.setAttribute('aria-label','Close post');
-        closeBtn.textContent='✖';
+        closeBtn.textContent='?';
         closeBtn.style.marginLeft='10px';
         favBtn.after(closeBtn);
         closeBtn.addEventListener('click', e=>{ e.stopPropagation(); closePostModal(); });
@@ -20387,9 +19478,9 @@ function openPostModal(id){
             const firstDate = visible[0].d;
             const lastDate = visible[visible.length - 1].d;
             const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
-            defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}${suffix}</div>`;
+            defaultInfoHTML = `<div>?? ${loc.price} | ?? ${rangeText}${suffix}</div>`;
           } else if(Array.isArray(loc.dates) && loc.dates.length){
-            defaultInfoHTML = `<div>💲 ${loc.price}${suffix}</div>`;
+            defaultInfoHTML = `<div>?? ${loc.price}${suffix}</div>`;
           } else {
             defaultInfoHTML = '';
           }
@@ -20449,7 +19540,7 @@ function openPostModal(id){
           let targetScrollLeft = null;
           if(dt){
             if(sessionInfo){
-              sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+              sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>?? Buy at venue | ? Accessible | ?? Kid-friendly</div>`;
             }
             if(sessBtn){
               sessBtn.innerHTML = `<img src="assets/Calendar Screenshot.png" alt="Calendar view"><span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
@@ -21439,8 +20530,8 @@ function openPostModal(id){
         info.innerHTML = `
           <div class="title">${p.title}</div>
           <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-          <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
-          <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+          <div class="loc-line"><span class="badge" title="Venue">??</span><span>${p.city}</span></div>
+          <div class="date-line"><span class="badge" title="Dates">??</span><span>${formatDates(p.dates)}</span></div>
         `;
         slide.appendChild(info);
         adPanel.appendChild(slide);
