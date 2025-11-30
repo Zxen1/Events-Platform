@@ -1357,18 +1357,7 @@ let __notifyMapOnInteraction = null;
           mapCardDisplay = 'hover_only',
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
-      // Set title immediately from localStorage to prevent flash
-      (function setTitleFromCache(){
-        const cachedSiteName = localStorage.getItem('site_name');
-        if(cachedSiteName){
-          let pageTitle = cachedSiteName;
-          const cachedTagline = localStorage.getItem('site_tagline');
-          if(cachedTagline){
-            pageTitle += ' - ' + cachedTagline;
-          }
-          document.title = pageTitle;
-        }
-      })();
+      // Title will be set when settings load from backend
       
       // Initialize system image pickers using iconpicker interface
       function initializeSystemImagePickers(settings){
@@ -1532,9 +1521,9 @@ let __notifyMapOnInteraction = null;
                 }
               }
               
-              // Store map shadow and console filter settings
+              // Apply map shadow and console filter settings (no localStorage caching)
               if(data.settings.map_shadow !== undefined){
-                localStorage.setItem('map_shadow', data.settings.map_shadow);
+                window._mapShadow = data.settings.map_shadow;
                 // Update slider if it exists
                 const opacityInput = document.getElementById('postModeBgOpacity');
                 if(opacityInput){
@@ -1542,7 +1531,8 @@ let __notifyMapOnInteraction = null;
                 }
               }
               if(data.settings.map_shadow_mode !== undefined){
-                localStorage.setItem('map_shadow_mode', data.settings.map_shadow_mode);
+                // Store in memory for shadow system to use
+                window._mapShadowMode = data.settings.map_shadow_mode;
                 // Set radio buttons
                 const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
                 const alwaysRadio = document.getElementById('mapShadowModeAlways');
@@ -1562,12 +1552,12 @@ let __notifyMapOnInteraction = null;
                 }, 100);
               }
               if(data.settings.console_filter !== undefined){
-                localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
+                window._consoleFilterEnabled = data.settings.console_filter;
               }
               
-              // Store welcome_enabled setting
+              // Apply welcome_enabled setting (no localStorage caching)
               if(data.settings.welcome_enabled !== undefined){
-                localStorage.setItem('welcome_enabled', data.settings.welcome_enabled ? 'true' : 'false');
+                window._welcomeEnabled = data.settings.welcome_enabled;
                 
                 // If welcome is enabled and user hasn't seen it, show it now
                 if(data.settings.welcome_enabled && !localStorage.getItem('welcome-seen')){
@@ -1581,15 +1571,8 @@ let __notifyMapOnInteraction = null;
                 }
               }
               
-              // Store message category names and icons
-              ['user', 'member', 'admin', 'email'].forEach(key => {
-                if(data.settings[`msg_category_${key}_name`]){
-                  localStorage.setItem(`msg_category_${key}_name`, data.settings[`msg_category_${key}_name`]);
-                }
-                if(data.settings[`msg_category_${key}_icon`]){
-                  localStorage.setItem(`msg_category_${key}_icon`, data.settings[`msg_category_${key}_icon`]);
-                }
-              });
+              // Message category names and icons are loaded fresh from settings each time
+              // No localStorage caching needed
               
               // Update document title with site name and tagline
               if(data.settings.site_name){
@@ -1598,13 +1581,6 @@ let __notifyMapOnInteraction = null;
                   pageTitle += ' - ' + data.settings.site_tagline;
                 }
                 document.title = pageTitle;
-                // Cache in localStorage for instant title on next page load
-                localStorage.setItem('site_name', data.settings.site_name);
-                if(data.settings.site_tagline){
-                  localStorage.setItem('site_tagline', data.settings.site_tagline);
-                } else {
-                  localStorage.removeItem('site_tagline');
-                }
               }
               
               // Calculate if spin should be enabled
@@ -1783,7 +1759,7 @@ let __notifyMapOnInteraction = null;
                 
                 // Track if we're programmatically setting the checkbox (to avoid triggering change event)
                 let isSettingProgrammatically = false;
-                const savedState = localStorage.getItem('enableConsoleFilter') === 'true';
+                const savedState = window._consoleFilterEnabled === true;
                 isSettingProgrammatically = true;
                 consoleFilterCheckbox.checked = savedState;
                 isSettingProgrammatically = false;
@@ -1838,7 +1814,7 @@ let __notifyMapOnInteraction = null;
                   }
                   
                   const enabled = consoleFilterCheckbox.checked;
-                  localStorage.setItem('enableConsoleFilter', enabled ? 'true' : 'false');
+                  window._consoleFilterEnabled = enabled;
                   
                   // Enable/disable filter immediately
                   if(enabled){
@@ -2268,7 +2244,6 @@ let __notifyMapOnInteraction = null;
             updateLayerVisibility(lastKnownZoom);
           }
         }
-        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
       function updateLogoClickState(){
@@ -2314,7 +2289,6 @@ let __notifyMapOnInteraction = null;
           }
           if(spinLogoClick && map && map.getZoom() <= spinZoomMax){
             spinEnabled = true;
-            localStorage.setItem('spinGlobe', 'true');
             startSpin(true);
           }
           toggleWelcome();
@@ -16536,7 +16510,6 @@ function makePosts(){
         lockMap(false);
         touchMarker = null;
         spinEnabled = false;
-        localStorage.setItem('spinGlobe', 'false');
         stopSpin();
         const p = getPostByIdAnywhere(id); if(!p) return;
         activePostId = id;
@@ -17053,7 +17026,6 @@ function makePosts(){
         }
         if(m==='posts'){
           spinEnabled = false;
-          localStorage.setItem('spinGlobe','false');
           stopSpin();
         }
         if(!skipFilters) applyFilters();
@@ -17664,7 +17636,7 @@ function makePosts(){
         });
         geolocate.on('geolocate', (event)=>{
           ensureGeolocateLoading();
-          spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
+          spinEnabled = false; stopSpin();
           closeWelcomeModalIfOpen();
           if(mode!=='map') setModeFromUser('map');
           if(event && event.coords){
@@ -18271,7 +18243,6 @@ function makePosts(){
       if(target instanceof Node && logoEls.some(el=>el.contains(target))) return;
       if(spinEnabled || spinning){
         spinEnabled = false;
-        localStorage.setItem('spinGlobe','false');
         stopSpin();
       }
     }
@@ -18284,7 +18255,6 @@ function makePosts(){
       const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && firstVisit));
       if(shouldSpin !== spinEnabled){
         spinEnabled = shouldSpin;
-        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) startSpin(); else stopSpin();
       }
     }
@@ -21941,8 +21911,8 @@ function openPanel(m){
     if(welcomeEnabledCheckbox && !welcomeEnabledCheckbox.dataset.autoSaveAdded){
       welcomeEnabledCheckbox.dataset.autoSaveAdded = 'true';
       welcomeEnabledCheckbox.addEventListener('change', async ()=>{
-        // Update localStorage immediately
-        localStorage.setItem('welcome_enabled', welcomeEnabledCheckbox.checked ? 'true' : 'false');
+        // Update in-memory state
+        window._welcomeEnabled = welcomeEnabledCheckbox.checked;
         
         try {
           await fetch('/gateway.php?action=save-admin-settings', {
@@ -23894,7 +23864,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!opacityInput || !opacityVal) return;
     
     const opacity = opacityInput.value;
-    const shadowMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
+    const shadowMode = window._mapShadowMode || 'post_mode_only';
     const isPostMode = document.body.classList.contains('mode-posts');
     
     // Only apply shadow if mode is 'always' or if mode is 'post_mode_only' and we're in post mode
@@ -23929,7 +23899,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Invalid shadow value:', opacityInput.value);
       return;
     }
-    localStorage.setItem('map_shadow', shadowValue);
+    window._mapShadow = shadowValue;
     try {
       const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
@@ -23958,7 +23928,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Auto-save function for map shadow mode
   async function autoSaveMapShadowMode(modeValue){
-    localStorage.setItem('map_shadow_mode', modeValue);
+    window._mapShadowMode = modeValue;
     try {
       const response = await fetch('/gateway.php?action=save-admin-settings', {
         method: 'POST',
@@ -23986,17 +23956,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if(opacityInput && opacityVal){
-    // Load from localStorage (which is populated from database on page load)
-    const savedValue = localStorage.getItem('map_shadow');
-    if(savedValue !== null){
+    // Load from memory (which is populated from database on page load)
+    const savedValue = window._mapShadow;
+    if(savedValue !== undefined && savedValue !== null){
       opacityInput.value = savedValue;
     } else {
       opacityInput.value = 0;
     }
     
-    // Ensure shadow mode is set
-    if(!localStorage.getItem('map_shadow_mode')){
-      localStorage.setItem('map_shadow_mode', 'post_mode_only');
+    // Ensure shadow mode is set in memory
+    if(!window._mapShadowMode){
+      window._mapShadowMode = 'post_mode_only';
     }
     
     // Apply immediately
@@ -24004,8 +23974,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Also re-apply after a short delay to catch any async settings loading
     setTimeout(() => {
-      const updatedValue = localStorage.getItem('map_shadow');
-      if(updatedValue !== null && updatedValue !== opacityInput.value){
+      const updatedValue = window._mapShadow;
+      if(updatedValue !== undefined && updatedValue !== null && String(updatedValue) !== opacityInput.value){
         opacityInput.value = updatedValue;
       }
       apply();
@@ -24083,8 +24053,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const postOnlyRadio = document.getElementById('mapShadowModePostOnly');
   const alwaysRadio = document.getElementById('mapShadowModeAlways');
   if(postOnlyRadio && alwaysRadio){
-    // Set initial state from localStorage
-    const savedMode = localStorage.getItem('map_shadow_mode') || 'post_mode_only';
+    // Set initial state from memory
+    const savedMode = window._mapShadowMode || 'post_mode_only';
     if(savedMode === 'always'){
       alwaysRadio.checked = true;
     } else {
@@ -24093,14 +24063,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     postOnlyRadio.addEventListener('change', () => {
       if(postOnlyRadio.checked){
-        localStorage.setItem('map_shadow_mode', 'post_mode_only');
         autoSaveMapShadowMode('post_mode_only');
         apply(); // Update shadow immediately when mode changes
       }
     });
     alwaysRadio.addEventListener('change', () => {
       if(alwaysRadio.checked){
-        localStorage.setItem('map_shadow_mode', 'always');
         autoSaveMapShadowMode('always');
         apply(); // Update shadow immediately when mode changes
       }
