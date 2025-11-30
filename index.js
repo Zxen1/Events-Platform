@@ -18222,11 +18222,7 @@ function makePosts(){
           });
           map.on('remove', () => mapLoading.clearAll());
         }
-      // PERFORMANCE: Track if actively zooming to defer heavy operations
-      let isActivelyZooming = false;
-      
       map.on('zoomstart', ()=>{
-        isActivelyZooming = true;
         if(waitForInitialZoom){
           initialZoomStarted = true;
         }
@@ -18235,29 +18231,24 @@ function makePosts(){
         const zoomValue = getZoomFromEvent(e);
         if(waitForInitialZoom){
           if(!initialZoomStarted){
-            // Only update lastKnownZoom during active zoom - defer heavy work
-            if(Number.isFinite(zoomValue)) lastKnownZoom = zoomValue;
+            updateZoomState(zoomValue);
             return;
           }
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
           initialZoomStarted = false;
         }
-        // PERFORMANCE: Only update zoom value during active zoom
-        // Heavy operations (layer visibility, cluster updates) deferred to zoomend
-        if(Number.isFinite(zoomValue)) lastKnownZoom = zoomValue;
+        updateZoomState(zoomValue);
         
-        // Clear composites when zoom < 8 (lightweight operation)
+        // Clear composites when zoom < 8 (MARKER_ZOOM_THRESHOLD is 8) (NO FALLBACKS)
         if(Number.isFinite(zoomValue) && zoomValue < 8){
           window.MapCardComposites.clearMapCardComposites(map);
         }
+        
+        // PERFORMANCE: scheduleCheckLoadPosts moved to zoomend to avoid jank during zoom
       });
       map.on('zoomend', ()=>{
-        // PERFORMANCE: Zoom ended - run deferred heavy operations
-        isActivelyZooming = false;
-        updateZoomState(lastKnownZoom);
-        
-        // Schedule post loading check (deferred from continuous zoom)
+        // PERFORMANCE: Schedule post loading check on zoomend instead of during zoom
         if(!spinning){
           scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
         }
