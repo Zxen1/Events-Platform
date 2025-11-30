@@ -3252,33 +3252,43 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return null;
     }
 
-    const persistedFormbuilderSnapshotPromise = (()=>{
-      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
-        return window.__persistedFormbuilderSnapshotPromise;
-      }
-      const promise = (async ()=>{
-        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
-        if(inlineSnapshot){
-          return inlineSnapshot;
-        }
-        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
-          return await fetchSavedFormbuilderSnapshot();
-        }
-        return null;
-      })();
-      if(typeof window !== 'undefined'){
-        window.__persistedFormbuilderSnapshotPromise = promise;
-      }
-      return promise;
-    })();
+    // LAZY LOADING - Don't fetch formbuilder on page load
+    // It will be fetched on-demand when admin opens Forms tab or member opens Create Post
+    let persistedFormbuilderSnapshotPromise = null;
 
-    // Wait for snapshot to load, then initialize
-    persistedFormbuilderSnapshotPromise.then(snapshot => {
-      window.__persistedFormbuilderSnapshot = snapshot;
-    }).catch(err => {
-      console.error('Failed to load formbuilder snapshot', err);
-      // Don't hide the error - it should be visible
-    });
+    function getFormbuilderSnapshotPromise() {
+      if (persistedFormbuilderSnapshotPromise) {
+        return persistedFormbuilderSnapshotPromise;
+      }
+      if (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise) {
+        persistedFormbuilderSnapshotPromise = window.__persistedFormbuilderSnapshotPromise;
+        return persistedFormbuilderSnapshotPromise;
+      }
+      const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
+      if (inlineSnapshot) {
+        persistedFormbuilderSnapshotPromise = Promise.resolve(inlineSnapshot);
+        window.__persistedFormbuilderSnapshot = inlineSnapshot;
+        return persistedFormbuilderSnapshotPromise;
+      }
+      if (typeof fetchSavedFormbuilderSnapshot === 'function') {
+        persistedFormbuilderSnapshotPromise = fetchSavedFormbuilderSnapshot().then(snapshot => {
+          window.__persistedFormbuilderSnapshot = snapshot;
+          return snapshot;
+        }).catch(err => {
+          console.error('Failed to load formbuilder snapshot', err);
+          throw err;
+        });
+        if (typeof window !== 'undefined') {
+          window.__persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotPromise;
+        }
+        return persistedFormbuilderSnapshotPromise;
+      }
+      return Promise.resolve(null);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.getFormbuilderSnapshotPromise = getFormbuilderSnapshotPromise;
+    }
 
     // NO FALLBACKS - wait for backend snapshot only
     // Note: This will throw if snapshot is not available - errors should be visible
@@ -14762,30 +14772,26 @@ function makePosts(){
       restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
       save(){ updateFormbuilderSnapshot(); },
       getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
-      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); }
-    };
-    persistedFormbuilderSnapshotPromise.then(snapshot => {
-      if(!snapshot) return;
-      const manager = window.formbuilderStateManager;
-      if(!manager || typeof manager.restore !== 'function'){
-        return;
-      }
-      try{
-        manager.restore(snapshot);
-      }catch(err){
-        console.error('Failed to restore persisted formbuilder snapshot', err);
-        return;
-      }
-      if(typeof manager.save === 'function'){
-        try{
-          manager.save();
-        }catch(err){
-          console.error('Failed to update saved formbuilder snapshot after hydration', err);
+      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); },
+      // LAZY LOADING: Load and restore formbuilder snapshot on-demand
+      async ensureLoaded(){
+        if(this._loaded) return;
+        try {
+          const snapshot = await getFormbuilderSnapshotPromise();
+          if(!snapshot) return;
+          if(typeof this.restore === 'function'){
+            this.restore(snapshot);
+          }
+          if(typeof this.save === 'function'){
+            this.save();
+          }
+          this._loaded = true;
+        } catch(err) {
+          console.error('Failed to load formbuilder snapshot:', err);
         }
-      }
-    }).catch(err => {
-      console.error('Failed to load persisted formbuilder snapshot from backend', err);
-    });
+      },
+      _loaded: false
+    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -16500,12 +16506,7 @@ function makePosts(){
       wrap.appendChild(cardEl);
       wrap.appendChild(postBody);
       
-      // Add click handler to card to toggle post body
-      cardEl.addEventListener('click', (e) => {
-        // Don't trigger if clicking on buttons or their children
-        if(e.target.closest('button, [role="button"], a, .fav, .share')) return;
-        wrap.classList.toggle('post-collapsed');
-      });
+      // Card click no longer toggles post body (removed per user request)
       
       // Set up favorites button handler for the card in open post
       const favBtnInCard = cardEl.querySelector('.fav');
@@ -16523,18 +16524,13 @@ function makePosts(){
         favBtnInCard._favHandlerBound = true;
       }
       
-      // Store animation trigger function on the wrap element
-      // This will be called after scroll completes to prevent flicker
+      // Open post immediately - no animation delay
       wrap._triggerAnimation = () => {
         wrap.classList.remove('post-collapsed');
-        wrap.classList.add('post-expanding');
-        setTimeout(() => {
-          wrap.classList.remove('post-expanding');
-        }, 350);
       };
       
-      // Don't auto-trigger animation - wait for scroll to complete first
-      // Animation will be triggered from openPost after scroll
+      // Trigger immediately on creation - don't wait for scroll
+      wrap.classList.remove('post-collapsed');
       
       // Progressive hero swap
       (function(){
@@ -16951,56 +16947,9 @@ function makePosts(){
         // Scroll sequence logging removed
         
         // Scroll to top BEFORE animation to prevent flicker
-        const openPostEl = container.querySelector(`.open-post[data-id="${id}"]`);
-        let animationTriggered = false;
-        const triggerAnimation = () => {
-          if(!animationTriggered && openPostEl && typeof openPostEl._triggerAnimation === 'function'){
-            animationTriggered = true;
-            openPostEl._triggerAnimation();
-          }
-        };
-        
-        // Fallback timeout to ensure animation triggers even if scroll fails
-        const fallbackTimeout = setTimeout(() => {
-          if(!animationTriggered){
-            console.warn('[openPost] Fallback: Triggering animation after timeout');
-            triggerAnimation();
-          }
-        }, 500);
-        
-        requestAnimationFrame(() => {
-          scrollToTop(1);
-          requestAnimationFrame(() => {
-            scrollToTop(2);
-            // Final attempt after a short delay to catch any late layout changes
-            setTimeout(() => {
-              requestAnimationFrame(() => {
-                scrollToTop(3);
-                // Final verification with clear success/failure message
-                // Use the actual scroll element for final check
-                let finalScrollElement = container;
-                if(container === postsWideEl || container.classList.contains('post-board')){
-                  const postsEl = container.querySelector('.posts');
-                  if(postsEl){
-                    finalScrollElement = postsEl;
-                  }
-                }
-                
-                const finalScrollTop = finalScrollElement.scrollTop;
-                const finalScrollHeight = finalScrollElement.scrollHeight;
-                const finalClientHeight = finalScrollElement.clientHeight;
-                const success = finalScrollTop <= 5; // Allow 5px tolerance
-                const finalScrollElementName = finalScrollElement === container ? 'container' : (finalScrollElement.className || 'posts');
-                
-                // Scroll sequence completion logging removed
-                
-                // Now that scroll is complete, trigger the animation
-                clearTimeout(fallbackTimeout);
-                triggerAnimation();
-              });
-            }, 100);
-          });
-        });
+        // Post already opens immediately (no animation delay)
+        // Just scroll to top
+        scrollToTop(1);
       }
 
       function closeActivePost(){
@@ -17149,9 +17098,8 @@ function makePosts(){
         if(m==='map'){
           document.body.classList.remove('show-history');
         }
-        if(m === 'map'){
-          startMainMapInit();
-        }
+        // ALWAYS initialize map - it's visible in background even in posts mode
+        startMainMapInit();
         const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
         if(shouldAdjustListHeight){
@@ -17847,15 +17795,9 @@ function makePosts(){
     }
 
     async function initMap(){
-      // Wait for formbuilder snapshot to load before initializing map
-      if (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) {
-        try {
-          await window.persistedFormbuilderSnapshotPromise;
-        } catch (err) {
-          console.error('Failed to wait for formbuilder snapshot:', err);
-          throw err; // Don't continue if snapshot failed
-        }
-      }
+      // PERFORMANCE FIX: Don't block map on formbuilder snapshot
+      // The formbuilder is only needed for admin Forms tab and member Create Post tab
+      // It will be loaded lazily via getFormbuilderSnapshotPromise() when those tabs open
       
       if(typeof mapboxgl === 'undefined'){
         console.error('Mapbox GL failed to load');
@@ -19838,8 +19780,7 @@ function openPostModal(id){
             : descEl.classList.contains('expanded');
           setDescExpandedState(!isExpanded);
         };
-        descEl.addEventListener('click', handleDescToggle);
-        descEl.addEventListener('keydown', handleDescToggle);
+        // Description click no longer toggles collapsed state (removed per user request)
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
@@ -23857,6 +23798,10 @@ document.addEventListener('pointerdown', (e) => {
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
+      // LAZY LOAD: Load formbuilder when admin opens Forms tab
+      if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
+        window.formbuilderStateManager.ensureLoaded();
+      }
     });
   });
 
@@ -23874,6 +23819,10 @@ document.addEventListener('pointerdown', (e) => {
       if(panel){
         panel.classList.add('active');
         panel.removeAttribute('hidden');
+      }
+      // LAZY LOAD: Load formbuilder when member opens Create Post tab
+      if(btn.dataset.tab === 'create' && window.formbuilderStateManager){
+        window.formbuilderStateManager.ensureLoaded();
       }
     });
   });

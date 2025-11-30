@@ -5709,7 +5709,7 @@ body.mode-map .post-board{
   width:100%;
   overflow:hidden;
   position:relative;
-  transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  transition:none;
   max-height:5000px;
   opacity:1;
   background:#1f2750;
@@ -6144,7 +6144,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .session-menu{
   position:absolute;
   top:calc(100% + 4px);
+  bottom:auto;
   left:0;
+  right:auto;
   width:100%;
   min-width:0;
   box-sizing:border-box;
@@ -6177,7 +6179,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .post-venue-menu .venue-options button,
 .post-body .post-venue-menu .venue-options button{
   height:50px;
-  background:rgba(0,0,0,0.2);
+  background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
@@ -6192,21 +6194,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .session-menu button,
 .post-body .session-menu button{
-  height:35px;
-  min-height:35px;
-  max-height:35px;
-  flex:0 0 35px;
-  background:rgba(0,0,0,0.2);
+  height:50px;
+  background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
-  padding:0 8px;
+  padding:4px 8px;
   color:var(--button-text);
   display:flex;
   align-items:center;
   justify-content:flex-start;
-  box-sizing:border-box;
-  width:100%;
 }
 
 .open-post .post-venue-menu,
