@@ -206,14 +206,14 @@
       </div>
       <div class="panel-body">
         <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
-          <div class="member-auth" data-state="logged-out">
+          <form id="memberAuthForm" class="member-auth" data-state="logged-out" autocomplete="off">
             <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
               <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin" data-message-key="msg_member_auth_login">Login</button>
               <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister" data-message-key="msg_member_auth_register">Register</button>
             </div>
             <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
               <label for="memberLoginEmail" data-message-key="msg_member_label_email">Email</label>
-              <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
+              <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="username" />
               <label for="memberLoginPassword" data-message-key="msg_member_label_password">Password</label>
               <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
               <button type="submit" class="primary-action member-auth-submit" data-action="login" data-message-key="msg_member_btn_log_in">Log In</button>
@@ -241,7 +241,7 @@
                 <button type="button" class="tiny" id="memberLogoutBtn" data-message-key="msg_member_btn_log_out">Log Out</button>
               </div>
             </section>
-          </div>
+          </form>
         </section>
         <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
           <p class="member-create-intro" data-message-key="msg_member_create_intro">Choose a category and subcategory to load the matching post form.</p>

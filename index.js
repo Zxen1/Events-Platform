@@ -17390,6 +17390,15 @@ function makePosts(){
         const gEl = sel && sel.geo ? document.querySelector(sel.geo) : null;
         if(gEl){
           gEl.appendChild(gc.onAdd(map));
+          // Disable autocomplete on geocoder input to prevent credential autofill
+          setTimeout(() => {
+            const geocoderInput = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
+            if(geocoderInput){
+              geocoderInput.setAttribute('autocomplete', 'off');
+              geocoderInput.setAttribute('data-lpignore', 'true'); // LastPass ignore
+              geocoderInput.setAttribute('data-form-type', 'other'); // Generic ignore
+            }
+          }, 100);
         }
         geocoders.push(gc);
         if(idx === 1){
@@ -23394,10 +23403,16 @@ const adminAuthManager = (()=>{
 
   function updateUI(){
     if(adminBtn){
-      // Always show admin button (temporarily - for development)
-      adminBtn.hidden = false;
-      adminBtn.style.display = 'flex';
-      adminBtn.setAttribute('aria-hidden', 'false');
+      // Only show admin button when authenticated
+      if(authenticated){
+        adminBtn.hidden = false;
+        adminBtn.style.display = 'flex';
+        adminBtn.setAttribute('aria-hidden', 'false');
+      } else {
+        adminBtn.hidden = true;
+        adminBtn.style.display = 'none';
+        adminBtn.setAttribute('aria-hidden', 'true');
+      }
     }
   }
 
@@ -25831,9 +25846,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setup(){
     const memberPanel = document.getElementById('memberPanel');
-    form = memberPanel ? memberPanel.querySelector('.panel-body') : null;
+    // Use the actual form element if it exists, otherwise fall back to panel-body
+    const authForm = document.getElementById('memberAuthForm');
+    form = authForm || (memberPanel ? memberPanel.querySelector('.panel-body') : null);
     if(!form) return;
-    container = form.querySelector('.member-auth');
+    container = authForm || form.querySelector('.member-auth');
     if(!container) return;
     tabsWrap = container.querySelector('.member-auth-tabs');
     loginTab = document.getElementById('memberAuthTabLogin');
@@ -25848,7 +25865,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loginInputs = loginPanel ? Array.from(loginPanel.querySelectorAll('input')) : [];
     registerInputs = registerPanel ? Array.from(registerPanel.querySelectorAll('input')) : [];
 
+    // Handle form submission
     form.addEventListener('submit', event => {
+      event.preventDefault();
       let submitter = event.submitter || null;
       if(!submitter){
         const active = document.activeElement || null;
@@ -25856,12 +25875,6 @@ document.addEventListener('DOMContentLoaded', () => {
           submitter = active;
         }
       }
-      const origin = submitter && typeof submitter.closest === 'function' ? submitter : null;
-      const isMemberAuthEvent = origin && origin.closest('.member-auth');
-      if(!isMemberAuthEvent){
-        return;
-      }
-      event.preventDefault();
       const action = submitter && submitter.dataset && submitter.dataset.action ? submitter.dataset.action : lastAction;
       if(action === 'register'){
         handleRegister();
@@ -25873,10 +25886,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Add click handlers to submit buttons as fallback
     const submitButtons = form.querySelectorAll('.member-auth-submit');
     submitButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
         lastAction = btn.dataset.action || 'login';
+        // If the form doesn't have native submit behavior, handle click directly
+        if(!authForm){
+          e.preventDefault();
+          if(lastAction === 'register'){
+            handleRegister();
+          } else {
+            Promise.resolve(handleLogin()).catch(err => {
+              console.error('Login handler failed', err);
+              showStatus('Unable to process login. Please try again.', { error: true });
+            });
+          }
+        }
       });
     });
 
