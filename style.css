@@ -6144,7 +6144,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .session-menu{
   position:absolute;
   top:calc(100% + 4px);
+  bottom:auto;
   left:0;
+  right:auto;
   width:100%;
   min-width:0;
   box-sizing:border-box;
