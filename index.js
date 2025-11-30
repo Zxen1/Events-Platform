@@ -23422,16 +23422,10 @@ const adminAuthManager = (()=>{
     // Re-fetch adminBtn each time to avoid stale reference
     const adminBtn = document.getElementById('adminBtn');
     if(adminBtn){
-      // Only show admin button when authenticated
-      if(authenticated){
-        adminBtn.hidden = false;
-        adminBtn.style.display = 'flex';
-        adminBtn.setAttribute('aria-hidden', 'false');
-      } else {
-        adminBtn.hidden = true;
-        adminBtn.style.display = 'none';
-        adminBtn.setAttribute('aria-hidden', 'true');
-      }
+      // Always show admin button
+      adminBtn.hidden = false;
+      adminBtn.style.display = 'flex';
+      adminBtn.setAttribute('aria-hidden', 'false');
     }
   }
 
