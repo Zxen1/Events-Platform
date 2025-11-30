@@ -2048,12 +2048,18 @@ let __notifyMapOnInteraction = null;
         let lastClusterGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildClusterFeatureCollection(zoom){
-          // Always use filtered posts when posts are loaded (respects filter panel)
-          // Use all posts only before posts are loaded
+          // Use filtered posts when available (respects filter panel), otherwise use all posts
           let postsSource;
-          if(postsLoaded && Array.isArray(filtered)){
-            postsSource = filtered;
-          } else {
+          try {
+            // Check if filtered is accessible and posts are loaded
+            if(postsLoaded && typeof filtered !== 'undefined' && Array.isArray(filtered)){
+              postsSource = filtered;
+            } else {
+              // Fallback to all posts
+              postsSource = getAllPostsCache({ allowInitialize: true }) || [];
+            }
+          } catch(e) {
+            // If filtered is not accessible, use all posts
             postsSource = getAllPostsCache({ allowInitialize: true }) || [];
           }
           if(!Array.isArray(postsSource) || postsSource.length === 0){
@@ -2134,16 +2140,19 @@ let __notifyMapOnInteraction = null;
 
         function updateClusterSourceForZoom(zoom, force = false){
           if(!map) return;
-          const source = map.getSource && map.getSource(CLUSTER_SOURCE_ID);
+          const source = map.getSource?.(CLUSTER_SOURCE_ID);
           if(!source || typeof source.setData !== 'function') return;
           const zoomValue = Number.isFinite(zoom) ? zoom : (map.getZoom?.() ?? 0);
           const bucketKey = getClusterBucketKey(zoomValue);
+          // Skip update only if not forced AND bucket key matches (same zoom level)
           if(!force && lastClusterBucketKey === bucketKey) return;
           try{
             const data = buildClusterFeatureCollection(zoomValue);
-            source.setData(data);
-            lastClusterBucketKey = bucketKey;
-          }catch(err){ console.error(err); }
+            if(data && data.features){
+              source.setData(data);
+              lastClusterBucketKey = bucketKey;
+            }
+          }catch(err){ console.error('Cluster update error:', err); }
         }
 
         function resetClusterSourceState(){
@@ -21328,11 +21337,13 @@ function openPostModal(id){
       syncMarkerSources(filtered);
       
       // Reset cluster state and force update clusters when filters change
-      resetClusterSourceState();
-      if(map){
+      if(typeof resetClusterSourceState === 'function'){
+        resetClusterSourceState();
+      }
+      if(map && typeof updateClusterSourceForZoom === 'function'){
         const currentZoom = map.getZoom?.() ?? 0;
         if(Number.isFinite(currentZoom)){
-          // Always update clusters when filters change, regardless of zoom level
+          // Force update clusters when filters change
           updateClusterSourceForZoom(currentZoom, true);
         }
       }
