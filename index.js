@@ -2049,9 +2049,8 @@ let __notifyMapOnInteraction = null;
 
         function buildClusterFeatureCollection(zoom){
           const allowInitialize = true; // ensure clusters have data even before marker zoom threshold
-          // Use filtered posts instead of all posts to respect filter panel
-          // Only fall back to all posts if filtered hasn't been initialized yet (null/undefined)
-          const postsSource = Array.isArray(filtered) ? filtered : (getAllPostsCache({ allowInitialize }) || []);
+          // Use filtered posts if posts are loaded (filters may have been applied), otherwise use all posts
+          const postsSource = (postsLoaded && Array.isArray(filtered)) ? filtered : (getAllPostsCache({ allowInitialize }) || []);
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getClusterBucketKey(zoom);
