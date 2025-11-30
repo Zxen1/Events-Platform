@@ -8742,8 +8742,6 @@ function makePosts(){
               geocoderInput.__formLocationBound = true;
               geocoderInput.placeholder = placeholderValue;
               geocoderInput.setAttribute('aria-label', placeholderValue);
-              geocoderInput.setAttribute('autocomplete', 'off');
-              geocoderInput.setAttribute('name', 'location-search-' + Date.now());
               geocoderInput.id = addressInputId;
               geocoderInput.dataset.locationAddress = 'true';
               geocoderInput.value = locationState.address || '';
@@ -17463,6 +17461,13 @@ function makePosts(){
         const gEl = sel && sel.geo ? document.querySelector(sel.geo) : null;
         if(gEl){
           gEl.appendChild(gc.onAdd(map));
+          // Prevent browser autofill on geocoder input
+          const gcInput = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
+          if(gcInput){
+            gcInput.setAttribute('autocomplete', 'off');
+            gcInput.setAttribute('data-lpignore', 'true'); // LastPass
+            gcInput.setAttribute('data-form-type', 'other'); // Dashlane
+          }
         }
         geocoders.push(gc);
         if(idx === 1){
