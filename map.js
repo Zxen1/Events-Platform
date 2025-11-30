@@ -898,6 +898,8 @@
   let clusterIconUrl = null;
   let clusterIconLoaded = false;
   let lastFilterSignature = null;
+  let initialized = false;
+  let eventsBound = false;
 
   // ==================== HELPER FUNCTIONS ====================
 
@@ -946,22 +948,6 @@
   }
 
   /**
-   * Format cluster count for display (e.g., 1000 -> 1k)
-   */
-  function formatClusterCount(count) {
-    if (!Number.isFinite(count) || count <= 0) return '0';
-    if (count >= 1000000) {
-      const value = count / 1000000;
-      return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10}m`;
-    }
-    if (count >= 1000) {
-      const value = count / 1000;
-      return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10}k`;
-    }
-    return String(count);
-  }
-
-  /**
    * Build GeoJSON from posts array
    */
   function buildPostsGeoJSON(posts) {
@@ -989,24 +975,24 @@
    * Load cluster icon into Mapbox
    */
   async function ensureClusterIcon(map) {
-    if (!map || clusterIconLoaded) return;
+    if (!map) return false;
 
     const iconUrl = getClusterIconUrl();
-    if (!iconUrl) return;
+    if (!iconUrl) return false;
 
     clusterIconUrl = iconUrl;
 
-    return new Promise(resolve => {
-      if (map.hasImage('cluster-icon')) {
-        clusterIconLoaded = true;
-        resolve();
-        return;
-      }
+    // Already loaded?
+    if (map.hasImage('cluster-icon')) {
+      clusterIconLoaded = true;
+      return true;
+    }
 
+    return new Promise(resolve => {
       map.loadImage(iconUrl, (err, image) => {
         if (err) {
           console.warn('[MarkerClusters] Failed to load cluster icon:', err);
-          resolve();
+          resolve(false);
           return;
         }
 
@@ -1015,11 +1001,15 @@
             const pixelRatio = image.width >= 256 ? 2 : 1;
             map.addImage('cluster-icon', image, { pixelRatio });
             clusterIconLoaded = true;
+            resolve(true);
           } catch (e) {
             console.warn('[MarkerClusters] Failed to add cluster icon:', e);
+            resolve(false);
           }
+        } else {
+          clusterIconLoaded = map.hasImage('cluster-icon');
+          resolve(clusterIconLoaded);
         }
-        resolve();
       });
     });
   }
@@ -1027,126 +1017,237 @@
   // ==================== SOURCE & LAYERS SETUP ====================
 
   /**
-   * Create the cluster source with native Mapbox clustering
+   * Check if source exists
    */
-  function createClusterSource(map, posts) {
-    const geojson = buildPostsGeoJSON(posts);
-
-    // Remove existing source if present
-    if (map.getSource(CLUSTER_SOURCE_ID)) {
-      // Just update the data instead of removing
-      map.getSource(CLUSTER_SOURCE_ID).setData(geojson);
-      return;
+  function hasSource(map) {
+    try {
+      return !!map.getSource(CLUSTER_SOURCE_ID);
+    } catch (e) {
+      return false;
     }
-
-    // Add source with native Mapbox clustering enabled
-    map.addSource(CLUSTER_SOURCE_ID, {
-      type: 'geojson',
-      data: geojson,
-      cluster: true,
-      clusterMaxZoom: CLUSTER_MAX_ZOOM,  // Stop clustering at this zoom
-      clusterRadius: CLUSTER_RADIUS,     // Cluster radius in pixels
-      clusterMinPoints: 1                // Minimum 1 point to form a cluster (shows all)
-    });
   }
 
   /**
-   * Create cluster layers
+   * Check if layer exists
    */
-  async function createClusterLayers(map) {
+  function hasLayer(map, layerId) {
+    try {
+      return !!map.getLayer(layerId);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Create or update the cluster source
+   */
+  function ensureClusterSource(map, posts) {
+    const geojson = buildPostsGeoJSON(posts);
+
+    if (hasSource(map)) {
+      // Update existing source data
+      try {
+        map.getSource(CLUSTER_SOURCE_ID).setData(geojson);
+      } catch (e) {
+        console.warn('[MarkerClusters] Failed to update source:', e);
+      }
+      return;
+    }
+
+    // Create new source with native Mapbox clustering
+    try {
+      map.addSource(CLUSTER_SOURCE_ID, {
+        type: 'geojson',
+        data: geojson,
+        cluster: true,
+        clusterMaxZoom: CLUSTER_MAX_ZOOM,
+        clusterRadius: CLUSTER_RADIUS,
+        clusterMinPoints: 1
+      });
+    } catch (e) {
+      console.error('[MarkerClusters] Failed to create source:', e);
+    }
+  }
+
+  // Layer IDs for single-post "clusters" (unclustered points shown as clusters with count 1)
+  const SINGLE_ICON_LAYER_ID = 'clusters-single-icon';
+  const SINGLE_COUNT_LAYER_ID = 'clusters-single-count';
+
+  /**
+   * Create cluster layers (only if they don't exist)
+   */
+  async function ensureClusterLayers(map) {
     // Ensure icon is loaded first
     await ensureClusterIcon(map);
 
-    // Remove existing layers if they exist
-    [CLUSTER_ICON_LAYER_ID, CLUSTER_COUNT_LAYER_ID, CLUSTER_LAYER_ID].forEach(layerId => {
-      if (map.getLayer(layerId)) {
-        map.removeLayer(layerId);
-      }
-    });
+    // Check if layers already exist
+    const hasIconLayer = hasLayer(map, CLUSTER_ICON_LAYER_ID);
+    const hasCircleLayer = hasLayer(map, CLUSTER_LAYER_ID);
+    const hasCountLayer = hasLayer(map, CLUSTER_COUNT_LAYER_ID);
+    const hasSingleIconLayer = hasLayer(map, SINGLE_ICON_LAYER_ID);
+    const hasSingleCountLayer = hasLayer(map, SINGLE_COUNT_LAYER_ID);
 
-    // Layer 1: Cluster icons (using admin-selected icon)
-    if (clusterIconLoaded) {
-      map.addLayer({
-        id: CLUSTER_ICON_LAYER_ID,
-        type: 'symbol',
-        source: CLUSTER_SOURCE_ID,
-        filter: ['has', 'point_count'],
-        layout: {
-          'icon-image': 'cluster-icon',
-          'icon-size': [
-            'interpolate', ['linear'], ['zoom'],
-            0, 0.5,
-            4, 0.7,
-            7, 1
-          ],
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true,
-          'icon-anchor': 'bottom'
-        },
-        paint: {
-          'icon-opacity': 0.95
+    // Create cluster icon or circle layer (for multi-point clusters)
+    if (!hasIconLayer && !hasCircleLayer) {
+      if (clusterIconLoaded) {
+        try {
+          map.addLayer({
+            id: CLUSTER_ICON_LAYER_ID,
+            type: 'symbol',
+            source: CLUSTER_SOURCE_ID,
+            filter: ['has', 'point_count'],
+            layout: {
+              'icon-image': 'cluster-icon',
+              'icon-size': [
+                'interpolate', ['linear'], ['zoom'],
+                0, 0.5,
+                4, 0.7,
+                7, 1
+              ],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'bottom'
+            },
+            paint: {
+              'icon-opacity': 0.95
+            }
+          });
+        } catch (e) {
+          console.warn('[MarkerClusters] Failed to create icon layer:', e);
         }
-      });
-    } else {
-      // Fallback: Circle clusters if icon failed to load
-      map.addLayer({
-        id: CLUSTER_LAYER_ID,
-        type: 'circle',
-        source: CLUSTER_SOURCE_ID,
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': [
-            'step', ['get', 'point_count'],
-            '#51bbd6', 10,
-            '#f1f075', 50,
-            '#f28cb1', 100,
-            '#e55e5e'
-          ],
-          'circle-radius': [
-            'step', ['get', 'point_count'],
-            18, 10,
-            22, 50,
-            28, 100,
-            35
-          ],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff'
+      } else {
+        // Fallback: Circle clusters
+        try {
+          map.addLayer({
+            id: CLUSTER_LAYER_ID,
+            type: 'circle',
+            source: CLUSTER_SOURCE_ID,
+            filter: ['has', 'point_count'],
+            paint: {
+              'circle-color': [
+                'step', ['get', 'point_count'],
+                '#51bbd6', 10,
+                '#f1f075', 50,
+                '#f28cb1', 100,
+                '#e55e5e'
+              ],
+              'circle-radius': [
+                'step', ['get', 'point_count'],
+                18, 10,
+                22, 50,
+                28, 100,
+                35
+              ],
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#fff'
+            }
+          });
+        } catch (e) {
+          console.warn('[MarkerClusters] Failed to create circle layer:', e);
         }
-      });
+      }
     }
 
-    // Layer 2: Cluster count labels
-    map.addLayer({
-      id: CLUSTER_COUNT_LAYER_ID,
-      type: 'symbol',
-      source: CLUSTER_SOURCE_ID,
-      filter: ['has', 'point_count'],
-      layout: {
-        'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-        'text-size': 13,
-        'text-offset': clusterIconLoaded ? [0, -1.4] : [0, 0],
-        'text-allow-overlap': true,
-        'text-ignore-placement': true
-      },
-      paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': 'rgba(0,0,0,0.5)',
-        'text-halo-width': 1.2
+    // Create count label layer for clusters
+    if (!hasCountLayer) {
+      try {
+        map.addLayer({
+          id: CLUSTER_COUNT_LAYER_ID,
+          type: 'symbol',
+          source: CLUSTER_SOURCE_ID,
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': ['get', 'point_count_abbreviated'],
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': 13,
+            'text-offset': clusterIconLoaded ? [0, -1.4] : [0, 0],
+            'text-allow-overlap': true,
+            'text-ignore-placement': true
+          },
+          paint: {
+            'text-color': '#ffffff',
+            'text-halo-color': 'rgba(0,0,0,0.5)',
+            'text-halo-width': 1.2
+          }
+        });
+      } catch (e) {
+        console.warn('[MarkerClusters] Failed to create count layer:', e);
       }
-    });
+    }
+
+    // === SINGLE POST "CLUSTERS" (unclustered points shown with count "1") ===
+    
+    // Single post icon layer
+    if (!hasSingleIconLayer && clusterIconLoaded) {
+      try {
+        map.addLayer({
+          id: SINGLE_ICON_LAYER_ID,
+          type: 'symbol',
+          source: CLUSTER_SOURCE_ID,
+          filter: ['!', ['has', 'point_count']],  // Unclustered points
+          layout: {
+            'icon-image': 'cluster-icon',
+            'icon-size': [
+              'interpolate', ['linear'], ['zoom'],
+              0, 0.5,
+              4, 0.7,
+              7, 1
+            ],
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'icon-anchor': 'bottom'
+          },
+          paint: {
+            'icon-opacity': 0.95
+          }
+        });
+      } catch (e) {
+        console.warn('[MarkerClusters] Failed to create single icon layer:', e);
+      }
+    }
+
+    // Single post count label ("1")
+    if (!hasSingleCountLayer) {
+      try {
+        map.addLayer({
+          id: SINGLE_COUNT_LAYER_ID,
+          type: 'symbol',
+          source: CLUSTER_SOURCE_ID,
+          filter: ['!', ['has', 'point_count']],  // Unclustered points
+          layout: {
+            'text-field': '1',  // Always show "1" for single posts
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': 13,
+            'text-offset': clusterIconLoaded ? [0, -1.4] : [0, 0],
+            'text-allow-overlap': true,
+            'text-ignore-placement': true
+          },
+          paint: {
+            'text-color': '#ffffff',
+            'text-halo-color': 'rgba(0,0,0,0.5)',
+            'text-halo-width': 1.2
+          }
+        });
+      } catch (e) {
+        console.warn('[MarkerClusters] Failed to create single count layer:', e);
+      }
+    }
   }
 
   // ==================== EVENT HANDLERS ====================
 
   /**
-   * Handle cluster click - zoom to level 12
+   * Handle cluster click - zoom to level 12 at actual post location
    */
   function handleClusterClick(e) {
     if (!mapInstance || !e.features || !e.features[0]) return;
 
+    e.preventDefault();
+    e.originalEvent?.stopPropagation();
+
     const feature = e.features[0];
-    const coords = feature.geometry.coordinates;
+    const clusterId = feature.properties.cluster_id;
+    const coords = feature.geometry.coordinates.slice();
 
     // Get current pitch to preserve it
     let currentPitch = 0;
@@ -1154,7 +1255,60 @@
       currentPitch = mapInstance.getPitch() || 0;
     } catch (err) {}
 
-    // Fly to zoom 12 centered on the cluster
+    const flyToLocation = (center) => {
+      mapInstance.flyTo({
+        center: center,
+        zoom: CLUSTER_ZOOM_ON_CLICK,
+        pitch: currentPitch,
+        speed: 1.35,
+        curve: 1.5,
+        essential: true,
+        easing: t => 1 - Math.pow(1 - t, 3)
+      });
+    };
+
+    // If it's a cluster, get the first actual post location
+    if (clusterId !== undefined) {
+      const source = mapInstance.getSource(CLUSTER_SOURCE_ID);
+      if (source && typeof source.getClusterLeaves === 'function') {
+        source.getClusterLeaves(clusterId, 1, 0, (err, leaves) => {
+          if (err || !leaves || leaves.length === 0) {
+            // Fallback to cluster center
+            flyToLocation(coords);
+            return;
+          }
+          // Zoom to first post's actual location
+          const firstPost = leaves[0];
+          const postCoords = firstPost.geometry.coordinates;
+          flyToLocation(postCoords);
+        });
+        return;
+      }
+    }
+
+    // For single posts or fallback, use the feature's coordinates
+    flyToLocation(coords);
+  }
+
+  /**
+   * Handle single post click - zoom to level 12
+   */
+  function handleSinglePostClick(e) {
+    if (!mapInstance || !e.features || !e.features[0]) return;
+
+    e.preventDefault();
+    e.originalEvent?.stopPropagation();
+
+    const feature = e.features[0];
+    const coords = feature.geometry.coordinates.slice();
+
+    // Get current pitch to preserve it
+    let currentPitch = 0;
+    try {
+      currentPitch = mapInstance.getPitch() || 0;
+    } catch (err) {}
+
+    // Fly to zoom 12 at the post's exact location
     mapInstance.flyTo({
       center: coords,
       zoom: CLUSTER_ZOOM_ON_CLICK,
@@ -1167,29 +1321,50 @@
   }
 
   /**
-   * Bind event handlers for cluster interaction
+   * Bind event handlers for cluster interaction (only once)
    */
   function bindClusterEvents(map) {
+    if (eventsBound) return;
+
     const layerId = clusterIconLoaded ? CLUSTER_ICON_LAYER_ID : CLUSTER_LAYER_ID;
 
+    // Cluster clicks
     map.on('click', layerId, handleClusterClick);
     map.on('click', CLUSTER_COUNT_LAYER_ID, handleClusterClick);
 
+    // Single post clicks
+    map.on('click', SINGLE_ICON_LAYER_ID, handleSinglePostClick);
+    map.on('click', SINGLE_COUNT_LAYER_ID, handleSinglePostClick);
+
+    // Cursor changes for clusters
     map.on('mouseenter', layerId, () => {
       map.getCanvas().style.cursor = 'pointer';
     });
-
     map.on('mouseleave', layerId, () => {
-      map.getCanvas().style.cursor = 'grab';
+      map.getCanvas().style.cursor = '';
     });
-
     map.on('mouseenter', CLUSTER_COUNT_LAYER_ID, () => {
       map.getCanvas().style.cursor = 'pointer';
     });
-
     map.on('mouseleave', CLUSTER_COUNT_LAYER_ID, () => {
-      map.getCanvas().style.cursor = 'grab';
+      map.getCanvas().style.cursor = '';
     });
+
+    // Cursor changes for single posts
+    map.on('mouseenter', SINGLE_ICON_LAYER_ID, () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', SINGLE_ICON_LAYER_ID, () => {
+      map.getCanvas().style.cursor = '';
+    });
+    map.on('mouseenter', SINGLE_COUNT_LAYER_ID, () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', SINGLE_COUNT_LAYER_ID, () => {
+      map.getCanvas().style.cursor = '';
+    });
+
+    eventsBound = true;
   }
 
   // ==================== MAIN API ====================
@@ -1211,24 +1386,29 @@
       posts = getAllPosts();
     }
 
-    // Create source and layers
-    createClusterSource(map, posts);
-    await createClusterLayers(map);
+    // Create/update source and layers
+    ensureClusterSource(map, posts);
+    await ensureClusterLayers(map);
     bindClusterEvents(map);
 
     lastFilterSignature = createFilterSignature(posts);
+    initialized = true;
 
-    console.log('[MarkerClusters] Initialized with', posts.length, 'posts (native Mapbox clustering)');
+    console.log('[MarkerClusters] Initialized with', posts.length, 'posts');
   }
 
   /**
    * Refresh clusters when filters change
    */
   function refresh() {
-    if (!mapInstance) return;
+    if (!mapInstance || !initialized) return;
 
     const source = mapInstance.getSource(CLUSTER_SOURCE_ID);
-    if (!source) return;
+    if (!source) {
+      // Source was removed, reinitialize
+      init(mapInstance);
+      return;
+    }
 
     // Get filtered posts
     let posts = getFilteredPosts();
@@ -1241,10 +1421,12 @@
 
     // Update the source data - Mapbox handles clustering automatically
     const geojson = buildPostsGeoJSON(posts);
-    source.setData(geojson);
-    lastFilterSignature = newSignature;
-
-    console.log('[MarkerClusters] Refreshed with', posts.length, 'filtered posts');
+    try {
+      source.setData(geojson);
+      lastFilterSignature = newSignature;
+    } catch (e) {
+      console.warn('[MarkerClusters] Failed to refresh:', e);
+    }
   }
 
   /**
@@ -1257,26 +1439,24 @@
     if (newUrl === clusterIconUrl) return;
 
     // Remove old icon
-    if (mapInstance.hasImage('cluster-icon')) {
-      mapInstance.removeImage('cluster-icon');
-    }
+    try {
+      if (mapInstance.hasImage('cluster-icon')) {
+        mapInstance.removeImage('cluster-icon');
+      }
+    } catch (e) {}
 
     clusterIconLoaded = false;
     clusterIconUrl = null;
 
-    // Load new icon and recreate layers
+    // Load new icon
     await ensureClusterIcon(mapInstance);
-    
-    // Recreate layers with new icon
-    const posts = getFilteredPosts();
-    if (posts.length === 0) {
-      await createClusterLayers(mapInstance);
-    } else {
-      await createClusterLayers(mapInstance);
-    }
 
-    // Rebind events
-    bindClusterEvents(mapInstance);
+    // Update the layer's icon-image if needed
+    if (clusterIconLoaded && hasLayer(mapInstance, CLUSTER_ICON_LAYER_ID)) {
+      try {
+        mapInstance.setLayoutProperty(CLUSTER_ICON_LAYER_ID, 'icon-image', 'cluster-icon');
+      } catch (e) {}
+    }
   }
 
   // ==================== EXPOSE API ====================
