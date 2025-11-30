@@ -13353,11 +13353,16 @@ function makePosts(){
               if(showCheckout){
                 renderCheckoutOptionsEditor();
               }
-              // Update delete button text based on whether field type is selected
-              if(deleteFieldBtn){
-                const hasFieldType = fieldTypeKey && fieldTypeKey !== '';
-                deleteFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
-                deleteFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
+              // Update action button text based on whether field type is selected
+              // Check if actionFieldBtn exists (it's created later in the function)
+              try {
+                if(actionFieldBtn){
+                  const hasFieldType = fieldTypeKey && fieldTypeKey !== '';
+                  actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
+                  actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
+                }
+              } catch(e) {
+                // actionFieldBtn not yet declared, skip update
               }
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
@@ -13501,28 +13506,38 @@ function makePosts(){
             saveFieldRow.className = 'formbuilder-save-row';
             saveFieldRow.append(saveFieldBtn);
 
-            const deleteFieldBtn = document.createElement('button');
-            deleteFieldBtn.type = 'button';
-            deleteFieldBtn.className = 'delete-category-btn delete-field-btn';
+            const actionFieldBtn = document.createElement('button');
+            actionFieldBtn.type = 'button';
+            actionFieldBtn.className = 'delete-category-btn delete-field-btn';
             // Show "Add Field" for new fields without a type, "Delete Field" for existing
             const hasFieldType = safeField.fieldTypeKey || safeField.key || safeField.type;
-            deleteFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
-            deleteFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
-            deleteFieldBtn.addEventListener('click', async event=>{
+            actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
+            actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
+            actionFieldBtn.addEventListener('click', async event=>{
               event.preventDefault();
               event.stopPropagation();
-              const handler = deleteHandler || (typeof safeField.__handleDeleteField === 'function'
-                ? safeField.__handleDeleteField
-                : null);
-              if(typeof handler === 'function'){
-                try{
-                  await handler();
-                }catch(err){}
+              
+              // Check dynamically if field has a type
+              const currentHasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
+              
+              if(currentHasFieldType){
+                // Existing field - delete it
+                const handler = deleteHandler || (typeof safeField.__handleDeleteField === 'function'
+                  ? safeField.__handleDeleteField
+                  : null);
+                if(typeof handler === 'function'){
+                  try{
+                    await handler();
+                  }catch(err){}
+                }
+              } else {
+                // New field without type - just close the panel (field will auto-delete on close)
+                closeEditPanel();
               }
             });
             const deleteFieldRow = document.createElement('div');
             deleteFieldRow.className = 'formbuilder-delete-row';
-            deleteFieldRow.append(deleteFieldBtn);
+            deleteFieldRow.append(actionFieldBtn);
 
             editMenu.append(saveFieldRow, deleteFieldRow);
 
@@ -13553,7 +13568,7 @@ function makePosts(){
               dropdownOptionsList,
               checkoutOptionsContainer,
               checkoutOptionsList,
-              deleteFieldBtn,
+              deleteFieldBtn: actionFieldBtn,
               closeEditPanel,
               openEditPanel,
               setSummaryUpdater,
