@@ -23385,8 +23385,17 @@ const adminAuthManager = (()=>{
   const adminPanel = document.getElementById('adminPanel');
   const memberPanel = document.getElementById('memberPanel');
 
-  let authenticated = localStorage.getItem(STORAGE_KEY) === 'true';
-  let adminIdentity = localStorage.getItem(IDENTITY_KEY) || '';
+  // Validate admin-authenticated against actual stored user to prevent flash
+  let authenticated = false;
+  if(localStorage.getItem(STORAGE_KEY) === 'true'){
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('member-auth-current') || 'null');
+      authenticated = storedUser && storedUser.isAdmin === true;
+    } catch(e) {
+      authenticated = false;
+    }
+  }
+  let adminIdentity = authenticated ? (localStorage.getItem(IDENTITY_KEY) || '') : '';
 
   function updateUI(){
     // Re-fetch adminBtn each time to avoid stale reference
