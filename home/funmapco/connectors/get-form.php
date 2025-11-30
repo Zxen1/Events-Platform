@@ -937,6 +937,11 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $fieldTypeKey = isset($matchingFieldType['field_type_key']) ? trim((string) $matchingFieldType['field_type_key']) : '';
                 $isCheckout = ($fieldTypeKey === 'checkout');
                 
+                // Debug: log field_type_edits for checkout fields
+                if ($isCheckout) {
+                    error_log("DEBUG get-form.php: Processing checkout field at index $index for subcategory '{$sub['subcategory_key']}'. fieldTypeEdits keys: " . implode(', ', array_keys($fieldTypeEdits)) . ", fieldEdit: " . ($fieldEdit ? json_encode($fieldEdit) : 'null'));
+                }
+                
                 $customName = null;
                 $customOptions = null;
                 $customCheckoutOptions = null;
@@ -987,6 +992,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // Add checkout options if available
                 if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
                     $builtField['checkoutOptions'] = $customCheckoutOptions;
+                    error_log("DEBUG get-form.php: Added checkoutOptions to field '{$builtField['key']}' for subcategory '{$sub['subcategory_key']}': " . json_encode($customCheckoutOptions));
+                } elseif ($isCheckout) {
+                    error_log("DEBUG get-form.php: Checkout field '{$builtField['key']}' for subcategory '{$sub['subcategory_key']}' has NO checkoutOptions. fieldEdit: " . json_encode($fieldEdit) . ", customCheckoutOptions: " . ($customCheckoutOptions !== null ? json_encode($customCheckoutOptions) : 'null'));
                 }
                 
                 $builtFields[] = $builtField;

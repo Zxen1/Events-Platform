@@ -24,9 +24,21 @@
       return;
     }
     
-    // PERFORMANCE FIX: Don't wait for formbuilder snapshot on page load
-    // The snapshot will be loaded lazily when member opens Create Post tab
-    // via formbuilderStateManager.ensureLoaded() or getFormbuilderSnapshotPromise()
+    // Also wait for persistedFormbuilderSnapshotPromise to be available
+    const snapshotPromise = (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) 
+      ? window.persistedFormbuilderSnapshotPromise 
+      : (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise)
+        ? window.__persistedFormbuilderSnapshotPromise
+        : null;
+    if(!snapshotPromise){
+      if(++initRetries < MAX_INIT_RETRIES){
+        console.warn("Member forms: Waiting for formbuilder snapshot promise...");
+        setTimeout(init, 100);
+      } else {
+        console.error("Member forms: Snapshot promise not available after timeout. Form features disabled.");
+      }
+      return;
+    }
     
     const memberCreateSection = document.getElementById('memberTab-create');
     // Mint HttpOnly token for connectors (no secrets in HTML)
