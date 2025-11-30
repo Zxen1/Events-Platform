@@ -18222,7 +18222,11 @@ function makePosts(){
           });
           map.on('remove', () => mapLoading.clearAll());
         }
+      // PERFORMANCE: Track if actively zooming to defer heavy operations
+      let isActivelyZooming = false;
+      
       map.on('zoomstart', ()=>{
+        isActivelyZooming = true;
         if(waitForInitialZoom){
           initialZoomStarted = true;
         }
@@ -18231,25 +18235,33 @@ function makePosts(){
         const zoomValue = getZoomFromEvent(e);
         if(waitForInitialZoom){
           if(!initialZoomStarted){
-            updateZoomState(zoomValue);
+            // Only update lastKnownZoom during active zoom - defer heavy work
+            if(Number.isFinite(zoomValue)) lastKnownZoom = zoomValue;
             return;
           }
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
           initialZoomStarted = false;
         }
-        updateZoomState(zoomValue);
+        // PERFORMANCE: Only update zoom value during active zoom
+        // Heavy operations (layer visibility, cluster updates) deferred to zoomend
+        if(Number.isFinite(zoomValue)) lastKnownZoom = zoomValue;
         
-        // Clear composites when zoom < 8 (MARKER_ZOOM_THRESHOLD is 8) (NO FALLBACKS)
+        // Clear composites when zoom < 8 (lightweight operation)
         if(Number.isFinite(zoomValue) && zoomValue < 8){
           window.MapCardComposites.clearMapCardComposites(map);
         }
-        
-        if(!spinning){
-          scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
-        }
       });
       map.on('zoomend', ()=>{
+        // PERFORMANCE: Zoom ended - run deferred heavy operations
+        isActivelyZooming = false;
+        updateZoomState(lastKnownZoom);
+        
+        // Schedule post loading check (deferred from continuous zoom)
+        if(!spinning){
+          scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+        }
+        
         // Clear map card markers when zoom < 8
         if(window.MapCards){
           let zoomForMarkers = NaN;
