@@ -7170,6 +7170,11 @@ function makePosts(){
       }
       if(confirmBtn && confirmBtn.parentNode){
         const replacement = confirmBtn.cloneNode(true);
+        // If custom label provided, remove data-message-key BEFORE adding to DOM
+        // to prevent MutationObserver from overwriting the custom label
+        if(confirmLabel){
+          replacement.removeAttribute('data-message-key');
+        }
         confirmBtn.parentNode.replaceChild(replacement, confirmBtn);
         confirmBtn = replacement;
       }
@@ -7670,10 +7675,12 @@ function makePosts(){
           if(validOptions.length > 0){
             safeField.checkoutOptions = validOptions.slice();
           } else if(!Array.isArray(safeField.checkoutOptions)){
-            safeField.checkoutOptions = [];
+            // Set default checkout options for new checkout fields
+            safeField.checkoutOptions = ['free 30', 'standard 30', 'featured and sidebar 30'];
           }
-        } else if(!Array.isArray(safeField.checkoutOptions)){
-          safeField.checkoutOptions = [];
+        } else if(!Array.isArray(safeField.checkoutOptions) || safeField.checkoutOptions.length === 0){
+          // Set default checkout options for new checkout fields
+          safeField.checkoutOptions = ['free 30', 'standard 30', 'featured and sidebar 30'];
         }
       }
         if(fieldTypeKey === 'location'){
