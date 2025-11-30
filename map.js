@@ -928,15 +928,18 @@
    */
   function ensureClusterIconImage(map) {
     if (!map || typeof map.hasImage !== 'function') {
+      console.warn('[MarkerClusters] Map or hasImage not available');
       return Promise.resolve();
     }
     
     if (map.hasImage(clusterIconImageId)) {
+      console.log('[MarkerClusters] Icon already loaded');
       return Promise.resolve();
     }
     
     return new Promise((resolve, reject) => {
       const url = getClusterIconUrl();
+      console.log('[MarkerClusters] Loading icon from:', url);
       if (!url) {
         reject(new Error('No cluster icon URL'));
         return;
@@ -945,12 +948,28 @@
       map.loadImage(url, (error, image) => {
         if (error) {
           console.warn('[MarkerClusters] Failed to load cluster icon:', error);
-          reject(error);
+          // Try fallback
+          const fallbackUrl = 'assets/system-images/multi-post-icon-30.webp';
+          console.log('[MarkerClusters] Trying fallback:', fallbackUrl);
+          map.loadImage(fallbackUrl, (fallbackError, fallbackImage) => {
+            if (fallbackError || !fallbackImage) {
+              reject(fallbackError || new Error('Failed to load fallback icon'));
+              return;
+            }
+            if (typeof map.addImage === 'function') {
+              map.addImage(clusterIconImageId, fallbackImage);
+              clusterIconUrl = fallbackUrl;
+              resolve();
+            } else {
+              reject(new Error('Failed to add cluster icon image'));
+            }
+          });
           return;
         }
         if (image && typeof map.addImage === 'function') {
           map.addImage(clusterIconImageId, image);
           clusterIconUrl = url;
+          console.log('[MarkerClusters] Icon loaded successfully');
           resolve();
         } else {
           reject(new Error('Failed to add cluster icon image'));
@@ -973,6 +992,7 @@
   
   /**
    * Group posts into clusters based on zoom level
+   * Uses a distance-based clustering algorithm
    * @param {Array} posts - Array of post objects with lng, lat
    * @param {number} zoom - Current zoom level
    * @returns {Array} Array of cluster objects { lng, lat, count, pointIds }
@@ -982,55 +1002,62 @@
       return [];
     }
     
-    // Calculate grid cell size based on zoom
-    // At zoom 0, grid is very large; at zoom 7.9, grid is smaller
-    const baseGridSize = CLUSTER_GRID_SIZE;
-    const zoomFactor = Math.pow(2, 8 - zoom); // Larger factor at lower zoom
-    const cellSize = baseGridSize * zoomFactor;
+    // Calculate cluster radius in degrees based on zoom
+    // At zoom 0, radius is large; at zoom 7.9, radius is smaller
+    // Base radius: approximately 0.1 degrees (about 11km at equator)
+    const baseRadius = 0.1;
+    const zoomFactor = Math.pow(2, 7 - zoom); // Larger factor at lower zoom
+    const clusterRadius = baseRadius / zoomFactor;
     
-    // Group posts into grid cells
-    const grid = new Map();
+    const clusters = [];
+    const processed = new Set();
     
     posts.forEach((post, index) => {
       if (!post || !Number.isFinite(post.lng) || !Number.isFinite(post.lat)) {
         return;
       }
       
-      // Calculate grid cell coordinates
-      const cellX = Math.floor(post.lng / cellSize);
-      const cellY = Math.floor(post.lat / cellSize);
-      const cellKey = `${cellX},${cellY}`;
-      
-      if (!grid.has(cellKey)) {
-        grid.set(cellKey, {
-          lng: 0,
-          lat: 0,
-          count: 0,
-          pointIds: []
-        });
+      const postId = post.id || index;
+      if (processed.has(postId)) {
+        return; // Already in a cluster
       }
       
-      const cell = grid.get(cellKey);
-      cell.lng += post.lng;
-      cell.lat += post.lat;
-      cell.count++;
-      cell.pointIds.push(post.id || index);
-    });
-    
-    // Convert grid cells to clusters
-    const clusters = [];
-    grid.forEach((cell, cellKey) => {
-      if (cell.count >= CLUSTER_MIN_POINTS) {
+      // Find nearby posts within cluster radius
+      const nearby = [];
+      posts.forEach((otherPost, otherIndex) => {
+        if (processed.has(otherPost.id || otherIndex)) {
+          return;
+        }
+        
+        const dx = otherPost.lng - post.lng;
+        const dy = otherPost.lat - post.lat;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance <= clusterRadius) {
+          nearby.push(otherPost);
+        }
+      });
+      
+      // If we have enough nearby posts, create a cluster
+      if (nearby.length >= CLUSTER_MIN_POINTS) {
         // Calculate centroid
-        clusters.push({
-          lng: cell.lng / cell.count,
-          lat: cell.lat / cell.count,
-          count: cell.count,
-          pointIds: cell.pointIds
+        let sumLng = 0;
+        let sumLat = 0;
+        const pointIds = [];
+        
+        nearby.forEach(nearbyPost => {
+          sumLng += nearbyPost.lng;
+          sumLat += nearbyPost.lat;
+          pointIds.push(nearbyPost.id || posts.indexOf(nearbyPost));
+          processed.add(nearbyPost.id || posts.indexOf(nearbyPost));
         });
-      } else {
-        // Single points - add as individual markers (not clustered)
-        // We'll handle these separately if needed
+        
+        clusters.push({
+          lng: sumLng / nearby.length,
+          lat: sumLat / nearby.length,
+          count: nearby.length,
+          pointIds: pointIds
+        });
       }
     });
     
@@ -1091,6 +1118,16 @@
     
     // Get filtered posts and create a key for caching
     const posts = getFilteredPosts();
+    console.log('[MarkerClusters] Filtered posts count:', posts.length);
+    
+    if (!Array.isArray(posts) || posts.length === 0) {
+      // No posts, set empty data
+      if (clusterSource && typeof clusterSource.setData === 'function') {
+        clusterSource.setData({ type: 'FeatureCollection', features: [] });
+      }
+      return;
+    }
+    
     const filterKey = Array.isArray(posts) ? posts.length + '-' + (posts[0]?.id || '') : 'empty';
     const zoomKey = Math.floor(zoom * 10) / 10; // Round to 0.1 precision
     
@@ -1104,21 +1141,32 @@
     
     // Build cluster data
     const data = buildClusterFeatureCollection(zoom);
+    console.log('[MarkerClusters] Built cluster data:', data.features.length, 'clusters');
     
     // Update or create source
     if (!clusterSource) {
       if (typeof map.getSource === 'function' && map.getSource(CLUSTER_SOURCE_ID)) {
         clusterSource = map.getSource(CLUSTER_SOURCE_ID);
       } else {
-        map.addSource(CLUSTER_SOURCE_ID, {
-          type: 'geojson',
-          data: data
-        });
-        clusterSource = map.getSource(CLUSTER_SOURCE_ID);
+        try {
+          map.addSource(CLUSTER_SOURCE_ID, {
+            type: 'geojson',
+            data: data
+          });
+          clusterSource = map.getSource(CLUSTER_SOURCE_ID);
+        } catch (err) {
+          console.error('[MarkerClusters] Failed to add source:', err);
+          return;
+        }
       }
     } else {
       if (typeof clusterSource.setData === 'function') {
-        clusterSource.setData(data);
+        try {
+          clusterSource.setData(data);
+        } catch (err) {
+          console.error('[MarkerClusters] Failed to set data:', err);
+          return;
+        }
       }
     }
     
@@ -1134,45 +1182,63 @@
    */
   function setupClusterLayers(map) {
     if (!map || typeof map.addLayer !== 'function') {
+      console.warn('[MarkerClusters] Map not available or addLayer not available');
       return;
+    }
+    
+    // Create source first with empty data
+    if (typeof map.getSource === 'function' && !map.getSource(CLUSTER_SOURCE_ID)) {
+      map.addSource(CLUSTER_SOURCE_ID, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+      clusterSource = map.getSource(CLUSTER_SOURCE_ID);
+    } else if (typeof map.getSource === 'function') {
+      clusterSource = map.getSource(CLUSTER_SOURCE_ID);
     }
     
     // Ensure cluster icon is loaded
     ensureClusterIconImage(map).then(() => {
       // Create cluster layer if it doesn't exist
       if (!clusterLayer && typeof map.getLayer === 'function' && !map.getLayer(CLUSTER_LAYER_ID)) {
-        map.addLayer({
-          id: CLUSTER_LAYER_ID,
-          type: 'symbol',
-          source: CLUSTER_SOURCE_ID,
-          layout: {
-            'icon-image': clusterIconImageId,
-            'icon-size': 1,
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-            'text-field': '{count}',
-            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-            'text-size': 14,
-            'text-offset': [0, 0],
-            'text-anchor': 'center',
-            'text-allow-overlap': true,
-            'text-ignore-placement': true
-          },
-          paint: {
-            'text-color': '#ffffff'
-          }
-        });
-        
-        clusterLayer = CLUSTER_LAYER_ID;
-        
-        // Add click handler
-        map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
-        map.on('mouseenter', CLUSTER_LAYER_ID, () => {
-          map.getCanvas().style.cursor = 'pointer';
-        });
-        map.on('mouseleave', CLUSTER_LAYER_ID, () => {
-          map.getCanvas().style.cursor = '';
-        });
+        try {
+          map.addLayer({
+            id: CLUSTER_LAYER_ID,
+            type: 'symbol',
+            source: CLUSTER_SOURCE_ID,
+            layout: {
+              'icon-image': clusterIconImageId,
+              'icon-size': 1,
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'text-field': ['to-string', ['get', 'count']],
+              'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+              'text-size': 14,
+              'text-offset': [0, 0],
+              'text-anchor': 'center',
+              'text-allow-overlap': true,
+              'text-ignore-placement': true
+            },
+            paint: {
+              'text-color': '#ffffff'
+            }
+          });
+          
+          clusterLayer = CLUSTER_LAYER_ID;
+          
+          // Add click handler
+          map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
+          map.on('mouseenter', CLUSTER_LAYER_ID, () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', CLUSTER_LAYER_ID, () => {
+            map.getCanvas().style.cursor = '';
+          });
+          
+          console.log('[MarkerClusters] Cluster layer created successfully');
+        } catch (err) {
+          console.error('[MarkerClusters] Failed to create cluster layer:', err);
+        }
       }
       
       // Initial update
