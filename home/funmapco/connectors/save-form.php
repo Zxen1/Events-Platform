@@ -725,9 +725,11 @@ try {
 
             $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
 
-            // Build field_type_edits JSON for editable fields
-            // Match fields by fieldTypeKey to fieldTypeIds by position
-            $fieldTypeEdits = [];
+            // Build editable_field_types JSON for editable fields (dropdown/radio options, custom names)
+            // Also extract checkout_options_id separately for the dedicated column
+            $editableFieldTypes = [];
+            $checkoutOptionsIds = [];
+            
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
                 // Create a map of fieldTypeKey to field data for quick lookup
                 $fieldsByTypeKey = [];
@@ -747,13 +749,33 @@ try {
                     $fieldTypeKey = $fieldTypeDef['key'] ?? null;
                     if (!$fieldTypeKey) continue;
                     
-                    // Check if this field type is editable (checkout is always editable for checkoutOptions)
+                    // Check if this field type is editable
                     $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
                     $isCheckout = ($fieldTypeKey === 'checkout');
-                    if (!$isEditable && !$isCheckout) continue;
                     
                     // Find matching field data
                     $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
+                    
+                    // Handle checkout field separately - save to checkout_options_id column
+                    if ($isCheckout && $fieldData) {
+                        if (isset($fieldData['checkoutOptions'])) {
+                            $opts = is_array($fieldData['checkoutOptions']) ? $fieldData['checkoutOptions'] : [];
+                            // Filter to valid numeric IDs only
+                            $validIds = [];
+                            foreach ($opts as $opt) {
+                                $id = is_numeric($opt) ? (int)$opt : null;
+                                if ($id !== null && $id > 0) {
+                                    $validIds[] = $id;
+                                }
+                            }
+                            if (!empty($validIds)) {
+                                $checkoutOptionsIds = array_values(array_unique($validIds));
+                            }
+                        }
+                        continue; // Don't add checkout to editable_field_types
+                    }
+                    
+                    if (!$isEditable) continue;
                     if (!$fieldData) continue;
                     
                     $editData = [];
@@ -765,7 +787,7 @@ try {
                     }
                     
                     // For dropdown/radio, save options if they differ from default placeholder
-                    if (($fieldTypeKey === 'dropdown' || $fieldTypeKey === 'radio') && isset($fieldData['options'])) {
+                    if (($fieldTypeKey === 'dropdown' || $fieldTypeKey === 'radio' || $fieldTypeKey === 'radio-toggle') && isset($fieldData['options'])) {
                         $customOptions = is_array($fieldData['options']) ? $fieldData['options'] : [];
                         // Parse default placeholder to compare
                         $defaultPlaceholder = $fieldTypeDef['placeholder'] ?? '';
@@ -780,21 +802,9 @@ try {
                         }
                     }
                     
-                    // For checkout field type, save selected checkout options
-                    if ($fieldTypeKey === 'checkout' && isset($fieldData['checkoutOptions'])) {
-                        $checkoutOptions = is_array($fieldData['checkoutOptions']) ? $fieldData['checkoutOptions'] : [];
-                        // Filter out empty strings
-                        $checkoutOptions = array_values(array_filter($checkoutOptions, function($opt) {
-                            return $opt !== '' && $opt !== null;
-                        }));
-                        if (!empty($checkoutOptions)) {
-                            $editData['checkoutOptions'] = $checkoutOptions;
-                        }
-                    }
-                    
                     // Only add to JSON if there's something to save
                     if (!empty($editData)) {
-                        $fieldTypeEdits[(string)$csvIndex] = $editData;
+                        $editableFieldTypes[(string)$csvIndex] = $editData;
                     }
                 }
             }
@@ -925,13 +935,17 @@ try {
                     $updateParts[] = 'required = :required';
                     $params[':required'] = $requiredCsv !== null && $requiredCsv !== '' ? $requiredCsv : null;
                 }
-                // Save field_type_edits JSON if fields were provided
-                if ($hasFieldsForThisSub && in_array('field_type_edits', $subcategoryColumns, true)) {
-                    error_log("DEBUG: field_type_edits for '$subName' before encoding: " . json_encode($fieldTypeEdits));
-                    $fieldTypeEditsJson = !empty($fieldTypeEdits) ? json_encode($fieldTypeEdits, JSON_UNESCAPED_UNICODE) : null;
-                    error_log("DEBUG: field_type_edits JSON for '$subName': " . ($fieldTypeEditsJson ?? 'NULL'));
-                    $updateParts[] = 'field_type_edits = :field_type_edits';
-                    $params[':field_type_edits'] = $fieldTypeEditsJson;
+                // Save editable_field_types JSON if fields were provided
+                if ($hasFieldsForThisSub && in_array('editable_field_types', $subcategoryColumns, true)) {
+                    $editableFieldTypesJson = !empty($editableFieldTypes) ? json_encode($editableFieldTypes, JSON_UNESCAPED_UNICODE) : null;
+                    $updateParts[] = 'editable_field_types = :editable_field_types';
+                    $params[':editable_field_types'] = $editableFieldTypesJson;
+                }
+                // Save checkout_options_id as CSV of checkout option IDs
+                if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {
+                    $checkoutOptionsIdCsv = !empty($checkoutOptionsIds) ? implode(',', $checkoutOptionsIds) : null;
+                    $updateParts[] = 'checkout_options_id = :checkout_options_id';
+                    $params[':checkout_options_id'] = $checkoutOptionsIdCsv;
                 }
             } else {
                 error_log("DEBUG: NOT updating field types for '$subName' - fieldTypesAreInPayload is false");
@@ -1419,20 +1433,27 @@ function sanitizeField(array $field): array
         $safe['helpText'] = sanitizeString($field['helpText'], 512);
     }
     
-    // Include fieldTypeKey for matching during field_type_edits build
+    // Include fieldTypeKey for matching during editable_field_types build
     if (isset($field['fieldTypeKey'])) {
         $safe['fieldTypeKey'] = sanitizeString($field['fieldTypeKey'], 128);
     } elseif (isset($field['key'])) {
         $safe['fieldTypeKey'] = sanitizeString($field['key'], 128);
     }
     
-    // Include checkoutOptions for checkout field type
+    // Include checkoutOptions for checkout field type (stores numeric IDs)
     if (isset($field['checkoutOptions']) && is_array($field['checkoutOptions'])) {
         $safe['checkoutOptions'] = array_values(array_filter(
             array_map(function($opt) {
-                return is_string($opt) ? trim($opt) : '';
+                // Accept both numeric and string representations of IDs
+                if (is_numeric($opt)) {
+                    return (int)$opt;
+                } elseif (is_string($opt) && trim($opt) !== '') {
+                    $trimmed = trim($opt);
+                    return is_numeric($trimmed) ? (int)$trimmed : 0;
+                }
+                return 0;
             }, $field['checkoutOptions']),
-            function($opt) { return $opt !== ''; }
+            function($opt) { return $opt > 0; }
         ));
     }
 

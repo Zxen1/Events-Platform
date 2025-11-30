@@ -8712,27 +8712,31 @@ function makePosts(){
           checkoutGroup.className = 'form-checkout-group';
           const groupName = `${baseId}-checkout`;
           
-          // Get selected checkout options from field.options or field.checkoutOptions
-          let selectedOptions = [];
+          // Get selected checkout options from field.checkoutOptions (array of IDs)
+          let selectedOptionIds = [];
           if(Array.isArray(field.checkoutOptions)){
-            selectedOptions = field.checkoutOptions;
-          } else if(Array.isArray(field.options)){
-            selectedOptions = field.options;
+            // Filter out invalid values and convert to numbers
+            selectedOptionIds = field.checkoutOptions
+              .filter(opt => opt !== '' && opt !== null && opt !== 0)
+              .map(opt => typeof opt === 'number' ? opt : parseInt(opt, 10))
+              .filter(id => !isNaN(id) && id > 0);
           }
-          
           
           // Get all checkout options from global
           const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
           
-          // Filter to only show selected options (by checkout_key or id)
-          const optionsToShow = selectedOptions.length > 0
-            ? allCheckoutOptions.filter(opt => 
-                selectedOptions.some(sel => 
-                  (typeof sel === 'string' && sel === opt.checkout_key) ||
-                  (typeof sel === 'object' && (sel.checkout_key === opt.checkout_key || sel.id === opt.id))
-                )
-              )
-            : allCheckoutOptions.slice(0, 3);
+          // Filter to only show selected options (by ID), preserving order
+          let optionsToShow = [];
+          if(selectedOptionIds.length > 0){
+            selectedOptionIds.forEach(id => {
+              const found = allCheckoutOptions.find(opt => opt.id === id);
+              if(found) optionsToShow.push(found);
+            });
+          }
+          // Fallback to first 3 if nothing selected
+          if(optionsToShow.length === 0){
+            optionsToShow = allCheckoutOptions.slice(0, 3);
+          }
           
           if(optionsToShow.length){
             optionsToShow.forEach((option, optionIndex) => {
@@ -8742,7 +8746,7 @@ function makePosts(){
               const radio = document.createElement('input');
               radio.type = 'radio';
               radio.name = groupName;
-              radio.value = option.checkout_key || '';
+              radio.value = String(option.id || '');
               radio.id = `${baseId}-checkout-${optionIndex}`;
               if(optionIndex === 0) radio.checked = true;
               if(field.required && optionIndex === 0) radio.required = true;
@@ -12805,6 +12809,14 @@ function makePosts(){
                     safeField.placeholder = matchingFieldType.placeholder;
                   }
                   safeField.type = nextValidType;
+                  
+                  // Set default checkout options when checkout field type is selected
+                  if(nextValidType === 'checkout'){
+                    // Only set defaults if not already set
+                    if(!Array.isArray(safeField.checkoutOptions) || safeField.checkoutOptions.length === 0){
+                      safeField.checkoutOptions = [1, 2, 3]; // Default to first 3 checkout options
+                    }
+                  }
                 }
                 
                 fieldTypeMenuBtn.textContent = optionLabel || nextValidType;
@@ -12912,12 +12924,22 @@ function makePosts(){
               }
             };
 
-            const closeEditPanel = ()=>{
+            const closeEditPanel = (options = {})=>{
               if(editPanel.hidden) return;
               editPanel.hidden = true;
               editBtn.setAttribute('aria-expanded', 'false');
               if(hostElement && hostElement.classList){
                 hostElement.classList.remove('field-edit-open');
+              }
+              
+              // Auto-delete fields without a type selected when panel is closed
+              // (unless explicitly skipped via options)
+              if(!options.skipAutoDelete){
+                const hasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
+                if(!hasFieldType && typeof deleteHandler === 'function'){
+                  // Remove the incomplete field silently (no confirmation)
+                  deleteHandler();
+                }
               }
             };
 
@@ -12999,28 +13021,18 @@ function makePosts(){
               checkoutOptionsList.innerHTML = '';
               const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
               
-              // Get current selected options from field
-              // Check both checkoutOptions and options (for backwards compatibility)
+              // Get current selected options from field (stores checkout_options IDs)
               if(!Array.isArray(safeField.checkoutOptions)){
-                if(Array.isArray(safeField.options) && safeField.type === 'checkout'){
-                  // Migrate from old options format
-                  safeField.checkoutOptions = safeField.options.slice();
-                } else {
-                  safeField.checkoutOptions = [];
-                }
+                safeField.checkoutOptions = [];
               }
               
-              // Filter out empty strings to see if we have any real values
-              const validOptions = safeField.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
+              // Filter out invalid values (empty, null, 0)
+              const validOptions = safeField.checkoutOptions.filter(opt => opt !== '' && opt !== null && opt !== 0);
               
-              // If we have valid options, preserve them before padding
-              // If not, we'll pad with empty strings (user hasn't selected yet)
-              const preservedOptions = validOptions.length > 0 ? validOptions.slice() : [];
-              
-              // Ensure we have 3 slots (pad with empty strings if needed)
-              safeField.checkoutOptions = preservedOptions.slice();
+              // Preserve existing options, pad with 0 for empty slots
+              safeField.checkoutOptions = validOptions.slice();
               while(safeField.checkoutOptions.length < 3){
-                safeField.checkoutOptions.push('');
+                safeField.checkoutOptions.push(0);
               }
               
               for(let i = 0; i < 3; i++){
@@ -13040,14 +13052,14 @@ function makePosts(){
                 
                 // Add empty option
                 const emptyOption = document.createElement('option');
-                emptyOption.value = '';
+                emptyOption.value = '0';
                 emptyOption.textContent = '-- Select --';
                 select.appendChild(emptyOption);
                 
-                // Add all checkout options
+                // Add all checkout options (use ID as value)
                 allCheckoutOptions.forEach(opt => {
                   const option = document.createElement('option');
-                  option.value = opt.checkout_key || '';
+                  option.value = String(opt.id || 0);
                   const priceDisplay = parseFloat(opt.checkout_price) > 0 
                     ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
                     : ' — Free';
@@ -13055,12 +13067,13 @@ function makePosts(){
                   select.appendChild(option);
                 });
                 
-                // Set current value
-                const currentValue = safeField.checkoutOptions[i] || '';
+                // Set current value (convert to string for comparison)
+                const currentValue = String(safeField.checkoutOptions[i] || 0);
                 select.value = currentValue;
                 
                 select.addEventListener('change', ()=>{
-                  safeField.checkoutOptions[i] = select.value;
+                  // Store as number (checkout_options.id)
+                  safeField.checkoutOptions[i] = parseInt(select.value, 10) || 0;
                   notifyFormbuilderChange();
                   renderForm({
                     formFields: formPreviewFields,
@@ -13334,6 +13347,12 @@ function makePosts(){
               if(showCheckout){
                 renderCheckoutOptionsEditor();
               }
+              // Update delete button text based on whether field type is selected
+              if(deleteFieldBtn){
+                const hasFieldType = fieldTypeKey && fieldTypeKey !== '';
+                deleteFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
+                deleteFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
+              }
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){
@@ -13479,8 +13498,10 @@ function makePosts(){
             const deleteFieldBtn = document.createElement('button');
             deleteFieldBtn.type = 'button';
             deleteFieldBtn.className = 'delete-category-btn delete-field-btn';
-            deleteFieldBtn.textContent = 'Delete Field';
-            deleteFieldBtn.setAttribute('aria-label', 'Delete field');
+            // Show "Add Field" for new fields without a type, "Delete Field" for existing
+            const hasFieldType = safeField.fieldTypeKey || safeField.key || safeField.type;
+            deleteFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
+            deleteFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
             deleteFieldBtn.addEventListener('click', async event=>{
               event.preventDefault();
               event.stopPropagation();
@@ -13627,7 +13648,7 @@ function makePosts(){
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';
               const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
               if(!confirmed) return;
-              closeEditPanel();
+              closeEditPanel({ skipAutoDelete: true });
               destroyEditUI();
               const idx = fields.indexOf(safeField);
               if(idx !== -1){
@@ -14514,11 +14535,11 @@ function makePosts(){
               if(Array.isArray(field && field.fields)){
                 cloned.fields = field.fields;
               }
-              // Preserve checkoutOptions for checkout field type
-              // Always preserve for member forms (even if empty), filter for saving
+              // Preserve checkoutOptions for checkout field type (stores checkout_options IDs)
+              // Filter out zeros when cloning for saving
               if(Array.isArray(field && field.checkoutOptions)){
-                // Always preserve the array (member forms need it to know which options to show)
-                cloned.checkoutOptions = field.checkoutOptions.slice();
+                // Filter out zeros and invalid values (only keep valid IDs)
+                cloned.checkoutOptions = field.checkoutOptions.filter(opt => opt !== 0 && opt !== '' && opt !== null);
               } else if(field && (field.type === 'checkout' || field.fieldTypeKey === 'checkout')){
                 // Initialize empty array for checkout fields if missing
                 cloned.checkoutOptions = [];
