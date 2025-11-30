@@ -882,7 +882,7 @@
   const CLUSTER_LAYER_ID = 'post-clusters';
   const CLUSTER_MAX_ZOOM = 8; // Clusters show at zoom < 8, not at 8
   const CLUSTER_GRID_SIZE = 50; // Grid size for clustering (pixels)
-  const CLUSTER_MIN_POINTS = 2; // Minimum points to form a cluster
+  const CLUSTER_MIN_POINTS = 1; // Minimum points to form a cluster
   
   let clusterSource = null;
   let clusterLayer = null;
@@ -1034,9 +1034,9 @@
       }
       
       // Find nearby posts within cluster radius
-      const nearby = [];
+      const nearby = [post]; // Start with the current post
       posts.forEach((otherPost, otherIndex) => {
-        if (processed.has(otherPost.id || otherIndex)) {
+        if (otherPost === post || processed.has(otherPost.id || otherIndex)) {
           return;
         }
         
@@ -1049,7 +1049,7 @@
         }
       });
       
-      // If we have enough nearby posts, create a cluster
+      // Create a cluster (minimum is 1, so even single posts become clusters)
       if (nearby.length >= CLUSTER_MIN_POINTS) {
         // Calculate centroid
         let sumLng = 0;
@@ -1291,10 +1291,10 @@
       return;
     }
     
-    // Zoom to level 8 (where clusters disappear and individual markers show)
+    // Zoom to level 12 when cluster is clicked
     mapInstance.easeTo({
       center: [e.lngLat.lng, e.lngLat.lat],
-      zoom: CLUSTER_MAX_ZOOM,
+      zoom: 12,
       duration: 800,
       essential: true
     });
