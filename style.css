@@ -6149,8 +6149,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   min-width:0;
   box-sizing:border-box;
   max-width:100%;
+  height:auto;
   max-height:none;
-  min-height:250px;
   overflow:auto;
   background:#222222;
   border:1px solid var(--border);
