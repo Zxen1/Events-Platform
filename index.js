@@ -7226,13 +7226,16 @@ function makePosts(){
         : previousClassName || 'formbuilder-confirm-button';
       confirmBtn.className = normalizedConfirmClass;
       
-      // Load button label from DB if not provided
+      // Set button label - use provided confirmLabel, don't load from DB message key
+      // The button's data-message-key is just for fallback, we explicitly set the label here
       let finalConfirmLabel = confirmLabel;
-      if(!finalConfirmLabel){
+      if(!finalConfirmLabel || finalConfirmLabel.trim() === ''){
+        // Only fallback to DB message if no label provided
         const confirmKey = confirmBtn.dataset.messageKey || 'msg_button_confirm';
         finalConfirmLabel = await getMessage(confirmKey, placeholders, true) || previousLabel || 'Confirm';
       }
-      confirmBtn.textContent = finalConfirmLabel;
+      // Always set the text content explicitly, don't rely on previous state
+      confirmBtn.textContent = finalConfirmLabel || 'Confirm';
 
       overlay.setAttribute('aria-hidden', 'false');
       overlay.classList.add('visible');
@@ -13079,17 +13082,40 @@ function makePosts(){
                 
                 select.addEventListener('change', ()=>{
                   // Store as number (checkout_options.id)
-                  safeField.checkoutOptions[i] = parseInt(select.value, 10) || 0;
-                  notifyFormbuilderChange();
-                  renderForm({
-                    formFields: formPreviewFields,
-                    formId: formPreviewId,
-                    fields: fields,
-                    categoryName: c && c.name,
-                    subcategoryName: sub,
-                    fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
-                  });
+                  const newValue = parseInt(select.value, 10) || 0;
+                  const oldValue = safeField.checkoutOptions[i] || 0;
+                  
+                  // Only update if value actually changed
+                  if(newValue !== oldValue){
+                    safeField.checkoutOptions[i] = newValue;
+                    // Filter out zeros to clean up the array
+                    safeField.checkoutOptions = safeField.checkoutOptions.filter(opt => opt > 0);
+                    // Ensure we have 3 slots
+                    while(safeField.checkoutOptions.length < 3){
+                      safeField.checkoutOptions.push(0);
+                    }
+                    
+                    notifyFormbuilderChange();
+                    
+                    // Update formbuilder state manager to mark as changed
+                    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+                      try {
+                        window.formbuilderStateManager.save();
+                      } catch(err) {
+                        console.error('Failed to update formbuilder state:', err);
+                      }
+                    }
+                    
+                    renderForm({
+                      formFields: formPreviewFields,
+                      formId: formPreviewId,
+                      fields: fields,
+                      categoryName: c && c.name,
+                      subcategoryName: sub,
+                      fieldIdCounter: formPreviewFieldIdCounter,
+                      formLabel: 'Form Preview'
+                    });
+                  }
                 });
                 
                 optionRow.append(optionLabel, select);
@@ -13357,7 +13383,8 @@ function makePosts(){
               // Check if actionFieldBtn exists (it's created later in the function)
               try {
                 if(actionFieldBtn){
-                  const hasFieldType = fieldTypeKey && fieldTypeKey !== '';
+                  // Only show "Delete Field" if field has a real type selected (not empty, not 'text')
+                  const hasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
                   actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
                   actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
                 }
@@ -13509,17 +13536,16 @@ function makePosts(){
             const actionFieldBtn = document.createElement('button');
             actionFieldBtn.type = 'button';
             actionFieldBtn.className = 'delete-category-btn delete-field-btn';
-            // Show "Add Field" for new fields without a type, "Delete Field" for existing
-            // Only count it as having a type if it's a real field type (not just default 'text')
-            const hasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
-            actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
-            actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
+            // Button text will be updated by updateFieldEditorsByType after button is created
+            actionFieldBtn.textContent = 'Delete Field'; // Default, will be updated
+            actionFieldBtn.setAttribute('aria-label', 'Delete field');
             actionFieldBtn.addEventListener('click', async event=>{
               event.preventDefault();
               event.stopPropagation();
               
               // Check dynamically if field has a type
-              const currentHasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
+              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+              const currentHasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
               
               if(currentHasFieldType){
                 // Existing field - delete it
@@ -13529,7 +13555,11 @@ function makePosts(){
                 if(typeof handler === 'function'){
                   try{
                     await handler();
-                  }catch(err){}
+                  }catch(err){
+                    console.error('Error deleting field:', err);
+                  }
+                } else {
+                  console.warn('No delete handler found for field');
                 }
               } else {
                 // New field without type - just close the panel (field will auto-delete on close)
