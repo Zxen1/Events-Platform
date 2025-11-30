@@ -84,13 +84,9 @@
 
       const direct = extractFromObject(memberCandidate);
       if(direct){
-        getConnectorApiKey.cached = direct;
         return direct;
       }
-
-      if(typeof getConnectorApiKey.cached === 'string'){
-        return getConnectorApiKey.cached;
-      }
+      // NO CACHING - always search for API key
 
       const candidates = [];
 
@@ -172,13 +168,11 @@
         if(typeof candidate === 'string'){
           const trimmed = candidate.trim();
           if(trimmed){
-            getConnectorApiKey.cached = trimmed;
             return trimmed;
           }
         }
       }
-
-      getConnectorApiKey.cached = '';
+      // NO CACHING - return empty string if not found
       return '';
     }
 

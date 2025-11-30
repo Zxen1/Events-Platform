@@ -102,94 +102,71 @@ function getSortedCategories(list) {
 }
 
 // === Message Utility Functions ===
-// Cache for loaded messages
-let messageCache = null;
-let messageCachePromise = null;
+// NO CACHING - Always fetch fresh messages for development
 
 /**
- * Load messages from database and cache them
+ * Load messages from database (NO CACHING - always fresh)
  * @param {boolean} includeAdmin - If true, includes admin and email messages (for admin panel)
  * @returns {Promise<Object>} Object mapping message_key to message data
  */
 async function loadMessagesFromDatabase(includeAdmin = false){
-  // Return cached messages if available
-  if(messageCache && !includeAdmin){
-    return messageCache;
-  }
-  
-  // Prevent duplicate requests
-  if(messageCachePromise){
-    return messageCachePromise;
-  }
-  
-  messageCachePromise = (async () => {
-    try {
-      // Add timeout to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if(!response.ok){
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      
-      if(!result.success || !result.messages){
-        console.warn('Failed to load messages from database:', result.message || result.messages_error);
-        return {};
-      }
-      
-      // Flatten messages by message_key for easy lookup
-      const messagesMap = {};
-      result.messages.forEach(container => {
-        if(!container.messages || !Array.isArray(container.messages)) return;
-        
-        container.messages.forEach(message => {
-          // Filter visibility: users see only msg_user and msg_member, exclude msg_email
-          // Admin sees everything when includeAdmin is true
-          if(!includeAdmin){
-            const visibleContainers = ['msg_user', 'msg_member'];
-            if(!visibleContainers.includes(message.container_key || container.container_key)){
-              return; // Skip admin and email messages for regular users
-            }
-            // Also check is_visible flag
-            if(message.is_visible === false || message.is_visible === 0){
-              return; // Skip hidden messages
-            }
-          }
-          
-          // Only include active messages
-          if(message.is_active !== false && message.is_active !== 0){
-            messagesMap[message.message_key] = message;
-          }
-        });
-      });
-      
-      // Cache user-visible messages separately from admin messages
-      if(!includeAdmin){
-        messageCache = messagesMap;
-      }
-      
-      return messagesMap;
-    } catch(error){
-      if(error.name === 'AbortError'){
-        console.error('Message loading timed out after 10 seconds');
-      } else {
-        console.error('Error loading messages from database:', error);
-      }
-      // Return empty object on error - UI will use fallback text
-      return {};
-    } finally {
-      messageCachePromise = null;
+  try {
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if(!response.ok){
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  })();
-  
-  return messageCachePromise;
+    const result = await response.json();
+    
+    if(!result.success || !result.messages){
+      console.warn('Failed to load messages from database:', result.message || result.messages_error);
+      return {};
+    }
+    
+    // Flatten messages by message_key for easy lookup
+    const messagesMap = {};
+    result.messages.forEach(container => {
+      if(!container.messages || !Array.isArray(container.messages)) return;
+      
+      container.messages.forEach(message => {
+        // Filter visibility: users see only msg_user and msg_member, exclude msg_email
+        // Admin sees everything when includeAdmin is true
+        if(!includeAdmin){
+          const visibleContainers = ['msg_user', 'msg_member'];
+          if(!visibleContainers.includes(message.container_key || container.container_key)){
+            return; // Skip admin and email messages for regular users
+          }
+          // Also check is_visible flag
+          if(message.is_visible === false || message.is_visible === 0){
+            return; // Skip hidden messages
+          }
+        }
+        
+        // Only include active messages
+        if(message.is_active !== false && message.is_active !== 0){
+          messagesMap[message.message_key] = message;
+        }
+      });
+    });
+    
+    return messagesMap;
+  } catch(error){
+    if(error.name === 'AbortError'){
+      console.error('Message loading timed out after 10 seconds');
+    } else {
+      console.error('Error loading messages from database:', error);
+    }
+    // Return empty object on error - UI will use fallback text
+    return {};
+  }
 }
 
 /**
@@ -232,33 +209,17 @@ async function getMessage(messageKey, placeholders = {}, includeAdmin = false){
 }
 
 /**
- * Get a message synchronously from cache (must have been loaded first)
+ * Get a message synchronously - NO CACHING, returns empty string for sync calls
+ * Use getMessage() async function instead for proper message loading
  * @param {string} messageKey - The message_key to look up
  * @param {Object} placeholders - Object with placeholder values to replace
- * @param {boolean} includeAdmin - If true, looks in admin messages cache
- * @returns {string} The message text with placeholders replaced, or empty string if not found
+ * @param {boolean} includeAdmin - If true, looks in admin messages
+ * @returns {string} Empty string - use async getMessage() instead
  */
 function getMessageSync(messageKey, placeholders = {}, includeAdmin = false){
-  if(!messageKey || typeof messageKey !== 'string'){
-    return '';
-  }
-  
-  // If cache not loaded yet, return empty (should use async getMessage instead)
-  if(!includeAdmin && !messageCache){
-    console.warn(`Message cache not loaded yet for: ${messageKey}. Use getMessage() instead.`);
-    return '';
-  }
-  
-  // For sync version, we need to use cache
-  // Note: Admin messages would need separate cache, but for now we'll return empty
-  const messages = includeAdmin ? {} : messageCache || {};
-  const message = messages[messageKey];
-  
-  if(!message){
-    return '';
-  }
-  
-  return replacePlaceholders(message.message_text || '', placeholders);
+  // NO CACHING - sync version deprecated, use async getMessage() instead
+  console.warn(`getMessageSync called for: ${messageKey}. Use async getMessage() instead.`);
+  return '';
 }
 
 /**
@@ -2905,10 +2866,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
-    let persistedFormbuilderSnapshotFetchPromise = null;
-    if(typeof window !== 'undefined'){
-      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
-    }
+    // NO CACHING - Always fetch fresh formbuilder snapshot for development
 
     function getSavedFormbuilderSnapshot(){
       if(window.formbuilderStateManager && typeof window.formbuilderStateManager.getSaved === 'function'){
@@ -2926,55 +2884,37 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     async function fetchSavedFormbuilderSnapshot(){
-      if(persistedFormbuilderSnapshotFetchPromise){
-        return persistedFormbuilderSnapshotFetchPromise;
-      }
-
+      // NO CACHING - Always fetch fresh snapshot
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timeoutId = controller ? window.setTimeout(() => {
         try{ controller.abort(); }catch(err){}
       }, 15000) : 0;
 
-      const fetchPromise = (async () => {
+      try{
+        const response = await fetch('/gateway.php?action=get-form', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          signal: controller ? controller.signal : undefined
+        });
+        const text = await response.text();
+        let data;
         try{
-          const response = await fetch('/gateway.php?action=get-form', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: controller ? controller.signal : undefined
-          });
-          const text = await response.text();
-          let data;
-          try{
-            data = JSON.parse(text);
-          }catch(parseErr){
-            throw new Error('The server returned an unexpected response.');
-          }
-          if(!response.ok || !data || data.success !== true || !data.snapshot){
-            const message = data && typeof data.message === 'string' && data.message.trim()
-              ? data.message.trim()
-              : 'Unable to load form definitions.';
-            throw new Error(message);
-          }
-          return data.snapshot;
-        } finally {
-          if(timeoutId){
-            clearTimeout(timeoutId);
-          }
+          data = JSON.parse(text);
+        }catch(parseErr){
+          throw new Error('The server returned an unexpected response.');
         }
-      })();
-
-      persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
-        persistedFormbuilderSnapshotFetchPromise = null;
-        if(typeof window !== 'undefined'){
-          window.persistedFormbuilderSnapshotPromise = null;
+        if(!response.ok || !data || data.success !== true || !data.snapshot){
+          const message = data && typeof data.message === 'string' && data.message.trim()
+            ? data.message.trim()
+            : 'Unable to load form definitions.';
+          throw new Error(message);
         }
-      });
-
-      if(typeof window !== 'undefined'){
-        window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
+        return data.snapshot;
+      } finally {
+        if(timeoutId){
+          clearTimeout(timeoutId);
+        }
       }
-
-      return persistedFormbuilderSnapshotFetchPromise;
     }
 
     if(typeof window !== 'undefined'){
@@ -3252,36 +3192,23 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return null;
     }
 
-    // LAZY LOADING - Don't fetch formbuilder on page load
-    // It will be fetched on-demand when admin opens Forms tab or member opens Create Post
-    let persistedFormbuilderSnapshotPromise = null;
+    // NO CACHING - Always fetch fresh formbuilder snapshot for development
 
     function getFormbuilderSnapshotPromise() {
-      if (persistedFormbuilderSnapshotPromise) {
-        return persistedFormbuilderSnapshotPromise;
-      }
-      if (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise) {
-        persistedFormbuilderSnapshotPromise = window.__persistedFormbuilderSnapshotPromise;
-        return persistedFormbuilderSnapshotPromise;
-      }
+      // NO CACHING - always fetch fresh snapshot
       const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
       if (inlineSnapshot) {
-        persistedFormbuilderSnapshotPromise = Promise.resolve(inlineSnapshot);
         window.__persistedFormbuilderSnapshot = inlineSnapshot;
-        return persistedFormbuilderSnapshotPromise;
+        return Promise.resolve(inlineSnapshot);
       }
       if (typeof fetchSavedFormbuilderSnapshot === 'function') {
-        persistedFormbuilderSnapshotPromise = fetchSavedFormbuilderSnapshot().then(snapshot => {
+        return fetchSavedFormbuilderSnapshot().then(snapshot => {
           window.__persistedFormbuilderSnapshot = snapshot;
           return snapshot;
         }).catch(err => {
           console.error('Failed to load formbuilder snapshot', err);
           throw err;
         });
-        if (typeof window !== 'undefined') {
-          window.__persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotPromise;
-        }
-        return persistedFormbuilderSnapshotPromise;
       }
       return Promise.resolve(null);
     }
@@ -4525,11 +4452,11 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
-  const MAPBOX_VENUE_CACHE_LIMIT = 40;
   const MAPBOX_VENUE_MIN_QUERY = 2;
-  const mapboxVenueCache = new Map();
+  // NO CACHING - Always fetch fresh venue data for development
 
   function mapboxVenueCacheKey(query, options={}){
+    // NO CACHING - this is now just for key generation if needed
     const normalized = (query || '').trim().toLowerCase();
     const limit = Number.isFinite(options.limit) ? options.limit : 0;
     const types = typeof options.types === 'string' ? options.types : '';
@@ -4543,14 +4470,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function rememberMapboxVenueResult(key, features){
-    if(!key) return;
-    try{
-      mapboxVenueCache.set(key, features);
-      if(mapboxVenueCache.size > MAPBOX_VENUE_CACHE_LIMIT){
-        const firstKey = mapboxVenueCache.keys().next().value;
-        if(firstKey) mapboxVenueCache.delete(firstKey);
-      }
-    }catch(err){}
+    // NO CACHING - disabled for development
   }
 
   function getMapboxVenueFeatureCenter(feature){
@@ -4799,11 +4719,7 @@ function uniqueTitle(seed, cityName, idx){
     const proximity = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
       ? { longitude: options.proximity.longitude, latitude: options.proximity.latitude }
       : null;
-    const cacheKey = mapboxVenueCacheKey(normalized, { limit, types: resolvedTypes, proximity, language, country, bbox });
-    if(mapboxVenueCache.has(cacheKey)){
-      const cached = mapboxVenueCache.get(cacheKey);
-      return Array.isArray(cached) ? cached.map(cloneGeocoderFeature) : [];
-    }
+    // NO CACHING - always fetch fresh venue data for development
     const params = new URLSearchParams({
       access_token: MAPBOX_TOKEN,
       autocomplete: 'true',
@@ -5931,31 +5847,25 @@ function makePosts(){
   return out;
 }
 
-    let ALL_POSTS_CACHE = null;
+    // NO CACHING - Always get fresh posts for development
     let ALL_POSTS_BY_ID = null;
-    function rebuildAllPostsIndex(cache){
-      if(!Array.isArray(cache)){
+    function rebuildAllPostsIndex(postsArray){
+      if(!Array.isArray(postsArray)){
         ALL_POSTS_BY_ID = null;
         return;
       }
       const map = new Map();
-      cache.forEach(item => {
+      postsArray.forEach(item => {
         if(!item || item.id === undefined || item.id === null) return;
         map.set(String(item.id), item);
       });
       ALL_POSTS_BY_ID = map;
     }
     function getAllPostsCache(options = {}){
-      const { allowInitialize = true } = options;
-      if(Array.isArray(ALL_POSTS_CACHE)){
-        return ALL_POSTS_CACHE;
-      }
-      if(!allowInitialize){
-        return null;
-      }
-      ALL_POSTS_CACHE = makePosts();
-      rebuildAllPostsIndex(ALL_POSTS_CACHE);
-      return ALL_POSTS_CACHE;
+      // NO CACHING - always return fresh posts
+      const freshPosts = makePosts();
+      rebuildAllPostsIndex(freshPosts);
+      return freshPosts;
     }
     function getPostByIdAnywhere(id){
       if(id === undefined || id === null) return null;
@@ -5976,16 +5886,9 @@ function makePosts(){
     }
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
-    const markerDataCache = {
-      signature: null,
-      postsData: EMPTY_FEATURE_COLLECTION,
-      featureIndex: new Map()
-    };
-
+    // NO CACHING - Marker data always computed fresh for development
     function invalidateMarkerDataCache(){
-      markerDataCache.signature = null;
-      markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
-      markerDataCache.featureIndex = new Map();
+      // No-op: no cache to invalidate
     }
 
     function markerSignatureForList(list){
@@ -6061,31 +5964,19 @@ function makePosts(){
     }
 
     function getMarkerCollections(list){
+      // NO CACHING - always compute fresh marker data for development
       const signature = markerSignatureForList(list);
-      if(markerDataCache.signature === signature && markerDataCache.postsData){
-        return {
-          postsData: markerDataCache.postsData,
-          signature,
-          changed: false,
-          featureIndex: markerDataCache.featureIndex
-        };
-      }
       if(!Array.isArray(list) || !list.length){
-        markerDataCache.signature = signature;
-        markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
-        markerDataCache.featureIndex = new Map();
         return {
           postsData: EMPTY_FEATURE_COLLECTION,
           signature,
           changed: true,
-          featureIndex: markerDataCache.featureIndex
+          featureIndex: new Map()
         };
       }
       const postsData = postsToGeoJSON(list);
-      markerDataCache.signature = signature;
-      markerDataCache.postsData = postsData;
-      markerDataCache.featureIndex = buildMarkerFeatureIndex(postsData);
-      return { postsData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
+      const featureIndex = buildMarkerFeatureIndex(postsData);
+      return { postsData, signature, changed: true, featureIndex };
     }
 
 

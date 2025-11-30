@@ -162,18 +162,15 @@
   
   // ==================== MAP CARD CREATION ====================
   
-  // Admin settings cache
-  let adminSettingsLoaded = false;
-  let adminSettingsPromise = null;
+  // NO CACHING - Always load fresh admin settings for development
   
   /**
-   * Load admin settings from server
+   * Load admin settings from server (NO CACHING - always fresh)
    * @returns {Promise<Object>} Admin settings object
    */
   function loadAdminSettings() {
-    if (adminSettingsPromise) return adminSettingsPromise;
-    
-    adminSettingsPromise = fetch('/gateway.php?action=get-admin-settings')
+    // NO CACHING - always fetch fresh settings
+    return fetch('/gateway.php?action=get-admin-settings')
       .then(response => {
         if (!response.ok) throw new Error('Failed to load admin settings');
         return response.json();
@@ -181,7 +178,6 @@
       .then(data => {
         if (data.success && data.settings) {
           window.adminSettings = data.settings;
-          adminSettingsLoaded = true;
           return data.settings;
         }
         throw new Error('Invalid admin settings response');
@@ -189,11 +185,8 @@
       .catch(err => {
         console.warn('[MapCards] Failed to load admin settings:', err);
         window.adminSettings = {};
-        adminSettingsLoaded = true;
         return {};
       });
-    
-    return adminSettingsPromise;
   }
   
   /**
@@ -827,7 +820,7 @@
     generateMarkerImageFromId: function() { return null; },
     clearMarkerLabelPillSpriteCache: function() {
       // When pills change, reload admin settings and refresh CSS
-      adminSettingsPromise = null; // Clear cache
+      // NO CACHING - always loads fresh
       loadAdminSettings().then(() => {
         refreshMapCardStyles();
       });
