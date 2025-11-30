@@ -16506,7 +16506,12 @@ function makePosts(){
       wrap.appendChild(cardEl);
       wrap.appendChild(postBody);
       
-      // Card click no longer toggles post body (removed per user request)
+      // Add click handler to card to toggle post body
+      cardEl.addEventListener('click', (e) => {
+        // Don't trigger if clicking on buttons or their children
+        if(e.target.closest('button, [role="button"], a, .fav, .share')) return;
+        wrap.classList.toggle('post-collapsed');
+      });
       
       // Set up favorites button handler for the card in open post
       const favBtnInCard = cardEl.querySelector('.fav');
@@ -16524,13 +16529,18 @@ function makePosts(){
         favBtnInCard._favHandlerBound = true;
       }
       
-      // Open post immediately - no animation delay
+      // Store animation trigger function on the wrap element
+      // This will be called after scroll completes to prevent flicker
       wrap._triggerAnimation = () => {
         wrap.classList.remove('post-collapsed');
+        wrap.classList.add('post-expanding');
+        setTimeout(() => {
+          wrap.classList.remove('post-expanding');
+        }, 350);
       };
       
-      // Trigger immediately on creation - don't wait for scroll
-      wrap.classList.remove('post-collapsed');
+      // Don't auto-trigger animation - wait for scroll to complete first
+      // Animation will be triggered from openPost after scroll
       
       // Progressive hero swap
       (function(){
@@ -16947,9 +16957,56 @@ function makePosts(){
         // Scroll sequence logging removed
         
         // Scroll to top BEFORE animation to prevent flicker
-        // Post already opens immediately (no animation delay)
-        // Just scroll to top
-        scrollToTop(1);
+        const openPostEl = container.querySelector(`.open-post[data-id="${id}"]`);
+        let animationTriggered = false;
+        const triggerAnimation = () => {
+          if(!animationTriggered && openPostEl && typeof openPostEl._triggerAnimation === 'function'){
+            animationTriggered = true;
+            openPostEl._triggerAnimation();
+          }
+        };
+        
+        // Fallback timeout to ensure animation triggers even if scroll fails
+        const fallbackTimeout = setTimeout(() => {
+          if(!animationTriggered){
+            console.warn('[openPost] Fallback: Triggering animation after timeout');
+            triggerAnimation();
+          }
+        }, 500);
+        
+        requestAnimationFrame(() => {
+          scrollToTop(1);
+          requestAnimationFrame(() => {
+            scrollToTop(2);
+            // Final attempt after a short delay to catch any late layout changes
+            setTimeout(() => {
+              requestAnimationFrame(() => {
+                scrollToTop(3);
+                // Final verification with clear success/failure message
+                // Use the actual scroll element for final check
+                let finalScrollElement = container;
+                if(container === postsWideEl || container.classList.contains('post-board')){
+                  const postsEl = container.querySelector('.posts');
+                  if(postsEl){
+                    finalScrollElement = postsEl;
+                  }
+                }
+                
+                const finalScrollTop = finalScrollElement.scrollTop;
+                const finalScrollHeight = finalScrollElement.scrollHeight;
+                const finalClientHeight = finalScrollElement.clientHeight;
+                const success = finalScrollTop <= 5; // Allow 5px tolerance
+                const finalScrollElementName = finalScrollElement === container ? 'container' : (finalScrollElement.className || 'posts');
+                
+                // Scroll sequence completion logging removed
+                
+                // Now that scroll is complete, trigger the animation
+                clearTimeout(fallbackTimeout);
+                triggerAnimation();
+              });
+            }, 100);
+          });
+        });
       }
 
       function closeActivePost(){
@@ -17098,8 +17155,9 @@ function makePosts(){
         if(m==='map'){
           document.body.classList.remove('show-history');
         }
-        // ALWAYS initialize map - it's visible in background even in posts mode
-        startMainMapInit();
+        if(m === 'map'){
+          startMainMapInit();
+        }
         const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
         if(shouldAdjustListHeight){
@@ -17461,25 +17519,6 @@ function makePosts(){
         const gEl = sel && sel.geo ? document.querySelector(sel.geo) : null;
         if(gEl){
           gEl.appendChild(gc.onAdd(map));
-          // Prevent browser autofill on geocoder input
-          const disableAutofill = (input) => {
-            if(!input) return;
-            input.setAttribute('autocomplete', 'new-password');
-            input.setAttribute('data-lpignore', 'true');
-            input.setAttribute('data-form-type', 'other');
-            input.setAttribute('name', 'mapbox-search-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-          };
-          const gcInput = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
-          disableAutofill(gcInput);
-          // Also watch for input creation in case it's async
-          const observer = new MutationObserver(() => {
-            const inp = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
-            if(inp && !inp.__autofillDisabled){
-              inp.__autofillDisabled = true;
-              disableAutofill(inp);
-            }
-          });
-          observer.observe(gEl, { childList: true, subtree: true });
         }
         geocoders.push(gc);
         if(idx === 1){
@@ -19799,7 +19838,8 @@ function openPostModal(id){
             : descEl.classList.contains('expanded');
           setDescExpandedState(!isExpanded);
         };
-        // Description click no longer toggles collapsed state (removed per user request)
+        descEl.addEventListener('click', handleDescToggle);
+        descEl.addEventListener('keydown', handleDescToggle);
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];

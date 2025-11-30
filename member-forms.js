@@ -864,16 +864,18 @@
         if(postButton) postButton.disabled = true;
       }
       try{
-        // LAZY LOADING: Use getFormbuilderSnapshotPromise() which loads on-demand
-        const getSnapshotPromise = (typeof window !== 'undefined' && typeof window.getFormbuilderSnapshotPromise === 'function')
-          ? window.getFormbuilderSnapshotPromise
-          : null;
+        // Try both possible locations for the snapshot promise
+        const snapshotPromise = (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) 
+          ? window.persistedFormbuilderSnapshotPromise 
+          : (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise)
+            ? window.__persistedFormbuilderSnapshotPromise
+            : null;
         
-        if(!getSnapshotPromise){
-          throw new Error('Formbuilder snapshot loader not available');
+        if(!snapshotPromise){
+          throw new Error('Formbuilder snapshot promise not available');
         }
         
-        const backendSnapshot = await getSnapshotPromise();
+        const backendSnapshot = await snapshotPromise;
         
         // NO FALLBACKS - validate snapshot exists and is valid
         if(!backendSnapshot){
