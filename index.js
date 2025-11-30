@@ -4972,9 +4972,19 @@ function makePosts(){
   const cityCounts = Object.create(null);
   const MAX_POSTS_PER_CITY = 200;
   const neighborhoodCache = new Map();
-  const eligibleCategories = Array.isArray(categories)
-    ? categories.filter(cat => cat && Array.isArray(cat.subs) && cat.subs.length)
-    : [];
+  
+  // Fallback categories for dummy post generation when formbuilder hasn't loaded yet
+  const FALLBACK_CATEGORIES = [
+    { name: "What's On", subs: [{ name: 'Events' }, { name: 'Festivals' }, { name: 'Concerts' }, { name: 'Markets' }] },
+    { name: 'Learning', subs: [{ name: 'Classes' }, { name: 'Workshops' }, { name: 'Courses' }] },
+    { name: 'Opportunities', subs: [{ name: 'Jobs' }, { name: 'Volunteering' }, { name: 'Internships' }] },
+    { name: 'For Hire', subs: [{ name: 'Services' }, { name: 'Freelancers' }, { name: 'Contractors' }] },
+    { name: 'Buy & Sell', subs: [{ name: 'Products' }, { name: 'Tickets' }, { name: 'Goods' }] }
+  ];
+  
+  // Use real categories if available, otherwise fallback
+  const sourceCategories = (Array.isArray(categories) && categories.length > 0) ? categories : FALLBACK_CATEGORIES;
+  const eligibleCategories = sourceCategories.filter(cat => cat && Array.isArray(cat.subs) && cat.subs.length);
 
   const pickCategory = ()=> eligibleCategories.length ? pick(eligibleCategories) : null;
   const pickSubcategory = (cat)=> (cat && Array.isArray(cat.subs) && cat.subs.length)
