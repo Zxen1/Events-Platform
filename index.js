@@ -12829,6 +12829,10 @@ function makePosts(){
                   btn.setAttribute('aria-pressed', btn === optionBtn ? 'true' : 'false');
                 });
                 
+                // Clear pending flag now that field type is selected
+                if(safeField.__pending){
+                  delete safeField.__pending;
+                }
                 notifyFormbuilderChange();
                 updateFieldEditorsByType();
                 renderForm({
@@ -13757,6 +13761,8 @@ function makePosts(){
             });
             if(!confirmed) return;
             const newField = ensureFieldDefaults({});
+            // Mark field as pending until a type is selected
+            newField.__pending = true;
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
             if(!fieldRow || !fieldRow.row) return;
@@ -13764,7 +13770,7 @@ function makePosts(){
             fieldsList.appendChild(fieldRow.row);
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
             syncFieldOrderFromDom(fieldsList, fields);
-            notifyFormbuilderChange();
+            // Don't notify change yet - wait until field type is selected
             if(fieldRow && fieldRow.editPanel){
               closeFieldEditPanels({ exceptPanel: fieldRow.editPanel, exceptButton: fieldRow.editBtn });
               if(typeof fieldRow.openEditPanel === 'function'){
@@ -14488,7 +14494,17 @@ function makePosts(){
           const value = source[key];
           if(Array.isArray(value)){
             // Always include the key, even if the array is empty
-            out[key] = value.length === 0 ? [] : value.map(field => {
+            // Filter out fields without a field type selected (incomplete/pending fields)
+            const validFields = value.filter(field => {
+              if(!field) return false;
+              // Skip pending fields (no type selected yet)
+              if(field.__pending) return false;
+              const hasFieldType = (field.key && field.key.trim()) || 
+                                   (field.fieldTypeKey && field.fieldTypeKey.trim()) ||
+                                   (field.type && field.type.trim() && field.type !== 'text');
+              return hasFieldType;
+            });
+            out[key] = validFields.length === 0 ? [] : validFields.map(field => {
               const cloned = {
                 id: field && field.id,
                 key: field && typeof field.key === 'string' ? field.key : undefined,
