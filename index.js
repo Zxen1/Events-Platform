@@ -1475,7 +1475,9 @@ let __notifyMapOnInteraction = null;
                     if(!data.success){
                       throw new Error(data.message || 'Save failed');
                     }
-                    console.log(`${picker.label} saved to database.`); else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
+                    console.log(`${picker.label} saved to database.`);
+                    
+                    if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
                       // Update window.adminSettings immediately for instant effect
                       if(!window.adminSettings) window.adminSettings = {};
                       window.adminSettings[picker.settingKey] = value;
