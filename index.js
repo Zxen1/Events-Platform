@@ -3252,33 +3252,43 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return null;
     }
 
-    const persistedFormbuilderSnapshotPromise = (()=>{
-      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
-        return window.__persistedFormbuilderSnapshotPromise;
-      }
-      const promise = (async ()=>{
-        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
-        if(inlineSnapshot){
-          return inlineSnapshot;
-        }
-        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
-          return await fetchSavedFormbuilderSnapshot();
-        }
-        return null;
-      })();
-      if(typeof window !== 'undefined'){
-        window.__persistedFormbuilderSnapshotPromise = promise;
-      }
-      return promise;
-    })();
+    // LAZY LOADING - Don't fetch formbuilder on page load
+    // It will be fetched on-demand when admin opens Forms tab or member opens Create Post
+    let persistedFormbuilderSnapshotPromise = null;
 
-    // Wait for snapshot to load, then initialize
-    persistedFormbuilderSnapshotPromise.then(snapshot => {
-      window.__persistedFormbuilderSnapshot = snapshot;
-    }).catch(err => {
-      console.error('Failed to load formbuilder snapshot', err);
-      // Don't hide the error - it should be visible
-    });
+    function getFormbuilderSnapshotPromise() {
+      if (persistedFormbuilderSnapshotPromise) {
+        return persistedFormbuilderSnapshotPromise;
+      }
+      if (typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise) {
+        persistedFormbuilderSnapshotPromise = window.__persistedFormbuilderSnapshotPromise;
+        return persistedFormbuilderSnapshotPromise;
+      }
+      const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
+      if (inlineSnapshot) {
+        persistedFormbuilderSnapshotPromise = Promise.resolve(inlineSnapshot);
+        window.__persistedFormbuilderSnapshot = inlineSnapshot;
+        return persistedFormbuilderSnapshotPromise;
+      }
+      if (typeof fetchSavedFormbuilderSnapshot === 'function') {
+        persistedFormbuilderSnapshotPromise = fetchSavedFormbuilderSnapshot().then(snapshot => {
+          window.__persistedFormbuilderSnapshot = snapshot;
+          return snapshot;
+        }).catch(err => {
+          console.error('Failed to load formbuilder snapshot', err);
+          throw err;
+        });
+        if (typeof window !== 'undefined') {
+          window.__persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotPromise;
+        }
+        return persistedFormbuilderSnapshotPromise;
+      }
+      return Promise.resolve(null);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.getFormbuilderSnapshotPromise = getFormbuilderSnapshotPromise;
+    }
 
     // NO FALLBACKS - wait for backend snapshot only
     // Note: This will throw if snapshot is not available - errors should be visible
@@ -14762,30 +14772,26 @@ function makePosts(){
       restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
       save(){ updateFormbuilderSnapshot(); },
       getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
-      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); }
-    };
-    persistedFormbuilderSnapshotPromise.then(snapshot => {
-      if(!snapshot) return;
-      const manager = window.formbuilderStateManager;
-      if(!manager || typeof manager.restore !== 'function'){
-        return;
-      }
-      try{
-        manager.restore(snapshot);
-      }catch(err){
-        console.error('Failed to restore persisted formbuilder snapshot', err);
-        return;
-      }
-      if(typeof manager.save === 'function'){
-        try{
-          manager.save();
-        }catch(err){
-          console.error('Failed to update saved formbuilder snapshot after hydration', err);
+      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); },
+      // LAZY LOADING: Load and restore formbuilder snapshot on-demand
+      async ensureLoaded(){
+        if(this._loaded) return;
+        try {
+          const snapshot = await getFormbuilderSnapshotPromise();
+          if(!snapshot) return;
+          if(typeof this.restore === 'function'){
+            this.restore(snapshot);
+          }
+          if(typeof this.save === 'function'){
+            this.save();
+          }
+          this._loaded = true;
+        } catch(err) {
+          console.error('Failed to load formbuilder snapshot:', err);
         }
-      }
-    }).catch(err => {
-      console.error('Failed to load persisted formbuilder snapshot from backend', err);
-    });
+      },
+      _loaded: false
+    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -17847,15 +17853,9 @@ function makePosts(){
     }
 
     async function initMap(){
-      // Wait for formbuilder snapshot to load before initializing map
-      if (typeof window !== 'undefined' && window.persistedFormbuilderSnapshotPromise) {
-        try {
-          await window.persistedFormbuilderSnapshotPromise;
-        } catch (err) {
-          console.error('Failed to wait for formbuilder snapshot:', err);
-          throw err; // Don't continue if snapshot failed
-        }
-      }
+      // PERFORMANCE FIX: Don't block map on formbuilder snapshot
+      // The formbuilder is only needed for admin Forms tab and member Create Post tab
+      // It will be loaded lazily via getFormbuilderSnapshotPromise() when those tabs open
       
       if(typeof mapboxgl === 'undefined'){
         console.error('Mapbox GL failed to load');
@@ -23857,6 +23857,10 @@ document.addEventListener('pointerdown', (e) => {
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
+      // LAZY LOAD: Load formbuilder when admin opens Forms tab
+      if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
+        window.formbuilderStateManager.ensureLoaded();
+      }
     });
   });
 
@@ -23874,6 +23878,10 @@ document.addEventListener('pointerdown', (e) => {
       if(panel){
         panel.classList.add('active');
         panel.removeAttribute('hidden');
+      }
+      // LAZY LOAD: Load formbuilder when member opens Create Post tab
+      if(btn.dataset.tab === 'create' && window.formbuilderStateManager){
+        window.formbuilderStateManager.ensureLoaded();
       }
     });
   });
