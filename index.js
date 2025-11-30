@@ -23394,7 +23394,6 @@ function closePanel(m){
 const adminAuthManager = (()=>{
   const STORAGE_KEY = 'admin-authenticated';
   const IDENTITY_KEY = 'admin-identity';
-  const adminBtn = document.getElementById('adminBtn');
   const adminPanel = document.getElementById('adminPanel');
   const memberPanel = document.getElementById('memberPanel');
 
@@ -23402,6 +23401,8 @@ const adminAuthManager = (()=>{
   let adminIdentity = localStorage.getItem(IDENTITY_KEY) || '';
 
   function updateUI(){
+    // Re-fetch adminBtn each time to avoid stale reference
+    const adminBtn = document.getElementById('adminBtn');
     if(adminBtn){
       // Only show admin button when authenticated
       if(authenticated){
@@ -25657,7 +25658,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return null;
     })();
     const roleFlags = extractRoleFlags(payload);
-    const { isAdmin: extractedIsAdmin, roles: extractedRoles, ...otherRoleFlags } = roleFlags;
+    const { isAdmin: extractedIsAdmin, roles: extractedRoles, role: extractedRole, ...otherRoleFlags } = roleFlags;
     const rolesList = Array.isArray(extractedRoles)
       ? extractedRoles
       : (Array.isArray(payload.roles)
@@ -25666,11 +25667,16 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(Boolean)
         : []);
     const usernameLower = typeof username === 'string' ? username.toLowerCase() : '';
+    // Check singular 'role' field from backend (e.g. role: 'admin')
+    const singleRole = typeof extractedRole === 'string' ? extractedRole.toLowerCase() : '';
     let isAdmin = false;
     if(typeof payload.isAdmin === 'boolean'){
       isAdmin = payload.isAdmin;
     } else if(typeof extractedIsAdmin === 'boolean'){
       isAdmin = extractedIsAdmin;
+    } else if(singleRole === 'admin'){
+      // Backend returns { role: 'admin' } for admin users
+      isAdmin = true;
     } else if(rolesList.includes('admin')){
       isAdmin = true;
     } else if(normalizedEmail === 'admin' || usernameLower === 'admin'){
