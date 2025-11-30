@@ -8742,6 +8742,8 @@ function makePosts(){
               geocoderInput.__formLocationBound = true;
               geocoderInput.placeholder = placeholderValue;
               geocoderInput.setAttribute('aria-label', placeholderValue);
+              geocoderInput.setAttribute('autocomplete', 'off');
+              geocoderInput.setAttribute('name', 'location-search-' + Date.now());
               geocoderInput.id = addressInputId;
               geocoderInput.dataset.locationAddress = 'true';
               geocoderInput.value = locationState.address || '';
