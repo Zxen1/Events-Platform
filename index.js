@@ -7170,6 +7170,10 @@ function makePosts(){
       }
       if(confirmBtn && confirmBtn.parentNode){
         const replacement = confirmBtn.cloneNode(true);
+        // Clear the message key so it doesn't override our explicit label
+        if(confirmLabel && confirmLabel.trim() !== ''){
+          replacement.removeAttribute('data-message-key');
+        }
         confirmBtn.parentNode.replaceChild(replacement, confirmBtn);
         confirmBtn = replacement;
       }
@@ -7227,14 +7231,14 @@ function makePosts(){
       confirmBtn.className = normalizedConfirmClass;
       
       // Set button label - use provided confirmLabel, don't load from DB message key
-      // The button's data-message-key is just for fallback, we explicitly set the label here
+      // If confirmLabel is provided, use it directly and ignore the button's data-message-key
       let finalConfirmLabel = confirmLabel;
-      if(!finalConfirmLabel || finalConfirmLabel.trim() === ''){
+      if(!finalConfirmLabel || (typeof finalConfirmLabel === 'string' && finalConfirmLabel.trim() === '')){
         // Only fallback to DB message if no label provided
         const confirmKey = confirmBtn.dataset.messageKey || 'msg_button_confirm';
         finalConfirmLabel = await getMessage(confirmKey, placeholders, true) || previousLabel || 'Confirm';
       }
-      // Always set the text content explicitly, don't rely on previous state
+      // Always set the text content explicitly - this happens AFTER all async operations
       confirmBtn.textContent = finalConfirmLabel || 'Confirm';
 
       overlay.setAttribute('aria-hidden', 'false');
@@ -12686,6 +12690,9 @@ function makePosts(){
             attachDropdownToPanel = false,
             summaryUpdater: initialSummaryUpdater = ()=>{}
           } = {}) => {
+            // Declare actionFieldBtn early so it can be referenced in updateFieldEditorsByType
+            let actionFieldBtn = null;
+            
             const editBtn = document.createElement('button');
             editBtn.type = 'button';
             editBtn.className = 'field-edit-btn';
@@ -13380,16 +13387,11 @@ function makePosts(){
                 renderCheckoutOptionsEditor();
               }
               // Update action button text based on whether field type is selected
-              // Check if actionFieldBtn exists (it's created later in the function)
-              try {
-                if(actionFieldBtn){
-                  // Only show "Delete Field" if field has a real type selected (not empty, not 'text')
-                  const hasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
-                  actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
-                  actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
-                }
-              } catch(e) {
-                // actionFieldBtn not yet declared, skip update
+              if(actionFieldBtn){
+                // Only show "Delete Field" if field has a real type selected (not empty, not 'text')
+                const hasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
+                actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
+                actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
               }
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
@@ -13533,7 +13535,7 @@ function makePosts(){
             saveFieldRow.className = 'formbuilder-save-row';
             saveFieldRow.append(saveFieldBtn);
 
-            const actionFieldBtn = document.createElement('button');
+            actionFieldBtn = document.createElement('button');
             actionFieldBtn.type = 'button';
             actionFieldBtn.className = 'delete-category-btn delete-field-btn';
             // Button text will be updated by updateFieldEditorsByType after button is created
@@ -13572,8 +13574,16 @@ function makePosts(){
 
             editMenu.append(saveFieldRow, deleteFieldRow);
             
-            // Update button text now that it's created (in case updateFieldEditorsByType was called before)
-            updateFieldEditorsByType();
+            // Update button text now that actionFieldBtn is created
+            // This ensures the button shows "Add Field" for new fields without a type
+            try {
+              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
+              const hasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
+              actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
+              actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
+            } catch(e) {
+              // Button not ready yet, will be updated by updateFieldEditorsByType
+            }
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
