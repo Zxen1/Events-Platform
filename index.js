@@ -6539,8 +6539,11 @@ function makePosts(){
         formbuilderCats.dispatchEvent(evt);
       }
       // Directly mark admin panel as dirty since formbuilder state isn't tracked via form inputs
-      if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
-        window.adminPanelModule.markDirty();
+      // Only after formbuilder is fully loaded to avoid marking dirty during initialization
+      if(window.formbuilderStateManager && window.formbuilderStateManager._loaded){
+        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+          window.adminPanelModule.markDirty();
+        }
       }
     }
 
