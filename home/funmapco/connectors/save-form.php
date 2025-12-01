@@ -15,6 +15,24 @@ try {
 
     $rawBody = file_get_contents('php://input');
     $decoded = json_decode($rawBody, true);
+    
+    // DEBUG: Log received payload
+    if (isset($decoded['categories']) && is_array($decoded['categories'])) {
+        foreach ($decoded['categories'] as $cat) {
+            $catName = $cat['name'] ?? '?';
+            if (isset($cat['subFields']) && is_array($cat['subFields'])) {
+                foreach ($cat['subFields'] as $subName => $fields) {
+                    if (is_array($fields) && count($fields) > 0) {
+                        $keys = array_map(function($f) { 
+                            return $f['fieldTypeKey'] ?? $f['key'] ?? $f['name'] ?? '?'; 
+                        }, $fields);
+                        error_log("[SAVE-FORM] Received: $catName > $subName: " . implode(' → ', $keys));
+                    }
+                }
+            }
+        }
+    }
+    
     if (!is_array($decoded)) {
         http_response_code(400);
         echo json_encode([

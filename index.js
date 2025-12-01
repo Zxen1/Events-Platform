@@ -6947,6 +6947,7 @@ function makePosts(){
         }
         if(changed){
           fields.splice(0, fields.length, ...reordered);
+          console.log('[Field Reorder] Reordered to:', fields.map(f => f.key || f.fieldTypeKey || f.name).join(' → '));
           notifyFormbuilderChange();
           const state = fieldContainerState.get(container);
           if(state && typeof state.onFieldsReordered === 'function'){
@@ -22753,17 +22754,13 @@ form.addEventListener('input', formChangedWrapper, true);
     }
 
     // Only save form data if there's actual form data (not just empty object)
-    // Debug: log checkout options in payload
+    // Debug: log field order before saving
     if(payload && payload.categories){
       payload.categories.forEach(cat => {
-        if(cat.subs){
-          cat.subs.forEach(sub => {
-            if(sub.fields){
-              sub.fields.forEach(field => {
-                if((field.type === 'checkout' || field.fieldTypeKey === 'checkout') && field.checkoutOptions){
-                  console.log(`[Save Debug] Subcategory "${sub.name}" checkout field has checkoutOptions:`, field.checkoutOptions);
-                }
-              });
+        if(cat.subFields){
+          Object.entries(cat.subFields).forEach(([subName, fields]) => {
+            if(Array.isArray(fields) && fields.length > 0){
+              console.log(`[SAVE] ${cat.name} > ${subName}: ${fields.map(f => f.fieldTypeKey || f.key || f.name || '?').join(' → ')}`);
             }
           });
         }
