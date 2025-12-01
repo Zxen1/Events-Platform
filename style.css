@@ -1211,15 +1211,6 @@ button[aria-expanded="true"] .results-arrow{
     color:#fff;
   }
 
-  /* Geocoder z-index for admin and member panels */
-  .admin-member-panels .mapboxgl-ctrl-geocoder{
-    position:relative;
-    z-index:var(--layer-menu);
-  }
-
-  .admin-member-panels .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:var(--layer-menu);
-  }
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
@@ -7202,10 +7193,13 @@ html, body { cursor: auto !important; }
 
 
 /* Extracted from <style> */
-#tab-forms{
+#tab-forms,
+            #memberPanel .member-create-fields{
               --forms-layer-stacked: 10;
               --forms-layer-overlay: 20;
               --forms-layer-popover: 30;
+            }
+            #tab-forms{
               padding-top:0;
               padding-bottom:0;
             }
