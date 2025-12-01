@@ -3148,6 +3148,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       if(typeof window === 'undefined'){
         return null;
       }
+      // Note: Do NOT include window.initialFormbuilderSnapshot here - it's a local placeholder
+      // that may have been created before server data loaded. Only use truly persisted snapshots.
       const candidates = [
         window.__persistedFormbuilderSnapshot,
         window.__PERSISTED_FORMBUILDER_SNAPSHOT__,
@@ -3155,11 +3157,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         window.persistedFormbuilderSnapshot,
         window.formbuilderSnapshot,
         window.formBuilderSnapshot,
-        window.initialFormbuilderSnapshot,
         window.__initialFormbuilderSnapshot
       ];
       for(const candidate of candidates){
-        if(candidate && typeof candidate === 'object'){
+        // Only use snapshots that have categories AND currencies loaded
+        if(candidate && typeof candidate === 'object' && 
+           Array.isArray(candidate.categories) && candidate.categories.length > 0 &&
+           Array.isArray(candidate.currencies) && candidate.currencies.length > 0){
           return candidate;
         }
       }
