@@ -747,25 +747,24 @@
             const target = e.target;
             const venueEditor = target.closest('.venue-session-editor');
             const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
+            const isDateInput = target.classList.contains('session-date-input') || target.closest('.session-date-input-wrapper');
             
-            if(venueEditor && !isGeocoderElement){
-              console.log('[Member] Click inside venue editor - preventing form close', { target: target.tagName, className: target.className });
+            // Don't block date input clicks - they need to open datepicker
+            if(venueEditor && !isGeocoderElement && !isDateInput){
               e.stopPropagation();
-              e.stopImmediatePropagation();
-              return false;
             }
           }, true);
-          
+
           // Also prevent other events that might close the form
           formWrapper.addEventListener('pointerdown', (e)=>{
             const target = e.target;
             const venueEditor = target.closest('.venue-session-editor');
             const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
+            const isDateInput = target.classList.contains('session-date-input') || target.closest('.session-date-input-wrapper');
             
-            if(venueEditor && !isGeocoderElement){
-              console.log('[Member] Pointerdown inside venue editor - preventing form close');
+            // Don't block date input clicks - they need to open datepicker
+            if(venueEditor && !isGeocoderElement && !isDateInput){
               e.stopPropagation();
-              e.stopImmediatePropagation();
             }
           }, true);
         }

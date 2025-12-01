@@ -1216,17 +1216,15 @@ button[aria-expanded="true"] .results-arrow{
     z-index:var(--layer-menu);
   }
 
-  #adminPanel .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:var(--layer-menu);
-  }
-
+  #adminPanel .mapboxgl-ctrl-geocoder,
   #memberPanel .mapboxgl-ctrl-geocoder{
     position:relative;
-    z-index:var(--layer-menu);
   }
 
-  #memberPanel .mapboxgl-ctrl-geocoder .suggestions{
+  /* Global geocoder suggestions z-index - one rule for all */
+  .mapboxgl-ctrl-geocoder .suggestions{
     z-index:var(--layer-menu);
+    background:#1a1a2e;
   }
 #filterPanel .panel-content{
   width:100%;
@@ -7927,12 +7925,6 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .session-date-row.has-open-session-picker{
               z-index:var(--forms-layer-overlay);
             }
-            /* Elevate entire venue ticketing field when geocoder active so suggestions appear above sibling fields */
-            #tab-forms .form-field--venues-sessions-pricing:has(.is-geocoder-active),
-            #memberPanel .member-create-fields .form-field--venues-sessions-pricing:has(.is-geocoder-active){
-              position:relative;
-              z-index:var(--forms-layer-popover);
-            }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
             #tab-forms .session-time-actions,
@@ -8067,10 +8059,6 @@ html, body { cursor: auto !important; }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
               display:none;
-            }
-            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions,
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
-              z-index:var(--forms-layer-popover);
             }
             #tab-forms .form-field--location .location-field-wrapper,
             #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
