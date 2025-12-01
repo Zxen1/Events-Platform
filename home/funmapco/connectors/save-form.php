@@ -747,9 +747,9 @@ try {
                     $fieldTypeKey = $fieldTypeDef['key'] ?? null;
                     if (!$fieldTypeKey) continue;
                     
-                    // Only process editable field types (text, text-area, dropdown, radio)
-                    $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
-                    if (!$isEditable) continue;
+                    // Only process these four editable field types - no others
+                    $allowedEditableTypes = ['text-box', 'text-area', 'dropdown', 'radio'];
+                    if (!in_array($fieldTypeKey, $allowedEditableTypes, true)) continue;
                     
                     $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
                     if (!$fieldData) continue;
