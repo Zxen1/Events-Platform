@@ -1211,17 +1211,12 @@ button[aria-expanded="true"] .results-arrow{
     color:#fff;
   }
 
-  #adminPanel .mapboxgl-ctrl-geocoder{
+  /* Global geocoder z-index - one rule for all */
+  .mapboxgl-ctrl-geocoder{
     position:relative;
     z-index:var(--layer-menu);
   }
 
-  #adminPanel .mapboxgl-ctrl-geocoder,
-  #memberPanel .mapboxgl-ctrl-geocoder{
-    position:relative;
-  }
-
-  /* Global geocoder suggestions z-index - one rule for all */
   .mapboxgl-ctrl-geocoder .suggestions{
     z-index:var(--layer-menu);
   }
