@@ -275,7 +275,7 @@ const persistedBootstrapSnapshot = {
     'id:202': 'https://cdn.example.com/library/icon.webp'
   },
   iconLibrary: ['assets/icons-30/existing.png'],
-  versionPriceCurrencies: []
+  currencies: []
 };
 
 const bootstrapWindow = {
@@ -347,7 +347,7 @@ const persistedBootstrapSnapshotFromPaths = {
     'id:404': 'https://cdn.example.com/library/icon.webp'
   },
   iconLibrary: [],
-  versionPriceCurrencies: []
+  currencies: []
 };
 
 const bootstrapWindowFromPaths = {
@@ -407,7 +407,7 @@ const persistedBootstrapSnapshotCategoryOnly = {
   },
   subcategoryIconPaths: {},
   iconLibrary: [],
-  versionPriceCurrencies: []
+  currencies: []
 };
 
 const bootstrapWindowCategoryOnly = {
@@ -444,7 +444,7 @@ const persistedBootstrapSnapshotSubcategoryOnly = {
     'id:606': 'https://cdn.example.com/library/icon.webp'
   },
   iconLibrary: [],
-  versionPriceCurrencies: []
+  currencies: []
 };
 
 const bootstrapWindowSubcategoryOnly = {

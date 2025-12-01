@@ -94,8 +94,8 @@ try {
     $fieldTypeDefinitions = fetchFieldTypeDefinitions($pdo);
 
     $versionCurrencies = [];
-    if (isset($decoded['versionPriceCurrencies']) && is_array($decoded['versionPriceCurrencies'])) {
-        foreach ($decoded['versionPriceCurrencies'] as $code) {
+    if (isset($decoded['currencies']) && is_array($decoded['currencies'])) {
+        foreach ($decoded['currencies'] as $currency) {
             $normalized = strtoupper(trim((string) $code));
             if ($normalized !== '' && !in_array($normalized, $versionCurrencies, true)) {
                 $versionCurrencies[] = $normalized;

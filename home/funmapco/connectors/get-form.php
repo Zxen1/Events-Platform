@@ -1169,9 +1169,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         return strcasecmp($a['name'], $b['name']);
     });
 
-    // Use currency options from currency field (or provided currencyOptions)
-    $versionPriceCurrencies = $currencyOptions;
-    sort($versionPriceCurrencies);
+    // Use currency options from currency field
+    $currencies = $currencyOptions;
+    sort($currencies);
 
     $sanitizedCategoryMarkers = sanitizeSubcategoryMarkers($categoryMarkers);
     $sanitizedSubcategoryMarkers = sanitizeSubcategoryMarkers($subcategoryMarkers);
@@ -1187,7 +1187,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
         'subcategoryFieldTypeIds' => $subcategoryFieldTypeIds,
         'subcategoryFieldTypeNames' => $subcategoryFieldTypeNames,
-        'versionPriceCurrencies' => $versionPriceCurrencies,
+        'currencies' => $currencies,
     ];
 }
 

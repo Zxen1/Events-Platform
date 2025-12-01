@@ -363,12 +363,12 @@
       }
     }
 
-    function collectCurrencyCodes(snapshot){
+    function collectCurrencies(snapshot){
       const codes = new Set();
       
-      // First, get currency codes from the currency field (versionPriceCurrencies)
-      if(snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
-        snapshot.versionPriceCurrencies.forEach(code => {
+      // First, get currencies from the currency field
+      if(snapshot && Array.isArray(snapshot.currencies)){
+        snapshot.currencies.forEach(code => {
           if(typeof code === 'string' && code.trim()){
             codes.add(code.trim().toUpperCase());
           }
@@ -421,7 +421,7 @@
     // NO DEFAULT SNAPSHOT - only use backend data
     let memberSnapshot = null; // Will be set from backend only
     let memberCategories = [];
-    let currencyCodes = [];
+    let currencies = [];
     let fieldIdCounter = 0;
     let memberSnapshotErrorMessage = '';
 
@@ -451,9 +451,9 @@
       } else {
         memberCategories = Array.isArray(memberSnapshot.categories) ? memberSnapshot.categories : [];
       }
-      currencyCodes = collectCurrencyCodes(memberSnapshot);
-      // Set window.currencyCodes for use in other parts of the application
-      window.currencyCodes = currencyCodes;
+      currencies = collectCurrencies(memberSnapshot);
+      // Set window.currencies for use in other parts of the application
+      window.currencies = currencies;
       // Only re-render form picker if not preserving selection AND populate is not false
       // This prevents resetting the form when admin makes formbuilder changes while user is editing
       if(options.populate !== false && !options.preserveSelection){
@@ -470,13 +470,13 @@
           select.removeChild(opt);
         }
       });
-      currencyCodes.forEach(code => {
+      currencies.forEach(code => {
         const opt = document.createElement('option');
         opt.value = code;
         opt.textContent = code;
         select.appendChild(opt);
       });
-      if(preserveValue && currencyCodes.includes(preserveValue)){
+      if(preserveValue && currencies.includes(preserveValue)){
         select.value = preserveValue;
       } else {
         select.value = '';

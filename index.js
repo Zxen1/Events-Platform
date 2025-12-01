@@ -2914,7 +2914,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
-      versionPriceCurrencies: [],
+      currencies: [],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
       fieldTypes: []
@@ -3121,7 +3121,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     function normalizeFormbuilderSnapshot(snapshot){
       const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
-      const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
+      const rawCurrencies = (snapshot && Array.isArray(snapshot.currencies)) ? snapshot.currencies : [];
       const normalizedCurrencies = Array.from(new Set(rawCurrencies
         .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
         .filter(Boolean)));
@@ -3133,7 +3133,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedCheckoutOptions = normalizeCheckoutOptions(snapshot && snapshot.checkout_options);
       return {
         categories: normalizedCategories,
-        versionPriceCurrencies: normalizedCurrencies,
+        currencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
         fieldTypes: normalizedFieldTypes,
@@ -3268,8 +3268,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return sanitized;
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
-    // versionPriceCurrencies now come from backend via currency field options
-    window.currencyCodes = Array.isArray(initialFormbuilderSnapshot.versionPriceCurrencies) ? initialFormbuilderSnapshot.versionPriceCurrencies : [];
+    // Currency codes come from backend via currency field options
+    window.currencies = Array.isArray(initialFormbuilderSnapshot.currencies) ? initialFormbuilderSnapshot.currencies : [];
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
@@ -8116,7 +8116,7 @@ function makePosts(){
               if(!existingCurrency){
                 currencyMenu.appendChild(placeholderBtn);
               }
-              const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+              const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
               currencyOptions.forEach(code => {
                 const optionBtn = document.createElement('button');
                 optionBtn.type = 'button';
@@ -8157,7 +8157,7 @@ function makePosts(){
                   // Ensure currency options are populated when menu opens
                   const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
                   if(existingOptions.length === 0){
-                    const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                    const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
                     currencyOptions.forEach(code => {
                       // Check if option already exists
                       const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
@@ -12240,7 +12240,7 @@ function makePosts(){
                           if(!existingCurrency){
                             currencyMenu.appendChild(placeholderBtn);
                           }
-                          const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                          const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
                           currencyOptions.forEach(code => {
                             const optionBtn = document.createElement('button');
                             optionBtn.type = 'button';
@@ -12286,7 +12286,7 @@ function makePosts(){
                               // Ensure currency options are populated when menu opens
                               const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
                               if(existingOptions.length === 0){
-                                const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                                const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
                                 currencyOptions.forEach(code => {
                                   // Check if option already exists
                                   const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
