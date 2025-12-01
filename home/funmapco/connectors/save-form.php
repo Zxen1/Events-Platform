@@ -762,15 +762,18 @@ try {
                         $editData['name'] = $customName;
                     }
                     
-                    // For dropdown/radio, save options if they differ from default placeholder
+                    // For dropdown/radio, save options ONLY if they differ from default placeholder
                     if (($fieldTypeKey === 'dropdown' || $fieldTypeKey === 'radio' || $fieldTypeKey === 'radio-toggle') && isset($fieldData['options'])) {
-                        $customOptions = is_array($fieldData['options']) ? $fieldData['options'] : [];
+                        $customOptions = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
                         $defaultPlaceholder = $fieldTypeDef['placeholder'] ?? '';
                         $defaultOptions = [];
                         if ($defaultPlaceholder !== '') {
-                            $defaultOptions = array_map('trim', explode(',', $defaultPlaceholder));
-                            $defaultOptions = array_filter($defaultOptions, function($opt) { return $opt !== ''; });
+                            $defaultOptions = array_values(array_filter(
+                                array_map('trim', explode(',', $defaultPlaceholder)),
+                                function($opt) { return $opt !== ''; }
+                            ));
                         }
+                        // Only save if custom options exist AND differ from defaults
                         if (!empty($customOptions) && $customOptions !== $defaultOptions) {
                             $editData['options'] = $customOptions;
                         }
