@@ -14665,6 +14665,9 @@ function makePosts(){
           : [],
         checkoutOptions: Array.isArray(CHECKOUT_OPTIONS)
           ? CHECKOUT_OPTIONS.map(opt => ({ ...opt }))
+          : [],
+        currencies: Array.isArray(window.currencies)
+          ? [...window.currencies]
           : []
       };
     }
