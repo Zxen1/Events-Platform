@@ -14694,6 +14694,12 @@ function makePosts(){
         CHECKOUT_OPTIONS.splice(0, CHECKOUT_OPTIONS.length, ...initialFormbuilderSnapshot.checkoutOptions);
         window.CHECKOUT_OPTIONS = CHECKOUT_OPTIONS;
       }
+
+      // Update currencies from snapshot
+      if(Array.isArray(normalized.currencies)){
+        initialFormbuilderSnapshot.currencies = [...normalized.currencies];
+        window.currencies = initialFormbuilderSnapshot.currencies;
+      }
       
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
