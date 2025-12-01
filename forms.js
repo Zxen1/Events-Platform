@@ -16,10 +16,10 @@
     // Check for required dependencies
     if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
       if(++initRetries < MAX_INIT_RETRIES){
-        console.warn("[Forms] Waiting for dependencies...");
+        console.warn("[Member] Waiting for dependencies...");
         setTimeout(init, 100);
       } else {
-        console.error("[Forms] Dependencies not available after timeout. Form features disabled.");
+        console.error("[Member] Dependencies not available after timeout. Form features disabled.");
       }
       return;
     }
@@ -918,7 +918,7 @@
             const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
             
             if(venueEditor && !isGeocoderElement){
-              console.log('[Forms] Click inside venue editor - preventing form close', { target: target.tagName, className: target.className });
+              console.log('[Member] Click inside venue editor - preventing form close', { target: target.tagName, className: target.className });
               e.stopPropagation();
               e.stopImmediatePropagation();
               return false;
@@ -932,7 +932,7 @@
             const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
             
             if(venueEditor && !isGeocoderElement){
-              console.log('[Forms] Pointerdown inside venue editor - preventing form close');
+              console.log('[Member] Pointerdown inside venue editor - preventing form close');
               e.stopPropagation();
               e.stopImmediatePropagation();
             }
@@ -1094,6 +1094,25 @@
       }
       
       const fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
+      
+      // Check if any field requires buildVenueSessionPreview (venue-ticketing type)
+      const needsVenueBuilder = fields.some(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing' || f.key === 'venue-ticketing'));
+      
+      // If venue builder needed but not available, wait for formbuilder to load it
+      if(needsVenueBuilder && typeof window.buildVenueSessionPreview !== 'function'){
+        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.ensureLoaded === 'function'){
+          window.formbuilderStateManager.ensureLoaded().then(() => {
+            // Re-render after formbuilder has loaded buildVenueSessionPreview
+            renderConfiguredFields();
+          }).catch(err => {
+            console.error('[Member] Failed to load venue builder:', err);
+          });
+        }
+        // Show loading state
+        formFields.innerHTML = '<p class="form-preview-loading">Loading form...</p>';
+        return;
+      }
+      
       fieldIdCounter = 0;
       formFields.innerHTML = '';
       currentCreateFields = [];
@@ -1692,7 +1711,7 @@
 
     function renderFormPicker(){
       if(!formpickerCats){
-        console.error('[Forms] renderFormPicker: formpickerCats element not found');
+        console.error('[Member] renderFormPicker: formpickerCats element not found');
         return;
       }
       // Removed excessive logging - only log errors
@@ -1713,11 +1732,11 @@
       
       // Get icon paths from snapshot (fetched from database)
       if(!memberSnapshot){
-        console.error('[Forms] memberSnapshot is null or undefined');
+        console.error('[Member] memberSnapshot is null or undefined');
         return;
       }
       if(typeof memberSnapshot.categoryIconPaths !== 'object' || typeof memberSnapshot.subcategoryIconPaths !== 'object'){
-        console.error('[Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths', {
+        console.error('[Member] memberSnapshot missing categoryIconPaths or subcategoryIconPaths', {
           hasCategoryIconPaths: typeof memberSnapshot.categoryIconPaths,
           hasSubcategoryIconPaths: typeof memberSnapshot.subcategoryIconPaths,
           snapshotKeys: Object.keys(memberSnapshot || {})
@@ -1838,7 +1857,7 @@
             try{
               normalizedPath = window.normalizeIconPath(normalizedPath) || normalizedPath;
             }catch(e){
-              console.warn('[Forms] Error normalizing icon path:', e);
+              console.warn('[Member] Error normalizing icon path:', e);
             }
           }
           if(normalizedPath){
@@ -1920,7 +1939,7 @@
                     try{
                       normalizedSubPath = window.normalizeIconPath(normalizedSubPath) || normalizedSubPath;
                     }catch(e){
-                      console.warn('[Forms] Error normalizing subcategory icon path:', e);
+                      console.warn('[Member] Error normalizing subcategory icon path:', e);
                     }
                   }
                   if(normalizedSubPath){
