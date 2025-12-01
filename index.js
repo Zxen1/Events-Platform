@@ -7696,7 +7696,7 @@ function makePosts(){
           delete safeField.location;
         }
         const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-        safeField.required = hasRequiredProp ? !!safeField.required : false;
+        safeField.required = hasRequiredProp ? !!safeField.required : true;
         if(!Array.isArray(safeField.options)){
           safeField.options = [];
         }

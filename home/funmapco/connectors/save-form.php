@@ -725,10 +725,9 @@ try {
 
             $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
 
-            // Build editable_field_types JSON for editable fields (dropdown/radio options, custom names)
-            // Also extract checkout_options_id separately for the dedicated column
+            // Build editable_field_types JSON for editable fields ONLY (text, text-area, dropdown, radio)
+            // This is completely separate from checkout options
             $editableFieldTypes = [];
-            $checkoutOptionsIds = [];
             
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
                 // Create a map of fieldTypeKey to field data for quick lookup
@@ -742,40 +741,17 @@ try {
                 
                 // Iterate through fieldTypeIds (CSV order) and match with fields
                 foreach ($fieldTypeIds as $csvIndex => $fieldTypeId) {
-                    // Find the field type definition
                     $fieldTypeDef = isset($fieldTypeDefinitions[$fieldTypeId]) ? $fieldTypeDefinitions[$fieldTypeId] : null;
                     if (!$fieldTypeDef) continue;
                     
                     $fieldTypeKey = $fieldTypeDef['key'] ?? null;
                     if (!$fieldTypeKey) continue;
                     
-                    // Check if this field type is editable
+                    // Only process editable field types (text, text-area, dropdown, radio)
                     $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
-                    $isCheckout = ($fieldTypeKey === 'checkout');
-                    
-                    // Find matching field data
-                    $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
-                    
-                    // Handle checkout field separately - save to checkout_options_id column
-                    if ($isCheckout && $fieldData) {
-                        if (isset($fieldData['checkoutOptions'])) {
-                            $opts = is_array($fieldData['checkoutOptions']) ? $fieldData['checkoutOptions'] : [];
-                            // Filter to valid numeric IDs only
-                            $validIds = [];
-                            foreach ($opts as $opt) {
-                                $id = is_numeric($opt) ? (int)$opt : null;
-                                if ($id !== null && $id > 0) {
-                                    $validIds[] = $id;
-                                }
-                            }
-                            if (!empty($validIds)) {
-                                $checkoutOptionsIds = array_values(array_unique($validIds));
-                            }
-                        }
-                        continue; // Don't add checkout to editable_field_types
-                    }
-                    
                     if (!$isEditable) continue;
+                    
+                    $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
                     if (!$fieldData) continue;
                     
                     $editData = [];
@@ -789,22 +765,40 @@ try {
                     // For dropdown/radio, save options if they differ from default placeholder
                     if (($fieldTypeKey === 'dropdown' || $fieldTypeKey === 'radio' || $fieldTypeKey === 'radio-toggle') && isset($fieldData['options'])) {
                         $customOptions = is_array($fieldData['options']) ? $fieldData['options'] : [];
-                        // Parse default placeholder to compare
                         $defaultPlaceholder = $fieldTypeDef['placeholder'] ?? '';
                         $defaultOptions = [];
                         if ($defaultPlaceholder !== '') {
                             $defaultOptions = array_map('trim', explode(',', $defaultPlaceholder));
                             $defaultOptions = array_filter($defaultOptions, function($opt) { return $opt !== ''; });
                         }
-                        // Only save if options differ from default
                         if (!empty($customOptions) && $customOptions !== $defaultOptions) {
                             $editData['options'] = $customOptions;
                         }
                     }
                     
-                    // Only add to JSON if there's something to save
                     if (!empty($editData)) {
                         $editableFieldTypes[(string)$csvIndex] = $editData;
+                    }
+                }
+            }
+            
+            // Extract checkout_options_id from checkout field
+            $checkoutOptionsIds = [];
+            if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
+                foreach ($sanitizedFields as $field) {
+                    $fieldKey = $field['fieldTypeKey'] ?? $field['key'] ?? null;
+                    if ($fieldKey === 'checkout' && isset($field['checkoutOptions']) && is_array($field['checkoutOptions'])) {
+                        $validIds = [];
+                        foreach ($field['checkoutOptions'] as $opt) {
+                            $id = is_numeric($opt) ? (int)$opt : null;
+                            if ($id !== null && $id > 0) {
+                                $validIds[] = $id;
+                            }
+                        }
+                        if (!empty($validIds)) {
+                            $checkoutOptionsIds = array_values(array_unique($validIds));
+                        }
+                        break; // Only one checkout field per subcategory
                     }
                 }
             }
