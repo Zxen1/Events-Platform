@@ -738,36 +738,7 @@
         applyMemberSnapshot(backendSnapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
-        // Removed excessive logging
         renderFormPicker();
-        
-        // Prevent form wrapper from closing when clicking inside venue fields
-        if(formWrapper){
-          formWrapper.addEventListener('click', (e)=>{
-            const target = e.target;
-            const venueEditor = target.closest('.venue-session-editor');
-            const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
-            const isDateInput = target.classList.contains('session-date-input') || target.closest('.session-date-input-wrapper');
-            
-            // Don't block date input clicks - they need to open datepicker
-            if(venueEditor && !isGeocoderElement && !isDateInput){
-              e.stopPropagation();
-            }
-          }, true);
-
-          // Also prevent other events that might close the form
-          formWrapper.addEventListener('pointerdown', (e)=>{
-            const target = e.target;
-            const venueEditor = target.closest('.venue-session-editor');
-            const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
-            const isDateInput = target.classList.contains('session-date-input') || target.closest('.session-date-input-wrapper');
-            
-            // Don't block date input clicks - they need to open datepicker
-            if(venueEditor && !isGeocoderElement && !isDateInput){
-              e.stopPropagation();
-            }
-          }, true);
-        }
       }catch(error){
         // NO FALLBACKS - show error, don't render with incorrect data
         console.error('Failed to load formbuilder snapshot for members:', error);
