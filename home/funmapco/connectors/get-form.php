@@ -102,7 +102,7 @@ try {
             
             // Get currency options from currency field
             $currencyField = array_filter($allFields, function($f) {
-                return isset($f['field_key']) && $f['field_key'] === 'currency' && $f['id'] === 13;
+                return isset($f['field_key']) && $f['field_key'] === 'currency' && (int)$f['id'] === 13;
             });
             if (!empty($currencyField)) {
                 $currencyField = reset($currencyField);
