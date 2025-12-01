@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Z-INDEX REFERENCE LIST
  * ======================
  * 
@@ -111,8 +111,8 @@
    2. Update baseUrl for default pill
    3. Update accentUrl for highlighted/clicked pill
    4. Update CSS dimensions below to match your image size:
-     - .small-map-card width/height (currently: 225px × 60px)
-     - .mapmarker-pill width/height (currently: 225px × 60px)
+     - .small-map-card width/height (currently: 225px Ã— 60px)
+     - .mapmarker-pill width/height (currently: 225px Ã— 60px)
    
    NOTE: The .mapmarker-pill CSS class is for positioning only - the actual image
    comes from Mapbox sprites. Changing CSS won't change the pill image itself.
@@ -1402,21 +1402,26 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar .weekday,
 #filterPanel .calendar .day,
 #tab-forms .session-date-picker .calendar .weekday,
-#tab-forms .session-date-picker .calendar .day{
+#tab-forms .session-date-picker .calendar .day,
+#memberPanel .member-create-fields .session-date-picker .calendar .weekday,
+#memberPanel .member-create-fields .session-date-picker .calendar .day{
   border-radius:0;
 }
 #filterPanel .calendar .day.range-start,
-#tab-forms .session-date-picker .calendar .day.range-start{
+#tab-forms .session-date-picker .calendar .day.range-start,
+#memberPanel .member-create-fields .session-date-picker .calendar .day.range-start{
   border-top-left-radius:8px;
   border-bottom-left-radius:8px;
 }
 #filterPanel .calendar .day.range-end,
-#tab-forms .session-date-picker .calendar .day.range-end{
+#tab-forms .session-date-picker .calendar .day.range-end,
+#memberPanel .member-create-fields .session-date-picker .calendar .day.range-end{
   border-top-right-radius:8px;
   border-bottom-right-radius:8px;
 }
 #filterPanel .calendar .day.range-start.range-end,
-#tab-forms .session-date-picker .calendar .day.range-start.range-end{
+#tab-forms .session-date-picker .calendar .day.range-start.range-end,
+#memberPanel .member-create-fields .session-date-picker .calendar .day.range-start.range-end{
   border-radius:8px;
 }
 .calendar .weekday{font-weight:bold;}
@@ -2071,36 +2076,10 @@ button[aria-expanded="true"] .results-arrow{
   text-align:right;
   font-size:14px;
 }
-#adminPanel .tab-bar{display:flex;gap:6px;}
-#adminPanel .tab-bar button{
-  flex:1;
-  padding:6px 10px;
-  border-radius:10px;
-  background:rgba(0,0,0,0.35);
-  border:1px solid rgba(255,255,255,0.18);
-  box-shadow:none;
-  color:var(--button-text);
-  cursor:pointer;
-  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-#adminPanel .tab-bar button:hover{
-  background:rgba(255,255,255,0.12);
-  border-color:rgba(255,255,255,0.28);
-}
-#adminPanel .tab-bar button:active{
-  transform:none;
-}
-#adminPanel .tab-bar button[aria-selected="true"]{
-  background:var(--btn-selected);
-  border-color:var(--btn-selected);
-  box-shadow:none;
-  color:var(--button-active-text);
-}
-#adminPanel .tab-bar button:focus-visible{
-  outline:2px solid rgba(255,255,255,0.85);
-  outline-offset:2px;
-}
-#memberPanel .tab-bar{display:flex;gap:6px;margin-top:8px;}
+#adminPanel .tab-bar,
+#memberPanel .tab-bar{display:flex;gap:6px;}
+#memberPanel .tab-bar{margin-top:8px;}
+#adminPanel .tab-bar .tab-btn,
 #memberPanel .tab-bar .tab-btn{
   flex:1;
   padding:6px 10px;
@@ -2112,19 +2091,23 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
   transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
+#adminPanel .tab-bar .tab-btn:hover,
 #memberPanel .tab-bar .tab-btn:hover{
   background:rgba(255,255,255,0.12);
   border-color:rgba(255,255,255,0.28);
 }
+#adminPanel .tab-bar .tab-btn:active,
 #memberPanel .tab-bar .tab-btn:active{
   transform:none;
 }
+#adminPanel .tab-bar .tab-btn[aria-selected="true"],
 #memberPanel .tab-bar .tab-btn[aria-selected="true"]{
   background:var(--btn-selected);
   border-color:var(--btn-selected);
   box-shadow:none;
   color:var(--button-active-text);
 }
+#adminPanel .tab-bar .tab-btn:focus-visible,
 #memberPanel .tab-bar .tab-btn:focus-visible{
   outline:2px solid rgba(255,255,255,0.85);
   outline-offset:2px;
@@ -2227,137 +2210,6 @@ button[aria-expanded="true"] .results-arrow{
 #memberPanel .member-create-actions .primary-action[disabled]{
   opacity:0.6;
   cursor:not-allowed;
-}
-#memberPanel .member-radio-group{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-#memberPanel .member-radio-option{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:14px;
-}
-#memberPanel .member-radio-option input{
-  width:auto;
-}
-#memberPanel .member-variant-pricing-list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-#memberPanel .member-variant-pricing-row{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 110px 110px auto;
-  gap:8px;
-  align-items:center;
-}
-#memberPanel .member-variant-pricing-row button{
-  padding:6px 8px;
-  border-radius:6px;
-  background:rgba(0,0,0,0.35);
-  border:1px solid var(--border);
-  color:var(--button-text);
-  cursor:pointer;
-}
-#memberPanel .member-variant-pricing-row button:hover{
-  background:var(--btn-hover, #2e3a72);
-  border-color:var(--btn-hover, #2e3a72);
-}
-#memberPanel .member-venue-session{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-#memberPanel .member-venue-card{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  background:rgba(0,0,0,0.25);
-}
-#memberPanel .member-venue-header{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-#memberPanel .member-session-list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-#memberPanel .member-session-card{
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  background:rgba(0,0,0,0.2);
-}
-#memberPanel .member-session-top{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-#memberPanel .member-time-list,
-#memberPanel .member-version-list,
-#memberPanel .member-tier-list{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-#memberPanel .member-time-card{
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  background:rgba(0,0,0,0.15);
-}
-#memberPanel .member-time-header{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-#memberPanel .member-version-card{
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  background:rgba(0,0,0,0.1);
-}
-#memberPanel .member-tier-row{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 110px 110px auto;
-  gap:8px;
-  align-items:center;
-}
-#memberPanel .member-venue-actions,
-#memberPanel .member-session-actions,
-#memberPanel .member-time-actions,
-#memberPanel .member-version-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-#memberPanel .member-create-secondary-btn{
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,0.35);
-  color:var(--button-text);
-  cursor:pointer;
-}
-#memberPanel .member-create-secondary-btn:hover{
-  background:var(--btn-hover, #2e3a72);
-  border-color:var(--btn-hover, #2e3a72);
 }
 #adminPanel .panel-field{margin:8px auto;}
 #adminPanel h3{margin:0;}
@@ -4281,8 +4133,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
    4. .ad-panel .ad-slide .info displays FOUR lines from post cards:
       - Title line (.title)
       - Category line (.cat-line) with subcategory icon
-      - Location line (.loc-line) with 📍 badge
-      - Date line (.date-line) with 📅 badge
+      - Location line (.loc-line) with ðŸ“ badge
+      - Date line (.date-line) with ðŸ“… badge
    
    These specifications ensure the ad panel displays edge-to-edge with
    complete event information matching the post card structure.
@@ -8075,6 +7927,12 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .session-date-row.has-open-session-picker{
               z-index:var(--forms-layer-overlay);
             }
+            /* Elevate entire venue ticketing field when geocoder active so suggestions appear above sibling fields */
+            #tab-forms .form-field--venues-sessions-pricing:has(.is-geocoder-active),
+            #memberPanel .member-create-fields .form-field--venues-sessions-pricing:has(.is-geocoder-active){
+              position:relative;
+              z-index:var(--forms-layer-popover);
+            }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
             #tab-forms .session-time-actions,
@@ -8413,7 +8271,8 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .tier-row .tier-price-row{
               width:100%;
             }
-            #tab-forms .session-date-picker{
+            #tab-forms .session-date-picker,
+            #memberPanel .member-create-fields .session-date-picker{
               background:#222222;
               position:absolute;
               top:auto;
@@ -8442,17 +8301,20 @@ html, body { cursor: auto !important; }
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
               z-index:var(--forms-layer-popover);
             }
-            #tab-forms .session-date-picker.is-visible{
+            #tab-forms .session-date-picker.is-visible,
+            #memberPanel .member-create-fields .session-date-picker.is-visible{
               opacity:1;
               visibility:visible;
               pointer-events:auto;
               transform:translateY(0);
             }
-            #tab-forms .session-date-picker-instructions{
+            #tab-forms .session-date-picker-instructions,
+            #memberPanel .member-create-fields .session-date-picker-instructions{
               margin:12px 16px 8px;
               color:#ffffff;
             }
-            #tab-forms .session-date-picker .calendar-scroll{
+            #tab-forms .session-date-picker .calendar-scroll,
+            #memberPanel .member-create-fields .session-date-picker .calendar-scroll{
               flex:1 1 auto;
               overflow-x:auto;
               overflow-y:hidden;
@@ -8464,7 +8326,8 @@ html, body { cursor: auto !important; }
               touch-action:pan-x pan-y;
               position:relative;
             }
-            #tab-forms .session-date-picker .calendar{
+            #tab-forms .session-date-picker .calendar,
+            #memberPanel .member-create-fields .session-date-picker .calendar{
               display:flex;
               width:max-content;
               transform:scale(var(--calendar-scale));
@@ -8472,7 +8335,8 @@ html, body { cursor: auto !important; }
               background:#222222;
               color:#ffffff;
             }
-            #tab-forms .session-date-picker .today-marker{
+            #tab-forms .session-date-picker .today-marker,
+            #memberPanel .member-create-fields .session-date-picker .today-marker{
               position:absolute;
               bottom:0;
               width:8px;
@@ -8481,14 +8345,16 @@ html, body { cursor: auto !important; }
               background:var(--today);
               cursor:pointer;
             }
-            #tab-forms .session-date-picker .calendar-actions{
+            #tab-forms .session-date-picker .calendar-actions,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions{
               display:flex;
               justify-content:flex-end;
               gap:8px;
               padding:10px;
               border-top:1px solid var(--border);
             }
-            #tab-forms .session-date-picker .calendar-actions button{
+            #tab-forms .session-date-picker .calendar-actions button,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions button{
               border-radius:8px;
               border:1px solid var(--btn);
               background:var(--btn);
@@ -8498,30 +8364,37 @@ html, body { cursor: auto !important; }
               transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
             }
             #tab-forms .session-date-picker .calendar-actions button:hover,
-            #tab-forms .session-date-picker .calendar-actions button:focus{
+            #tab-forms .session-date-picker .calendar-actions button:focus,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions button:hover,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions button:focus{
               background:var(--btn-hover);
               border-color:var(--btn-hover);
               color:var(--button-hover-text);
             }
-            #tab-forms .session-date-picker .calendar-actions button:active{
+            #tab-forms .session-date-picker .calendar-actions button:active,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions button:active{
               background:var(--btn-active);
               border-color:var(--btn-active);
               color:var(--button-active-text);
             }
-            #tab-forms .session-date-picker .calendar-actions .primary{
+            #tab-forms .session-date-picker .calendar-actions .primary,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary{
               background:var(--button-selected-bg, var(--btn-selected));
               border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
               color:var(--button-selected-text, var(--button-active-text));
               box-shadow:0 0 0 2px rgba(255,255,255,0.6);
             }
             #tab-forms .session-date-picker .calendar-actions .primary:hover,
-            #tab-forms .session-date-picker .calendar-actions .primary:focus{
+            #tab-forms .session-date-picker .calendar-actions .primary:focus,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:hover,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:focus{
               background:var(--button-selected-hover, var(--btn-selected-hover));
               border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
               color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
               box-shadow:0 0 0 2px rgba(255,255,255,0.8);
             }
-            #tab-forms .session-date-picker .calendar-actions .primary:active{
+            #tab-forms .session-date-picker .calendar-actions .primary:active,
+            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:active{
               background:var(--button-selected-active, var(--btn-selected-active));
               border-color:var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active)));
               color:var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
