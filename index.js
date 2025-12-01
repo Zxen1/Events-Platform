@@ -6538,6 +6538,10 @@ function makePosts(){
         evt.initEvent('change', true, true);
         formbuilderCats.dispatchEvent(evt);
       }
+      // Directly mark admin panel as dirty since formbuilder state isn't tracked via form inputs
+      if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+        window.adminPanelModule.markDirty();
+      }
     }
 
     function syncCategoriesFromDom(){
@@ -6947,7 +6951,6 @@ function makePosts(){
         }
         if(changed){
           fields.splice(0, fields.length, ...reordered);
-          console.log('[Field Reorder] Reordered to:', fields.map(f => f.key || f.fieldTypeKey || f.name).join(' → '));
           notifyFormbuilderChange();
           const state = fieldContainerState.get(container);
           if(state && typeof state.onFieldsReordered === 'function'){
@@ -13420,7 +13423,6 @@ function makePosts(){
               if(showCheckout){
                 renderCheckoutOptionsEditor();
               }
-              // Button always says "Delete Field" - no need to update text
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){
@@ -13589,17 +13591,6 @@ function makePosts(){
             deleteFieldRow.append(actionFieldBtn);
 
             editMenu.append(saveFieldRow, deleteFieldRow);
-            
-            // Update button text now that actionFieldBtn is created
-            // This ensures the button shows "Add Field" for new fields without a type
-            try {
-              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              const hasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
-              actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
-              actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
-            } catch(e) {
-              // Button not ready yet, will be updated by updateFieldEditorsByType
-            }
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -13837,16 +13828,6 @@ function makePosts(){
           });
 
           addFieldBtn.addEventListener('click', async ()=>{
-            const subDisplayName = getSubDisplayName();
-          const confirmed = await confirmFormbuilderAction({
-            titleText: 'Add Field',
-            messageKey: 'msg_confirm_add_field',
-            placeholders: { subcategory: subDisplayName },
-              confirmLabel: 'Add Field',
-              confirmClassName: 'formbuilder-confirm-primary',
-              focusCancel: false
-            });
-            if(!confirmed) return;
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
@@ -22754,18 +22735,6 @@ form.addEventListener('input', formChangedWrapper, true);
     }
 
     // Only save form data if there's actual form data (not just empty object)
-    // Debug: log field order before saving
-    if(payload && payload.categories){
-      payload.categories.forEach(cat => {
-        if(cat.subFields){
-          Object.entries(cat.subFields).forEach(([subName, fields]) => {
-            if(Array.isArray(fields) && fields.length > 0){
-              console.log(`[SAVE] ${cat.name} > ${subName}: ${fields.map(f => f.fieldTypeKey || f.key || f.name || '?').join(' → ')}`);
-            }
-          });
-        }
-      });
-    }
     let response;
     try {
       // Only send form data if there's something to save
