@@ -4839,8 +4839,7 @@ body.filters-active #filterBtn{
 .options-dropdown > button,
 .options-dropdown .form-select,
 .options-dropdown .variant-pricing-currency,
-.options-dropdown .field-type-select,
-.options-dropdown .session-currency-select{ text-align:left; }
+.options-dropdown .field-type-select{ text-align:left; }
 .options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; right:0; width:100%; min-width:100%; max-width:100%; box-sizing:border-box; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
@@ -8160,15 +8159,6 @@ html, body { cursor: auto !important; }
             #tab-forms .session-time-row.has-same-pricing,
             #memberPanel .member-create-fields .session-time-row.has-same-pricing{
               padding-bottom:0;
-            }
-            #tab-forms .session-currency-select,
-            #memberPanel .member-create-fields .session-currency-select{
-              height:36px;
-              border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--input-text);
-              padding:0 30px 0 10px;
             }
             #tab-forms .venue-line > *:first-child,
             #tab-forms .session-date-row > *:first-child,

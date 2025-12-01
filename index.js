@@ -12192,7 +12192,7 @@ function makePosts(){
                           currencyWrapper.className = 'options-dropdown';
                           const currencyMenuBtn = document.createElement('button');
                           currencyMenuBtn.type = 'button';
-                          currencyMenuBtn.className = 'session-currency-select';
+                          currencyMenuBtn.className = 'variant-pricing-currency';
                           currencyMenuBtn.setAttribute('aria-haspopup', 'true');
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
                           const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
