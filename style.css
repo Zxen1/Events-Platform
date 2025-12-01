@@ -8507,6 +8507,9 @@ html, body { cursor: auto !important; }
               gap:6px;
               margin-top:8px;
             }
+            #tab-forms .field-name-editor[hidden]{
+              display:none;
+            }
             #tab-forms .field-name-label{
               font-size:14px;
               font-weight:600;

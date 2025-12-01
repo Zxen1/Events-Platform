@@ -2977,6 +2977,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(typeof source.type === 'string' && source.type){
             option.type = source.type;
           }
+          if(typeof source.formbuilder_editable === 'boolean'){
+            option.formbuilder_editable = source.formbuilder_editable;
+          }
+          if(typeof source.sort_order !== 'undefined'){
+            option.sort_order = source.sort_order;
+          }
         }
         normalized.push(option);
         seen.add(dedupeKey);
@@ -13486,14 +13492,16 @@ function makePosts(){
 
 
             // Wire up name input for editable fields - only update on blur, not on every keystroke
-            // Don't call notifyFormbuilderChange() here as it triggers member form refresh
-            // The formbuilder will be marked dirty when the form is saved
+            // Call markDirty() directly (not notifyFormbuilderChange) to avoid member form refresh
+            // while still enabling the save button
             fieldNameInput.addEventListener('blur', ()=>{
               const newName = fieldNameInput.value.trim();
               if(safeField.name !== newName){
                 safeField.name = newName;
-                // Only update preview and summary, don't trigger formbuilder change event
-                // which causes member forms to refresh
+                // Mark form dirty so save button is enabled
+                if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+                  window.adminPanelModule.markDirty();
+                }
                 renderForm({
                   formFields: formPreviewFields,
                   formId: formPreviewId,

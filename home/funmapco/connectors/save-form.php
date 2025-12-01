@@ -747,9 +747,9 @@ try {
                     $fieldTypeKey = $fieldTypeDef['key'] ?? null;
                     if (!$fieldTypeKey) continue;
                     
-                    // Only process these four editable field types - no others
-                    $allowedEditableTypes = ['text-box', 'text-area', 'dropdown', 'radio'];
-                    if (!in_array($fieldTypeKey, $allowedEditableTypes, true)) continue;
+                    // Only process field types marked as editable in the database
+                    $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
+                    if (!$isEditable) continue;
                     
                     $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
                     if (!$fieldData) continue;
@@ -762,8 +762,8 @@ try {
                         $editData['name'] = $customName;
                     }
                     
-                    // For dropdown/radio, save options ONLY if they differ from default placeholder
-                    if (($fieldTypeKey === 'dropdown' || $fieldTypeKey === 'radio' || $fieldTypeKey === 'radio-toggle') && isset($fieldData['options'])) {
+                    // For dropdown/radio types, save options ONLY if they differ from default placeholder
+                    if (isset($fieldData['options'])) {
                         $customOptions = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
                         $defaultPlaceholder = $fieldTypeDef['placeholder'] ?? '';
                         $defaultOptions = [];
@@ -1362,6 +1362,7 @@ function sanitizeField(array $field): array
         'text-box',
         'text-area',
         'dropdown',
+        'radio',
         'radio-toggle',
         'email',
         'phone',
@@ -1404,6 +1405,7 @@ function sanitizeField(array $field): array
             $safe['options'] = sanitizeVariantPricingOptions($options);
             break;
         case 'dropdown':
+        case 'radio':
         case 'radio-toggle':
             $safe['options'] = sanitizeOptionList($options);
             break;
@@ -1928,6 +1930,10 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
         if ($hasFormbuilderEditable) {
             $select[] = 'formbuilder_editable';
         }
+        $hasPlaceholder = in_array('placeholder', $columns, true);
+        if ($hasPlaceholder) {
+            $select[] = 'placeholder';
+        }
 
         $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
             return '`' . str_replace('`', '``', $col) . '`';
@@ -1949,6 +1955,9 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
             ];
             if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
                 $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
+            }
+            if ($hasPlaceholder && isset($row['placeholder'])) {
+                $entry['placeholder'] = trim((string) $row['placeholder']);
             }
             $map[$id] = $entry;
         }
