@@ -4839,7 +4839,8 @@ body.hide-ads .ad-board{
 .form-image-remove span{
   pointer-events:none;
 }
-#tab-forms .form-image-thumb img{
+#tab-forms .form-image-thumb img,
+#memberPanel .member-create-fields .form-image-thumb img{
   position:absolute;
   inset:0;
   width:100%;

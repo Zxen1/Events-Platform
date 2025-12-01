@@ -16,10 +16,10 @@
     // Check for required dependencies
     if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
       if(++initRetries < MAX_INIT_RETRIES){
-        console.warn("Member forms: Waiting for dependencies...");
+        console.warn("[Forms] Waiting for dependencies...");
         setTimeout(init, 100);
       } else {
-        console.error("Member forms: Dependencies not available after timeout. Form features disabled.");
+        console.error("[Forms] Dependencies not available after timeout. Form features disabled.");
       }
       return;
     }
@@ -454,7 +454,9 @@
       currencyCodes = collectCurrencyCodes(memberSnapshot);
       // Set window.currencyCodes for use in other parts of the application
       window.currencyCodes = currencyCodes;
-      if(options.populate !== false){
+      // Only re-render form picker if not preserving selection AND populate is not false
+      // This prevents resetting the form when admin makes formbuilder changes while user is editing
+      if(options.populate !== false && !options.preserveSelection){
         renderFormPicker();
       }
     }
@@ -657,20 +659,39 @@
       return fields.map(sanitizeCreateField);
     }
 
+    // Track last renderEmptyState call to prevent rapid-fire loop
+    let lastRenderEmptyStateTime = 0;
+    let renderEmptyStatePending = false;
+    
     function renderEmptyState(message){
-      // Don't hide form wrapper if user is interacting with venue fields
-      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
-      const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
-      // Never close the form if there's an active venue editor or if venue editor exists (regardless of message)
-      // This prevents closing when user is working with venue ticketing fields
-      if(activeVenueEditor || hasVenueEditor){
-        // User is interacting with venue field, don't close the form
-        console.log('[Member Forms] renderEmptyState: Skipping form close - venue editor active', { activeVenueEditor: !!activeVenueEditor, hasVenueEditor: !!hasVenueEditor, message });
+      // Throttle: prevent calling more than once per 500ms to avoid infinite loops
+      const now = Date.now();
+      if(now - lastRenderEmptyStateTime < 500){
+        if(!renderEmptyStatePending){
+          renderEmptyStatePending = true;
+          setTimeout(()=>{
+            renderEmptyStatePending = false;
+            renderEmptyState(message);
+          }, 500 - (now - lastRenderEmptyStateTime));
+        }
         return;
       }
-      console.log('[Member Forms] renderEmptyState: Closing form', { message });
+      lastRenderEmptyStateTime = now;
       
-      // Remove empty placeholder usage; we no longer show the empty state text
+      // Only protect from closing if user is ACTIVELY typing in venue field
+      // AND a valid subcategory is selected (prevents form showing without selection)
+      const activeVenueEditor = document.activeElement && document.activeElement.closest('.venue-session-editor');
+      const isActivelyTypingInVenue = activeVenueEditor && (
+        document.activeElement.tagName === 'INPUT' || 
+        document.activeElement.tagName === 'TEXTAREA'
+      );
+      
+      // Only block if: actively typing in venue field AND subcategory is selected
+      if(isActivelyTypingInVenue && selectedSubcategory){
+        return;
+      }
+      
+      // Hide form and related controls
       if(formWrapper) formWrapper.hidden = true;
       if(postButton){ postButton.disabled = true; postButton.hidden = true; postButton.style.display = 'none'; }
       if(postActions){ postActions.hidden = true; postActions.style.display = 'none'; }
@@ -897,7 +918,7 @@
             const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
             
             if(venueEditor && !isGeocoderElement){
-              console.log('[Member Forms] Click inside venue editor - preventing form close', { target: target.tagName, className: target.className });
+              console.log('[Forms] Click inside venue editor - preventing form close', { target: target.tagName, className: target.className });
               e.stopPropagation();
               e.stopImmediatePropagation();
               return false;
@@ -911,7 +932,7 @@
             const isGeocoderElement = target.closest('.mapboxgl-ctrl-geocoder');
             
             if(venueEditor && !isGeocoderElement){
-              console.log('[Member Forms] Pointerdown inside venue editor - preventing form close');
+              console.log('[Forms] Pointerdown inside venue editor - preventing form close');
               e.stopPropagation();
               e.stopImmediatePropagation();
             }
@@ -1028,7 +1049,25 @@
       postButton.disabled = !ready;
     }
 
+    // Track last renderConfiguredFields call to prevent rapid-fire loop
+    let lastRenderConfiguredFieldsTime = 0;
+    let renderConfiguredFieldsPending = false;
+    
 		function renderConfiguredFields(){
+      // Throttle: prevent calling more than once per 300ms to avoid infinite loops
+      const now = Date.now();
+      if(now - lastRenderConfiguredFieldsTime < 300){
+        if(!renderConfiguredFieldsPending){
+          renderConfiguredFieldsPending = true;
+          setTimeout(()=>{
+            renderConfiguredFieldsPending = false;
+            renderConfiguredFields();
+          }, 300 - (now - lastRenderConfiguredFieldsTime));
+        }
+        return;
+      }
+      lastRenderConfiguredFieldsTime = now;
+      
       // Only block if user is ACTIVELY typing in venue editor (not just if it exists)
       // This allows subcategory changes to work even when venue editor is present
       const activeElement = document.activeElement;
@@ -1040,7 +1079,6 @@
       
       // Only block if actively typing - allow subcategory changes
       if(isActivelyTyping){
-        console.log('[Member Forms] renderConfiguredFields: Blocked - user actively typing in venue editor');
         return;
       }
       
@@ -1052,12 +1090,6 @@
         if(postButton) postButton.disabled = true;
         if(postButton) postButton.hidden = true;
         if(postActions) postActions.hidden = true;
-        return;
-      }
-      // Don't clear form if user is actively typing in venue editor
-      // But allow re-render for subcategory changes
-      if(isActivelyTyping){
-        console.log('[Member Forms] renderConfiguredFields: Skipping re-render - user actively typing');
         return;
       }
       
@@ -1256,104 +1288,9 @@
     }
     window.ensureFieldDefaultsForMember = ensureFieldDefaultsForMember;
     
-    function handleImagePreview(fileInput){
-      if(!fileInput || fileInput.type !== 'file') return;
-      const previewTargetId = fileInput.dataset.imagePreviewTarget;
-      const messageTargetId = fileInput.dataset.imageMessageTarget;
-      if(!previewTargetId) return;
-      
-      const previewGrid = document.getElementById(previewTargetId);
-      const messageEl = messageTargetId ? document.getElementById(messageTargetId) : null;
-      if(!previewGrid) return;
-      
-      const maxImages = parseInt(fileInput.dataset.maxImages || '10', 10);
-      const maxFileSizeBytes = (() => {
-        const custom = parseInt(fileInput.dataset.maxBytes || '0', 10);
-        return Number.isFinite(custom) && custom > 0 ? custom : 10 * 1024 * 1024;
-      })();
-      const allowedMimePrefixes = ['image/'];
-      const allowedExtensions = ['jpg','jpeg','png','gif','webp','bmp'];
-      const fileMap = new WeakMap();
-      
-      fileInput.addEventListener('change', function(event){
-        const files = Array.from(event.target.files || []);
-        if(files.length === 0) return;
-        
-        const existingPreviews = previewGrid.querySelectorAll('.form-preview-image-thumb').length;
-        const remainingSlots = maxImages - existingPreviews;
-        
-        if(files.length > remainingSlots){
-          if(messageEl){
-            messageEl.textContent = `You can only upload ${maxImages} images total.`;
-            messageEl.hidden = false;
-          }
-          return;
-        }
-        
-        if(messageEl){
-          messageEl.hidden = true;
-        }
-        
-        files.forEach(file => {
-          const name = typeof file.name === 'string' ? file.name.toLowerCase() : '';
-          const ext = name.includes('.') ? name.split('.').pop() : '';
-          const hasAllowedMime = allowedMimePrefixes.some(prefix => (file.type || '').startsWith(prefix));
-          const hasAllowedExt = allowedExtensions.includes(ext);
-          if(!(hasAllowedMime && hasAllowedExt)){
-            if(messageEl){
-              messageEl.textContent = 'Only image files are allowed (jpg, jpeg, png, gif, webp, bmp).';
-              messageEl.hidden = false;
-            }
-            return;
-          }
-          if(typeof file.size === 'number' && file.size > maxFileSizeBytes){
-            if(messageEl){
-              const mb = (maxFileSizeBytes / (1024 * 1024)).toFixed(1);
-              messageEl.textContent = `Each image must be ≤ ${mb} MB.`;
-              messageEl.hidden = false;
-            }
-            return;
-          }
-          
-          const reader = new FileReader();
-          reader.onload = function(e){
-            const thumb = document.createElement('div');
-            thumb.className = 'form-preview-image-thumb';
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.alt = file.name;
-            fileMap.set(thumb, file);
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'form-preview-image-remove';
-            removeBtn.setAttribute('aria-label', `Remove ${file.name}`);
-            removeBtn.innerHTML = '<span>├ù</span>';
-            removeBtn.addEventListener('click', function(){
-              const fileToRemove = fileMap.get(thumb);
-              thumb.remove();
-              if(fileToRemove){
-                const dataTransfer = new DataTransfer();
-                Array.from(fileInput.files).forEach(f => {
-                  if(f !== fileToRemove){
-                    dataTransfer.items.add(f);
-                  }
-                });
-                fileInput.files = dataTransfer.files;
-              }
-              // Re-validate submit state after removal
-              try{ updatePostButtonState(); }catch(_e){}
-            });
-            thumb.appendChild(img);
-            thumb.appendChild(removeBtn);
-            previewGrid.appendChild(thumb);
-          };
-          reader.readAsDataURL(file);
-        });
-        // Re-validate submit state after selecting files
-        try{ updatePostButtonState(); }catch(_e){}
-      });
-    }
-    
+    // Image preview handling is done by global handler in index.js
+    // via MutationObserver watching for input[data-images-field]
+    // No duplicate code needed here - single source of truth
 
     async function handleMemberCreatePost(event){
       if(event && typeof event.preventDefault === 'function'){
@@ -1755,7 +1692,7 @@
 
     function renderFormPicker(){
       if(!formpickerCats){
-        console.error('[Member Forms] renderFormPicker: formpickerCats element not found');
+        console.error('[Forms] renderFormPicker: formpickerCats element not found');
         return;
       }
       // Removed excessive logging - only log errors
@@ -1776,11 +1713,11 @@
       
       // Get icon paths from snapshot (fetched from database)
       if(!memberSnapshot){
-        console.error('[Member Forms] memberSnapshot is null or undefined');
+        console.error('[Forms] memberSnapshot is null or undefined');
         return;
       }
       if(typeof memberSnapshot.categoryIconPaths !== 'object' || typeof memberSnapshot.subcategoryIconPaths !== 'object'){
-        console.error('[Member Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths', {
+        console.error('[Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths', {
           hasCategoryIconPaths: typeof memberSnapshot.categoryIconPaths,
           hasSubcategoryIconPaths: typeof memberSnapshot.subcategoryIconPaths,
           snapshotKeys: Object.keys(memberSnapshot || {})
@@ -1901,7 +1838,7 @@
             try{
               normalizedPath = window.normalizeIconPath(normalizedPath) || normalizedPath;
             }catch(e){
-              console.warn('[Member Forms] Error normalizing icon path:', e);
+              console.warn('[Forms] Error normalizing icon path:', e);
             }
           }
           if(normalizedPath){
@@ -1983,7 +1920,7 @@
                     try{
                       normalizedSubPath = window.normalizeIconPath(normalizedSubPath) || normalizedSubPath;
                     }catch(e){
-                      console.warn('[Member Forms] Error normalizing subcategory icon path:', e);
+                      console.warn('[Forms] Error normalizing subcategory icon path:', e);
                     }
                   }
                   if(normalizedSubPath){

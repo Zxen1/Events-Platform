@@ -4323,7 +4323,7 @@ function uniqueTitle(seed, cityName, idx){
       }
     };
   }
-  // Expose for member-forms.js usage
+  // Expose for forms.js usage
   if(typeof window !== 'undefined'){
     window.cloneGeocoderFeature = cloneGeocoderFeature;
   }
@@ -4419,7 +4419,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   const localVenueGeocoder = (query) => searchLocalVenues(query);
-  // Expose to window for member-forms.js access
+  // Expose to window for forms.js access
   if(typeof window !== 'undefined'){
     window.searchLocalVenues = searchLocalVenues;
     window.localVenueGeocoder = localVenueGeocoder;
@@ -4468,7 +4468,7 @@ function uniqueTitle(seed, cityName, idx){
     }
     return null;
   }
-  // Expose for member-forms.js usage
+  // Expose for forms.js usage
   if(typeof window !== 'undefined'){
     window.getMapboxVenueFeatureCenter = getMapboxVenueFeatureCenter;
   }
@@ -23849,7 +23849,7 @@ document.addEventListener('pointerdown', (e) => {
   const adminPaypalClientId = document.getElementById('adminPaypalClientId');
   const adminPaypalClientSecret = document.getElementById('adminPaypalClientSecret');
 
-  // Member form code has been moved to member-forms.js
+  // Form code has been moved to forms.js
   // The member form initialization is now handled in that separate file
 
   const colorAreas = [
