@@ -8778,10 +8778,21 @@ html, body { cursor: auto !important; }
               border-radius:0;
             }
             /* Venue-ticketing currency dropdown - match variant-pricing style */
+            #tab-forms .tier-price-row .options-dropdown,
+            #memberPanel .member-create-fields .tier-price-row .options-dropdown{
+              position:relative;
+              overflow:visible;
+            }
             #tab-forms .tier-price-row .variant-pricing-currency,
             #memberPanel .member-create-fields .tier-price-row .variant-pricing-currency{
               position:relative;
               padding-right:30px;
+              width:100%;
+              max-width:100%;
+              min-width:0;
+              overflow:hidden;
+              box-sizing:border-box;
+              display:block;
             }
             #tab-forms .tier-price-row .options-menu,
             #memberPanel .member-create-fields .tier-price-row .options-menu{
@@ -8789,8 +8800,10 @@ html, body { cursor: auto !important; }
               top:calc(100% + 4px);
               bottom:auto;
               left:0;
-              width:auto;
-              min-width:110px;
+              right:0;
+              width:100%;
+              min-width:100%;
+              max-width:100%;
               box-sizing:border-box;
               z-index:var(--layer-menu);
               margin:0;
