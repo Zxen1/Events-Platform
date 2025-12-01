@@ -12840,6 +12840,17 @@ function makePosts(){
                   btn.setAttribute('aria-pressed', btn === optionBtn ? 'true' : 'false');
                 });
                 
+                // If no valid type selected, auto-delete the field immediately
+                if(!nextValidType || nextValidType === '' || nextValidType === 'text'){
+                  const handler = typeof safeField.__handleDeleteField === 'function' 
+                    ? safeField.__handleDeleteField 
+                    : null;
+                  if(typeof handler === 'function'){
+                    handler();
+                  }
+                  return; // Don't continue - field is deleted
+                }
+                
                 notifyFormbuilderChange();
                 updateFieldEditorsByType();
                 renderForm({
@@ -12863,6 +12874,17 @@ function makePosts(){
               if(open){
                 fieldTypeMenu.hidden = true;
                 fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+                
+                // If dropdown closes without a type selected, delete the field
+                const currentType = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+                if(!currentType || currentType === '' || currentType === 'text'){
+                  const handler = typeof safeField.__handleDeleteField === 'function' 
+                    ? safeField.__handleDeleteField 
+                    : null;
+                  if(typeof handler === 'function'){
+                    handler();
+                  }
+                }
               } else {
                 fieldTypeMenu.hidden = false;
                 fieldTypeMenuBtn.setAttribute('aria-expanded', 'true');
@@ -12872,6 +12894,17 @@ function makePosts(){
                     fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
                     document.removeEventListener('click', outsideHandler);
                     document.removeEventListener('pointerdown', outsideHandler);
+                    
+                    // If dropdown closes without a type selected, delete the field
+                    const currentType = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+                    if(!currentType || currentType === '' || currentType === 'text'){
+                      const handler = typeof safeField.__handleDeleteField === 'function' 
+                        ? safeField.__handleDeleteField 
+                        : null;
+                      if(typeof handler === 'function'){
+                        handler();
+                      }
+                    }
                   }
                 };
                 setTimeout(() => {
@@ -13386,13 +13419,7 @@ function makePosts(){
               if(showCheckout){
                 renderCheckoutOptionsEditor();
               }
-              // Update action button text based on whether field type is selected
-              if(actionFieldBtn){
-                // Only show "Delete Field" if field has a real type selected (not empty, not 'text')
-                const hasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
-                actionFieldBtn.textContent = hasFieldType ? 'Delete Field' : 'Add Field';
-                actionFieldBtn.setAttribute('aria-label', hasFieldType ? 'Delete field' : 'Add field');
-              }
+              // Button always says "Delete Field" - no need to update text
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){
@@ -13538,34 +13565,22 @@ function makePosts(){
             actionFieldBtn = document.createElement('button');
             actionFieldBtn.type = 'button';
             actionFieldBtn.className = 'delete-category-btn delete-field-btn';
-            // Button text will be updated by updateFieldEditorsByType after button is created
-            actionFieldBtn.textContent = 'Delete Field'; // Default, will be updated
+            actionFieldBtn.textContent = 'Delete Field';
             actionFieldBtn.setAttribute('aria-label', 'Delete field');
             actionFieldBtn.addEventListener('click', async event=>{
               event.preventDefault();
               event.stopPropagation();
               
-              // Check dynamically if field has a type
-              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              const currentHasFieldType = fieldTypeKey && fieldTypeKey !== '' && fieldTypeKey !== 'text';
-              
-              if(currentHasFieldType){
-                // Existing field - delete it
-                const handler = deleteHandler || (typeof safeField.__handleDeleteField === 'function'
-                  ? safeField.__handleDeleteField
-                  : null);
-                if(typeof handler === 'function'){
-                  try{
-                    await handler();
-                  }catch(err){
-                    console.error('Error deleting field:', err);
-                  }
-                } else {
-                  console.warn('No delete handler found for field');
+              // Always delete - if field has no type, it will be auto-deleted anyway
+              const handler = deleteHandler || (typeof safeField.__handleDeleteField === 'function'
+                ? safeField.__handleDeleteField
+                : null);
+              if(typeof handler === 'function'){
+                try{
+                  await handler();
+                }catch(err){
+                  console.error('Error deleting field:', err);
                 }
-              } else {
-                // New field without type - just close the panel (field will auto-delete on close)
-                closeEditPanel();
               }
             });
             const deleteFieldRow = document.createElement('div');
