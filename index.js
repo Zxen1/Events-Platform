@@ -3302,7 +3302,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     let LAST_SELECTED_VENUE_CURRENCY = '';
 
     function venueSessionCreateTier(){
-      return { name: '', currencies: '', price: '' };
+      return { name: '', currency: '', price: '' };
     }
     function venueSessionCreateVersion(){
       return { name: '', tiers: [venueSessionCreateTier()] };
@@ -3592,7 +3592,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           checkout_title: typeof opt.checkout_title === 'string' ? opt.checkout_title : '',
           checkout_description: typeof opt.checkout_description === 'string' ? opt.checkout_description : '',
           checkout_price: typeof opt.checkout_price === 'number' ? opt.checkout_price : parseFloat(opt.checkout_price) || 0,
-          checkout_currencies: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
+          checkout_currency: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
           checkout_duration_days: typeof opt.checkout_duration_days === 'number' ? opt.checkout_duration_days : parseInt(opt.checkout_duration_days, 10) || 30,
           checkout_tier: typeof opt.checkout_tier === 'string' ? opt.checkout_tier : 'standard',
           checkout_sidebar_ad: !!opt.checkout_sidebar_ad
@@ -7710,15 +7710,15 @@ function makePosts(){
             if(opt && typeof opt === 'object'){
               return {
                 version: typeof opt.version === 'string' ? opt.version : '',
-                currencies: typeof opt.currency === 'string' ? opt.currency : '',
+                currency: typeof opt.currency === 'string' ? opt.currency : '',
                 price: typeof opt.price === 'string' ? opt.price : ''
               };
             }
             const str = typeof opt === 'string' ? opt : String(opt ?? '');
-            return { version: str, currencies: '', price: '' };
+            return { version: str, currency: '', price: '' };
           });
           if(safeField.options.length === 0){
-            safeField.options.push({ version: '', currencies: '', price: '' });
+            safeField.options.push({ version: '', currency: '', price: '' });
           }
         } else {
           safeField.options = safeField.options.map(opt => {
@@ -7976,7 +7976,7 @@ function makePosts(){
           versionList.className = 'variant-pricing-options-list';
           editor.appendChild(versionList);
 
-          const createEmptyOption = ()=>({ version: '', currencies: '', price: '' });
+          const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
 
           const normalizeOptions = ()=>{
             if(!Array.isArray(field.options)){
@@ -7986,12 +7986,12 @@ function makePosts(){
               if(opt && typeof opt === 'object'){
                 return {
                   version: typeof opt.version === 'string' ? opt.version : '',
-                  currencies: typeof opt.currency === 'string' ? opt.currency : '',
+                  currency: typeof opt.currency === 'string' ? opt.currency : '',
                   price: typeof opt.price === 'string' ? opt.price : ''
                 };
               }
               const str = typeof opt === 'string' ? opt : String(opt ?? '');
-              return { version: str, currencies: '', price: '' };
+              return { version: str, currency: '', price: '' };
             });
             if(field.options.length === 0){
               field.options.push(createEmptyOption());
@@ -9944,7 +9944,7 @@ function makePosts(){
             const ensureVenueCurrencyState = venue => {
               let state = VENUE_CURRENCY_STATE.get(venue);
               if(!state){
-                state = { currencies: '' };
+                state = { currency: '' };
                 VENUE_CURRENCY_STATE.set(venue, state);
               }
               if(typeof state.currency !== 'string'){
@@ -13430,19 +13430,19 @@ function makePosts(){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
-                  safeField.options = [{ version: '', currencies: '', price: '' }];
+                  safeField.options = [{ version: '', currency: '', price: '' }];
                   notifyFormbuilderChange();
                 } else {
                   safeField.options = safeField.options.map(opt => {
                     if(opt && typeof opt === 'object'){
                       return {
                         version: typeof opt.version === 'string' ? opt.version : '',
-                        currencies: typeof opt.currency === 'string' ? opt.currency : '',
+                        currency: typeof opt.currency === 'string' ? opt.currency : '',
                         price: typeof opt.price === 'string' ? opt.price : ''
                       };
                     }
                     const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                    return { version: str, currencies: '', price: '' };
+                    return { version: str, currency: '', price: '' };
                   });
                 }
               }
@@ -14578,12 +14578,12 @@ function makePosts(){
                       if(opt && typeof opt === 'object'){
                         return {
                           version: typeof opt.version === 'string' ? opt.version : '',
-                          currencies: typeof opt.currency === 'string' ? opt.currency : '',
+                          currency: typeof opt.currency === 'string' ? opt.currency : '',
                           price: typeof opt.price === 'string' ? opt.price : ''
                         };
                       }
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                      return { version: str, currencies: '', price: '' };
+                      return { version: str, currency: '', price: '' };
                     }
                     if(field && field.type === 'venue-ticketing'){
                       return cloneVenueSessionVenue(opt);
