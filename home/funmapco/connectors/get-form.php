@@ -492,6 +492,9 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     if ($hasPlaceholder) {
         $selectColumns[] = '`placeholder`';
     }
+    if ($hasFormbuilderEditable) {
+        $selectColumns[] = '`formbuilder_editable`';
+    }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
         $orderBy = ' ORDER BY `sort_order` ASC';
