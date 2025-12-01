@@ -896,20 +896,14 @@
       
       const fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
       
-      // Check if any field requires buildVenueSessionPreview (venue-ticketing type)
-      const needsVenueBuilder = fields.some(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing' || f.key === 'venue-ticketing'));
-      
-      // If venue builder needed but not available, wait for formbuilder to load it
-      if(needsVenueBuilder && typeof window.buildVenueSessionPreview !== 'function'){
-        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.ensureLoaded === 'function'){
-          window.formbuilderStateManager.ensureLoaded().then(() => {
-            // Re-render after formbuilder has loaded buildVenueSessionPreview
-            renderConfiguredFields();
-          }).catch(err => {
-            console.error('[Member] Failed to load venue builder:', err);
-          });
-        }
-        // Show loading state
+      // Ensure formbuilder data is loaded before rendering any form
+      // This covers all field types that may depend on global data (checkout options, venue builder, etc.)
+      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.ensureLoaded === 'function' && !window.formbuilderStateManager._loaded){
+        window.formbuilderStateManager.ensureLoaded().then(() => {
+          renderConfiguredFields();
+        }).catch(err => {
+          console.error('[Forms] Failed to load formbuilder data:', err);
+        });
         formFields.innerHTML = '<p class="form-preview-loading">Loading form...</p>';
         return;
       }

@@ -14662,6 +14662,9 @@ function makePosts(){
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         fieldTypes: Array.isArray(FORM_FIELD_TYPES)
           ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+          : [],
+        checkoutOptions: Array.isArray(CHECKOUT_OPTIONS)
+          ? CHECKOUT_OPTIONS.map(opt => ({ ...opt }))
           : []
       };
     }
@@ -22726,11 +22729,17 @@ form.addEventListener('input', formChangedWrapper, true);
     
     // Collect form data (separate from messages and settings)
     let payload = null;
-    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
-      try {
-        payload = window.formbuilderStateManager.capture();
-      } catch (err) {
-        console.error('formbuilderStateManager.capture failed', err);
+    if(window.formbuilderStateManager){
+      // Ensure formbuilder data is loaded before capturing
+      if(!window.formbuilderStateManager._loaded && typeof window.formbuilderStateManager.ensureLoaded === 'function'){
+        await window.formbuilderStateManager.ensureLoaded();
+      }
+      if(typeof window.formbuilderStateManager.capture === 'function'){
+        try {
+          payload = window.formbuilderStateManager.capture();
+        } catch (err) {
+          console.error('formbuilderStateManager.capture failed', err);
+        }
       }
     }
     if(!payload || typeof payload !== 'object'){
