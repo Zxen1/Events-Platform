@@ -8777,6 +8777,34 @@ html, body { cursor: auto !important; }
               border:none;
               border-radius:0;
             }
+            /* Venue-ticketing currency dropdown - match variant-pricing style */
+            #tab-forms .tier-price-row .variant-pricing-currency,
+            #memberPanel .member-create-fields .tier-price-row .variant-pricing-currency{
+              position:relative;
+              padding-right:30px;
+            }
+            #tab-forms .tier-price-row .options-menu,
+            #memberPanel .member-create-fields .tier-price-row .options-menu{
+              position:absolute;
+              top:calc(100% + 4px);
+              bottom:auto;
+              left:0;
+              width:auto;
+              min-width:110px;
+              box-sizing:border-box;
+              z-index:var(--layer-menu);
+              margin:0;
+              background:#222222;
+              border:1px solid rgba(255,255,255,1);
+              border-radius:8px;
+              padding:10px;
+            }
+            #tab-forms .tier-price-row .options-menu .menu-option,
+            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
+              background:rgba(0,0,0,0.2);
+              border:none;
+              border-radius:0;
+            }
             #tab-forms .variant-pricing-price,
             #memberPanel .member-create-fields .variant-pricing-price{
               width:100%;
