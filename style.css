@@ -1211,18 +1211,13 @@ button[aria-expanded="true"] .results-arrow{
     color:#fff;
   }
 
-  /* Global geocoder z-index - one rule for all */
-  .mapboxgl-ctrl-geocoder{
+  /* Geocoder z-index for admin and member panels */
+  .admin-member-panels .mapboxgl-ctrl-geocoder{
     position:relative;
     z-index:var(--layer-menu);
   }
 
-  .mapboxgl-ctrl-geocoder .suggestions{
-    z-index:var(--layer-menu);
-  }
-
-  /* Global datepicker z-index - one rule for all */
-  .session-date-picker{
+  .admin-member-panels .mapboxgl-ctrl-geocoder .suggestions{
     z-index:var(--layer-menu);
   }
 #filterPanel .panel-content{
@@ -8286,7 +8281,7 @@ html, body { cursor: auto !important; }
               pointer-events:none;
               transform:translateY(-4px);
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-              z-index:var(--forms-layer-popover);
+              z-index:var(--layer-menu);
             }
             #tab-forms .session-date-picker.is-visible,
             #memberPanel .member-create-fields .session-date-picker.is-visible{
