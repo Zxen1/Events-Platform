@@ -2977,8 +2977,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(typeof source.type === 'string' && source.type){
             option.type = source.type;
           }
-          if(typeof source.formbuilder_editable === 'boolean'){
-            option.formbuilder_editable = source.formbuilder_editable;
+          if(typeof source.formbuilder_editable !== 'undefined'){
+            // Handle both boolean (true/false) and numeric (0/1) values from database
+            option.formbuilder_editable = source.formbuilder_editable === true || source.formbuilder_editable === 1 || source.formbuilder_editable === '1';
           }
           if(typeof source.sort_order !== 'undefined'){
             option.sort_order = source.sort_order;
