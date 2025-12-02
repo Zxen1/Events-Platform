@@ -7868,14 +7868,15 @@ html, body { cursor: auto !important; }
               flex-shrink:0;
             }
             #tab-forms .iconpicker-container{
-              width:100%;
+              width:260px;
+              max-width:100%;
             }
             #tab-forms .iconpicker-button{
               width:100%;
               display:flex;
               align-items:center;
               gap:10px;
-              height:44px;
+              height:60px;
               padding:0 30px 0 10px;
               background:rgba(0,0,0,0.35);
               border:1px solid var(--border);
@@ -7891,8 +7892,8 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.45);
             }
             #tab-forms .iconpicker-btn-img{
-              width:24px;
-              height:24px;
+              width:30px;
+              height:30px;
               object-fit:contain;
               flex-shrink:0;
               display:none;

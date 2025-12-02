@@ -9113,21 +9113,35 @@ function makePosts(){
       }
       closeAllIconPickers();
       
-      // Function to load available icons from a folder
+      // Icon cache for instant loading
+      const iconCache = new Map();
+      
+      // Function to load available icons from a folder (with caching)
       const loadIconsFromFolder = async (folderPath) => {
         if(!folderPath) return [];
+        // Return cached result if available
+        if(iconCache.has(folderPath)){
+          return iconCache.get(folderPath);
+        }
         try {
           const response = await fetch(`/gateway.php?action=list-icons&folder=${encodeURIComponent(folderPath)}`);
           if(!response.ok) return [];
           const data = await response.json();
           if(data.success && Array.isArray(data.icons)){
-            return data.icons.map(icon => `${folderPath}/${icon}`);
+            const icons = data.icons.map(icon => `${folderPath}/${icon}`);
+            iconCache.set(folderPath, icons);
+            return icons;
           }
         } catch(err){
           console.warn('Failed to load icons from folder:', err);
         }
         return [];
       };
+      
+      // Preload icons when formbuilder loads
+      if(window.iconFolder){
+        loadIconsFromFolder(window.iconFolder);
+      }
       
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
