@@ -1792,7 +1792,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Delete Button - Inside Edit Panel */
-.checkout-option-delete{
+#tab-settings .checkout-option-delete{
   align-self:flex-start;
   padding:8px 16px;
   background:transparent;
@@ -1800,10 +1800,11 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:6px;
   color:#c45050;
   font-size:13px;
+  font-weight:normal;
   cursor:pointer;
   transition:background 0.15s, border-color 0.15s;
 }
-.checkout-option-delete:hover{
+#tab-settings .checkout-option-delete:hover{
   background:rgba(200,80,80,0.15);
   border-color:rgba(200,80,80,0.5);
 }
@@ -1886,7 +1887,6 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:row;
   align-items:center;
   gap:8px;
-  padding-top:22px;
 }
 .checkout-option-field.sidebar-field label{
   display:flex;
@@ -7540,12 +7540,12 @@ html, body { cursor: auto !important; }
               max-width:320px;
             }
             #tab-forms .field-edit-panel{
-              margin-top:12px;
-              padding-top:12px;
+              margin-top:8px;
+              padding-top:8px;
               border-top:1px solid rgba(255,255,255,0.1);
               display:flex;
               flex-direction:column;
-              gap:12px;
+              gap:10px;
               background:transparent;
               border:none;
               border-radius:0;
