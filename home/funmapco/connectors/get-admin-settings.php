@@ -125,6 +125,30 @@ try {
         'settings' => $settings,
     ];
 
+    // Fetch general_options for dropdown settings
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'general_options'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `sort_order` FROM `general_options` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $optionRows = $stmt->fetchAll();
+            
+            $generalOptions = [];
+            foreach ($optionRows as $row) {
+                $group = $row['option_group'];
+                if (!isset($generalOptions[$group])) {
+                    $generalOptions[$group] = [];
+                }
+                $generalOptions[$group][] = [
+                    'value' => $row['option_value'],
+                    'label' => $row['option_label'],
+                ];
+            }
+            $response['general_options'] = $generalOptions;
+        }
+    } catch (Throwable $optionsError) {
+        // If options fail, don't break the whole response
+    }
+
     // Optionally include admin messages if requested
     $includeMessages = isset($_GET['include_messages']) && $_GET['include_messages'] === 'true';
     if ($includeMessages) {

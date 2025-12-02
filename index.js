@@ -1727,9 +1727,23 @@ let __notifyMapOnInteraction = null;
                 websiteTaglineInput.value = data.settings.site_tagline;
               }
               
-              const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
-              if(websiteCurrencyInput && data.settings.site_currency){
-                websiteCurrencyInput.value = data.settings.site_currency;
+              const websiteCurrencySelect = document.getElementById('adminWebsiteCurrency');
+              if(websiteCurrencySelect){
+                // Populate dropdown from general_options
+                if(data.general_options && data.general_options.currency){
+                  // Keep the first "Select Currency" option
+                  websiteCurrencySelect.innerHTML = '<option value="">Select Currency</option>';
+                  data.general_options.currency.forEach(function(opt){
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.value + ' - ' + opt.label;
+                    websiteCurrencySelect.appendChild(option);
+                  });
+                }
+                // Set selected value
+                if(data.settings.site_currency){
+                  websiteCurrencySelect.value = data.settings.site_currency;
+                }
               }
               
               const contactEmailInput = document.getElementById('adminContactEmail');
