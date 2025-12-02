@@ -1686,29 +1686,24 @@ button[aria-expanded="true"] .results-arrow{
 
 /* Checkout Option Cards - Admin Panel Style */
 .checkout-option-card{
+  position:relative;
   background:rgba(0,0,0,0.15);
   border:1px solid rgba(255,255,255,0.08);
   border-radius:8px;
   padding:14px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
 }
 .checkout-option-card.inactive{
   opacity:0.5;
 }
-
-/* Card Header */
-.checkout-option-header{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.checkout-option-card.edit-open{
+  border-color:rgba(255,255,255,0.2);
 }
-.checkout-option-title-row{
+
+/* Card Header - Single Row */
+.checkout-option-header{
   display:flex;
   align-items:center;
   gap:10px;
-  width:100%;
 }
 .checkout-option-title{
   flex:1;
@@ -1741,12 +1736,8 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(255,180,50,0.15);
   color:#e8b020;
 }
-.checkout-option-controls{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
 .checkout-option-active{
+  flex-shrink:0;
   display:flex;
   align-items:center;
   gap:6px;
@@ -1761,31 +1752,61 @@ button[aria-expanded="true"] .results-arrow{
   accent-color:var(--btn);
   cursor:pointer;
 }
-.checkout-option-delete{
+
+/* Edit Button */
+.checkout-options-edit-btn{
   flex-shrink:0;
-  width:24px;
-  height:24px;
+  width:28px;
+  height:28px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:transparent;
-  border:none;
-  color:#666;
-  font-size:18px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  color:#888;
   cursor:pointer;
-  border-radius:4px;
-  transition:color 0.15s, background 0.15s;
+  transition:color 0.15s, background 0.15s, border-color 0.15s;
 }
-.checkout-option-delete:hover{
-  color:#c45050;
-  background:rgba(200,80,80,0.1);
+.checkout-options-edit-btn:hover{
+  color:#fff;
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(255,255,255,0.2);
+}
+.checkout-options-edit-btn[aria-expanded="true"]{
+  color:#fff;
+  background:var(--btn);
+  border-color:var(--btn);
 }
 
-/* Card Body */
-.checkout-option-body{
+/* Edit Panel */
+.checkout-options-edit-panel{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.1);
   display:flex;
   flex-direction:column;
   gap:12px;
+}
+.checkout-options-edit-panel[hidden]{
+  display:none;
+}
+
+/* Delete Button - Inside Edit Panel */
+.checkout-option-delete{
+  align-self:flex-start;
+  padding:8px 16px;
+  background:transparent;
+  border:1px solid rgba(200,80,80,0.3);
+  border-radius:6px;
+  color:#c45050;
+  font-size:13px;
+  cursor:pointer;
+  transition:background 0.15s, border-color 0.15s;
+}
+.checkout-option-delete:hover{
+  background:rgba(200,80,80,0.15);
+  border-color:rgba(200,80,80,0.5);
 }
 .checkout-option-description{
   width:100%;
@@ -1809,18 +1830,11 @@ button[aria-expanded="true"] .results-arrow{
   color:#555;
 }
 
-/* Fields Grid */
-.checkout-option-fields{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-}
-.checkout-option-field{
+/* Edit Panel Fields */
+.checkout-options-edit-panel .checkout-option-field{
   display:flex;
   flex-direction:column;
   gap:6px;
-  flex:1 1 calc(50% - 6px);
-  min-width:100px;
 }
 .checkout-option-field label{
   font-size:12px;

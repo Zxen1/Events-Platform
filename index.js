@@ -102,6 +102,18 @@ function getSortedCategories(list) {
 }
 
 // === Checkout Options Rendering ===
+function closeAllCheckoutEditPanels(exceptPanel){
+  document.querySelectorAll('.checkout-options-edit-panel').forEach(function(panel){
+    if(panel !== exceptPanel){
+      panel.hidden = true;
+      const card = panel.closest('.checkout-option-card');
+      if(card) card.classList.remove('edit-open');
+      const btn = card && card.querySelector('.checkout-options-edit-btn');
+      if(btn) btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
 function renderCheckoutOptions(checkoutOptions, siteCurrency){
   const container = document.getElementById('checkoutOptionsTiers');
   if(!container) return;
@@ -122,45 +134,64 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     
     tierCard.innerHTML = `
       <div class="checkout-option-header">
-        <div class="checkout-option-title-row">
-          <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
-          <button type="button" class="checkout-option-delete" title="Delete">&times;</button>
+        <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
+        <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
+        <label class="checkout-option-active">
+          <input type="checkbox" ${option.is_active ? 'checked' : ''} />
+          <span>Active</span>
+        </label>
+        <button type="button" class="checkout-options-edit-btn" aria-haspopup="true" aria-expanded="false" title="Edit">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>
+        </button>
+      </div>
+      <div class="checkout-options-edit-panel" hidden>
+        <div class="checkout-option-field">
+          <label>Description</label>
+          <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
         </div>
-        <div class="checkout-option-controls">
-          <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
-          <label class="checkout-option-active">
-            <input type="checkbox" ${option.is_active ? 'checked' : ''} />
-            <span>Active</span>
+        <div class="checkout-option-field">
+          <label>Price</label>
+          <input type="number" class="checkout-option-price" value="${option.checkout_price}" step="0.01" min="0" />
+        </div>
+        <div class="checkout-option-field">
+          <label>Duration (days)</label>
+          <input type="number" class="checkout-option-days" value="${option.checkout_duration_days}" min="1" />
+        </div>
+        <div class="checkout-option-field">
+          <label>Tier</label>
+          <select class="checkout-option-tier-select">
+            <option value="standard" ${option.checkout_tier === 'standard' ? 'selected' : ''}>Standard</option>
+            <option value="featured" ${option.checkout_tier === 'featured' ? 'selected' : ''}>Featured</option>
+          </select>
+        </div>
+        <div class="checkout-option-field sidebar-field">
+          <label>
+            <input type="checkbox" class="checkout-option-sidebar" ${option.checkout_sidebar_ad ? 'checked' : ''} />
+            Sidebar Ad
           </label>
         </div>
-      </div>
-      <div class="checkout-option-body">
-        <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
-        <div class="checkout-option-fields">
-          <div class="checkout-option-field">
-            <label>Price</label>
-            <input type="number" class="checkout-option-price" value="${option.checkout_price}" step="0.01" min="0" />
-          </div>
-          <div class="checkout-option-field">
-            <label>Duration (days)</label>
-            <input type="number" class="checkout-option-days" value="${option.checkout_duration_days}" min="1" />
-          </div>
-          <div class="checkout-option-field">
-            <label>Tier</label>
-            <select class="checkout-option-tier-select">
-              <option value="standard" ${option.checkout_tier === 'standard' ? 'selected' : ''}>Standard</option>
-              <option value="featured" ${option.checkout_tier === 'featured' ? 'selected' : ''}>Featured</option>
-            </select>
-          </div>
-          <div class="checkout-option-field sidebar-field">
-            <label>
-              <input type="checkbox" class="checkout-option-sidebar" ${option.checkout_sidebar_ad ? 'checked' : ''} />
-              Sidebar Ad
-            </label>
-          </div>
-        </div>
+        <button type="button" class="checkout-option-delete">Delete</button>
       </div>
     `;
+    
+    // Edit button handler
+    const editBtn = tierCard.querySelector('.checkout-options-edit-btn');
+    const editPanel = tierCard.querySelector('.checkout-options-edit-panel');
+    editBtn.addEventListener('click', function(){
+      const isOpen = !editPanel.hidden;
+      closeAllCheckoutEditPanels(editPanel);
+      editPanel.hidden = isOpen;
+      tierCard.classList.toggle('edit-open', !isOpen);
+      editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    });
+    
+    // Tier select updates badge
+    const tierSelect = tierCard.querySelector('.checkout-option-tier-select');
+    const tierBadge = tierCard.querySelector('.checkout-option-tier-badge');
+    tierSelect.addEventListener('change', function(){
+      tierBadge.className = 'checkout-option-tier-badge ' + tierSelect.value;
+      tierBadge.textContent = tierSelect.value;
+    });
     
     // Add change listeners to mark dirty
     tierCard.querySelectorAll('input, textarea, select').forEach(function(input){
