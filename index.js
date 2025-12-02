@@ -21738,39 +21738,6 @@ const panelButtons = {
   adminPanel: 'adminBtn'
 };
 
-const panelScrollOverlayItems = new Set();
-
-function updatePanelScrollOverlay(target){
-  if(!target || !target.isConnected) return;
-  const overlayWidth = target.offsetWidth - target.clientWidth;
-  const value = overlayWidth > 0 ? `${overlayWidth}px` : '0px';
-  target.style.setProperty('--panel-scrollbar-overlay', value);
-}
-
-function registerPanelScrollOverlay(target){
-  if(!target || panelScrollOverlayItems.has(target)) return;
-  panelScrollOverlayItems.add(target);
-  updatePanelScrollOverlay(target);
-  if('ResizeObserver' in window){
-    const observer = new ResizeObserver(()=> updatePanelScrollOverlay(target));
-    observer.observe(target);
-  }
-  target.addEventListener('scroll', ()=> updatePanelScrollOverlay(target), { passive: true });
-}
-
-function refreshPanelScrollOverlays(){
-  document.querySelectorAll('.panel-body').forEach(registerPanelScrollOverlay);
-  panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
-}
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  refreshPanelScrollOverlays();
-  window.addEventListener('resize', ()=>{
-    requestAnimationFrame(()=>{
-      panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
-    });
-  });
-});
 
 (function(){
   const MIN_HEADER_WIDTH = 390;
