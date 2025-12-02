@@ -7569,6 +7569,12 @@ html, body { cursor: auto !important; }
               border-color:transparent;
               color:var(--button-text);
             }
+            #tab-forms .category-form-menu .filter-category-trigger .label{
+              font-weight:600;
+            }
+            #tab-forms .subcategory-label{
+              font-size:14px;
+            }
             #tab-forms .category-form-menu .filter-category-trigger-wrap{
               flex:1;
             }

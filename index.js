@@ -9600,8 +9600,15 @@ function makePosts(){
             }
           });
           closeFieldEditPanels();
-          editPanel.hidden = !editPanel.hidden;
-          editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
+          const willShow = editPanel.hidden;
+          editPanel.hidden = !willShow;
+          editBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+          // Also expand the category content if showing edit panel
+          if(willShow && content.hidden){
+            content.hidden = false;
+            menu.setAttribute('aria-expanded', 'true');
+            menuBtn.setAttribute('aria-expanded', 'true');
+          }
         });
 
         const handleCategoryEditPointerDown = event => {
@@ -14462,8 +14469,15 @@ function makePosts(){
               }
             });
             closeFieldEditPanels();
-            subEditPanel.hidden = !subEditPanel.hidden;
-            subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
+            const willShow = subEditPanel.hidden;
+            subEditPanel.hidden = !willShow;
+            subEditBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            // Also expand the subcategory content if showing edit panel
+            if(willShow && subContent.hidden){
+              subContent.hidden = false;
+              subMenu.setAttribute('aria-expanded', 'true');
+              subBtn.setAttribute('aria-expanded', 'true');
+            }
           });
 
           const handleSubcategoryEditPointerDown = event => {
