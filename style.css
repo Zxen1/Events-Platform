@@ -7786,12 +7786,91 @@ html, body { cursor: auto !important; }
               color:var(--button-text);
               padding:0 12px;
             }
+            /* Edit panel name row with overflow menu */
+            #tab-forms .edit-panel-name-row{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              position:relative;
+            }
+            #tab-forms .edit-panel-name-row .category-name-input,
+            #tab-forms .edit-panel-name-row .subcategory-name-input{
+              flex:1;
+            }
+            #tab-forms .edit-panel-overflow-btn{
+              flex-shrink:0;
+              width:32px;
+              height:32px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              background:transparent;
+              border:1px solid transparent;
+              border-radius:6px;
+              color:rgba(255,255,255,0.5);
+              cursor:pointer;
+              transition:all 0.15s;
+            }
+            #tab-forms .edit-panel-overflow-btn:hover{
+              background:rgba(255,255,255,0.08);
+              color:rgba(255,255,255,0.8);
+            }
+            #tab-forms .edit-panel-overflow-menu{
+              position:absolute;
+              top:100%;
+              right:0;
+              margin-top:4px;
+              background:#1a1a1a;
+              border:1px solid rgba(255,255,255,0.15);
+              border-radius:8px;
+              padding:4px;
+              min-width:180px;
+              z-index:100;
+              box-shadow:0 8px 24px rgba(0,0,0,0.5);
+            }
+            #tab-forms .edit-panel-overflow-menu[hidden]{
+              display:none;
+            }
+            #tab-forms .overflow-menu-item{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              width:100%;
+              padding:10px 12px;
+              background:transparent;
+              border:none;
+              border-radius:6px;
+              color:#ccc;
+              font-size:13px;
+              cursor:pointer;
+              text-align:left;
+              transition:background 0.15s;
+            }
+            #tab-forms .overflow-menu-item:hover{
+              background:rgba(255,255,255,0.08);
+            }
+            #tab-forms .overflow-menu-item--danger{
+              color:#e05050;
+            }
+            #tab-forms .overflow-menu-item--danger:hover{
+              background:rgba(224,80,80,0.15);
+            }
+            #tab-forms .overflow-menu-item svg{
+              flex-shrink:0;
+            }
+            #tab-forms .overflow-menu-toggle{
+              justify-content:space-between;
+            }
+            #tab-forms .overflow-menu-toggle .switch{
+              flex-shrink:0;
+            }
             #tab-forms .iconpicker-container{
               position:relative;
               display:flex;
               flex-direction:row;
               align-items:center;
               gap:12px;
+              justify-content:flex-start;
             }
             #tab-forms .iconpicker-button{
               position:relative;

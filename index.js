@@ -9474,11 +9474,28 @@ function makePosts(){
         editPanel.className = 'category-edit-panel';
         editPanel.id = editPanelId;
 
+        // Name row with input and 3-dot overflow menu
+        const nameRow = document.createElement('div');
+        nameRow.className = 'edit-panel-name-row';
+
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.className = 'category-name-input';
         nameInput.placeholder = 'Category Name';
         nameInput.value = c.name || '';
+
+        // 3-dot overflow button
+        const overflowBtn = document.createElement('button');
+        overflowBtn.type = 'button';
+        overflowBtn.className = 'edit-panel-overflow-btn';
+        overflowBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>';
+        overflowBtn.setAttribute('aria-label', 'More options');
+        overflowBtn.setAttribute('aria-haspopup', 'true');
+        overflowBtn.setAttribute('aria-expanded', 'false');
+
+        const overflowMenu = document.createElement('div');
+        overflowMenu.className = 'edit-panel-overflow-menu';
+        overflowMenu.hidden = true;
 
         const iconPicker = document.createElement('div');
         iconPicker.className = 'iconpicker-container';
@@ -9531,34 +9548,12 @@ function makePosts(){
         // Text will be updated from DB when messages are available (via MutationObserver)
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
-        const saveCategoryBtn = document.createElement('button');
-        saveCategoryBtn.type = 'button';
-        saveCategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
-        saveCategoryBtn.dataset.messageKey = 'msg_button_save';
-        // Text will be loaded from DB
-        saveCategoryBtn.setAttribute('aria-label', 'Save changes');
-        saveCategoryBtn.addEventListener('click', (e)=>{
-          e.preventDefault();
-          e.stopPropagation();
-          if(typeof window.adminPanelModule?.runSave === 'function'){
-            window.adminPanelModule.runSave({ closeAfter:false });
-          }
-          editPanel.hidden = true;
-          editBtn.setAttribute('aria-expanded', 'false');
-        });
-
-        const deleteCategoryBtn = document.createElement('button');
-        deleteCategoryBtn.type = 'button';
-        deleteCategoryBtn.className = 'delete-category-btn';
-        deleteCategoryBtn.dataset.messageKey = 'msg_button_delete_category';
-        // Text will be loaded from DB
-        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
-
+        // Hide toggle inside overflow menu
         const hideToggleRow = document.createElement('div');
-        hideToggleRow.className = 'category-hide-toggle-row';
+        hideToggleRow.className = 'overflow-menu-item overflow-menu-toggle';
         const hideToggleLabel = document.createElement('span');
         hideToggleLabel.dataset.messageKey = 'msg_label_hide_category';
-        // Text will be loaded from DB
+        hideToggleLabel.textContent = 'Hide Category';
         const hideToggle = document.createElement('label');
         hideToggle.className = 'switch';
         const hideToggleInput = document.createElement('input');
@@ -9581,16 +9576,40 @@ function makePosts(){
           c.hidden = hideToggleInput.checked;
           notifyFormbuilderChange();
         });
-        
-        const saveCategoryRow = document.createElement('div');
-        saveCategoryRow.className = 'formbuilder-save-row';
-        saveCategoryRow.append(saveCategoryBtn);
-        
-        const deleteCategoryRow = document.createElement('div');
-        deleteCategoryRow.className = 'formbuilder-delete-row';
-        deleteCategoryRow.append(deleteCategoryBtn);
 
-        editPanel.append(nameInput, iconPicker, hideToggleRow, saveCategoryRow, deleteCategoryRow);
+        // Delete button inside overflow menu
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.type = 'button';
+        deleteCategoryBtn.className = 'overflow-menu-item overflow-menu-item--danger';
+        deleteCategoryBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg><span>Delete Category</span>';
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+
+        overflowMenu.append(hideToggleRow, deleteCategoryBtn);
+        nameRow.append(nameInput, overflowBtn, overflowMenu);
+
+        // Overflow button toggle
+        overflowBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = !overflowMenu.hidden;
+          document.querySelectorAll('.edit-panel-overflow-menu').forEach(m => {
+            if(m !== overflowMenu) m.hidden = true;
+          });
+          document.querySelectorAll('.edit-panel-overflow-btn').forEach(b => {
+            if(b !== overflowBtn) b.setAttribute('aria-expanded', 'false');
+          });
+          overflowMenu.hidden = isOpen;
+          overflowBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+
+        // Close overflow menu when clicking outside
+        document.addEventListener('pointerdown', (e) => {
+          if(!overflowMenu.hidden && !overflowBtn.contains(e.target) && !overflowMenu.contains(e.target)){
+            overflowMenu.hidden = true;
+            overflowBtn.setAttribute('aria-expanded', 'false');
+          }
+        }, true);
+
+        editPanel.append(nameRow, iconPicker);
         editPanel.hidden = true;
         
         editBtn.addEventListener('click', (e)=>{
@@ -14199,12 +14218,30 @@ function makePosts(){
           const subEditPanel = document.createElement('div');
           subEditPanel.className = 'subcategory-edit-panel';
           subEditPanel.hidden = true;
-          
+
+          // Name row with input and 3-dot overflow menu
+          const subNameRow = document.createElement('div');
+          subNameRow.className = 'edit-panel-name-row';
+
+          // 3-dot overflow button
+          const subOverflowBtn = document.createElement('button');
+          subOverflowBtn.type = 'button';
+          subOverflowBtn.className = 'edit-panel-overflow-btn';
+          subOverflowBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>';
+          subOverflowBtn.setAttribute('aria-label', 'More options');
+          subOverflowBtn.setAttribute('aria-haspopup', 'true');
+          subOverflowBtn.setAttribute('aria-expanded', 'false');
+
+          const subOverflowMenu = document.createElement('div');
+          subOverflowMenu.className = 'edit-panel-overflow-menu';
+          subOverflowMenu.hidden = true;
+
+          // Hide toggle inside overflow menu
           const subHideToggleRow = document.createElement('div');
-          subHideToggleRow.className = 'subcategory-hide-toggle-row';
+          subHideToggleRow.className = 'overflow-menu-item overflow-menu-toggle';
           const subHideToggleLabel = document.createElement('span');
           subHideToggleLabel.dataset.messageKey = 'msg_label_hide_subcategory';
-          // Text will be loaded from DB
+          subHideToggleLabel.textContent = 'Hide Subcategory';
           const subHideToggle = document.createElement('label');
           subHideToggle.className = 'switch';
           const subHideToggleInput = document.createElement('input');
@@ -14230,6 +14267,44 @@ function makePosts(){
             c.subHidden[sub] = subHideToggleInput.checked;
             notifyFormbuilderChange();
           });
+
+          // Delete button inside overflow menu
+          const deleteSubMenuBtn = document.createElement('button');
+          deleteSubMenuBtn.type = 'button';
+          deleteSubMenuBtn.className = 'overflow-menu-item overflow-menu-item--danger';
+          deleteSubMenuBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg><span>Delete Subcategory</span>';
+          deleteSubMenuBtn.setAttribute('aria-label', `Delete ${sub} subcategory`);
+          deleteSubMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            subOverflowMenu.hidden = true;
+            subOverflowBtn.setAttribute('aria-expanded', 'false');
+            deleteSubBtn.click();
+          });
+
+          subOverflowMenu.append(subHideToggleRow, deleteSubMenuBtn);
+          subNameRow.append(subNameInput, subOverflowBtn, subOverflowMenu);
+
+          // Overflow button toggle
+          subOverflowBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = !subOverflowMenu.hidden;
+            document.querySelectorAll('.edit-panel-overflow-menu').forEach(m => {
+              if(m !== subOverflowMenu) m.hidden = true;
+            });
+            document.querySelectorAll('.edit-panel-overflow-btn').forEach(b => {
+              if(b !== subOverflowBtn) b.setAttribute('aria-expanded', 'false');
+            });
+            subOverflowMenu.hidden = isOpen;
+            subOverflowBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          });
+
+          // Close overflow menu when clicking outside
+          document.addEventListener('pointerdown', (e) => {
+            if(!subOverflowMenu.hidden && !subOverflowBtn.contains(e.target) && !subOverflowMenu.contains(e.target)){
+              subOverflowMenu.hidden = true;
+              subOverflowBtn.setAttribute('aria-expanded', 'false');
+            }
+          }, true);
           
           // Get site currency from admin settings (default to USD)
           const siteCurrency = 'USD'; // TODO: Load from admin_settings
@@ -14437,30 +14512,7 @@ function makePosts(){
           subTypeStandardInput.addEventListener('change', updateDaysVisibility);
           updateDaysVisibility();
           
-          const saveSubcategoryBtn = document.createElement('button');
-          saveSubcategoryBtn.type = 'button';
-          saveSubcategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
-          saveSubcategoryBtn.textContent = 'Save';
-          saveSubcategoryBtn.setAttribute('aria-label', 'Save changes');
-          saveSubcategoryBtn.addEventListener('click', (e)=>{
-            e.preventDefault();
-            e.stopPropagation();
-            if(typeof window.adminPanelModule?.runSave === 'function'){
-              window.adminPanelModule.runSave({ closeAfter:false });
-            }
-            subEditPanel.hidden = true;
-            subEditBtn.setAttribute('aria-expanded', 'false');
-          });
-          
-          const saveSubcategoryRow = document.createElement('div');
-          saveSubcategoryRow.className = 'formbuilder-save-row';
-          saveSubcategoryRow.append(saveSubcategoryBtn);
-          
-          const deleteSubcategoryRow = document.createElement('div');
-          deleteSubcategoryRow.className = 'formbuilder-delete-row';
-          deleteSubcategoryRow.append(deleteSubBtn);
-
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
+          subEditPanel.append(subNameRow, subIconPicker, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow);
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
