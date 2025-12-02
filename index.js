@@ -1656,6 +1656,9 @@ let __notifyMapOnInteraction = null;
         });
       }
       
+      // Flag to track if admin settings have been loaded - prevents saving empty values
+      window._adminSettingsLoaded = false;
+      
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
@@ -2026,12 +2029,15 @@ let __notifyMapOnInteraction = null;
                 });
               }
             }
+              // Mark settings as loaded - safe to save now
+              window._adminSettingsLoaded = true;
+              console.log('[Admin Settings] Loaded successfully - saving enabled');
           }
         } catch(err){
           console.error('Failed to load admin settings from database:', err);
           // Don't use defaults - error should be visible
-          // You may want to show an error message in the UI here
-          throw err; // Or handle the error appropriately without using defaults
+          // Settings remain unloaded - saving will be blocked
+          window._adminSettingsLoaded = false;
         }
       })();
       let markersLoaded = false;
@@ -22741,6 +22747,13 @@ form.addEventListener('input', formChangedWrapper, true);
   }
 
   async function saveAdminChanges(){
+    // SAFEGUARD: Prevent saving if admin settings haven't fully loaded yet
+    // This prevents wiping database fields with empty values due to timing issues
+    if(!window._adminSettingsLoaded){
+      console.error('[Admin Save] BLOCKED - Settings not yet loaded. Refusing to save to prevent data loss.');
+      return;
+    }
+    
     // Collect modified admin messages
     const modifiedMessages = [];
     document.querySelectorAll('.message-text-input').forEach(textarea => {
