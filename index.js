@@ -193,9 +193,9 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       tierBadge.textContent = tierSelect.value;
     });
     
-    // Add change listeners to mark dirty
+    // Add input listeners to mark dirty immediately
     tierCard.querySelectorAll('input, textarea, select').forEach(function(input){
-      input.addEventListener('change', function(){
+      input.addEventListener('input', function(){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
