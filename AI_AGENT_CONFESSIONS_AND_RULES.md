@@ -65,6 +65,18 @@
 
 **Impact:** Did not accomplish the task, wasted time, broke trust, user had to point out the failure.
 
+### 8. OVERENGINEERING INSTEAD OF COPYING EXISTING PATTERNS
+**Mistake:** When implementing checkout option delete confirmation dialog, instead of looking at how the existing formbuilder delete works and copying that pattern exactly, went through multiple failed approaches:
+- Tried using database message keys (caused 500ms+ delay per message)
+- Tried to "fix" the message caching system (would break things)
+- Tried to pre-load messages for just one container (wrong approach)
+- Tried modifying core functions that affect the whole site
+- Went back and forth multiple times wasting user's time
+
+**The answer was simple:** Formbuilder delete passes text directly with the dynamic item name baked in: `Delete the "${displayName}" category?`. Just copy that pattern.
+
+**Impact:** Wasted significant time with trial and error when the solution was right there in existing code. Should have looked at formbuilder delete code FIRST and copied exactly.
+
 ---
 
 ## PROJECT SCOPE: EVENTS PLATFORM CMS
