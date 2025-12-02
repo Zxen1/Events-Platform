@@ -9155,9 +9155,9 @@ function makePosts(){
           const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
           const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
           let left = triggerRect.left - containerRect.left;
-          // Use 10px spacing for map tab, 8px for others
+          // Use 10px spacing for map tab, 4px for others (matches .options-menu)
           const isMapTab = container.closest('#tab-map') !== null;
-          const spacing = isMapTab ? 10 : 8;
+          const spacing = isMapTab ? 10 : 4;
           let top = triggerRect.bottom - containerRect.top + spacing;
           popup.style.left = '0px';
           popup.style.top = '0px';
@@ -9204,6 +9204,7 @@ function makePosts(){
             alignFrame = 0;
           }
           container.classList.remove('iconpicker-open');
+          trigger.setAttribute('aria-expanded', 'false');
           if(parentMenu) parentMenu.classList.remove('has-floating-overlay');
           if(parentCategoryMenu) parentCategoryMenu.classList.remove('has-floating-overlay');
           document.removeEventListener('pointerdown', handlePointerDown, true);
@@ -9236,6 +9237,7 @@ function makePosts(){
         const openPicker = async ()=>{
           if(popup) return;
           closeAllIconPickers();
+          trigger.setAttribute('aria-expanded', 'true');
           
           // Load icons from folder if configured
           let iconsToShow = [];
@@ -9340,12 +9342,20 @@ function makePosts(){
         trigger.addEventListener('click', event => {
           event.preventDefault();
           event.stopPropagation();
-          openPicker();
+          if(popup){
+            closePicker();
+          } else {
+            openPicker();
+          }
         });
         trigger.addEventListener('keydown', event => {
           if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar'){
             event.preventDefault();
-            openPicker();
+            if(popup){
+              closePicker();
+            } else {
+              openPicker();
+            }
           }
         });
         // Enable picker if we have icon folder (or custom folder specified)
@@ -9522,7 +9532,7 @@ function makePosts(){
           iconPickerImg.src = normalizedCategoryIconPath;
           iconPickerButton.classList.add('has-icon');
           // Extract filename from path
-          const filename = normalizedCategoryIconPath.split('/').pop().replace(/\.[^/.]+$/, '');
+          const filename = normalizedCategoryIconPath.split('/').pop();
           iconPickerLabel.textContent = filename;
           if(!categoryIconLookup.found){
             writeIconPath(categoryIconPaths, c.id, c.name, normalizedCategoryIconPath);
@@ -9695,7 +9705,7 @@ function makePosts(){
           if(normalizedSrc){
             iconPickerImg.src = normalizedSrc;
             iconPickerButton.classList.add('has-icon');
-            const filename = normalizedSrc.split('/').pop().replace(/\.[^/.]+$/, '');
+            const filename = normalizedSrc.split('/').pop();
             iconPickerLabel.textContent = filename;
           } else {
             iconPickerImg.removeAttribute('src');
@@ -9905,7 +9915,7 @@ function makePosts(){
             if(normalizedSubIconPath){
               subIconImg.src = normalizedSubIconPath;
               subIconButton.classList.add('has-icon');
-              const filename = normalizedSubIconPath.split('/').pop().replace(/\.[^/.]+$/, '');
+              const filename = normalizedSubIconPath.split('/').pop();
               subIconLabel.textContent = filename;
             }
           }
@@ -14089,7 +14099,7 @@ function makePosts(){
               if(normalizedSrc){
                 subIconImg.src = normalizedSrc;
                 subIconButton.classList.add('has-icon');
-                const filename = normalizedSrc.split('/').pop().replace(/\.[^/.]+$/, '');
+                const filename = normalizedSrc.split('/').pop();
                 subIconLabel.textContent = filename;
               } else {
                 subIconImg.removeAttribute('src');

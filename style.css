@@ -7875,7 +7875,7 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               gap:10px;
-              height:36px;
+              height:44px;
               padding:0 30px 0 10px;
               background:rgba(0,0,0,0.35);
               border:1px solid var(--border);
@@ -7919,17 +7919,17 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .icon-picker-popup{
               position:absolute;
-              top:100%;
+              top:calc(100% + 4px);
               left:0;
-              margin-top:8px;
+              right:0;
               border-radius:10px;
               border:1px solid var(--border);
               background:rgba(10,10,20,0.95);
               box-shadow:0 18px 40px rgba(0,0,0,0.45);
               padding:12px;
-              min-width:240px;
-              max-width:320px;
-              max-height:240px;
+              width:100%;
+              box-sizing:border-box;
+              max-height:300px;
               overflow:auto;
               z-index:var(--forms-layer-popover, 80);
             }
