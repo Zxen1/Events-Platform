@@ -7531,15 +7531,18 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .category-edit-panel,
             #tab-forms .subcategory-edit-panel{
-              background:#222222;
-              border:1px solid rgba(255,255,255,0.15);
+              background:rgba(0,0,0,0.2);
+              border:1px solid rgba(255,255,255,0.1);
               border-radius:8px;
-              padding:16px;
-              box-shadow:0 8px 24px rgba(0,0,0,0.4);
+              padding:14px;
+              margin-bottom:12px;
+              display:flex;
+              flex-direction:column;
+              gap:10px;
             }
-            #tab-forms .category-edit-panel{
-              min-width:280px;
-              max-width:320px;
+            #tab-forms .category-edit-panel[hidden],
+            #tab-forms .subcategory-edit-panel[hidden]{
+              display:none;
             }
             #tab-forms .field-edit-panel{
               border-top:1px solid rgba(255,255,255,0.1);
@@ -7552,9 +7555,135 @@ html, body { cursor: auto !important; }
               box-shadow:none;
               z-index:auto;
             }
-            #tab-forms .subcategory-edit-panel{
-              min-width:340px;
-              max-width:360px;
+            /* Name row with input and overflow button */
+            #tab-forms .category-name-row,
+            #tab-forms .subcategory-name-row{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              position:relative;
+            }
+            #tab-forms .category-name-row .category-name-input,
+            #tab-forms .subcategory-name-row .subcategory-name-input{
+              flex:1;
+            }
+            /* Overflow menu button */
+            #tab-forms .category-overflow-btn,
+            #tab-forms .subcategory-overflow-btn{
+              flex-shrink:0;
+              width:32px;
+              height:32px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              background:transparent;
+              border:1px solid transparent;
+              border-radius:6px;
+              color:rgba(255,255,255,0.5);
+              cursor:pointer;
+              transition:all 0.15s;
+            }
+            #tab-forms .category-overflow-btn:hover,
+            #tab-forms .subcategory-overflow-btn:hover{
+              background:rgba(255,255,255,0.08);
+              color:rgba(255,255,255,0.8);
+            }
+            /* Overflow dropdown menu */
+            #tab-forms .category-overflow-menu,
+            #tab-forms .subcategory-overflow-menu{
+              position:absolute;
+              top:100%;
+              right:0;
+              margin-top:4px;
+              background:#1a1a1a;
+              border:1px solid rgba(255,255,255,0.15);
+              border-radius:8px;
+              padding:4px;
+              min-width:180px;
+              z-index:100;
+              box-shadow:0 8px 24px rgba(0,0,0,0.5);
+            }
+            #tab-forms .category-overflow-menu[hidden],
+            #tab-forms .subcategory-overflow-menu[hidden]{
+              display:none;
+            }
+            #tab-forms .overflow-menu-item{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              width:100%;
+              padding:10px 12px;
+              background:transparent;
+              border:none;
+              border-radius:6px;
+              color:#ccc;
+              font-size:13px;
+              cursor:pointer;
+              text-align:left;
+              transition:background 0.15s;
+            }
+            #tab-forms .overflow-menu-item:hover{
+              background:rgba(255,255,255,0.08);
+            }
+            #tab-forms .overflow-menu-item--danger{
+              color:#e05050;
+            }
+            #tab-forms .overflow-menu-item--danger:hover{
+              background:rgba(224,80,80,0.15);
+            }
+            #tab-forms .overflow-menu-item svg{
+              flex-shrink:0;
+            }
+            /* Checkout options in subcategory edit panel */
+            #tab-forms .subcategory-checkout-options{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .subcategory-checkout-label{
+              font-size:12px;
+              font-weight:500;
+              color:rgba(255,255,255,0.7);
+              text-transform:uppercase;
+              letter-spacing:0.5px;
+            }
+            #tab-forms .subcategory-checkout-list{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+              max-height:200px;
+              overflow-y:auto;
+              padding:8px;
+              background:rgba(0,0,0,0.2);
+              border-radius:6px;
+            }
+            #tab-forms .subcategory-checkout-option{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              padding:6px 8px;
+              border-radius:4px;
+              cursor:pointer;
+              transition:background 0.15s;
+            }
+            #tab-forms .subcategory-checkout-option:hover{
+              background:rgba(255,255,255,0.05);
+            }
+            #tab-forms .subcategory-checkout-option input[type="checkbox"]{
+              width:16px;
+              height:16px;
+              flex-shrink:0;
+              accent-color:var(--btn);
+            }
+            #tab-forms .subcategory-checkout-option span{
+              font-size:13px;
+              color:#ccc;
+            }
+            #tab-forms .subcategory-checkout-empty{
+              font-size:12px;
+              color:rgba(255,255,255,0.4);
+              font-style:italic;
+              padding:8px;
             }
             #tab-forms .category-hide-toggle-row,
             #tab-forms .subcategory-hide-toggle-row{
@@ -7699,20 +7828,12 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.3);
               border-color:rgba(0,0,0,0.3);
             }
-            #tab-forms .category-edit-panel,
-            #tab-forms .subcategory-edit-panel{
-              background:#1a1a1a;
-              display:flex;
-              flex-direction:column;
-              gap:10px;
-            }
             #tab-forms .subcategory-hide-toggle-row{
               display:flex;
               align-items:center;
               gap:12px;
               padding:8px 0;
             }
-            #tab-forms .subcategory-fee-row,
             #tab-forms .subcategory-type-row,
             #tab-forms .subcategory-days-row{
               display:flex;
@@ -7720,18 +7841,11 @@ html, body { cursor: auto !important; }
               gap:12px;
               padding:8px 0;
             }
-            #tab-forms .subcategory-fee-row span:first-child,
             #tab-forms .subcategory-type-row span:first-child,
             #tab-forms .subcategory-days-row span:first-child{
               min-width:140px;
               font-size:14px;
             }
-            #tab-forms .fee-currency{
-              font-weight:600;
-              font-size:14px;
-              min-width:auto;
-            }
-            #tab-forms .fee-input,
             #tab-forms .days-input{
               width:120px;
               padding:8px;
@@ -7740,14 +7854,6 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.35);
               color:var(--button-text);
               font-size:14px;
-            }
-            #tab-forms .fee-input::-webkit-inner-spin-button,
-            #tab-forms .fee-input::-webkit-outer-spin-button{
-              -webkit-appearance:none;
-              margin:0;
-            }
-            #tab-forms .fee-input{
-              -moz-appearance:textfield;
             }
             #tab-forms .subcategory-type-option{
               display:flex;
@@ -7769,10 +7875,6 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .formbuilder-delete-row{
               display:flex;
-            }
-            #tab-forms .category-edit-panel[hidden],
-            #tab-forms .subcategory-edit-panel[hidden]{
-              display:none;
             }
             #tab-forms .field-edit-panel[hidden]{
               display:none;

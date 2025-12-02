@@ -9461,18 +9461,66 @@ function makePosts(){
         content.id = contentId;
         content.hidden = true;
 
-        const editMenu = document.createElement('div');
-        editMenu.className = 'category-edit-menu';
-
         const editPanel = document.createElement('div');
         editPanel.className = 'category-edit-panel';
         editPanel.id = editPanelId;
+        editPanel.hidden = true;
+
+        // Name row with input and 3-dot overflow menu
+        const nameRow = document.createElement('div');
+        nameRow.className = 'category-name-row';
 
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.className = 'category-name-input';
         nameInput.placeholder = 'Category Name';
         nameInput.value = c.name || '';
+
+        // 3-dot overflow menu for delete action
+        const overflowBtn = document.createElement('button');
+        overflowBtn.type = 'button';
+        overflowBtn.className = 'category-overflow-btn';
+        overflowBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>';
+        overflowBtn.setAttribute('aria-label', 'More options');
+        overflowBtn.setAttribute('aria-haspopup', 'true');
+        overflowBtn.setAttribute('aria-expanded', 'false');
+
+        const overflowMenu = document.createElement('div');
+        overflowMenu.className = 'category-overflow-menu';
+        overflowMenu.hidden = true;
+
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.type = 'button';
+        deleteCategoryBtn.className = 'overflow-menu-item overflow-menu-item--danger';
+        deleteCategoryBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg><span>Delete Category</span>';
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+
+        overflowMenu.appendChild(deleteCategoryBtn);
+
+        overflowBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = !overflowMenu.hidden;
+          // Close all other overflow menus
+          document.querySelectorAll('.category-overflow-menu, .subcategory-overflow-menu').forEach(m => {
+            if(m !== overflowMenu) m.hidden = true;
+          });
+          document.querySelectorAll('.category-overflow-btn, .subcategory-overflow-btn').forEach(b => {
+            if(b !== overflowBtn) b.setAttribute('aria-expanded', 'false');
+          });
+          overflowMenu.hidden = isOpen;
+          overflowBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+
+        // Close overflow menu when clicking outside
+        const handleOverflowClickOutside = (e) => {
+          if(!overflowMenu.hidden && !overflowBtn.contains(e.target) && !overflowMenu.contains(e.target)){
+            overflowMenu.hidden = true;
+            overflowBtn.setAttribute('aria-expanded', 'false');
+          }
+        };
+        document.addEventListener('pointerdown', handleOverflowClickOutside, true);
+
+        nameRow.append(nameInput, overflowBtn, overflowMenu);
 
         const iconPicker = document.createElement('div');
         iconPicker.className = 'iconpicker-container';
@@ -9525,29 +9573,6 @@ function makePosts(){
         // Text will be updated from DB when messages are available (via MutationObserver)
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
-        const saveCategoryBtn = document.createElement('button');
-        saveCategoryBtn.type = 'button';
-        saveCategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
-        saveCategoryBtn.dataset.messageKey = 'msg_button_save';
-        // Text will be loaded from DB
-        saveCategoryBtn.setAttribute('aria-label', 'Save changes');
-        saveCategoryBtn.addEventListener('click', (e)=>{
-          e.preventDefault();
-          e.stopPropagation();
-          if(typeof window.adminPanelModule?.runSave === 'function'){
-            window.adminPanelModule.runSave({ closeAfter:false });
-          }
-          editPanel.hidden = true;
-          editBtn.setAttribute('aria-expanded', 'false');
-        });
-
-        const deleteCategoryBtn = document.createElement('button');
-        deleteCategoryBtn.type = 'button';
-        deleteCategoryBtn.className = 'delete-category-btn';
-        deleteCategoryBtn.dataset.messageKey = 'msg_button_delete_category';
-        // Text will be loaded from DB
-        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
-
         const hideToggleRow = document.createElement('div');
         hideToggleRow.className = 'category-hide-toggle-row';
         const hideToggleLabel = document.createElement('span');
@@ -9576,37 +9601,37 @@ function makePosts(){
           notifyFormbuilderChange();
         });
         
-        const saveCategoryRow = document.createElement('div');
-        saveCategoryRow.className = 'formbuilder-save-row';
-        saveCategoryRow.append(saveCategoryBtn);
+        editPanel.append(nameRow, iconPicker, hideToggleRow);
         
-        const deleteCategoryRow = document.createElement('div');
-        deleteCategoryRow.className = 'formbuilder-delete-row';
-        deleteCategoryRow.append(deleteCategoryBtn);
-
-        editPanel.append(nameInput, iconPicker, hideToggleRow, saveCategoryRow, deleteCategoryRow);
-        editPanel.hidden = true;
-        editPanel.style.position = 'absolute';
-        editPanel.style.right = '0';
-        editPanel.style.top = 'calc(100% + 10px)';
-        editPanel.style.zIndex = '100';
-        header.append(editPanel);
+        // Container for add subcategory button
+        const editMenu = document.createElement('div');
+        editMenu.className = 'category-edit-menu';
+        
+        // Insert edit panel at the start of content (inline, not popup)
+        content.insertBefore(editPanel, content.firstChild);
         
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
+          // Close other edit panels
           document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
             if(panel === editPanel) return;
             panel.hidden = true;
-            const relatedButton = panel.parentElement
-              ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
-              : null;
-            if(relatedButton){
-              relatedButton.setAttribute('aria-expanded','false');
-            }
+          });
+          document.querySelectorAll('.category-edit-btn, .subcategory-edit-btn').forEach(btn => {
+            if(btn !== editBtn) btn.setAttribute('aria-expanded', 'false');
           });
           closeFieldEditPanels();
-          editPanel.hidden = !editPanel.hidden;
-          editBtn.setAttribute('aria-expanded', editPanel.hidden ? 'false' : 'true');
+          
+          const willShow = editPanel.hidden;
+          editPanel.hidden = !willShow;
+          editBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+          
+          // If showing edit panel, also expand the category content
+          if(willShow && content.hidden){
+            content.hidden = false;
+            menu.setAttribute('aria-expanded', 'true');
+            menuBtn.setAttribute('aria-expanded', 'true');
+          }
         });
 
         const handleCategoryEditPointerDown = event => {
@@ -14191,10 +14216,65 @@ function makePosts(){
           const subEditPanel = document.createElement('div');
           subEditPanel.className = 'subcategory-edit-panel';
           subEditPanel.hidden = true;
-          subEditPanel.style.position = 'absolute';
-          subEditPanel.style.right = '0';
-          subEditPanel.style.top = 'calc(100% + 10px)';
-          subEditPanel.style.zIndex = '100';
+          
+          // Name row with input and 3-dot overflow menu
+          const subNameRow = document.createElement('div');
+          subNameRow.className = 'subcategory-name-row';
+
+          // 3-dot overflow menu for delete action
+          const subOverflowBtn = document.createElement('button');
+          subOverflowBtn.type = 'button';
+          subOverflowBtn.className = 'subcategory-overflow-btn';
+          subOverflowBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>';
+          subOverflowBtn.setAttribute('aria-label', 'More options');
+          subOverflowBtn.setAttribute('aria-haspopup', 'true');
+          subOverflowBtn.setAttribute('aria-expanded', 'false');
+
+          const subOverflowMenu = document.createElement('div');
+          subOverflowMenu.className = 'subcategory-overflow-menu';
+          subOverflowMenu.hidden = true;
+
+          const deleteSubMenuBtn = document.createElement('button');
+          deleteSubMenuBtn.type = 'button';
+          deleteSubMenuBtn.className = 'overflow-menu-item overflow-menu-item--danger';
+          deleteSubMenuBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg><span>Delete Subcategory</span>';
+          deleteSubMenuBtn.setAttribute('aria-label', `Delete ${sub} subcategory`);
+          
+          // Wire up delete button to existing delete handler
+          deleteSubMenuBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            subOverflowMenu.hidden = true;
+            subOverflowBtn.setAttribute('aria-expanded', 'false');
+            // Trigger the existing delete logic
+            deleteSubBtn.click();
+          });
+
+          subOverflowMenu.appendChild(deleteSubMenuBtn);
+
+          subOverflowBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = !subOverflowMenu.hidden;
+            // Close all other overflow menus
+            document.querySelectorAll('.category-overflow-menu, .subcategory-overflow-menu').forEach(m => {
+              if(m !== subOverflowMenu) m.hidden = true;
+            });
+            document.querySelectorAll('.category-overflow-btn, .subcategory-overflow-btn').forEach(b => {
+              if(b !== subOverflowBtn) b.setAttribute('aria-expanded', 'false');
+            });
+            subOverflowMenu.hidden = isOpen;
+            subOverflowBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          });
+
+          // Close overflow menu when clicking outside
+          const handleSubOverflowClickOutside = (e) => {
+            if(!subOverflowMenu.hidden && !subOverflowBtn.contains(e.target) && !subOverflowMenu.contains(e.target)){
+              subOverflowMenu.hidden = true;
+              subOverflowBtn.setAttribute('aria-expanded', 'false');
+            }
+          };
+          document.addEventListener('pointerdown', handleSubOverflowClickOutside, true);
+
+          subNameRow.append(subNameInput, subOverflowBtn, subOverflowMenu);
           
           const subHideToggleRow = document.createElement('div');
           subHideToggleRow.className = 'subcategory-hide-toggle-row';
@@ -14227,137 +14307,75 @@ function makePosts(){
             notifyFormbuilderChange();
           });
           
-          // Get site currency from admin settings (default to USD)
-          const siteCurrency = 'USD'; // TODO: Load from admin_settings
-          
-          // Initialize subFees if not exists, but don't overwrite existing database values
+          // Initialize subFees if not exists
           if(!c.subFees) c.subFees = {};
           if(!c.subFees[sub]) {
             c.subFees[sub] = {};
           }
-          // Set defaults only for missing values
-          if(c.subFees[sub].listing_fee === undefined) c.subFees[sub].listing_fee = null;
-          if(c.subFees[sub].featured_fee === undefined) c.subFees[sub].featured_fee = null;
-          if(c.subFees[sub].renew_fee === undefined) c.subFees[sub].renew_fee = null;
-          if(c.subFees[sub].renew_featured_fee === undefined) c.subFees[sub].renew_featured_fee = null;
           if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
           if(c.subFees[sub].listing_days === undefined) c.subFees[sub].listing_days = 30;
           
-          // Listing Fee Row
-          const listingFeeRow = document.createElement('div');
-          listingFeeRow.className = 'subcategory-fee-row';
-          const listingFeeLabel = document.createElement('span');
-          listingFeeLabel.textContent = 'Listing Fee';
-          const listingFeeCurrency = document.createElement('span');
-          listingFeeCurrency.className = 'fee-currency';
-          listingFeeCurrency.textContent = siteCurrency;
-          const listingFeeInput = document.createElement('input');
-          listingFeeInput.type = 'number';
-          listingFeeInput.step = '0.01';
-          listingFeeInput.min = '0';
-          listingFeeInput.className = 'fee-input';
-          listingFeeInput.placeholder = '0.00';
-          listingFeeInput.value = c.subFees[sub].listing_fee !== null && c.subFees[sub].listing_fee !== undefined 
-            ? c.subFees[sub].listing_fee.toFixed(2) 
-            : '';
-          listingFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].listing_fee = listingFeeInput.value ? parseFloat(listingFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          listingFeeInput.addEventListener('blur', ()=>{
-            if(listingFeeInput.value && !listingFeeInput.value.includes('.')){
-              listingFeeInput.value = parseFloat(listingFeeInput.value).toFixed(2);
-              c.subFees[sub].listing_fee = parseFloat(listingFeeInput.value);
-            }
-          });
-          listingFeeRow.append(listingFeeLabel, listingFeeCurrency, listingFeeInput);
+          // Initialize subCheckoutOptions if not exists
+          if(!c.subCheckoutOptions) c.subCheckoutOptions = {};
+          if(!Array.isArray(c.subCheckoutOptions[sub])) {
+            c.subCheckoutOptions[sub] = [];
+          }
           
-          // Renew Listing Fee Row
-          const renewFeeRow = document.createElement('div');
-          renewFeeRow.className = 'subcategory-fee-row';
-          const renewFeeLabel = document.createElement('span');
-          renewFeeLabel.textContent = 'Renew Listing Fee';
-          const renewFeeCurrency = document.createElement('span');
-          renewFeeCurrency.className = 'fee-currency';
-          renewFeeCurrency.textContent = siteCurrency;
-          const renewFeeInput = document.createElement('input');
-          renewFeeInput.type = 'number';
-          renewFeeInput.step = '0.01';
-          renewFeeInput.min = '0';
-          renewFeeInput.className = 'fee-input';
-          renewFeeInput.placeholder = '0.00';
-          renewFeeInput.value = c.subFees[sub].renew_fee !== null && c.subFees[sub].renew_fee !== undefined 
-            ? c.subFees[sub].renew_fee.toFixed(2) 
-            : '';
-          renewFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].renew_fee = renewFeeInput.value ? parseFloat(renewFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          renewFeeInput.addEventListener('blur', ()=>{
-            if(renewFeeInput.value && !renewFeeInput.value.includes('.')){
-              renewFeeInput.value = parseFloat(renewFeeInput.value).toFixed(2);
-              c.subFees[sub].renew_fee = parseFloat(renewFeeInput.value);
-            }
-          });
-          renewFeeRow.append(renewFeeLabel, renewFeeCurrency, renewFeeInput);
+          // Checkout Options Selector
+          const checkoutOptionsSection = document.createElement('div');
+          checkoutOptionsSection.className = 'subcategory-checkout-options';
           
-          // Featured Fee Row
-          const featuredFeeRow = document.createElement('div');
-          featuredFeeRow.className = 'subcategory-fee-row';
-          const featuredFeeLabel = document.createElement('span');
-          featuredFeeLabel.textContent = 'Featured Fee';
-          const featuredFeeCurrency = document.createElement('span');
-          featuredFeeCurrency.className = 'fee-currency';
-          featuredFeeCurrency.textContent = siteCurrency;
-          const featuredFeeInput = document.createElement('input');
-          featuredFeeInput.type = 'number';
-          featuredFeeInput.step = '0.01';
-          featuredFeeInput.min = '0';
-          featuredFeeInput.className = 'fee-input';
-          featuredFeeInput.placeholder = '0.00';
-          featuredFeeInput.value = c.subFees[sub].featured_fee !== null && c.subFees[sub].featured_fee !== undefined 
-            ? c.subFees[sub].featured_fee.toFixed(2) 
-            : '';
-          featuredFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].featured_fee = featuredFeeInput.value ? parseFloat(featuredFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          featuredFeeInput.addEventListener('blur', ()=>{
-            if(featuredFeeInput.value && !featuredFeeInput.value.includes('.')){
-              featuredFeeInput.value = parseFloat(featuredFeeInput.value).toFixed(2);
-              c.subFees[sub].featured_fee = parseFloat(featuredFeeInput.value);
-            }
-          });
-          featuredFeeRow.append(featuredFeeLabel, featuredFeeCurrency, featuredFeeInput);
+          const checkoutOptionsLabel = document.createElement('div');
+          checkoutOptionsLabel.className = 'subcategory-checkout-label';
+          checkoutOptionsLabel.textContent = 'Checkout Options';
           
-          // Renew Featured Fee Row
-          const renewFeaturedFeeRow = document.createElement('div');
-          renewFeaturedFeeRow.className = 'subcategory-fee-row';
-          const renewFeaturedFeeLabel = document.createElement('span');
-          renewFeaturedFeeLabel.textContent = 'Renew Featured Fee';
-          const renewFeaturedFeeCurrency = document.createElement('span');
-          renewFeaturedFeeCurrency.className = 'fee-currency';
-          renewFeaturedFeeCurrency.textContent = siteCurrency;
-          const renewFeaturedFeeInput = document.createElement('input');
-          renewFeaturedFeeInput.type = 'number';
-          renewFeaturedFeeInput.step = '0.01';
-          renewFeaturedFeeInput.min = '0';
-          renewFeaturedFeeInput.className = 'fee-input';
-          renewFeaturedFeeInput.placeholder = '0.00';
-          renewFeaturedFeeInput.value = c.subFees[sub].renew_featured_fee !== null && c.subFees[sub].renew_featured_fee !== undefined 
-            ? c.subFees[sub].renew_featured_fee.toFixed(2) 
-            : '';
-          renewFeaturedFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].renew_featured_fee = renewFeaturedFeeInput.value ? parseFloat(renewFeaturedFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          renewFeaturedFeeInput.addEventListener('blur', ()=>{
-            if(renewFeaturedFeeInput.value && !renewFeaturedFeeInput.value.includes('.')){
-              renewFeaturedFeeInput.value = parseFloat(renewFeaturedFeeInput.value).toFixed(2);
-              c.subFees[sub].renew_featured_fee = parseFloat(renewFeaturedFeeInput.value);
+          const checkoutOptionsList = document.createElement('div');
+          checkoutOptionsList.className = 'subcategory-checkout-list';
+          
+          const renderSubCheckoutOptions = () => {
+            checkoutOptionsList.innerHTML = '';
+            const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
+            const selectedIds = c.subCheckoutOptions[sub] || [];
+            
+            if(allCheckoutOptions.length === 0){
+              const emptyMsg = document.createElement('div');
+              emptyMsg.className = 'subcategory-checkout-empty';
+              emptyMsg.textContent = 'No checkout options defined. Add them in Settings tab.';
+              checkoutOptionsList.appendChild(emptyMsg);
+              return;
             }
-          });
-          renewFeaturedFeeRow.append(renewFeaturedFeeLabel, renewFeaturedFeeCurrency, renewFeaturedFeeInput);
+            
+            allCheckoutOptions.forEach(opt => {
+              const optionRow = document.createElement('label');
+              optionRow.className = 'subcategory-checkout-option';
+              
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.checked = selectedIds.includes(opt.id);
+              checkbox.addEventListener('change', () => {
+                if(checkbox.checked){
+                  if(!c.subCheckoutOptions[sub].includes(opt.id)){
+                    c.subCheckoutOptions[sub].push(opt.id);
+                  }
+                } else {
+                  c.subCheckoutOptions[sub] = c.subCheckoutOptions[sub].filter(id => id !== opt.id);
+                }
+                notifyFormbuilderChange();
+              });
+              
+              const optionText = document.createElement('span');
+              const priceDisplay = parseFloat(opt.checkout_price) > 0 
+                ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
+                : ' — Free';
+              optionText.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
+              
+              optionRow.append(checkbox, optionText);
+              checkoutOptionsList.appendChild(optionRow);
+            });
+          };
+          
+          renderSubCheckoutOptions();
+          checkoutOptionsSection.append(checkoutOptionsLabel, checkoutOptionsList);
           
           // Subcategory Type Row
           const subTypeRow = document.createElement('div');
@@ -14432,48 +14450,39 @@ function makePosts(){
           subTypeEventsInput.addEventListener('change', updateDaysVisibility);
           subTypeStandardInput.addEventListener('change', updateDaysVisibility);
           updateDaysVisibility();
-          
-          const saveSubcategoryBtn = document.createElement('button');
-          saveSubcategoryBtn.type = 'button';
-          saveSubcategoryBtn.className = 'save-changes primary-action formbuilder-inline-save';
-          saveSubcategoryBtn.textContent = 'Save';
-          saveSubcategoryBtn.setAttribute('aria-label', 'Save changes');
-          saveSubcategoryBtn.addEventListener('click', (e)=>{
-            e.preventDefault();
-            e.stopPropagation();
-            if(typeof window.adminPanelModule?.runSave === 'function'){
-              window.adminPanelModule.runSave({ closeAfter:false });
-            }
-            subEditPanel.hidden = true;
-            subEditBtn.setAttribute('aria-expanded', 'false');
-          });
-          
-          const saveSubcategoryRow = document.createElement('div');
-          saveSubcategoryRow.className = 'formbuilder-save-row';
-          saveSubcategoryRow.append(saveSubcategoryBtn);
-          
-          const deleteSubcategoryRow = document.createElement('div');
-          deleteSubcategoryRow.className = 'formbuilder-delete-row';
-          deleteSubcategoryRow.append(deleteSubBtn);
 
-          subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
-          subHeader.append(subEditPanel);
+          subEditPanel.append(subNameRow, subIconPicker, subHideToggleRow, checkoutOptionsSection, subTypeRow, listingDaysRow);
+          
+          // Insert edit panel at the start of subcategory content (inline, not popup)
+          subContent.insertBefore(subEditPanel, subContent.firstChild);
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
+            // Close other edit panels
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel === subEditPanel) return;
               panel.hidden = true;
-              const relatedButton = panel.parentElement
-                ? panel.parentElement.querySelector('.category-edit-btn, .subcategory-edit-btn')
-                : null;
-              if(relatedButton){
-                relatedButton.setAttribute('aria-expanded','false');
-              }
+            });
+            document.querySelectorAll('.category-edit-btn, .subcategory-edit-btn').forEach(btn => {
+              if(btn !== subEditBtn) btn.setAttribute('aria-expanded', 'false');
             });
             closeFieldEditPanels();
-            subEditPanel.hidden = !subEditPanel.hidden;
-            subEditBtn.setAttribute('aria-expanded', subEditPanel.hidden ? 'false' : 'true');
+            
+            const willShow = subEditPanel.hidden;
+            subEditPanel.hidden = !willShow;
+            subEditBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+            
+            // If showing edit panel, also expand the subcategory content
+            if(willShow && subContent.hidden){
+              subContent.hidden = false;
+              subMenu.setAttribute('aria-expanded', 'true');
+              subBtn.setAttribute('aria-expanded', 'true');
+            }
+            
+            // Re-render checkout options in case they changed
+            if(willShow && typeof renderSubCheckoutOptions === 'function'){
+              renderSubCheckoutOptions();
+            }
           });
 
           const handleSubcategoryEditPointerDown = event => {
