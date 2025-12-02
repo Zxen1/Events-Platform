@@ -7654,8 +7654,7 @@ html, body { cursor: auto !important; }
             #tab-forms .formbuilder-actions{
               margin:0;
             }
-            #tab-forms .category-edit-menu,
-            #tab-forms .field-edit-menu{
+            #tab-forms .category-edit-menu{
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -8730,16 +8729,16 @@ html, body { cursor: auto !important; }
               background:rgba(255,77,77,0.2);
               color:rgba(255,214,214,0.95);
             }
-            #tab-forms .field-edit-menu .field-inline-controls{
+            #tab-forms .field-edit-panel .field-inline-controls{
               display:flex;
               flex-direction:column;
               align-items:stretch;
               gap:10px;
             }
-            #tab-forms .field-edit-menu .field-inline-controls .field-type-select-wrapper{
+            #tab-forms .field-edit-panel .field-inline-controls .field-type-select-wrapper{
               width:100%;
             }
-            #tab-forms .field-edit-menu .field-required-row{
+            #tab-forms .field-edit-panel .field-required-row{
               display:flex;
               align-items:center;
               justify-content:space-between;

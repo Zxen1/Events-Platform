@@ -12913,13 +12913,9 @@ function makePosts(){
             editPanel.className = 'field-edit-panel';
             editPanel.hidden = true;
 
-            const editMenu = document.createElement('div');
-            editMenu.className = 'field-edit-menu';
-            editPanel.append(editMenu);
-
             const inlineControls = document.createElement('div');
             inlineControls.className = 'field-inline-controls';
-            editMenu.append(inlineControls);
+            editPanel.append(inlineControls);
 
             const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
             
@@ -13154,7 +13150,7 @@ function makePosts(){
             fieldNameInput.value = safeField.name || '';
             fieldNameLabel.appendChild(fieldNameInput);
             fieldNameContainer.appendChild(fieldNameLabel);
-            editMenu.appendChild(fieldNameContainer);
+            editPanel.appendChild(fieldNameContainer);
 
             inlineControls.append(fieldRequiredRow, fieldTypeWrapper);
 
@@ -13249,7 +13245,7 @@ function makePosts(){
             dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
 
             // Always add dropdown options to edit panel (not exposed on row)
-            editMenu.append(dropdownOptionsContainer);
+            editPanel.append(dropdownOptionsContainer);
 
             // Checkout options editor
             const checkoutOptionsContainer = document.createElement('div');
@@ -13265,7 +13261,7 @@ function makePosts(){
             checkoutOptionsContainer.append(checkoutOptionsLabel, checkoutOptionsList);
             
             // Always add checkout options to edit panel (not exposed on row)
-            editMenu.append(checkoutOptionsContainer);
+            editPanel.append(checkoutOptionsContainer);
 
             const renderCheckoutOptionsEditor = ()=>{
               checkoutOptionsList.innerHTML = '';
@@ -13745,29 +13741,10 @@ function makePosts(){
 
             let deleteHandler = null;
 
-            const saveFieldBtn = document.createElement('button');
-            saveFieldBtn.type = 'button';
-            saveFieldBtn.className = 'save-changes primary-action formbuilder-inline-save';
-            saveFieldBtn.textContent = 'Save';
-            saveFieldBtn.setAttribute('aria-label', 'Save changes');
-            saveFieldBtn.addEventListener('click', (e)=>{
-              e.preventDefault();
-              e.stopPropagation();
-              if(typeof window.adminPanelModule?.runSave === 'function'){
-                window.adminPanelModule.runSave({ closeAfter:false });
-              }
-              editPanel.hidden = true;
-              editBtn.setAttribute('aria-expanded', 'false');
-            });
-            
-            const saveFieldRow = document.createElement('div');
-            saveFieldRow.className = 'formbuilder-save-row';
-            saveFieldRow.append(saveFieldBtn);
-
             actionFieldBtn = document.createElement('button');
             actionFieldBtn.type = 'button';
             actionFieldBtn.className = 'delete-category-btn delete-field-btn';
-            actionFieldBtn.textContent = 'Delete Field';
+            actionFieldBtn.textContent = 'Delete';
             actionFieldBtn.setAttribute('aria-label', 'Delete field');
             actionFieldBtn.addEventListener('click', async event=>{
               event.preventDefault();
@@ -13785,11 +13762,8 @@ function makePosts(){
                 }
               }
             });
-            const deleteFieldRow = document.createElement('div');
-            deleteFieldRow.className = 'formbuilder-delete-row';
-            deleteFieldRow.append(actionFieldBtn);
 
-            editMenu.append(saveFieldRow, deleteFieldRow);
+            editPanel.append(actionFieldBtn);
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -13810,7 +13784,6 @@ function makePosts(){
             return {
               editBtn,
               editPanel,
-              editMenu,
               inlineControls,
               fieldTypeMenuBtn,
               fieldRequiredInput,
