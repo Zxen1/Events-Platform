@@ -8859,8 +8859,7 @@ function makePosts(){
 
         if(!isUserFormContext && typeof createFieldEditUI === 'function'){
           const fieldEditUI = createFieldEditUI(field, {
-            hostElement: wrapper,
-            attachDropdownToPanel: true
+            hostElement: wrapper
           });
 
           if(fieldEditUI && typeof fieldEditUI.setDeleteHandler === 'function'){
@@ -12705,7 +12704,6 @@ function makePosts(){
 
           const createFieldEditUI = (safeField, {
             hostElement = null,
-            attachDropdownToPanel = false,
             summaryUpdater: initialSummaryUpdater = ()=>{}
           } = {}) => {
             // Declare actionFieldBtn early so it can be referenced in updateFieldEditorsByType
@@ -12722,7 +12720,6 @@ function makePosts(){
             editPanel.className = 'field-edit-panel';
             editPanel.hidden = true;
             editPanel.style.position = 'absolute';
-            editPanel.style.right = '0';
             editPanel.style.top = 'calc(100% + 10px)';
             editPanel.style.zIndex = '100';
 
@@ -13061,9 +13058,8 @@ function makePosts(){
             dropdownOptionsList.className = 'dropdown-options-list';
             dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
 
-            if(attachDropdownToPanel === true){
-              editMenu.append(dropdownOptionsContainer);
-            }
+            // Always add dropdown options to edit panel (not exposed on row)
+            editMenu.append(dropdownOptionsContainer);
 
             // Checkout options editor
             const checkoutOptionsContainer = document.createElement('div');
@@ -13078,11 +13074,8 @@ function makePosts(){
             checkoutOptionsList.className = 'checkout-options-list';
             checkoutOptionsContainer.append(checkoutOptionsLabel, checkoutOptionsList);
             
-            // Only add to edit panel if explicitly requested (for form preview)
-            // Otherwise it will be added to the field row later
-            if(attachDropdownToPanel === true){
-              editMenu.append(checkoutOptionsContainer);
-            }
+            // Always add checkout options to edit panel (not exposed on row)
+            editMenu.append(checkoutOptionsContainer);
 
             const renderCheckoutOptionsEditor = ()=>{
               checkoutOptionsList.innerHTML = '';
@@ -13684,7 +13677,7 @@ function makePosts(){
             header.append(summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, dropdownOptionsContainer, checkoutOptionsContainer, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             header.append(fieldDragHandle);
             header.append(fieldEditBtn);
@@ -13728,9 +13721,6 @@ function makePosts(){
 
             fieldEditUI.setSummaryUpdater(updateFieldSummary);
             fieldEditUI.runSummaryUpdater();
-
-            row.append(dropdownOptionsContainer);
-            row.append(checkoutOptionsContainer);
 
             const handleDeleteField = async ()=>{
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';

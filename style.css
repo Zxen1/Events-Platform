@@ -7266,10 +7266,16 @@ html, body { cursor: auto !important; }
               padding:16px;
               box-shadow:0 8px 24px rgba(0,0,0,0.4);
             }
-            #tab-forms .category-edit-panel,
-            #tab-forms .field-edit-panel{
+            #tab-forms .category-edit-panel{
               min-width:280px;
               max-width:320px;
+            }
+            #tab-forms .field-edit-panel{
+              width:400px;
+              max-width:400px;
+              left:50%;
+              right:auto;
+              transform:translateX(-50%);
             }
             #tab-forms .subcategory-edit-panel{
               min-width:340px;
