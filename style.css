@@ -984,7 +984,7 @@ input[type="checkbox"]{
 .options-dropdown .results-arrow{
   position:absolute;
   top:50%;
-  right:10px;
+  right:12px;
   transform:translateY(-50%) rotate(45deg);
   margin-right:0;
   pointer-events:none;
