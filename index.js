@@ -136,15 +136,15 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       <div class="checkout-option-header">
         <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
         <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
-        <label class="checkout-option-active">
-          <input type="checkbox" ${option.is_active ? 'checked' : ''} />
-          <span>Active</span>
-        </label>
         <button type="button" class="checkout-options-edit-btn" aria-haspopup="true" aria-expanded="false" title="Edit">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>
         </button>
       </div>
       <div class="checkout-options-edit-panel" hidden>
+        <label class="checkout-option-active">
+          <input type="checkbox" ${option.is_active ? 'checked' : ''} />
+          <span>Active</span>
+        </label>
         <div class="checkout-option-field">
           <label>Description</label>
           <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
