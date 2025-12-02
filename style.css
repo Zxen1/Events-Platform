@@ -1131,6 +1131,12 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body{
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
+  overflow-y: overlay;
+}
+@supports not (overflow-y: overlay){
+  .panel-body{
+    overflow-y: auto;
+  }
 }
 .panel-body::-webkit-scrollbar{
   width: 12px;
@@ -2287,7 +2293,7 @@ button[aria-expanded="true"] .results-arrow{
   outline-offset:2px;
 }
 #adminPanel .tab-panel{display:none;}
-#adminPanel .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
+#adminPanel .tab-panel.active{display:flex;flex-direction:column;align-items:center;gap:12px;}
 #memberPanel .member-tab-panel{display:none;}
 #memberPanel .member-tab-panel.active{display:flex;flex-direction:column;gap:12px;}
 #adminPanel .marker-grid{display:flex;flex-direction:column;gap:8px;}
