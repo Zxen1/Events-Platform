@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 02, 2025 at 10:48 AM
+-- Generation Time: Dec 02, 2025 at 01:44 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -451,7 +451,7 @@ CREATE TABLE `field_types` (
 --
 
 INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placeholder`, `formbuilder_editable`, `field_type_item_1`, `field_type_item_2`, `field_type_item_3`, `field_type_item_4`, `field_type_item_5`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'Title', 'title', 'eg. Summer Rain', 1, 'title [field=1]', NULL, NULL, NULL, NULL, 1, '2025-10-29 19:03:05', '2025-12-01 23:42:40'),
+(1, 'Title', 'title', 'eg. Summer Rain', 0, 'title [field=1]', NULL, NULL, NULL, NULL, 1, '2025-10-29 19:03:05', '2025-12-02 01:35:11'),
 (2, 'Description', 'description', 'eg. Come and Express Yourself!', 0, 'description [field=2]', NULL, NULL, NULL, NULL, 2, '2025-10-29 19:03:05', '2025-11-05 02:58:24'),
 (3, 'Text Box (editable)', 'text-box', 'text', 1, 'text-box [field=14]', NULL, NULL, NULL, NULL, 100, '2025-10-29 19:03:05', '2025-11-17 08:39:26'),
 (4, 'Text Area (editable)', 'text-area', 'The quick brown fox jumped over the lazy dogs.', 1, 'text-area [field=15]', NULL, NULL, NULL, NULL, 100, '2025-10-29 19:03:05', '2025-11-17 08:39:26'),
@@ -467,6 +467,45 @@ INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placehold
 (14, 'Variant Pricing', 'variant-pricing', 'prices', 0, 'variant-pricing [fieldset=5]', NULL, NULL, NULL, NULL, 14, '2025-10-29 19:03:05', '2025-11-06 02:20:00'),
 (15, 'Checkout', 'checkout', 'pay me', 0, 'checkout-options [table=checkout_options]', NULL, NULL, NULL, NULL, 15, '2025-10-29 19:03:05', '2025-11-29 17:23:57'),
 (16, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 0, 'venues [fieldset=1]', 'sessions [fieldset=2]', 'ticket-pricing [fieldset=3]', NULL, NULL, 16, '2025-10-29 19:03:05', '2025-11-06 02:25:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `general_options`
+--
+
+CREATE TABLE `general_options` (
+  `id` int(11) NOT NULL,
+  `option_group` varchar(50) NOT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `general_options`
+--
+
+INSERT INTO `general_options` (`id`, `option_group`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'currency', 'USD', 'US Dollar', 1, 1),
+(2, 'currency', 'EUR', 'Euro', 2, 1),
+(3, 'currency', 'GBP', 'British Pound', 3, 1),
+(4, 'currency', 'AUD', 'Australian Dollar', 4, 1),
+(5, 'currency', 'CAD', 'Canadian Dollar', 5, 1),
+(6, 'currency', 'NZD', 'New Zealand Dollar', 6, 1),
+(7, 'currency', 'JPY', 'Japanese Yen', 7, 1),
+(8, 'currency', 'CHF', 'Swiss Franc', 8, 1),
+(9, 'currency', 'SGD', 'Singapore Dollar', 9, 1),
+(10, 'currency', 'HKD', 'Hong Kong Dollar', 10, 1),
+(11, 'currency', 'SEK', 'Swedish Krona', 11, 1),
+(12, 'currency', 'NOK', 'Norwegian Krone', 12, 1),
+(13, 'currency', 'DKK', 'Danish Krone', 13, 1),
+(14, 'currency', 'PLN', 'Polish Zloty', 14, 1),
+(15, 'currency', 'MXN', 'Mexican Peso', 15, 1),
+(16, 'currency', 'BRL', 'Brazilian Real', 16, 1),
+(17, 'currency', 'INR', 'Indian Rupee', 17, 1),
+(18, 'currency', 'ZAR', 'South African Rand', 18, 1);
 
 -- --------------------------------------------------------
 
@@ -828,7 +867,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', NULL, '1,2,3', '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-12-01 03:55:09'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', NULL, '1,2,3', '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-12-01 03:55:09'),
 (24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', '1,1,1,1,1', NULL, '1,2,3', '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 10.00, 5.00, 15.00, 10.00, 30, 'Standard', '2025-10-29 12:32:47', '2025-12-01 03:55:09'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,16,12,15', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Variant Pricing, Venue Ticketing, Images, Checkout', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"0\":{\"name\":\"afafff\"},\"2\":{\"name\":\"sHSHfhshS\"},\"4\":{\"options\":[\"goodbye\",\"this is silly\",\"abaravcadabara\"]}}', '1,2,3', '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, NULL, NULL, NULL, NULL, NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-01 23:43:14');
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,16,12,15', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Variant Pricing, Venue Ticketing, Images, Checkout', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', '1,2,3', '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, NULL, NULL, NULL, NULL, NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-02 01:36:12');
 
 -- --------------------------------------------------------
 
@@ -941,6 +980,13 @@ ALTER TABLE `fieldsets`
 --
 ALTER TABLE `field_types`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `general_options`
+--
+ALTER TABLE `general_options`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `option_group` (`option_group`);
 
 --
 -- Indexes for table `layout_containers`
@@ -1072,7 +1118,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2704;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2768;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1121,6 +1167,12 @@ ALTER TABLE `fieldsets`
 --
 ALTER TABLE `field_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `general_options`
+--
+ALTER TABLE `general_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`
