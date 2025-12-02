@@ -156,12 +156,14 @@ Mapbox layers in rendering order (bottom to top):
 
 ## RULES: MANDATORY COMPLIANCE
 
-### Rule 1: NO NAMING OR RENAMING WITHOUT APPROVAL
-**CRITICAL:** You are NEVER allowed to name or rename anything without explicit user approval.
-- Do not create new variable names
-- Do not rename existing variables
-- Do not add new properties or parameters
-- Ask first, always
+### Rule 1: USER IS IN CHARGE OF ALL NAMING
+**CRITICAL:** The USER is in charge of naming. AI must ask permission before naming ANYTHING.
+- Do not create new variable names without asking
+- Do not rename existing variables without asking
+- Do not name new classes, IDs, or properties without asking
+- Do not add new parameters without asking
+- ALWAYS ask first, NEVER assume you can name things
+- If you need to create something new, describe what you need and ask what to name it
 
 ### Rule 2: NO GUESSING
 **CRITICAL:** Never guess what code should be. Instead:

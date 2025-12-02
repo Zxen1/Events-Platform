@@ -1656,9 +1656,9 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 
-.checkout-options-title{
+.checkout-options-header-label{
   margin:0 0 12px 0;
-  padding:0;
+  padding:10px 0;
   font-size:15px;
   font-weight:500;
   color:#fff;
@@ -1701,15 +1701,14 @@ button[aria-expanded="true"] .results-arrow{
 /* Card Header */
 .checkout-option-header{
   display:flex;
-  align-items:center;
-  gap:10px;
+  flex-direction:column;
+  gap:8px;
 }
 .checkout-option-title-row{
   display:flex;
   align-items:center;
   gap:10px;
-  flex:1;
-  min-width:0;
+  width:100%;
 }
 .checkout-option-title{
   flex:1;
@@ -1745,8 +1744,7 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-controls{
   display:flex;
   align-items:center;
-  gap:10px;
-  flex-shrink:0;
+  gap:12px;
 }
 .checkout-option-active{
   display:flex;
@@ -1764,6 +1762,7 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
 }
 .checkout-option-delete{
+  flex-shrink:0;
   width:24px;
   height:24px;
   display:flex;

@@ -124,14 +124,14 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       <div class="checkout-option-header">
         <div class="checkout-option-title-row">
           <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
-          <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
+          <button type="button" class="checkout-option-delete" title="Delete">&times;</button>
         </div>
         <div class="checkout-option-controls">
+          <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
           <label class="checkout-option-active">
             <input type="checkbox" ${option.is_active ? 'checked' : ''} />
             <span>Active</span>
           </label>
-          <button type="button" class="checkout-option-delete" title="Delete">&times;</button>
         </div>
       </div>
       <div class="checkout-option-body">
