@@ -1643,7 +1643,8 @@ button[aria-expanded="true"] .results-arrow{
 
 .settings-general-container,
 .settings-paypal-container,
-.settings-icon-folders-container{
+.settings-icon-folders-container,
+.settings-checkout-options-container{
   background:rgba(0,0,0,0.2);
   border:1px solid rgba(255,255,255,0.1);
   width:100%;
@@ -1664,6 +1665,32 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.2);
   border:none;
   color:#fff;
+}
+
+.settings-checkout-options-container h3{
+  margin:0 0 12px 0;
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+}
+.settings-checkout-options-container .checkout-options-tiers{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:12px;
+}
+.settings-checkout-options-container .add-checkout-option{
+  width:100%;
+  padding:10px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:8px;
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
+}
+.settings-checkout-options-container .add-checkout-option:hover{
+  background:var(--btn-hover);
 }
 
 /* System Image Picker Styles */
@@ -2727,6 +2754,7 @@ button[aria-expanded="true"] .results-arrow{
 #tab-settings .settings-welcome-container,
 #tab-settings .settings-paypal-container,
 #tab-settings .settings-icon-folders-container,
+#tab-settings .settings-checkout-options-container,
 #tab-map #map_shadow_container,
 #memberPanel .member-form-container{
   width:100%;
