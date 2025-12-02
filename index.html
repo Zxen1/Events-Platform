@@ -450,9 +450,18 @@
           </div>
           <div class="panel-field">
             <div class="option-label">
-              <span>Welcome Message Enabled</span>
+              <span>Welcome Message on Load</span>
               <label class="switch">
                 <input type="checkbox" id="adminWelcomeEnabled" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="panel-field">
+            <div class="option-label">
+              <span>Devtools Console Filter</span>
+              <label class="switch">
+                <input type="checkbox" id="adminEnableConsoleFilter" />
                 <span class="slider"></span>
               </label>
             </div>
@@ -477,12 +486,6 @@
             <label for="adminSystemImagesFolder">System Images Folder</label>
             <input type="text" id="adminSystemImagesFolder" autocomplete="off" placeholder="assets/system-images" />
           </div>
-        </div>
-        <div class="panel-field">
-          <label>
-            <input type="checkbox" id="adminEnableConsoleFilter" />
-            <span>Enable Console Filter</span>
-          </label>
         </div>
         <div class="settings-checkout-options-container">
           <h3>Checkout Options</h3>
