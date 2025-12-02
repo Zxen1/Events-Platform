@@ -8060,8 +8060,7 @@ html, body { cursor: auto !important; }
               color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
             }
             #tab-forms .delete-category-btn,
-            #tab-forms .delete-subcategory-btn,
-            #tab-forms .delete-field-btn{
+            #tab-forms .delete-subcategory-btn{
               display:flex;
               align-items:center;
               justify-content:center;
@@ -8076,10 +8075,24 @@ html, body { cursor: auto !important; }
               width:100%;
             }
             #tab-forms .delete-category-btn:hover,
-            #tab-forms .delete-subcategory-btn:hover,
-            #tab-forms .delete-field-btn:hover{
+            #tab-forms .delete-subcategory-btn:hover{
               background:#d13c3c;
               border-color:#d13c3c;
+            }
+            #tab-forms .delete-field-btn{
+              align-self:flex-start;
+              padding:8px 16px;
+              background:transparent;
+              border:1px solid rgba(200,80,80,0.3);
+              border-radius:6px;
+              color:#c45050;
+              font-size:13px;
+              cursor:pointer;
+              transition:background 0.15s, border-color 0.15s;
+            }
+            #tab-forms .delete-field-btn:hover{
+              background:rgba(200,80,80,0.15);
+              border-color:rgba(200,80,80,0.5);
             }
             #tab-forms .subcategory-form-content .delete-subcategory-btn{
               margin-top:12px;
@@ -8662,12 +8675,6 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-field-row.field-edit-open{
               border-color:rgba(255,255,255,0.2);
             }
-            #tab-forms .subcategory-field-row .field-inline-controls{
-              display:flex;
-              align-items:center;
-              gap:10px;
-              flex-wrap:nowrap;
-            }
             #tab-forms .subcategory-field-row .field-row-header{
               display:flex;
               align-items:center;
@@ -8729,20 +8736,20 @@ html, body { cursor: auto !important; }
               background:rgba(255,77,77,0.2);
               color:rgba(255,214,214,0.95);
             }
-            #tab-forms .field-edit-panel .field-inline-controls{
-              display:flex;
-              flex-direction:column;
-              align-items:stretch;
-              gap:10px;
-            }
-            #tab-forms .field-edit-panel .field-inline-controls .field-type-select-wrapper{
-              width:100%;
-            }
-            #tab-forms .field-edit-panel .field-required-row{
+            #tab-forms .field-required-toggle{
               display:flex;
               align-items:center;
-              justify-content:space-between;
-              gap:12px;
+              gap:6px;
+              font-size:13px;
+              color:#888;
+              cursor:pointer;
+              user-select:none;
+            }
+            #tab-forms .field-required-toggle input[type="checkbox"]{
+              width:18px;
+              height:18px;
+              accent-color:var(--btn);
+              cursor:pointer;
             }
             #tab-forms .field-type-select-wrapper{
               position:relative;
@@ -8764,8 +8771,7 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
               z-index:var(--layer-menu);
             }
-            #tab-forms .subcategory-field-row .field-inline-controls .field-type-select-wrapper{
-              flex:1 1 auto;
+            #tab-forms .field-edit-panel .field-type-select-wrapper{
               width:100%;
             }
             #tab-forms .field-type-select{
@@ -8843,12 +8849,6 @@ html, body { cursor: auto !important; }
             #tab-forms .field-name-input:focus{
               border-color:var(--btn-hover, #2e3a72);
               outline:none;
-            }
-            #tab-forms .field-required-row{
-              display:flex;
-              align-items:center;
-              justify-content:space-between;
-              gap:12px;
             }
             #tab-forms .field-required-options{
               display:flex;

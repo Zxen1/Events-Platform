@@ -12913,10 +12913,6 @@ function makePosts(){
             editPanel.className = 'field-edit-panel';
             editPanel.hidden = true;
 
-            const inlineControls = document.createElement('div');
-            inlineControls.className = 'field-inline-controls';
-            editPanel.append(inlineControls);
-
             const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
             
             // Get existing field types in this subcategory (excluding current field)
@@ -13118,23 +13114,15 @@ function makePosts(){
             
             fieldTypeWrapper.append(fieldTypeMenuBtn, fieldTypeMenu);
 
-            const fieldRequiredLabel = document.createElement('span');
-            fieldRequiredLabel.className = 'field-required-label';
-            fieldRequiredLabel.textContent = 'Required';
-
             const fieldRequiredToggle = document.createElement('label');
-            fieldRequiredToggle.className = 'switch field-required-switch';
+            fieldRequiredToggle.className = 'field-required-toggle';
             const fieldRequiredInput = document.createElement('input');
             fieldRequiredInput.type = 'checkbox';
             fieldRequiredInput.checked = !!safeField.required;
             fieldRequiredInput.setAttribute('aria-label', 'Toggle required field');
-            const fieldRequiredSlider = document.createElement('span');
-            fieldRequiredSlider.className = 'slider';
-            fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredSlider);
-
-            const fieldRequiredRow = document.createElement('div');
-            fieldRequiredRow.className = 'field-required-row';
-            fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredToggle);
+            const fieldRequiredText = document.createElement('span');
+            fieldRequiredText.textContent = 'Required';
+            fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
             // Add name input for editable fields
             const fieldNameContainer = document.createElement('div');
@@ -13152,7 +13140,7 @@ function makePosts(){
             fieldNameContainer.appendChild(fieldNameLabel);
             editPanel.appendChild(fieldNameContainer);
 
-            inlineControls.append(fieldRequiredRow, fieldTypeWrapper);
+            editPanel.append(fieldRequiredToggle, fieldTypeWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -13601,7 +13589,8 @@ function makePosts(){
                 const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
                 isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
               }
-              fieldNameContainer.hidden = !isEditable;
+              // Editable fields have inline name input in header, so hide the edit panel name input
+              fieldNameContainer.hidden = true;
               if(type === 'images'){
                 if(safeField.placeholder){
                   safeField.placeholder = '';
@@ -13784,7 +13773,6 @@ function makePosts(){
             return {
               editBtn,
               editPanel,
-              inlineControls,
               fieldTypeMenuBtn,
               fieldRequiredInput,
               fieldNameInput,
@@ -13841,11 +13829,12 @@ function makePosts(){
             const summaryLabel = document.createElement('span');
             summaryLabel.className = 'field-summary-label';
 
+            summary.append(summaryLabel);
+            
             const summaryRequired = document.createElement('span');
             summaryRequired.className = 'field-summary-required';
 
-            summary.append(summaryLabel, summaryRequired);
-            header.append(inlineNameInput, summary);
+            header.append(inlineNameInput, summary, summaryRequired);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
             const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, fieldNameInput, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
