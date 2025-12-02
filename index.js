@@ -9415,7 +9415,7 @@ function makePosts(){
         menu.dataset.category = c.name;
         menu.dataset.categoryIndex = String(sourceIndex);
         menu.setAttribute('role','group');
-        menu.setAttribute('aria-expanded','false');
+        menu.setAttribute('aria-expanded','true');
 
         const header = document.createElement('div');
         header.className = 'formbuilder-category-header';
@@ -9427,7 +9427,7 @@ function makePosts(){
         menuBtn.type = 'button';
         menuBtn.className = 'filter-category-trigger';
         menuBtn.setAttribute('aria-haspopup','true');
-        menuBtn.setAttribute('aria-expanded','false');
+        menuBtn.setAttribute('aria-expanded','true');
         menuBtn.setAttribute('aria-controls', contentId);
 
         const categoryLogo = document.createElement('span');
@@ -9489,7 +9489,7 @@ function makePosts(){
         const content = document.createElement('div');
         content.className = 'category-form-content';
         content.id = contentId;
-        content.hidden = true;
+        content.hidden = false;
 
         const editMenu = document.createElement('div');
         editMenu.className = 'category-edit-menu';
