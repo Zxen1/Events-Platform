@@ -103,12 +103,17 @@ try {
         return;
     }
 
-    // Separate messages from settings
+    // Separate messages and checkout_options from settings
     $messages = null;
+    $checkoutOptions = null;
     $settings = $data;
     if (isset($data['messages']) && is_array($data['messages'])) {
         $messages = $data['messages'];
         unset($settings['messages']);
+    }
+    if (isset($data['checkout_options']) && is_array($data['checkout_options'])) {
+        $checkoutOptions = $data['checkout_options'];
+        unset($settings['checkout_options']);
     }
 
     // Save settings
@@ -199,6 +204,102 @@ try {
         }
     }
 
+    // Save checkout options if provided
+    $checkoutUpdated = 0;
+    $checkoutInserted = 0;
+    $checkoutDeleted = 0;
+    if ($checkoutOptions !== null && is_array($checkoutOptions)) {
+        // Check if checkout_options table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
+        if ($stmt->rowCount() > 0) {
+            // Get existing IDs
+            $existingIds = [];
+            $stmt = $pdo->query('SELECT id FROM checkout_options');
+            while ($row = $stmt->fetch()) {
+                $existingIds[] = (int)$row['id'];
+            }
+            
+            // Track IDs from input
+            $inputIds = [];
+            
+            // Prepare statements
+            $updateStmt = $pdo->prepare('
+                UPDATE `checkout_options`
+                SET `checkout_title` = :title,
+                    `checkout_description` = :description,
+                    `checkout_price` = :price,
+                    `checkout_duration_days` = :days,
+                    `checkout_tier` = :tier,
+                    `checkout_sidebar_ad` = :sidebar,
+                    `is_active` = :active,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+            
+            $insertStmt = $pdo->prepare('
+                INSERT INTO `checkout_options` 
+                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_price`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`)
+                VALUES (:key, :title, :description, :price, :currency, :days, :tier, :sidebar, :sort_order, :active)
+            ');
+            
+            $sortOrder = 0;
+            foreach ($checkoutOptions as $option) {
+                $sortOrder++;
+                $id = $option['id'] ?? null;
+                $title = $option['checkout_title'] ?? 'Untitled';
+                $description = $option['checkout_description'] ?? '';
+                $price = (float)($option['checkout_price'] ?? 0);
+                $days = (int)($option['checkout_duration_days'] ?? 30);
+                $tier = $option['checkout_tier'] ?? 'standard';
+                $sidebar = !empty($option['checkout_sidebar_ad']) ? 1 : 0;
+                $active = !empty($option['is_active']) ? 1 : 0;
+                
+                // Check if this is an existing ID or new
+                if ($id && is_numeric($id) && in_array((int)$id, $existingIds)) {
+                    // Update existing
+                    $inputIds[] = (int)$id;
+                    $updateStmt->execute([
+                        ':id' => (int)$id,
+                        ':title' => $title,
+                        ':description' => $description,
+                        ':price' => $price,
+                        ':days' => $days,
+                        ':tier' => $tier,
+                        ':sidebar' => $sidebar,
+                        ':active' => $active,
+                    ]);
+                    $checkoutUpdated++;
+                } else {
+                    // Insert new
+                    $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title)) . '-' . $days;
+                    $currency = 'USD'; // Default, will be overridden by site currency
+                    $insertStmt->execute([
+                        ':key' => $key,
+                        ':title' => $title,
+                        ':description' => $description,
+                        ':price' => $price,
+                        ':currency' => $currency,
+                        ':days' => $days,
+                        ':tier' => $tier,
+                        ':sidebar' => $sidebar,
+                        ':sort_order' => $sortOrder,
+                        ':active' => $active,
+                    ]);
+                    $checkoutInserted++;
+                }
+            }
+            
+            // Delete removed options
+            $idsToDelete = array_diff($existingIds, $inputIds);
+            if (!empty($idsToDelete)) {
+                $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
+                $deleteStmt = $pdo->prepare("DELETE FROM `checkout_options` WHERE `id` IN ({$placeholders})");
+                $deleteStmt->execute(array_values($idsToDelete));
+                $checkoutDeleted = count($idsToDelete);
+            }
+        }
+    }
+
     $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
@@ -207,6 +308,13 @@ try {
 
     if ($messagesUpdated > 0) {
         $response['messages_updated'] = $messagesUpdated;
+    }
+    if ($checkoutUpdated > 0 || $checkoutInserted > 0 || $checkoutDeleted > 0) {
+        $response['checkout_options'] = [
+            'updated' => $checkoutUpdated,
+            'inserted' => $checkoutInserted,
+            'deleted' => $checkoutDeleted,
+        ];
     }
 
     echo json_encode($response);

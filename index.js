@@ -101,6 +101,139 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+// === Checkout Options Rendering ===
+function renderCheckoutOptions(checkoutOptions, siteCurrency){
+  const container = document.getElementById('checkoutOptionsTiers');
+  if(!container) return;
+  
+  container.innerHTML = '';
+  
+  if(!checkoutOptions || !checkoutOptions.length){
+    container.innerHTML = '<div class="checkout-option-empty">No checkout options configured.</div>';
+    return;
+  }
+  
+  checkoutOptions.forEach(function(option){
+    const tierCard = document.createElement('div');
+    tierCard.className = 'checkout-option-card' + (option.is_active ? '' : ' inactive');
+    tierCard.dataset.id = option.id;
+    
+    const priceDisplay = option.checkout_price === 0 ? 'Free' : (siteCurrency + ' ' + option.checkout_price.toFixed(2));
+    
+    tierCard.innerHTML = `
+      <div class="checkout-option-header">
+        <div class="checkout-option-title-row">
+          <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
+          <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
+        </div>
+        <div class="checkout-option-controls">
+          <label class="checkout-option-active">
+            <input type="checkbox" ${option.is_active ? 'checked' : ''} />
+            <span>Active</span>
+          </label>
+          <button type="button" class="checkout-option-delete" title="Delete">&times;</button>
+        </div>
+      </div>
+      <div class="checkout-option-body">
+        <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
+        <div class="checkout-option-fields">
+          <div class="checkout-option-field">
+            <label>Price</label>
+            <input type="number" class="checkout-option-price" value="${option.checkout_price}" step="0.01" min="0" />
+          </div>
+          <div class="checkout-option-field">
+            <label>Duration (days)</label>
+            <input type="number" class="checkout-option-days" value="${option.checkout_duration_days}" min="1" />
+          </div>
+          <div class="checkout-option-field">
+            <label>Tier</label>
+            <select class="checkout-option-tier-select">
+              <option value="standard" ${option.checkout_tier === 'standard' ? 'selected' : ''}>Standard</option>
+              <option value="featured" ${option.checkout_tier === 'featured' ? 'selected' : ''}>Featured</option>
+            </select>
+          </div>
+          <div class="checkout-option-field">
+            <label>
+              <input type="checkbox" class="checkout-option-sidebar" ${option.checkout_sidebar_ad ? 'checked' : ''} />
+              Sidebar Ad
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add change listeners to mark dirty
+    tierCard.querySelectorAll('input, textarea, select').forEach(function(input){
+      input.addEventListener('change', function(){
+        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+          window.adminPanelModule.markDirty();
+        }
+      });
+    });
+    
+    // Delete button handler
+    tierCard.querySelector('.checkout-option-delete').addEventListener('click', function(){
+      if(confirm('Delete this checkout option?')){
+        tierCard.remove();
+        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+          window.adminPanelModule.markDirty();
+        }
+      }
+    });
+    
+    container.appendChild(tierCard);
+  });
+  
+  // Add tier button handler
+  const addBtn = document.querySelector('.add-checkout-option');
+  if(addBtn && !addBtn.dataset.initialized){
+    addBtn.dataset.initialized = 'true';
+    addBtn.addEventListener('click', function(){
+      const newOption = {
+        id: 'new-' + Date.now(),
+        checkout_key: '',
+        checkout_title: 'New Tier',
+        checkout_description: '',
+        checkout_price: 0,
+        checkout_currency: siteCurrency,
+        checkout_duration_days: 30,
+        checkout_tier: 'standard',
+        checkout_sidebar_ad: false,
+        is_active: true
+      };
+      renderCheckoutOptions([...getCheckoutOptionsFromUI(), newOption], siteCurrency);
+      if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+        window.adminPanelModule.markDirty();
+      }
+    });
+  }
+}
+
+function getCheckoutOptionsFromUI(){
+  const container = document.getElementById('checkoutOptionsTiers');
+  if(!container) return [];
+  
+  const options = [];
+  container.querySelectorAll('.checkout-option-card').forEach(function(card){
+    options.push({
+      id: card.dataset.id,
+      checkout_title: card.querySelector('.checkout-option-title').value,
+      checkout_description: card.querySelector('.checkout-option-description').value,
+      checkout_price: parseFloat(card.querySelector('.checkout-option-price').value) || 0,
+      checkout_duration_days: parseInt(card.querySelector('.checkout-option-days').value) || 30,
+      checkout_tier: card.querySelector('.checkout-option-tier-select').value,
+      checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked,
+      is_active: card.querySelector('.checkout-option-active input').checked
+    });
+  });
+  return options;
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // === Message Utility Functions ===
 // NO CACHING - Always fetch fresh messages for development
 
@@ -1744,6 +1877,11 @@ let __notifyMapOnInteraction = null;
                 if(data.settings.site_currency){
                   websiteCurrencySelect.value = data.settings.site_currency;
                 }
+              }
+              
+              // Render checkout options
+              if(data.checkout_options && Array.isArray(data.checkout_options)){
+                renderCheckoutOptions(data.checkout_options, data.settings.site_currency || 'USD');
               }
               
               const contactEmailInput = document.getElementById('adminContactEmail');
@@ -22682,6 +22820,12 @@ form.addEventListener('input', formChangedWrapper, true);
     const welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
     if(welcomeEnabledCheckbox){
       websiteSettings.welcome_enabled = welcomeEnabledCheckbox.checked;
+    }
+    
+    // Collect checkout options from UI
+    const checkoutOptions = getCheckoutOptionsFromUI();
+    if(checkoutOptions.length > 0){
+      websiteSettings.checkout_options = checkoutOptions;
     }
     
     // Save messages separately to admin-settings endpoint (not formbuilder)

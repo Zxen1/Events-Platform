@@ -149,6 +149,35 @@ try {
         // If options fail, don't break the whole response
     }
 
+    // Fetch checkout_options
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_price`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active` FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
+            $checkoutRows = $stmt->fetchAll();
+            
+            $checkoutOptions = [];
+            foreach ($checkoutRows as $row) {
+                $checkoutOptions[] = [
+                    'id' => (int)$row['id'],
+                    'checkout_key' => $row['checkout_key'],
+                    'checkout_title' => $row['checkout_title'],
+                    'checkout_description' => $row['checkout_description'],
+                    'checkout_price' => (float)$row['checkout_price'],
+                    'checkout_currency' => $row['checkout_currency'],
+                    'checkout_duration_days' => (int)$row['checkout_duration_days'],
+                    'checkout_tier' => $row['checkout_tier'],
+                    'checkout_sidebar_ad' => (bool)$row['checkout_sidebar_ad'],
+                    'sort_order' => (int)$row['sort_order'],
+                    'is_active' => (bool)$row['is_active'],
+                ];
+            }
+            $response['checkout_options'] = $checkoutOptions;
+        }
+    } catch (Throwable $checkoutError) {
+        // If checkout options fail, don't break the whole response
+    }
+
     // Optionally include admin messages if requested
     $includeMessages = isset($_GET['include_messages']) && $_GET['include_messages'] === 'true';
     if ($includeMessages) {
