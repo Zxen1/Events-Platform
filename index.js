@@ -9498,33 +9498,37 @@ function makePosts(){
         overflowMenu.hidden = true;
 
         const iconPicker = document.createElement('div');
-        iconPicker.className = 'iconpicker-container';
+        iconPicker.className = 'options-dropdown iconpicker-container';
 
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
         iconPickerButton.className = 'iconpicker-button';
-        iconPickerButton.dataset.messageKey = initialCategoryIconSrc ? 'msg_button_change_icon' : 'msg_button_choose_icon';
-        // Text will be loaded from DB
+        iconPickerButton.setAttribute('aria-haspopup', 'true');
+        iconPickerButton.setAttribute('aria-expanded', 'false');
 
-        const preview = document.createElement('div');
-        preview.className = 'iconpicker-preview';
-        const previewLabel = document.createElement('span');
-        previewLabel.dataset.messageKey = 'msg_label_no_icon';
-        // Text will be loaded from DB
-        const previewImg = document.createElement('img');
-        previewImg.alt = `${c.name} icon preview`;
-        preview.append(previewLabel, previewImg);
+        const iconPickerImg = document.createElement('img');
+        iconPickerImg.className = 'iconpicker-btn-img';
+        iconPickerImg.alt = '';
+        const iconPickerLabel = document.createElement('span');
+        iconPickerLabel.className = 'iconpicker-btn-label';
+        iconPickerLabel.textContent = 'Choose Icon';
+        const iconPickerArrow = document.createElement('span');
+        iconPickerArrow.className = 'dropdown-arrow';
+        iconPickerArrow.setAttribute('aria-hidden', 'true');
+        iconPickerButton.append(iconPickerImg, iconPickerLabel, iconPickerArrow);
+
         const normalizedCategoryIconPath = applyNormalizeIconPath(initialCategoryIconSrc);
         if(normalizedCategoryIconPath){
-          previewImg.src = normalizedCategoryIconPath;
-          preview.classList.add('has-image');
-          previewLabel.textContent = '';
-          iconPickerButton.textContent = 'Change Icon';
+          iconPickerImg.src = normalizedCategoryIconPath;
+          iconPickerButton.classList.add('has-icon');
+          // Extract filename from path
+          const filename = normalizedCategoryIconPath.split('/').pop().replace(/\.[^/.]+$/, '');
+          iconPickerLabel.textContent = filename;
           if(!categoryIconLookup.found){
             writeIconPath(categoryIconPaths, c.id, c.name, normalizedCategoryIconPath);
           }
         }
-        iconPicker.append(preview, iconPickerButton);
+        iconPicker.append(iconPickerButton);
         // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
         if(typeof window.attachIconPicker === 'function'){
           window.attachIconPicker(iconPickerButton, iconPicker, {
@@ -9687,25 +9691,16 @@ function makePosts(){
             delete categoryIcons[currentCategoryName];
             writeIconPath(categoryIconPaths, c.id, currentCategoryName, '');
           }
+          // Update iconpicker button display
           if(normalizedSrc){
-            previewImg.src = normalizedSrc;
-            preview.classList.add('has-image');
-            previewLabel.textContent = '';
-            (async ()=>{
-              const changeIconMsg = await getMessage('msg_button_change_icon', {}, true) || 'Change Icon';
-              iconPickerButton.textContent = changeIconMsg;
-            })();
+            iconPickerImg.src = normalizedSrc;
+            iconPickerButton.classList.add('has-icon');
+            const filename = normalizedSrc.split('/').pop().replace(/\.[^/.]+$/, '');
+            iconPickerLabel.textContent = filename;
           } else {
-            previewImg.removeAttribute('src');
-            preview.classList.remove('has-image');
-            (async ()=>{
-              const noIconMsg = await getMessage('msg_label_no_icon', {}, true) || 'No Icon';
-              previewLabel.textContent = noIconMsg;
-            })();
-            (async ()=>{
-              const chooseIconMsg = await getMessage('msg_button_choose_icon', {}, true) || 'Choose Icon';
-              iconPickerButton.textContent = chooseIconMsg;
-            })();
+            iconPickerImg.removeAttribute('src');
+            iconPickerButton.classList.remove('has-icon');
+            iconPickerLabel.textContent = 'Choose Icon';
           }
         };
         const applyCategoryNameChange = ()=>{
@@ -9887,25 +9882,36 @@ function makePosts(){
           subNameInput.value = sub || '';
 
           const subIconPicker = document.createElement('div');
-          subIconPicker.className = 'iconpicker-container';
+          subIconPicker.className = 'options-dropdown iconpicker-container';
 
           const subIconButton = document.createElement('button');
           subIconButton.type = 'button';
           subIconButton.className = 'iconpicker-button';
-          subIconButton.dataset.messageKey = initialSubIconPath ? 'msg_button_change_icon' : 'msg_button_choose_icon';
-          // Text will be loaded from DB
+          subIconButton.setAttribute('aria-haspopup', 'true');
+          subIconButton.setAttribute('aria-expanded', 'false');
 
-          const subPreview = document.createElement('div');
-          subPreview.className = 'iconpicker-preview';
-          const subPreviewLabel = document.createElement('span');
-          subPreviewLabel.dataset.messageKey = 'msg_label_no_icon';
-          // Text will be loaded from DB
-          const subPreviewImg = document.createElement('img');
-          subPreviewImg.alt = `${sub} icon preview`;
-          subPreview.append(subPreviewLabel, subPreviewImg);
-    
+          const subIconImg = document.createElement('img');
+          subIconImg.className = 'iconpicker-btn-img';
+          subIconImg.alt = '';
+          const subIconLabel = document.createElement('span');
+          subIconLabel.className = 'iconpicker-btn-label';
+          subIconLabel.textContent = 'Choose Icon';
+          const subIconArrow = document.createElement('span');
+          subIconArrow.className = 'dropdown-arrow';
+          subIconArrow.setAttribute('aria-hidden', 'true');
+          subIconButton.append(subIconImg, subIconLabel, subIconArrow);
 
-          subIconPicker.append(subPreview, subIconButton);
+          if(initialSubIconPath){
+            const normalizedSubIconPath = applyNormalizeIconPath(initialSubIconPath);
+            if(normalizedSubIconPath){
+              subIconImg.src = normalizedSubIconPath;
+              subIconButton.classList.add('has-icon');
+              const filename = normalizedSubIconPath.split('/').pop().replace(/\.[^/.]+$/, '');
+              subIconLabel.textContent = filename;
+            }
+          }
+
+          subIconPicker.append(subIconButton);
           // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
           if(typeof window.attachIconPicker === 'function'){
             window.attachIconPicker(subIconButton, subIconPicker, {
@@ -14080,16 +14086,16 @@ function makePosts(){
                 delete subcategoryIcons[currentSubName];
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, '');
               }
+              // Update iconpicker button display
               if(normalizedSrc){
-                subPreviewImg.src = normalizedSrc;
-                subPreview.classList.add('has-image');
-                subPreviewLabel.textContent = '';
-                subIconButton.textContent = 'Change Icon';
+                subIconImg.src = normalizedSrc;
+                subIconButton.classList.add('has-icon');
+                const filename = normalizedSrc.split('/').pop().replace(/\.[^/.]+$/, '');
+                subIconLabel.textContent = filename;
               } else {
-                subPreviewImg.removeAttribute('src');
-                subPreview.classList.remove('has-image');
-                subPreviewLabel.textContent = 'No Icon';
-                subIconButton.textContent = 'Choose Icon';
+                subIconImg.removeAttribute('src');
+                subIconButton.classList.remove('has-icon');
+                subIconLabel.textContent = 'Choose Icon';
               }
             };
           const applySubNameChange = ()=>{
