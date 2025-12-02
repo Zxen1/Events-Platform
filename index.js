@@ -172,8 +172,16 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     });
     
     // Delete button handler
-    tierCard.querySelector('.checkout-option-delete').addEventListener('click', function(){
-      if(confirm('Delete this checkout option?')){
+    tierCard.querySelector('.checkout-option-delete').addEventListener('click', async function(){
+      const confirmed = await window.showConfirmDialog({
+        titleKey: 'msg_confirm_delete_checkout_option_title',
+        messageKey: 'msg_confirm_delete_checkout_option',
+        titleText: 'Delete Checkout Option',
+        messageText: 'Are you sure you want to delete this checkout option?',
+        confirmLabel: 'Delete',
+        focusCancel: true
+      });
+      if(confirmed){
         tierCard.remove();
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
@@ -7482,6 +7490,9 @@ function makePosts(){
       });
       return result;
     }
+    
+    // Expose confirm dialog globally for use across admin panel
+    window.showConfirmDialog = confirmFormbuilderAction;
     let subcategoryFieldOverlayEl = null;
     let subcategoryFieldOverlayContent = null;
     let subcategoryFieldOverlayKeyHandler = null;
