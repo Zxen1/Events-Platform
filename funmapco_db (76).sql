@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 02, 2025 at 02:02 PM
+-- Generation Time: Dec 02, 2025 at 05:25 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -145,6 +145,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (51, 'Currency Required Error Message', 'msg_error_currency_required', 'error', 'post', 'msg_member', 'Please select a currency before entering a price.', 'Currency validation for pricing', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (52, 'Duplicate Session Time Error Message', 'msg_error_duplicate_session_time', 'error', 'post', 'msg_member', 'There is already a session for that time.', 'Duplicate session time validation', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (53, 'Member Create Intro Message', 'msg_member_create_intro', 'label', 'member', 'msg_member', 'Complete the form below to submit your post.', 'Intro text shown in member create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-16 12:30:31'),
+(79, 'Delete Checkout Option Title', 'msg_confirm_delete_checkout_option_title', '', 'confirm', 'settings', 'Delete Checkout Option', 'Title for checkout option delete confirmation dialog', 0, NULL, 1, 1, 0, NULL, '2025-12-02 06:25:33', '2025-12-02 06:25:33'),
 (55, 'Member Post Listing Button', 'msg_member_post_listing', 'label', 'member', 'msg_member', 'Submit Post', 'Button text to submit a new listing', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-16 12:13:35'),
 (56, 'Member Tab Create', 'msg_member_tab_create', 'label', 'member', 'msg_member', 'Create Post', 'Tab label for create post section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (57, 'Member Tab My Posts', 'msg_member_tab_myposts', 'label', 'member', 'msg_member', 'My Posts', 'Tab label for my posts section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
@@ -168,7 +169,8 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (75, 'Delete Subcategory Button', 'msg_button_delete_subcategory', 'label', 'admin', 'msg_admin', 'Delete Subcategory', 'Button to delete subcategory', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02'),
 (76, 'Add Field Button', 'msg_button_add_field', 'label', 'admin', 'msg_admin', 'Add Field', 'Button to add new field', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02'),
 (77, 'Hide Category Label', 'msg_label_hide_category', 'label', 'admin', 'msg_admin', 'Hide Category', 'Label for hide category toggle', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02'),
-(78, 'Hide Subcategory Label', 'msg_label_hide_subcategory', 'label', 'admin', 'msg_admin', 'Hide Subcategory', 'Label for hide subcategory toggle', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02');
+(78, 'Hide Subcategory Label', 'msg_label_hide_subcategory', 'label', 'admin', 'msg_admin', 'Hide Subcategory', 'Label for hide subcategory toggle', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02'),
+(80, 'Delete Checkout Option Message', 'msg_confirm_delete_checkout_option', '', 'confirm', 'settings', 'Are you sure you want to delete this checkout option?', 'Message for checkout option delete confirmation dialog', 0, NULL, 1, 1, 0, NULL, '2025-12-02 06:25:33', '2025-12-02 06:25:33');
 
 -- --------------------------------------------------------
 
@@ -201,7 +203,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-29 19:03:49'),
-(11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-11-29 00:49:18'),
+(11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-02 03:25:58'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (14, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-01 04:16:25'),
@@ -299,18 +301,18 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_price`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 0.00, 'USD', 30, 'standard', 0, 1, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 10.00, 'USD', 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 15.00, 'USD', 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 20.00, 'USD', 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 0.00, 'USD', 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 18.00, 'USD', 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 27.00, 'USD', 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 36.00, 'USD', 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 0.00, 'USD', 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 80.00, 'USD', 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 120.00, 'USD', 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21'),
-(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 160.00, 'USD', 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-11-30 05:45:21');
+(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 0.00, 'USD', 30, 'standard', 0, 1, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 10.00, 'USD', 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 15.00, 'USD', 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 20.00, 'USD', 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 0.00, 'USD', 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 18.00, 'USD', 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 27.00, 'USD', 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 36.00, 'USD', 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 0.00, 'USD', 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 80.00, 'USD', 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 120.00, 'USD', 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
+(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 160.00, 'USD', 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02');
 
 -- --------------------------------------------------------
 
@@ -1112,13 +1114,13 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2775;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2791;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
