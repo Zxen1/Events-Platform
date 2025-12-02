@@ -13007,10 +13007,6 @@ function makePosts(){
                 } else if(isEditable && !safeField.name){
                   safeField.name = updatedFieldTypeName;
                 }
-                if(fieldNameInput){
-                  fieldNameInput.value = safeField.name || '';
-                }
-                
                 if(matchingFieldType){
                   if(matchingFieldType.placeholder){
                     safeField.placeholder = matchingFieldType.placeholder;
@@ -13123,22 +13119,6 @@ function makePosts(){
             const fieldRequiredText = document.createElement('span');
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
-
-            // Add name input for editable fields
-            const fieldNameContainer = document.createElement('div');
-            fieldNameContainer.className = 'field-name-editor';
-            fieldNameContainer.hidden = true;
-            const fieldNameLabel = document.createElement('label');
-            fieldNameLabel.className = 'field-name-label';
-            fieldNameLabel.textContent = 'Field Name';
-            const fieldNameInput = document.createElement('input');
-            fieldNameInput.type = 'text';
-            fieldNameInput.className = 'field-name-input';
-            fieldNameInput.placeholder = 'Enter field name';
-            fieldNameInput.value = safeField.name || '';
-            fieldNameLabel.appendChild(fieldNameInput);
-            fieldNameContainer.appendChild(fieldNameLabel);
-            editPanel.appendChild(fieldNameContainer);
 
             editPanel.append(fieldRequiredToggle, fieldTypeWrapper);
 
@@ -13589,8 +13569,6 @@ function makePosts(){
                 const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
                 isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
               }
-              // Editable fields have inline name input in header, so hide the edit panel name input
-              fieldNameContainer.hidden = true;
               if(type === 'images'){
                 if(safeField.placeholder){
                   safeField.placeholder = '';
@@ -13659,31 +13637,6 @@ function makePosts(){
               runSummaryUpdater();
             };
 
-
-            // Wire up name input for editable fields - only update on blur, not on every keystroke
-            // Call markDirty() directly (not notifyFormbuilderChange) to avoid member form refresh
-            // while still enabling the save button
-            fieldNameInput.addEventListener('blur', ()=>{
-              const newName = fieldNameInput.value.trim();
-              if(safeField.name !== newName){
-                safeField.name = newName;
-                // Mark form dirty so save button is enabled
-                if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
-                  window.adminPanelModule.markDirty();
-                }
-                renderForm({
-                  formFields: formPreviewFields,
-                  formId: formPreviewId,
-                  fields: fields,
-                  categoryName: c && c.name,
-                  subcategoryName: sub,
-                  fieldIdCounter: formPreviewFieldIdCounter,
-                  formLabel: 'Form Preview'
-                });
-                runSummaryUpdater();
-              }
-            });
-
             updateFieldEditorsByType();
 
             const openEditPanel = ()=>{
@@ -13732,7 +13685,7 @@ function makePosts(){
 
             actionFieldBtn = document.createElement('button');
             actionFieldBtn.type = 'button';
-            actionFieldBtn.className = 'delete-category-btn delete-field-btn';
+            actionFieldBtn.className = 'delete-field-btn';
             actionFieldBtn.textContent = 'Delete';
             actionFieldBtn.setAttribute('aria-label', 'Delete field');
             actionFieldBtn.addEventListener('click', async event=>{
@@ -13775,7 +13728,6 @@ function makePosts(){
               editPanel,
               fieldTypeMenuBtn,
               fieldRequiredInput,
-              fieldNameInput,
               dropdownOptionsContainer,
               dropdownOptionsList,
               checkoutOptionsContainer,
@@ -13837,17 +13789,14 @@ function makePosts(){
             header.append(inlineNameInput, summary, summaryRequired);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, fieldNameInput, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             
-            // Type badge for editable fields
-            const fieldTypeBadge = document.createElement('span');
-            fieldTypeBadge.className = 'field-type-badge';
-            fieldTypeBadge.style.display = 'none';
-            
-            header.append(fieldTypeBadge, fieldDragHandle, fieldEditBtn);
+            header.append(fieldDragHandle, fieldEditBtn);
 
-            row.append(header, editPanel);
+            row.append(header);
+            editPanel.hidden = true;
+            row.append(editPanel);
             row._header = header;
 
             // Edit panel only opens via the edit button click (handled in createFieldEditUI)
@@ -13878,12 +13827,9 @@ function makePosts(){
                 inlineNameInput.style.display = '';
                 inlineNameInput.value = safeField.name || '';
                 summary.style.display = 'none';
-                fieldTypeBadge.style.display = '';
-                fieldTypeBadge.textContent = typeLabel;
               } else {
                 inlineNameInput.style.display = 'none';
                 summary.style.display = '';
-                fieldTypeBadge.style.display = 'none';
                 summaryLabel.textContent = typeLabel || 'Field';
               }
               
@@ -13904,9 +13850,6 @@ function makePosts(){
             // Sync inline name input with field data
             inlineNameInput.addEventListener('input', ()=>{
               safeField.name = inlineNameInput.value;
-              if(fieldNameInput){
-                fieldNameInput.value = inlineNameInput.value;
-              }
               notifyFormbuilderChange();
             });
 
