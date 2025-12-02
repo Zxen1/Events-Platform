@@ -1657,10 +1657,12 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .settings-checkout-options-container h3{
-  margin:0 0 8px 0;
+  margin:0 0 12px 0;
+  padding:0 0 10px 0;
   font-size:15px;
   font-weight:500;
   color:#fff;
+  border-bottom:1px solid rgba(255,255,255,0.1);
 }
 .settings-checkout-options-container .checkout-options-tiers{
   display:flex;
@@ -1714,7 +1716,7 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
   min-width:0;
   background:rgba(0,0,0,0.2);
-  border:none;
+  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:8px 12px;
   color:#fff;
@@ -1724,6 +1726,7 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-title:focus{
   outline:none;
   background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
 }
 .checkout-option-tier-badge{
   flex-shrink:0;
@@ -1789,7 +1792,7 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-description{
   width:100%;
   background:rgba(0,0,0,0.2);
-  border:none;
+  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:10px 12px;
   color:#ccc;
@@ -1802,6 +1805,7 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-description:focus{
   outline:none;
   background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
 }
 .checkout-option-description::placeholder{
   color:#555;
@@ -1828,7 +1832,7 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-field input[type="number"]{
   width:100%;
   background:rgba(0,0,0,0.2);
-  border:none;
+  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:8px 12px;
   color:#fff;
@@ -1837,11 +1841,12 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-field input[type="number"]:focus{
   outline:none;
   background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
 }
 .checkout-option-field select{
   width:100%;
   background:rgba(0,0,0,0.2);
-  border:none;
+  border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;
   padding:8px 32px 8px 12px;
   color:#fff;
@@ -1858,6 +1863,7 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-field select:focus{
   outline:none;
   background-color:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
 }
 .checkout-option-field select option{
   background:#2a2a2a;
