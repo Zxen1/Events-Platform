@@ -1107,13 +1107,7 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:auto;
   overflow-y:overlay;
   overflow-x:hidden;
-  padding:0 10px;
-  --panel-scrollbar-overlay: 0px;
-  --panel-scrollbar-size: 12px;
-  --panel-scrollbar-thumb: rgba(255,255,255,0.5);
-  --panel-scrollbar-thumb-hover: rgba(255,255,255,0.7);
-  --panel-base-padding-end: 10px;
-  padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
+  padding:0;
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
@@ -1122,16 +1116,11 @@ button[aria-expanded="true"] .results-arrow{
 }
 #adminForm.panel-body,
 #memberForm.panel-body{
-  padding:10px;
-  padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
-}
-#adminForm.panel-body{
-  --panel-base-padding-end: 10px;
-  padding-right:10px;
+  padding:10px 0;
 }
 .panel-body{
   scrollbar-width: thin;
-  scrollbar-color: var(--panel-scrollbar-thumb) transparent;
+  scrollbar-color: rgba(255,255,255,0.5) transparent;
 }
 .panel-body::-webkit-scrollbar{
   width: 12px;
@@ -1154,6 +1143,8 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   box-sizing:border-box;
   margin:0 auto;
+  padding-left:10px;
+  padding-right:10px;
   min-width:0;
 }
 .panel-body > *:last-child{
@@ -3920,7 +3911,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:440px;
   padding:10px;
   overflow:auto;
-  overflow:overlay;
   background:rgba(0,0,0,0);
   pointer-events:auto;
   z-index:2;
@@ -4097,7 +4087,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   padding:0;
   margin:0;
   overflow-y:auto;
-  overflow-y:overlay;
   overflow-x:hidden;
   display:flex;
   flex-direction:column;
@@ -4183,11 +4172,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   justify-content:flex-start;
 }
 
-@supports (scrollbar-gutter: stable){
-  .post-images .thumbnail-row{
-    scrollbar-gutter:stable both-edges;
-  }
-}
 
 .post-images .thumbnail-row img{
   width:40px;
@@ -5535,13 +5519,6 @@ body.filters-active #filterBtn{
   overflow-x:hidden;
   padding:0;
   margin:0;
-  scrollbar-gutter:stable;
-}
-@supports (scrollbar-gutter: stable){
-  .post-board .posts,
-  .recents-board{
-    scrollbar-gutter:stable;
-  }
 }
 @supports (scrollbar-width: thin){
   .post-board .posts,
@@ -6317,12 +6294,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   border-radius:8px;
 }
 
-@supports (scrollbar-gutter: stable){
-  .open-post .calendar-container .calendar-scroll,
-  .post-body .calendar-container .calendar-scroll{
-    scrollbar-gutter: stable;
-  }
-}
 .open-post .post-calendar .calendar,
 .post-body .post-calendar .calendar,
 .post-body .post-calendar .calendar{
@@ -7047,7 +7018,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     max-width:100%;
     height:90%;
     overflow:auto;
-    overflow:overlay;
     background:var(--list-background);
     border-radius:8px;
   }
