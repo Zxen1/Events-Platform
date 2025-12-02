@@ -14103,11 +14103,47 @@ function makePosts(){
                 subLogo.classList.add('has-icon');
                 subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" alt="">`;
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, normalizedSrc);
+                // Sample dominant color from icon and apply to header/content backgrounds
+                const colorImg = new Image();
+                colorImg.crossOrigin = 'anonymous';
+                colorImg.onload = () => {
+                  try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = colorImg.width;
+                    canvas.height = colorImg.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(colorImg, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                    let r = 0, g = 0, b = 0, count = 0;
+                    for(let i = 0; i < imageData.length; i += 4){
+                      if(imageData[i + 3] > 128){ // Only count non-transparent pixels
+                        r += imageData[i];
+                        g += imageData[i + 1];
+                        b += imageData[i + 2];
+                        count++;
+                      }
+                    }
+                    if(count > 0){
+                      r = Math.round(r / count);
+                      g = Math.round(g / count);
+                      b = Math.round(b / count);
+                      const bgColor = `rgba(${r},${g},${b},0.25)`;
+                      subHeader.style.background = bgColor;
+                      subContent.style.background = bgColor;
+                    }
+                  } catch(err){
+                    // CORS or canvas error - keep default background
+                  }
+                };
+                colorImg.src = normalizedSrc;
               } else {
                 subLogo.textContent = displayName.charAt(0) || '';
                 subLogo.classList.remove('has-icon');
                 delete subcategoryIcons[currentSubName];
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, '');
+                // Reset to default background
+                subHeader.style.background = '';
+                subContent.style.background = '';
               }
               // Update iconpicker button display
               if(normalizedSrc){
