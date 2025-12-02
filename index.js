@@ -152,7 +152,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
               <option value="featured" ${option.checkout_tier === 'featured' ? 'selected' : ''}>Featured</option>
             </select>
           </div>
-          <div class="checkout-option-field">
+          <div class="checkout-option-field sidebar-field">
             <label>
               <input type="checkbox" class="checkout-option-sidebar" ${option.checkout_sidebar_ad ? 'checked' : ''} />
               Sidebar Ad

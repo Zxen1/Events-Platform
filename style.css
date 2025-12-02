@@ -1657,146 +1657,240 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .settings-checkout-options-container h3{
-  margin:0 0 12px 0;
-  font-size:16px;
-  font-weight:600;
+  margin:0 0 8px 0;
+  font-size:15px;
+  font-weight:500;
   color:#fff;
 }
 .settings-checkout-options-container .checkout-options-tiers{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:12px;
   margin-bottom:12px;
 }
 .settings-checkout-options-container .add-checkout-option{
   width:100%;
   padding:10px;
   background:var(--btn);
-  border:1px solid var(--btn);
+  border:none;
   border-radius:8px;
   color:#fff;
   cursor:pointer;
   font-size:14px;
+  transition:background 0.15s;
 }
 .settings-checkout-options-container .add-checkout-option:hover{
   background:var(--btn-hover);
 }
 
+/* Checkout Option Cards - Admin Panel Style */
 .checkout-option-card{
-  background:rgba(0,0,0,0.3);
-  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(0,0,0,0.15);
+  border:1px solid rgba(255,255,255,0.08);
   border-radius:8px;
-  padding:12px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 .checkout-option-card.inactive{
-  opacity:0.6;
+  opacity:0.5;
 }
+
+/* Card Header */
 .checkout-option-header{
   display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:8px;
-  margin-bottom:10px;
+  align-items:center;
+  gap:10px;
 }
 .checkout-option-title-row{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
   flex:1;
+  min-width:0;
 }
 .checkout-option-title{
   flex:1;
-  background:rgba(0,0,0,0.3);
+  min-width:0;
+  background:rgba(0,0,0,0.2);
   border:none;
-  border-radius:4px;
-  padding:6px 10px;
+  border-radius:8px;
+  padding:8px 12px;
   color:#fff;
   font-size:14px;
-  font-weight:600;
+  font-weight:500;
+}
+.checkout-option-title:focus{
+  outline:none;
+  background:rgba(0,0,0,0.3);
 }
 .checkout-option-tier-badge{
+  flex-shrink:0;
   font-size:10px;
+  font-weight:600;
   text-transform:uppercase;
-  padding:2px 6px;
+  letter-spacing:0.5px;
+  padding:4px 8px;
   border-radius:4px;
-  background:#3a3a5a;
-  color:#aaa;
+  background:rgba(100,100,140,0.3);
+  color:#9090b0;
 }
 .checkout-option-tier-badge.featured{
-  background:#5a4a2a;
-  color:#ffd700;
+  background:rgba(255,180,50,0.15);
+  color:#e8b020;
 }
 .checkout-option-controls{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
+  flex-shrink:0;
 }
 .checkout-option-active{
   display:flex;
   align-items:center;
-  gap:4px;
-  font-size:12px;
-  color:#aaa;
+  gap:6px;
+  font-size:13px;
+  color:#888;
+  cursor:pointer;
+  user-select:none;
+}
+.checkout-option-active input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  accent-color:var(--btn);
   cursor:pointer;
 }
 .checkout-option-delete{
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   background:transparent;
   border:none;
-  color:#ff6b6b;
+  color:#666;
   font-size:18px;
   cursor:pointer;
-  padding:0 4px;
-  line-height:1;
+  border-radius:4px;
+  transition:color 0.15s, background 0.15s;
 }
 .checkout-option-delete:hover{
-  color:#ff4444;
+  color:#c45050;
+  background:rgba(200,80,80,0.1);
 }
+
+/* Card Body */
 .checkout-option-body{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:12px;
 }
 .checkout-option-description{
+  width:100%;
   background:rgba(0,0,0,0.2);
   border:none;
-  border-radius:4px;
-  padding:8px;
+  border-radius:8px;
+  padding:10px 12px;
   color:#ccc;
   font-size:13px;
+  font-family:inherit;
   resize:vertical;
-  min-height:50px;
+  min-height:60px;
+  line-height:1.4;
 }
+.checkout-option-description:focus{
+  outline:none;
+  background:rgba(0,0,0,0.3);
+}
+.checkout-option-description::placeholder{
+  color:#555;
+}
+
+/* Fields Grid */
 .checkout-option-fields{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
 }
 .checkout-option-field{
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:6px;
+  flex:1 1 calc(50% - 6px);
+  min-width:100px;
 }
 .checkout-option-field label{
-  font-size:11px;
+  font-size:12px;
   color:#888;
+  font-weight:400;
+}
+.checkout-option-field input[type="number"]{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  color:#fff;
+  font-size:14px;
+}
+.checkout-option-field input[type="number"]:focus{
+  outline:none;
+  background:rgba(0,0,0,0.3);
+}
+.checkout-option-field select{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:8px;
+  padding:8px 32px 8px 12px;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:12px;
+}
+.checkout-option-field select:focus{
+  outline:none;
+  background-color:rgba(0,0,0,0.3);
+}
+.checkout-option-field select option{
+  background:#2a2a2a;
+  color:#fff;
+}
+
+/* Sidebar Ad Checkbox Field */
+.checkout-option-field.sidebar-field{
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+  padding-top:22px;
+}
+.checkout-option-field.sidebar-field label{
   display:flex;
   align-items:center;
-  gap:4px;
+  gap:8px;
+  cursor:pointer;
+  user-select:none;
+  color:#aaa;
 }
-.checkout-option-field input[type="number"],
-.checkout-option-field select{
-  background:rgba(0,0,0,0.3);
-  border:none;
-  border-radius:4px;
-  padding:6px 8px;
-  color:#fff;
-  font-size:13px;
+.checkout-option-field.sidebar-field input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  accent-color:var(--btn);
+  cursor:pointer;
 }
+
 .checkout-option-empty{
-  color:#666;
+  color:#555;
   text-align:center;
-  padding:20px;
-  font-style:italic;
+  padding:24px 16px;
+  font-size:14px;
 }
 
 /* System Image Picker Styles */
