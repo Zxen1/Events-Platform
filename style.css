@@ -7868,8 +7868,7 @@ html, body { cursor: auto !important; }
               flex-shrink:0;
             }
             #tab-forms .iconpicker-container{
-              width:260px;
-              max-width:100%;
+              width:calc(100% - 44px);
             }
             #tab-forms .iconpicker-button{
               width:100%;
