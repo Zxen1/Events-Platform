@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 02, 2025 at 01:44 PM
+-- Generation Time: Dec 02, 2025 at 02:02 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -180,7 +180,7 @@ CREATE TABLE `admin_settings` (
   `id` int(11) NOT NULL,
   `setting_key` varchar(100) NOT NULL,
   `setting_value` text DEFAULT NULL,
-  `setting_type` enum('string','boolean','integer','decimal','json') DEFAULT 'string',
+  `setting_type` enum('string','boolean','integer','decimal','json','dropdown') DEFAULT 'string',
   `description` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -193,7 +193,7 @@ CREATE TABLE `admin_settings` (
 INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
 (1, 'site_name', 'Funmap', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-30 17:00:04'),
 (2, 'site_tagline', 'Do Stuff', 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-30 17:00:04'),
-(3, 'site_currency', '', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-11-29 19:03:51'),
+(3, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-12-02 02:54:56'),
 (4, 'contact_email', '', 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (5, 'support_email', '', 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -1118,7 +1118,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2768;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2775;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
