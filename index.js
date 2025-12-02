@@ -22261,9 +22261,6 @@ function openPanel(m){
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
   if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
   if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
-  if(content){
-    requestAnimationFrame(()=> refreshPanelScrollOverlays());
-  }
 }
 
 const memberPanelChangeManager = (()=>{
