@@ -173,11 +173,10 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     
     // Delete button handler
     tierCard.querySelector('.checkout-option-delete').addEventListener('click', async function(){
+      const optionTitle = tierCard.querySelector('.checkout-option-title').value || 'this checkout option';
       const confirmed = await window.showConfirmDialog({
-        titleKey: 'msg_confirm_delete_checkout_option_title',
-        messageKey: 'msg_confirm_delete_checkout_option',
         titleText: 'Delete Checkout Option',
-        messageText: 'Are you sure you want to delete this checkout option?',
+        messageText: `Delete "${optionTitle}"?`,
         confirmLabel: 'Delete',
         focusCancel: true
       });
