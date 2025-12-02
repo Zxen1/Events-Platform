@@ -9730,7 +9730,6 @@ function makePosts(){
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
           updateDragHandleLabel(categoryDragHandle, `Reorder ${displayName} category`);
           iconPickerButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
-          previewImg.alt = `${displayName} icon preview`;
           deleteCategoryBtn.setAttribute('aria-label', `Delete ${displayName} category`);
           addSubBtn.setAttribute('aria-label', `Add subcategory to ${displayName}`);
           subMenusContainer.querySelectorAll('.subcategory-form-menu').forEach(subEl=>{
@@ -14113,7 +14112,6 @@ function makePosts(){
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
             updateDragHandleLabel(subDragHandle, `Reorder ${displayName} subcategory`);
             subIconButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
-            subPreviewImg.alt = `${displayName} icon preview`;
           const categoryDisplayName = getCategoryDisplayName();
           deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
