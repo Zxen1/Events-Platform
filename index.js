@@ -14191,10 +14191,6 @@ function makePosts(){
           const subEditPanel = document.createElement('div');
           subEditPanel.className = 'subcategory-edit-panel';
           subEditPanel.hidden = true;
-          subEditPanel.style.position = 'absolute';
-          subEditPanel.style.right = '0';
-          subEditPanel.style.top = 'calc(100% + 10px)';
-          subEditPanel.style.zIndex = '100';
           
           const subHideToggleRow = document.createElement('div');
           subHideToggleRow.className = 'subcategory-hide-toggle-row';
@@ -14457,7 +14453,6 @@ function makePosts(){
           deleteSubcategoryRow.append(deleteSubBtn);
 
           subEditPanel.append(subNameInput, subIconPicker, subHideToggleRow, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, saveSubcategoryRow, deleteSubcategoryRow);
-          subHeader.append(subEditPanel);
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
@@ -14493,7 +14488,7 @@ function makePosts(){
           };
           document.addEventListener('pointerdown', handleSubcategoryEditPointerDown, true);
 
-          subContent.append(fieldsSection);
+          subContent.append(subEditPanel, fieldsSection);
 
           subMenu.append(subContent);
 
