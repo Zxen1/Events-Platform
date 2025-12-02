@@ -6730,6 +6730,7 @@ function makePosts(){
       handle.title = label;
     }
 
+    let formbuilderAutoSaveTimer = null;
     function notifyFormbuilderChange(){
       if(!formbuilderCats) return;
       try{
@@ -6745,6 +6746,15 @@ function makePosts(){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
+        // Auto-save formbuilder changes with debounce
+        if(formbuilderAutoSaveTimer){
+          clearTimeout(formbuilderAutoSaveTimer);
+        }
+        formbuilderAutoSaveTimer = setTimeout(()=>{
+          if(typeof window.adminPanelModule?.runSave === 'function'){
+            window.adminPanelModule.runSave({ closeAfter: false });
+          }
+        }, 800);
       }
     }
 
@@ -13851,6 +13861,17 @@ function makePosts(){
             inlineNameInput.addEventListener('input', ()=>{
               safeField.name = inlineNameInput.value;
               notifyFormbuilderChange();
+            });
+            // Save immediately when clicking outside the input (only if edited)
+            inlineNameInput.addEventListener('blur', ()=>{
+              if(formbuilderAutoSaveTimer){
+                clearTimeout(formbuilderAutoSaveTimer);
+                formbuilderAutoSaveTimer = null;
+                // Timer was pending, so there were changes - save now
+                if(typeof window.adminPanelModule?.runSave === 'function'){
+                  window.adminPanelModule.runSave({ closeAfter: false });
+                }
+              }
             });
 
             const handleDeleteField = async ()=>{
@@ -23365,9 +23386,8 @@ const adminPanelChangeManager = (()=>{
         applying = false;
       }
     }
-    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restoreSaved === 'function'){
-      window.formbuilderStateManager.restoreSaved();
-    }
+    // Don't re-render formbuilder - keep edit panels open, just restore data values
+    // Formbuilder auto-saves on each action anyway
     // Reset admin messages to original values
     document.querySelectorAll('.message-text-input').forEach(textarea => {
       textarea.value = textarea.dataset.originalValue;

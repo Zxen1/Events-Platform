@@ -1750,6 +1750,10 @@ button[aria-expanded="true"] .results-arrow{
   height:18px;
   accent-color:var(--btn);
   cursor:pointer;
+  filter:brightness(0.6);
+}
+.checkout-option-active input[type="checkbox"]:checked{
+  filter:none;
 }
 
 /* Edit Button */
@@ -1780,12 +1784,10 @@ button[aria-expanded="true"] .results-arrow{
 
 /* Edit Panel */
 .checkout-options-edit-panel{
-  margin-top:12px;
-  padding-top:12px;
-  border-top:1px solid rgba(255,255,255,0.1);
+  margin-top:10px;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:10px;
 }
 .checkout-options-edit-panel[hidden]{
   display:none;
@@ -7540,8 +7542,7 @@ html, body { cursor: auto !important; }
               max-width:320px;
             }
             #tab-forms .field-edit-panel{
-              margin-top:8px;
-              padding-top:8px;
+              margin-top:10px;
               border-top:1px solid rgba(255,255,255,0.1);
               display:flex;
               flex-direction:column;
@@ -8736,6 +8737,10 @@ html, body { cursor: auto !important; }
               height:18px;
               accent-color:var(--btn);
               cursor:pointer;
+              filter:brightness(0.6);
+            }
+            #tab-forms .field-required-toggle input[type="checkbox"]:checked{
+              filter:none;
             }
             #tab-forms .field-type-select-wrapper{
               position:relative;
