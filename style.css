@@ -7536,8 +7536,6 @@ html, body { cursor: auto !important; }
               gap:10px;
             }
             #tab-forms .category-edit-panel{
-              min-width:280px;
-              max-width:320px;
             }
             #tab-forms .field-edit-panel{
               border-top:1px solid rgba(255,255,255,0.1);

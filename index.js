@@ -9586,11 +9586,6 @@ function makePosts(){
 
         editPanel.append(nameInput, iconPicker, hideToggleRow, saveCategoryRow, deleteCategoryRow);
         editPanel.hidden = true;
-        editPanel.style.position = 'absolute';
-        editPanel.style.right = '0';
-        editPanel.style.top = 'calc(100% + 10px)';
-        editPanel.style.zIndex = '100';
-        header.append(editPanel);
         
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
@@ -14621,7 +14616,7 @@ function makePosts(){
 
         applyCategoryNameChange();
 
-        content.append(subMenusContainer, editMenu);
+        content.append(editPanel, subMenusContainer, editMenu);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
