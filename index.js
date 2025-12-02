@@ -12912,9 +12912,6 @@ function makePosts(){
             const editPanel = document.createElement('div');
             editPanel.className = 'field-edit-panel';
             editPanel.hidden = true;
-            editPanel.style.position = 'absolute';
-            editPanel.style.top = 'calc(100% + 10px)';
-            editPanel.style.zIndex = '100';
 
             const editMenu = document.createElement('div');
             editMenu.className = 'field-edit-menu';
@@ -13817,6 +13814,7 @@ function makePosts(){
               inlineControls,
               fieldTypeMenuBtn,
               fieldRequiredInput,
+              fieldNameInput,
               dropdownOptionsContainer,
               dropdownOptionsList,
               checkoutOptionsContainer,
@@ -13855,7 +13853,14 @@ function makePosts(){
 
             const header = document.createElement('div');
             header.className = 'field-row-header';
-            header.style.position = 'relative';
+
+            // Inline name input for editable field types
+            const inlineNameInput = document.createElement('input');
+            inlineNameInput.type = 'text';
+            inlineNameInput.className = 'field-inline-name';
+            inlineNameInput.placeholder = 'Field name';
+            inlineNameInput.value = safeField.name || '';
+            inlineNameInput.style.display = 'none';
 
             const summary = document.createElement('div');
             summary.className = 'field-row-summary';
@@ -13867,16 +13872,20 @@ function makePosts(){
             summaryRequired.className = 'field-summary-required';
 
             summary.append(summaryLabel, summaryRequired);
-            header.append(summary);
+            header.append(inlineNameInput, summary);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, fieldNameInput, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
-            header.append(fieldDragHandle);
-            header.append(fieldEditBtn);
-            header.append(editPanel);
+            
+            // Type badge for editable fields
+            const fieldTypeBadge = document.createElement('span');
+            fieldTypeBadge.className = 'field-type-badge';
+            fieldTypeBadge.style.display = 'none';
+            
+            header.append(fieldTypeBadge, fieldDragHandle, fieldEditBtn);
 
-            row.append(header);
+            row.append(header, editPanel);
             row._header = header;
 
             // Edit panel only opens via the edit button click (handled in createFieldEditUI)
@@ -13890,7 +13899,9 @@ function makePosts(){
 
             const updateFieldSummary = ()=>{
               const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
-              // For editable fields, use the custom name if set, otherwise use field type name
+              const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === typeKey);
+              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              
               const customName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : '';
               const storedTypeName = (typeof safeField.field_type_name === 'string' && safeField.field_type_name.trim())
                 ? safeField.field_type_name.trim()
@@ -13899,8 +13910,21 @@ function makePosts(){
                   : '';
               const typeLabelRaw = (storedTypeName || getFormFieldTypeLabel(typeKey)).trim();
               const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
-              // Use custom name if available (for editable fields), otherwise use type label
-              summaryLabel.textContent = customName || typeLabel || 'Field';
+              
+              // Show inline input for editable fields, summary for non-editable
+              if(isEditable){
+                inlineNameInput.style.display = '';
+                inlineNameInput.value = safeField.name || '';
+                summary.style.display = 'none';
+                fieldTypeBadge.style.display = '';
+                fieldTypeBadge.textContent = typeLabel;
+              } else {
+                inlineNameInput.style.display = 'none';
+                summary.style.display = '';
+                fieldTypeBadge.style.display = 'none';
+                summaryLabel.textContent = typeLabel || 'Field';
+              }
+              
               const isRequired = !!safeField.required;
               summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
               summaryRequired.classList.toggle('is-required', isRequired);
@@ -13914,6 +13938,15 @@ function makePosts(){
 
             fieldEditUI.setSummaryUpdater(updateFieldSummary);
             fieldEditUI.runSummaryUpdater();
+
+            // Sync inline name input with field data
+            inlineNameInput.addEventListener('input', ()=>{
+              safeField.name = inlineNameInput.value;
+              if(fieldNameInput){
+                fieldNameInput.value = inlineNameInput.value;
+              }
+              notifyFormbuilderChange();
+            });
 
             const handleDeleteField = async ()=>{
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';

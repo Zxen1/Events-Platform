@@ -7541,11 +7541,21 @@ html, body { cursor: auto !important; }
               max-width:320px;
             }
             #tab-forms .field-edit-panel{
-              width:400px;
-              max-width:400px;
-              left:50%;
+              position:relative;
+              top:auto;
+              left:auto;
               right:auto;
-              transform:translateX(-50%);
+              transform:none;
+              width:100%;
+              max-width:100%;
+              margin-top:12px;
+              padding-top:12px;
+              border-top:1px solid rgba(255,255,255,0.1);
+              background:transparent;
+              border:none;
+              border-radius:0;
+              box-shadow:none;
+              z-index:auto;
             }
             #tab-forms .subcategory-edit-panel{
               min-width:340px;
@@ -8650,6 +8660,9 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:10px;
             }
+            #tab-forms .subcategory-field-row.field-edit-open{
+              border-color:rgba(255,255,255,0.2);
+            }
             #tab-forms .subcategory-field-row .field-inline-controls{
               display:flex;
               align-items:center;
@@ -8676,6 +8689,33 @@ html, body { cursor: auto !important; }
               overflow:hidden;
               text-overflow:ellipsis;
               white-space:nowrap;
+            }
+            #tab-forms .field-inline-name{
+              flex:1;
+              min-width:0;
+              height:36px;
+              padding:0 12px;
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              color:var(--button-text);
+              font-size:13px;
+            }
+            #tab-forms .field-inline-name:focus{
+              outline:none;
+              border-color:var(--btn-hover, #2e3a72);
+              background:rgba(0,0,0,0.3);
+            }
+            #tab-forms .field-type-badge{
+              flex-shrink:0;
+              font-size:10px;
+              font-weight:600;
+              text-transform:uppercase;
+              letter-spacing:0.5px;
+              padding:4px 8px;
+              border-radius:4px;
+              background:rgba(100,100,140,0.3);
+              color:#9090b0;
             }
             #tab-forms .field-summary-required{
               font-size:12px;
