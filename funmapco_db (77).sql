@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 02, 2025 at 05:25 PM
+-- Generation Time: Dec 03, 2025 at 12:57 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -193,9 +193,9 @@ CREATE TABLE `admin_settings` (
 --
 
 INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'site_name', 'Funmap', 'string', 'Site name', '2025-11-13 16:17:10', '2025-11-30 17:00:04'),
-(2, 'site_tagline', 'Do Stuff', 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-11-30 17:00:04'),
-(3, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-12-02 02:54:56'),
+(1, 'site_name', 'Funmap.com', 'string', 'Site name', '2025-11-13 16:17:10', '2025-12-02 10:03:20'),
+(2, 'site_tagline', 'Find stuff to do', 'string', 'Site tagline/slogan', '2025-11-13 16:17:10', '2025-12-02 10:03:20'),
+(3, 'site_currency', 'USD', 'string', 'Universal currency for all listings', '2025-11-13 16:17:10', '2025-12-02 09:35:39'),
 (4, 'contact_email', '', 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (5, 'support_email', '', 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -267,7 +267,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `created_at`, `updated_at`) VALUES
-(1, 'What\'s On', 'whats-on', 1, 0, 'assets/icons-30/whats-on-category-icon-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-28 10:50:27'),
+(1, 'What\'s On', 'whats-on', 1, 0, 'assets/icons-30/whats-on-category-icon-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-12-02 21:48:27'),
 (2, 'Opportunities', 'opportunities', 4, 0, 'assets/icons-30/opportunities-category-icon-30.webp', '#F1C40F', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (3, 'Learning', 'learning', 3, 0, 'assets/icons-30/learning-category-icon-30.webp', '#3498DB', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/icons-30/Buy-and-sell-category-icon-30.webp', '#2ECC71', '2025-10-29 23:32:47', '2025-11-11 23:59:15'),
@@ -285,8 +285,9 @@ CREATE TABLE `checkout_options` (
   `checkout_key` varchar(100) NOT NULL,
   `checkout_title` varchar(255) NOT NULL,
   `checkout_description` text DEFAULT NULL,
-  `checkout_price` decimal(10,2) NOT NULL,
   `checkout_currency` varchar(10) NOT NULL,
+  `checkout_price` decimal(10,2) NOT NULL,
+  `checkout_renew_price` decimal(10,2) DEFAULT NULL,
   `checkout_duration_days` int(11) NOT NULL,
   `checkout_tier` enum('standard','featured') DEFAULT 'standard',
   `checkout_sidebar_ad` tinyint(1) DEFAULT 0,
@@ -300,19 +301,19 @@ CREATE TABLE `checkout_options` (
 -- Dumping data for table `checkout_options`
 --
 
-INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_price`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 0.00, 'USD', 30, 'standard', 0, 1, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 10.00, 'USD', 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 15.00, 'USD', 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 20.00, 'USD', 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 0.00, 'USD', 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 18.00, 'USD', 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 27.00, 'USD', 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 36.00, 'USD', 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 0.00, 'USD', 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 80.00, 'USD', 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 120.00, 'USD', 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02'),
-(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 160.00, 'USD', 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-12-02 14:40:02');
+INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_price`, `checkout_renew_price`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, 30, 'standard', 1, 1, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, NULL, 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 15.00, NULL, 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 20.00, NULL, 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 'USD', 0.00, NULL, 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 'USD', 18.00, NULL, 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 'USD', 27.00, NULL, 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 'USD', 36.00, NULL, 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 'USD', 0.00, NULL, 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 'USD', 80.00, NULL, 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 'USD', 120.00, NULL, 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 'USD', 160.00, NULL, 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06');
 
 -- --------------------------------------------------------
 
@@ -845,7 +846,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `editable_field_types`, `checkout_options_id`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `listing_fee`, `renew_fee`, `featured_fee`, `renew_featured_fee`, `listing_days`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', NULL, '1,2,3', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-12-01 03:55:09'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', NULL, '1,11,7,2,3', '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, 30, 'Events', '2025-10-29 12:32:47', '2025-12-03 01:49:06'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', NULL, '1,2,3', '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-12-01 03:55:09'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', NULL, '1,2,3', '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-12-01 01:36:28'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', '1,1,1,1,1', NULL, '1,2,3', '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 10.00, 5.00, 15.00, 10.00, NULL, 'Events', '2025-10-29 12:32:47', '2025-12-01 03:55:09'),
@@ -1120,7 +1121,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2791;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2895;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
