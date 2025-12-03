@@ -12,31 +12,68 @@ $configCandidates = [
     __DIR__ . '/home/funmapco/config/config-db.php',
     __DIR__ . '/config/config-db.php',
     dirname(__DIR__) . '/config/config-db.php',
+    dirname(__DIR__, 2) . '/config/config-db.php',
+    dirname(__DIR__, 3) . '/../config/config-db.php',
+    dirname(__DIR__) . '/../config/config-db.php',
+    __DIR__ . '/../config/config-db.php',
+    __DIR__ . '/../../config/config-db.php',
 ];
 
 $configPath = null;
 foreach ($configCandidates as $candidate) {
-    if (is_file($candidate)) {
-        $configPath = $candidate;
+    $realPath = realpath($candidate);
+    if ($realPath && is_file($realPath)) {
+        $configPath = $realPath;
+        echo "Found config at: $realPath\n\n";
         break;
     }
 }
 
 if ($configPath === null) {
-    echo "ERROR: Database config not found\n";
+    echo "ERROR: Database config not found in any of these locations:\n";
+    foreach ($configCandidates as $candidate) {
+        echo "  - $candidate\n";
+    }
+    echo "\nTrying to find config-db.php files...\n";
+    $files = glob(__DIR__ . '/**/config-db.php', GLOB_BRACE);
+    if (!empty($files)) {
+        echo "Found config files:\n";
+        foreach ($files as $file) {
+            echo "  - $file\n";
+        }
+    }
     exit;
 }
 
 require_once $configPath;
 
-if (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
+// Check what constants are defined
+echo "Checking database constants...\n";
+echo "DB_HOST defined: " . (defined('DB_HOST') ? 'YES (' . DB_HOST . ')' : 'NO') . "\n";
+echo "DB_NAME defined: " . (defined('DB_NAME') ? 'YES (' . DB_NAME . ')' : 'NO') . "\n";
+echo "DB_USER defined: " . (defined('DB_USER') ? 'YES' : 'NO') . "\n";
+echo "DB_DSN defined: " . (defined('DB_DSN') ? 'YES' : 'NO') . "\n";
+echo "\n";
+
+if (defined('DB_DSN')) {
+    // Use DSN if available
+    $user = defined('DB_USER') ? DB_USER : null;
+    $pass = defined('DB_PASS') ? DB_PASS : null;
+    $pdo = new PDO(DB_DSN, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+} elseif (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
     $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', DB_HOST, DB_NAME);
     $pdo = new PDO($dsn, DB_USER, defined('DB_PASS') ? DB_PASS : null, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
 } else {
-    echo "ERROR: Database constants not defined\n";
+    echo "ERROR: Database constants not defined after loading config\n";
+    echo "Config file loaded: $configPath\n";
+    echo "\nPlease check that your config-db.php file defines DB_HOST, DB_NAME, and DB_USER\n";
+    echo "or defines DB_DSN.\n";
     exit;
 }
 
