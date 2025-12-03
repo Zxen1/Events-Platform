@@ -9103,6 +9103,93 @@ function makePosts(){
           options.onFieldRendered(wrapper, field);
         }
       });
+      
+      // Render subcategory-level checkout options (new system) - appears at bottom of form
+      if(categoryName && subcategoryName && window.categories && Array.isArray(window.categories)){
+        const category = window.categories.find(c => c && c.name === categoryName);
+        if(category && category.subCheckoutOptions && Array.isArray(category.subCheckoutOptions[subcategoryName])){
+          const subCheckoutOptionIds = category.subCheckoutOptions[subcategoryName].filter(id => id && id > 0);
+          if(subCheckoutOptionIds.length > 0){
+            const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
+            const optionsToShow = [];
+            subCheckoutOptionIds.forEach(id => {
+              const found = allCheckoutOptions.find(opt => opt.id === id);
+              if(found) optionsToShow.push(found);
+            });
+            
+            if(optionsToShow.length > 0){
+              const wrapper = document.createElement('div');
+              wrapper.className = 'panel-field form-field form-field--checkout';
+              const baseId = `${formId}-subcategory-checkout`;
+              const labelEl = document.createElement('span');
+              labelEl.className = 'subcategory-form-label';
+              labelEl.textContent = 'Checkout Options';
+              const labelId = `${baseId}-label`;
+              labelEl.id = labelId;
+              
+              const checkoutGroup = document.createElement('div');
+              checkoutGroup.className = 'form-checkout-group';
+              const groupName = `${baseId}-checkout`;
+              
+              optionsToShow.forEach((option, optionIndex) => {
+                const radioLabel = document.createElement('label');
+                radioLabel.className = 'form-checkout-option';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = groupName;
+                radio.value = String(option.id || '');
+                radio.id = `${baseId}-checkout-${optionIndex}`;
+                if(optionIndex === 0) radio.checked = true;
+                radio.required = true;
+                
+                const optionContent = document.createElement('div');
+                optionContent.className = 'form-checkout-option-content';
+                
+                const titleRow = document.createElement('div');
+                titleRow.className = 'form-checkout-option-title';
+                
+                const titleText = document.createElement('span');
+                titleText.className = 'form-checkout-option-name';
+                titleText.textContent = option.checkout_title || 'Untitled';
+                
+                const priceText = document.createElement('span');
+                priceText.className = 'form-checkout-option-price';
+                const priceValue = parseFloat(option.checkout_price) || 0;
+                const currency = option.checkout_currency || 'USD';
+                priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
+                
+                titleRow.appendChild(titleText);
+                titleRow.appendChild(priceText);
+                optionContent.appendChild(titleRow);
+                
+                if(option.checkout_description){
+                  const descText = document.createElement('div');
+                  descText.className = 'form-checkout-option-description';
+                  descText.textContent = option.checkout_description;
+                  optionContent.appendChild(descText);
+                }
+                
+                radioLabel.appendChild(radio);
+                radioLabel.appendChild(optionContent);
+                checkoutGroup.appendChild(radioLabel);
+              });
+              
+              const header = document.createElement('div');
+              header.className = 'form-field-header';
+              header.style.position = 'relative';
+              header.appendChild(labelEl);
+              
+              wrapper.append(header, checkoutGroup);
+              formFields.appendChild(wrapper);
+              
+              if(options.onFieldRendered && typeof options.onFieldRendered === 'function'){
+                options.onFieldRendered(wrapper, { type: 'checkout', name: 'Checkout Options', required: true });
+              }
+            }
+          }
+        }
+      }
     }
     window.renderForm = renderForm;
     
@@ -14386,6 +14473,25 @@ function makePosts(){
           if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
           if(c.subFees[sub].listing_days === undefined) c.subFees[sub].listing_days = 30;
           
+          // Initialize subCheckoutOptions if not exists
+          if(!c.subCheckoutOptions) c.subCheckoutOptions = {};
+          if(!c.subCheckoutOptions[sub]) {
+            // Try to get from fields if available (from checkout field)
+            const subFields = subFieldsMap[sub];
+            let checkoutOptionIds = [];
+            if(subFields && Array.isArray(subFields)){
+              for(const field of subFields){
+                if(field && typeof field === 'object' && (field.fieldTypeKey === 'checkout' || field.key === 'checkout')){
+                  if(Array.isArray(field.checkoutOptions)){
+                    checkoutOptionIds = field.checkoutOptions.filter(id => id && id > 0).map(id => parseInt(id, 10) || 0).filter(id => id > 0);
+                  }
+                  break;
+                }
+              }
+            }
+            c.subCheckoutOptions[sub] = checkoutOptionIds.length > 0 ? checkoutOptionIds : [];
+          }
+          
           // Listing Fee Row
           const listingFeeRow = document.createElement('div');
           listingFeeRow.className = 'subcategory-fee-row';
@@ -14576,7 +14682,127 @@ function makePosts(){
           subTypeStandardInput.addEventListener('change', updateDaysVisibility);
           updateDaysVisibility();
           
-          subEditPanel.append(subNameRow, subIconPicker, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow);
+          // Checkout Options Editor - laid out like radio options list with dropdowns
+          const checkoutOptionsEditor = document.createElement('div');
+          checkoutOptionsEditor.className = 'subcategory-checkout-options-editor';
+          const checkoutOptionsLabel = document.createElement('div');
+          checkoutOptionsLabel.className = 'subcategory-checkout-options-label';
+          checkoutOptionsLabel.textContent = 'Checkout Options';
+          const checkoutOptionsList = document.createElement('div');
+          checkoutOptionsList.className = 'subcategory-checkout-options-list';
+          checkoutOptionsEditor.append(checkoutOptionsLabel, checkoutOptionsList);
+          
+          const renderCheckoutOptionsEditor = (focusIndex = null)=>{
+            checkoutOptionsList.innerHTML = '';
+            const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
+            const currentOptions = Array.isArray(c.subCheckoutOptions[sub]) ? c.subCheckoutOptions[sub].slice() : [];
+            
+            // Ensure we have at least one empty slot
+            if(currentOptions.length === 0){
+              currentOptions.push(0);
+            }
+            
+            currentOptions.forEach((optionId, index)=>{
+              const optionRow = document.createElement('div');
+              optionRow.className = 'subcategory-checkout-option-row';
+              
+              const select = document.createElement('select');
+              select.className = 'subcategory-checkout-option-select';
+              select.addEventListener('click', (e) => e.stopPropagation());
+              select.addEventListener('mousedown', (e) => e.stopPropagation());
+              
+              // Add empty option
+              const emptyOption = document.createElement('option');
+              emptyOption.value = '0';
+              emptyOption.textContent = '-- Select --';
+              select.appendChild(emptyOption);
+              
+              // Add all checkout options
+              allCheckoutOptions.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = String(opt.id || 0);
+                const priceDisplay = parseFloat(opt.checkout_price) > 0 
+                  ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
+                  : ' — Free';
+                option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
+                select.appendChild(option);
+              });
+              
+              // Set current value
+              select.value = String(optionId || 0);
+              
+              select.addEventListener('change', ()=>{
+                const newValue = parseInt(select.value, 10) || 0;
+                c.subCheckoutOptions[sub][index] = newValue;
+                // Remove zeros and empty values
+                c.subCheckoutOptions[sub] = c.subCheckoutOptions[sub].filter(id => id > 0);
+                // If all removed, add one empty slot
+                if(c.subCheckoutOptions[sub].length === 0){
+                  c.subCheckoutOptions[sub] = [0];
+                }
+                // Sync to checkout field in subFieldsMap
+                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
+                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
+                if(checkoutField){
+                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
+                }
+                notifyFormbuilderChange();
+                renderCheckoutOptionsEditor();
+              });
+              
+              const actions = document.createElement('div');
+              actions.className = 'subcategory-checkout-option-actions';
+              
+              const addBtn = document.createElement('button');
+              addBtn.type = 'button';
+              addBtn.className = 'subcategory-checkout-option-add';
+              addBtn.textContent = '+';
+              addBtn.setAttribute('aria-label', 'Add checkout option after this one');
+              addBtn.addEventListener('click', (e)=>{
+                e.stopPropagation();
+                c.subCheckoutOptions[sub].splice(index + 1, 0, 0);
+                // Sync to checkout field in subFieldsMap
+                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
+                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
+                if(checkoutField){
+                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
+                }
+                notifyFormbuilderChange();
+                renderCheckoutOptionsEditor(index + 1);
+              });
+              
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'subcategory-checkout-option-remove';
+              removeBtn.textContent = '-';
+              removeBtn.setAttribute('aria-label', `Remove checkout option ${index + 1}`);
+              removeBtn.addEventListener('click', (e)=>{
+                e.stopPropagation();
+                if(c.subCheckoutOptions[sub].length <= 1){
+                  c.subCheckoutOptions[sub][0] = 0;
+                } else {
+                  c.subCheckoutOptions[sub].splice(index, 1);
+                }
+                // Sync to checkout field in subFieldsMap
+                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
+                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
+                if(checkoutField){
+                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
+                }
+                notifyFormbuilderChange();
+                const nextFocus = Math.min(index, Math.max(c.subCheckoutOptions[sub].length - 1, 0));
+                renderCheckoutOptionsEditor(nextFocus);
+              });
+              
+              actions.append(addBtn, removeBtn);
+              optionRow.append(select, actions);
+              checkoutOptionsList.appendChild(optionRow);
+            });
+          };
+          
+          renderCheckoutOptionsEditor();
+          
+          subEditPanel.append(subNameRow, subIconPicker, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, checkoutOptionsEditor);
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
