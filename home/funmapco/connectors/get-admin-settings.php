@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+// Disable output buffering to prevent delays
+if (ob_get_level()) {
+    ob_end_clean();
+}
+
 header('Content-Type: application/json');
 
 try {
@@ -302,7 +307,11 @@ try {
         }
     }
 
+    // Flush output immediately
     echo json_encode($response);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
 
 } catch (Throwable $e) {
     http_response_code(500);
