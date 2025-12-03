@@ -176,6 +176,16 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
           <label>Discount Day Rate</label>
           <input type="number" class="checkout-option-discount-day-rate" value="${discountDayRate}" step="0.01" min="0" placeholder="N/A" />
         </div>
+        <div class="checkout-option-calculator">
+          <div class="checkout-option-field">
+            <label>Price Calculator (Sandbox)</label>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <input type="number" class="checkout-option-calc-days" value="" placeholder="Days" min="1" step="1" style="width: 100px;" />
+              <span style="font-weight: 600;">=</span>
+              <span class="checkout-option-calc-total" style="font-weight: 600; color: #2f3b73; min-width: 120px;">${siteCurrency} 0.00</span>
+            </div>
+          </div>
+        </div>
         <button type="button" class="checkout-option-delete">Delete</button>
       </div>
     `;
@@ -200,6 +210,64 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       tierBadge.textContent = isFeatured ? 'featured' : 'standard';
       // No need to manually mark dirty - form's event delegation handles it
     });
+    
+    // Price calculator logic
+    const calcDaysInput = tierCard.querySelector('.checkout-option-calc-days');
+    const calcTotalSpan = tierCard.querySelector('.checkout-option-calc-total');
+    const priceInput = tierCard.querySelector('.checkout-option-price');
+    const basicDayRateInput = tierCard.querySelector('.checkout-option-basic-day-rate');
+    const discountDayRateInput = tierCard.querySelector('.checkout-option-discount-day-rate');
+    
+    function updateCalculator(){
+      if(!calcDaysInput || !calcTotalSpan) return;
+      
+      const days = parseFloat(calcDaysInput.value) || 0;
+      if(days <= 0){
+        calcTotalSpan.textContent = siteCurrency + ' 0.00';
+        return;
+      }
+      
+      const flagfall = parseFloat(priceInput.value) || 0;
+      let dayRate = null;
+      
+      if(days >= 365){
+        // Use discount day rate for 365+ days
+        const discountRateValue = discountDayRateInput.value.trim();
+        dayRate = discountRateValue !== '' ? parseFloat(discountRateValue) : null;
+      } else {
+        // Use basic day rate for less than 365 days
+        const basicRateValue = basicDayRateInput.value.trim();
+        dayRate = basicRateValue !== '' ? parseFloat(basicRateValue) : null;
+      }
+      
+      if(dayRate === null || isNaN(dayRate)){
+        calcTotalSpan.textContent = siteCurrency + ' ' + flagfall.toFixed(2);
+        return;
+      }
+      
+      const total = flagfall + (dayRate * days);
+      calcTotalSpan.textContent = siteCurrency + ' ' + total.toFixed(2);
+    }
+    
+    // Update calculator when days input changes
+    if(calcDaysInput){
+      calcDaysInput.addEventListener('input', updateCalculator);
+      calcDaysInput.addEventListener('change', updateCalculator);
+    }
+    
+    // Update calculator when pricing fields change
+    if(priceInput){
+      priceInput.addEventListener('input', updateCalculator);
+      priceInput.addEventListener('change', updateCalculator);
+    }
+    if(basicDayRateInput){
+      basicDayRateInput.addEventListener('input', updateCalculator);
+      basicDayRateInput.addEventListener('change', updateCalculator);
+    }
+    if(discountDayRateInput){
+      discountDayRateInput.addEventListener('input', updateCalculator);
+      discountDayRateInput.addEventListener('change', updateCalculator);
+    }
     
     // No manual event listeners needed - form's event delegation handles all inputs automatically
     // Checkout option inputs are inside the form, so they're caught by form's 'input' and 'change' listeners

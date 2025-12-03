@@ -1905,6 +1905,24 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
 }
 
+/* Checkout Option Calculator */
+.checkout-option-calculator{
+  margin-top:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.1);
+}
+.checkout-option-calculator .checkout-option-field input[type="number"]{
+  width:auto;
+  flex:0 0 100px;
+}
+.checkout-option-calc-total{
+  display:inline-block;
+  padding:4px 8px;
+  background:rgba(47,59,115,0.2);
+  border-radius:4px;
+  font-size:14px;
+}
+
 .checkout-option-empty{
   color:#555;
   text-align:center;
