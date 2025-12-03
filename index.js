@@ -130,7 +130,8 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     tierCard.className = 'checkout-option-card' + (option.is_active ? '' : ' inactive');
     tierCard.dataset.id = option.id;
     
-    const priceDisplay = option.checkout_price === 0 ? 'Free' : (siteCurrency + ' ' + option.checkout_price.toFixed(2));
+    const flagfallPrice = option.checkout_flagfall_price !== undefined ? option.checkout_flagfall_price : 0;
+    const priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
     
     tierCard.innerHTML = `
       <div class="checkout-option-header">
@@ -150,8 +151,16 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
           <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
         </div>
         <div class="checkout-option-field">
-          <label>Price</label>
-          <input type="number" class="checkout-option-price" value="${option.checkout_price}" step="0.01" min="0" />
+          <label>Flagfall Price</label>
+          <input type="number" class="checkout-option-price" value="${flagfallPrice}" step="0.01" min="0" />
+        </div>
+        <div class="checkout-option-field">
+          <label>Basic Day Rate</label>
+          <input type="number" class="checkout-option-basic-day-rate" value="${option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? option.checkout_basic_day_rate : ''}" step="0.01" min="0" placeholder="Optional" />
+        </div>
+        <div class="checkout-option-field">
+          <label>Discount Day Rate</label>
+          <input type="number" class="checkout-option-discount-day-rate" value="${option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? option.checkout_discount_day_rate : ''}" step="0.01" min="0" placeholder="Optional" />
         </div>
         <div class="checkout-option-field">
           <label>Duration (days)</label>
@@ -232,7 +241,9 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
         checkout_key: '',
         checkout_title: 'New Tier',
         checkout_description: '',
-        checkout_price: 0,
+        checkout_flagfall_price: 0,
+        checkout_basic_day_rate: null,
+        checkout_discount_day_rate: null,
         checkout_currency: siteCurrency,
         checkout_duration_days: 30,
         checkout_tier: 'standard',
@@ -253,11 +264,18 @@ function getCheckoutOptionsFromUI(){
   
   const options = [];
   container.querySelectorAll('.checkout-option-card').forEach(function(card){
+    const basicDayRateInput = card.querySelector('.checkout-option-basic-day-rate');
+    const discountDayRateInput = card.querySelector('.checkout-option-discount-day-rate');
+    const basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? parseFloat(basicDayRateInput.value) : null;
+    const discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? parseFloat(discountDayRateInput.value) : null;
+    
     options.push({
       id: card.dataset.id,
       checkout_title: card.querySelector('.checkout-option-title').value,
       checkout_description: card.querySelector('.checkout-option-description').value,
-      checkout_price: parseFloat(card.querySelector('.checkout-option-price').value) || 0,
+      checkout_flagfall_price: parseFloat(card.querySelector('.checkout-option-price').value) || 0,
+      checkout_basic_day_rate: basicDayRate,
+      checkout_discount_day_rate: discountDayRate,
       checkout_duration_days: parseInt(card.querySelector('.checkout-option-days').value) || 30,
       checkout_tier: card.querySelector('.checkout-option-tier-select').value,
       checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked,
@@ -3798,7 +3816,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           checkout_key: typeof opt.checkout_key === 'string' ? opt.checkout_key : '',
           checkout_title: typeof opt.checkout_title === 'string' ? opt.checkout_title : '',
           checkout_description: typeof opt.checkout_description === 'string' ? opt.checkout_description : '',
-          checkout_price: typeof opt.checkout_price === 'number' ? opt.checkout_price : parseFloat(opt.checkout_price) || 0,
+          checkout_flagfall_price: typeof opt.checkout_flagfall_price === 'number' ? opt.checkout_flagfall_price : parseFloat(opt.checkout_flagfall_price) || 0,
+          checkout_basic_day_rate: opt.checkout_basic_day_rate !== undefined && opt.checkout_basic_day_rate !== null ? (typeof opt.checkout_basic_day_rate === 'number' ? opt.checkout_basic_day_rate : parseFloat(opt.checkout_basic_day_rate)) : null,
+          checkout_discount_day_rate: opt.checkout_discount_day_rate !== undefined && opt.checkout_discount_day_rate !== null ? (typeof opt.checkout_discount_day_rate === 'number' ? opt.checkout_discount_day_rate : parseFloat(opt.checkout_discount_day_rate)) : null,
           checkout_currency: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
           checkout_duration_days: typeof opt.checkout_duration_days === 'number' ? opt.checkout_duration_days : parseInt(opt.checkout_duration_days, 10) || 30,
           checkout_tier: typeof opt.checkout_tier === 'string' ? opt.checkout_tier : 'standard',
@@ -8997,7 +9017,7 @@ function makePosts(){
               
               const priceText = document.createElement('span');
               priceText.className = 'form-checkout-option-price';
-              const priceValue = parseFloat(option.checkout_price) || 0;
+              const priceValue = parseFloat(option.checkout_flagfall_price) || 0;
               const currency = option.checkout_currency || 'USD';
               priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
               
@@ -9155,7 +9175,7 @@ function makePosts(){
                 
                 const priceText = document.createElement('span');
                 priceText.className = 'form-checkout-option-price';
-                const priceValue = parseFloat(option.checkout_price) || 0;
+                const priceValue = parseFloat(option.checkout_flagfall_price) || 0;
                 const currency = option.checkout_currency || 'USD';
                 priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
                 
@@ -13427,8 +13447,8 @@ function makePosts(){
                 allCheckoutOptions.forEach(opt => {
                   const option = document.createElement('option');
                   option.value = String(opt.id || 0);
-                  const priceDisplay = parseFloat(opt.checkout_price) > 0 
-                    ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
+                  const priceDisplay = parseFloat(opt.checkout_flagfall_price) > 0 
+                    ? ` — $${parseFloat(opt.checkout_flagfall_price).toFixed(2)}` 
                     : ' — Free';
                   option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
                   select.appendChild(option);
@@ -14721,8 +14741,8 @@ function makePosts(){
               allCheckoutOptions.forEach(opt => {
                 const option = document.createElement('option');
                 option.value = String(opt.id || 0);
-                const priceDisplay = parseFloat(opt.checkout_price) > 0 
-                  ? ` — $${parseFloat(opt.checkout_price).toFixed(2)}` 
+                const priceDisplay = parseFloat(opt.checkout_flagfall_price) > 0 
+                  ? ` — $${parseFloat(opt.checkout_flagfall_price).toFixed(2)}` 
                   : ' — Free';
                 option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
                 select.appendChild(option);

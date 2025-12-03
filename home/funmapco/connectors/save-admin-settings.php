@@ -227,7 +227,9 @@ try {
                 UPDATE `checkout_options`
                 SET `checkout_title` = :title,
                     `checkout_description` = :description,
-                    `checkout_price` = :price,
+                    `checkout_flagfall_price` = :flagfall_price,
+                    `checkout_basic_day_rate` = :basic_day_rate,
+                    `checkout_discount_day_rate` = :discount_day_rate,
                     `checkout_duration_days` = :days,
                     `checkout_tier` = :tier,
                     `checkout_sidebar_ad` = :sidebar,
@@ -238,8 +240,8 @@ try {
             
             $insertStmt = $pdo->prepare('
                 INSERT INTO `checkout_options` 
-                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_price`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`)
-                VALUES (:key, :title, :description, :price, :currency, :days, :tier, :sidebar, :sort_order, :active)
+                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`)
+                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :days, :tier, :sidebar, :sort_order, :active)
             ');
             
             $sortOrder = 0;
@@ -248,7 +250,9 @@ try {
                 $id = $option['id'] ?? null;
                 $title = $option['checkout_title'] ?? 'Untitled';
                 $description = $option['checkout_description'] ?? '';
-                $price = (float)($option['checkout_price'] ?? 0);
+                $flagfallPrice = (float)($option['checkout_flagfall_price'] ?? 0);
+                $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? (float)$option['checkout_basic_day_rate'] : null;
+                $discountDayRate = isset($option['checkout_discount_day_rate']) && $option['checkout_discount_day_rate'] !== null && $option['checkout_discount_day_rate'] !== '' ? (float)$option['checkout_discount_day_rate'] : null;
                 $days = (int)($option['checkout_duration_days'] ?? 30);
                 $tier = $option['checkout_tier'] ?? 'standard';
                 $sidebar = !empty($option['checkout_sidebar_ad']) ? 1 : 0;
@@ -262,7 +266,9 @@ try {
                         ':id' => (int)$id,
                         ':title' => $title,
                         ':description' => $description,
-                        ':price' => $price,
+                        ':flagfall_price' => $flagfallPrice,
+                        ':basic_day_rate' => $basicDayRate,
+                        ':discount_day_rate' => $discountDayRate,
                         ':days' => $days,
                         ':tier' => $tier,
                         ':sidebar' => $sidebar,
@@ -277,7 +283,9 @@ try {
                         ':key' => $key,
                         ':title' => $title,
                         ':description' => $description,
-                        ':price' => $price,
+                        ':flagfall_price' => $flagfallPrice,
+                        ':basic_day_rate' => $basicDayRate,
+                        ':discount_day_rate' => $discountDayRate,
                         ':currency' => $currency,
                         ':days' => $days,
                         ':tier' => $tier,
