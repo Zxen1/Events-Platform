@@ -191,35 +191,18 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     });
     
-    // Featured checkbox updates badge
+    // Featured checkbox updates badge (form's event delegation handles dirty state)
     const featuredCheckbox = tierCard.querySelector('.checkout-option-featured');
     const tierBadge = tierCard.querySelector('.checkout-option-tier-badge');
     featuredCheckbox.addEventListener('change', function(){
       const isFeatured = featuredCheckbox.checked;
       tierBadge.className = 'checkout-option-tier-badge ' + (isFeatured ? 'featured' : 'standard');
       tierBadge.textContent = isFeatured ? 'featured' : 'standard';
-      if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
-        window.adminPanelModule.markDirty();
-      }
+      // No need to manually mark dirty - form's event delegation handles it
     });
     
-    // Add input listeners to mark dirty immediately (for text inputs, textareas, number inputs)
-    tierCard.querySelectorAll('input[type="text"], input[type="number"], textarea, select').forEach(function(input){
-      input.addEventListener('input', function(){
-        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
-          window.adminPanelModule.markDirty();
-        }
-      });
-    });
-    
-    // Add change listeners for checkboxes to mark dirty
-    tierCard.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox){
-      checkbox.addEventListener('change', function(){
-        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
-          window.adminPanelModule.markDirty();
-        }
-      });
-    });
+    // No manual event listeners needed - form's event delegation handles all inputs automatically
+    // Checkout option inputs are inside the form, so they're caught by form's 'input' and 'change' listeners
     
     // Delete button handler
     tierCard.querySelector('.checkout-option-delete').addEventListener('click', async function(){
