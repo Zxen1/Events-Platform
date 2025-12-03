@@ -212,6 +212,19 @@ try {
         // Check if checkout_options table exists
         $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
         if ($stmt->rowCount() > 0) {
+            // Get site currency from admin_settings
+            $siteCurrency = 'USD'; // Default
+            try {
+                $currencyStmt = $pdo->prepare('SELECT `setting_value` FROM `admin_settings` WHERE `setting_key` = ? LIMIT 1');
+                $currencyStmt->execute(['site_currency']);
+                $currencyRow = $currencyStmt->fetch(PDO::FETCH_ASSOC);
+                if ($currencyRow && !empty($currencyRow['setting_value'])) {
+                    $siteCurrency = strtoupper(trim($currencyRow['setting_value']));
+                }
+            } catch (PDOException $e) {
+                // Use default if currency lookup fails
+            }
+            
             // Get existing IDs
             $existingIds = [];
             $stmt = $pdo->query('SELECT id FROM checkout_options');
@@ -225,7 +238,8 @@ try {
             // Prepare statements
             $updateStmt = $pdo->prepare('
                 UPDATE `checkout_options`
-                SET `checkout_title` = :title,
+                SET `checkout_key` = :key,
+                    `checkout_title` = :title,
                     `checkout_description` = :description,
                     `checkout_flagfall_price` = :flagfall_price,
                     `checkout_basic_day_rate` = :basic_day_rate,
@@ -246,9 +260,29 @@ try {
             $sortOrder = 0;
             foreach ($checkoutOptions as $option) {
                 $sortOrder++;
+                // Handle ID - can be string or number
                 $id = $option['id'] ?? null;
-                $title = $option['checkout_title'] ?? 'Untitled';
-                $description = $option['checkout_description'] ?? '';
+                if ($id !== null && $id !== '') {
+                    // Convert string numbers to integers
+                    if (is_string($id) && is_numeric($id)) {
+                        $id = (int)$id;
+                    } elseif (!is_numeric($id)) {
+                        // For new options with non-numeric IDs (e.g., "new-123"), treat as new
+                        $id = null;
+                    }
+                } else {
+                    $id = null;
+                }
+                
+                $title = isset($option['checkout_title']) ? trim((string)$option['checkout_title']) : 'Untitled';
+                if (empty($title)) {
+                    $title = 'Untitled';
+                }
+                $description = isset($option['checkout_description']) ? trim((string)$option['checkout_description']) : '';
+                // Get checkout_key from input, or generate from title if not provided
+                $key = isset($option['checkout_key']) && trim((string)$option['checkout_key']) !== '' 
+                    ? trim((string)$option['checkout_key']) 
+                    : strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title)) . '-' . time();
                 // Round money values to 2 decimal places
                 $flagfallPrice = round((float)($option['checkout_flagfall_price'] ?? 0), 2);
                 $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? round((float)$option['checkout_basic_day_rate'], 2) : null;
@@ -258,11 +292,12 @@ try {
                 $active = !empty($option['is_active']) ? 1 : 0;
                 
                 // Check if this is an existing ID or new
-                if ($id && is_numeric($id) && in_array((int)$id, $existingIds)) {
+                if ($id !== null && is_numeric($id) && in_array((int)$id, $existingIds)) {
                     // Update existing
                     $inputIds[] = (int)$id;
                     $updateStmt->execute([
                         ':id' => (int)$id,
+                        ':key' => $key,
                         ':title' => $title,
                         ':description' => $description,
                         ':flagfall_price' => $flagfallPrice,
@@ -274,9 +309,10 @@ try {
                     ]);
                     $checkoutUpdated++;
                 } else {
-                    // Insert new
-                    $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title)) . '-' . time();
-                    $currency = 'USD'; // Default, will be overridden by site currency
+                    // Insert new - generate key if not already set above
+                    if (!isset($option['checkout_key']) || trim((string)$option['checkout_key']) === '') {
+                        $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title)) . '-' . time();
+                    }
                     $insertStmt->execute([
                         ':key' => $key,
                         ':title' => $title,
@@ -284,7 +320,7 @@ try {
                         ':flagfall_price' => $flagfallPrice,
                         ':basic_day_rate' => $basicDayRate,
                         ':discount_day_rate' => $discountDayRate,
-                        ':currency' => $currency,
+                        ':currency' => $siteCurrency,
                         ':featured' => $featured,
                         ':sidebar' => $sidebar,
                         ':sort_order' => $sortOrder,
