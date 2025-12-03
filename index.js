@@ -191,18 +191,35 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     });
     
-    // Featured checkbox updates badge (form's event delegation handles dirty state)
+    // Featured checkbox updates badge
     const featuredCheckbox = tierCard.querySelector('.checkout-option-featured');
     const tierBadge = tierCard.querySelector('.checkout-option-tier-badge');
     featuredCheckbox.addEventListener('change', function(){
       const isFeatured = featuredCheckbox.checked;
       tierBadge.className = 'checkout-option-tier-badge ' + (isFeatured ? 'featured' : 'standard');
       tierBadge.textContent = isFeatured ? 'featured' : 'standard';
-      // No need to manually mark dirty - form's event delegation handles it
+      if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+        window.adminPanelModule.markDirty();
+      }
     });
     
-    // No manual event listeners needed - form's event delegation handles all inputs automatically
-    // Checkout option inputs are inside the form, so they're caught by form's 'input' and 'change' listeners
+    // Add input listeners to mark dirty immediately (for text inputs, textareas, number inputs)
+    tierCard.querySelectorAll('input[type="text"], input[type="number"], textarea, select').forEach(function(input){
+      input.addEventListener('input', function(){
+        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+          window.adminPanelModule.markDirty();
+        }
+      });
+    });
+    
+    // Add change listeners for checkboxes to mark dirty
+    tierCard.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox){
+      checkbox.addEventListener('change', function(){
+        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+          window.adminPanelModule.markDirty();
+        }
+      });
+    });
     
     // Delete button handler
     tierCard.querySelector('.checkout-option-delete').addEventListener('click', async function(){
@@ -265,27 +282,16 @@ function getCheckoutOptionsFromUI(){
     const basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : null;
     const discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : null;
     
-    const titleInput = card.querySelector('.checkout-option-title');
-    const descriptionInput = card.querySelector('.checkout-option-description');
-    const featuredCheckbox = card.querySelector('.checkout-option-featured');
-    const sidebarCheckbox = card.querySelector('.checkout-option-sidebar');
-    const activeCheckbox = card.querySelector('.checkout-option-active input');
-    
-    if(!titleInput){
-      console.warn('Checkout option title input not found for card:', card);
-      return; // Skip this card if title input is missing
-    }
-    
     options.push({
       id: card.dataset.id,
-      checkout_title: (titleInput.value || '').trim(),
-      checkout_description: descriptionInput ? (descriptionInput.value || '').trim() : '',
+      checkout_title: card.querySelector('.checkout-option-title').value,
+      checkout_description: card.querySelector('.checkout-option-description').value,
       checkout_flagfall_price: flagfallPrice,
       checkout_basic_day_rate: basicDayRate,
       checkout_discount_day_rate: discountDayRate,
-      checkout_featured: featuredCheckbox && featuredCheckbox.checked ? 1 : 0,
-      checkout_sidebar_ad: sidebarCheckbox && sidebarCheckbox.checked ? 1 : 0,
-      is_active: activeCheckbox && activeCheckbox.checked ? 1 : 0
+      checkout_featured: card.querySelector('.checkout-option-featured').checked ? 1 : 0,
+      checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked ? 1 : 0,
+      is_active: card.querySelector('.checkout-option-active input').checked ? 1 : 0
     });
   });
   return options;
@@ -23042,12 +23048,9 @@ form.addEventListener('input', formChangedWrapper, true);
     
     // Collect checkout options from UI
     const checkoutOptions = getCheckoutOptionsFromUI();
-    // Debug: Log collected checkout options
     if(checkoutOptions.length > 0){
-      console.log('[SaveAdminChanges] Collected checkout options:', checkoutOptions);
+      websiteSettings.checkout_options = checkoutOptions;
     }
-    // Always include checkout options if they exist (even if empty array, to handle deletions)
-    websiteSettings.checkout_options = checkoutOptions;
     
     // Save messages separately to admin-settings endpoint (not formbuilder)
     if(modifiedMessages.length > 0){
@@ -23313,28 +23316,6 @@ const adminPanelChangeManager = (()=>{
     form.querySelectorAll('[contenteditable][id]').forEach(el => {
       data[el.id] = el.innerHTML;
     });
-    
-    // Include checkout options in state for comparison
-    // Normalize to ensure consistent format (sort by id, normalize all values)
-    const checkoutOptions = getCheckoutOptionsFromUI();
-    const normalized = checkoutOptions.map(opt => ({
-      id: opt.id,
-      checkout_title: String(opt.checkout_title || ''),
-      checkout_description: String(opt.checkout_description || ''),
-      checkout_flagfall_price: Math.round((parseFloat(opt.checkout_flagfall_price) || 0) * 100) / 100,
-      checkout_basic_day_rate: opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined ? Math.round((parseFloat(opt.checkout_basic_day_rate) || 0) * 100) / 100 : null,
-      checkout_discount_day_rate: opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined ? Math.round((parseFloat(opt.checkout_discount_day_rate) || 0) * 100) / 100 : null,
-      checkout_featured: opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0,
-      checkout_sidebar_ad: opt.checkout_sidebar_ad === 1 || opt.checkout_sidebar_ad === true ? 1 : 0,
-      is_active: opt.is_active === 1 || opt.is_active === true ? 1 : 0
-    })).sort((a, b) => {
-      // Sort by id for consistent comparison
-      const aId = typeof a.id === 'string' && a.id.startsWith('new-') ? 999999 : parseInt(a.id) || 0;
-      const bId = typeof b.id === 'string' && b.id.startsWith('new-') ? 999999 : parseInt(b.id) || 0;
-      return aId - bId;
-    });
-    data['__checkout_options__'] = JSON.stringify(normalized);
-    
     return data;
   }
 
