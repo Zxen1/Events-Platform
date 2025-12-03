@@ -23048,9 +23048,8 @@ form.addEventListener('input', formChangedWrapper, true);
     
     // Collect checkout options from UI
     const checkoutOptions = getCheckoutOptionsFromUI();
-    if(checkoutOptions.length > 0){
-      websiteSettings.checkout_options = checkoutOptions;
-    }
+    // Always include checkout options if they exist (even if empty array, to handle deletions)
+    websiteSettings.checkout_options = checkoutOptions;
     
     // Save messages separately to admin-settings endpoint (not formbuilder)
     if(modifiedMessages.length > 0){
