@@ -155,33 +155,31 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
           <label>Description</label>
           <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
         </div>
+        <div class="checkout-option-field sidebar-field" style="display: flex; gap: 20px;">
+          <label>
+            <input type="checkbox" class="checkout-option-featured" ${isFeatured ? 'checked' : ''} />
+            Featured
+          </label>
+          <label>
+            <input type="checkbox" class="checkout-option-sidebar" ${option.checkout_sidebar_ad ? 'checked' : ''} />
+            Sidebar Ad
+          </label>
+        </div>
         <div class="checkout-option-field">
           <label>Flagfall Price</label>
           <input type="number" class="checkout-option-price" value="${flagfallPrice.toFixed(2)}" step="0.01" min="0" />
         </div>
         <div class="checkout-option-field">
           <label>Basic Day Rate</label>
-          <input type="number" class="checkout-option-basic-day-rate" value="${basicDayRate}" step="0.01" min="0" placeholder="Optional" />
+          <input type="number" class="checkout-option-basic-day-rate" value="${basicDayRate}" step="0.01" min="0" placeholder="N/A" />
         </div>
         <div class="checkout-option-field">
           <label>Discount Day Rate</label>
-          <input type="number" class="checkout-option-discount-day-rate" value="${discountDayRate}" step="0.01" min="0" placeholder="Optional" />
+          <input type="number" class="checkout-option-discount-day-rate" value="${discountDayRate}" step="0.01" min="0" placeholder="N/A" />
         </div>
         <div class="checkout-option-field">
           <label>Duration (days)</label>
           <input type="number" class="checkout-option-days" value="${option.checkout_duration_days}" min="1" />
-        </div>
-        <div class="checkout-option-field sidebar-field">
-          <label>
-            <input type="checkbox" class="checkout-option-featured" ${isFeatured ? 'checked' : ''} />
-            Featured
-          </label>
-        </div>
-        <div class="checkout-option-field sidebar-field">
-          <label>
-            <input type="checkbox" class="checkout-option-sidebar" ${option.checkout_sidebar_ad ? 'checked' : ''} />
-            Sidebar Ad
-          </label>
         </div>
         <button type="button" class="checkout-option-delete">Delete</button>
       </div>
