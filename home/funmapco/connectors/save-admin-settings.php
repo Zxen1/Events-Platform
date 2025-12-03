@@ -250,9 +250,10 @@ try {
                 $id = $option['id'] ?? null;
                 $title = $option['checkout_title'] ?? 'Untitled';
                 $description = $option['checkout_description'] ?? '';
-                $flagfallPrice = (float)($option['checkout_flagfall_price'] ?? 0);
-                $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? (float)$option['checkout_basic_day_rate'] : null;
-                $discountDayRate = isset($option['checkout_discount_day_rate']) && $option['checkout_discount_day_rate'] !== null && $option['checkout_discount_day_rate'] !== '' ? (float)$option['checkout_discount_day_rate'] : null;
+                // Round money values to 2 decimal places
+                $flagfallPrice = round((float)($option['checkout_flagfall_price'] ?? 0), 2);
+                $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? round((float)$option['checkout_basic_day_rate'], 2) : null;
+                $discountDayRate = isset($option['checkout_discount_day_rate']) && $option['checkout_discount_day_rate'] !== null && $option['checkout_discount_day_rate'] !== '' ? round((float)$option['checkout_discount_day_rate'], 2) : null;
                 $days = (int)($option['checkout_duration_days'] ?? 30);
                 $tier = $option['checkout_tier'] ?? 'standard';
                 $sidebar = !empty($option['checkout_sidebar_ad']) ? 1 : 0;
