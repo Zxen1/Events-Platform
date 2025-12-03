@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 03, 2025 at 12:57 PM
+-- Generation Time: Dec 03, 2025 at 03:14 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -286,8 +286,9 @@ CREATE TABLE `checkout_options` (
   `checkout_title` varchar(255) NOT NULL,
   `checkout_description` text DEFAULT NULL,
   `checkout_currency` varchar(10) NOT NULL,
-  `checkout_price` decimal(10,2) NOT NULL,
-  `checkout_renew_price` decimal(10,2) DEFAULT NULL,
+  `checkout_flagfall_price` decimal(10,2) NOT NULL,
+  `checkout_basic_day_rate` decimal(10,2) DEFAULT NULL,
+  `checkout_discount_day_rate` decimal(10,2) DEFAULT NULL,
   `checkout_duration_days` int(11) NOT NULL,
   `checkout_tier` enum('standard','featured') DEFAULT 'standard',
   `checkout_sidebar_ad` tinyint(1) DEFAULT 0,
@@ -301,19 +302,19 @@ CREATE TABLE `checkout_options` (
 -- Dumping data for table `checkout_options`
 --
 
-INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_price`, `checkout_renew_price`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, 30, 'standard', 1, 1, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, NULL, 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 15.00, NULL, 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 20.00, NULL, 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 'USD', 0.00, NULL, 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 'USD', 18.00, NULL, 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 'USD', 27.00, NULL, 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 'USD', 36.00, NULL, 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 'USD', 0.00, NULL, 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 'USD', 80.00, NULL, 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 'USD', 120.00, NULL, 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
-(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 'USD', 160.00, NULL, 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06');
+INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 30, 'standard', 1, 1, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, NULL, NULL, 30, 'standard', 0, 2, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 15.00, NULL, NULL, 30, 'featured', 0, 3, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 20.00, NULL, NULL, 30, 'featured', 1, 4, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 'USD', 0.00, NULL, NULL, 60, 'standard', 0, 5, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 'USD', 18.00, NULL, NULL, 60, 'standard', 0, 6, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 'USD', 27.00, NULL, NULL, 60, 'featured', 0, 7, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 'USD', 36.00, NULL, NULL, 60, 'featured', 1, 8, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 'USD', 0.00, NULL, NULL, 365, 'standard', 0, 9, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 'USD', 80.00, NULL, NULL, 365, 'standard', 0, 10, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 'USD', 120.00, NULL, NULL, 365, 'featured', 0, 11, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06'),
+(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 'USD', 160.00, NULL, NULL, 365, 'featured', 1, 12, 1, '2025-11-30 05:45:21', '2025-12-03 12:49:06');
 
 -- --------------------------------------------------------
 
