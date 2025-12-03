@@ -1815,7 +1815,10 @@ function fetchSubcategoriesById(PDO $pdo, array $columns): array
     if (!$columns || !in_array('id', $columns, true)) {
         return [];
     }
-    $stmt = $pdo->query('SELECT * FROM subcategories');
+    // Only select columns that exist in the database (avoid removed columns)
+    $selectColumns = array_map(fn($col) => '`' . str_replace('`', '``', $col) . '`', $columns);
+    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM subcategories';
+    $stmt = $pdo->query($sql);
     $map = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if (!isset($row['id'])) {
