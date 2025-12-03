@@ -203,11 +203,23 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       const isFeatured = featuredCheckbox.checked;
       tierBadge.className = 'checkout-option-tier-badge ' + (isFeatured ? 'featured' : 'standard');
       tierBadge.textContent = isFeatured ? 'featured' : 'standard';
+      if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+        window.adminPanelModule.markDirty();
+      }
     });
     
-    // Add input listeners to mark dirty immediately
-    tierCard.querySelectorAll('input, textarea, select').forEach(function(input){
+    // Add input listeners to mark dirty immediately (for text inputs, textareas, number inputs)
+    tierCard.querySelectorAll('input[type="text"], input[type="number"], textarea, select').forEach(function(input){
       input.addEventListener('input', function(){
+        if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
+          window.adminPanelModule.markDirty();
+        }
+      });
+    });
+    
+    // Add change listeners for checkboxes to mark dirty
+    tierCard.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox){
+      checkbox.addEventListener('change', function(){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
@@ -285,8 +297,8 @@ function getCheckoutOptionsFromUI(){
       checkout_discount_day_rate: discountDayRate,
       checkout_duration_days: parseInt(card.querySelector('.checkout-option-days').value) || 30,
       checkout_featured: card.querySelector('.checkout-option-featured').checked ? 1 : 0,
-      checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked,
-      is_active: card.querySelector('.checkout-option-active input').checked
+      checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked ? 1 : 0,
+      is_active: card.querySelector('.checkout-option-active input').checked ? 1 : 0
     });
   });
   return options;
@@ -22709,6 +22721,9 @@ const memberPanelChangeManager = (()=>{
       }
       data[key] = el.value;
     });
+    // Include checkout options in state for comparison
+    const checkoutOptions = getCheckoutOptionsFromUI();
+    data['__checkout_options__'] = JSON.stringify(checkoutOptions);
     return data;
   }
 
