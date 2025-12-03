@@ -811,12 +811,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
         
         $categoriesMap[$categoryName]['subFees'][$sub['name']] = [
-            'listing_fee' => isset($sub['listing_fee']) ? (float)$sub['listing_fee'] : null,
-            'featured_fee' => isset($sub['featured_fee']) ? (float)$sub['featured_fee'] : null,
-            'renew_fee' => isset($sub['renew_fee']) ? (float)$sub['renew_fee'] : null,
-            'renew_featured_fee' => isset($sub['renew_featured_fee']) ? (float)$sub['renew_featured_fee'] : null,
+            'checkout_surcharge' => isset($sub['checkout_surcharge']) ? (float)$sub['checkout_surcharge'] : null,
             'subcategory_type' => $sub['subcategory_type'] ?? 'Standard',
-            'listing_days' => isset($sub['listing_days']) ? (int)$sub['listing_days'] : null,
         ];
 
         // Get field_type_ids and required flags from CSV columns
