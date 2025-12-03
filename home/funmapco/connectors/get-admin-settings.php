@@ -153,7 +153,7 @@ try {
     try {
         $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_duration_days`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active` FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
+            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active` FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
             $checkoutRows = $stmt->fetchAll();
             
             $checkoutOptions = [];
@@ -167,7 +167,6 @@ try {
                     'checkout_basic_day_rate' => isset($row['checkout_basic_day_rate']) && $row['checkout_basic_day_rate'] !== null ? round((float)$row['checkout_basic_day_rate'], 2) : null,
                     'checkout_discount_day_rate' => isset($row['checkout_discount_day_rate']) && $row['checkout_discount_day_rate'] !== null ? round((float)$row['checkout_discount_day_rate'], 2) : null,
                     'checkout_currency' => $row['checkout_currency'],
-                    'checkout_duration_days' => (int)$row['checkout_duration_days'],
                     'checkout_featured' => isset($row['checkout_featured']) ? (int)$row['checkout_featured'] : 0,
                     'checkout_sidebar_ad' => (bool)$row['checkout_sidebar_ad'],
                     'sort_order' => (int)$row['sort_order'],

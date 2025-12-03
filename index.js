@@ -134,8 +134,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     const priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
     const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate).toFixed(2) : '';
     const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '';
-    // Support both old checkout_tier and new checkout_featured for backward compatibility
-    const isFeatured = option.checkout_featured !== undefined ? (option.checkout_featured === 1 || option.checkout_featured === true) : (option.checkout_tier === 'featured');
+    const isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
     const featuredBadgeText = isFeatured ? 'featured' : 'standard';
     
     tierCard.innerHTML = `
@@ -176,10 +175,6 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
         <div class="checkout-option-field">
           <label>Discount Day Rate</label>
           <input type="number" class="checkout-option-discount-day-rate" value="${discountDayRate}" step="0.01" min="0" placeholder="N/A" />
-        </div>
-        <div class="checkout-option-field">
-          <label>Duration (days)</label>
-          <input type="number" class="checkout-option-days" value="${option.checkout_duration_days}" min="1" />
         </div>
         <button type="button" class="checkout-option-delete">Delete</button>
       </div>
@@ -256,12 +251,11 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
         checkout_key: '',
         checkout_title: 'New Tier',
         checkout_description: '',
-        checkout_flagfall_price: 0,
-        checkout_basic_day_rate: null,
-        checkout_discount_day_rate: null,
-        checkout_currency: siteCurrency,
-        checkout_duration_days: 30,
-        checkout_featured: 0,
+      checkout_flagfall_price: 0,
+      checkout_basic_day_rate: null,
+      checkout_discount_day_rate: null,
+      checkout_currency: siteCurrency,
+      checkout_featured: 0,
         checkout_sidebar_ad: false,
         is_active: true
       };
@@ -295,7 +289,6 @@ function getCheckoutOptionsFromUI(){
       checkout_flagfall_price: flagfallPrice,
       checkout_basic_day_rate: basicDayRate,
       checkout_discount_day_rate: discountDayRate,
-      checkout_duration_days: parseInt(card.querySelector('.checkout-option-days').value) || 30,
       checkout_featured: card.querySelector('.checkout-option-featured').checked ? 1 : 0,
       checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked ? 1 : 0,
       is_active: card.querySelector('.checkout-option-active input').checked ? 1 : 0
@@ -3845,9 +3838,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           checkout_basic_day_rate: opt.checkout_basic_day_rate !== undefined && opt.checkout_basic_day_rate !== null ? Math.round((typeof opt.checkout_basic_day_rate === 'number' ? opt.checkout_basic_day_rate : parseFloat(opt.checkout_basic_day_rate)) * 100) / 100 : null,
           checkout_discount_day_rate: opt.checkout_discount_day_rate !== undefined && opt.checkout_discount_day_rate !== null ? Math.round((typeof opt.checkout_discount_day_rate === 'number' ? opt.checkout_discount_day_rate : parseFloat(opt.checkout_discount_day_rate)) * 100) / 100 : null,
           checkout_currency: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
-          checkout_duration_days: typeof opt.checkout_duration_days === 'number' ? opt.checkout_duration_days : parseInt(opt.checkout_duration_days, 10) || 30,
-          checkout_featured: opt.checkout_featured !== undefined ? (opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0) : (opt.checkout_tier === 'featured' ? 1 : 0),
-          checkout_sidebar_ad: !!opt.checkout_sidebar_ad
+          checkout_featured: opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0,
+          checkout_sidebar_ad: opt.checkout_sidebar_ad === 1 || opt.checkout_sidebar_ad === true ? 1 : 0
         };
       }).filter(Boolean);
     }
@@ -7887,13 +7879,6 @@ function makePosts(){
       if(!safeField.fieldTypeKey && safeField.key){
         safeField.fieldTypeKey = safeField.key;
       }
-      // If type is 'checkout' but fieldTypeKey is missing, set it
-      if(safeField.type === 'checkout' && !safeField.fieldTypeKey){
-        safeField.fieldTypeKey = 'checkout';
-        if(!safeField.key){
-          safeField.key = 'checkout';
-        }
-      }
       // For brand new fields, default to first field type in list
       // Don't default to first field type - let user select
       // Only set defaults if field type is explicitly provided
@@ -7934,23 +7919,6 @@ function makePosts(){
         }
       }
       
-      // Preserve checkoutOptions for checkout field type
-      // Check both fieldTypeKey and type since member forms might not have fieldTypeKey
-      const isCheckoutField = fieldTypeKey === 'checkout' || safeField.type === 'checkout' || safeField.fieldTypeKey === 'checkout';
-      if(isCheckoutField){
-        // Always prefer checkoutOptions from the original field object if it exists and has values
-        if(field && typeof field === 'object' && Array.isArray(field.checkoutOptions) && field.checkoutOptions.length > 0){
-          // Use the original field's checkoutOptions (filter out empty strings)
-          const validOptions = field.checkoutOptions.filter(opt => opt && opt !== '' && opt !== null);
-          if(validOptions.length > 0){
-            safeField.checkoutOptions = validOptions.slice();
-          } else if(!Array.isArray(safeField.checkoutOptions)){
-            safeField.checkoutOptions = [];
-          }
-        } else if(!Array.isArray(safeField.checkoutOptions)){
-          safeField.checkoutOptions = [];
-        }
-      }
         if(fieldTypeKey === 'location'){
           if(!safeField.placeholder || !safeField.placeholder.trim()){
             safeField.placeholder = 'Search for a location';
@@ -13210,14 +13178,6 @@ function makePosts(){
                     safeField.placeholder = matchingFieldType.placeholder;
                   }
                   safeField.type = nextValidType;
-                  
-                  // Set default checkout options when checkout field type is selected
-                  if(nextValidType === 'checkout'){
-                    // Only set defaults if not already set
-                    if(!Array.isArray(safeField.checkoutOptions) || safeField.checkoutOptions.length === 0){
-                      safeField.checkoutOptions = [1, 2, 3]; // Default to first 3 checkout options
-                    }
-                  }
                 }
                 
                 fieldTypeMenuBtn.textContent = optionLabel || nextValidType;
@@ -22613,7 +22573,6 @@ const memberPanelChangeManager = (()=>{
       checkout_flagfall_price: Math.round((parseFloat(opt.checkout_flagfall_price) || 0) * 100) / 100,
       checkout_basic_day_rate: opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined ? Math.round((parseFloat(opt.checkout_basic_day_rate) || 0) * 100) / 100 : null,
       checkout_discount_day_rate: opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined ? Math.round((parseFloat(opt.checkout_discount_day_rate) || 0) * 100) / 100 : null,
-      checkout_duration_days: parseInt(opt.checkout_duration_days) || 30,
       checkout_featured: opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0,
       checkout_sidebar_ad: opt.checkout_sidebar_ad === 1 || opt.checkout_sidebar_ad === true ? 1 : 0,
       is_active: opt.is_active === 1 || opt.is_active === true ? 1 : 0

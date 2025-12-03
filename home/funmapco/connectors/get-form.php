@@ -703,7 +703,6 @@ function fetchCheckoutOptions(PDO $pdo): array
                 'checkout_basic_day_rate' => isset($row['checkout_basic_day_rate']) && $row['checkout_basic_day_rate'] !== null ? round((float)$row['checkout_basic_day_rate'], 2) : null,
                 'checkout_discount_day_rate' => isset($row['checkout_discount_day_rate']) && $row['checkout_discount_day_rate'] !== null ? round((float)$row['checkout_discount_day_rate'], 2) : null,
                 'checkout_currency' => isset($row['checkout_currency']) ? (string)$row['checkout_currency'] : 'USD',
-                'checkout_duration_days' => isset($row['checkout_duration_days']) ? (int)$row['checkout_duration_days'] : 30,
                 'checkout_featured' => isset($row['checkout_featured']) ? (int)$row['checkout_featured'] : 0,
                 'checkout_sidebar_ad' => isset($row['checkout_sidebar_ad']) ? (bool)$row['checkout_sidebar_ad'] : false,
                 'sort_order' => isset($row['sort_order']) ? (int)$row['sort_order'] : 0,
