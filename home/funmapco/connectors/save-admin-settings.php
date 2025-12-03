@@ -273,8 +273,11 @@ try {
                     $id = null;
                 }
                 
-                $title = $option['checkout_title'] ?? 'Untitled';
-                $description = $option['checkout_description'] ?? '';
+                $title = isset($option['checkout_title']) ? trim((string)$option['checkout_title']) : 'Untitled';
+                if (empty($title)) {
+                    $title = 'Untitled';
+                }
+                $description = isset($option['checkout_description']) ? trim((string)$option['checkout_description']) : '';
                 // Round money values to 2 decimal places
                 $flagfallPrice = round((float)($option['checkout_flagfall_price'] ?? 0), 2);
                 $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? round((float)$option['checkout_basic_day_rate'], 2) : null;

@@ -282,16 +282,27 @@ function getCheckoutOptionsFromUI(){
     const basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : null;
     const discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : null;
     
+    const titleInput = card.querySelector('.checkout-option-title');
+    const descriptionInput = card.querySelector('.checkout-option-description');
+    const featuredCheckbox = card.querySelector('.checkout-option-featured');
+    const sidebarCheckbox = card.querySelector('.checkout-option-sidebar');
+    const activeCheckbox = card.querySelector('.checkout-option-active input');
+    
+    if(!titleInput){
+      console.warn('Checkout option title input not found for card:', card);
+      return; // Skip this card if title input is missing
+    }
+    
     options.push({
       id: card.dataset.id,
-      checkout_title: card.querySelector('.checkout-option-title').value,
-      checkout_description: card.querySelector('.checkout-option-description').value,
+      checkout_title: (titleInput.value || '').trim(),
+      checkout_description: descriptionInput ? (descriptionInput.value || '').trim() : '',
       checkout_flagfall_price: flagfallPrice,
       checkout_basic_day_rate: basicDayRate,
       checkout_discount_day_rate: discountDayRate,
-      checkout_featured: card.querySelector('.checkout-option-featured').checked ? 1 : 0,
-      checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked ? 1 : 0,
-      is_active: card.querySelector('.checkout-option-active input').checked ? 1 : 0
+      checkout_featured: featuredCheckbox && featuredCheckbox.checked ? 1 : 0,
+      checkout_sidebar_ad: sidebarCheckbox && sidebarCheckbox.checked ? 1 : 0,
+      is_active: activeCheckbox && activeCheckbox.checked ? 1 : 0
     });
   });
   return options;
@@ -23048,6 +23059,10 @@ form.addEventListener('input', formChangedWrapper, true);
     
     // Collect checkout options from UI
     const checkoutOptions = getCheckoutOptionsFromUI();
+    // Debug: Log collected checkout options
+    if(checkoutOptions.length > 0){
+      console.log('[SaveAdminChanges] Collected checkout options:', checkoutOptions);
+    }
     // Always include checkout options if they exist (even if empty array, to handle deletions)
     websiteSettings.checkout_options = checkoutOptions;
     
