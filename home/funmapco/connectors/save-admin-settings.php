@@ -231,7 +231,7 @@ try {
                     `checkout_basic_day_rate` = :basic_day_rate,
                     `checkout_discount_day_rate` = :discount_day_rate,
                     `checkout_duration_days` = :days,
-                    `checkout_tier` = :tier,
+                    `checkout_featured` = :featured,
                     `checkout_sidebar_ad` = :sidebar,
                     `is_active` = :active,
                     `updated_at` = CURRENT_TIMESTAMP
@@ -240,8 +240,8 @@ try {
             
             $insertStmt = $pdo->prepare('
                 INSERT INTO `checkout_options` 
-                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_duration_days`, `checkout_tier`, `checkout_sidebar_ad`, `sort_order`, `is_active`)
-                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :days, :tier, :sidebar, :sort_order, :active)
+                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_duration_days`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`)
+                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :days, :featured, :sidebar, :sort_order, :active)
             ');
             
             $sortOrder = 0;
@@ -255,7 +255,8 @@ try {
                 $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? round((float)$option['checkout_basic_day_rate'], 2) : null;
                 $discountDayRate = isset($option['checkout_discount_day_rate']) && $option['checkout_discount_day_rate'] !== null && $option['checkout_discount_day_rate'] !== '' ? round((float)$option['checkout_discount_day_rate'], 2) : null;
                 $days = (int)($option['checkout_duration_days'] ?? 30);
-                $tier = $option['checkout_tier'] ?? 'standard';
+                // Support both old checkout_tier and new checkout_featured
+                $featured = isset($option['checkout_featured']) ? ((int)$option['checkout_featured'] ? 1 : 0) : (isset($option['checkout_tier']) && $option['checkout_tier'] === 'featured' ? 1 : 0);
                 $sidebar = !empty($option['checkout_sidebar_ad']) ? 1 : 0;
                 $active = !empty($option['is_active']) ? 1 : 0;
                 
@@ -271,7 +272,7 @@ try {
                         ':basic_day_rate' => $basicDayRate,
                         ':discount_day_rate' => $discountDayRate,
                         ':days' => $days,
-                        ':tier' => $tier,
+                        ':featured' => $featured,
                         ':sidebar' => $sidebar,
                         ':active' => $active,
                     ]);
@@ -289,7 +290,7 @@ try {
                         ':discount_day_rate' => $discountDayRate,
                         ':currency' => $currency,
                         ':days' => $days,
-                        ':tier' => $tier,
+                        ':featured' => $featured,
                         ':sidebar' => $sidebar,
                         ':sort_order' => $sortOrder,
                         ':active' => $active,

@@ -134,11 +134,14 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     const priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
     const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate).toFixed(2) : '';
     const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '';
+    // Support both old checkout_tier and new checkout_featured for backward compatibility
+    const isFeatured = option.checkout_featured !== undefined ? (option.checkout_featured === 1 || option.checkout_featured === true) : (option.checkout_tier === 'featured');
+    const featuredBadgeText = isFeatured ? 'featured' : 'standard';
     
     tierCard.innerHTML = `
       <div class="checkout-option-header">
         <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
-        <span class="checkout-option-tier-badge ${option.checkout_tier}">${option.checkout_tier}</span>
+        <span class="checkout-option-tier-badge ${featuredBadgeText}">${featuredBadgeText}</span>
         <button type="button" class="checkout-options-edit-btn" aria-haspopup="true" aria-expanded="false" title="Edit">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>
         </button>
@@ -168,12 +171,11 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
           <label>Duration (days)</label>
           <input type="number" class="checkout-option-days" value="${option.checkout_duration_days}" min="1" />
         </div>
-        <div class="checkout-option-field">
-          <label>Tier</label>
-          <select class="checkout-option-tier-select">
-            <option value="standard" ${option.checkout_tier === 'standard' ? 'selected' : ''}>Standard</option>
-            <option value="featured" ${option.checkout_tier === 'featured' ? 'selected' : ''}>Featured</option>
-          </select>
+        <div class="checkout-option-field sidebar-field">
+          <label>
+            <input type="checkbox" class="checkout-option-featured" ${isFeatured ? 'checked' : ''} />
+            Featured
+          </label>
         </div>
         <div class="checkout-option-field sidebar-field">
           <label>
@@ -196,12 +198,13 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     });
     
-    // Tier select updates badge
-    const tierSelect = tierCard.querySelector('.checkout-option-tier-select');
+    // Featured checkbox updates badge
+    const featuredCheckbox = tierCard.querySelector('.checkout-option-featured');
     const tierBadge = tierCard.querySelector('.checkout-option-tier-badge');
-    tierSelect.addEventListener('change', function(){
-      tierBadge.className = 'checkout-option-tier-badge ' + tierSelect.value;
-      tierBadge.textContent = tierSelect.value;
+    featuredCheckbox.addEventListener('change', function(){
+      const isFeatured = featuredCheckbox.checked;
+      tierBadge.className = 'checkout-option-tier-badge ' + (isFeatured ? 'featured' : 'standard');
+      tierBadge.textContent = isFeatured ? 'featured' : 'standard';
     });
     
     // Add input listeners to mark dirty immediately
@@ -248,7 +251,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
         checkout_discount_day_rate: null,
         checkout_currency: siteCurrency,
         checkout_duration_days: 30,
-        checkout_tier: 'standard',
+        checkout_featured: 0,
         checkout_sidebar_ad: false,
         is_active: true
       };
@@ -283,7 +286,7 @@ function getCheckoutOptionsFromUI(){
       checkout_basic_day_rate: basicDayRate,
       checkout_discount_day_rate: discountDayRate,
       checkout_duration_days: parseInt(card.querySelector('.checkout-option-days').value) || 30,
-      checkout_tier: card.querySelector('.checkout-option-tier-select').value,
+      checkout_featured: card.querySelector('.checkout-option-featured').checked ? 1 : 0,
       checkout_sidebar_ad: card.querySelector('.checkout-option-sidebar').checked,
       is_active: card.querySelector('.checkout-option-active input').checked
     });
@@ -3827,7 +3830,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           checkout_discount_day_rate: opt.checkout_discount_day_rate !== undefined && opt.checkout_discount_day_rate !== null ? Math.round((typeof opt.checkout_discount_day_rate === 'number' ? opt.checkout_discount_day_rate : parseFloat(opt.checkout_discount_day_rate)) * 100) / 100 : null,
           checkout_currency: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
           checkout_duration_days: typeof opt.checkout_duration_days === 'number' ? opt.checkout_duration_days : parseInt(opt.checkout_duration_days, 10) || 30,
-          checkout_tier: typeof opt.checkout_tier === 'string' ? opt.checkout_tier : 'standard',
+          checkout_featured: opt.checkout_featured !== undefined ? (opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0) : (opt.checkout_tier === 'featured' ? 1 : 0),
           checkout_sidebar_ad: !!opt.checkout_sidebar_ad
         };
       }).filter(Boolean);
