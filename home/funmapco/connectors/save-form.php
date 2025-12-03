@@ -384,12 +384,8 @@ try {
                 if ($stringKey === '') continue;
                 
                 $fees = [
-                    'listing_fee' => isset($feeData['listing_fee']) ? (float)$feeData['listing_fee'] : null,
-                    'featured_fee' => isset($feeData['featured_fee']) ? (float)$feeData['featured_fee'] : null,
-                    'renew_fee' => isset($feeData['renew_fee']) ? (float)$feeData['renew_fee'] : null,
-                    'renew_featured_fee' => isset($feeData['renew_featured_fee']) ? (float)$feeData['renew_featured_fee'] : null,
+                    'checkout_surcharge' => isset($feeData['checkout_surcharge']) && $feeData['checkout_surcharge'] !== null && $feeData['checkout_surcharge'] !== '' ? round((float)$feeData['checkout_surcharge'], 2) : null,
                     'subcategory_type' => isset($feeData['subcategory_type']) ? (string)$feeData['subcategory_type'] : 'Standard',
-                    'listing_days' => isset($feeData['listing_days']) ? (int)$feeData['listing_days'] : null,
                 ];
                 
                 $nameKey = sanitizeString($stringKey);
@@ -531,35 +527,15 @@ try {
                         $insertValues[] = ':hidden';
                         $insertParams[':hidden'] = $subHidden;
                     }
-                    if (in_array('listing_fee', $subcategoryColumns, true)) {
-                        $insertParts[] = 'listing_fee';
-                        $insertValues[] = ':listing_fee';
-                        $insertParams[':listing_fee'] = $listingFee;
-                    }
-                    if (in_array('featured_fee', $subcategoryColumns, true)) {
-                        $insertParts[] = 'featured_fee';
-                        $insertValues[] = ':featured_fee';
-                        $insertParams[':featured_fee'] = $featuredFee;
-                    }
-                    if (in_array('renew_fee', $subcategoryColumns, true)) {
-                        $insertParts[] = 'renew_fee';
-                        $insertValues[] = ':renew_fee';
-                        $insertParams[':renew_fee'] = $renewFee;
-                    }
-                    if (in_array('renew_featured_fee', $subcategoryColumns, true)) {
-                        $insertParts[] = 'renew_featured_fee';
-                        $insertValues[] = ':renew_featured_fee';
-                        $insertParams[':renew_featured_fee'] = $renewFeaturedFee;
+                    if (in_array('checkout_surcharge', $subcategoryColumns, true)) {
+                        $insertParts[] = 'checkout_surcharge';
+                        $insertValues[] = ':checkout_surcharge';
+                        $insertParams[':checkout_surcharge'] = $checkoutSurcharge;
                     }
                     if (in_array('subcategory_type', $subcategoryColumns, true)) {
                         $insertParts[] = 'subcategory_type';
                         $insertValues[] = ':subcategory_type';
                         $insertParams[':subcategory_type'] = $subcategoryType;
-                    }
-                    if (in_array('listing_days', $subcategoryColumns, true)) {
-                        $insertParts[] = 'listing_days';
-                        $insertValues[] = ':listing_days';
-                        $insertParams[':listing_days'] = $listingDays;
                     }
                     if ($insertParts) {
                         $sql = 'INSERT INTO subcategories (' . implode(', ', $insertParts) . ') VALUES (' . implode(', ', $insertValues) . ')';
@@ -596,12 +572,8 @@ try {
                 $subFees = $subFeesMap[$subKey];
             }
             
-            $listingFee = isset($subFees['listing_fee']) ? $subFees['listing_fee'] : null;
-            $featuredFee = isset($subFees['featured_fee']) ? $subFees['featured_fee'] : null;
-            $renewFee = isset($subFees['renew_fee']) ? $subFees['renew_fee'] : null;
-            $renewFeaturedFee = isset($subFees['renew_featured_fee']) ? $subFees['renew_featured_fee'] : null;
+            $checkoutSurcharge = isset($subFees['checkout_surcharge']) && $subFees['checkout_surcharge'] !== null && $subFees['checkout_surcharge'] !== '' ? round((float)$subFees['checkout_surcharge'], 2) : null;
             $subcategoryType = isset($subFees['subcategory_type']) ? $subFees['subcategory_type'] : 'Standard';
-            $listingDays = isset($subFees['listing_days']) ? $subFees['listing_days'] : null;
 
             $fieldsPayload = [];
             $hasFieldsForThisSub = false;
@@ -955,29 +927,13 @@ try {
                 $updateParts[] = 'hidden = :hidden';
                 $params[':hidden'] = $subHidden;
             }
-            if (in_array('listing_fee', $subcategoryColumns, true)) {
-                $updateParts[] = 'listing_fee = :listing_fee';
-                $params[':listing_fee'] = $listingFee;
-            }
-            if (in_array('featured_fee', $subcategoryColumns, true)) {
-                $updateParts[] = 'featured_fee = :featured_fee';
-                $params[':featured_fee'] = $featuredFee;
-            }
-            if (in_array('renew_fee', $subcategoryColumns, true)) {
-                $updateParts[] = 'renew_fee = :renew_fee';
-                $params[':renew_fee'] = $renewFee;
-            }
-            if (in_array('renew_featured_fee', $subcategoryColumns, true)) {
-                $updateParts[] = 'renew_featured_fee = :renew_featured_fee';
-                $params[':renew_featured_fee'] = $renewFeaturedFee;
+            if (in_array('checkout_surcharge', $subcategoryColumns, true)) {
+                $updateParts[] = 'checkout_surcharge = :checkout_surcharge';
+                $params[':checkout_surcharge'] = $checkoutSurcharge;
             }
             if (in_array('subcategory_type', $subcategoryColumns, true)) {
                 $updateParts[] = 'subcategory_type = :subcategory_type';
                 $params[':subcategory_type'] = $subcategoryType;
-            }
-            if (in_array('listing_days', $subcategoryColumns, true)) {
-                $updateParts[] = 'listing_days = :listing_days';
-                $params[':listing_days'] = $listingDays;
             }
             // Only update icon_path if icon data was provided in payload
             $hasIconInPayload = !empty($subcategoryIconPaths) || !empty($subcategoryIcons);

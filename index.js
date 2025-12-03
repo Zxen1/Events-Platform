@@ -14511,12 +14511,8 @@ function makePosts(){
             c.subFees[sub] = {};
           }
           // Set defaults only for missing values
-          if(c.subFees[sub].listing_fee === undefined) c.subFees[sub].listing_fee = null;
-          if(c.subFees[sub].featured_fee === undefined) c.subFees[sub].featured_fee = null;
-          if(c.subFees[sub].renew_fee === undefined) c.subFees[sub].renew_fee = null;
-          if(c.subFees[sub].renew_featured_fee === undefined) c.subFees[sub].renew_featured_fee = null;
+          if(c.subFees[sub].checkout_surcharge === undefined) c.subFees[sub].checkout_surcharge = null;
           if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
-          if(c.subFees[sub].listing_days === undefined) c.subFees[sub].listing_days = 30;
           
           // Initialize subCheckoutOptions if not exists
           if(!c.subCheckoutOptions) c.subCheckoutOptions = {};
@@ -14537,121 +14533,34 @@ function makePosts(){
             c.subCheckoutOptions[sub] = checkoutOptionIds.length > 0 ? checkoutOptionIds : [];
           }
           
-          // Listing Fee Row
-          const listingFeeRow = document.createElement('div');
-          listingFeeRow.className = 'subcategory-fee-row';
-          const listingFeeLabel = document.createElement('span');
-          listingFeeLabel.textContent = 'Listing Fee';
-          const listingFeeCurrency = document.createElement('span');
-          listingFeeCurrency.className = 'fee-currency';
-          listingFeeCurrency.textContent = siteCurrency;
-          const listingFeeInput = document.createElement('input');
-          listingFeeInput.type = 'number';
-          listingFeeInput.step = '0.01';
-          listingFeeInput.min = '0';
-          listingFeeInput.className = 'fee-input';
-          listingFeeInput.placeholder = '0.00';
-          listingFeeInput.value = c.subFees[sub].listing_fee !== null && c.subFees[sub].listing_fee !== undefined 
-            ? c.subFees[sub].listing_fee.toFixed(2) 
+          // Checkout Surcharge Row
+          const surchargeRow = document.createElement('div');
+          surchargeRow.className = 'subcategory-fee-row';
+          const surchargeLabel = document.createElement('span');
+          surchargeLabel.textContent = 'Checkout Surcharge';
+          const surchargePercent = document.createElement('span');
+          surchargePercent.className = 'fee-currency';
+          surchargePercent.textContent = '%';
+          const surchargeInput = document.createElement('input');
+          surchargeInput.type = 'number';
+          surchargeInput.step = '0.01';
+          surchargeInput.min = '0';
+          surchargeInput.className = 'fee-input';
+          surchargeInput.placeholder = 'N/A';
+          surchargeInput.value = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
+            ? c.subFees[sub].checkout_surcharge.toFixed(2) 
             : '';
-          listingFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].listing_fee = listingFeeInput.value ? parseFloat(listingFeeInput.value) : null;
+          surchargeInput.addEventListener('input', ()=>{
+            c.subFees[sub].checkout_surcharge = surchargeInput.value ? Math.round(parseFloat(surchargeInput.value) * 100) / 100 : null;
             notifyFormbuilderChange();
           });
-          listingFeeInput.addEventListener('blur', ()=>{
-            if(listingFeeInput.value && !listingFeeInput.value.includes('.')){
-              listingFeeInput.value = parseFloat(listingFeeInput.value).toFixed(2);
-              c.subFees[sub].listing_fee = parseFloat(listingFeeInput.value);
+          surchargeInput.addEventListener('blur', ()=>{
+            if(surchargeInput.value && !surchargeInput.value.includes('.')){
+              surchargeInput.value = parseFloat(surchargeInput.value).toFixed(2);
+              c.subFees[sub].checkout_surcharge = Math.round(parseFloat(surchargeInput.value) * 100) / 100;
             }
           });
-          listingFeeRow.append(listingFeeLabel, listingFeeCurrency, listingFeeInput);
-          
-          // Renew Listing Fee Row
-          const renewFeeRow = document.createElement('div');
-          renewFeeRow.className = 'subcategory-fee-row';
-          const renewFeeLabel = document.createElement('span');
-          renewFeeLabel.textContent = 'Renew Listing Fee';
-          const renewFeeCurrency = document.createElement('span');
-          renewFeeCurrency.className = 'fee-currency';
-          renewFeeCurrency.textContent = siteCurrency;
-          const renewFeeInput = document.createElement('input');
-          renewFeeInput.type = 'number';
-          renewFeeInput.step = '0.01';
-          renewFeeInput.min = '0';
-          renewFeeInput.className = 'fee-input';
-          renewFeeInput.placeholder = '0.00';
-          renewFeeInput.value = c.subFees[sub].renew_fee !== null && c.subFees[sub].renew_fee !== undefined 
-            ? c.subFees[sub].renew_fee.toFixed(2) 
-            : '';
-          renewFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].renew_fee = renewFeeInput.value ? parseFloat(renewFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          renewFeeInput.addEventListener('blur', ()=>{
-            if(renewFeeInput.value && !renewFeeInput.value.includes('.')){
-              renewFeeInput.value = parseFloat(renewFeeInput.value).toFixed(2);
-              c.subFees[sub].renew_fee = parseFloat(renewFeeInput.value);
-            }
-          });
-          renewFeeRow.append(renewFeeLabel, renewFeeCurrency, renewFeeInput);
-          
-          // Featured Fee Row
-          const featuredFeeRow = document.createElement('div');
-          featuredFeeRow.className = 'subcategory-fee-row';
-          const featuredFeeLabel = document.createElement('span');
-          featuredFeeLabel.textContent = 'Featured Fee';
-          const featuredFeeCurrency = document.createElement('span');
-          featuredFeeCurrency.className = 'fee-currency';
-          featuredFeeCurrency.textContent = siteCurrency;
-          const featuredFeeInput = document.createElement('input');
-          featuredFeeInput.type = 'number';
-          featuredFeeInput.step = '0.01';
-          featuredFeeInput.min = '0';
-          featuredFeeInput.className = 'fee-input';
-          featuredFeeInput.placeholder = '0.00';
-          featuredFeeInput.value = c.subFees[sub].featured_fee !== null && c.subFees[sub].featured_fee !== undefined 
-            ? c.subFees[sub].featured_fee.toFixed(2) 
-            : '';
-          featuredFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].featured_fee = featuredFeeInput.value ? parseFloat(featuredFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          featuredFeeInput.addEventListener('blur', ()=>{
-            if(featuredFeeInput.value && !featuredFeeInput.value.includes('.')){
-              featuredFeeInput.value = parseFloat(featuredFeeInput.value).toFixed(2);
-              c.subFees[sub].featured_fee = parseFloat(featuredFeeInput.value);
-            }
-          });
-          featuredFeeRow.append(featuredFeeLabel, featuredFeeCurrency, featuredFeeInput);
-          
-          // Renew Featured Fee Row
-          const renewFeaturedFeeRow = document.createElement('div');
-          renewFeaturedFeeRow.className = 'subcategory-fee-row';
-          const renewFeaturedFeeLabel = document.createElement('span');
-          renewFeaturedFeeLabel.textContent = 'Renew Featured Fee';
-          const renewFeaturedFeeCurrency = document.createElement('span');
-          renewFeaturedFeeCurrency.className = 'fee-currency';
-          renewFeaturedFeeCurrency.textContent = siteCurrency;
-          const renewFeaturedFeeInput = document.createElement('input');
-          renewFeaturedFeeInput.type = 'number';
-          renewFeaturedFeeInput.step = '0.01';
-          renewFeaturedFeeInput.min = '0';
-          renewFeaturedFeeInput.className = 'fee-input';
-          renewFeaturedFeeInput.placeholder = '0.00';
-          renewFeaturedFeeInput.value = c.subFees[sub].renew_featured_fee !== null && c.subFees[sub].renew_featured_fee !== undefined 
-            ? c.subFees[sub].renew_featured_fee.toFixed(2) 
-            : '';
-          renewFeaturedFeeInput.addEventListener('input', ()=>{
-            c.subFees[sub].renew_featured_fee = renewFeaturedFeeInput.value ? parseFloat(renewFeaturedFeeInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          renewFeaturedFeeInput.addEventListener('blur', ()=>{
-            if(renewFeaturedFeeInput.value && !renewFeaturedFeeInput.value.includes('.')){
-              renewFeaturedFeeInput.value = parseFloat(renewFeaturedFeeInput.value).toFixed(2);
-              c.subFees[sub].renew_featured_fee = parseFloat(renewFeaturedFeeInput.value);
-            }
-          });
-          renewFeaturedFeeRow.append(renewFeaturedFeeLabel, renewFeaturedFeeCurrency, renewFeaturedFeeInput);
+          surchargeRow.append(surchargeLabel, surchargePercent, surchargeInput);
           
           // Subcategory Type Row
           const subTypeRow = document.createElement('div');
@@ -14693,39 +14602,6 @@ function makePosts(){
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
           
           subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);
-          
-          // Listing Days Row (conditional based on type)
-          const listingDaysRow = document.createElement('div');
-          listingDaysRow.className = 'subcategory-days-row';
-          const listingDaysLabel = document.createElement('span');
-          listingDaysLabel.textContent = 'Listing Days';
-          const listingDaysInput = document.createElement('input');
-          listingDaysInput.type = 'number';
-          listingDaysInput.min = '1';
-          listingDaysInput.className = 'days-input';
-          listingDaysInput.placeholder = '30';
-          listingDaysInput.value = c.subFees[sub].listing_days !== null && c.subFees[sub].listing_days !== undefined 
-            ? c.subFees[sub].listing_days 
-            : '';
-          listingDaysInput.addEventListener('input', ()=>{
-            c.subFees[sub].listing_days = listingDaysInput.value ? parseInt(listingDaysInput.value) : null;
-            notifyFormbuilderChange();
-          });
-          const listingDaysText = document.createElement('span');
-          listingDaysText.textContent = 'days';
-          listingDaysRow.append(listingDaysLabel, listingDaysInput, listingDaysText);
-          
-          // Show/hide listing days based on type
-          const updateDaysVisibility = () => {
-            if(subTypeEventsInput.checked){
-              listingDaysRow.style.display = 'none';
-            } else {
-              listingDaysRow.style.display = 'flex';
-            }
-          };
-          subTypeEventsInput.addEventListener('change', updateDaysVisibility);
-          subTypeStandardInput.addEventListener('change', updateDaysVisibility);
-          updateDaysVisibility();
           
           // Checkout Options Editor - laid out like radio options list with dropdowns
           const checkoutOptionsEditor = document.createElement('div');
@@ -14847,7 +14723,7 @@ function makePosts(){
           
           renderCheckoutOptionsEditor();
           
-          subEditPanel.append(subNameRow, subIconPicker, listingFeeRow, renewFeeRow, featuredFeeRow, renewFeaturedFeeRow, subTypeRow, listingDaysRow, checkoutOptionsEditor);
+          subEditPanel.append(subNameRow, subIconPicker, surchargeRow, subTypeRow, checkoutOptionsEditor);
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();

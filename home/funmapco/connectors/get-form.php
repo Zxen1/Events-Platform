@@ -323,24 +323,12 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         $select[] = 's.`checkout_options_id`';
     }
     
-    // Add fee columns
-    if (in_array('listing_fee', $columns, true)) {
-        $select[] = 's.`listing_fee`';
-    }
-    if (in_array('featured_fee', $columns, true)) {
-        $select[] = 's.`featured_fee`';
-    }
-    if (in_array('renew_fee', $columns, true)) {
-        $select[] = 's.`renew_fee`';
-    }
-    if (in_array('renew_featured_fee', $columns, true)) {
-        $select[] = 's.`renew_featured_fee`';
+    // Add checkout_surcharge column
+    if (in_array('checkout_surcharge', $columns, true)) {
+        $select[] = 's.`checkout_surcharge`';
     }
     if (in_array('subcategory_type', $columns, true)) {
         $select[] = 's.`subcategory_type`';
-    }
-    if (in_array('listing_days', $columns, true)) {
-        $select[] = 's.`listing_days`';
     }
 
     $order = [];
@@ -417,24 +405,12 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             'field_type_names' => $fieldTypeNames,
         ];
         
-        // Add fee columns if they exist in the row
-        if (isset($row['listing_fee'])) {
-            $result['listing_fee'] = $row['listing_fee'];
-        }
-        if (isset($row['featured_fee'])) {
-            $result['featured_fee'] = $row['featured_fee'];
-        }
-        if (isset($row['renew_fee'])) {
-            $result['renew_fee'] = $row['renew_fee'];
-        }
-        if (isset($row['renew_featured_fee'])) {
-            $result['renew_featured_fee'] = $row['renew_featured_fee'];
+        // Add checkout_surcharge if it exists in the row
+        if (isset($row['checkout_surcharge'])) {
+            $result['checkout_surcharge'] = $row['checkout_surcharge'] !== null ? round((float)$row['checkout_surcharge'], 2) : null;
         }
         if (isset($row['subcategory_type'])) {
             $result['subcategory_type'] = $row['subcategory_type'];
-        }
-        if (isset($row['listing_days'])) {
-            $result['listing_days'] = $row['listing_days'];
         }
         if ($hasEditableFieldTypes && isset($row['editable_field_types'])) {
             $editsJson = $row['editable_field_types'];
