@@ -1960,6 +1960,12 @@ let __notifyMapOnInteraction = null;
               // Render checkout options
               if(data.checkout_options && Array.isArray(data.checkout_options)){
                 renderCheckoutOptions(data.checkout_options, data.settings.site_currency || 'USD');
+                // Refresh saved state after checkout options are rendered to capture the initial state
+                setTimeout(() => {
+                  if(window.adminPanelModule && typeof window.adminPanelModule.markSaved === 'function'){
+                    window.adminPanelModule.markSaved();
+                  }
+                }, 50);
               }
               
               const contactEmailInput = document.getElementById('adminContactEmail');
@@ -22722,8 +22728,26 @@ const memberPanelChangeManager = (()=>{
       data[key] = el.value;
     });
     // Include checkout options in state for comparison
+    // Normalize to ensure consistent format (sort by id, normalize all values)
     const checkoutOptions = getCheckoutOptionsFromUI();
-    data['__checkout_options__'] = JSON.stringify(checkoutOptions);
+    const normalized = checkoutOptions.map(opt => ({
+      id: opt.id,
+      checkout_title: String(opt.checkout_title || ''),
+      checkout_description: String(opt.checkout_description || ''),
+      checkout_flagfall_price: Math.round((parseFloat(opt.checkout_flagfall_price) || 0) * 100) / 100,
+      checkout_basic_day_rate: opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined ? Math.round((parseFloat(opt.checkout_basic_day_rate) || 0) * 100) / 100 : null,
+      checkout_discount_day_rate: opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined ? Math.round((parseFloat(opt.checkout_discount_day_rate) || 0) * 100) / 100 : null,
+      checkout_duration_days: parseInt(opt.checkout_duration_days) || 30,
+      checkout_featured: opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0,
+      checkout_sidebar_ad: opt.checkout_sidebar_ad === 1 || opt.checkout_sidebar_ad === true ? 1 : 0,
+      is_active: opt.is_active === 1 || opt.is_active === true ? 1 : 0
+    })).sort((a, b) => {
+      // Sort by id for consistent comparison
+      const aId = typeof a.id === 'string' && a.id.startsWith('new-') ? 999999 : parseInt(a.id) || 0;
+      const bId = typeof b.id === 'string' && b.id.startsWith('new-') ? 999999 : parseInt(b.id) || 0;
+      return aId - bId;
+    });
+    data['__checkout_options__'] = JSON.stringify(normalized);
     return data;
   }
 
