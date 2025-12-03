@@ -68,6 +68,15 @@ try {
     }
 
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Set PHP execution timeout for this script (30 seconds max)
+    set_time_limit(30);
+    
+    // Set MySQL query timeout (5 seconds per query)
+    try {
+        $pdo->exec("SET SESSION max_execution_time = 5000"); // 5 seconds in milliseconds
+    } catch (PDOException $e) {
+        // Ignore if not supported
+    }
 
     // Check if admin_settings table exists
     $stmt = $pdo->query("SHOW TABLES LIKE 'admin_settings'");
@@ -187,27 +196,60 @@ try {
             $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
             if ($stmt->rowCount() > 0) {
                 // Fetch all admin messages grouped by container_key
-                $sql = "SELECT 
-                            am.id,
-                            am.message_name,
-                            am.message_key,
-                            am.message_type,
-                            am.message_category,
-                            am.container_key,
-                            am.message_text,
-                            am.message_description,
-                            am.supports_html,
-                            am.placeholders,
-                            am.is_active,
-                            am.is_visible,
-                            am.is_deletable,
-                            am.display_duration,
-                            lc.container_name,
-                            lc.icon_path as container_icon
-                        FROM admin_messages am
-                        LEFT JOIN layout_containers lc ON am.container_key = lc.container_key
-                        WHERE am.is_active = 1
-                        ORDER BY lc.sort_order ASC, am.id ASC";
+                // Use a simpler query first to check if layout_containers exists
+                $hasLayoutContainers = false;
+                try {
+                    $checkStmt = $pdo->query("SHOW TABLES LIKE 'layout_containers'");
+                    $hasLayoutContainers = ($checkStmt->rowCount() > 0);
+                } catch (PDOException $e) {
+                    // Table doesn't exist, skip JOIN
+                }
+                
+                if ($hasLayoutContainers) {
+                    $sql = "SELECT 
+                                am.id,
+                                am.message_name,
+                                am.message_key,
+                                am.message_type,
+                                am.message_category,
+                                am.container_key,
+                                am.message_text,
+                                am.message_description,
+                                am.supports_html,
+                                am.placeholders,
+                                am.is_active,
+                                am.is_visible,
+                                am.is_deletable,
+                                am.display_duration,
+                                lc.container_name,
+                                lc.icon_path as container_icon
+                            FROM admin_messages am
+                            LEFT JOIN layout_containers lc ON am.container_key = lc.container_key
+                            WHERE am.is_active = 1
+                            ORDER BY lc.sort_order ASC, am.id ASC";
+                } else {
+                    // Fallback if layout_containers doesn't exist
+                    $sql = "SELECT 
+                                id,
+                                message_name,
+                                message_key,
+                                message_type,
+                                message_category,
+                                container_key,
+                                message_text,
+                                message_description,
+                                supports_html,
+                                placeholders,
+                                is_active,
+                                is_visible,
+                                is_deletable,
+                                display_duration,
+                                NULL as container_name,
+                                NULL as container_icon
+                            FROM admin_messages
+                            WHERE is_active = 1
+                            ORDER BY id ASC";
+                }
                 
                 $stmt = $pdo->query($sql);
                 $messages = $stmt->fetchAll();

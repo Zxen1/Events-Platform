@@ -68,6 +68,14 @@ try {
     }
 
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Set PHP execution timeout for this script (30 seconds max)
+    set_time_limit(30);
+    // Set MySQL query timeout (5 seconds per query)
+    try {
+        $pdo->exec("SET SESSION max_execution_time = 5000"); // 5 seconds in milliseconds
+    } catch (PDOException $e) {
+        // Ignore if not supported
+    }
 
     $categoryColumns = fetchTableColumns($pdo, 'categories');
     $subcategoryColumns = fetchTableColumns($pdo, 'subcategories');
