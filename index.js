@@ -26626,6 +26626,18 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.clear();
         console.log(`[Clear] Cleared ${keyCount} localStorage items`);
         
+        // Clear sessionStorage
+        if(typeof sessionStorage !== 'undefined'){
+          try {
+            const sessionKeys = Object.keys(sessionStorage);
+            const sessionCount = sessionKeys.length;
+            sessionStorage.clear();
+            console.log(`[Clear] Cleared ${sessionCount} sessionStorage items`);
+          } catch(err){
+            console.warn('[Clear] sessionStorage error:', err);
+          }
+        }
+        
         // Clear service workers
         if('serviceWorker' in navigator){
           try {
@@ -26639,7 +26651,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
-        // Clear browser caches
+        // Clear browser caches (Cache API)
         if('caches' in window){
           try {
             const cacheNames = await caches.keys();
@@ -26650,9 +26662,19 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
-        console.log('[Clear] All cleared! Reloading...');
+        // Clear application cache (deprecated but may still exist)
+        if(typeof applicationCache !== 'undefined' && applicationCache.status !== applicationCache.UNCACHED){
+          try {
+            applicationCache.update();
+            console.log('[Clear] Application cache update triggered');
+          } catch(err){
+            console.warn('[Clear] Application cache error:', err);
+          }
+        }
         
-        // Reload with cache bypass
+        console.log('[Clear] All storage cleared! Reloading...');
+        
+        // Reload with cache bypass (force reload from server)
         setTimeout(() => {
           location.reload(true);
         }, 100);
