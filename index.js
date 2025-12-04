@@ -1,4 +1,76 @@
-﻿// === Shared login verifier ===
+﻿// === Centralized API Request Manager (Deduplication) ===
+const apiRequestCache = new Map();
+const apiRequestInFlight = new Map();
+
+/**
+ * Make a deduplicated API request - prevents multiple simultaneous calls to the same endpoint
+ * @param {string} url - The API endpoint URL
+ * @param {Object} options - Fetch options (method, body, headers, etc.)
+ * @param {number} cacheTime - Cache duration in milliseconds (0 = no cache, only deduplication)
+ * @returns {Promise} The fetch response
+ */
+async function apiRequest(url, options = {}, cacheTime = 0) {
+  const cacheKey = `${options.method || 'GET'}:${url}:${options.body ? JSON.stringify(options.body) : ''}`;
+  
+  // Check if request is already in flight - return the same promise
+  if (apiRequestInFlight.has(cacheKey)) {
+    return apiRequestInFlight.get(cacheKey);
+  }
+  
+  // Check cache if enabled
+  if (cacheTime > 0 && apiRequestCache.has(cacheKey)) {
+    const cached = apiRequestCache.get(cacheKey);
+    if (Date.now() - cached.timestamp < cacheTime) {
+      return Promise.resolve(cached.response.clone());
+    }
+    apiRequestCache.delete(cacheKey);
+  }
+  
+  // Create the request promise
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
+  const requestPromise = fetch(url, {
+    ...options,
+    signal: controller.signal
+  })
+    .then(response => {
+      clearTimeout(timeoutId);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Cache the response if cache time is set
+      if (cacheTime > 0) {
+        apiRequestCache.set(cacheKey, {
+          response: response.clone(),
+          timestamp: Date.now()
+        });
+      }
+      
+      return response;
+    })
+    .catch(error => {
+      clearTimeout(timeoutId);
+      throw error;
+    })
+    .finally(() => {
+      // Remove from in-flight after a short delay to allow clones
+      setTimeout(() => {
+        apiRequestInFlight.delete(cacheKey);
+      }, 100);
+    });
+  
+  // Store in-flight request
+  apiRequestInFlight.set(cacheKey, requestPromise);
+  
+  return requestPromise;
+}
+
+// Expose globally for other scripts
+window.apiRequest = apiRequest;
+
+// === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
@@ -374,15 +446,8 @@ function escapeHtml(str){
  */
 async function loadMessagesFromDatabase(includeAdmin = false){
   try {
-    // Add timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
-    const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
+    // Use deduplicated API request (5 second cache to prevent rapid duplicate calls)
+    const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {}, 5000);
     
     if(!response.ok){
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1757,10 +1822,10 @@ let __notifyMapOnInteraction = null;
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
-          const response = await fetch('/gateway.php?action=get-admin-settings', {
+          const response = await apiRequest('/gateway.php?action=get-admin-settings', {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
-          });
+          }, 5000); // 5 second cache
           if(response.ok){
             const data = await response.json();
             if(data.success && data.settings){
@@ -2173,7 +2238,7 @@ let __notifyMapOnInteraction = null;
         async function ensureClusterIconImage(mapInstance){
           // Load cluster icon URL from admin_settings - no fallbacks
             try {
-              const response = await fetch('/gateway.php?action=get-admin-settings');
+              const response = await apiRequest('/gateway.php?action=get-admin-settings', {}, 5000);
               if(response.ok){
                 const data = await response.json();
               if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
@@ -3155,18 +3220,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     async function fetchSavedFormbuilderSnapshot(){
-      // NO CACHING - Always fetch fresh snapshot
-      const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeoutId = controller ? window.setTimeout(() => {
-        try{ controller.abort(); }catch(err){}
-      }, 15000) : 0;
-
+      // Use deduplicated request with cache
       try{
-        const response = await fetch('/gateway.php?action=get-form', {
+        const response = await apiRequest('/gateway.php?action=get-form', {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
-          signal: controller ? controller.signal : undefined
-        });
+        }, 10000); // 10 second cache for form data
+        
         const text = await response.text();
         let data;
         try{
@@ -3181,10 +3241,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           throw new Error(message);
         }
         return data.snapshot;
-      } finally {
-        if(timeoutId){
-          clearTimeout(timeoutId);
-        }
+      } catch(error) {
+        throw error;
       }
     }
 
@@ -15280,7 +15338,7 @@ function makePosts(){
     // Load message category icons from admin_settings
     async function loadMessageCategoryIcons(){
       try {
-        const response = await fetch('/gateway.php?action=get-admin-settings');
+        const response = await apiRequest('/gateway.php?action=get-admin-settings', {}, 5000);
         if(response.ok){
           const data = await response.json();
           if(data.success && data.settings){
@@ -15550,7 +15608,7 @@ function makePosts(){
       try {
         // Fetch messages directly for messages tab to get full container structure
         // This preserves the original container format needed by populateMessagesIntoContainers
-        const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+        const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {}, 5000);
         if(!response.ok){
           throw new Error(`HTTP error! status: ${response.status}`);
         }
