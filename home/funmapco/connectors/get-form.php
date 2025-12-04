@@ -176,9 +176,8 @@ try {
         'success' => true,
         'snapshot' => $snapshot,
     ]);
-    if (function_exists('fastcgi_finish_request')) {
-        fastcgi_finish_request();
-    }
+    // Note: fastcgi_finish_request() removed - was causing partial image loading issues
+    // The output buffering cleanup (ob_end_clean) is sufficient for performance
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
