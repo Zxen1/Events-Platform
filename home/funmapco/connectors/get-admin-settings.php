@@ -167,7 +167,17 @@ try {
     try {
         $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `admin_only` FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
+            // Check if admin_only column exists, then select accordingly
+            $hasAdminOnly = false;
+            try {
+                $colCheck = $pdo->query("SHOW COLUMNS FROM `checkout_options` LIKE 'admin_only'");
+                $hasAdminOnly = $colCheck->rowCount() > 0;
+            } catch (Exception $e) {
+                // Column doesn't exist, continue without it
+            }
+            
+            $adminOnlySelect = $hasAdminOnly ? ', `admin_only`' : '';
+            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`' . $adminOnlySelect . ' FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
             $checkoutRows = $stmt->fetchAll();
             
             $checkoutOptions = [];

@@ -236,6 +236,19 @@ try {
             $inputIds = [];
             
             // Prepare statements
+            // Check if admin_only column exists
+            $hasAdminOnly = false;
+            try {
+                $colCheck = $pdo->query("SHOW COLUMNS FROM `checkout_options` LIKE 'admin_only'");
+                $hasAdminOnly = $colCheck->rowCount() > 0;
+            } catch (Exception $e) {
+                // Column doesn't exist, continue without it
+            }
+            
+            $adminOnlyUpdate = $hasAdminOnly ? ', `admin_only` = :admin_only' : '';
+            $adminOnlyInsert = $hasAdminOnly ? ', `admin_only`' : '';
+            $adminOnlyValues = $hasAdminOnly ? ', :admin_only' : '';
+            
             $updateStmt = $pdo->prepare('
                 UPDATE `checkout_options`
                 SET `checkout_key` = :key,
@@ -246,16 +259,15 @@ try {
                     `checkout_discount_day_rate` = :discount_day_rate,
                     `checkout_featured` = :featured,
                     `checkout_sidebar_ad` = :sidebar,
-                    `is_active` = :active,
-                    `admin_only` = :admin_only,
+                    `is_active` = :active' . $adminOnlyUpdate . ',
                     `updated_at` = CURRENT_TIMESTAMP
                 WHERE `id` = :id
             ');
             
             $insertStmt = $pdo->prepare('
                 INSERT INTO `checkout_options` 
-                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `admin_only`)
-                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :featured, :sidebar, :sort_order, :active, :admin_only)
+                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`' . $adminOnlyInsert . ')
+                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :featured, :sidebar, :sort_order, :active' . $adminOnlyValues . ')
             ');
             
             $sortOrder = 0;
@@ -298,7 +310,7 @@ try {
                 if ($id !== null && is_numeric($id) && in_array((int)$id, $existingIds)) {
                     // Update existing
                     $inputIds[] = (int)$id;
-                    $updateStmt->execute([
+                    $updateParams = [
                         ':id' => (int)$id,
                         ':key' => $key,
                         ':title' => $title,
@@ -309,8 +321,11 @@ try {
                         ':featured' => $featured,
                         ':sidebar' => $sidebar,
                         ':active' => $active,
-                        ':admin_only' => $adminOnly,
-                    ]);
+                    ];
+                    if ($hasAdminOnly) {
+                        $updateParams[':admin_only'] = $adminOnly;
+                    }
+                    $updateStmt->execute($updateParams);
                     $checkoutUpdated++;
                 } else {
                     // Insert new - generate key if not already set above
@@ -318,7 +333,7 @@ try {
                     if (!isset($option['checkout_key']) || trim((string)$option['checkout_key']) === '') {
                         $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
                     }
-                    $insertStmt->execute([
+                    $insertParams = [
                         ':key' => $key,
                         ':title' => $title,
                         ':description' => $description,
@@ -330,8 +345,11 @@ try {
                         ':sidebar' => $sidebar,
                         ':sort_order' => $sortOrder,
                         ':active' => $active,
-                        ':admin_only' => $adminOnly,
-                    ]);
+                    ];
+                    if ($hasAdminOnly) {
+                        $insertParams[':admin_only'] = $adminOnly;
+                    }
+                    $insertStmt->execute($insertParams);
                     $checkoutInserted++;
                 }
             }

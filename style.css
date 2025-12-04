@@ -2492,6 +2492,24 @@ button[aria-expanded="true"] .results-arrow{
   gap:10px;
   align-items:center;
 }
+#memberPanel .admin-skip-payment-btn{
+  background:rgba(100,150,200,0.2);
+  border:1px solid rgba(100,150,200,0.4);
+  color:#8ab4ff;
+  padding:10px 16px;
+  border-radius:8px;
+  font-size:14px;
+  cursor:pointer;
+  transition:background 0.15s, border-color 0.15s;
+}
+#memberPanel .admin-skip-payment-btn:hover:not(:disabled){
+  background:rgba(100,150,200,0.3);
+  border-color:rgba(100,150,200,0.6);
+}
+#memberPanel .admin-skip-payment-btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
 #memberPanel .member-create-actions .primary-action[disabled]{
   opacity:0.6;
   cursor:not-allowed;

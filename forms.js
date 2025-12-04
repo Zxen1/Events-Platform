@@ -848,6 +848,12 @@
       if(!postButton) return;
       const ready = isCreateFormValid();
       postButton.disabled = !ready;
+      
+      // Also update admin skip payment button state
+      const adminSkipButton = document.getElementById('adminSkipPaymentBtn');
+      if(adminSkipButton){
+        adminSkipButton.disabled = !ready;
+      }
     }
 
     // Track last renderConfiguredFields call to prevent rapid-fire loop
@@ -942,7 +948,64 @@
         emptyState.hidden = true;
       }
       if(formWrapper) formWrapper.hidden = false;
-      if(postActions){ postActions.hidden = false; postActions.style.display = ''; }
+      if(postActions){ 
+        postActions.hidden = false; 
+        postActions.style.display = '';
+        
+        // Add admin "Submit without Payment" button if admin is logged in
+        const currentMember = loadCurrentMember();
+        const isAdmin = currentMember && currentMember.type === 'admin';
+        let adminSkipButton = document.getElementById('adminSkipPaymentBtn');
+        
+        if(isAdmin){
+          if(!adminSkipButton){
+            adminSkipButton = document.createElement('button');
+            adminSkipButton.type = 'button';
+            adminSkipButton.id = 'adminSkipPaymentBtn';
+            adminSkipButton.className = 'admin-skip-payment-btn';
+            adminSkipButton.setAttribute('data-message-key', 'msg_admin_submit_without_payment');
+            // Button will be populated with message text via getMessage
+            postActions.appendChild(adminSkipButton);
+            
+            // Load message text
+            (async () => {
+              const messageText = await getMessage('msg_admin_submit_without_payment', {}, false) || 'Admin: Submit without Payment';
+              adminSkipButton.textContent = messageText;
+            })();
+            
+            // Handle click
+            adminSkipButton.addEventListener('click', async (event) => {
+              if(event && typeof event.preventDefault === 'function'){
+                event.preventDefault();
+              }
+              if(isSubmittingCreatePost){
+                return;
+              }
+              // Set flag and call handleMemberCreatePost
+              window.__adminSkipPayment = true;
+              Promise.resolve(handleMemberCreatePost(event)).catch(err => {
+                console.error('Admin skip payment submission failed', err);
+                showCreateStatus('Unable to post your listing. Please try again.', { error: true });
+                isSubmittingCreatePost = false;
+                if(postButton){
+                  delete postButton.dataset.submitting;
+                  postButton.disabled = false;
+                }
+                if(adminSkipButton){
+                  delete adminSkipButton.dataset.submitting;
+                  adminSkipButton.disabled = false;
+                }
+              });
+            });
+          }
+          adminSkipButton.hidden = false;
+          adminSkipButton.disabled = postButton ? postButton.disabled : true;
+        } else {
+          if(adminSkipButton){
+            adminSkipButton.hidden = true;
+          }
+        }
+      }
       if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
 			
 			// Apply any saved draft and bind autosave for dynamic fields
@@ -1119,10 +1182,20 @@
           delete postButton.dataset.submitting;
           postButton.disabled = false;
         }
+        const adminSkipButton = document.getElementById('adminSkipPaymentBtn');
+        if(adminSkipButton){
+          delete adminSkipButton.dataset.submitting;
+          adminSkipButton.disabled = false;
+        }
       };
       if(postButton){
         postButton.dataset.submitting = 'true';
         postButton.disabled = true;
+      }
+      const adminSkipButton = document.getElementById('adminSkipPaymentBtn');
+      if(adminSkipButton){
+        adminSkipButton.dataset.submitting = 'true';
+        adminSkipButton.disabled = true;
       }
 
       const focusElement = el => {
@@ -1374,6 +1447,12 @@
         payload.member_email = currentMember.email || '';
         payload.member_username = currentMember.username || '';
         payload.member_type = currentMember.type || 'member';
+      }
+      
+      // Check if admin requested to skip payment
+      if(window.__adminSkipPayment === true){
+        payload.skip_payment = true;
+        window.__adminSkipPayment = false; // Reset flag
       }
 
       let response;

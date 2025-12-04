@@ -146,16 +146,10 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
         </button>
       </div>
       <div class="checkout-options-edit-panel" hidden>
-        <div class="checkout-option-field sidebar-field" style="display: flex; gap: 20px;">
-          <label class="checkout-option-active">
-            <input type="checkbox" ${option.is_active ? 'checked' : ''} />
-            <span>Active</span>
-          </label>
-          <label class="checkout-option-admin-only">
-            <input type="checkbox" class="checkout-option-admin-only-input" ${option.admin_only ? 'checked' : ''} />
-            <span>Admin Only</span>
-          </label>
-        </div>
+        <label class="checkout-option-active">
+          <input type="checkbox" ${option.is_active ? 'checked' : ''} />
+          <span>Active</span>
+        </label>
         <div class="checkout-option-field">
           <label>Description</label>
           <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
@@ -311,11 +305,10 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       checkout_flagfall_price: 0,
       checkout_basic_day_rate: null,
       checkout_discount_day_rate: null,
-      checkout_currency: siteCurrency,
+        checkout_currency: siteCurrency,
       checkout_featured: 0,
         checkout_sidebar_ad: false,
-        is_active: true,
-        admin_only: 0
+        is_active: true
       };
       renderCheckoutOptions([...getCheckoutOptionsFromUI(), newOption], siteCurrency);
       if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
@@ -14576,7 +14569,6 @@ function makePosts(){
           const renderCheckoutOptionsEditor = ()=>{
             checkoutOptionsList.innerHTML = '';
             const allCheckoutOptions = (window.CHECKOUT_OPTIONS || []).filter(opt => opt.is_active !== false && opt.is_active !== 0);
-            const currentOptions = Array.isArray(c.subCheckoutOptions[sub]) ? c.subCheckoutOptions[sub].filter(id => id > 0) : [];
             const surcharge = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
               ? parseFloat(c.subFees[sub].checkout_surcharge) : 0;
             
@@ -14588,8 +14580,6 @@ function makePosts(){
             allCheckoutOptions.forEach(opt => {
               const optionCard = document.createElement('div');
               optionCard.className = 'subcategory-checkout-option-card';
-              
-              const isSelected = currentOptions.includes(opt.id);
               const flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
               const basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
                 ? parseFloat(opt.checkout_basic_day_rate) : null;

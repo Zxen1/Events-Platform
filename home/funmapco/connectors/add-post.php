@@ -150,7 +150,17 @@ $subcategoryId = isset($data['subcategory_id']) ? (int)$data['subcategory_id'] :
 $subcategoryName = isset($data['subcategory_name']) ? trim((string)$data['subcategory_name']) : '';
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
+$memberType = isset($data['member_type']) ? trim((string)$data['member_type']) : 'member';
 $title = trim((string)$data['title']);
+
+// Check if user is admin
+$isAdmin = strtolower($memberType) === 'admin' || 
+           (isset($data['member']) && is_array($data['member']) && 
+            (strtolower($data['member']['type'] ?? '') === 'admin' || 
+             !empty($data['member']['isAdmin'])));
+
+// Check if admin requested to skip payment
+$skipPayment = $isAdmin && !empty($data['skip_payment']);
 
 if ($subcategoryId <= 0 || $subcategoryName === '' || $memberId <= 0 || $memberName === '' || $title === '') {
   http_response_code(400);
@@ -166,17 +176,38 @@ if (!$mysqli->begin_transaction()) {
 
 $transactionActive = true;
 
-$stmt = $mysqli->prepare(
-  "INSERT INTO posts (subcategory_id, subcategory_name, member_id, member_name, title, status) VALUES (?, ?, ?, ?, ?, 'active')"
-);
+// Determine payment status - admins can skip payment if requested, others get 'pending'
+$paymentStatus = $skipPayment ? 'paid' : 'pending';
+
+// Check if posts table has payment_status column
+$postColumns = fetch_table_columns($mysqli, 'posts');
+$hasPaymentStatus = in_array('payment_status', $postColumns, true);
+
+if ($hasPaymentStatus) {
+  $stmt = $mysqli->prepare(
+    "INSERT INTO posts (subcategory_id, subcategory_name, member_id, member_name, title, status, payment_status) VALUES (?, ?, ?, ?, ?, 'active', ?)"
+  );
+} else {
+  $stmt = $mysqli->prepare(
+    "INSERT INTO posts (subcategory_id, subcategory_name, member_id, member_name, title, status) VALUES (?, ?, ?, ?, ?, 'active')"
+  );
+}
 
 if (!$stmt) {
   abort_with_error($mysqli, 500, 'Unable to prepare post statement.', $transactionActive);
 }
 
-if (!$stmt->bind_param('isiss', $subcategoryId, $subcategoryName, $memberId, $memberName, $title)) {
-  $stmt->close();
-  abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
+if ($hasPaymentStatus) {
+  if (!bind_statement_params($stmt, 'isiss', $subcategoryId, $subcategoryName, $memberId, $memberName, $title, $paymentStatus)) {
+    $stmt->close();
+    abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
+  }
+} else {
+  if (!bind_statement_params($stmt, 'isiss', $subcategoryId, $subcategoryName, $memberId, $memberName, $title)) {
+    $stmt->close();
+    abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
+  }
+}
 }
 
 if (!$stmt->execute()) {
