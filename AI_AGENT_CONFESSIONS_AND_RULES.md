@@ -293,18 +293,18 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 **Investigation:** Spent entire day investigating loading speed issues - checked code, database queries, API calls, network requests, CDN configuration, etc.
 
-**Root Cause:** Not a code or server issue. The problem was network infrastructure.
+**Initial Attempted Fix:** Turned router and WiFi repeater off and on again, waited 10 minutes for network to stabilize. This did NOT fix the issue.
 
-**Resolution:** Fixed by turning router and WiFi repeater off and on again, then waiting 10 minutes for network to stabilize.
+**Further Testing:**
+- Tested with Telstra phone hotspot connected to PC - website still loaded just as slowly
+- Cleared all browser cache and local storage - no improvement
+- Cannot determine why PC is forcibly running slow
+- Issue yet to be determined
 
 **Important Notes:**
 - There are known problems using Cloudflare CDN in Australia with both Optus and Telstra ISPs
-- Long-term solutions to consider:
-  1. Choose a different CDN provider
-  2. Accept slower loading times than other CDNs
-  3. Use VPN as a workaround
-
-**Lesson:** When investigating performance issues, don't forget to check network infrastructure (router, WiFi, ISP) before spending extensive time on code/server-side debugging.
+- The slow loading persists across different network connections (router WiFi, phone hotspot)
+- Not a network infrastructure issue - appears to be something else causing forced slowdown
 
 ---
 
