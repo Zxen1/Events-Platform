@@ -146,10 +146,16 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
         </button>
       </div>
       <div class="checkout-options-edit-panel" hidden>
-        <label class="checkout-option-active">
-          <input type="checkbox" ${option.is_active ? 'checked' : ''} />
-          <span>Active</span>
-        </label>
+        <div class="checkout-option-field sidebar-field" style="display: flex; gap: 20px;">
+          <label class="checkout-option-active">
+            <input type="checkbox" ${option.is_active ? 'checked' : ''} />
+            <span>Active</span>
+          </label>
+          <label class="checkout-option-admin-only">
+            <input type="checkbox" class="checkout-option-admin-only-input" ${option.admin_only ? 'checked' : ''} />
+            <span>Admin Only</span>
+          </label>
+        </div>
         <div class="checkout-option-field">
           <label>Description</label>
           <textarea class="checkout-option-description" placeholder="Description">${escapeHtml(option.checkout_description || '')}</textarea>
@@ -308,7 +314,8 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       checkout_currency: siteCurrency,
       checkout_featured: 0,
         checkout_sidebar_ad: false,
-        is_active: true
+        is_active: true,
+        admin_only: 0
       };
       renderCheckoutOptions([...getCheckoutOptionsFromUI(), newOption], siteCurrency);
       if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
@@ -14607,31 +14614,6 @@ function makePosts(){
               const price30 = calculatePrice(30);
               const price365 = calculatePrice(365);
               
-              const checkbox = document.createElement('input');
-              checkbox.type = 'checkbox';
-              checkbox.checked = isSelected;
-              checkbox.className = 'subcategory-checkout-option-checkbox';
-              checkbox.addEventListener('change', ()=>{
-                if(checkbox.checked){
-                  if(!currentOptions.includes(opt.id)){
-                    currentOptions.push(opt.id);
-                  }
-                } else {
-                  const idx = currentOptions.indexOf(opt.id);
-                  if(idx >= 0){
-                    currentOptions.splice(idx, 1);
-                  }
-                }
-                c.subCheckoutOptions[sub] = currentOptions.slice();
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = currentOptions.slice();
-                }
-                notifyFormbuilderChange();
-              });
-              
               const content = document.createElement('div');
               content.className = 'subcategory-checkout-option-content';
               
@@ -14687,7 +14669,7 @@ function makePosts(){
               calculator.append(calcLabel, calcInput, calcTotal);
               
               content.append(title, prices, calculator);
-              optionCard.append(checkbox, content);
+              optionCard.append(content);
               checkoutOptionsList.appendChild(optionCard);
             });
           };

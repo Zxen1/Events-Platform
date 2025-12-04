@@ -247,14 +247,15 @@ try {
                     `checkout_featured` = :featured,
                     `checkout_sidebar_ad` = :sidebar,
                     `is_active` = :active,
+                    `admin_only` = :admin_only,
                     `updated_at` = CURRENT_TIMESTAMP
                 WHERE `id` = :id
             ');
             
             $insertStmt = $pdo->prepare('
                 INSERT INTO `checkout_options` 
-                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`)
-                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :featured, :sidebar, :sort_order, :active)
+                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `admin_only`)
+                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :featured, :sidebar, :sort_order, :active, :admin_only)
             ');
             
             $sortOrder = 0;
@@ -280,9 +281,10 @@ try {
                 }
                 $description = isset($option['checkout_description']) ? trim((string)$option['checkout_description']) : '';
                 // Get checkout_key from input, or generate from title if not provided
+                // Generate key: "Free Listing" -> "free-listing" (hyphens, no numbers/timestamps)
                 $key = isset($option['checkout_key']) && trim((string)$option['checkout_key']) !== '' 
                     ? trim((string)$option['checkout_key']) 
-                    : strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title)) . '-' . time();
+                    : strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
                 // Round money values to 2 decimal places
                 $flagfallPrice = round((float)($option['checkout_flagfall_price'] ?? 0), 2);
                 $basicDayRate = isset($option['checkout_basic_day_rate']) && $option['checkout_basic_day_rate'] !== null && $option['checkout_basic_day_rate'] !== '' ? round((float)$option['checkout_basic_day_rate'], 2) : null;
@@ -290,6 +292,7 @@ try {
                 $featured = isset($option['checkout_featured']) ? ((int)$option['checkout_featured'] ? 1 : 0) : 0;
                 $sidebar = !empty($option['checkout_sidebar_ad']) ? 1 : 0;
                 $active = !empty($option['is_active']) ? 1 : 0;
+                $adminOnly = !empty($option['admin_only']) ? 1 : 0;
                 
                 // Check if this is an existing ID or new
                 if ($id !== null && is_numeric($id) && in_array((int)$id, $existingIds)) {
@@ -306,12 +309,14 @@ try {
                         ':featured' => $featured,
                         ':sidebar' => $sidebar,
                         ':active' => $active,
+                        ':admin_only' => $adminOnly,
                     ]);
                     $checkoutUpdated++;
                 } else {
                     // Insert new - generate key if not already set above
+                    // Generate key: "Free Listing" -> "free-listing" (hyphens, no numbers/timestamps)
                     if (!isset($option['checkout_key']) || trim((string)$option['checkout_key']) === '') {
-                        $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title)) . '-' . time();
+                        $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
                     }
                     $insertStmt->execute([
                         ':key' => $key,
@@ -325,6 +330,7 @@ try {
                         ':sidebar' => $sidebar,
                         ':sort_order' => $sortOrder,
                         ':active' => $active,
+                        ':admin_only' => $adminOnly,
                     ]);
                     $checkoutInserted++;
                 }
