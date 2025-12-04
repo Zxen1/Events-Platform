@@ -14703,21 +14703,33 @@ function makePosts(){
           const surchargeInput = document.createElement('input');
           surchargeInput.type = 'number';
           surchargeInput.step = '0.01';
+          surchargeInput.min = '-100';
           surchargeInput.className = 'fee-input';
           surchargeInput.placeholder = 'N/A';
           surchargeInput.value = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
             ? c.subFees[sub].checkout_surcharge.toFixed(2) 
             : '';
           surchargeInput.addEventListener('input', ()=>{
-            c.subFees[sub].checkout_surcharge = surchargeInput.value ? Math.round(parseFloat(surchargeInput.value) * 100) / 100 : null;
+            let value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+            // Enforce minimum of -100%
+            if(value !== null && value < -100){
+              value = -100;
+              surchargeInput.value = value.toFixed(2);
+            }
+            c.subFees[sub].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
             notifyFormbuilderChange();
             // Re-render checkout options to update prices with new surcharge
             renderCheckoutOptionsEditor();
           });
           surchargeInput.addEventListener('blur', ()=>{
-            if(surchargeInput.value && !surchargeInput.value.includes('.')){
-              surchargeInput.value = parseFloat(surchargeInput.value).toFixed(2);
-              c.subFees[sub].checkout_surcharge = Math.round(parseFloat(surchargeInput.value) * 100) / 100;
+            let value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+            // Enforce minimum of -100%
+            if(value !== null && value < -100){
+              value = -100;
+            }
+            if(value !== null){
+              surchargeInput.value = value.toFixed(2);
+              c.subFees[sub].checkout_surcharge = Math.round(value * 100) / 100;
             }
             // Re-render checkout options to update prices with new surcharge
             renderCheckoutOptionsEditor();
