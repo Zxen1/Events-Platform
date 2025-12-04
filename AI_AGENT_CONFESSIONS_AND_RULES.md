@@ -287,24 +287,34 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 ## INCIDENTS AND RESOLUTIONS
 
-### 2025-12-04: Website Speed Degradation (5s to 5mins startup)
+### 2025-12-04: Website Speed Degradation (5-20 minute loads)
 
-**Issue:** Website startup time degraded from 5 seconds to 5 minutes.
+**Issue:** funmap.com experienced 5-20 minute load times specifically on Paul's PC (8700k).
 
-**Investigation:** Spent entire day investigating loading speed issues - checked code, database queries, API calls, network requests, CDN configuration, etc.
+**Key Observations:**
+- Phone on Telstra loaded instantly
+- Hotspotting Telstra phone to PC still resulted in slow loads (PC-specific issue, not network)
+- Other websites completely unaffected
+- Other PCs (AI and Ventra IP) loaded normally
+- All browsers on the affected PC were slow
+- Possibly related to geolocation blocking or DNS
 
-**Initial Attempted Fix:** Turned router and WiFi repeater off and on again, waited 10 minutes for network to stabilize. This did NOT fix the issue.
+**What DIDN'T Fix It:**
+- Turned router and WiFi repeater off and on again
+- Tested with Telstra phone hotspot connected to PC
+- Cleared all browser cache and local storage
 
-**Further Testing:**
-- Tested with Telstra phone hotspot connected to PC - website still loaded just as slowly
-- Cleared all browser cache and local storage - no improvement
-- Cannot determine why PC is forcibly running slow
-- Issue yet to be determined
+**Resolution:** Issue self-resolved on December 5, 2025. Root cause unknown.
+
+**If This Recurs, Investigate:**
+- Browser geolocation permissions
+- Local DNS cache (`ipconfig /flushdns`)
+- Browser extensions
+- PC-specific network settings affecting only this domain
 
 **Important Notes:**
 - There are known problems using Cloudflare CDN in Australia with both Optus and Telstra ISPs
-- The slow loading persists across different network connections (router WiFi, phone hotspot)
-- Not a network infrastructure issue - appears to be something else causing forced slowdown
+- The fact that hotspotting didn't help but other PCs were fine suggests a PC-specific issue, not network infrastructure
 
 ---
 
