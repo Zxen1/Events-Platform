@@ -1,29 +1,22 @@
 ﻿// === Centralized API Request Manager (Deduplication) ===
-const apiRequestCache = new Map();
 const apiRequestInFlight = new Map();
 
 /**
  * Make a deduplicated API request - prevents multiple simultaneous calls to the same endpoint
+ * Each caller gets a fresh clone of the response so the body can be read independently
  * @param {string} url - The API endpoint URL
  * @param {Object} options - Fetch options (method, body, headers, etc.)
- * @param {number} cacheTime - Cache duration in milliseconds (0 = no cache, only deduplication)
- * @returns {Promise} The fetch response
+ * @param {number} cacheTime - Unused (kept for compatibility, caching removed to prevent body consumption issues)
+ * @returns {Promise} The fetch response (cloned for each caller)
  */
 async function apiRequest(url, options = {}, cacheTime = 0) {
   const cacheKey = `${options.method || 'GET'}:${url}:${options.body ? JSON.stringify(options.body) : ''}`;
   
-  // Check if request is already in flight - return the same promise
+  // Check if request is already in flight - return a cloned response
   if (apiRequestInFlight.has(cacheKey)) {
-    return apiRequestInFlight.get(cacheKey);
-  }
-  
-  // Check cache if enabled
-  if (cacheTime > 0 && apiRequestCache.has(cacheKey)) {
-    const cached = apiRequestCache.get(cacheKey);
-    if (Date.now() - cached.timestamp < cacheTime) {
-      return Promise.resolve(cached.response.clone());
-    }
-    apiRequestCache.delete(cacheKey);
+    const inFlightPromise = apiRequestInFlight.get(cacheKey);
+    // Clone the response so each caller can read the body independently
+    return inFlightPromise.then(response => response.clone());
   }
   
   // Create the request promise
@@ -39,15 +32,7 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      // Cache the response if cache time is set
-      if (cacheTime > 0) {
-        apiRequestCache.set(cacheKey, {
-          response: response.clone(),
-          timestamp: Date.now()
-        });
-      }
-      
+      // Return original response (will be cloned for each caller)
       return response;
     })
     .catch(error => {
@@ -55,16 +40,17 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
       throw error;
     })
     .finally(() => {
-      // Remove from in-flight after a short delay to allow clones
+      // Remove from in-flight after a delay to allow clones
       setTimeout(() => {
         apiRequestInFlight.delete(cacheKey);
-      }, 100);
+      }, 1000);
     });
   
   // Store in-flight request
   apiRequestInFlight.set(cacheKey, requestPromise);
   
-  return requestPromise;
+  // Return a clone so the original can be cloned again for other callers
+  return requestPromise.then(response => response.clone());
 }
 
 // Expose globally for other scripts
@@ -2271,6 +2257,12 @@ let __notifyMapOnInteraction = null;
               }catch(err){ console.error(err); }
               resolve();
             };
+            // Only load if URL is valid
+            if(!CLUSTER_ICON_URL || typeof CLUSTER_ICON_URL !== 'string' || !CLUSTER_ICON_URL.trim()){
+              resolve();
+              return;
+            }
+            
             try{
               if(typeof mapInstance.loadImage === 'function'){
                 mapInstance.loadImage(CLUSTER_ICON_URL, (err, image)=>{
