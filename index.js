@@ -182,7 +182,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <input type="number" class="checkout-option-calc-days" value="" placeholder="Days" min="1" step="1" style="width: 100px;" />
               <span style="font-weight: 600;">=</span>
-              <span class="checkout-option-calc-total" style="font-weight: 600; color: #2f3b73; min-width: 120px;">${siteCurrency} 0.00</span>
+              <span class="checkout-option-calc-total" style="min-width: 120px;">${siteCurrency} 0.00</span>
             </div>
           </div>
         </div>
