@@ -973,28 +973,31 @@ function handlePromptKeydown(event, context){
     hideGeocoderIconFromAT();
     setupGeocoderObserver();
     
-    // Load user-visible messages on page load (excludes admin and email messages)
-    loadMessagesFromDatabase(false).then(() => {
-      // Update all message elements after loading
-      updateAllMessageElements(false).catch(err => {
-        console.warn('Failed to update message elements:', err);
-      });
-    }).catch(err => {
-      console.warn('Failed to preload messages:', err);
-    });
-    
-    // Set up observer for dynamically created elements
+    // Set up observer for dynamically created elements (do this immediately)
     setupMessageObserver();
     
-    // Load admin messages and update all elements (including dynamically created ones)
-    (async () => {
-      try {
-        await loadMessagesFromDatabase(true);
-        await updateAllMessageElements(true);
-      } catch(err){
-        console.warn('Failed to load admin messages:', err);
-      }
-    })();
+    // Load messages in background - don't block page rendering
+    setTimeout(() => {
+      // Load user-visible messages on page load (excludes admin and email messages)
+      loadMessagesFromDatabase(false).then(() => {
+        // Update all message elements after loading
+        updateAllMessageElements(false).catch(err => {
+          console.warn('Failed to update message elements:', err);
+        });
+      }).catch(err => {
+        console.warn('Failed to preload messages:', err);
+      });
+      
+      // Load admin messages and update all elements (including dynamically created ones)
+      (async () => {
+        try {
+          await loadMessagesFromDatabase(true);
+          await updateAllMessageElements(true);
+        } catch(err){
+          console.warn('Failed to load admin messages:', err);
+        }
+      })();
+    }, 100); // Small delay to let page render first
   });
 })();
 
