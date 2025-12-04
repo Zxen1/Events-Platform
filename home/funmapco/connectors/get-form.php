@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+// Disable output buffering to prevent delays
+if (ob_get_level()) {
+    ob_end_clean();
+}
+
 header('Content-Type: application/json');
 
 try {
@@ -70,7 +75,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // Set PHP execution timeout for this script (30 seconds max)
     set_time_limit(30);
-    // Set MySQL query timeout (5 seconds per query)
+    // Set MySQL query timeout (5 seconds per query - prevents hanging)
     try {
         $pdo->exec("SET SESSION max_execution_time = 5000"); // 5 seconds in milliseconds
     } catch (PDOException $e) {
@@ -166,10 +171,14 @@ try {
     $snapshot['field_types'] = $fieldTypes;
     $snapshot['checkout_options'] = $checkoutOptions;
 
+    // Flush output immediately
     echo json_encode([
         'success' => true,
         'snapshot' => $snapshot,
     ]);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([

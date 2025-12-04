@@ -76,7 +76,7 @@ try {
     // Set PHP execution timeout for this script (30 seconds max)
     set_time_limit(30);
     
-    // Set MySQL query timeout (5 seconds per query)
+    // Set MySQL query timeout (5 seconds per query - prevents hanging)
     try {
         $pdo->exec("SET SESSION max_execution_time = 5000"); // 5 seconds in milliseconds
     } catch (PDOException $e) {

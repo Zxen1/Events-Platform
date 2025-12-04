@@ -12,19 +12,49 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link id="mapbox-gl-css" rel="preload" as="style"
-        href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
-        onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" /></noscript>
-
-  <link rel="preload" as="style"
-    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
-    data-fallback="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css"
-    onload="this.onload=null;this.rel='stylesheet'"
-    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;this.rel='preload';}else{this.dataset.fallbackState='failed';this.rel='stylesheet';}" />
-  <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" /></noscript>
+  <!-- Mapbox CSS - load asynchronously after page renders to prevent blocking -->
+  <script>
+    (function(){
+      function loadMapboxCSS(){
+        var link1 = document.createElement('link');
+        link1.id = 'mapbox-gl-css';
+        link1.rel = 'stylesheet';
+        link1.href = 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css';
+        link1.media = 'print';
+        link1.onload = function(){ this.media = 'all'; };
+        link1.onerror = function(){ this.media = 'all'; };
+        document.head.appendChild(link1);
+        
+        var link2 = document.createElement('link');
+        link2.rel = 'stylesheet';
+        link2.href = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css';
+        link2.media = 'print';
+        link2.onload = function(){ this.media = 'all'; };
+        link2.onerror = function(){ 
+          this.href = 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css';
+          this.media = 'all';
+        };
+        document.head.appendChild(link2);
+      }
+      if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', loadMapboxCSS);
+      } else {
+        setTimeout(loadMapboxCSS, 0);
+      }
+    })();
+  </script>
   
-  <link rel="stylesheet" href="style.css?v=20251201l" />
+  <link id="main-stylesheet" rel="stylesheet" href="style.css?v=20251201l" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="style.css?v=20251201l" /></noscript>
+  <script>
+    // Force enable style.css after 2 seconds if it hasn't loaded
+    setTimeout(function(){
+      var link = document.getElementById('main-stylesheet');
+      if(link && link.media === 'print'){
+        link.media = 'all';
+      }
+    }, 2000);
+  </script>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <div id="headerLoadingOverlay" class="header-loading-overlay" role="status" aria-live="polite">
@@ -34,7 +64,7 @@
   </div>
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
-      <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
+      <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" loading="eager" fetchpriority="high" />
     </div>
     <div id="headerTimecode" class="header-timecode" aria-live="polite" style="position:absolute;left:50%;transform:translateX(-50%);top:8px;font-weight:600;"></div>
     <nav class="view-toggle" aria-label="Primary">
