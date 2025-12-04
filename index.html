@@ -44,17 +44,7 @@
     })();
   </script>
   
-  <link id="main-stylesheet" rel="stylesheet" href="style.css?v=20251201l" media="print" onload="this.media='all'" />
-  <noscript><link rel="stylesheet" href="style.css?v=20251201l" /></noscript>
-  <script>
-    // Force enable style.css after 2 seconds if it hasn't loaded
-    setTimeout(function(){
-      var link = document.getElementById('main-stylesheet');
-      if(link && link.media === 'print'){
-        link.media = 'all';
-      }
-    }, 2000);
-  </script>
+  <link rel="stylesheet" href="style.css?v=20251201l" />
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
