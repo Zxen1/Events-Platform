@@ -2427,82 +2427,22 @@ button[aria-expanded="true"] .results-arrow{
 }
 #memberPanel .member-create-actions{
   display:flex;
-  flex-direction:column;
-  gap:16px;
-  align-items:stretch;
-}
-#memberPanel .form-checkout-options{
-  margin-bottom:8px;
-}
-#memberPanel .form-checkout-title{
-  margin:0 0 12px;
-  font-size:16px;
-  font-weight:600;
-  color:var(--button-text);
-}
-#memberPanel .form-checkout-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
-  gap:16px;
-}
-#memberPanel .form-checkout-option-card{
-  border:2px solid var(--border);
-  border-radius:12px;
-  padding:16px;
-  background:rgba(0,0,0,0.2);
-  transition:border-color 0.2s ease, background 0.2s ease;
-}
-#memberPanel .form-checkout-option-card:hover{
-  border-color:var(--btn-hover, #2e3a72);
-  background:rgba(0,0,0,0.3);
-}
-#memberPanel .form-checkout-option-title{
-  font-size:15px;
-  font-weight:600;
-  color:var(--button-text);
-  margin-bottom:8px;
-}
-#memberPanel .form-checkout-option-description{
-  font-size:13px;
-  color:var(--muted);
-  margin-bottom:12px;
-  line-height:1.4;
-}
-#memberPanel .form-checkout-duration-options{
-  display:flex;
-  gap:8px;
-  flex-direction:column;
-}
-#memberPanel .form-checkout-duration-btn{
-  display:flex;
-  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
   align-items:center;
-  padding:12px 16px;
-  border:2px solid var(--border);
-  border-radius:8px;
-  background:rgba(0,0,0,0.35);
-  color:var(--button-text);
-  font-size:14px;
-  cursor:pointer;
-  transition:all 0.2s ease;
-  width:100%;
-  box-sizing:border-box;
 }
-#memberPanel .form-checkout-duration-btn:hover{
-  border-color:var(--btn-hover, #2e3a72);
-  background:rgba(0,0,0,0.5);
+#tab-forms .form-container .form-checkout-duration-wrapper,
+#memberPanel .member-create-fields .form-checkout-duration-wrapper{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-left:8px;
 }
-#memberPanel .form-checkout-duration-btn.selected{
-  border-color:var(--btn-selected, #4a5ba3);
-  background:var(--btn-selected, #4a5ba3);
-  color:var(--button-active-text, #fff);
-}
-#memberPanel .form-checkout-duration-btn .duration-label{
-  font-weight:600;
-}
-#memberPanel .form-checkout-duration-btn .duration-price{
-  font-weight:600;
-  font-size:15px;
+#tab-forms .form-container .form-checkout-duration-option,
+#memberPanel .member-create-fields .form-checkout-duration-option{
+  font-size:13px;
+  color:var(--accent-color, #8ab4ff);
+  line-height:1.4;
 }
 #memberPanel .admin-skip-payment-btn{
   background:rgba(100,150,200,0.2);
@@ -8464,12 +8404,12 @@ html, body { cursor: auto !important; }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
             #tab-forms .session-time-actions,
-            #tab-forms .version-actions,
+            #tab-forms .seating-area-actions,
             #tab-forms .tier-actions,
             #memberPanel .member-create-fields .venue-line-actions,
             #memberPanel .member-create-fields .session-date-actions,
             #memberPanel .member-create-fields .session-time-actions,
-            #memberPanel .member-create-fields .version-actions,
+            #memberPanel .member-create-fields .seating-area-actions,
             #memberPanel .member-create-fields .tier-actions{
               margin-left:0;
               display:flex;
@@ -8747,8 +8687,8 @@ html, body { cursor: auto !important; }
               grid-column:1 / 2;
               grid-row:2;
             }
-            #tab-forms .session-pricing-card .version-actions,
-            #memberPanel .member-create-fields .session-pricing-card .version-actions{
+            #tab-forms .session-pricing-card .seating-area-actions,
+            #memberPanel .member-create-fields .session-pricing-card .seating-area-actions{
               grid-column:2 / 3;
               grid-row:2;
             }
@@ -8762,9 +8702,9 @@ html, body { cursor: auto !important; }
               grid-column:2 / 3;
               grid-row:2;
             }
-            #tab-forms .session-pricing-card .version-actions,
+            #tab-forms .session-pricing-card .seating-area-actions,
             #tab-forms .tier-row .tier-actions,
-            #memberPanel .member-create-fields .session-pricing-card .version-actions,
+            #memberPanel .member-create-fields .session-pricing-card .seating-area-actions,
             #memberPanel .member-create-fields .tier-row .tier-actions{
               align-self:start;
               justify-self:end;

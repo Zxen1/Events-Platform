@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 04, 2025 at 10:00 PM
+-- Generation Time: Dec 05, 2025 at 12:13 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -303,10 +303,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing-1764819652', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 1, '2025-11-30 05:45:21', '2025-12-04 14:40:52'),
-(2, 'standard-listing-1764819652', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-04 14:40:52'),
-(3, 'featured-listing-1764819652', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-04 14:40:52'),
-(4, 'featured-sidebar-ad-1764819652', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-04 14:40:52');
+(1, 'free-listing', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-04 22:25:39'),
+(2, 'standard-listing', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-04 22:25:39'),
+(3, 'featured-listing', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-04 22:25:39'),
+(4, 'featured-sidebar-ad', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-04 22:25:39');
 
 -- --------------------------------------------------------
 
@@ -390,7 +390,6 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `options`, `created_at`, 
 (19, 'phone', 'tel', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
 (20, 'website', 'url', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
 (21, 'variant', 'text', NULL, '2025-10-30 18:33:09', '2025-10-30 18:33:09'),
-(22, 'subvariant', 'text', NULL, '2025-10-30 18:33:09', '2025-10-30 18:33:09'),
 (23, 'item-price', 'decimal(10,2)', NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
 
 -- --------------------------------------------------------
@@ -418,7 +417,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `description`, `field_id`, `field
 (2, 'sessions', 'Fields for session date and time.', '8,9', 'session-date,session-time', '2025-10-25 16:56:09', '2025-11-06 13:15:47'),
 (3, 'ticket-pricing', 'Fields for seating area, pricing tier, ticket price, and currency.', '10,11,12,13', 'seating-area,pricing-tier,ticket-price,currency', '2025-10-25 16:56:09', '2025-11-06 13:16:06'),
 (4, 'location', 'Fields for location details including address and coordinates.', '5,6,7', 'address-line,latitude,longitude', '2025-10-29 22:59:10', '2025-11-06 13:16:16'),
-(5, 'variant-pricing', 'Fields for managing variants, subvariants, and item pricing.', '21,22,23', 'variant,subvariant,item-price', '2025-10-30 18:39:14', '2025-11-06 13:16:26');
+(5, 'variant-pricing', 'Fields for managing variants and pricing.', '21,23,13', 'variant,item-price, currency', '2025-10-30 18:39:14', '2025-12-05 00:04:52');
 
 -- --------------------------------------------------------
 
@@ -432,11 +431,11 @@ CREATE TABLE `field_types` (
   `field_type_key` varchar(255) DEFAULT NULL,
   `placeholder` varchar(512) DEFAULT NULL,
   `formbuilder_editable` tinyint(1) NOT NULL DEFAULT 0,
-  `field_type_item_1` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
-  `field_type_item_2` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
+  `field_type_item_1` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
+  `field_type_item_2` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
   `field_type_item_3` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
   `field_type_item_4` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
-  `field_type_item_5` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','subvariant [field=22]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
+  `field_type_item_5` enum('address-line [field=5]','currency [field=13]','description [field=2]','dropdown [field=16]','email [field=18]','images [field=3]','item-price [field=23]','latitude [field=6]','location [fieldset=4]','longitude [field=7]','phone [field=19]','pricing-tier [field=11]','radio [field=17]','seating-area [field=10]','session-date [field=8]','session-time [field=9]','sessions [fieldset=2]','text-area [field=15]','text-box [field=14]','ticket-price [field=12]','ticket-pricing [fieldset=3]','title [field=1]','variant [field=21]','variant-pricing [fieldset=5]','venue-name [field=4]','venues [fieldset=1]','website [field=20]') DEFAULT NULL,
   `sort_order` int(10) UNSIGNED DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -460,7 +459,7 @@ INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placehold
 (11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 0, 'website [field=20]', NULL, NULL, NULL, NULL, 11, '2025-10-29 19:03:05', '2025-11-06 02:07:35'),
 (12, 'Images', 'images', 'images', 0, 'images [field=3]', NULL, NULL, NULL, NULL, 12, '2025-10-29 19:03:05', '2025-11-05 03:01:51'),
 (13, 'Coupon', 'coupon', 'eg. FreeStuff', 0, 'text-box [field=14]', NULL, NULL, NULL, NULL, 13, '2025-10-29 19:03:05', '2025-11-06 02:19:54'),
-(14, 'Variant Pricing', 'variant-pricing', 'prices', 0, 'variant-pricing [fieldset=5]', NULL, NULL, NULL, NULL, 14, '2025-10-29 19:03:05', '2025-11-06 02:20:00'),
+(14, 'Variant Pricing', 'variant-pricing', 'eg. Ruby Slippers - Small', 0, 'variant-pricing [fieldset=5]', NULL, NULL, NULL, NULL, 14, '2025-10-29 19:03:05', '2025-12-04 13:07:54'),
 (16, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 0, 'venues [fieldset=1]', 'sessions [fieldset=2]', 'ticket-pricing [fieldset=3]', NULL, NULL, 16, '2025-10-29 19:03:05', '2025-11-06 02:25:18');
 
 -- --------------------------------------------------------
@@ -743,7 +742,6 @@ CREATE TABLE `post_children` (
   `seating_area` varchar(100) DEFAULT NULL,
   `pricing_tier` varchar(100) DEFAULT NULL,
   `variant_name` varchar(100) DEFAULT NULL,
-  `subvariant_name` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -1108,7 +1106,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3140;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3154;
 
 --
 -- AUTO_INCREMENT for table `banned_words`

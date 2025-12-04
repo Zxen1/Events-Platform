@@ -3659,69 +3659,69 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const VENUE_CURRENCY_STATE = new WeakMap();
     let LAST_SELECTED_VENUE_CURRENCY = '';
 
-    function venueSessionCreateTier(){
+    function venueSessionCreatePricingTier(){
       return { name: '', currency: '', price: '' };
     }
-    function venueSessionCreateVersion(){
-      return { name: '', tiers: [venueSessionCreateTier()] };
+    function venueSessionCreateSeatingArea(){
+      return { name: '', tiers: [venueSessionCreatePricingTier()] };
     }
-    function venueSessionCreateTime(){
+    function venueSessionCreateSessionTime(){
       return {
         time: '',
-        versions: [venueSessionCreateVersion()],
+        seating_areas: [venueSessionCreateSeatingArea()],
         samePricingAsAbove: true,
         samePricingSourceIndex: 0,
         tierAutofillLocked: false
       };
     }
     function venueSessionCreateSession(){
-      return { date: '', times: [venueSessionCreateTime()] };
+      return { date: '', times: [venueSessionCreateSessionTime()] };
     }
     function venueSessionCreateVenue(){
       return { name: '', address: '', location: null, feature: null, sessions: [venueSessionCreateSession()] };
     }
-    function normalizeVenueSessionTier(tier){
+    function normalizeVenueSessionPricingTier(tier){
       let obj = tier;
       if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateTier();
+        obj = venueSessionCreatePricingTier();
       }
       if(typeof obj.name !== 'string') obj.name = '';
       if(typeof obj.currency !== 'string') obj.currency = '';
       if(typeof obj.price !== 'string') obj.price = '';
       return obj;
     }
-    function normalizeVenueSessionVersion(version){
-      let obj = version;
+    function normalizeVenueSessionSeatingArea(seatingArea){
+      let obj = seatingArea;
       if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateVersion();
+        obj = venueSessionCreateSeatingArea();
       }
       if(typeof obj.name !== 'string') obj.name = '';
-      if(!Array.isArray(obj.tiers)){
-        obj.tiers = [venueSessionCreateTier()];
+      if(!Array.isArray(obj.pricing_tiers)){
+        obj.pricing_tiers = [venueSessionCreatePricingTier()];
       } else {
-        for(let i = 0; i < obj.tiers.length; i++){
-          obj.tiers[i] = normalizeVenueSessionTier(obj.tiers[i]);
+        for(let i = 0; i < obj.pricing_tiers.length; i++){
+          obj.pricing_tiers[i] = normalizeVenueSessionPricingTier(obj.pricing_tiers[i]);
         }
-        if(obj.tiers.length === 0){
-          obj.tiers.push(venueSessionCreateTier());
+        if(obj.pricing_tiers.length === 0){
+          obj.pricing_tiers.push(venueSessionCreatePricingTier());
         }
       }
       return obj;
     }
-    function normalizeVenueSessionTime(time){
+    function normalizeVenueSessionSessionTime(time){
       let obj = time;
       if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateTime();
+        obj = venueSessionCreateSessionTime();
       }
       if(typeof obj.time !== 'string') obj.time = '';
-      if(!Array.isArray(obj.versions)){
-        obj.versions = [venueSessionCreateVersion()];
+      if(!Array.isArray(obj.seating_areas)){
+        obj.seating_areas = [venueSessionCreateSeatingArea()];
       } else {
-        for(let i = 0; i < obj.versions.length; i++){
-          obj.versions[i] = normalizeVenueSessionVersion(obj.versions[i]);
+        for(let i = 0; i < obj.seating_areas.length; i++){
+          obj.seating_areas[i] = normalizeVenueSessionSeatingArea(obj.seating_areas[i]);
         }
-        if(obj.versions.length === 0){
-          obj.versions.push(venueSessionCreateVersion());
+        if(obj.seating_areas.length === 0){
+          obj.seating_areas.push(venueSessionCreateSeatingArea());
         }
       }
       obj.samePricingAsAbove = obj.samePricingAsAbove !== false;
@@ -3736,14 +3736,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         obj = venueSessionCreateSession();
       }
       if(typeof obj.date !== 'string') obj.date = '';
-      if(!Array.isArray(obj.times)){
-        obj.times = [venueSessionCreateTime()];
+      if(!Array.isArray(obj.session_times)){
+        obj.session_times = [venueSessionCreateSessionTime()];
       } else {
-        for(let i = 0; i < obj.times.length; i++){
-          obj.times[i] = normalizeVenueSessionTime(obj.times[i]);
+        for(let i = 0; i < obj.session_times.length; i++){
+          obj.session_times[i] = normalizeVenueSessionSessionTime(obj.session_times[i]);
         }
-        if(obj.times.length === 0){
-          obj.times.push(venueSessionCreateTime());
+        if(obj.session_times.length === 0){
+          obj.session_times.push(venueSessionCreateSessionTime());
         }
       }
       return obj;
@@ -3790,8 +3790,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return list;
     }
-    function cloneVenueSessionTier(tier){
-      const base = venueSessionCreateTier();
+    function cloneVenueSessionPricingTier(tier){
+      const base = venueSessionCreatePricingTier();
       if(tier && typeof tier === 'object'){
         if(typeof tier.name === 'string') base.name = tier.name;
         if(typeof tier.currency === 'string') base.currency = tier.currency;
@@ -3799,18 +3799,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return base;
     }
-    function cloneVenueSessionVersion(version){
-      const base = venueSessionCreateVersion();
-      base.name = (version && typeof version.name === 'string') ? version.name : '';
-      const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
-      base.tiers = tiers.length ? tiers.map(cloneVenueSessionTier) : [venueSessionCreateTier()];
+    function cloneVenueSessionSeatingArea(seatingArea){
+      const base = venueSessionCreateSeatingArea();
+      base.name = (seatingArea && typeof seatingArea.name === 'string') ? seatingArea.name : '';
+      const pricingTiers = seatingArea && Array.isArray(seatingArea.pricing_tiers) ? seatingArea.pricing_tiers : [];
+      base.pricing_tiers = pricingTiers.length ? pricingTiers.map(cloneVenueSessionPricingTier) : [venueSessionCreatePricingTier()];
       return base;
     }
-    function cloneVenueSessionTime(time){
-      const base = venueSessionCreateTime();
+    function cloneVenueSessionSessionTime(time){
+      const base = venueSessionCreateSessionTime();
       base.time = (time && typeof time.time === 'string') ? time.time : '';
-      const versions = time && Array.isArray(time.versions) ? time.versions : [];
-      base.versions = versions.length ? versions.map(cloneVenueSessionVersion) : [venueSessionCreateVersion()];
+      const seatingAreas = time && Array.isArray(time.seating_areas) ? time.seating_areas : [];
+      base.seating_areas = seatingAreas.length ? seatingAreas.map(cloneVenueSessionSeatingArea) : [venueSessionCreateSeatingArea()];
       base.samePricingAsAbove = !!(time && time.samePricingAsAbove);
       const sourceIndex = Number(time && time.samePricingSourceIndex);
       base.samePricingSourceIndex = Number.isInteger(sourceIndex) && sourceIndex >= 0 ? sourceIndex : 0;
@@ -3820,8 +3820,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     function cloneVenueSessionSession(session){
       const base = venueSessionCreateSession();
       base.date = (session && typeof session.date === 'string') ? session.date : '';
-      const times = session && Array.isArray(session.times) ? session.times : [];
-      base.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
+      const times = session && Array.isArray(session.session_times) ? session.session_times : [];
+      base.session_times = times.length ? times.map(cloneVenueSessionSessionTime) : [venueSessionCreateSessionTime()];
       return base;
     }
     function cloneVenueSessionFeature(feature){
@@ -8057,22 +8057,22 @@ function makePosts(){
           safeField.options = safeField.options.map(opt => {
             if(opt && typeof opt === 'object'){
               return {
-                version: typeof opt.version === 'string' ? opt.version : '',
-                currency: typeof opt.currency === 'string' ? opt.currency : '',
-                price: typeof opt.price === 'string' ? opt.price : ''
+                variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
+                variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
+                variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
               };
             }
             const str = typeof opt === 'string' ? opt : String(opt ?? '');
-            return { version: str, currency: '', price: '' };
+            return { variant_name: str, variant_currency: '', variant_price: '' };
           });
           if(safeField.options.length === 0){
-            safeField.options.push({ version: '', currency: '', price: '' });
+            safeField.options.push({ variant_name: '', variant_currency: '', variant_price: '' });
           }
         } else {
           safeField.options = safeField.options.map(opt => {
             if(typeof opt === 'string') return opt;
-            if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
-              return opt.version;
+            if(opt && typeof opt === 'object' && typeof opt.variant_name === 'string'){
+              return opt.variant_name;
             }
             return String(opt ?? '');
           });
@@ -8320,11 +8320,11 @@ function makePosts(){
           wrapper.classList.add('form-field--variant-pricing');
           const editor = document.createElement('div');
           editor.className = 'form-variant-pricing variant-pricing-options-editor';
-          const versionList = document.createElement('div');
-          versionList.className = 'variant-pricing-options-list';
-          editor.appendChild(versionList);
+          const variantList = document.createElement('div');
+          variantList.className = 'variant-pricing-options-list';
+          editor.appendChild(variantList);
 
-          const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
+          const createEmptyOption = ()=>({ variant_name: '', variant_currency: '', variant_price: '' });
 
           const normalizeOptions = ()=>{
             if(!Array.isArray(field.options)){
@@ -8333,13 +8333,13 @@ function makePosts(){
             field.options = field.options.map(opt => {
               if(opt && typeof opt === 'object'){
                 return {
-                  version: typeof opt.version === 'string' ? opt.version : '',
-                  currency: typeof opt.currency === 'string' ? opt.currency : '',
-                  price: typeof opt.price === 'string' ? opt.price : ''
+                  variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
+                  variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
+                  variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
                 };
               }
               const str = typeof opt === 'string' ? opt : String(opt ?? '');
-              return { version: str, currency: '', price: '' };
+              return { variant_name: str, variant_currency: '', variant_price: '' };
             });
             if(field.options.length === 0){
               field.options.push(createEmptyOption());
@@ -8350,9 +8350,9 @@ function makePosts(){
             ? window.notifyFormbuilderChange 
             : (()=>{});
 
-          const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
+          const renderVariantEditor = (focusIndex = null, focusTarget = 'variant_name')=>{
             normalizeOptions();
-            versionList.innerHTML = '';
+            variantList.innerHTML = '';
             let firstId = null;
             const currencyAlertMessage = 'Please select a currency before entering a price.';
             let lastCurrencyAlertAt = 0;
@@ -8402,21 +8402,21 @@ function makePosts(){
               const topRow = document.createElement('div');
               topRow.className = 'variant-pricing-row variant-pricing-row--top';
 
-              const versionInput = document.createElement('input');
-              versionInput.type = 'text';
-              versionInput.className = 'variant-pricing-name';
-              versionInput.placeholder = 'Version Name';
-              const versionInputId = `${baseId}-version-${optionIndex}`;
-              versionInput.id = versionInputId;
+              const variantNameInput = document.createElement('input');
+              variantNameInput.type = 'text';
+              variantNameInput.className = 'variant-pricing-name';
+              variantNameInput.placeholder = 'Variant Name';
+              const variantNameInputId = `${baseId}-variant-${optionIndex}`;
+              variantNameInput.id = variantNameInputId;
               if(optionIndex === 0){
-                firstId = versionInputId;
+                firstId = variantNameInputId;
               }
-              versionInput.value = optionValue.version || '';
-              versionInput.addEventListener('input', ()=>{
-                field.options[optionIndex].version = versionInput.value;
+              variantNameInput.value = optionValue.variant_name || '';
+              variantNameInput.addEventListener('input', ()=>{
+                field.options[optionIndex].variant_name = variantNameInput.value;
                 safeNotifyFormbuilderChange();
               });
-              topRow.appendChild(versionInput);
+              topRow.appendChild(variantNameInput);
 
               const bottomRow = document.createElement('div');
               bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
@@ -8430,7 +8430,7 @@ function makePosts(){
               currencyMenuBtn.setAttribute('aria-expanded', 'false');
               const currencyMenuId = `variant-currency-${baseId}-${optionIndex}`;
               currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-              const existingCurrency = optionValue.currency || '';
+              const existingCurrency = optionValue.variant_currency || '';
               currencyMenuBtn.textContent = existingCurrency || 'Currency';
               currencyMenuBtn.dataset.value = existingCurrency;
               const currencyArrow = document.createElement('span');
@@ -8454,8 +8454,8 @@ function makePosts(){
                 currencyMenuBtn.dataset.value = '';
                 currencyMenu.hidden = true;
                 currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                const previousCurrency = field.options[optionIndex].currency || '';
-                field.options[optionIndex].currency = '';
+                const previousCurrency = field.options[optionIndex].variant_currency || '';
+                field.options[optionIndex].variant_currency = '';
                 const priceCleared = updatePriceState();
                 if(previousCurrency !== '' || priceCleared){
                   safeNotifyFormbuilderChange();
@@ -8479,8 +8479,8 @@ function makePosts(){
                   currencyMenuBtn.dataset.value = code;
                   currencyMenu.hidden = true;
                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                  const previousCurrency = field.options[optionIndex].currency || '';
-                  field.options[optionIndex].currency = code;
+                  const previousCurrency = field.options[optionIndex].variant_currency || '';
+                  field.options[optionIndex].variant_currency = code;
                   const priceCleared = updatePriceState();
                   if(isCurrencySelected()){
                     commitPriceValue();
@@ -8523,8 +8523,8 @@ function makePosts(){
                           currencyMenuBtn.dataset.value = code;
                           currencyMenu.hidden = true;
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                          const previousCurrency = field.options[optionIndex].currency || '';
-                          field.options[optionIndex].currency = code;
+                          const previousCurrency = field.options[optionIndex].variant_currency || '';
+                          field.options[optionIndex].variant_currency = code;
                           const priceCleared = updatePriceState();
                           if(isCurrencySelected()){
                             commitPriceValue();
@@ -8599,8 +8599,8 @@ function makePosts(){
               const initialPriceValue = sanitizePriceValue(optionValue.price || '');
               const formattedInitialPrice = formatPriceValue(initialPriceValue);
               priceInput.value = formattedInitialPrice;
-              if(formattedInitialPrice !== (field.options[optionIndex].price || '')){
-                field.options[optionIndex].price = formattedInitialPrice;
+              if(formattedInitialPrice !== (field.options[optionIndex].variant_price || '')){
+                field.options[optionIndex].variant_price = formattedInitialPrice;
               }
               const clearPriceValue = ()=>{
                 let changed = false;
@@ -8608,11 +8608,11 @@ function makePosts(){
                   priceInput.value = '';
                   changed = true;
                 }
-                if(field.options[optionIndex].price !== ''){
-                  field.options[optionIndex].price = '';
+                if(field.options[optionIndex].variant_price !== ''){
+                  field.options[optionIndex].variant_price = '';
                   changed = true;
-                } else if(typeof field.options[optionIndex].price !== 'string'){
-                  field.options[optionIndex].price = '';
+                } else if(typeof field.options[optionIndex].variant_price !== 'string'){
+                  field.options[optionIndex].variant_price = '';
                 }
                 return changed;
               };
@@ -8684,9 +8684,9 @@ function makePosts(){
                     }
                   }
                 }
-                const previous = field.options[optionIndex].price || '';
+                const previous = field.options[optionIndex].variant_price || '';
                 if(previous !== formatted){
-                  field.options[optionIndex].price = formatted;
+                  field.options[optionIndex].variant_price = formatted;
                   safeNotifyFormbuilderChange();
                 }
               };
@@ -8721,11 +8721,11 @@ function makePosts(){
               addBtn.type = 'button';
               addBtn.className = 'dropdown-option-add';
               addBtn.textContent = '+';
-              addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
+              addBtn.setAttribute('aria-label', `Add variant after Variant ${optionIndex + 1}`);
               addBtn.addEventListener('click', ()=>{
                 field.options.splice(optionIndex + 1, 0, createEmptyOption());
                 safeNotifyFormbuilderChange();
-                renderVersionEditor(optionIndex + 1);
+                renderVariantEditor(optionIndex + 1);
               });
 
               const removeBtn = document.createElement('button');
@@ -8742,19 +8742,19 @@ function makePosts(){
                 }
                 safeNotifyFormbuilderChange();
                 const nextFocus = Math.min(optionIndex, Math.max(field.options.length - 1, 0));
-                renderVersionEditor(nextFocus);
+                renderVariantEditor(nextFocus);
               });
 
               actions.append(addBtn, removeBtn);
               bottomRow.append(currencyWrapper, priceInput, actions);
 
               optionRow.append(topRow, bottomRow);
-              versionList.appendChild(optionRow);
+              variantList.appendChild(optionRow);
             });
 
             if(focusIndex !== null){
               requestAnimationFrame(()=>{
-                const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
+                const targetRow = variantList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
                 if(!targetRow) return;
                 let focusEl = null;
                 if(focusTarget === 'price'){
@@ -8775,7 +8775,7 @@ function makePosts(){
             }
           };
 
-          renderVersionEditor();
+          renderVariantEditor();
           editor.setAttribute('aria-required', field.required ? 'true' : 'false');
           control = editor;
         } else if(field.type === 'website-url' || field.type === 'tickets-url'){
@@ -9074,6 +9074,61 @@ function makePosts(){
           checkoutGroup.className = 'form-checkout-group';
           const groupName = `${baseId}-checkout`;
           
+          // Calculate days from submission to final session date for events
+          function calculateDaysToFinalSession(){
+            try {
+              // Find venue-ticketing field in the form fields
+              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
+              if(!venueTicketingField || !venueTicketingField.options || !Array.isArray(venueTicketingField.options)) return null;
+              
+              let latestDate = null;
+              
+              // Iterate through all venues
+              venueTicketingField.options.forEach(venue => {
+                if(!venue || !Array.isArray(venue.sessions)) return;
+                
+                // Iterate through all sessions in this venue
+                venue.sessions.forEach(session => {
+                  if(!session || typeof session.date !== 'string' || !session.date.trim()) return;
+                  
+                  // Parse session date - could be ISO format or other
+                  const dateStr = session.date.trim();
+                  let date = null;
+                  
+                  // Try ISO format first (YYYY-MM-DD)
+                  if(dateStr.match(/^\d{4}-\d{2}-\d{2}/)){
+                    date = new Date(dateStr.split(' ')[0] + 'T00:00:00');
+                  } else {
+                    date = new Date(dateStr);
+                  }
+                  
+                  if(date && !isNaN(date.getTime())){
+                    date.setHours(0, 0, 0, 0);
+                    if(!latestDate || date > latestDate){
+                      latestDate = date;
+                    }
+                  }
+                });
+              });
+              
+              if(!latestDate) return null;
+              
+              // Calculate days from today (submission date) to final session
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              const diffTime = latestDate.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              return diffDays > 0 ? diffDays : null;
+            } catch(err){
+              console.warn('Failed to calculate days to final session:', err);
+              return null;
+            }
+          }
+          
+          const calculatedDays = calculateDaysToFinalSession();
+          
           // Get selected checkout options from field.checkoutOptions (array of IDs)
           let selectedOptionIds = [];
           if(Array.isArray(field.checkoutOptions)){
@@ -9125,9 +9180,39 @@ function makePosts(){
               
               const priceText = document.createElement('span');
               priceText.className = 'form-checkout-option-price';
-              const priceValue = parseFloat(option.checkout_flagfall_price) || 0;
+              
+              // Calculate prices for 30 and 365 day options, or use calculated days for events
+              const flagfallPrice = parseFloat(option.checkout_flagfall_price) || 0;
+              const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate) : null;
+              const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate) : null;
               const currency = option.checkout_currency || 'USD';
-              priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
+              
+              const price30Days = basicDayRate !== null ? flagfallPrice + (basicDayRate * 30) : flagfallPrice;
+              const price365Days = discountDayRate !== null ? flagfallPrice + (discountDayRate * 365) : (basicDayRate !== null ? flagfallPrice + (basicDayRate * 365) : flagfallPrice);
+              
+              // If calculated days available (event with sessions), show calculated price
+              if(calculatedDays !== null && calculatedDays > 0){
+                const dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : (basicDayRate !== null ? basicDayRate : null);
+                const calculatedPrice = dayRate !== null ? flagfallPrice + (dayRate * calculatedDays) : flagfallPrice;
+                priceText.textContent = `(${calculatedDays} days) — ${calculatedPrice > 0 ? `${currency} ${calculatedPrice.toFixed(2)}` : 'Free'}`;
+              } else {
+                // Show both duration options for standard posts
+                const durationWrapper = document.createElement('div');
+                durationWrapper.className = 'form-checkout-duration-wrapper';
+                
+                const duration30 = document.createElement('span');
+                duration30.className = 'form-checkout-duration-option';
+                duration30.textContent = `(30 days) — ${price30Days > 0 ? `${currency} ${price30Days.toFixed(2)}` : 'Free'}`;
+                
+                const duration365 = document.createElement('span');
+                duration365.className = 'form-checkout-duration-option';
+                duration365.textContent = `(365 days) — ${price365Days > 0 ? `${currency} ${price365Days.toFixed(2)}` : 'Free'}`;
+                
+                durationWrapper.appendChild(duration30);
+                durationWrapper.appendChild(duration365);
+                
+                priceText.appendChild(durationWrapper);
+              }
               
               titleRow.appendChild(titleText);
               titleRow.appendChild(priceText);
@@ -9238,6 +9323,61 @@ function makePosts(){
         if(category && category.subCheckoutOptions && Array.isArray(category.subCheckoutOptions[subcategoryName])){
           const subCheckoutOptionIds = category.subCheckoutOptions[subcategoryName].filter(id => id && id > 0);
           if(subCheckoutOptionIds.length > 0){
+            // Calculate days from submission to final session date for events
+            function calculateDaysToFinalSessionForSubcategory(){
+              try {
+                // Find venue-ticketing field in the form fields
+                const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
+                if(!venueTicketingField || !venueTicketingField.options || !Array.isArray(venueTicketingField.options)) return null;
+                
+                let latestDate = null;
+                
+                // Iterate through all venues
+                venueTicketingField.options.forEach(venue => {
+                  if(!venue || !Array.isArray(venue.sessions)) return;
+                  
+                  // Iterate through all sessions in this venue
+                  venue.sessions.forEach(session => {
+                    if(!session || typeof session.date !== 'string' || !session.date.trim()) return;
+                    
+                    // Parse session date - could be ISO format or other
+                    const dateStr = session.date.trim();
+                    let date = null;
+                    
+                    // Try ISO format first (YYYY-MM-DD)
+                    if(dateStr.match(/^\d{4}-\d{2}-\d{2}/)){
+                      date = new Date(dateStr.split(' ')[0] + 'T00:00:00');
+                    } else {
+                      date = new Date(dateStr);
+                    }
+                    
+                    if(date && !isNaN(date.getTime())){
+                      date.setHours(0, 0, 0, 0);
+                      if(!latestDate || date > latestDate){
+                        latestDate = date;
+                      }
+                    }
+                  });
+                });
+                
+                if(!latestDate) return null;
+                
+                // Calculate days from today (submission date) to final session
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const diffTime = latestDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                return diffDays > 0 ? diffDays : null;
+              } catch(err){
+                console.warn('Failed to calculate days to final session:', err);
+                return null;
+              }
+            }
+            
+            const calculatedDays = calculateDaysToFinalSessionForSubcategory();
+            
             const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
             const optionsToShow = [];
             subCheckoutOptionIds.forEach(id => {
@@ -9283,9 +9423,39 @@ function makePosts(){
                 
                 const priceText = document.createElement('span');
                 priceText.className = 'form-checkout-option-price';
-                const priceValue = parseFloat(option.checkout_flagfall_price) || 0;
+                
+                // Calculate prices for 30 and 365 day options, or use calculated days for events
+                const flagfallPrice = parseFloat(option.checkout_flagfall_price) || 0;
+                const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate) : null;
+                const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate) : null;
                 const currency = option.checkout_currency || 'USD';
-                priceText.textContent = priceValue > 0 ? ` — $${priceValue.toFixed(2)} ${currency}` : ' — Free';
+                
+                const price30Days = basicDayRate !== null ? flagfallPrice + (basicDayRate * 30) : flagfallPrice;
+                const price365Days = discountDayRate !== null ? flagfallPrice + (discountDayRate * 365) : (basicDayRate !== null ? flagfallPrice + (basicDayRate * 365) : flagfallPrice);
+                
+                // If calculated days available (event with sessions), show calculated price
+                if(calculatedDays !== null && calculatedDays > 0){
+                  const dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : (basicDayRate !== null ? basicDayRate : null);
+                  const calculatedPrice = dayRate !== null ? flagfallPrice + (dayRate * calculatedDays) : flagfallPrice;
+                  priceText.textContent = `(${calculatedDays} days) — ${calculatedPrice > 0 ? `${currency} ${calculatedPrice.toFixed(2)}` : 'Free'}`;
+                } else {
+                  // Show both duration options for standard posts
+                  const durationWrapper = document.createElement('div');
+                  durationWrapper.className = 'form-checkout-duration-wrapper';
+                  
+                  const duration30 = document.createElement('span');
+                  duration30.className = 'form-checkout-duration-option';
+                  duration30.textContent = `(30 days) — ${price30Days > 0 ? `${currency} ${price30Days.toFixed(2)}` : 'Free'}`;
+                  
+                  const duration365 = document.createElement('span');
+                  duration365.className = 'form-checkout-duration-option';
+                  duration365.textContent = `(365 days) — ${price365Days > 0 ? `${currency} ${price365Days.toFixed(2)}` : 'Free'}`;
+                  
+                  durationWrapper.appendChild(duration30);
+                  durationWrapper.appendChild(duration365);
+                  
+                  priceText.appendChild(durationWrapper);
+                }
                 
                 titleRow.appendChild(titleText);
                 titleRow.appendChild(priceText);
@@ -10440,14 +10610,14 @@ function makePosts(){
             const findFirstVenueCurrency = venue => {
               if(!venue || !Array.isArray(venue.sessions)) return '';
               for(const session of venue.sessions){
-                if(!session || !Array.isArray(session.times)) continue;
-                for(const time of session.times){
-                  if(!time || !Array.isArray(time.versions)) continue;
-                  for(const version of time.versions){
-                    if(!version || !Array.isArray(version.tiers)) continue;
-                    for(const tier of version.tiers){
-                      if(tier && typeof tier.currency === 'string'){
-                        const trimmed = tier.currency.trim();
+                if(!session || !Array.isArray(session.session_times)) continue;
+                for(const time of session.session_times){
+                  if(!time || !Array.isArray(time.seating_areas)) continue;
+                  for(const seatingArea of time.seating_areas){
+                    if(!seatingArea || !Array.isArray(seatingArea.pricing_tiers)) continue;
+                    for(const pricingTier of seatingArea.pricing_tiers){
+                      if(pricingTier && typeof pricingTier.currency === 'string'){
+                        const trimmed = pricingTier.currency.trim();
                         if(trimmed) return trimmed;
                       }
                     }
@@ -10488,12 +10658,12 @@ function makePosts(){
               let changed = false;
               if(!venue || !Array.isArray(venue.sessions)) return changed;
               venue.sessions.forEach(session => {
-                if(!session || !Array.isArray(session.times)) return;
-                session.times.forEach(time => {
-                  if(!time || !Array.isArray(time.versions)) return;
-                  time.versions.forEach(version => {
-                    if(!version || !Array.isArray(version.tiers)) return;
-                    version.tiers.forEach(tierItem => {
+                if(!session || !Array.isArray(session.session_times)) return;
+                session.session_times.forEach(time => {
+                  if(!time || !Array.isArray(time.seating_areas)) return;
+                  time.seating_areas.forEach(seatingArea => {
+                    if(!seatingArea || !Array.isArray(seatingArea.pricing_tiers)) return;
+                    seatingArea.pricing_tiers.forEach(tierItem => {
                       if(!tierItem || typeof tierItem !== 'object') return;
                       if(sourceTier && tierItem === sourceTier) return;
                       const current = typeof tierItem.currency === 'string' ? tierItem.currency : '';
@@ -10546,14 +10716,14 @@ function makePosts(){
             };
 
             const getSessionPrimaryTime = session => {
-              if(!session || !Array.isArray(session.times)) return '';
-              for(let i = 0; i < session.times.length; i++){
-                const candidate = session.times[i];
+              if(!session || !Array.isArray(session.session_times)) return '';
+              for(let i = 0; i < session.session_times.length; i++){
+                const candidate = session.session_times[i];
                 if(candidate && typeof candidate.time === 'string' && candidate.time.trim() !== ''){
                   return candidate.time.trim();
                 }
               }
-              const first = session.times[0];
+              const first = session.session_times[0];
               return first && typeof first.time === 'string' ? first.time.trim() : '';
             };
 
@@ -10607,7 +10777,7 @@ function makePosts(){
               const state = getVenueAutofillState(previewField, venue);
               if(!state || !Array.isArray(state.slots) || !state.slots[index]) return;
               const allEmpty = venue.sessions.every(sess => {
-                const t = sess.times[index];
+                const t = sess.session_times[index];
                 return !t || !t.time || !t.time.trim();
               });
               if(allEmpty){
@@ -10647,8 +10817,8 @@ function makePosts(){
             };
 
             const cloneVersionsFromTime = sourceTime => {
-              const versions = sourceTime && Array.isArray(sourceTime.versions) ? sourceTime.versions : [];
-              return versions.length ? versions.map(cloneVenueSessionVersion) : [venueSessionCreateVersion()];
+              const seatingAreas = sourceTime && Array.isArray(sourceTime.seating_areas) ? sourceTime.seating_areas : [];
+              return seatingAreas.length ? seatingAreas.map(cloneVenueSessionSeatingArea) : [venueSessionCreateSeatingArea()];
             };
 
             const cloneSessionTimesFromFirst = (venue, targetSession)=>{
@@ -10659,24 +10829,24 @@ function makePosts(){
               const template = sessions[0];
               if(!template || template === targetSession) return;
               const preservedDate = typeof targetSession.date === 'string' ? targetSession.date : '';
-              const preservedTimes = Array.isArray(targetSession.times)
-                ? targetSession.times.map(time => (time && typeof time.time === 'string') ? time.time : '')
+              const preservedTimes = Array.isArray(targetSession.session_times)
+                ? targetSession.session_times.map(time => (time && typeof time.time === 'string') ? time.time : '')
                 : [];
-              const times = Array.isArray(template.times) ? template.times : [];
-              targetSession.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
+              const times = Array.isArray(template.session_times) ? template.session_times : [];
+              targetSession.session_times = times.length ? times.map(cloneVenueSessionSessionTime) : [venueSessionCreateSessionTime()];
               targetSession.date = preservedDate;
               const referenceTimes = times;
               const referenceFirstTime = referenceTimes[0];
-              if(targetSession.times.length === 0){
-                targetSession.times.push(venueSessionCreateTime());
+              if(targetSession.session_times.length === 0){
+                targetSession.session_times.push(venueSessionCreateSessionTime());
               }
               if(targetSession !== template){
-                targetSession.times.forEach((time, index)=>{
+                targetSession.session_times.forEach((time, index)=>{
                   time.samePricingSourceIndex = 0;
                   if(index === 0){
                     if(referenceFirstTime){
                       time.samePricingAsAbove = true;
-                      time.versions = cloneVersionsFromTime(referenceFirstTime);
+                      time.seating_areas = cloneVersionsFromTime(referenceFirstTime);
                       time.tierAutofillLocked = true;
                     } else {
                       time.samePricingAsAbove = false;
@@ -10687,12 +10857,12 @@ function makePosts(){
                     time.time = preservedTimes[index];
                   }
                 });
-                const targetFirstTime = targetSession.times[0];
-                targetSession.times.forEach((time, index)=>{
+                const targetFirstTime = targetSession.session_times[0];
+                targetSession.session_times.forEach((time, index)=>{
                   if(index > 0){
                     time.samePricingAsAbove = true;
                     if(targetFirstTime && targetFirstTime !== time){
-                      time.versions = cloneVersionsFromTime(targetFirstTime);
+                      time.seating_areas = cloneVersionsFromTime(targetFirstTime);
                     }
                     time.tierAutofillLocked = true;
                   }
@@ -10706,13 +10876,13 @@ function makePosts(){
               let requiresLock = false;
               venue.sessions.forEach((session, index)=>{
                 if(!session) return;
-                if(!Array.isArray(session.times) || session.times.length === 0){
-                  session.times = [venueSessionCreateTime()];
+                if(!Array.isArray(session.session_times) || session.session_times.length === 0){
+                  session.session_times = [venueSessionCreateSessionTime()];
                 }
-                const sanitizedTimes = session.times.filter(Boolean);
+                const sanitizedTimes = session.session_times.filter(Boolean);
                 if(sanitizedTimes.length <= 1){
-                  session.times = sanitizedTimes.length ? [sanitizedTimes[0]] : [venueSessionCreateTime()];
-                  const firstTime = session.times[0];
+                  session.session_times = sanitizedTimes.length ? [sanitizedTimes[0]] : [venueSessionCreateSessionTime()];
+                  const firstTime = session.session_times[0];
                   if(firstTime){
                     if(typeof firstTime.samePricingAsAbove !== 'boolean'){
                       firstTime.samePricingAsAbove = false;
@@ -10724,15 +10894,15 @@ function makePosts(){
                   return;
                 }
                 requiresLock = true;
-                const primaryTime = cloneVenueSessionTime(sanitizedTimes[0]);
+                const primaryTime = cloneVenueSessionSessionTime(sanitizedTimes[0]);
                 primaryTime.samePricingSourceIndex = 0;
                 primaryTime.tierAutofillLocked = !!primaryTime.tierAutofillLocked;
-                session.times = [primaryTime];
+                session.session_times = [primaryTime];
                 const clones = [];
                 for(let i = 1; i < sanitizedTimes.length; i++){
                   const cloneSession = cloneVenueSessionSession(session);
-                  cloneSession.times = [cloneVenueSessionTime(sanitizedTimes[i])];
-                  const firstCloneTime = cloneSession.times[0];
+                  cloneSession.session_times = [cloneVenueSessionSessionTime(sanitizedTimes[i])];
+                  const firstCloneTime = cloneSession.session_times[0];
                   if(firstCloneTime){
                     firstCloneTime.samePricingSourceIndex = 0;
                     firstCloneTime.tierAutofillLocked = !!firstCloneTime.tierAutofillLocked;
@@ -10764,7 +10934,7 @@ function makePosts(){
               for(let i = 0; i < slots.length; i++){
                 const slot = slots[i];
                 if(!slot || typeof slot !== 'object' || !slot.value || slot.locked) continue;
-                const target = session.times[i] || (session.times[i] = venueSessionCreateTime());
+                const target = session.session_times[i] || (session.session_times[i] = venueSessionCreateSessionTime());
                 if(!target.time){
                   target.time = slot.value;
                 }
@@ -10787,18 +10957,18 @@ function makePosts(){
               }
               let maxTimes = 0;
               venue.sessions.forEach(session => {
-                if(!Array.isArray(session.times)){
-                  session.times = [venueSessionCreateTime()];
+                if(!Array.isArray(session.session_times)){
+                  session.session_times = [venueSessionCreateSessionTime()];
                 }
-                if(session.times.length === 0){
-                  session.times.push(venueSessionCreateTime());
+                if(session.session_times.length === 0){
+                  session.session_times.push(venueSessionCreateSessionTime());
                 }
-                session.times.forEach((time, timeIndex) => {
-                  if(!Array.isArray(time.versions)){
-                    time.versions = [venueSessionCreateVersion()];
+                session.session_times.forEach((time, timeIndex) => {
+                  if(!Array.isArray(time.seating_areas)){
+                    time.seating_areas = [venueSessionCreateSeatingArea()];
                   }
-                  if(time.versions.length === 0){
-                    time.versions.push(venueSessionCreateVersion());
+                  if(time.seating_areas.length === 0){
+                    time.seating_areas.push(venueSessionCreateSeatingArea());
                   }
                   if(typeof time.samePricingAsAbove !== 'boolean'){
                     time.samePricingAsAbove = timeIndex > 0;
@@ -10810,16 +10980,16 @@ function makePosts(){
                   if(typeof time.tierAutofillLocked !== 'boolean'){
                     time.tierAutofillLocked = false;
                   }
-                  time.versions.forEach(version => {
-                    if(!Array.isArray(version.tiers)){
-                      version.tiers = [venueSessionCreateTier()];
+                  time.seating_areas.forEach(seatingArea => {
+                    if(!Array.isArray(seatingArea.pricing_tiers)){
+                      seatingArea.pricing_tiers = [venueSessionCreatePricingTier()];
                     }
-                    if(version.tiers.length === 0){
-                      version.tiers.push(venueSessionCreateTier());
+                    if(seatingArea.pricing_tiers.length === 0){
+                      seatingArea.pricing_tiers.push(venueSessionCreatePricingTier());
                     }
                   });
                 });
-                maxTimes = Math.max(maxTimes, session.times.length);
+                maxTimes = Math.max(maxTimes, session.session_times.length);
               });
               const state = getVenueAutofillState(previewField, venue);
               if(!Array.isArray(state.slots)) state.slots = [];
@@ -10833,14 +11003,14 @@ function makePosts(){
                 ensureSlot(venue, i);
               }
               venue.sessions.forEach(session => {
-                while(session.times.length < maxTimes){
-                  session.times.push(venueSessionCreateTime());
+                while(session.session_times.length < maxTimes){
+                  session.session_times.push(venueSessionCreateSessionTime());
                 }
               });
               if(!isSessionMirrorLocked(venue)){
                 const template = venue.sessions[0];
-                if(template && Array.isArray(template.times)){
-                  template.times.forEach((time, index)=>{
+                if(template && Array.isArray(template.session_times)){
+                  template.session_times.forEach((time, index)=>{
                     const slot = ensureSlot(venue, index);
                     slot.value = typeof time.time === 'string' ? time.time : '';
                     slot.source = time;
@@ -10904,19 +11074,19 @@ function makePosts(){
             const addSession = (venue, venueIndex, afterIndex)=>{
               const sessions = venue.sessions;
               const newSession = venueSessionCreateSession();
-              const maxTimes = Math.max(...sessions.map(sess => Array.isArray(sess.times) ? sess.times.length : 1), 1);
-              while(newSession.times.length < maxTimes){
-                newSession.times.push(venueSessionCreateTime());
+              const maxTimes = Math.max(...sessions.map(sess => Array.isArray(sess.session_times) ? sess.session_times.length : 1), 1);
+              while(newSession.session_times.length < maxTimes){
+                newSession.session_times.push(venueSessionCreateSessionTime());
               }
               const primarySession = sessions[0];
-              const primaryTimes = Array.isArray(primarySession?.times) ? primarySession.times : [];
+              const primaryTimes = Array.isArray(primarySession?.session_times) ? primarySession.session_times : [];
               const primaryFirstTime = primaryTimes[0];
-              newSession.times.forEach((time, index)=>{
+              newSession.session_times.forEach((time, index)=>{
                 time.samePricingSourceIndex = 0;
                 if(index === 0){
                   if(primaryFirstTime){
                     time.samePricingAsAbove = true;
-                    time.versions = cloneVersionsFromTime(primaryFirstTime);
+                    time.seating_areas = cloneVersionsFromTime(primaryFirstTime);
                     time.tierAutofillLocked = true;
                   } else {
                     time.samePricingAsAbove = false;
@@ -10924,23 +11094,23 @@ function makePosts(){
                   }
                 } else {
                   time.samePricingAsAbove = true;
-                  const baseTime = newSession.times[0];
+                  const baseTime = newSession.session_times[0];
                   if(primaryTimes[index]){
                     const referenceTime = primaryTimes[index];
-                    time.versions = cloneVersionsFromTime(referenceTime);
+                    time.seating_areas = cloneVersionsFromTime(referenceTime);
                   } else if(baseTime && baseTime !== time){
-                    time.versions = cloneVersionsFromTime(baseTime);
+                    time.seating_areas = cloneVersionsFromTime(baseTime);
                   }
                   time.tierAutofillLocked = true;
                 }
               });
               const venueCurrency = getVenueCurrencyValue(venue);
               if(venueCurrency){
-                newSession.times.forEach(time => {
-                  if(!time || !Array.isArray(time.versions)) return;
-                  time.versions.forEach(version => {
-                    if(!version || !Array.isArray(version.tiers)) return;
-                    version.tiers.forEach(tier => {
+                newSession.session_times.forEach(time => {
+                  if(!time || !Array.isArray(time.seating_areas)) return;
+                  time.seating_areas.forEach(seatingArea => {
+                    if(!seatingArea || !Array.isArray(seatingArea.pricing_tiers)) return;
+                    seatingArea.pricing_tiers.forEach(tier => {
                       if(tier && !tier.currency){
                         tier.currency = venueCurrency;
                       }
@@ -10971,10 +11141,10 @@ function makePosts(){
               if(sessionIndex < 0 || sessionIndex >= sessions.length) return;
               const baseSession = sessions[sessionIndex];
               if(!baseSession) return;
-              const existingTimes = Array.isArray(baseSession.times) ? baseSession.times : [];
-              const baseTime = existingTimes[timeIndex] || existingTimes[0] || venueSessionCreateTime();
-              baseSession.times = [existingTimes[0] || cloneVenueSessionTime(baseTime) || venueSessionCreateTime()];
-              const primaryTime = baseSession.times[0];
+              const existingTimes = Array.isArray(baseSession.session_times) ? baseSession.session_times : [];
+              const baseTime = existingTimes[timeIndex] || existingTimes[0] || venueSessionCreateSessionTime();
+              baseSession.session_times = [existingTimes[0] || cloneVenueSessionSessionTime(baseTime) || venueSessionCreateSessionTime()];
+              const primaryTime = baseSession.session_times[0];
               if(primaryTime){
                 primaryTime.samePricingAsAbove = false;
                 primaryTime.samePricingSourceIndex = 0;
@@ -10983,8 +11153,8 @@ function makePosts(){
               }
               const newSession = cloneVenueSessionSession(baseSession);
               newSession.date = baseSession.date;
-              newSession.times = [cloneVenueSessionTime(baseTime)];
-              const newTime = newSession.times[0];
+              newSession.session_times = [cloneVenueSessionSessionTime(baseTime)];
+              const newTime = newSession.session_times[0];
               newTime.time = '';
               newTime.samePricingAsAbove = true;
               newTime.samePricingSourceIndex = 0;
@@ -11013,7 +11183,7 @@ function makePosts(){
               flattenSessionTimes(venue);
               const session = venue.sessions[sessionIndex];
               if(!session) return;
-              const times = Array.isArray(session.times) ? session.times : [];
+              const times = Array.isArray(session.session_times) ? session.session_times : [];
               if(times.length <= 1){
                 const state = getVenueAutofillState(previewField, venue);
                 if(Array.isArray(state.slots) && state.slots.length > 1){
@@ -11026,24 +11196,24 @@ function makePosts(){
               const mirrorLocked = isSessionMirrorLocked(venue);
               const referenceSession = mirrorLocked ? venue.sessions[sessionIndex] : venue.sessions[0];
               if(!referenceSession) return;
-              const totalSlots = Array.isArray(referenceSession.times) ? referenceSession.times.length : 0;
+              const totalSlots = Array.isArray(referenceSession.session_times) ? referenceSession.session_times.length : 0;
               if(totalSlots <= 1) return;
               if(mirrorLocked){
                 const sess = venue.sessions[sessionIndex];
-                if(sess && sess.times.length > timeIndex){
-                  sess.times.splice(timeIndex, 1);
+                if(sess && sess.session_times.length > timeIndex){
+                  sess.session_times.splice(timeIndex, 1);
                 }
-                if(sess && sess.times.length === 0){
-                  sess.times.push(venueSessionCreateTime());
+                if(sess && sess.session_times.length === 0){
+                  sess.session_times.push(venueSessionCreateSessionTime());
                 }
                 lockSessionMirror(venue);
               } else {
                 venue.sessions.forEach(sess => {
-                  if(sess.times.length > timeIndex){
-                    sess.times.splice(timeIndex, 1);
+                  if(sess.session_times.length > timeIndex){
+                    sess.session_times.splice(timeIndex, 1);
                   }
-                  if(sess.times.length === 0){
-                    sess.times.push(venueSessionCreateTime());
+                  if(sess.session_times.length === 0){
+                    sess.session_times.push(venueSessionCreateSessionTime());
                   }
                 });
               }
@@ -11052,136 +11222,136 @@ function makePosts(){
                 state.slots.splice(timeIndex, 1);
               }
               notifyFormbuilderChange();
-              const nextTime = Math.max(0, Math.min(timeIndex, venue.sessions[sessionIndex]?.times.length - 1));
+              const nextTime = Math.max(0, Math.min(timeIndex, venue.sessions[sessionIndex]?.session_times.length - 1));
               renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: nextTime });
             };
 
-            const copyTemplateTiersToVersion = (time, targetVersion)=>{
-              if(!time || !targetVersion) return;
+            const copyTemplateTiersToSeatingArea = (time, targetSeatingArea)=>{
+              if(!time || !targetSeatingArea) return;
               if(time.tierAutofillLocked) return;
-              const template = Array.isArray(time.versions) ? time.versions[0] : null;
-              if(!template || template === targetVersion) return;
-              if(!Array.isArray(template.tiers) || template.tiers.length === 0) return;
-              targetVersion.tiers = template.tiers.map(cloneVenueSessionTier);
+              const template = Array.isArray(time.seating_areas) ? time.seating_areas[0] : null;
+              if(!template || template === targetSeatingArea) return;
+              if(!Array.isArray(template.pricing_tiers) || template.pricing_tiers.length === 0) return;
+              targetSeatingArea.pricing_tiers = template.pricing_tiers.map(cloneVenueSessionPricingTier);
             };
 
-            const addVersion = (venue, venueIndex, sessionIndex, timeIndex, afterIndex)=>{
-              const time = venue.sessions[sessionIndex].times[timeIndex];
-              const timeVersionsRef = time.versions;
-              const newVersion = venueSessionCreateVersion();
+            const addSeatingArea = (venue, venueIndex, sessionIndex, timeIndex, afterIndex)=>{
+              const time = venue.sessions[sessionIndex].session_times[timeIndex];
+              const timeVersionsRef = time.seating_areas;
+              const newVersion = venueSessionCreateSeatingArea();
               const venueCurrency = getVenueCurrencyValue(venue);
-              if(venueCurrency && Array.isArray(newVersion.tiers)){
-                newVersion.tiers.forEach(tier => {
+              if(venueCurrency && Array.isArray(newVersion.pricing_tiers)){
+                newVersion.pricing_tiers.forEach(tier => {
                   if(tier && !tier.currency){
                     tier.currency = venueCurrency;
                   }
                 });
               }
-              copyTemplateTiersToVersion(time, newVersion);
-              time.versions.splice(afterIndex + 1, 0, newVersion);
+              copyTemplateTiersToSeatingArea(time, newVersion);
+              time.seating_areas.splice(afterIndex + 1, 0, newVersion);
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
-                  const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
-                  if(!Array.isArray(otherTime.versions)){
-                    otherTime.versions = [venueSessionCreateVersion()];
+                  const otherTime = otherSess.session_times[timeIndex] || (otherSess.session_times[timeIndex] = venueSessionCreateSessionTime());
+                  if(!Array.isArray(otherTime.seating_areas)){
+                    otherTime.seating_areas = [venueSessionCreateSeatingArea()];
                   }
-                  if(otherTime.versions === timeVersionsRef){
+                  if(otherTime.seating_areas === timeVersionsRef){
                     return;
                   }
-                  const clone = cloneVenueSessionVersion(newVersion);
-                  otherTime.versions.splice(afterIndex + 1, 0, clone);
+                  const clone = cloneVenueSessionSeatingArea(newVersion);
+                  otherTime.seating_areas.splice(afterIndex + 1, 0, clone);
                 });
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
               notifyFormbuilderChange();
-              renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: afterIndex + 1 });
+              renderVenues({ type: 'seating_area', venueIndex, sessionIndex, timeIndex, seatingAreaIndex: afterIndex + 1 });
             };
 
-            const removeVersion = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, expectedVersion = null)=>{
-              const time = venue.sessions[sessionIndex].times[timeIndex];
-              const versions = Array.isArray(time.versions) ? time.versions : [];
-              if(versions.length <= 1) return;
-              let targetVersion = expectedVersion ?? null;
-              let targetIndex = targetVersion ? versions.indexOf(targetVersion) : -1;
+            const removeSeatingArea = (venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex, expectedSeatingArea = null)=>{
+              const time = venue.sessions[sessionIndex].session_times[timeIndex];
+              const seatingAreas = Array.isArray(time.seating_areas) ? time.seating_areas : [];
+              if(seatingAreas.length <= 1) return;
+              let targetSeatingArea = expectedSeatingArea ?? null;
+              let targetIndex = targetSeatingArea ? seatingAreas.indexOf(targetSeatingArea) : -1;
               if(targetIndex === -1){
-                targetIndex = typeof versionIndex === 'number' ? versionIndex : -1;
-                if(targetIndex < 0 || targetIndex >= versions.length) return;
-                targetVersion = versions[targetIndex];
+                targetIndex = typeof seatingAreaIndex === 'number' ? seatingAreaIndex : -1;
+                if(targetIndex < 0 || targetIndex >= seatingAreas.length) return;
+                targetSeatingArea = seatingAreas[targetIndex];
               }
-              if(!targetVersion) return;
+              if(!targetSeatingArea) return;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
-                  const otherTime = otherSess.times[timeIndex];
-                  if(!otherTime || !Array.isArray(otherTime.versions)) return;
-                  if(otherTime.versions === versions){
-                    otherTime.versions = otherTime.versions.map(cloneVenueSessionVersion);
+                  const otherTime = otherSess.session_times[timeIndex];
+                  if(!otherTime || !Array.isArray(otherTime.seating_areas)) return;
+                  if(otherTime.seating_areas === seatingAreas){
+                    otherTime.seating_areas = otherTime.seating_areas.map(cloneVenueSessionSeatingArea);
                   }
                 });
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              versions.splice(targetIndex, 1);
+              seatingAreas.splice(targetIndex, 1);
               notifyFormbuilderChange();
-              const focusVersion = Math.max(0, Math.min(targetIndex, versions.length - 1));
-              renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: focusVersion });
+              const focusSeatingArea = Math.max(0, Math.min(targetIndex, seatingAreas.length - 1));
+              renderVenues({ type: 'seating_area', venueIndex, sessionIndex, timeIndex, seatingAreaIndex: focusSeatingArea });
             };
 
-            const addTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, afterIndex)=>{
-              const time = venue.sessions[sessionIndex].times[timeIndex];
-              if(versionIndex > 0){
-                lockTierAutofillIfNeeded(time, versionIndex);
+            const addTier = (venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex, afterIndex)=>{
+              const time = venue.sessions[sessionIndex].session_times[timeIndex];
+              if(seatingAreaIndex > 0){
+                lockTierAutofillIfNeeded(time, seatingAreaIndex);
               }
-              const version = time.versions[versionIndex];
-              const versionTiersRef = version.tiers;
-              const newTier = venueSessionCreateTier();
+              const seatingArea = time.seating_areas[seatingAreaIndex];
+              const seatingAreaTiersRef = seatingArea.pricing_tiers;
+              const newTier = venueSessionCreatePricingTier();
               const venueCurrency = getVenueCurrencyValue(venue);
               if(venueCurrency){
                 newTier.currency = venueCurrency;
               }
-              version.tiers.splice(afterIndex + 1, 0, newTier);
-              if(versionIndex === 0){
+              seatingArea.pricing_tiers.splice(afterIndex + 1, 0, newTier);
+              if(seatingAreaIndex === 0){
                 syncTiersFromTemplate(time);
               }
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
-                  const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
-                  const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
-                  while(otherVersions.length <= versionIndex){
-                    otherVersions.push(venueSessionCreateVersion());
+                  const otherTime = otherSess.session_times[timeIndex] || (otherSess.session_times[timeIndex] = venueSessionCreateSessionTime());
+                  const otherSeatingAreas = Array.isArray(otherTime.seating_areas) ? otherTime.seating_areas : (otherTime.seating_areas = [venueSessionCreateSeatingArea()]);
+                  while(otherSeatingAreas.length <= seatingAreaIndex){
+                    otherSeatingAreas.push(venueSessionCreateSeatingArea());
                   }
-                  const otherVersion = otherVersions[versionIndex];
-                  if(!otherVersion) return;
-                  if(otherVersion === version || otherVersion.tiers === versionTiersRef){
+                  const otherSeatingArea = otherSeatingAreas[seatingAreaIndex];
+                  if(!otherSeatingArea) return;
+                  if(otherSeatingArea === seatingArea || otherSeatingArea.pricing_tiers === seatingAreaTiersRef){
                     return;
                   }
-                  const clone = cloneVenueSessionTier(newTier);
-                  otherVersion.tiers.splice(afterIndex + 1, 0, clone);
+                  const clone = cloneVenueSessionPricingTier(newTier);
+                  otherSeatingArea.pricing_tiers.splice(afterIndex + 1, 0, clone);
                 });
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
               notifyFormbuilderChange();
-              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: afterIndex + 1 });
+              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex: afterIndex + 1 });
             };
 
-            const removeTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex, expectedVersion = null, expectedTier = null)=>{
-              const time = venue.sessions[sessionIndex].times[timeIndex];
-              const versions = Array.isArray(time.versions) ? time.versions : [];
-              if(versions.length === 0) return;
-              let targetVersion = expectedVersion ?? null;
-              let targetVersionIndex = targetVersion ? versions.indexOf(targetVersion) : -1;
-              if(targetVersionIndex === -1){
-                targetVersionIndex = typeof versionIndex === 'number' ? versionIndex : -1;
-                if(targetVersionIndex < 0 || targetVersionIndex >= versions.length) return;
-                targetVersion = versions[targetVersionIndex];
+            const removeTier = (venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex, expectedSeatingArea = null, expectedTier = null)=>{
+              const time = venue.sessions[sessionIndex].session_times[timeIndex];
+              const seatingAreas = Array.isArray(time.seating_areas) ? time.seating_areas : [];
+              if(seatingAreas.length === 0) return;
+              let targetSeatingArea = expectedSeatingArea ?? null;
+              let targetSeatingAreaIndex = targetSeatingArea ? seatingAreas.indexOf(targetSeatingArea) : -1;
+              if(targetSeatingAreaIndex === -1){
+                targetSeatingAreaIndex = typeof seatingAreaIndex === 'number' ? seatingAreaIndex : -1;
+                if(targetSeatingAreaIndex < 0 || targetSeatingAreaIndex >= seatingAreas.length) return;
+                targetSeatingArea = seatingAreas[targetSeatingAreaIndex];
               }
-              if(!targetVersion) return;
-              if(targetVersionIndex > 0){
-                lockTierAutofillIfNeeded(time, targetVersionIndex);
+              if(!targetSeatingArea) return;
+              if(targetSeatingAreaIndex > 0){
+                lockTierAutofillIfNeeded(time, targetSeatingAreaIndex);
               }
-              const version = versions[targetVersionIndex];
-              const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
+              const seatingArea = seatingAreas[targetSeatingAreaIndex];
+              const tiers = seatingArea && Array.isArray(seatingArea.pricing_tiers) ? seatingArea.pricing_tiers : [];
               if(tiers.length <= 1) return;
               let targetTier = expectedTier ?? null;
               let targetTierIndex = targetTier ? tiers.indexOf(targetTier) : -1;
@@ -11191,19 +11361,19 @@ function makePosts(){
                 targetTier = tiers[targetTierIndex];
               }
               if(!targetTier) return;
-              const templateRemoval = targetVersionIndex === 0;
+              const templateRemoval = targetSeatingAreaIndex === 0;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
-                  const otherTime = otherSess.times[timeIndex];
-                  if(!otherTime || !Array.isArray(otherTime.versions)) return;
-                  if(otherTime.versions === versions){
-                    otherTime.versions = otherTime.versions.map(cloneVenueSessionVersion);
+                  const otherTime = otherSess.session_times[timeIndex];
+                  if(!otherTime || !Array.isArray(otherTime.seating_areas)) return;
+                  if(otherTime.seating_areas === seatingAreas){
+                    otherTime.seating_areas = otherTime.seating_areas.map(cloneVenueSessionSeatingArea);
                     return;
                   }
-                  const otherVersion = otherTime.versions[targetVersionIndex];
-                  if(!otherVersion || !Array.isArray(otherVersion.tiers)) return;
-                  if(otherVersion.tiers === tiers){
-                    otherVersion.tiers = otherVersion.tiers.map(cloneVenueSessionTier);
+                  const otherSeatingArea = otherTime.seating_areas[targetSeatingAreaIndex];
+                  if(!otherSeatingArea || !Array.isArray(otherSeatingArea.pricing_tiers)) return;
+                  if(otherSeatingArea.pricing_tiers === tiers){
+                    otherSeatingArea.pricing_tiers = otherSeatingArea.pricing_tiers.map(cloneVenueSessionPricingTier);
                   }
                 });
               } else if(sessionIndex > 0){
@@ -11215,7 +11385,7 @@ function makePosts(){
               }
               notifyFormbuilderChange();
               const focusTier = Math.max(0, Math.min(targetTierIndex, tiers.length - 1));
-              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex: targetVersionIndex, tierIndex: focusTier });
+              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, seatingAreaIndex: targetSeatingAreaIndex, tierIndex: focusTier });
             };
 
             const focusRequest = { current: null };
@@ -11232,12 +11402,12 @@ function makePosts(){
                 selector = `.session-date-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"]`;
               } else if(spec.type === 'session-time'){
                 selector = `.session-time-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"]`;
-              } else if(spec.type === 'version'){
-                selector = `.seating_area-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
+              } else if(spec.type === 'seating_area'){
+                selector = `.seating_area-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-seating-area-index="${spec.seatingAreaIndex}"]`;
               } else if(spec.type === 'tier'){
-                selector = `.pricing_tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
+                selector = `.pricing_tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-seating-area-index="${spec.seatingAreaIndex}"][data-tier-index="${spec.tierIndex}"]`;
               } else if(spec.type === 'price'){
-                selector = `.session-price-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
+                selector = `.session-price-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-seating-area-index="${spec.seatingAreaIndex}"][data-tier-index="${spec.tierIndex}"]`;
               }
               if(!selector) return;
               const target = editor.querySelector(selector);
@@ -11265,10 +11435,10 @@ function makePosts(){
               return btn;
             };
 
-            const lockTierAutofillIfNeeded = (time, versionIndex)=>{
+            const lockTierAutofillIfNeeded = (time, seatingAreaIndex)=>{
               if(!time || time.tierAutofillLocked) return false;
-              if(typeof versionIndex !== 'number' || versionIndex <= 0) return false;
-              const versionCount = Array.isArray(time.versions) ? time.versions.length : 0;
+              if(typeof seatingAreaIndex !== 'number' || seatingAreaIndex <= 0) return false;
+              const versionCount = Array.isArray(time.seating_areas) ? time.seating_areas.length : 0;
               if(versionCount <= 1) return false;
               time.tierAutofillLocked = true;
               return true;
@@ -11276,16 +11446,16 @@ function makePosts(){
 
             const syncTiersFromTemplate = time => {
               if(!time || time.tierAutofillLocked) return false;
-              const versions = Array.isArray(time.versions) ? time.versions : [];
-              if(versions.length <= 1) return false;
-              const template = versions[0];
-              if(!template || !Array.isArray(template.tiers)) return false;
-              const templateTiers = template.tiers;
+              const seatingAreas = Array.isArray(time.seating_areas) ? time.seating_areas : [];
+              if(seatingAreas.length <= 1) return false;
+              const template = seatingAreas[0];
+              if(!template || !Array.isArray(template.pricing_tiers)) return false;
+              const templateTiers = template.pricing_tiers;
               let changed = false;
-              for(let index = 1; index < versions.length; index++){
-                const version = versions[index];
-                if(!version) continue;
-                let tiers = Array.isArray(version.tiers) ? version.tiers : (version.tiers = []);
+              for(let index = 1; index < seatingAreas.length; index++){
+                const seatingArea = seatingAreas[index];
+                if(!seatingArea) continue;
+                let tiers = Array.isArray(seatingArea.pricing_tiers) ? seatingArea.pricing_tiers : (seatingArea.pricing_tiers = []);
                 if(tiers.length > templateTiers.length){
                   tiers.length = templateTiers.length;
                   changed = true;
@@ -11294,7 +11464,7 @@ function makePosts(){
                   const templateTier = templateTiers[tierIndex];
                   let targetTier = tiers[tierIndex];
                   if(!targetTier){
-                    targetTier = venueSessionCreateTier();
+                    targetTier = venueSessionCreatePricingTier();
                     tiers[tierIndex] = targetTier;
                     changed = true;
                   }
@@ -11331,7 +11501,7 @@ function makePosts(){
                   slot.source = timeObj;
                   slot.locked = false;
                   forEachOtherSession(venue, (sess, idx)=>{
-                    const targetTime = sess.times[timeIndex] || (sess.times[timeIndex] = venueSessionCreateTime());
+                    const targetTime = sess.session_times[timeIndex] || (sess.session_times[timeIndex] = venueSessionCreateSessionTime());
                     if(targetTime.time){
                       targetTime.time = '';
                     }
@@ -11382,7 +11552,7 @@ function makePosts(){
                 } else if(compareSession !== session){
                   continue;
                 }
-                const compareTimes = Array.isArray(compareSession.times) ? compareSession.times : [];
+                const compareTimes = Array.isArray(compareSession.session_times) ? compareSession.session_times : [];
                 for(let tIdx = 0; tIdx < compareTimes.length; tIdx++){
                   const compareTime = compareTimes[tIdx];
                   if(!compareTime || compareTime === timeObj) continue;
@@ -11407,7 +11577,7 @@ function makePosts(){
                 slot.source = timeObj;
                 slot.locked = false;
                 forEachOtherSession(venue, (sess, idx)=>{
-                  const targetTime = sess.times[timeIndex] || (sess.times[timeIndex] = venueSessionCreateTime());
+                  const targetTime = sess.session_times[timeIndex] || (sess.session_times[timeIndex] = venueSessionCreateSessionTime());
                   targetTime.time = raw;
                   const selector = `.session-time-input[data-venue-index="${venueIndex}"][data-session-index="${idx}"][data-time-index="${timeIndex}"]`;
                   const sibling = editor.querySelector(selector);
@@ -11548,7 +11718,7 @@ function makePosts(){
                 const sorted = Array.from(selectedDates).sort();
                 const existingSessions = Array.isArray(venue.sessions) ? [...venue.sessions] : [];
                 const maxTimes = Math.max(
-                  ...existingSessions.map(sess => Array.isArray(sess?.times) ? sess.times.length : 1),
+                  ...existingSessions.map(sess => Array.isArray(sess?.session_times) ? sess.session_times.length : 1),
                   1
                 );
                 const sessionsByIso = new Map();
@@ -11589,8 +11759,8 @@ function makePosts(){
                   }
                   if(!active){
                     active = venueSessionCreateSession();
-                    while(active.times.length < maxTimes){
-                      active.times.push(venueSessionCreateTime());
+                    while(active.session_times.length < maxTimes){
+                      active.session_times.push(venueSessionCreateSessionTime());
                     }
                     applyAutofillToSession(venue, active);
                   }
@@ -12358,7 +12528,7 @@ function makePosts(){
                   timesList.className = 'session-times';
                   sessionDetails.appendChild(timesList);
 
-                  session.times.forEach((timeObj, timeIndex)=>{
+                  session.session_times.forEach((timeObj, timeIndex)=>{
                     const isFirstSession = sessionIndex === 0;
                     const isFirstTimeSlot = timeIndex === 0;
                     if(isFirstTimeSlot){
@@ -12387,7 +12557,7 @@ function makePosts(){
                           const compareSession = venue.sessions[i];
                           if(!compareSession || typeof compareSession.date !== 'string') continue;
                           if(compareSession.date !== currentDate) continue;
-                          const compareTimes = Array.isArray(compareSession.times) ? compareSession.times.filter(Boolean) : [];
+                          const compareTimes = Array.isArray(compareSession.session_times) ? compareSession.session_times.filter(Boolean) : [];
                           ordinal += Math.max(compareTimes.length, 1);
                         }
                       }
@@ -12425,7 +12595,7 @@ function makePosts(){
                     timeActions.className = 'session-time-actions';
                     timeActions.appendChild(createActionButton('+', 'Add Session Time', ()=> addTimeSlot(venue, venueIndex, sessionIndex, timeIndex)));
                     const removeTimeBtn = createActionButton('-', 'Remove Session Time', ()=> removeTimeSlot(venue, venueIndex, sessionIndex, timeIndex));
-                    const timesForSession = Array.isArray(session.times) ? session.times.filter(Boolean) : [];
+                    const timesForSession = Array.isArray(session.session_times) ? session.session_times.filter(Boolean) : [];
                     const canRemoveTime = timesForSession.length > 1;
                     if(!canRemoveTime){
                       removeTimeBtn.disabled = true;
@@ -12437,8 +12607,8 @@ function makePosts(){
                     timeActions.appendChild(removeTimeBtn);
                     timeRow.appendChild(timeActions);
 
-                    const versionList = document.createElement('div');
-                    versionList.className = 'seating_area-list';
+                    const seatingAreaList = document.createElement('div');
+                    seatingAreaList.className = 'seating_area-list';
                     let samePricingRow = null;
                     let samePricingYesInput = null;
                     let samePricingNoInput = null;
@@ -12449,13 +12619,13 @@ function makePosts(){
 
                     const getSamePricingReference = ()=>{
                       if(timeIndex > 0){
-                        const firstTime = session.times[0];
+                        const firstTime = session.session_times[0];
                         return firstTime && firstTime !== timeObj ? firstTime : null;
                       }
                       if(sessionIndex > 0){
                         const referenceSession = Array.isArray(venue.sessions) ? venue.sessions[0] : null;
                         if(referenceSession && referenceSession !== session){
-                          const referenceTimes = Array.isArray(referenceSession.times) ? referenceSession.times : [];
+                          const referenceTimes = Array.isArray(referenceSession.session_times) ? referenceSession.session_times : [];
                           const referenceByIndex = referenceTimes[timeIndex];
                           if(referenceByIndex && referenceByIndex !== timeObj){
                             return referenceByIndex;
@@ -12466,23 +12636,23 @@ function makePosts(){
                           }
                         }
                       }
-                      const fallback = session.times[0];
+                      const fallback = session.session_times[0];
                       return fallback && fallback !== timeObj ? fallback : null;
                     };
 
                     const initialReference = getSamePricingReference();
                     if(timeObj.samePricingAsAbove === true && initialReference && initialReference !== timeObj){
                       timeObj.samePricingSourceIndex = 0;
-                      timeObj.versions = initialReference.versions;
+                      timeObj.seating_areas = initialReference.seating_areas;
                       if(sessionIndex > 0){
                         timeObj.tierAutofillLocked = true;
                       }
                     } else {
-                      if(initialReference && timeObj.versions === initialReference.versions){
-                        timeObj.versions = initialReference.versions.map(cloneVenueSessionVersion);
+                      if(initialReference && timeObj.seating_areas === initialReference.seating_areas){
+                        timeObj.seating_areas = initialReference.seating_areas.map(cloneVenueSessionSeatingArea);
                       }
-                      if(!Array.isArray(timeObj.versions) || timeObj.versions.length === 0){
-                        timeObj.versions = [venueSessionCreateVersion()];
+                      if(!Array.isArray(timeObj.seating_areas) || timeObj.seating_areas.length === 0){
+                        timeObj.seating_areas = [venueSessionCreateSeatingArea()];
                       }
                       if(sessionIndex > 0 && timeObj.samePricingAsAbove !== true){
                         timeObj.tierAutofillLocked = false;
@@ -12492,8 +12662,8 @@ function makePosts(){
                     const updateSamePricingUI = ()=>{
                       const referenceTime = getSamePricingReference();
                       const isSamePricing = showSamePricingOptions && referenceTime && referenceTime !== timeObj && timeObj.samePricingAsAbove === true;
-                      versionList.hidden = isSamePricing;
-                      versionList.style.display = isSamePricing ? 'none' : '';
+                      seatingAreaList.hidden = isSamePricing;
+                      seatingAreaList.style.display = isSamePricing ? 'none' : '';
                       timeRow.classList.toggle('has-same-pricing', isSamePricing);
                       if(samePricingRow){
                         samePricingRow.hidden = !showSamePricingOptions;
@@ -12507,45 +12677,45 @@ function makePosts(){
                       }
                     };
 
-                    const populateVersionList = ()=>{
-                      versionList.innerHTML = '';
-                      timeObj.versions.forEach((version, versionIndex)=>{
-                        const versionCard = document.createElement('div');
-                        versionCard.className = 'session-pricing-card';
+                    const populateSeatingAreaList = ()=>{
+                      seatingAreaList.innerHTML = '';
+                      timeObj.seating_areas.forEach((seatingArea, seatingAreaIndex)=>{
+                        const seatingAreaCard = document.createElement('div');
+                        seatingAreaCard.className = 'session-pricing-card';
 
-                        const versionPlaceholder = 'eg. General, Stalls, Balcony';
-                        const seatingLabelText = `Seating Area ${versionIndex + 1}`;
+                        const seatingAreaPlaceholder = 'eg. General, Stalls, Balcony';
+                        const seatingLabelText = `Seating Area ${seatingAreaIndex + 1}`;
                         const seatingLabel = document.createElement('label');
                         seatingLabel.className = 'seating_area-label';
                         seatingLabel.textContent = seatingLabelText;
-                        const seatingInputId = `seating_area-${uniqueSuffix}-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
+                        const seatingInputId = `seating_area-${uniqueSuffix}-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
-                        const versionInput = document.createElement('input');
-                        versionInput.type = 'text';
-                        versionInput.className = 'seating_area-input';
-                        versionInput.placeholder = versionPlaceholder;
-                        versionInput.setAttribute('aria-label', seatingLabelText);
-                        versionInput.id = seatingInputId;
-                        versionInput.value = version.name || '';
-                        versionInput.dataset.venueIndex = String(venueIndex);
-                        versionInput.dataset.sessionIndex = String(sessionIndex);
-                        versionInput.dataset.timeIndex = String(timeIndex);
-                        versionInput.dataset.versionIndex = String(versionIndex);
-                        versionInput.addEventListener('input', ()=>{
-                          const previous = typeof version.name === 'string' ? version.name : '';
-                          const nextValue = versionInput.value;
-                          version.name = nextValue;
+                        const seatingAreaInput = document.createElement('input');
+                        seatingAreaInput.type = 'text';
+                        seatingAreaInput.className = 'seating_area-input';
+                        seatingAreaInput.placeholder = seatingAreaPlaceholder;
+                        seatingAreaInput.setAttribute('aria-label', seatingLabelText);
+                        seatingAreaInput.id = seatingInputId;
+                        seatingAreaInput.value = seatingArea.name || '';
+                        seatingAreaInput.dataset.venueIndex = String(venueIndex);
+                        seatingAreaInput.dataset.sessionIndex = String(sessionIndex);
+                        seatingAreaInput.dataset.timeIndex = String(timeIndex);
+                        seatingAreaInput.dataset.seatingAreaIndex = String(seatingAreaIndex);
+                        seatingAreaInput.addEventListener('input', ()=>{
+                          const previous = typeof seatingArea.name === 'string' ? seatingArea.name : '';
+                          const nextValue = seatingAreaInput.value;
+                          seatingArea.name = nextValue;
                           if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== nextValue){
                             forEachOtherSession(venue, (otherSess, otherIndex)=>{
-                              const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
-                              const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
-                              while(otherVersions.length <= versionIndex){
-                                otherVersions.push(venueSessionCreateVersion());
+                              const otherTime = otherSess.session_times[timeIndex] || (otherSess.session_times[timeIndex] = venueSessionCreateSessionTime());
+                              const otherSeatingAreas = Array.isArray(otherTime.seating_areas) ? otherTime.seating_areas : (otherTime.seating_areas = [venueSessionCreateSeatingArea()]);
+                              while(otherSeatingAreas.length <= seatingAreaIndex){
+                                otherSeatingAreas.push(venueSessionCreateSeatingArea());
                               }
-                              const otherVersion = otherVersions[versionIndex];
-                              if(otherVersion){
-                                otherVersion.name = nextValue;
-                                const selector = `.seating_area-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"]`;
+                              const otherSeatingArea = otherSeatingAreas[seatingAreaIndex];
+                              if(otherSeatingArea){
+                                otherSeatingArea.name = nextValue;
+                                const selector = `.seating_area-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-seating-area-index="${seatingAreaIndex}"]`;
                                 const peer = editor.querySelector(selector);
                                 if(peer){
                                   peer.value = nextValue;
@@ -12557,26 +12727,26 @@ function makePosts(){
                           }
                           notifyFormbuilderChange();
                         });
-                        versionCard.appendChild(seatingLabel);
-                        versionCard.appendChild(versionInput);
+                        seatingAreaCard.appendChild(seatingLabel);
+                        seatingAreaCard.appendChild(seatingAreaInput);
 
-                        const versionActions = document.createElement('div');
-                        versionActions.className = 'version-actions';
-                        versionActions.appendChild(createActionButton('+', 'Add Seating Area', ()=> addVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex)));
-                        const removeVersionBtn = createActionButton('-', 'Remove Seating Area', ()=> removeVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex, version));
-                        if(timeObj.versions.length <= 1){
-                          removeVersionBtn.disabled = true;
-                          removeVersionBtn.setAttribute('aria-disabled', 'true');
+                        const seatingAreaActions = document.createElement('div');
+                        seatingAreaActions.className = 'seating-area-actions';
+                        seatingAreaActions.appendChild(createActionButton('+', 'Add Seating Area', ()=> addSeatingArea(venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex)));
+                        const removeSeatingAreaBtn = createActionButton('-', 'Remove Seating Area', ()=> removeSeatingArea(venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex, seatingArea));
+                        if(timeObj.seating_areas.length <= 1){
+                          removeSeatingAreaBtn.disabled = true;
+                          removeSeatingAreaBtn.setAttribute('aria-disabled', 'true');
                         } else {
-                          removeVersionBtn.disabled = false;
-                          removeVersionBtn.removeAttribute('aria-disabled');
+                          removeSeatingAreaBtn.disabled = false;
+                          removeSeatingAreaBtn.removeAttribute('aria-disabled');
                         }
-                        versionActions.appendChild(removeVersionBtn);
-                        versionCard.appendChild(versionActions);
+                        seatingAreaActions.appendChild(removeSeatingAreaBtn);
+                        seatingAreaCard.appendChild(seatingAreaActions);
 
                         const tierList = document.createElement('div');
                         tierList.className = 'pricing_tier-list';
-                        version.tiers.forEach((tier, tierIndex)=>{
+                        seatingArea.pricing_tiers.forEach((tier, tierIndex)=>{
                           const tierRow = document.createElement('div');
                           tierRow.className = 'tier-row';
 
@@ -12586,7 +12756,7 @@ function makePosts(){
                           tierLabel.className = 'pricing_tier-label';
                           tierLabel.textContent = tierLabelText;
                           // Use same unique suffix for consistency
-                          const tierInputId = `pricing_tier-${uniqueSuffix}-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          const tierInputId = `pricing_tier-${uniqueSuffix}-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
@@ -12598,7 +12768,7 @@ function makePosts(){
                           tierInput.dataset.venueIndex = String(venueIndex);
                           tierInput.dataset.sessionIndex = String(sessionIndex);
                           tierInput.dataset.timeIndex = String(timeIndex);
-                          tierInput.dataset.versionIndex = String(versionIndex);
+                          tierInput.dataset.seatingAreaIndex = String(seatingAreaIndex);
                           tierInput.dataset.tierIndex = String(tierIndex);
                           tierRow.appendChild(tierLabel);
                           tierInput.addEventListener('input', ()=>{
@@ -12606,12 +12776,12 @@ function makePosts(){
                             const nextValue = tierInput.value;
                             tier.name = nextValue;
                             let syncedFromTemplate = false;
-                            if(versionIndex === 0){
+                            if(seatingAreaIndex === 0){
                               syncedFromTemplate = syncTiersFromTemplate(timeObj);
                               if(!timeObj.tierAutofillLocked){
-                                const versions = Array.isArray(timeObj.versions) ? timeObj.versions : [];
-                                for(let otherVersionIndex = 1; otherVersionIndex < versions.length; otherVersionIndex++){
-                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-version-index="${otherVersionIndex}"][data-tier-index="${tierIndex}"]`;
+                                const seatingAreas = Array.isArray(timeObj.seating_areas) ? timeObj.seating_areas : [];
+                                for(let otherSeatingAreaIndex = 1; otherSeatingAreaIndex < seatingAreas.length; otherSeatingAreaIndex++){
+                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-seating-area-index="${otherSeatingAreaIndex}"][data-tier-index="${tierIndex}"]`;
                                   const peer = editor.querySelector(selector);
                                   if(peer){
                                     peer.value = nextValue;
@@ -12621,21 +12791,21 @@ function makePosts(){
                             }
                             if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== nextValue){
                               forEachOtherSession(venue, (otherSess, otherIndex)=>{
-                                const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
-                                const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
-                                while(otherVersions.length <= versionIndex){
-                                  otherVersions.push(venueSessionCreateVersion());
+                                const otherTime = otherSess.session_times[timeIndex] || (otherSess.session_times[timeIndex] = venueSessionCreateSessionTime());
+                                const otherSeatingAreas = Array.isArray(otherTime.seating_areas) ? otherTime.seating_areas : (otherTime.seating_areas = [venueSessionCreateSeatingArea()]);
+                                while(otherSeatingAreas.length <= seatingAreaIndex){
+                                  otherSeatingAreas.push(venueSessionCreateSeatingArea());
                                 }
-                                const otherVersion = otherVersions[versionIndex];
-                                if(!otherVersion) return;
-                                const otherTiers = Array.isArray(otherVersion.tiers) ? otherVersion.tiers : (otherVersion.tiers = [venueSessionCreateTier()]);
+                                const otherSeatingArea = otherSeatingAreas[seatingAreaIndex];
+                                if(!otherSeatingArea) return;
+                                const otherTiers = Array.isArray(otherSeatingArea.pricing_tiers) ? otherSeatingArea.pricing_tiers : (otherSeatingArea.pricing_tiers = [venueSessionCreatePricingTier()]);
                                 while(otherTiers.length <= tierIndex){
-                                  otherTiers.push(venueSessionCreateTier());
+                                  otherTiers.push(venueSessionCreatePricingTier());
                                 }
                                 const otherTier = otherTiers[tierIndex];
                                 if(otherTier){
                                   otherTier.name = nextValue;
-                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-seating-area-index="${seatingAreaIndex}"][data-tier-index="${tierIndex}"]`;
                                   const peer = editor.querySelector(selector);
                                   if(peer){
                                     peer.value = nextValue;
@@ -12645,7 +12815,7 @@ function makePosts(){
                             } else if(sessionIndex > 0 && previous !== nextValue){
                               lockSessionMirror(venue);
                             }
-                            const locked = lockTierAutofillIfNeeded(timeObj, versionIndex);
+                            const locked = lockTierAutofillIfNeeded(timeObj, seatingAreaIndex);
                             if(previous !== nextValue || locked || syncedFromTemplate){
                               notifyFormbuilderChange();
                             }
@@ -12654,9 +12824,9 @@ function makePosts(){
 
                           const tierActions = document.createElement('div');
                           tierActions.className = 'tier-actions';
-                          tierActions.appendChild(createActionButton('+', 'Add Tier', ()=> addTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)));
-                          const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex, version, tier));
-                          if(version.tiers.length <= 1){
+                          tierActions.appendChild(createActionButton('+', 'Add Tier', ()=> addTier(venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex)));
+                          const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex, seatingArea, tier));
+                          if(seatingArea.pricing_tiers.length <= 1){
                             removeTierBtn.disabled = true;
                             removeTierBtn.setAttribute('aria-disabled', 'true');
                           } else {
@@ -12675,7 +12845,7 @@ function makePosts(){
                           currencyMenuBtn.className = 'variant-pricing-currency';
                           currencyMenuBtn.setAttribute('aria-haspopup', 'true');
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                          const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
                           currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
                           const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
                           currencyMenuBtn.textContent = existingCurrency || 'Currency';
@@ -12683,7 +12853,7 @@ function makePosts(){
                           currencyMenuBtn.dataset.venueIndex = String(venueIndex);
                           currencyMenuBtn.dataset.sessionIndex = String(sessionIndex);
                           currencyMenuBtn.dataset.timeIndex = String(timeIndex);
-                          currencyMenuBtn.dataset.versionIndex = String(versionIndex);
+                          currencyMenuBtn.dataset.seatingAreaIndex = String(seatingAreaIndex);
                           currencyMenuBtn.dataset.tierIndex = String(tierIndex);
                           const currencyArrow = document.createElement('span');
                           currencyArrow.className = 'dropdown-arrow';
@@ -12849,7 +13019,7 @@ function makePosts(){
                           priceInput.dataset.venueIndex = String(venueIndex);
                           priceInput.dataset.sessionIndex = String(sessionIndex);
                           priceInput.dataset.timeIndex = String(timeIndex);
-                          priceInput.dataset.versionIndex = String(versionIndex);
+                          priceInput.dataset.seatingAreaIndex = String(seatingAreaIndex);
                           priceInput.dataset.tierIndex = String(tierIndex);
 
                           const hasCurrencySelected = ()=> (currencyMenuBtn.dataset.value || '').trim() !== '';
@@ -12909,21 +13079,21 @@ function makePosts(){
                             if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== tier.price){
                               const nextValue = tier.price || '';
                               forEachOtherSession(venue, (otherSess, otherIndex)=>{
-                                const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
-                                const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
-                                while(otherVersions.length <= versionIndex){
-                                  otherVersions.push(venueSessionCreateVersion());
+                                const otherTime = otherSess.session_times[timeIndex] || (otherSess.session_times[timeIndex] = venueSessionCreateSessionTime());
+                                const otherSeatingAreas = Array.isArray(otherTime.seating_areas) ? otherTime.seating_areas : (otherTime.seating_areas = [venueSessionCreateSeatingArea()]);
+                                while(otherSeatingAreas.length <= seatingAreaIndex){
+                                  otherSeatingAreas.push(venueSessionCreateSeatingArea());
                                 }
-                                const otherVersion = otherVersions[versionIndex];
-                                if(!otherVersion) return;
-                                const otherTiers = Array.isArray(otherVersion.tiers) ? otherVersion.tiers : (otherVersion.tiers = [venueSessionCreateTier()]);
+                                const otherSeatingArea = otherSeatingAreas[seatingAreaIndex];
+                                if(!otherSeatingArea) return;
+                                const otherTiers = Array.isArray(otherSeatingArea.pricing_tiers) ? otherSeatingArea.pricing_tiers : (otherSeatingArea.pricing_tiers = [venueSessionCreatePricingTier()]);
                                 while(otherTiers.length <= tierIndex){
-                                  otherTiers.push(venueSessionCreateTier());
+                                  otherTiers.push(venueSessionCreatePricingTier());
                                 }
                                 const otherTier = otherTiers[tierIndex];
                                 if(!otherTier) return;
                                 otherTier.price = nextValue;
-                                const selector = `.session-price-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
+                                const selector = `.session-price-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-seating-area-index="${seatingAreaIndex}"][data-tier-index="${tierIndex}"]`;
                                 const peer = editor.querySelector(selector);
                                 if(peer){
                                   peer.value = nextValue;
@@ -12932,7 +13102,7 @@ function makePosts(){
                             } else if(sessionIndex > 0 && previous !== tier.price){
                               lockSessionMirror(venue);
                             }
-                            if(shouldLock && lockTierAutofillIfNeeded(timeObj, versionIndex)){
+                            if(shouldLock && lockTierAutofillIfNeeded(timeObj, seatingAreaIndex)){
                               shouldNotify = true;
                             }
                             if(shouldNotify){
@@ -12973,13 +13143,13 @@ function makePosts(){
                             }
                             setVenueCurrencyState(venue, nextCurrency);
                             let notifyNeeded = (previousCurrency !== nextCurrency) || priceCleared || propagated;
-                            if(lockTierAutofillIfNeeded(timeObj, versionIndex)){
+                            if(lockTierAutofillIfNeeded(timeObj, seatingAreaIndex)){
                               notifyNeeded = true;
                             }
                             if(notifyNeeded){
                               notifyFormbuilderChange();
                             }
-                            renderVenues({ type: 'price', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex });
+                            renderVenues({ type: 'price', venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex });
                           });
 
                           priceInput.addEventListener('beforeinput', event => {
@@ -13026,7 +13196,7 @@ function makePosts(){
                           tierList.appendChild(tierRow);
                         });
                         versionCard.appendChild(tierList);
-                        versionList.appendChild(versionCard);
+                        seatingAreaList.appendChild(seatingAreaCard);
                       });
                     };
 
@@ -13039,21 +13209,21 @@ function makePosts(){
                       if(canApplyReference){
                         timeObj.samePricingAsAbove = true;
                         timeObj.samePricingSourceIndex = 0;
-                        timeObj.versions = referenceTime.versions;
+                        timeObj.seating_areas = referenceTime.seating_areas;
                         timeObj.tierAutofillLocked = true;
                       } else {
                         timeObj.samePricingAsAbove = false;
                         timeObj.samePricingSourceIndex = 0;
-                        if(referenceTime && timeObj.versions === referenceTime.versions){
-                          timeObj.versions = referenceTime.versions.map(cloneVenueSessionVersion);
+                        if(referenceTime && timeObj.seating_areas === referenceTime.seating_areas){
+                          timeObj.seating_areas = referenceTime.seating_areas.map(cloneVenueSessionSeatingArea);
                         }
-                        if(!Array.isArray(timeObj.versions) || timeObj.versions.length === 0){
-                          timeObj.versions = [venueSessionCreateVersion()];
+                        if(!Array.isArray(timeObj.seating_areas) || timeObj.seating_areas.length === 0){
+                          timeObj.seating_areas = [venueSessionCreateSeatingArea()];
                         }
                         timeObj.tierAutofillLocked = false;
                       }
                       notifyFormbuilderChange();
-                      populateVersionList();
+                      populateSeatingAreaList();
                       updateSamePricingUI();
                     };
 
@@ -13105,8 +13275,8 @@ function makePosts(){
                       timeRow.appendChild(samePricingRow);
                     }
 
-                    timeRow.appendChild(versionList);
-                    populateVersionList();
+                    timeRow.appendChild(seatingAreaList);
+                    populateSeatingAreaList();
                     updateSamePricingUI();
                     timesList.appendChild(timeRow);
                   });
@@ -13648,8 +13818,8 @@ function makePosts(){
               safeField.options.forEach((optionValue, optionIndex)=>{
                 const optionText = typeof optionValue === 'string'
                   ? optionValue
-                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.version === 'string'
-                    ? optionValue.version
+                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.variant_name === 'string'
+                    ? optionValue.variant_name
                     : '');
                 const optionRow = document.createElement('div');
                 optionRow.className = 'dropdown-option-row';
@@ -13860,19 +14030,19 @@ function makePosts(){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
-                  safeField.options = [{ version: '', currency: '', price: '' }];
+                  safeField.options = [{ variant_name: '', variant_currency: '', variant_price: '' }];
                   notifyFormbuilderChange();
                 } else {
                   safeField.options = safeField.options.map(opt => {
                     if(opt && typeof opt === 'object'){
                       return {
-                        version: typeof opt.version === 'string' ? opt.version : '',
-                        currency: typeof opt.currency === 'string' ? opt.currency : '',
-                        price: typeof opt.price === 'string' ? opt.price : ''
+                        variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
+                        variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
+                        variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
                       };
                     }
                     const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                    return { version: str, currency: '', price: '' };
+                    return { variant_name: str, variant_currency: '', variant_price: '' };
                   });
                 }
               }
@@ -15086,20 +15256,20 @@ function makePosts(){
                     if(field && field.type === 'variant-pricing'){
                       if(opt && typeof opt === 'object'){
                         return {
-                          version: typeof opt.version === 'string' ? opt.version : '',
-                          currency: typeof opt.currency === 'string' ? opt.currency : '',
-                          price: typeof opt.price === 'string' ? opt.price : ''
+                          variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
+                          variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
+                          variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
                         };
                       }
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                      return { version: str, currency: '', price: '' };
+                      return { variant_name: str, variant_currency: '', variant_price: '' };
                     }
                     if(field && field.type === 'venue-ticketing'){
                       return cloneVenueSessionVenue(opt);
                     }
                     if(typeof opt === 'string') return opt;
-                    if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
-                      return opt.version;
+                    if(opt && typeof opt === 'object' && typeof opt.variant_name === 'string'){
+                      return opt.variant_name;
                     }
                     return String(opt ?? '');
                   })
