@@ -1851,6 +1851,12 @@ button[aria-expanded="true"] .results-arrow{
   padding:8px 12px;
   color:#fff;
   font-size:14px;
+  -moz-appearance:textfield;
+}
+.checkout-option-field input[type="number"]::-webkit-outer-spin-button,
+.checkout-option-field input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
 }
 .checkout-option-field input[type="number"]:focus{
   outline:none;
@@ -1914,6 +1920,12 @@ button[aria-expanded="true"] .results-arrow{
 .checkout-option-calculator .checkout-option-field input[type="number"]{
   width:auto;
   flex:0 0 100px;
+  -moz-appearance:textfield;
+}
+.checkout-option-calculator .checkout-option-field input[type="number"]::-webkit-outer-spin-button,
+.checkout-option-calculator .checkout-option-field input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
 }
 .checkout-option-calc-total{
   display:inline-block;
@@ -1921,6 +1933,8 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(47,59,115,0.2);
   border-radius:4px;
   font-size:14px;
+  color:#fff;
+  font-weight:600;
 }
 
 .checkout-option-empty{
