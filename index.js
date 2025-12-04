@@ -18522,7 +18522,6 @@ function makePosts(){
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
           }
-          const overlay = document.getElementById('headerLoadingOverlay');
           const motionTokens = new Set();
           let tilesPending = false;
           let active = false;
@@ -18541,19 +18540,11 @@ function makePosts(){
           const apply = (forceStop = false) => {
             const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
             if(busy){
-              if(overlay){
-                overlay.classList.remove('is-hidden');
-                overlay.setAttribute('aria-hidden', 'false');
-              }
               if(!active){
                 active = true;
                 try{ loader.begin('map'); }catch(err){}
               }
             } else {
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
               if(active){
                 active = false;
                 try{ loader.end('map'); }catch(err){}
@@ -18581,10 +18572,6 @@ function makePosts(){
             clearAll(){
               motionTokens.clear();
               tilesPending = false;
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
               if(active){
                 active = false;
                 try{ loader.end('map'); }catch(err){}
