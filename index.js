@@ -26607,7 +26607,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // LocalStorage Clear Button Handler
 (function(){
-  function initClearLocalStorageBtn(){
+  async function initClearLocalStorageBtn(){
     const btn = document.getElementById('clearLocalStorageBtn');
     if(!btn) {
       // Retry if button not ready yet
@@ -26615,24 +26615,55 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    btn.addEventListener('click', function(e){
+    btn.addEventListener('click', async function(e){
       e.preventDefault();
       e.stopPropagation();
       
       try {
+        // Clear localStorage
         const keys = Object.keys(localStorage);
         const keyCount = keys.length;
         localStorage.clear();
-        console.log(`[LocalStorage] Cleared ${keyCount} items`);
+        console.log(`[Clear] Cleared ${keyCount} localStorage items`);
         
-        // Reload the page to apply changes
-        location.reload();
+        // Clear service workers
+        if('serviceWorker' in navigator){
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for(let registration of registrations){
+              await registration.unregister();
+            }
+            console.log(`[Clear] Unregistered ${registrations.length} service worker(s)`);
+          } catch(err){
+            console.warn('[Clear] Service worker error:', err);
+          }
+        }
+        
+        // Clear browser caches
+        if('caches' in window){
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            console.log(`[Clear] Cleared ${cacheNames.length} cache(s)`);
+          } catch(err){
+            console.warn('[Clear] Cache error:', err);
+          }
+        }
+        
+        console.log('[Clear] All cleared! Reloading...');
+        
+        // Reload with cache bypass
+        setTimeout(() => {
+          location.reload(true);
+        }, 100);
       } catch(err){
-        console.error('[LocalStorage] Error clearing:', err);
+        console.error('[Clear] Error:', err);
+        // Still reload even if there's an error
+        location.reload(true);
       }
     });
     
-    console.log('[LocalStorage] Clear button initialized');
+    console.log('[Clear] Clear button initialized');
   }
   
   // Initialize when DOM is ready
