@@ -170,8 +170,15 @@
    */
   function loadAdminSettings() {
     // NO CACHING - always fetch fresh settings
-    return fetch('/gateway.php?action=get-admin-settings')
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    return fetch('/gateway.php?action=get-admin-settings', {
+      signal: controller.signal
+    })
       .then(response => {
+        clearTimeout(timeoutId);
         if (!response.ok) throw new Error('Failed to load admin settings');
         return response.json();
       })
@@ -183,6 +190,7 @@
         throw new Error('Invalid admin settings response');
       })
       .catch(err => {
+        clearTimeout(timeoutId);
         console.warn('[MapCards] Failed to load admin settings:', err);
         window.adminSettings = {};
         return {};

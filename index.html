@@ -12,15 +12,17 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link id="mapbox-gl-css" rel="stylesheet"
-        href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" />
+  <link id="mapbox-gl-css" rel="preload" as="style"
+        href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
+        onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" /></noscript>
 
-  <link
-    rel="stylesheet"
+  <link rel="preload" as="style"
     href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
     data-fallback="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css"
-    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
-  />
+    onload="this.onload=null;this.rel='stylesheet'"
+    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;this.rel='preload';}else{this.dataset.fallbackState='failed';this.rel='stylesheet';}" />
+  <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" /></noscript>
   
   <link rel="stylesheet" href="style.css?v=20251201l" />
 </head>
@@ -571,10 +573,11 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js" defer></script>
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js" defer></script>
   <script>
-    // Conditionally load console filter based on admin settings
+    // Conditionally load console filter based on admin settings (async, non-blocking)
     if(localStorage.getItem('enableConsoleFilter') === 'true'){
       const script = document.createElement('script');
       script.src = 'console-filter.js';
+      script.async = true;
       document.head.appendChild(script);
     }
   </script>
