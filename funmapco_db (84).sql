@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 03, 2025 at 05:23 PM
+-- Generation Time: Dec 04, 2025 at 01:57 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -293,6 +293,7 @@ CREATE TABLE `checkout_options` (
   `checkout_sidebar_ad` tinyint(1) DEFAULT 0,
   `sort_order` tinyint(3) UNSIGNED DEFAULT 1,
   `is_active` tinyint(1) DEFAULT 1,
+  `admin_only` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -301,19 +302,11 @@ CREATE TABLE `checkout_options` (
 -- Dumping data for table `checkout_options`
 --
 
-INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-30', 'Free Listing (30 days)', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(2, 'standard-30', 'Standard Listing (30 days)', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(3, 'featured-30', 'Featured Listing (30 days)', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(4, 'featured-ad-30', 'Featured + Sidebar Ad (30 days)', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(5, 'free-60', 'Free Listing (60 days)', 'Basic listing visible on map for 60 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 5, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(6, 'standard-60', 'Standard Listing (60 days)', 'Standard listing visible on map for 60 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 6, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(7, 'featured-60', 'Featured Listing (60 days)', 'Featured listing with highlighted placement for 60 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 7, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(8, 'featured-ad-60', 'Featured + Sidebar Ad (60 days)', 'Featured listing with sidebar advertisement for 60 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 8, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(9, 'free-365', 'Free Listing (1 year)', 'Basic listing visible on map for 1 year. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 9, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(10, 'standard-365', 'Standard Listing (1 year)', 'Standard listing visible on map for 1 year. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 10, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(11, 'featured-365', 'Featured Listing (1 year)', 'Featured listing with highlighted placement for 1 year. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 11, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05'),
-(12, 'featured-ad-365', 'Featured + Sidebar Ad (1 year)', 'Featured listing with sidebar advertisement for 1 year. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 12, 1, '2025-11-30 05:45:21', '2025-12-03 16:25:05');
+INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `admin_only`, `created_at`, `updated_at`) VALUES
+(1, 'free-listing-1764810350', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 1, 0, '2025-11-30 05:45:21', '2025-12-04 12:05:50'),
+(2, 'standard-listing-1764810350', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, 0, '2025-11-30 05:45:21', '2025-12-04 12:05:50'),
+(3, 'featured-listing-1764810350', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, 0, '2025-11-30 05:45:21', '2025-12-04 12:05:50'),
+(4, 'featured-sidebar-ad-1764810350', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, 0, '2025-11-30 05:45:21', '2025-12-04 12:05:50');
 
 -- --------------------------------------------------------
 
@@ -841,31 +834,31 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `editable_field_types`, `checkout_options_id`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,11,7,2,3', 15.00, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,2,3', NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,2,3', NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,2,3', NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,2,3', NULL, '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(8, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,2,3', NULL, '6', 0, 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(9, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '1,2,3', NULL, '5', 0, 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(11, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '3', 0, 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(12, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '7', 0, 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(13, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '2', 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(14, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '4', 0, 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(15, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '4', 0, 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(16, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '2', 0, 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Variant Pricing, Images, Location', '1,1,1,1,1,1', NULL, '1,2,3', NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1,2,3', NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:23:29'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,16,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Variant Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', '1,2,3', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-03 06:23:29');
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-04 01:05:51'),
+(2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(8, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '6', 0, 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(9, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,16', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, NULL, '5', 0, 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(11, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '3', 0, 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(12, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '7', 0, 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(13, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '2', 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(14, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '4', 0, 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(15, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '4', 0, 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(16, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '2', 0, 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Variant Pricing, Images, Location', '1,1,1,1,1', NULL, NULL, NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,16,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Variant Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-03 06:27:25');
 
 -- --------------------------------------------------------
 
@@ -1116,7 +1109,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2944;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3126;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
