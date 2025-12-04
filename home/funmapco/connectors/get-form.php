@@ -1,11 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Disable output buffering to prevent delays
-if (ob_get_level()) {
-    ob_end_clean();
-}
-
 header('Content-Type: application/json');
 
 try {

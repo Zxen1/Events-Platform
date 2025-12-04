@@ -12,38 +12,8 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <!-- Mapbox CSS - load asynchronously after page renders to prevent blocking -->
-  <script>
-    (function(){
-      function loadMapboxCSS(){
-        var link1 = document.createElement('link');
-        link1.id = 'mapbox-gl-css';
-        link1.rel = 'stylesheet';
-        link1.href = 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css';
-        link1.media = 'print';
-        link1.onload = function(){ this.media = 'all'; };
-        link1.onerror = function(){ this.media = 'all'; };
-        document.head.appendChild(link1);
-        
-        var link2 = document.createElement('link');
-        link2.rel = 'stylesheet';
-        link2.href = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css';
-        link2.media = 'print';
-        link2.onload = function(){ this.media = 'all'; };
-        link2.onerror = function(){ 
-          this.href = 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css';
-          this.media = 'all';
-        };
-        document.head.appendChild(link2);
-      }
-      if(document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', loadMapboxCSS);
-      } else {
-        setTimeout(loadMapboxCSS, 0);
-      }
-    })();
-  </script>
-  
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" />
   <link rel="stylesheet" href="style.css?v=20251201l" />
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
