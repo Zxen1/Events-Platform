@@ -783,9 +783,17 @@
   };
   
   // Load admin settings and inject styles when DOM is ready
-  async function initMapCards() {
-    await loadAdminSettings();
+  // PERFORMANCE FIX: Don't block - load settings in background, use defaults immediately
+  function initMapCards() {
+    // Inject styles immediately with defaults (non-blocking)
     injectMapCardStyles();
+    
+    // Load admin settings in background and update styles when ready
+    loadAdminSettings().then(() => {
+      refreshMapCardStyles();
+    }).catch(err => {
+      console.warn('[MapCards] Settings load failed, using defaults:', err);
+    });
   }
   
   if (document.readyState === 'loading') {

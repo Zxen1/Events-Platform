@@ -1,4 +1,62 @@
-﻿// === Shared login verifier ===
+﻿// === Centralized API Request Manager (Deduplication) ===
+const apiRequestInFlight = new Map();
+
+/**
+ * Make a deduplicated API request - prevents multiple simultaneous calls to the same endpoint
+ * Each caller gets a fresh clone of the response so the body can be read independently
+ * @param {string} url - The API endpoint URL
+ * @param {Object} options - Fetch options (method, body, headers, etc.)
+ * @param {number} cacheTime - Unused (kept for compatibility, caching removed to prevent body consumption issues)
+ * @returns {Promise} The fetch response (cloned for each caller)
+ */
+async function apiRequest(url, options = {}, cacheTime = 0) {
+  const cacheKey = `${options.method || 'GET'}:${url}:${options.body ? JSON.stringify(options.body) : ''}`;
+  
+  // Check if request is already in flight - return a cloned response
+  if (apiRequestInFlight.has(cacheKey)) {
+    const inFlightPromise = apiRequestInFlight.get(cacheKey);
+    // Clone the response so each caller can read the body independently
+    return inFlightPromise.then(response => response.clone());
+  }
+  
+  // Create the request promise
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
+  const requestPromise = fetch(url, {
+    ...options,
+    signal: controller.signal
+  })
+    .then(response => {
+      clearTimeout(timeoutId);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Return original response (will be cloned for each caller)
+      return response;
+    })
+    .catch(error => {
+      clearTimeout(timeoutId);
+      throw error;
+    })
+    .finally(() => {
+      // Remove from in-flight after a delay to allow clones
+      setTimeout(() => {
+        apiRequestInFlight.delete(cacheKey);
+      }, 1000);
+    });
+  
+  // Store in-flight request
+  apiRequestInFlight.set(cacheKey, requestPromise);
+  
+  // Return a clone so the original can be cloned again for other callers
+  return requestPromise.then(response => response.clone());
+}
+
+// Expose globally for other scripts
+window.apiRequest = apiRequest;
+
+// === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
@@ -176,6 +234,16 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
           <label>Discount Day Rate</label>
           <input type="number" class="checkout-option-discount-day-rate" value="${discountDayRate}" step="0.01" min="0" placeholder="N/A" />
         </div>
+        <div class="checkout-option-calculator">
+          <div class="checkout-option-field">
+            <label>Price Calculator (Sandbox)</label>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <input type="number" class="checkout-option-calc-days" value="" placeholder="Days" min="1" step="1" style="width: 100px;" />
+              <span style="font-weight: 600;">=</span>
+              <span class="checkout-option-calc-total" style="min-width: 120px;">${siteCurrency} 0.00</span>
+            </div>
+          </div>
+        </div>
         <button type="button" class="checkout-option-delete">Delete</button>
       </div>
     `;
@@ -200,6 +268,64 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       tierBadge.textContent = isFeatured ? 'featured' : 'standard';
       // No need to manually mark dirty - form's event delegation handles it
     });
+    
+    // Price calculator logic
+    const calcDaysInput = tierCard.querySelector('.checkout-option-calc-days');
+    const calcTotalSpan = tierCard.querySelector('.checkout-option-calc-total');
+    const priceInput = tierCard.querySelector('.checkout-option-price');
+    const basicDayRateInput = tierCard.querySelector('.checkout-option-basic-day-rate');
+    const discountDayRateInput = tierCard.querySelector('.checkout-option-discount-day-rate');
+    
+    function updateCalculator(){
+      if(!calcDaysInput || !calcTotalSpan) return;
+      
+      const days = parseFloat(calcDaysInput.value) || 0;
+      if(days <= 0){
+        calcTotalSpan.textContent = siteCurrency + ' 0.00';
+        return;
+      }
+      
+      const flagfall = parseFloat(priceInput.value) || 0;
+      let dayRate = null;
+      
+      if(days >= 365){
+        // Use discount day rate for 365+ days
+        const discountRateValue = discountDayRateInput.value.trim();
+        dayRate = discountRateValue !== '' ? parseFloat(discountRateValue) : null;
+      } else {
+        // Use basic day rate for less than 365 days
+        const basicRateValue = basicDayRateInput.value.trim();
+        dayRate = basicRateValue !== '' ? parseFloat(basicRateValue) : null;
+      }
+      
+      if(dayRate === null || isNaN(dayRate)){
+        calcTotalSpan.textContent = siteCurrency + ' ' + flagfall.toFixed(2);
+        return;
+      }
+      
+      const total = flagfall + (dayRate * days);
+      calcTotalSpan.textContent = siteCurrency + ' ' + total.toFixed(2);
+    }
+    
+    // Update calculator when days input changes
+    if(calcDaysInput){
+      calcDaysInput.addEventListener('input', updateCalculator);
+      calcDaysInput.addEventListener('change', updateCalculator);
+    }
+    
+    // Update calculator when pricing fields change
+    if(priceInput){
+      priceInput.addEventListener('input', updateCalculator);
+      priceInput.addEventListener('change', updateCalculator);
+    }
+    if(basicDayRateInput){
+      basicDayRateInput.addEventListener('input', updateCalculator);
+      basicDayRateInput.addEventListener('change', updateCalculator);
+    }
+    if(discountDayRateInput){
+      discountDayRateInput.addEventListener('input', updateCalculator);
+      discountDayRateInput.addEventListener('change', updateCalculator);
+    }
     
     // No manual event listeners needed - form's event delegation handles all inputs automatically
     // Checkout option inputs are inside the form, so they're caught by form's 'input' and 'change' listeners
@@ -237,7 +363,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       checkout_flagfall_price: 0,
       checkout_basic_day_rate: null,
       checkout_discount_day_rate: null,
-      checkout_currency: siteCurrency,
+        checkout_currency: siteCurrency,
       checkout_featured: 0,
         checkout_sidebar_ad: false,
         is_active: true
@@ -306,15 +432,8 @@ function escapeHtml(str){
  */
 async function loadMessagesFromDatabase(includeAdmin = false){
   try {
-    // Add timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
-    const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true', {
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
+    // Use deduplicated API request (5 second cache to prevent rapid duplicate calls)
+    const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {}, 5000);
     
     if(!response.ok){
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -905,28 +1024,31 @@ function handlePromptKeydown(event, context){
     hideGeocoderIconFromAT();
     setupGeocoderObserver();
     
-    // Load user-visible messages on page load (excludes admin and email messages)
-    loadMessagesFromDatabase(false).then(() => {
-      // Update all message elements after loading
-      updateAllMessageElements(false).catch(err => {
-        console.warn('Failed to update message elements:', err);
-      });
-    }).catch(err => {
-      console.warn('Failed to preload messages:', err);
-    });
-    
-    // Set up observer for dynamically created elements
+    // Set up observer for dynamically created elements (do this immediately)
     setupMessageObserver();
     
-    // Load admin messages and update all elements (including dynamically created ones)
-    (async () => {
-      try {
-        await loadMessagesFromDatabase(true);
-        await updateAllMessageElements(true);
-      } catch(err){
-        console.warn('Failed to load admin messages:', err);
-      }
-    })();
+    // Load messages in background - don't block page rendering
+    setTimeout(() => {
+      // Load user-visible messages on page load (excludes admin and email messages)
+      loadMessagesFromDatabase(false).then(() => {
+        // Update all message elements after loading
+        updateAllMessageElements(false).catch(err => {
+          console.warn('Failed to update message elements:', err);
+        });
+      }).catch(err => {
+        console.warn('Failed to preload messages:', err);
+      });
+      
+      // Load admin messages and update all elements (including dynamically created ones)
+      (async () => {
+        try {
+          await loadMessagesFromDatabase(true);
+          await updateAllMessageElements(true);
+        } catch(err){
+          console.warn('Failed to load admin messages:', err);
+        }
+      })();
+    }, 100); // Small delay to let page render first
   });
 })();
 
@@ -1686,10 +1808,10 @@ let __notifyMapOnInteraction = null;
       // Load admin settings from database
       (async function loadAdminSettings(){
         try {
-          const response = await fetch('/gateway.php?action=get-admin-settings', {
+          const response = await apiRequest('/gateway.php?action=get-admin-settings', {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
-          });
+          }, 5000); // 5 second cache
           if(response.ok){
             const data = await response.json();
             if(data.success && data.settings){
@@ -2102,7 +2224,7 @@ let __notifyMapOnInteraction = null;
         async function ensureClusterIconImage(mapInstance){
           // Load cluster icon URL from admin_settings - no fallbacks
             try {
-              const response = await fetch('/gateway.php?action=get-admin-settings');
+              const response = await apiRequest('/gateway.php?action=get-admin-settings', {}, 5000);
               if(response.ok){
                 const data = await response.json();
               if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
@@ -2135,6 +2257,12 @@ let __notifyMapOnInteraction = null;
               }catch(err){ console.error(err); }
               resolve();
             };
+            // Only load if URL is valid
+            if(!CLUSTER_ICON_URL || typeof CLUSTER_ICON_URL !== 'string' || !CLUSTER_ICON_URL.trim()){
+              resolve();
+              return;
+            }
+            
             try{
               if(typeof mapInstance.loadImage === 'function'){
                 mapInstance.loadImage(CLUSTER_ICON_URL, (err, image)=>{
@@ -3084,18 +3212,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     async function fetchSavedFormbuilderSnapshot(){
-      // NO CACHING - Always fetch fresh snapshot
-      const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeoutId = controller ? window.setTimeout(() => {
-        try{ controller.abort(); }catch(err){}
-      }, 15000) : 0;
-
+      // Use deduplicated request with cache
       try{
-        const response = await fetch('/gateway.php?action=get-form', {
+        const response = await apiRequest('/gateway.php?action=get-form', {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
-          signal: controller ? controller.signal : undefined
-        });
+        }, 10000); // 10 second cache for form data
+        
         const text = await response.text();
         let data;
         try{
@@ -3110,10 +3233,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           throw new Error(message);
         }
         return data.snapshot;
-      } finally {
-        if(timeoutId){
-          clearTimeout(timeoutId);
-        }
+      } catch(error) {
+        throw error;
       }
     }
 
@@ -14487,6 +14608,115 @@ function makePosts(){
             c.subCheckoutOptions[sub] = checkoutOptionIds.length > 0 ? checkoutOptionIds : [];
           }
           
+          // Checkout Options Editor - List of all enabled checkout options with prices and calculators
+          const checkoutOptionsEditor = document.createElement('div');
+          checkoutOptionsEditor.className = 'subcategory-checkout-options-editor';
+          const checkoutOptionsLabel = document.createElement('div');
+          checkoutOptionsLabel.className = 'subcategory-checkout-options-label';
+          checkoutOptionsLabel.textContent = 'Checkout Options';
+          const checkoutOptionsList = document.createElement('div');
+          checkoutOptionsList.className = 'subcategory-checkout-options-list';
+          checkoutOptionsEditor.append(checkoutOptionsLabel, checkoutOptionsList);
+          
+          // Define renderCheckoutOptionsEditor function first so it can be referenced by surcharge input
+          const renderCheckoutOptionsEditor = ()=>{
+            checkoutOptionsList.innerHTML = '';
+            const allCheckoutOptions = (window.CHECKOUT_OPTIONS || []).filter(opt => opt.is_active !== false && opt.is_active !== 0);
+            const surcharge = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
+              ? parseFloat(c.subFees[sub].checkout_surcharge) : 0;
+            
+            if(allCheckoutOptions.length === 0){
+              checkoutOptionsList.innerHTML = '<div style="color:#888;padding:12px;text-align:center;">No enabled checkout options available.</div>';
+              return;
+            }
+            
+            allCheckoutOptions.forEach(opt => {
+              const optionCard = document.createElement('div');
+              optionCard.className = 'subcategory-checkout-option-card';
+              const flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
+              const basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
+                ? parseFloat(opt.checkout_basic_day_rate) : null;
+              const discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
+                ? parseFloat(opt.checkout_discount_day_rate) : null;
+              
+              // Calculate prices for 30 and 365 days with surcharge
+              function calculatePrice(days){
+                let basePrice = flagfall;
+                if(days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)){
+                  basePrice += discountDayRate * days;
+                } else if(basicDayRate !== null && !isNaN(basicDayRate)){
+                  basePrice += basicDayRate * days;
+                }
+                // Apply surcharge (can be negative)
+                if(surcharge !== 0 && !isNaN(surcharge)){
+                  basePrice = basePrice * (1 + surcharge / 100);
+                }
+                return basePrice;
+              }
+              
+              const price30 = calculatePrice(30);
+              const price365 = calculatePrice(365);
+              
+              const content = document.createElement('div');
+              content.className = 'subcategory-checkout-option-content';
+              
+              const title = document.createElement('div');
+              title.className = 'subcategory-checkout-option-title';
+              title.textContent = opt.checkout_title || 'Untitled';
+              
+              const prices = document.createElement('div');
+              prices.className = 'subcategory-checkout-option-prices';
+              prices.innerHTML = `
+                <div class="subcategory-checkout-price-item">
+                  <span class="price-label">30 days:</span>
+                  <span class="price-value">${siteCurrency} ${price30.toFixed(2)}</span>
+                </div>
+                <div class="subcategory-checkout-price-item">
+                  <span class="price-label">365 days:</span>
+                  <span class="price-value">${siteCurrency} ${price365.toFixed(2)}</span>
+                </div>
+              `;
+              
+              // Calculator for this checkout option
+              const calculator = document.createElement('div');
+              calculator.className = 'subcategory-checkout-option-calculator';
+              const calcLabel = document.createElement('label');
+              calcLabel.className = 'subcategory-checkout-calc-label';
+              calcLabel.textContent = 'Calculator:';
+              const calcInput = document.createElement('input');
+              calcInput.type = 'number';
+              calcInput.className = 'subcategory-checkout-calc-days';
+              calcInput.placeholder = 'Days';
+              calcInput.min = '1';
+              calcInput.step = '1';
+              calcInput.style.width = '80px';
+              calcInput.style.marginLeft = '8px';
+              calcInput.style.marginRight = '8px';
+              const calcTotal = document.createElement('span');
+              calcTotal.className = 'subcategory-checkout-calc-total';
+              calcTotal.textContent = `${siteCurrency} 0.00`;
+              
+              function updateCalculator(){
+                const days = parseFloat(calcInput.value) || 0;
+                if(days <= 0){
+                  calcTotal.textContent = `${siteCurrency} 0.00`;
+                  return;
+                }
+                const total = calculatePrice(days);
+                calcTotal.textContent = `${siteCurrency} ${total.toFixed(2)}`;
+              }
+              
+              calcInput.addEventListener('input', updateCalculator);
+              calcInput.addEventListener('change', updateCalculator);
+              
+              calculator.append(calcLabel, calcInput, calcTotal);
+              
+              content.append(title, prices, calculator);
+              optionCard.append(content);
+              checkoutOptionsList.appendChild(optionCard);
+            });
+          };
+          
           // Checkout Surcharge Row
           const surchargeRow = document.createElement('div');
           surchargeRow.className = 'subcategory-fee-row';
@@ -14498,21 +14728,36 @@ function makePosts(){
           const surchargeInput = document.createElement('input');
           surchargeInput.type = 'number';
           surchargeInput.step = '0.01';
-          surchargeInput.min = '0';
+          surchargeInput.min = '-100';
           surchargeInput.className = 'fee-input';
           surchargeInput.placeholder = 'N/A';
           surchargeInput.value = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
             ? c.subFees[sub].checkout_surcharge.toFixed(2) 
             : '';
           surchargeInput.addEventListener('input', ()=>{
-            c.subFees[sub].checkout_surcharge = surchargeInput.value ? Math.round(parseFloat(surchargeInput.value) * 100) / 100 : null;
+            let value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+            // Enforce minimum of -100%
+            if(value !== null && value < -100){
+              value = -100;
+              surchargeInput.value = value.toFixed(2);
+            }
+            c.subFees[sub].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
             notifyFormbuilderChange();
+            // Re-render checkout options to update prices with new surcharge
+            renderCheckoutOptionsEditor();
           });
           surchargeInput.addEventListener('blur', ()=>{
-            if(surchargeInput.value && !surchargeInput.value.includes('.')){
-              surchargeInput.value = parseFloat(surchargeInput.value).toFixed(2);
-              c.subFees[sub].checkout_surcharge = Math.round(parseFloat(surchargeInput.value) * 100) / 100;
+            let value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+            // Enforce minimum of -100%
+            if(value !== null && value < -100){
+              value = -100;
             }
+            if(value !== null){
+              surchargeInput.value = value.toFixed(2);
+              c.subFees[sub].checkout_surcharge = Math.round(value * 100) / 100;
+            }
+            // Re-render checkout options to update prices with new surcharge
+            renderCheckoutOptionsEditor();
           });
           surchargeRow.append(surchargeLabel, surchargePercent, surchargeInput);
           
@@ -14556,124 +14801,6 @@ function makePosts(){
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
           
           subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);
-          
-          // Checkout Options Editor - laid out like radio options list with dropdowns
-          const checkoutOptionsEditor = document.createElement('div');
-          checkoutOptionsEditor.className = 'subcategory-checkout-options-editor';
-          const checkoutOptionsLabel = document.createElement('div');
-          checkoutOptionsLabel.className = 'subcategory-checkout-options-label';
-          checkoutOptionsLabel.textContent = 'Checkout Options';
-          const checkoutOptionsList = document.createElement('div');
-          checkoutOptionsList.className = 'subcategory-checkout-options-list';
-          checkoutOptionsEditor.append(checkoutOptionsLabel, checkoutOptionsList);
-          
-          const renderCheckoutOptionsEditor = (focusIndex = null)=>{
-            checkoutOptionsList.innerHTML = '';
-            const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
-            const currentOptions = Array.isArray(c.subCheckoutOptions[sub]) ? c.subCheckoutOptions[sub].slice() : [];
-            
-            // Ensure we have at least one empty slot
-            if(currentOptions.length === 0){
-              currentOptions.push(0);
-            }
-            
-            currentOptions.forEach((optionId, index)=>{
-              const optionRow = document.createElement('div');
-              optionRow.className = 'subcategory-checkout-option-row';
-              
-              const select = document.createElement('select');
-              select.className = 'subcategory-checkout-option-select';
-              select.addEventListener('click', (e) => e.stopPropagation());
-              select.addEventListener('mousedown', (e) => e.stopPropagation());
-              
-              // Add empty option
-              const emptyOption = document.createElement('option');
-              emptyOption.value = '0';
-              emptyOption.textContent = '-- Select --';
-              select.appendChild(emptyOption);
-              
-              // Add all checkout options
-              allCheckoutOptions.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = String(opt.id || 0);
-                const priceDisplay = parseFloat(opt.checkout_flagfall_price) > 0 
-                  ? ` — $${parseFloat(opt.checkout_flagfall_price).toFixed(2)}` 
-                  : ' — Free';
-                option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
-                select.appendChild(option);
-              });
-              
-              // Set current value
-              select.value = String(optionId || 0);
-              
-              select.addEventListener('change', ()=>{
-                const newValue = parseInt(select.value, 10) || 0;
-                c.subCheckoutOptions[sub][index] = newValue;
-                // Remove zeros and empty values
-                c.subCheckoutOptions[sub] = c.subCheckoutOptions[sub].filter(id => id > 0);
-                // If all removed, add one empty slot
-                if(c.subCheckoutOptions[sub].length === 0){
-                  c.subCheckoutOptions[sub] = [0];
-                }
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
-                }
-                notifyFormbuilderChange();
-                renderCheckoutOptionsEditor();
-              });
-              
-              const actions = document.createElement('div');
-              actions.className = 'subcategory-checkout-option-actions';
-              
-              const addBtn = document.createElement('button');
-              addBtn.type = 'button';
-              addBtn.className = 'subcategory-checkout-option-add';
-              addBtn.textContent = '+';
-              addBtn.setAttribute('aria-label', 'Add checkout option after this one');
-              addBtn.addEventListener('click', (e)=>{
-                e.stopPropagation();
-                c.subCheckoutOptions[sub].splice(index + 1, 0, 0);
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
-                }
-                notifyFormbuilderChange();
-                renderCheckoutOptionsEditor(index + 1);
-              });
-              
-              const removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'subcategory-checkout-option-remove';
-              removeBtn.textContent = '-';
-              removeBtn.setAttribute('aria-label', `Remove checkout option ${index + 1}`);
-              removeBtn.addEventListener('click', (e)=>{
-                e.stopPropagation();
-                if(c.subCheckoutOptions[sub].length <= 1){
-                  c.subCheckoutOptions[sub][0] = 0;
-                } else {
-                  c.subCheckoutOptions[sub].splice(index, 1);
-                }
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
-                }
-                notifyFormbuilderChange();
-                const nextFocus = Math.min(index, Math.max(c.subCheckoutOptions[sub].length - 1, 0));
-                renderCheckoutOptionsEditor(nextFocus);
-              });
-              
-              actions.append(addBtn, removeBtn);
-              optionRow.append(select, actions);
-              checkoutOptionsList.appendChild(optionRow);
-            });
-          };
           
           renderCheckoutOptionsEditor();
           
@@ -15203,7 +15330,7 @@ function makePosts(){
     // Load message category icons from admin_settings
     async function loadMessageCategoryIcons(){
       try {
-        const response = await fetch('/gateway.php?action=get-admin-settings');
+        const response = await apiRequest('/gateway.php?action=get-admin-settings', {}, 5000);
         if(response.ok){
           const data = await response.json();
           if(data.success && data.settings){
@@ -15473,7 +15600,7 @@ function makePosts(){
       try {
         // Fetch messages directly for messages tab to get full container structure
         // This preserves the original container format needed by populateMessagesIntoContainers
-        const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+        const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {}, 5000);
         if(!response.ok){
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -18448,7 +18575,6 @@ function makePosts(){
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
           }
-          const overlay = document.getElementById('headerLoadingOverlay');
           const motionTokens = new Set();
           let tilesPending = false;
           let active = false;
@@ -18467,19 +18593,11 @@ function makePosts(){
           const apply = (forceStop = false) => {
             const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
             if(busy){
-              if(overlay){
-                overlay.classList.remove('is-hidden');
-                overlay.setAttribute('aria-hidden', 'false');
-              }
               if(!active){
                 active = true;
                 try{ loader.begin('map'); }catch(err){}
               }
             } else {
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
               if(active){
                 active = false;
                 try{ loader.end('map'); }catch(err){}
@@ -18507,10 +18625,6 @@ function makePosts(){
             clearAll(){
               motionTokens.clear();
               tilesPending = false;
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
               if(active){
                 active = false;
                 try{ loader.end('map'); }catch(err){}
@@ -26491,7 +26605,96 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 })();
 
-// LocalStorage Clear Button Handler - now inline in index.html for immediate availability
+// LocalStorage Clear Button Handler
+(function(){
+  async function initClearLocalStorageBtn(){
+    const btn = document.getElementById('clearLocalStorageBtn');
+    if(!btn) {
+      // Retry if button not ready yet
+      setTimeout(initClearLocalStorageBtn, 100);
+      return;
+    }
+    
+    btn.addEventListener('click', async function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      
+      try {
+        // Clear localStorage
+        const keys = Object.keys(localStorage);
+        const keyCount = keys.length;
+        localStorage.clear();
+        console.log(`[Clear] Cleared ${keyCount} localStorage items`);
+        
+        // Clear sessionStorage
+        if(typeof sessionStorage !== 'undefined'){
+          try {
+            const sessionKeys = Object.keys(sessionStorage);
+            const sessionCount = sessionKeys.length;
+            sessionStorage.clear();
+            console.log(`[Clear] Cleared ${sessionCount} sessionStorage items`);
+          } catch(err){
+            console.warn('[Clear] sessionStorage error:', err);
+          }
+        }
+        
+        // Clear service workers
+        if('serviceWorker' in navigator){
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for(let registration of registrations){
+              await registration.unregister();
+            }
+            console.log(`[Clear] Unregistered ${registrations.length} service worker(s)`);
+          } catch(err){
+            console.warn('[Clear] Service worker error:', err);
+          }
+        }
+        
+        // Clear browser caches (Cache API)
+        if('caches' in window){
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            console.log(`[Clear] Cleared ${cacheNames.length} cache(s)`);
+          } catch(err){
+            console.warn('[Clear] Cache error:', err);
+          }
+        }
+        
+        // Clear application cache (deprecated but may still exist)
+        if(typeof applicationCache !== 'undefined' && applicationCache.status !== applicationCache.UNCACHED){
+          try {
+            applicationCache.update();
+            console.log('[Clear] Application cache update triggered');
+          } catch(err){
+            console.warn('[Clear] Application cache error:', err);
+          }
+        }
+        
+        console.log('[Clear] All storage cleared! Reloading...');
+        
+        // Reload with cache bypass (force reload from server)
+        setTimeout(() => {
+          location.reload(true);
+        }, 100);
+      } catch(err){
+        console.error('[Clear] Error:', err);
+        // Still reload even if there's an error
+        location.reload(true);
+      }
+    });
+    
+    console.log('[Clear] Clear button initialized');
+  }
+  
+  // Initialize when DOM is ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initClearLocalStorageBtn);
+  } else {
+    initClearLocalStorageBtn();
+  }
+})();
 
  
 
