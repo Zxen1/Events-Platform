@@ -1933,9 +1933,8 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(47,59,115,0.2);
   border-radius:4px;
   font-size:14px;
-  color:#fff;
+  color:#777777;
   font-weight:700;
-  text-shadow:0 1px 2px rgba(0,0,0,0.3);
 }
 
 .checkout-option-empty{
@@ -7826,27 +7825,85 @@ html, body { cursor: auto !important; }
             #tab-forms .subcategory-checkout-options-list{
               display:flex;
               flex-direction:column;
-              gap:10px;
+              gap:12px;
             }
-            #tab-forms .subcategory-checkout-option-row{
+            #tab-forms .subcategory-checkout-option-card{
               display:flex;
-              align-items:center;
-              gap:8px;
-              padding:0;
-              border:none;
+              align-items:flex-start;
+              gap:12px;
+              padding:12px;
+              border:1px solid rgba(255,255,255,0.1);
               border-radius:8px;
               background:rgba(0,0,0,0.2);
             }
-            #tab-forms .subcategory-checkout-option-select{
+            #tab-forms .subcategory-checkout-option-card:hover{
+              border-color:rgba(255,255,255,0.2);
+              background:rgba(0,0,0,0.3);
+            }
+            #tab-forms .subcategory-checkout-option-checkbox{
+              margin-top:4px;
+              width:18px;
+              height:18px;
+              cursor:pointer;
+              accent-color:var(--btn);
+            }
+            #tab-forms .subcategory-checkout-option-content{
               flex:1;
-              height:36px;
-              border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              padding:0 12px;
-              box-sizing:border-box;
-              appearance:none;
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .subcategory-checkout-option-title{
+              font-size:14px;
+              font-weight:600;
+              color:#fff;
+            }
+            #tab-forms .subcategory-checkout-option-prices{
+              display:flex;
+              gap:16px;
+              flex-wrap:wrap;
+            }
+            #tab-forms .subcategory-checkout-price-item{
+              display:flex;
+              gap:6px;
+              font-size:13px;
+            }
+            #tab-forms .subcategory-checkout-price-item .price-label{
+              color:#888;
+            }
+            #tab-forms .subcategory-checkout-price-item .price-value{
+              color:#fff;
+              font-weight:600;
+            }
+            #tab-forms .subcategory-checkout-option-calculator{
+              display:flex;
+              align-items:center;
+              gap:4px;
+              font-size:13px;
+            }
+            #tab-forms .subcategory-checkout-calc-label{
+              color:#888;
+            }
+            #tab-forms .subcategory-checkout-calc-days{
+              background:rgba(0,0,0,0.2);
+              border:1px solid rgba(255,255,255,0.15);
+              border-radius:6px;
+              padding:6px 8px;
+              color:#fff;
+              font-size:13px;
+              -moz-appearance:textfield;
+            }
+            #tab-forms .subcategory-checkout-calc-days::-webkit-outer-spin-button,
+            #tab-forms .subcategory-checkout-calc-days::-webkit-inner-spin-button{
+              -webkit-appearance:none;
+              margin:0;
+            }
+            #tab-forms .subcategory-checkout-calc-total{
+              color:#777777;
+              font-weight:700;
+              padding:4px 8px;
+              background:rgba(47,59,115,0.2);
+              border-radius:4px;
             }
             #tab-forms .subcategory-checkout-option-actions{
               display:flex;

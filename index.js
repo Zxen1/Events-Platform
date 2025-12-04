@@ -14555,6 +14555,143 @@ function makePosts(){
             c.subCheckoutOptions[sub] = checkoutOptionIds.length > 0 ? checkoutOptionIds : [];
           }
           
+          // Checkout Options Editor - List of all enabled checkout options with prices and calculators
+          const checkoutOptionsEditor = document.createElement('div');
+          checkoutOptionsEditor.className = 'subcategory-checkout-options-editor';
+          const checkoutOptionsLabel = document.createElement('div');
+          checkoutOptionsLabel.className = 'subcategory-checkout-options-label';
+          checkoutOptionsLabel.textContent = 'Checkout Options';
+          const checkoutOptionsList = document.createElement('div');
+          checkoutOptionsList.className = 'subcategory-checkout-options-list';
+          checkoutOptionsEditor.append(checkoutOptionsLabel, checkoutOptionsList);
+          
+          // Define renderCheckoutOptionsEditor function first so it can be referenced by surcharge input
+          const renderCheckoutOptionsEditor = ()=>{
+            checkoutOptionsList.innerHTML = '';
+            const allCheckoutOptions = (window.CHECKOUT_OPTIONS || []).filter(opt => opt.is_active !== false && opt.is_active !== 0);
+            const currentOptions = Array.isArray(c.subCheckoutOptions[sub]) ? c.subCheckoutOptions[sub].filter(id => id > 0) : [];
+            const surcharge = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
+              ? parseFloat(c.subFees[sub].checkout_surcharge) : 0;
+            
+            if(allCheckoutOptions.length === 0){
+              checkoutOptionsList.innerHTML = '<div style="color:#888;padding:12px;text-align:center;">No enabled checkout options available.</div>';
+              return;
+            }
+            
+            allCheckoutOptions.forEach(opt => {
+              const optionCard = document.createElement('div');
+              optionCard.className = 'subcategory-checkout-option-card';
+              
+              const isSelected = currentOptions.includes(opt.id);
+              const flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
+              const basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
+                ? parseFloat(opt.checkout_basic_day_rate) : null;
+              const discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
+                ? parseFloat(opt.checkout_discount_day_rate) : null;
+              
+              // Calculate prices for 30 and 365 days with surcharge
+              function calculatePrice(days){
+                let basePrice = flagfall;
+                if(days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)){
+                  basePrice += discountDayRate * days;
+                } else if(basicDayRate !== null && !isNaN(basicDayRate)){
+                  basePrice += basicDayRate * days;
+                }
+                // Apply surcharge (can be negative)
+                if(surcharge !== 0 && !isNaN(surcharge)){
+                  basePrice = basePrice * (1 + surcharge / 100);
+                }
+                return basePrice;
+              }
+              
+              const price30 = calculatePrice(30);
+              const price365 = calculatePrice(365);
+              
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.checked = isSelected;
+              checkbox.className = 'subcategory-checkout-option-checkbox';
+              checkbox.addEventListener('change', ()=>{
+                if(checkbox.checked){
+                  if(!currentOptions.includes(opt.id)){
+                    currentOptions.push(opt.id);
+                  }
+                } else {
+                  const idx = currentOptions.indexOf(opt.id);
+                  if(idx >= 0){
+                    currentOptions.splice(idx, 1);
+                  }
+                }
+                c.subCheckoutOptions[sub] = currentOptions.slice();
+                // Sync to checkout field in subFieldsMap
+                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
+                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
+                if(checkoutField){
+                  checkoutField.checkoutOptions = currentOptions.slice();
+                }
+                notifyFormbuilderChange();
+              });
+              
+              const content = document.createElement('div');
+              content.className = 'subcategory-checkout-option-content';
+              
+              const title = document.createElement('div');
+              title.className = 'subcategory-checkout-option-title';
+              title.textContent = opt.checkout_title || 'Untitled';
+              
+              const prices = document.createElement('div');
+              prices.className = 'subcategory-checkout-option-prices';
+              prices.innerHTML = `
+                <div class="subcategory-checkout-price-item">
+                  <span class="price-label">30 days:</span>
+                  <span class="price-value">${siteCurrency} ${price30.toFixed(2)}</span>
+                </div>
+                <div class="subcategory-checkout-price-item">
+                  <span class="price-label">365 days:</span>
+                  <span class="price-value">${siteCurrency} ${price365.toFixed(2)}</span>
+                </div>
+              `;
+              
+              // Calculator for this checkout option
+              const calculator = document.createElement('div');
+              calculator.className = 'subcategory-checkout-option-calculator';
+              const calcLabel = document.createElement('label');
+              calcLabel.className = 'subcategory-checkout-calc-label';
+              calcLabel.textContent = 'Calculator:';
+              const calcInput = document.createElement('input');
+              calcInput.type = 'number';
+              calcInput.className = 'subcategory-checkout-calc-days';
+              calcInput.placeholder = 'Days';
+              calcInput.min = '1';
+              calcInput.step = '1';
+              calcInput.style.width = '80px';
+              calcInput.style.marginLeft = '8px';
+              calcInput.style.marginRight = '8px';
+              const calcTotal = document.createElement('span');
+              calcTotal.className = 'subcategory-checkout-calc-total';
+              calcTotal.textContent = `${siteCurrency} 0.00`;
+              
+              function updateCalculator(){
+                const days = parseFloat(calcInput.value) || 0;
+                if(days <= 0){
+                  calcTotal.textContent = `${siteCurrency} 0.00`;
+                  return;
+                }
+                const total = calculatePrice(days);
+                calcTotal.textContent = `${siteCurrency} ${total.toFixed(2)}`;
+              }
+              
+              calcInput.addEventListener('input', updateCalculator);
+              calcInput.addEventListener('change', updateCalculator);
+              
+              calculator.append(calcLabel, calcInput, calcTotal);
+              
+              content.append(title, prices, calculator);
+              optionCard.append(checkbox, content);
+              checkoutOptionsList.appendChild(optionCard);
+            });
+          };
+          
           // Checkout Surcharge Row
           const surchargeRow = document.createElement('div');
           surchargeRow.className = 'subcategory-fee-row';
@@ -14566,7 +14703,6 @@ function makePosts(){
           const surchargeInput = document.createElement('input');
           surchargeInput.type = 'number';
           surchargeInput.step = '0.01';
-          surchargeInput.min = '0';
           surchargeInput.className = 'fee-input';
           surchargeInput.placeholder = 'N/A';
           surchargeInput.value = c.subFees[sub].checkout_surcharge !== null && c.subFees[sub].checkout_surcharge !== undefined 
@@ -14575,12 +14711,16 @@ function makePosts(){
           surchargeInput.addEventListener('input', ()=>{
             c.subFees[sub].checkout_surcharge = surchargeInput.value ? Math.round(parseFloat(surchargeInput.value) * 100) / 100 : null;
             notifyFormbuilderChange();
+            // Re-render checkout options to update prices with new surcharge
+            renderCheckoutOptionsEditor();
           });
           surchargeInput.addEventListener('blur', ()=>{
             if(surchargeInput.value && !surchargeInput.value.includes('.')){
               surchargeInput.value = parseFloat(surchargeInput.value).toFixed(2);
               c.subFees[sub].checkout_surcharge = Math.round(parseFloat(surchargeInput.value) * 100) / 100;
             }
+            // Re-render checkout options to update prices with new surcharge
+            renderCheckoutOptionsEditor();
           });
           surchargeRow.append(surchargeLabel, surchargePercent, surchargeInput);
           
@@ -14624,124 +14764,6 @@ function makePosts(){
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
           
           subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);
-          
-          // Checkout Options Editor - laid out like radio options list with dropdowns
-          const checkoutOptionsEditor = document.createElement('div');
-          checkoutOptionsEditor.className = 'subcategory-checkout-options-editor';
-          const checkoutOptionsLabel = document.createElement('div');
-          checkoutOptionsLabel.className = 'subcategory-checkout-options-label';
-          checkoutOptionsLabel.textContent = 'Checkout Options';
-          const checkoutOptionsList = document.createElement('div');
-          checkoutOptionsList.className = 'subcategory-checkout-options-list';
-          checkoutOptionsEditor.append(checkoutOptionsLabel, checkoutOptionsList);
-          
-          const renderCheckoutOptionsEditor = (focusIndex = null)=>{
-            checkoutOptionsList.innerHTML = '';
-            const allCheckoutOptions = window.CHECKOUT_OPTIONS || [];
-            const currentOptions = Array.isArray(c.subCheckoutOptions[sub]) ? c.subCheckoutOptions[sub].slice() : [];
-            
-            // Ensure we have at least one empty slot
-            if(currentOptions.length === 0){
-              currentOptions.push(0);
-            }
-            
-            currentOptions.forEach((optionId, index)=>{
-              const optionRow = document.createElement('div');
-              optionRow.className = 'subcategory-checkout-option-row';
-              
-              const select = document.createElement('select');
-              select.className = 'subcategory-checkout-option-select';
-              select.addEventListener('click', (e) => e.stopPropagation());
-              select.addEventListener('mousedown', (e) => e.stopPropagation());
-              
-              // Add empty option
-              const emptyOption = document.createElement('option');
-              emptyOption.value = '0';
-              emptyOption.textContent = '-- Select --';
-              select.appendChild(emptyOption);
-              
-              // Add all checkout options
-              allCheckoutOptions.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = String(opt.id || 0);
-                const priceDisplay = parseFloat(opt.checkout_flagfall_price) > 0 
-                  ? ` — $${parseFloat(opt.checkout_flagfall_price).toFixed(2)}` 
-                  : ' — Free';
-                option.textContent = (opt.checkout_title || 'Untitled') + priceDisplay;
-                select.appendChild(option);
-              });
-              
-              // Set current value
-              select.value = String(optionId || 0);
-              
-              select.addEventListener('change', ()=>{
-                const newValue = parseInt(select.value, 10) || 0;
-                c.subCheckoutOptions[sub][index] = newValue;
-                // Remove zeros and empty values
-                c.subCheckoutOptions[sub] = c.subCheckoutOptions[sub].filter(id => id > 0);
-                // If all removed, add one empty slot
-                if(c.subCheckoutOptions[sub].length === 0){
-                  c.subCheckoutOptions[sub] = [0];
-                }
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
-                }
-                notifyFormbuilderChange();
-                renderCheckoutOptionsEditor();
-              });
-              
-              const actions = document.createElement('div');
-              actions.className = 'subcategory-checkout-option-actions';
-              
-              const addBtn = document.createElement('button');
-              addBtn.type = 'button';
-              addBtn.className = 'subcategory-checkout-option-add';
-              addBtn.textContent = '+';
-              addBtn.setAttribute('aria-label', 'Add checkout option after this one');
-              addBtn.addEventListener('click', (e)=>{
-                e.stopPropagation();
-                c.subCheckoutOptions[sub].splice(index + 1, 0, 0);
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
-                }
-                notifyFormbuilderChange();
-                renderCheckoutOptionsEditor(index + 1);
-              });
-              
-              const removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'subcategory-checkout-option-remove';
-              removeBtn.textContent = '-';
-              removeBtn.setAttribute('aria-label', `Remove checkout option ${index + 1}`);
-              removeBtn.addEventListener('click', (e)=>{
-                e.stopPropagation();
-                if(c.subCheckoutOptions[sub].length <= 1){
-                  c.subCheckoutOptions[sub][0] = 0;
-                } else {
-                  c.subCheckoutOptions[sub].splice(index, 1);
-                }
-                // Sync to checkout field in subFieldsMap
-                const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-                const checkoutField = fields.find(f => f && (f.fieldTypeKey === 'checkout' || f.key === 'checkout'));
-                if(checkoutField){
-                  checkoutField.checkoutOptions = c.subCheckoutOptions[sub].filter(id => id > 0).slice();
-                }
-                notifyFormbuilderChange();
-                const nextFocus = Math.min(index, Math.max(c.subCheckoutOptions[sub].length - 1, 0));
-                renderCheckoutOptionsEditor(nextFocus);
-              });
-              
-              actions.append(addBtn, removeBtn);
-              optionRow.append(select, actions);
-              checkoutOptionsList.appendChild(optionRow);
-            });
-          };
           
           renderCheckoutOptionsEditor();
           
