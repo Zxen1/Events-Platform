@@ -8347,9 +8347,12 @@ function makePosts(){
             }
           };
 
-          const safeNotifyFormbuilderChange = typeof window !== 'undefined' && typeof window.notifyFormbuilderChange === 'function' 
-            ? window.notifyFormbuilderChange 
-            : (()=>{});
+          // In sandbox mode (form preview), don't trigger save state changes
+          const safeNotifyFormbuilderChange = (options.isSandbox === true)
+            ? (()=>{})
+            : (typeof window !== 'undefined' && typeof window.notifyFormbuilderChange === 'function' 
+              ? window.notifyFormbuilderChange 
+              : (()=>{}));
 
           const renderVariantEditor = (focusIndex = null, focusTarget = 'variant_name')=>{
             normalizeOptions();
@@ -13310,9 +13313,9 @@ function makePosts(){
           formPreviewBtn.type = 'button';
           formPreviewBtn.className = 'form-btn';
           formPreviewBtn.setAttribute('aria-expanded', 'false');
-          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
+          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form (sandbox)`);
           const formPreviewLabel = document.createElement('span');
-          formPreviewLabel.textContent = 'Form Preview';
+          formPreviewLabel.textContent = 'Form Preview (Sandbox)';
           const formPreviewArrow = document.createElement('span');
           formPreviewArrow.className = 'dropdown-arrow';
           formPreviewArrow.setAttribute('aria-hidden', 'true');
@@ -13346,7 +13349,8 @@ function makePosts(){
                 categoryName: c && c.name,
                 subcategoryName: sub,
                 fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
+                formLabel: 'Form Preview (Sandbox)',
+                isSandbox: true
               });
             }
           });
@@ -13501,7 +13505,8 @@ function makePosts(){
                   categoryName: c && c.name,
                   subcategoryName: sub,
                   fieldIdCounter: formPreviewFieldIdCounter,
-                  formLabel: 'Form Preview'
+                  formLabel: 'Form Preview (Sandbox)',
+                  isSandbox: true
                 });
                 runSummaryUpdater();
               });
@@ -13642,7 +13647,8 @@ function makePosts(){
                 categoryName: c && c.name,
                 subcategoryName: sub,
                 fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
+                formLabel: 'Form Preview (Sandbox)',
+                isSandbox: true
               });
               runSummaryUpdater();
             };
@@ -13766,7 +13772,8 @@ function makePosts(){
                       categoryName: c && c.name,
                       subcategoryName: sub,
                       fieldIdCounter: formPreviewFieldIdCounter,
-                      formLabel: 'Form Preview'
+                      formLabel: 'Form Preview (Sandbox)',
+                      isSandbox: true
                     });
                   }
                 });
@@ -13854,7 +13861,8 @@ function makePosts(){
                     categoryName: c && c.name,
                     subcategoryName: sub,
                     fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
+                    formLabel: 'Form Preview (Sandbox)',
+                    isSandbox: true
                   });
                 });
 
@@ -13879,7 +13887,8 @@ function makePosts(){
                     categoryName: c && c.name,
                     subcategoryName: sub,
                     fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
+                    formLabel: 'Form Preview (Sandbox)',
+                    isSandbox: true
                   });
                 });
 
@@ -13906,7 +13915,8 @@ function makePosts(){
                     categoryName: c && c.name,
                     subcategoryName: sub,
                     fieldIdCounter: formPreviewFieldIdCounter,
-                    formLabel: 'Form Preview'
+                    formLabel: 'Form Preview (Sandbox)',
+                    isSandbox: true
                   });
                 });
 
@@ -13997,7 +14007,8 @@ function makePosts(){
                 categoryName: c && c.name,
                 subcategoryName: sub,
                 fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
+                formLabel: 'Form Preview (Sandbox)',
+                isSandbox: true
               });
             });
 
@@ -14202,7 +14213,8 @@ function makePosts(){
                 categoryName: c && c.name,
                 subcategoryName: sub,
                 fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
+                formLabel: 'Form Preview (Sandbox)',
+                isSandbox: true
               });
             };
           }
@@ -14347,7 +14359,8 @@ function makePosts(){
                 categoryName: c && c.name,
                 subcategoryName: sub,
                 fieldIdCounter: formPreviewFieldIdCounter,
-                formLabel: 'Form Preview'
+                formLabel: 'Form Preview (Sandbox)',
+                isSandbox: true
               });
               
               // Update formbuilder state manager snapshot after field deletion
@@ -14453,7 +14466,8 @@ function makePosts(){
               categoryName: c && c.name,
               subcategoryName: sub,
               fieldIdCounter: formPreviewFieldIdCounter,
-              formLabel: 'Form Preview'
+              formLabel: 'Form Preview (Sandbox)',
+              isSandbox: true
             });
           });
 
@@ -14464,7 +14478,8 @@ function makePosts(){
             categoryName: c && c.name,
             subcategoryName: sub,
             fieldIdCounter: formPreviewFieldIdCounter,
-            formLabel: 'Form Preview'
+            formLabel: 'Form Preview (Sandbox)',
+            isSandbox: true
           });
 
           const defaultSubName = sub || 'Subcategory';
