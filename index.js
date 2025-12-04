@@ -3954,7 +3954,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           checkout_discount_day_rate: opt.checkout_discount_day_rate !== undefined && opt.checkout_discount_day_rate !== null ? Math.round((typeof opt.checkout_discount_day_rate === 'number' ? opt.checkout_discount_day_rate : parseFloat(opt.checkout_discount_day_rate)) * 100) / 100 : null,
           checkout_currency: typeof opt.checkout_currency === 'string' ? opt.checkout_currency : 'USD',
           checkout_featured: opt.checkout_featured === 1 || opt.checkout_featured === true ? 1 : 0,
-          checkout_sidebar_ad: opt.checkout_sidebar_ad === 1 || opt.checkout_sidebar_ad === true ? 1 : 0
+          checkout_sidebar_ad: opt.checkout_sidebar_ad === 1 || opt.checkout_sidebar_ad === true ? 1 : 0,
+          is_active: opt.is_active === false || opt.is_active === 0 ? false : true
         };
       }).filter(Boolean);
     }
