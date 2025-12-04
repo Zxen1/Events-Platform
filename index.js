@@ -13195,7 +13195,7 @@ function makePosts(){
                           tierRow.appendChild(priceRow);
                           tierList.appendChild(tierRow);
                         });
-                        versionCard.appendChild(tierList);
+                        seatingAreaCard.appendChild(tierList);
                         seatingAreaList.appendChild(seatingAreaCard);
                       });
                     };
