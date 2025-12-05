@@ -5504,6 +5504,16 @@ body.filters-active #filterBtn{
   background-color:#ffffff;
 }
 
+/* Geolocate button loading animation */
+@keyframes mapboxgl-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon {
+  animation: mapboxgl-spin 1s linear infinite;
+}
+
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
 .map-control-row .mapboxgl-ctrl-compass button:hover{
   background-color:#f2f2f2;
