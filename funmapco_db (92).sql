@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 05, 2025 at 05:03 PM
+-- Generation Time: Dec 05, 2025 at 05:56 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -303,10 +303,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-05 16:10:33'),
-(2, 'standard-listing', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-05 16:10:33'),
-(3, 'featured-listing', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-05 16:10:33'),
-(4, 'featured-sidebar-ad', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-05 16:10:33');
+(1, 'free-listing', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-05 17:07:18'),
+(2, 'standard-listing', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-05 17:07:18'),
+(3, 'featured-listing', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-05 17:07:18'),
+(4, 'featured-sidebar-ad', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-05 17:07:18');
 
 -- --------------------------------------------------------
 
@@ -1069,7 +1069,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3385;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3399;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
