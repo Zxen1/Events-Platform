@@ -1393,8 +1393,8 @@ function sanitizeField(array $field, array $fieldTypeDefinitions = []): array
     }
 
     switch ($safe['type']) {
-        case 'variant-pricing':
-            $safe['options'] = sanitizeVariantPricingOptions($options);
+        case 'item-pricing':
+            $safe['options'] = sanitizeItemPricingOptions($options);
             break;
         case 'dropdown':
         case 'radio':
@@ -1482,7 +1482,7 @@ function sanitizeGenericOptions(array $options): array
     return $clean;
 }
 
-function sanitizeVariantPricingOptions(array $options): array
+function sanitizeItemPricingOptions(array $options): array
 {
     $clean = [];
     foreach ($options as $option) {
@@ -1490,9 +1490,9 @@ function sanitizeVariantPricingOptions(array $options): array
             continue;
         }
         $clean[] = [
-            'version' => sanitizeString($option['version'] ?? '', 255),
-            'currency' => strtoupper(sanitizeString($option['currency'] ?? '', 12)),
-            'price' => sanitizeString($option['price'] ?? '', 64),
+            'item_name' => sanitizeString($option['item_name'] ?? $option['variant_name'] ?? $option['version'] ?? '', 255),
+            'item_currency' => strtoupper(sanitizeString($option['item_currency'] ?? $option['variant_currency'] ?? $option['currency'] ?? '', 12)),
+            'item_price' => sanitizeString($option['item_price'] ?? $option['variant_price'] ?? $option['price'] ?? '', 64),
         ];
     }
     return $clean;

@@ -389,7 +389,7 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `options`, `created_at`, 
 (18, 'email', 'email', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
 (19, 'phone', 'tel', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
 (20, 'website', 'url', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(21, 'variant', 'text', NULL, '2025-10-30 18:33:09', '2025-10-30 18:33:09'),
+(21, 'item-name', 'text', NULL, '2025-10-30 18:33:09', '2025-10-30 18:33:09'),
 (23, 'item-price', 'decimal(10,2)', NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
 
 -- --------------------------------------------------------
@@ -428,7 +428,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `
 (11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 0, '[\"website\"]', 11, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
 (12, 'Images', 'images', 'images', 0, '[\"images\"]', 12, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
 (13, 'Coupon', 'coupon', 'eg. FreeStuff', 0, '[\"text-box\"]', 13, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(14, 'Variant Pricing', 'variant-pricing', 'eg. Ruby Slippers - Small', 0, '[\"variant\", \"item-price\", \"currency\"]', 14, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
+(14, 'Item Pricing', 'item-pricing', 'eg. Ruby Slippers - Small', 0, '[\"item-name\", \"item-price\", \"currency\"]', 14, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
 (15, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 0, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 16, '2025-10-29 19:03:05', '2025-12-05 05:32:15');
 
 -- --------------------------------------------------------
@@ -819,12 +819,12 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Variant Pricing, Images, Location', '1,1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Variant Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-05 05:07:18');
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-05 05:07:18');
 
 -- --------------------------------------------------------
 

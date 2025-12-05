@@ -375,7 +375,7 @@
         });
       }
       
-      // Also collect from existing variant-pricing and venue-ticketing fields as fallback
+      // Also collect from existing item-pricing and venue-ticketing fields as fallback
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
       cats.forEach(cat => {
         if(!cat || typeof cat !== 'object') return;
@@ -384,7 +384,7 @@
           if(!Array.isArray(fields)) return;
           fields.forEach(field => {
             if(!field || typeof field !== 'object') return;
-            if(field.type === 'variant-pricing'){
+            if(field.type === 'item-pricing'){
               const options = Array.isArray(field.options) ? field.options : [];
               options.forEach(opt => {
                 const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
@@ -571,7 +571,7 @@
           safe.placeholder = field.placeholder;
         }
         safe.required = !!field.required;
-        if(type === 'variant-pricing'){
+        if(type === 'item-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => ({
             version: opt && typeof opt.version === 'string' ? opt.version : '',
@@ -812,14 +812,14 @@
         }
       }
 
-		// Composite validation: Variant Pricing
-		const requiredVariantEditors = formFields.querySelectorAll('.form-preview-field--variant-pricing .variant-pricing-options-editor[aria-required="true"]');
-		for(const editor of requiredVariantEditors){
+		// Composite validation: Item Pricing
+		const requiredItemEditors = formFields.querySelectorAll('.form-preview-field--item-pricing .item-pricing-options-editor[aria-required="true"]');
+		for(const editor of requiredItemEditors){
 			let ok = false;
-			const rows = editor.querySelectorAll('.variant-pricing-option');
+			const rows = editor.querySelectorAll('.item-pricing-option');
 			for(const row of rows){
-				const currency = row.querySelector('button.variant-pricing-currency');
-				const price = row.querySelector('.variant-pricing-price');
+				const currency = row.querySelector('button.item-pricing-currency');
+				const price = row.querySelector('.item-pricing-price');
 				const hasCurrency = currency && String(currency.dataset.value || '').trim();
 				const hasPrice = price && String(price.value || '').trim();
 				if(hasCurrency && hasPrice){ ok = true; break; }
@@ -1094,7 +1094,7 @@
 					try{
 						var t = e.target;
 						if(!t) return;
-						if(t.closest('.venue-session-editor') || t.closest('.variant-pricing-option') || t.closest('.variant-pricing-option-actions')){
+						if(t.closest('.venue-session-editor') || t.closest('.item-pricing-option') || t.closest('.item-pricing-option-actions')){
 							setTimeout(function(){ try{ updatePostButtonState(); }catch(_e){} }, 0);
 						}
 					}catch(_e){}
@@ -1314,7 +1314,7 @@
             };
             break;
           }
-        } else if(type === 'variant-pricing'){
+        } else if(type === 'item-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           value = options.map(opt => ({
             version: typeof opt.version === 'string' ? opt.version.trim() : '',
@@ -1327,7 +1327,7 @@
               const msg = await getMessage('msg_post_validation_pricing', { field: label }, false) || `Provide pricing details for ${label}.`;
               invalid = {
                 message: msg,
-                focus: ()=> focusElement(findFirstFocusable(['.variant-pricing-option select','.variant-pricing-option input']))
+                focus: ()=> focusElement(findFirstFocusable(['.item-pricing-option select','.item-pricing-option input']))
               };
               break;
             }

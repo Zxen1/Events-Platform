@@ -375,7 +375,7 @@
         });
       }
       
-      // Also collect from existing variant-pricing and venue-ticketing fields as fallback
+      // Also collect from existing item-pricing and venue-ticketing fields as fallback
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
       cats.forEach(cat => {
         if(!cat || typeof cat !== 'object') return;
@@ -384,7 +384,7 @@
           if(!Array.isArray(fields)) return;
           fields.forEach(field => {
             if(!field || typeof field !== 'object') return;
-            if(field.type === 'variant-pricing'){
+            if(field.type === 'item-pricing'){
               const options = Array.isArray(field.options) ? field.options : [];
               options.forEach(opt => {
                 const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
@@ -571,7 +571,7 @@
           safe.placeholder = field.placeholder;
         }
         safe.required = !!field.required;
-        if(type === 'variant-pricing'){
+        if(type === 'item-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => ({
             version: opt && typeof opt.version === 'string' ? opt.version : '',
@@ -707,35 +707,35 @@
         : [{ version: '', currency: '', price: '' }];
 
       const editor = document.createElement('div');
-      editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+      editor.className = 'form-preview-item-pricing item-pricing-options-editor';
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
 
       const list = document.createElement('div');
-      list.className = 'variant-pricing-options-list';
+      list.className = 'item-pricing-options-list';
       editor.appendChild(list);
 
       function addRow(option){
         const row = document.createElement('div');
-        row.className = 'variant-pricing-option';
+        row.className = 'item-pricing-option';
 
         const topRow = document.createElement('div');
-        topRow.className = 'variant-pricing-row variant-pricing-row--top';
+        topRow.className = 'item-pricing-row item-pricing-row--top';
         const versionInput = document.createElement('input');
         versionInput.type = 'text';
-        versionInput.className = 'variant-pricing-name form-preview-variant-pricing-name';
-        versionInput.placeholder = 'Version Name';
-        versionInput.value = option.version || '';
-        versionInput.addEventListener('input', ()=>{ option.version = versionInput.value; });
+        versionInput.className = 'item-pricing-name form-preview-item-pricing-name';
+        versionInput.placeholder = 'Item Name';
+        versionInput.value = option.item_name || option.variant_name || option.version || '';
+        versionInput.addEventListener('input', ()=>{ option.item_name = versionInput.value; if(option.variant_name) delete option.variant_name; if(option.version) delete option.version; });
         topRow.appendChild(versionInput);
 
         const bottomRow = document.createElement('div');
-        bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
+        bottomRow.className = 'item-pricing-row item-pricing-row--bottom';
         const currencyWrapper = document.createElement('div');
         currencyWrapper.className = 'options-dropdown';
         const currencyMenuBtn = document.createElement('button');
         currencyMenuBtn.type = 'button';
-        currencyMenuBtn.className = 'variant-pricing-currency';
+        currencyMenuBtn.className = 'item-pricing-currency';
         currencyMenuBtn.setAttribute('aria-haspopup', 'true');
         currencyMenuBtn.setAttribute('aria-expanded', 'false');
         const currencyMenuId = `member-variant-currency-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -812,7 +812,7 @@
         currencyWrapper.appendChild(currencyMenu);
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
-        priceInput.className = 'variant-pricing-price form-preview-variant-pricing-price';
+        priceInput.className = 'item-pricing-price form-preview-item-pricing-price';
         priceInput.placeholder = '0.00';
         priceInput.value = option.price || '';
         priceInput.addEventListener('blur', ()=>{
@@ -823,7 +823,7 @@
         bottomRow.append(currencyWrapper, priceInput);
 
         const actions = document.createElement('div');
-        actions.className = 'variant-pricing-option-actions';
+        actions.className = 'item-pricing-option-actions';
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'member-create-secondary-btn';
@@ -1011,14 +1011,14 @@
         }
       }
 
-		// Composite validation: Variant Pricing
-		const requiredVariantEditors = formFields.querySelectorAll('.form-preview-field--variant-pricing .variant-pricing-options-editor[aria-required="true"]');
-		for(const editor of requiredVariantEditors){
+		// Composite validation: Item Pricing
+		const requiredItemEditors = formFields.querySelectorAll('.form-preview-field--item-pricing .item-pricing-options-editor[aria-required="true"]');
+		for(const editor of requiredItemEditors){
 			let ok = false;
-			const rows = editor.querySelectorAll('.variant-pricing-option');
+			const rows = editor.querySelectorAll('.item-pricing-option');
 			for(const row of rows){
-				const currency = row.querySelector('button.variant-pricing-currency');
-				const price = row.querySelector('.variant-pricing-price');
+				const currency = row.querySelector('button.item-pricing-currency');
+				const price = row.querySelector('.item-pricing-price');
 				const hasCurrency = currency && String(currency.dataset.value || '').trim();
 				const hasPrice = price && String(price.value || '').trim();
 				if(hasCurrency && hasPrice){ ok = true; break; }
@@ -1216,7 +1216,7 @@
 					try{
 						var t = e.target;
 						if(!t) return;
-						if(t.closest('.venue-session-editor') || t.closest('.variant-pricing-option') || t.closest('.variant-pricing-option-actions')){
+						if(t.closest('.venue-session-editor') || t.closest('.item-pricing-option') || t.closest('.item-pricing-option-actions')){
 							setTimeout(function(){ try{ updatePostButtonState(); }catch(_e){} }, 0);
 						}
 					}catch(_e){}
@@ -1426,7 +1426,7 @@
             };
             break;
           }
-        } else if(type === 'variant-pricing'){
+        } else if(type === 'item-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           value = options.map(opt => ({
             version: typeof opt.version === 'string' ? opt.version.trim() : '',
@@ -1439,7 +1439,7 @@
               const msg = await getMessage('msg_post_validation_pricing', { field: label }, false) || `Provide pricing details for ${label}.`;
               invalid = {
                 message: msg,
-                focus: ()=> focusElement(findFirstFocusable(['.variant-pricing-option select','.variant-pricing-option input']))
+                focus: ()=> focusElement(findFirstFocusable(['.item-pricing-option select','.item-pricing-option input']))
               };
               break;
             }

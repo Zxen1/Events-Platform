@@ -8106,26 +8106,26 @@ function makePosts(){
         }
         if(fieldsetKey === 'venue-ticketing' || fieldTypeKey === 'venue-ticketing'){
           safeField.options = normalizeVenueSessionOptions(safeField.options);
-        } else if(fieldsetKey === 'variant-pricing' || fieldTypeKey === 'variant-pricing'){
+        } else if(fieldsetKey === 'item-pricing' || fieldTypeKey === 'item-pricing'){
           safeField.options = safeField.options.map(opt => {
             if(opt && typeof opt === 'object'){
               return {
-                variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
-                variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
-                variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
+                item_name: typeof opt.item_name === 'string' ? opt.item_name : (typeof opt.variant_name === 'string' ? opt.variant_name : ''),
+                item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : (typeof opt.variant_currency === 'string' ? opt.variant_currency : ''),
+                item_price: typeof opt.item_price === 'string' ? opt.item_price : (typeof opt.variant_price === 'string' ? opt.variant_price : '')
               };
             }
             const str = typeof opt === 'string' ? opt : String(opt ?? '');
-            return { variant_name: str, variant_currency: '', variant_price: '' };
+            return { item_name: str, item_currency: '', item_price: '' };
           });
           if(safeField.options.length === 0){
-            safeField.options.push({ variant_name: '', variant_currency: '', variant_price: '' });
+            safeField.options.push({ item_name: '', item_currency: '', item_price: '' });
           }
         } else {
           safeField.options = safeField.options.map(opt => {
             if(typeof opt === 'string') return opt;
-            if(opt && typeof opt === 'object' && typeof opt.variant_name === 'string'){
-              return opt.variant_name;
+            if(opt && typeof opt === 'object' && (typeof opt.item_name === 'string' || typeof opt.variant_name === 'string')){
+              return opt.item_name || opt.variant_name;
             }
             return String(opt ?? '');
           });
@@ -8377,15 +8377,15 @@ function makePosts(){
           if(control && field.required){
             control.setAttribute('aria-required','true');
           }
-        } else if(field.type === 'variant-pricing'){
-          wrapper.classList.add('form-field--variant-pricing');
+        } else if(field.type === 'item-pricing'){
+          wrapper.classList.add('form-field--item-pricing');
           const editor = document.createElement('div');
-          editor.className = 'form-variant-pricing variant-pricing-options-editor';
-          const variantList = document.createElement('div');
-          variantList.className = 'variant-pricing-options-list';
-          editor.appendChild(variantList);
+          editor.className = 'form-item-pricing item-pricing-options-editor';
+          const itemList = document.createElement('div');
+          itemList.className = 'item-pricing-options-list';
+          editor.appendChild(itemList);
 
-          const createEmptyOption = ()=>({ variant_name: '', variant_currency: '', variant_price: '' });
+          const createEmptyOption = ()=>({ item_name: '', item_currency: '', item_price: '' });
 
           const normalizeOptions = ()=>{
             if(!Array.isArray(field.options)){
@@ -8394,13 +8394,13 @@ function makePosts(){
             field.options = field.options.map(opt => {
               if(opt && typeof opt === 'object'){
                 return {
-                  variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
-                  variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
-                  variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
+                  item_name: typeof opt.item_name === 'string' ? opt.item_name : (typeof opt.variant_name === 'string' ? opt.variant_name : ''),
+                  item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : (typeof opt.variant_currency === 'string' ? opt.variant_currency : ''),
+                  item_price: typeof opt.item_price === 'string' ? opt.item_price : (typeof opt.variant_price === 'string' ? opt.variant_price : '')
                 };
               }
               const str = typeof opt === 'string' ? opt : String(opt ?? '');
-              return { variant_name: str, variant_currency: '', variant_price: '' };
+              return { item_name: str, item_currency: '', item_price: '' };
             });
             if(field.options.length === 0){
               field.options.push(createEmptyOption());
@@ -8414,9 +8414,9 @@ function makePosts(){
               ? window.notifyFormbuilderChange 
               : (()=>{}));
 
-          const renderVariantEditor = (focusIndex = null, focusTarget = 'variant_name')=>{
+          const renderItemEditor = (focusIndex = null, focusTarget = 'item_name')=>{
             normalizeOptions();
-            variantList.innerHTML = '';
+            itemList.innerHTML = '';
             let firstId = null;
             const currencyAlertMessage = 'Please select a currency before entering a price.';
             let lastCurrencyAlertAt = 0;
@@ -8460,41 +8460,41 @@ function makePosts(){
             };
             field.options.forEach((optionValue, optionIndex)=>{
               const optionRow = document.createElement('div');
-              optionRow.className = 'variant-pricing-option';
+              optionRow.className = 'item-pricing-option';
               optionRow.dataset.optionIndex = String(optionIndex);
 
               const topRow = document.createElement('div');
-              topRow.className = 'variant-pricing-row variant-pricing-row--top';
+              topRow.className = 'item-pricing-row item-pricing-row--top';
 
-              const variantNameInput = document.createElement('input');
-              variantNameInput.type = 'text';
-              variantNameInput.className = 'variant-pricing-name';
-              variantNameInput.placeholder = 'Variant Name';
-              const variantNameInputId = `${baseId}-variant-${optionIndex}`;
-              variantNameInput.id = variantNameInputId;
+              const itemNameInput = document.createElement('input');
+              itemNameInput.type = 'text';
+              itemNameInput.className = 'item-pricing-name';
+              itemNameInput.placeholder = 'Item Name';
+              const itemNameInputId = `${baseId}-item-${optionIndex}`;
+              itemNameInput.id = itemNameInputId;
               if(optionIndex === 0){
-                firstId = variantNameInputId;
+                firstId = itemNameInputId;
               }
-              variantNameInput.value = optionValue.variant_name || '';
-              variantNameInput.addEventListener('input', ()=>{
-                field.options[optionIndex].variant_name = variantNameInput.value;
+              itemNameInput.value = optionValue.item_name || optionValue.variant_name || '';
+              itemNameInput.addEventListener('input', ()=>{
+                field.options[optionIndex].item_name = itemNameInput.value;
                 safeNotifyFormbuilderChange();
               });
-              topRow.appendChild(variantNameInput);
+              topRow.appendChild(itemNameInput);
 
               const bottomRow = document.createElement('div');
-              bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
+              bottomRow.className = 'item-pricing-row item-pricing-row--bottom';
 
               const currencyWrapper = document.createElement('div');
               currencyWrapper.className = 'options-dropdown';
               const currencyMenuBtn = document.createElement('button');
               currencyMenuBtn.type = 'button';
-              currencyMenuBtn.className = 'variant-pricing-currency';
+              currencyMenuBtn.className = 'item-pricing-currency';
               currencyMenuBtn.setAttribute('aria-haspopup', 'true');
               currencyMenuBtn.setAttribute('aria-expanded', 'false');
-              const currencyMenuId = `variant-currency-${baseId}-${optionIndex}`;
+              const currencyMenuId = `item-currency-${baseId}-${optionIndex}`;
               currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-              const existingCurrency = optionValue.variant_currency || '';
+              const existingCurrency = optionValue.item_currency || optionValue.variant_currency || '';
               currencyMenuBtn.textContent = existingCurrency || 'Currency';
               currencyMenuBtn.dataset.value = existingCurrency;
               const currencyArrow = document.createElement('span');
@@ -8518,8 +8518,9 @@ function makePosts(){
                 currencyMenuBtn.dataset.value = '';
                 currencyMenu.hidden = true;
                 currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                const previousCurrency = field.options[optionIndex].variant_currency || '';
-                field.options[optionIndex].variant_currency = '';
+                const previousCurrency = field.options[optionIndex].item_currency || field.options[optionIndex].variant_currency || '';
+                field.options[optionIndex].item_currency = '';
+                if(field.options[optionIndex].variant_currency) delete field.options[optionIndex].variant_currency;
                 const priceCleared = updatePriceState();
                 if(previousCurrency !== '' || priceCleared){
                   safeNotifyFormbuilderChange();
@@ -8543,8 +8544,9 @@ function makePosts(){
                   currencyMenuBtn.dataset.value = code;
                   currencyMenu.hidden = true;
                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                  const previousCurrency = field.options[optionIndex].variant_currency || '';
-                  field.options[optionIndex].variant_currency = code;
+                  const previousCurrency = field.options[optionIndex].item_currency || field.options[optionIndex].variant_currency || '';
+                  field.options[optionIndex].item_currency = code;
+                  if(field.options[optionIndex].variant_currency) delete field.options[optionIndex].variant_currency;
                   const priceCleared = updatePriceState();
                   if(isCurrencySelected()){
                     commitPriceValue();
@@ -8587,8 +8589,9 @@ function makePosts(){
                           currencyMenuBtn.dataset.value = code;
                           currencyMenu.hidden = true;
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                          const previousCurrency = field.options[optionIndex].variant_currency || '';
-                          field.options[optionIndex].variant_currency = code;
+                          const previousCurrency = field.options[optionIndex].item_currency || field.options[optionIndex].variant_currency || '';
+                          field.options[optionIndex].item_currency = code;
+                          if(field.options[optionIndex].variant_currency) delete field.options[optionIndex].variant_currency;
                           const priceCleared = updatePriceState();
                           if(isCurrencySelected()){
                             commitPriceValue();
@@ -8631,7 +8634,7 @@ function makePosts(){
               priceInput.type = 'text';
               priceInput.inputMode = 'decimal';
               priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
-              priceInput.className = 'variant-pricing-price';
+              priceInput.className = 'item-pricing-price';
               priceInput.placeholder = '0.00';
               const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
               const formatPriceValue = value => {
@@ -8660,11 +8663,13 @@ function makePosts(){
                 }
                 return `${integerPart}.${decimalPart}`;
               };
-              const initialPriceValue = sanitizePriceValue(optionValue.price || '');
+              const initialPriceValue = sanitizePriceValue(optionValue.price || optionValue.item_price || optionValue.variant_price || '');
               const formattedInitialPrice = formatPriceValue(initialPriceValue);
               priceInput.value = formattedInitialPrice;
-              if(formattedInitialPrice !== (field.options[optionIndex].variant_price || '')){
-                field.options[optionIndex].variant_price = formattedInitialPrice;
+              const currentPrice = field.options[optionIndex].item_price || field.options[optionIndex].variant_price || '';
+              if(formattedInitialPrice !== currentPrice){
+                field.options[optionIndex].item_price = formattedInitialPrice;
+                if(field.options[optionIndex].variant_price) delete field.options[optionIndex].variant_price;
               }
               const clearPriceValue = ()=>{
                 let changed = false;
@@ -8672,11 +8677,13 @@ function makePosts(){
                   priceInput.value = '';
                   changed = true;
                 }
-                if(field.options[optionIndex].variant_price !== ''){
-                  field.options[optionIndex].variant_price = '';
+                const currentPrice = field.options[optionIndex].item_price || field.options[optionIndex].variant_price || '';
+                if(currentPrice !== ''){
+                  field.options[optionIndex].item_price = '';
+                  if(field.options[optionIndex].variant_price) delete field.options[optionIndex].variant_price;
                   changed = true;
-                } else if(typeof field.options[optionIndex].variant_price !== 'string'){
-                  field.options[optionIndex].variant_price = '';
+                } else if(typeof field.options[optionIndex].item_price !== 'string' && typeof field.options[optionIndex].variant_price !== 'string'){
+                  field.options[optionIndex].item_price = '';
                 }
                 return changed;
               };
@@ -8748,9 +8755,10 @@ function makePosts(){
                     }
                   }
                 }
-                const previous = field.options[optionIndex].variant_price || '';
+                const previous = field.options[optionIndex].item_price || field.options[optionIndex].variant_price || '';
                 if(previous !== formatted){
-                  field.options[optionIndex].variant_price = formatted;
+                  field.options[optionIndex].item_price = formatted;
+                  if(field.options[optionIndex].variant_price) delete field.options[optionIndex].variant_price;
                   safeNotifyFormbuilderChange();
                 }
               };
@@ -8779,17 +8787,17 @@ function makePosts(){
               }
 
               const actions = document.createElement('div');
-              actions.className = 'dropdown-option-actions variant-pricing-option-actions';
+              actions.className = 'dropdown-option-actions item-pricing-option-actions';
 
               const addBtn = document.createElement('button');
               addBtn.type = 'button';
               addBtn.className = 'dropdown-option-add';
               addBtn.textContent = '+';
-              addBtn.setAttribute('aria-label', `Add variant after Variant ${optionIndex + 1}`);
+              addBtn.setAttribute('aria-label', `Add item after Item ${optionIndex + 1}`);
               addBtn.addEventListener('click', ()=>{
                 field.options.splice(optionIndex + 1, 0, createEmptyOption());
                 safeNotifyFormbuilderChange();
-                renderVariantEditor(optionIndex + 1);
+                renderItemEditor(optionIndex + 1);
               });
 
               const removeBtn = document.createElement('button');
@@ -8813,21 +8821,21 @@ function makePosts(){
               bottomRow.append(currencyWrapper, priceInput, actions);
 
               optionRow.append(topRow, bottomRow);
-              variantList.appendChild(optionRow);
+              itemList.appendChild(optionRow);
             });
 
             if(focusIndex !== null){
               requestAnimationFrame(()=>{
-                const targetRow = variantList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
+                const targetRow = itemList.querySelector(`.item-pricing-option[data-option-index="${focusIndex}"]`);
                 if(!targetRow) return;
                 let focusEl = null;
                 if(focusTarget === 'price'){
-                  focusEl = targetRow.querySelector('.variant-pricing-price');
+                  focusEl = targetRow.querySelector('.item-pricing-price');
                 } else if(focusTarget === 'currency'){
-                  focusEl = targetRow.querySelector('button.variant-pricing-currency');
+                  focusEl = targetRow.querySelector('button.item-pricing-currency');
                 }
                 if(!focusEl){
-                  focusEl = targetRow.querySelector('.variant-pricing-name');
+                  focusEl = targetRow.querySelector('.item-pricing-name');
                 }
                 if(focusEl && typeof focusEl.focus === 'function'){
                   try{ focusEl.focus({ preventScroll: true }); }
@@ -13032,7 +13040,7 @@ function makePosts(){
                           currencyWrapper.className = 'options-dropdown';
                           const currencyMenuBtn = document.createElement('button');
                           currencyMenuBtn.type = 'button';
-                          currencyMenuBtn.className = 'variant-pricing-currency';
+                          currencyMenuBtn.className = 'item-pricing-currency';
                           currencyMenuBtn.setAttribute('aria-haspopup', 'true');
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
                           const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
@@ -14217,7 +14225,7 @@ function makePosts(){
               const fieldsetKey = selectedValue || safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key || safeField.type || '';
               const fieldTypeKey = selectedValue || safeField.fieldTypeKey || safeField.fieldsetKey || safeField.key || safeField.type || '';
               const isOptionsType = fieldsetKey === 'dropdown' || fieldsetKey === 'radio' || fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
-              const showVariantPricing = fieldsetKey === 'variant-pricing' || fieldTypeKey === 'variant-pricing';
+              const showItemPricing = fieldsetKey === 'item-pricing' || fieldTypeKey === 'item-pricing';
               const showVenueSession = fieldsetKey === 'venue-ticketing' || fieldTypeKey === 'venue-ticketing';
               const showCheckout = fieldsetKey === 'checkout' || fieldTypeKey === 'checkout';
               // Check if this field type is editable - must have a valid fieldsetKey/fieldTypeKey
@@ -14242,21 +14250,21 @@ function makePosts(){
               }
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
-              } else if(showVariantPricing){
+              } else if(showItemPricing){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
-                  safeField.options = [{ variant_name: '', variant_currency: '', variant_price: '' }];
+                  safeField.options = [{ item_name: '', item_currency: '', item_price: '' }];
                   notifyFormbuilderChange();
                 } else {
                   safeField.options = safeField.options.map(opt => {
                     if(opt && typeof opt === 'object'){
                       return {
-                        variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
-                        variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
-                        variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
+                        item_name: typeof opt.item_name === 'string' ? opt.item_name : (typeof opt.variant_name === 'string' ? opt.variant_name : ''),
+                        item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : (typeof opt.variant_currency === 'string' ? opt.variant_currency : ''),
+                        item_price: typeof opt.item_price === 'string' ? opt.item_price : (typeof opt.variant_price === 'string' ? opt.variant_price : '')
                       };
                     }
                     const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                    return { variant_name: str, variant_currency: '', variant_price: '' };
+                    return { item_name: str, item_currency: '', item_price: '' };
                   });
                 }
               }
@@ -14273,7 +14281,7 @@ function makePosts(){
                   notifyFormbuilderChange();
                 }
                 renderDropdownOptions();
-              } else if(!showVariantPricing && !showVenueSession){
+              } else if(!showItemPricing && !showVenueSession){
                 dropdownOptionsList.innerHTML = '';
               } else if(showVenueSession){
                 dropdownOptionsList.innerHTML = '';
@@ -15471,7 +15479,7 @@ function makePosts(){
                 required: !!(field && field.required),
                 options: Array.isArray(field && field.options)
                 ? field.options.map(opt => {
-                    if(field && field.type === 'variant-pricing'){
+                    if(field && field.type === 'item-pricing'){
                       if(opt && typeof opt === 'object'){
                         return {
                           variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
@@ -15480,14 +15488,14 @@ function makePosts(){
                         };
                       }
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                      return { variant_name: str, variant_currency: '', variant_price: '' };
+                      return { item_name: str, item_currency: '', item_price: '' };
                     }
                     if(field && field.type === 'venue-ticketing'){
                       return cloneVenueSessionVenue(opt);
                     }
                     if(typeof opt === 'string') return opt;
                     if(opt && typeof opt === 'object' && typeof opt.variant_name === 'string'){
-                      return opt.variant_name;
+                      return opt.item_name || opt.variant_name;
                     }
                     return String(opt ?? '');
                   })
