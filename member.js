@@ -2138,7 +2138,8 @@
       });
     }
 
-    initializeMemberFormbuilderSnapshot();
+    // REMOVED: initializeMemberFormbuilderSnapshot() - formbuilder should only load when Create Post tab is opened, not on startup
+    // This was causing 5-20 minute load times
   }
 
   }

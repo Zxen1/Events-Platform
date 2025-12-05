@@ -336,6 +336,47 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 **Update (Dec 5, 2025):** Issue RETURNED after clicking "Clear Local Storage" button on the site, then using Edge's "Clear cache and hard refresh". This suggests the slow loading may be related to missing cached data forcing the browser to re-fetch everything slowly, possibly hitting the same geolocation/DNS issue as before.
 
+**CRITICAL DISCOVERY (Dec 6, 2025):** The slow loading was caused by CODE, not network/infrastructure.
+
+**The Smoking Gun:**
+When `renderVariantEditor is not defined` error occurs, the site loads in **13 seconds** instead of 5-20 minutes. This error short-circuits the slow initialization code.
+
+**Test Conditions:**
+- Local storage cleared
+- Cache cleared  
+- Hard refresh in Chrome
+- Spin active
+- **Result with error: 13 seconds**
+- **Result without error: 5-20 minutes**
+
+**Root Cause:**
+The slow code is in the formbuilder initialization chain:
+1. `initializeSavedState()` or `initializeMemberFormbuilderSnapshot()` calls
+2. `restoreFormbuilderSnapshot()` which calls
+3. `renderFormbuilderCats()` which calls
+4. `renderForm()` for every category/subcategory/field
+5. When rendering item-pricing fields, it calls `renderVariantEditor()` (now renamed to `renderItemEditor()`)
+6. **This entire chain is taking 5-20 minutes to execute**
+
+**What the Error Reveals:**
+- The error stops execution at step 5, preventing the slow code from running
+- This proves the slow loading is in the formbuilder snapshot restoration/rendering process
+- NOT caused by: Optus, Ventra IP, Mapbox, WiFi, or database
+- **CAUSED BY: Formbuilder initialization code taking 5-20 minutes to render all forms**
+
+**Critical Code Locations to Investigate:**
+- `restoreFormbuilderSnapshot()` - line ~15580
+- `renderFormbuilderCats()` - line ~9979  
+- `renderForm()` - line ~8142
+- `renderItemEditor()` (formerly `renderVariantEditor`) - line ~8417
+- Any code that renders forms for all categories/subcategories on page load
+
+**Action Required:**
+- Profile the formbuilder initialization code to find the bottleneck
+- Likely rendering too many forms synchronously
+- May need lazy loading or async rendering for formbuilder categories
+- The fact that it works fine when the error short-circuits it proves the code path is the problem
+
 **If This Recurs, Investigate:**
 - Browser geolocation permissions
 - Local DNS cache (`ipconfig /flushdns`)
@@ -345,6 +386,7 @@ The user has spent weeks on this project with thousands of failures caused by:
 **Important Notes:**
 - There are known problems using Cloudflare CDN in Australia with both Optus and Telstra ISPs
 - The fact that hotspotting didn't help but other PCs were fine suggests a PC-specific issue, not network infrastructure
+- **UPDATE: The slow loading is CODE, not network. The error proves it.**
 
 ---
 

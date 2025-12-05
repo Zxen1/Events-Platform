@@ -8814,7 +8814,7 @@ function makePosts(){
                 }
                 safeNotifyFormbuilderChange();
                 const nextFocus = Math.min(optionIndex, Math.max(field.options.length - 1, 0));
-                renderVariantEditor(nextFocus);
+                renderItemEditor(nextFocus);
               });
 
               actions.append(addBtn, removeBtn);
@@ -8847,7 +8847,7 @@ function makePosts(){
             }
           };
 
-          renderVariantEditor();
+          renderItemEditor();
           editor.setAttribute('aria-required', field.required ? 'true' : 'false');
           control = editor;
         } else if(field.type === 'website-url' || field.type === 'tickets-url'){
@@ -24291,16 +24291,13 @@ const adminPanelChangeManager = (()=>{
 
   ensureElements();
   attachListeners();
-  initializeSavedState().then(()=>{
-    refreshSavedState();
-  });
+  // REMOVED: initializeSavedState() - formbuilder should only load when Forms tab is opened, not on startup
+  // This was causing 5-20 minute load times
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(()=>{
       ensureElements();
       attachListeners();
-      initializeSavedState().then(()=>{
-        refreshSavedState();
-      });
+      // REMOVED: initializeSavedState() - formbuilder should only load when Forms tab is opened, not on startup
     }, 0);
   });
 
@@ -24752,7 +24749,7 @@ document.addEventListener('pointerdown', (e) => {
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
-      // LAZY LOAD: Load formbuilder when admin opens Forms tab
+      // LAZY LOAD: Load formbuilder when admin opens Forms tab (only when tab is clicked, not on startup)
       if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
         window.formbuilderStateManager.ensureLoaded();
       }
