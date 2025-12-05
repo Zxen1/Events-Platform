@@ -1509,7 +1509,7 @@ button[aria-expanded="true"] .results-arrow{
   margin:0;
   border-radius:8px;
 }
-#welcome-modal{background:rgba(0,0,0,0.7);}
+#welcome-modal{background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);}
 #welcome-modal .modal-content{
   position:absolute;
   width:min(600px, 90vw);
@@ -2586,6 +2586,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);
   z-index:var(--layer-dialog);
   opacity:0;
   pointer-events:none;
@@ -2620,6 +2621,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);
   z-index:var(--layer-dialog);
   opacity:0;
   pointer-events:none;
@@ -7172,7 +7174,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     left:0;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.7);
+    background:rgba(0,0,0,0.65);
+    backdrop-filter:blur(4px);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -7191,7 +7194,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     left:0;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.7);
+    background:rgba(0,0,0,0.65);
+    backdrop-filter:blur(4px);
     display:flex;
     align-items:center;
     justify-content:center;
