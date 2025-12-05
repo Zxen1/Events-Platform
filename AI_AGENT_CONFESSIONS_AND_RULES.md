@@ -258,6 +258,8 @@ Mapbox layers in rendering order (bottom to top):
 - User will paste the SQL into their database management tool (phpMyAdmin, etc.)
 - Include all necessary ALTER TABLE, RENAME, UPDATE statements
 - Make SQL clear, complete, and ready to execute
+- **IGNORE DUMP FILES:** When checking database structure, look for the latest numbered database file (e.g., `funmapco_db (93).sql`), not dump files or older versions
+- Always check which database files exist and use the most recent one
 
 ---
 
