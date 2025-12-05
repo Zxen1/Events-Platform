@@ -5929,6 +5929,9 @@ body.mode-map .post-board{
 .open-post:not(.desc-expanded) .member-avatar-row{
   display:none;
 }
+.open-post:not(.desc-expanded) .desc{
+  margin-top:0;
+}
 
 .open-post .post-details .info{
   color: inherit;
