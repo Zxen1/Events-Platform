@@ -6178,11 +6178,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .desc-wrap .see-more-toggle{
-  display:inline-block;
-  color:var(--text-muted, #65676b);
+  display:inline;
+  color:#888888;
   font-size:14px;
   font-weight:400;
-  margin-top:4px;
   user-select:none;
   -webkit-user-select:none;
 }
