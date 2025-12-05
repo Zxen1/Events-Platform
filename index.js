@@ -17526,7 +17526,7 @@ function makePosts(){
             </div>
           </div>
           <div class="post-details-description-container">
-            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc} <span class="see-more-toggle">See More</span></div></div>
+            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div><span class="see-more-toggle">See More</span></div>
             <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
           </div>
         </div>
@@ -20794,26 +20794,15 @@ function openPostModal(id){
 
       if(descEl){
         const descWrap = descEl.closest('.desc-wrap');
-        const seeMoreToggle = descEl.querySelector('.see-more-toggle');
-        const fullText = p.desc || '';
-        const truncateLength = 150;
-        const needsTruncation = fullText.length > truncateLength;
+        const seeMoreToggle = descWrap ? descWrap.querySelector('.see-more-toggle') : null;
         
-        const renderDescription = (expanded) => {
-          if(!needsTruncation){
-            descEl.innerHTML = fullText;
-            return;
-          }
-          if(expanded){
-            descEl.innerHTML = fullText + ' <span class="see-more-toggle">See Less</span>';
-          } else {
-            const truncated = fullText.substring(0, truncateLength).trim();
-            descEl.innerHTML = truncated + '... <span class="see-more-toggle">See More</span>';
+        const updateToggleText = (expanded) => {
+          if(seeMoreToggle){
+            seeMoreToggle.textContent = expanded ? 'See Less' : 'See More';
           }
         };
         
         const handleDescToggle = evt => {
-          if(!needsTruncation) return;
           const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
           if(evt.type === 'keydown' && !allowed.includes(evt.key)){
             return;
@@ -20824,7 +20813,7 @@ function openPostModal(id){
             ? openPostEl.classList.contains('desc-expanded')
             : descEl.classList.contains('expanded');
           setDescExpandedState(!isExpanded);
-          renderDescription(!isExpanded);
+          updateToggleText(!isExpanded);
         };
         
         // Description click toggles collapsed state
@@ -20832,8 +20821,8 @@ function openPostModal(id){
         descWrap.addEventListener('keydown', handleDescToggle);
         descWrap.style.cursor = 'pointer';
         
-        // Initialize the description
-        renderDescription(false);
+        // Initialize
+        updateToggleText(false);
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
