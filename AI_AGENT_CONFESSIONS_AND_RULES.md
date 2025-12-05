@@ -77,6 +77,23 @@
 
 **Impact:** Wasted significant time with trial and error when the solution was right there in existing code. Should have looked at formbuilder delete code FIRST and copied exactly.
 
+### 9. OVERCOMPLICATING SIMPLE SOLUTIONS (Dec 5, 2025)
+**Mistake:** When asked to make form preview sandbox not trigger save/cancel buttons, instead of adding ONE umbrella check in `notifyFormbuilderChange()`, I:
+- Modified `renderForm` to pass `isSandbox` flag
+- Modified `buildVenueSessionPreview` to accept sandbox options
+- Replaced ~20 individual `notifyFormbuilderChange()` calls with `safeNotifyChange()`
+- Spent 20+ minutes on what should have been a 30-second fix
+
+**The correct solution was simple:**
+1. Add `data-sandbox="true"` to the form preview container
+2. Add ONE check at the top of `notifyFormbuilderChange()`:
+```javascript
+const activeEl = document.activeElement;
+if(activeEl && activeEl.closest('[data-sandbox="true"]')) return;
+```
+
+**Lesson:** Before modifying multiple components, ask: "Can I solve this with ONE change at a higher level?" Look for umbrella solutions, not per-component fixes. The higher up the chain you can intercept, the simpler and more future-proof the solution.
+
 ---
 
 ## PROJECT SCOPE: EVENTS PLATFORM CMS
@@ -305,6 +322,8 @@ The user has spent weeks on this project with thousands of failures caused by:
 - Cleared all browser cache and local storage
 
 **Resolution:** Issue self-resolved on December 5, 2025. Root cause unknown.
+
+**Update (Dec 5, 2025):** Issue RETURNED after clicking "Clear Local Storage" button on the site, then using Edge's "Clear cache and hard refresh". This suggests the slow loading may be related to missing cached data forcing the browser to re-fetch everything slowly, possibly hitting the same geolocation/DNS issue as before.
 
 **If This Recurs, Investigate:**
 - Browser geolocation permissions

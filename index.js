@@ -6892,6 +6892,11 @@ function makePosts(){
     let formbuilderAutoSaveTimer = null;
     function notifyFormbuilderChange(){
       if(!formbuilderCats) return;
+      // Don't trigger save if interaction is inside a sandbox (form preview)
+      const activeEl = document.activeElement;
+      if(activeEl && activeEl.closest && activeEl.closest('[data-sandbox="true"]')){
+        return;
+      }
       try{
         formbuilderCats.dispatchEvent(new Event('change', { bubbles: true }));
       }catch(err){
@@ -8309,7 +8314,7 @@ function makePosts(){
         } else if(field.type === 'venue-ticketing'){
           wrapper.classList.add('form-field--venues-sessions-pricing');
           if(typeof window.buildVenueSessionPreview === 'function'){
-            control = window.buildVenueSessionPreview(field, baseId);
+            control = window.buildVenueSessionPreview(field, baseId, { isSandbox: options.isSandbox === true });
           } else {
             control = document.createElement('div');
             control.textContent = 'Venue ticketing field';
@@ -10364,7 +10369,7 @@ function makePosts(){
           addFieldBtn.setAttribute('aria-label', `Add field to ${sub}`);
 
           // ensureFieldDefaults is now defined at module scope, use it directly
-          const buildVenueSessionPreview = (previewField, baseId)=>{
+          const buildVenueSessionPreview = (previewField, baseId, buildOptions = {})=>{
             // CRITICAL: Clone options to prevent sharing state between form preview and member forms
             // Each instance needs its own independent copy of the options
             const clonedOptions = Array.isArray(previewField.options) 
@@ -10384,6 +10389,9 @@ function makePosts(){
             const isMemberForm = baseId && (baseId.includes('memberForm') || baseId.includes('memberCreate'));
             // Detect if we're in formbuilder (needs to sync back to previewField.options)
             const isFormbuilder = !isMemberForm && baseId && (baseId.includes('formPreview') || baseId.includes('formbuilder'));
+            // In sandbox mode, don't trigger save state changes
+            const isSandbox = buildOptions.isSandbox === true;
+            const safeNotifyChange = isSandbox ? (()=>{}) : notifyFormbuilderChange;
             
             // For member forms, prevent clicks from bubbling up to prevent form closure
             // BUT allow buttons and geocoder events to propagate so they work
@@ -11049,7 +11057,7 @@ function makePosts(){
               }
               venues.splice(afterIndex + 1, 0, newVenue);
               openSessions.clear();
-              notifyFormbuilderChange();
+              safeNotifyChange();
               renderVenues({ type: 'venue-name', venueIndex: afterIndex + 1 });
             };
 
@@ -11066,7 +11074,7 @@ function makePosts(){
                 try{ state.delete(removed); }catch(err){}
               }
               openSessions.clear();
-              notifyFormbuilderChange();
+              safeNotifyChange();
               const nextIndex = Math.max(0, index - 1);
               renderVenues({ type: 'venue-name', venueIndex: nextIndex });
             };
@@ -11129,7 +11137,7 @@ function makePosts(){
               sessions.splice(afterIndex + 1, 0, newSession);
               applyAutofillToSession(venue, newSession);
               openSessions.clear();
-              notifyFormbuilderChange();
+              safeNotifyChange();
               renderVenues();
             };
 
@@ -11137,7 +11145,7 @@ function makePosts(){
               if(venue.sessions.length <= 1) return;
               venue.sessions.splice(sessionIndex, 1);
               openSessions.clear();
-              notifyFormbuilderChange();
+              safeNotifyChange();
               renderVenues();
             };
 
@@ -11182,7 +11190,7 @@ function makePosts(){
                 }
               });
               openSessions.add(newSession);
-              notifyFormbuilderChange();
+              safeNotifyChange();
               renderVenues({ type: 'session-time', venueIndex, sessionIndex: sessionIndex + 1, timeIndex: 0 });
             };
 
@@ -11229,7 +11237,7 @@ function makePosts(){
               if(Array.isArray(state.slots) && state.slots.length > timeIndex){
                 state.slots.splice(timeIndex, 1);
               }
-              notifyFormbuilderChange();
+              safeNotifyChange();
               const nextTime = Math.max(0, Math.min(timeIndex, venue.sessions[sessionIndex]?.session_times.length - 1));
               renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: nextTime });
             };
@@ -11272,7 +11280,7 @@ function makePosts(){
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              notifyFormbuilderChange();
+              safeNotifyChange();
               renderVenues({ type: 'seating_area', venueIndex, sessionIndex, timeIndex, seatingAreaIndex: afterIndex + 1 });
             };
 
@@ -11300,7 +11308,7 @@ function makePosts(){
                 lockSessionMirror(venue);
               }
               seatingAreas.splice(targetIndex, 1);
-              notifyFormbuilderChange();
+              safeNotifyChange();
               const focusSeatingArea = Math.max(0, Math.min(targetIndex, seatingAreas.length - 1));
               renderVenues({ type: 'seating_area', venueIndex, sessionIndex, timeIndex, seatingAreaIndex: focusSeatingArea });
             };
@@ -11339,7 +11347,7 @@ function makePosts(){
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              notifyFormbuilderChange();
+              safeNotifyChange();
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex: afterIndex + 1 });
             };
 
@@ -11391,7 +11399,7 @@ function makePosts(){
               if(templateRemoval){
                 syncTiersFromTemplate(time);
               }
-              notifyFormbuilderChange();
+              safeNotifyChange();
               const focusTier = Math.max(0, Math.min(targetTierIndex, tiers.length - 1));
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, seatingAreaIndex: targetSeatingAreaIndex, tierIndex: focusTier });
             };
@@ -11501,7 +11509,7 @@ function makePosts(){
                 }
                 if(previous){
                   timeObj.time = '';
-                  notifyFormbuilderChange();
+                  safeNotifyChange();
                 }
                 const slot = ensureSlot(venue, timeIndex);
                 if(isMaster && !mirrorLocked){
@@ -11600,7 +11608,7 @@ function makePosts(){
                 slot.source = timeObj;
                 slot.locked = true;
               }
-              notifyFormbuilderChange();
+              safeNotifyChange();
             };
 
             const setupDatePicker = (input, venue, session, venueIndex, sessionIndex, options = {})=>{
@@ -11781,7 +11789,7 @@ function makePosts(){
                 }
                 venue.sessions.splice(0, venue.sessions.length, ...newSessions);
                 openSessions.clear();
-                notifyFormbuilderChange();
+                safeNotifyChange();
                 closePicker();
                 renderVenues();
               };
@@ -12079,7 +12087,7 @@ function makePosts(){
                       lat: Number(center[1])
                     };
                   }
-                  notifyFormbuilderChange();
+                  safeNotifyChange();
                 };
 
                 const venueNamePlaceholder = `Venue Name ${venueIndex + 1}`;
@@ -12095,7 +12103,7 @@ function makePosts(){
                   const value = venueNameInput.value || '';
                   venue.name = value;
                   syncToPreviewField();
-                  notifyFormbuilderChange();
+                  safeNotifyChange();
                   if(nameSearchTimeout){
                     clearTimeout(nameSearchTimeout);
                     nameSearchTimeout = null;
@@ -12216,7 +12224,7 @@ function makePosts(){
                   fallback.dataset.venueIndex = String(venueIndex);
                   fallback.addEventListener('input', ()=>{
                     venue.address = fallback.value;
-                    notifyFormbuilderChange();
+                    safeNotifyChange();
                   });
                   geocoderContainer.appendChild(fallback);
                   geocoderInputRef = fallback;
@@ -12369,7 +12377,7 @@ function makePosts(){
                       if(venue.address !== nextValue){
                         venue.address = nextValue;
                         syncToPreviewField();
-                        notifyFormbuilderChange();
+                        safeNotifyChange();
                       }
                     });
                     // For member forms, prevent form closure when interacting with geocoder input
@@ -12406,7 +12414,7 @@ function makePosts(){
                       venue.address = '';
                       venue.location = null;
                       clearNameSuggestions();
-                      notifyFormbuilderChange();
+                      safeNotifyChange();
                       setGeocoderActive(false);
                     });
                     geocoder.on('error', ()=> setGeocoderActive(false));
@@ -12733,7 +12741,7 @@ function makePosts(){
                           } else if(sessionIndex > 0 && previous !== nextValue){
                             lockSessionMirror(venue);
                           }
-                          notifyFormbuilderChange();
+                          safeNotifyChange();
                         });
                         seatingAreaCard.appendChild(seatingLabel);
                         seatingAreaCard.appendChild(seatingAreaInput);
@@ -12825,7 +12833,7 @@ function makePosts(){
                             }
                             const locked = lockTierAutofillIfNeeded(timeObj, seatingAreaIndex);
                             if(previous !== nextValue || locked || syncedFromTemplate){
-                              notifyFormbuilderChange();
+                              safeNotifyChange();
                             }
                           });
                           tierRow.appendChild(tierInput);
@@ -13114,7 +13122,7 @@ function makePosts(){
                               shouldNotify = true;
                             }
                             if(shouldNotify){
-                              notifyFormbuilderChange();
+                              safeNotifyChange();
                             }
                           };
 
@@ -13155,7 +13163,7 @@ function makePosts(){
                               notifyNeeded = true;
                             }
                             if(notifyNeeded){
-                              notifyFormbuilderChange();
+                              safeNotifyChange();
                             }
                             renderVenues({ type: 'price', venueIndex, sessionIndex, timeIndex, seatingAreaIndex, tierIndex });
                           });
@@ -13230,7 +13238,7 @@ function makePosts(){
                         }
                         timeObj.tierAutofillLocked = false;
                       }
-                      notifyFormbuilderChange();
+                      safeNotifyChange();
                       populateSeatingAreaList();
                       updateSamePricingUI();
                     };
@@ -13323,6 +13331,7 @@ function makePosts(){
 
           const formPreviewContainer = document.createElement('div');
           formPreviewContainer.className = 'form-container';
+          formPreviewContainer.dataset.sandbox = 'true';
           formPreviewContainer.hidden = true;
           const formPreviewFields = document.createElement('div');
           formPreviewFields.className = 'form-fields';
