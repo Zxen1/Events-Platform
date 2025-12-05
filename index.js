@@ -10535,8 +10535,7 @@ function makePosts(){
           fieldsSection.appendChild(fieldsList);
 
           const addFieldBtnWrapper = document.createElement('div');
-          addFieldBtnWrapper.className = 'options-dropdown add-field-btn-wrapper';
-          addFieldBtnWrapper.style.position = 'relative';
+          addFieldBtnWrapper.className = 'field-type-select-wrapper options-dropdown add-field-btn-wrapper';
           
           const addFieldBtn = document.createElement('button');
           addFieldBtn.type = 'button';
@@ -14648,163 +14647,149 @@ function makePosts(){
             enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
           });
 
-          addFieldBtn.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            
-            // Check if dropdown already exists and is open
-            let existingDropdown = document.querySelector('.add-field-dropdown-menu');
-            if(existingDropdown && !existingDropdown.hasAttribute('hidden')){
-              existingDropdown.hidden = true;
-              return;
+          // Create the dropdown menu once (not on each click)
+          const addFieldMenu = document.createElement('div');
+          addFieldMenu.className = 'options-menu';
+          addFieldMenu.hidden = true;
+          
+          // Add placeholder option
+          const addFieldPlaceholder = document.createElement('button');
+          addFieldPlaceholder.type = 'button';
+          addFieldPlaceholder.className = 'menu-option';
+          addFieldPlaceholder.textContent = 'Select Fieldset...';
+          addFieldPlaceholder.disabled = true;
+          addFieldMenu.appendChild(addFieldPlaceholder);
+          
+          // Add fieldset options
+          FORM_FIELD_TYPES.forEach(optionDef => {
+            const optionBtn = document.createElement('button');
+            optionBtn.type = 'button';
+            optionBtn.className = 'menu-option';
+            const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
+            optionBtn.textContent = optionLabel || optionDef.value;
+            optionBtn.dataset.value = optionDef.value || '';
+            if(optionDef.value){
+              optionBtn.dataset.fieldsetKey = optionDef.value;
+              optionBtn.dataset.fieldTypeKey = optionDef.value;
+            }
+            if(optionLabel){
+              optionBtn.dataset.fieldsetName = optionLabel;
+              optionBtn.dataset.fieldTypeName = optionLabel;
+            } else if(optionDef.value){
+              optionBtn.dataset.fieldsetName = optionDef.value;
+              optionBtn.dataset.fieldTypeName = optionDef.value;
             }
             
-            // Remove any existing dropdown
-            if(existingDropdown){
-              existingDropdown.remove();
-            }
+            optionBtn.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              const selectedFieldsetKey = optionBtn.dataset.value || '';
+              if(!selectedFieldsetKey) return;
+              
+              // Close dropdown
+              addFieldMenu.hidden = true;
+              
+              // Create new field with selected fieldset
+              const newField = ensureFieldDefaults({});
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === selectedFieldsetKey);
+              const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
+              const fieldsetName = (matchingDisplayName || selectedFieldsetKey || '').trim();
+              
+              newField.fieldsetKey = selectedFieldsetKey;
+              newField.fieldTypeKey = selectedFieldsetKey;
+              newField.key = selectedFieldsetKey;
+              newField.fieldset_name = fieldsetName;
+              newField.fieldsetName = fieldsetName;
+              newField.field_type_name = fieldsetName;
+              newField.fieldTypeName = fieldsetName;
+              
+              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              if(!isEditable && fieldsetName){
+                newField.name = fieldsetName;
+              } else if(isEditable && !newField.name){
+                newField.name = fieldsetName;
+              }
+              if(matchingFieldType){
+                if(matchingFieldType.placeholder){
+                  newField.placeholder = matchingFieldType.placeholder;
+                }
+                newField.type = selectedFieldsetKey;
+              }
+              
+              fields.push(newField);
+              const fieldRow = createFieldRow(newField);
+              if(!fieldRow || !fieldRow.row) return;
+              fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+              fieldsList.appendChild(fieldRow.row);
+              enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
+              syncFieldOrderFromDom(fieldsList, fields);
+              notifyFormbuilderChange();
+              if(fieldRow && fieldRow.editPanel){
+                closeFieldEditPanels({ exceptPanel: fieldRow.editPanel, exceptButton: fieldRow.editBtn });
+                if(typeof fieldRow.openEditPanel === 'function'){
+                  fieldRow.openEditPanel();
+                }
+              }
+              renderForm({
+                formFields: formPreviewFields,
+                formId: formPreviewId,
+                fields: fields,
+                categoryName: c && c.name,
+                subcategoryName: sub,
+                fieldIdCounter: formPreviewFieldIdCounter,
+                formLabel: 'Form Preview (Sandbox)',
+                isSandbox: true
+              });
+            });
             
-            // Create dropdown menu
-            const dropdownMenu = document.createElement('div');
-            dropdownMenu.className = 'options-menu add-field-dropdown-menu';
-            dropdownMenu.setAttribute('role', 'menu');
-            
-            // Get existing field types in this subcategory to disable already-used fieldsets
+            addFieldMenu.appendChild(optionBtn);
+          });
+          
+          addFieldMenu.addEventListener('click', (e) => e.stopPropagation());
+          addFieldBtnWrapper.appendChild(addFieldMenu);
+          
+          // Function to update disabled state of options based on existing fields
+          const updateAddFieldMenuOptions = () => {
             const existingFieldTypes = new Set();
             fields.forEach(f => {
               if(f && (f.fieldsetKey || f.fieldTypeKey || f.key)){
                 existingFieldTypes.add(f.fieldsetKey || f.fieldTypeKey || f.key);
               }
             });
-            
-            // Add placeholder option
-            const placeholderBtn = document.createElement('button');
-            placeholderBtn.type = 'button';
-            placeholderBtn.className = 'menu-option';
-            placeholderBtn.textContent = 'Select Fieldset...';
-            placeholderBtn.disabled = true;
-            dropdownMenu.appendChild(placeholderBtn);
-            
-            // Add fieldset options
-            FORM_FIELD_TYPES.forEach(optionDef => {
-              const optionBtn = document.createElement('button');
-              optionBtn.type = 'button';
-              optionBtn.className = 'menu-option';
-              const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
-              optionBtn.textContent = optionLabel || optionDef.value;
-              optionBtn.dataset.value = optionDef.value || '';
-              if(optionDef.value){
-                optionBtn.dataset.fieldsetKey = optionDef.value;
-                optionBtn.dataset.fieldTypeKey = optionDef.value;
+            addFieldMenu.querySelectorAll('.menu-option[data-value]').forEach(btn => {
+              const val = btn.dataset.value;
+              if(existingFieldTypes.has(val)){
+                btn.disabled = true;
+                btn.classList.add('field-type-disabled');
+              } else {
+                btn.disabled = false;
+                btn.classList.remove('field-type-disabled');
               }
-              if(optionLabel){
-                optionBtn.dataset.fieldsetName = optionLabel;
-                optionBtn.dataset.fieldTypeName = optionLabel;
-              } else if(optionDef.value){
-                optionBtn.dataset.fieldsetName = optionDef.value;
-                optionBtn.dataset.fieldTypeName = optionDef.value;
-              }
-              
-              // Disable if this fieldset already exists in the subcategory
-              if(existingFieldTypes.has(optionDef.value)){
-                optionBtn.disabled = true;
-                optionBtn.classList.add('field-type-disabled');
-              }
-              
-              optionBtn.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                const selectedFieldsetKey = optionBtn.dataset.value || '';
-                if(!selectedFieldsetKey) return;
-                
-                // Close dropdown
-                dropdownMenu.hidden = true;
-                dropdownMenu.remove();
-                
-                // Create new field with selected fieldset
-                const newField = ensureFieldDefaults({});
-                const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === selectedFieldsetKey);
-                const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
-                const fieldsetName = (matchingDisplayName || selectedFieldsetKey || '').trim();
-                
-                newField.fieldsetKey = selectedFieldsetKey;
-                newField.fieldTypeKey = selectedFieldsetKey;
-                newField.key = selectedFieldsetKey;
-                newField.fieldset_name = fieldsetName;
-                newField.fieldsetName = fieldsetName;
-                newField.field_type_name = fieldsetName;
-                newField.fieldTypeName = fieldsetName;
-                
-                const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
-                if(!isEditable && fieldsetName){
-                  newField.name = fieldsetName;
-                } else if(isEditable && !newField.name){
-                  newField.name = fieldsetName;
-                }
-                if(matchingFieldType){
-                  if(matchingFieldType.placeholder){
-                    newField.placeholder = matchingFieldType.placeholder;
-                  }
-                  newField.type = selectedFieldsetKey;
-                }
-                
-                fields.push(newField);
-                const fieldRow = createFieldRow(newField);
-                if(!fieldRow || !fieldRow.row) return;
-                fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
-                fieldsList.appendChild(fieldRow.row);
-                enableFieldDrag(fieldRow.row, fieldsList, fields, fieldRow.dragHandle);
-                syncFieldOrderFromDom(fieldsList, fields);
-                notifyFormbuilderChange();
-                if(fieldRow && fieldRow.editPanel){
-                  closeFieldEditPanels({ exceptPanel: fieldRow.editPanel, exceptButton: fieldRow.editBtn });
-                  if(typeof fieldRow.openEditPanel === 'function'){
-                    fieldRow.openEditPanel();
-                  }
-                }
-                renderForm({
-                  formFields: formPreviewFields,
-                  formId: formPreviewId,
-                  fields: fields,
-                  categoryName: c && c.name,
-                  subcategoryName: sub,
-                  fieldIdCounter: formPreviewFieldIdCounter,
-                  formLabel: 'Form Preview (Sandbox)',
-                  isSandbox: true
-                });
-              });
-              
-              dropdownMenu.appendChild(optionBtn);
             });
-            
-            // Position dropdown relative to button - use fixed positioning to avoid clipping
-            const buttonRect = addFieldBtn.getBoundingClientRect();
-            dropdownMenu.style.position = 'fixed';
-            dropdownMenu.style.top = `${buttonRect.bottom + 4}px`;
-            dropdownMenu.style.bottom = 'auto';
-            dropdownMenu.style.left = `${buttonRect.left}px`;
-            dropdownMenu.style.right = 'auto';
-            dropdownMenu.style.width = 'auto';
-            dropdownMenu.style.minWidth = '200px';
-            dropdownMenu.style.maxWidth = 'none';
-            dropdownMenu.hidden = false;
-            
-            // Append to body to avoid clipping by parent containers
-            document.body.appendChild(dropdownMenu);
-            
-            // Close dropdown when clicking outside
-            const outsideHandler = (ev) => {
-              if(!addFieldBtnWrapper.contains(ev.target) && !dropdownMenu.contains(ev.target)){
-                dropdownMenu.hidden = true;
-                dropdownMenu.remove();
-                document.removeEventListener('click', outsideHandler);
-                document.removeEventListener('pointerdown', outsideHandler);
-              }
-            };
-            setTimeout(() => {
-              document.addEventListener('click', outsideHandler);
-              document.addEventListener('pointerdown', outsideHandler);
-            }, 0);
-            
-            dropdownMenu.addEventListener('click', (e) => e.stopPropagation());
+          };
+          
+          addFieldBtn.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            const isOpen = !addFieldMenu.hidden;
+            if(isOpen){
+              addFieldMenu.hidden = true;
+            } else {
+              // Update disabled states before showing
+              updateAddFieldMenuOptions();
+              addFieldMenu.hidden = false;
+              
+              // Close when clicking outside
+              const outsideHandler = (ev) => {
+                if(!addFieldBtnWrapper.contains(ev.target)){
+                  addFieldMenu.hidden = true;
+                  document.removeEventListener('click', outsideHandler);
+                  document.removeEventListener('pointerdown', outsideHandler);
+                }
+              };
+              setTimeout(() => {
+                document.addEventListener('click', outsideHandler);
+                document.addEventListener('pointerdown', outsideHandler);
+              }, 0);
+            }
           });
 
           renderForm({
