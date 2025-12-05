@@ -10537,6 +10537,8 @@ function makePosts(){
           const addFieldBtnWrapper = document.createElement('div');
           addFieldBtnWrapper.className = 'options-dropdown add-field-btn-wrapper';
           addFieldBtnWrapper.style.position = 'relative';
+          addFieldBtnWrapper.style.overflow = 'visible';
+          addFieldBtnWrapper.style.height = 'auto';
           
           const addFieldBtn = document.createElement('button');
           addFieldBtn.type = 'button';
@@ -14676,6 +14678,10 @@ function makePosts(){
             dropdownMenu.style.flexDirection = 'column';
             dropdownMenu.style.gap = '6px';
             dropdownMenu.style.boxSizing = 'border-box';
+            dropdownMenu.style.height = 'auto';
+            dropdownMenu.style.minHeight = 'auto';
+            dropdownMenu.style.maxHeight = 'none';
+            dropdownMenu.style.overflow = 'visible';
             
             // Get existing field types in this subcategory to disable already-used fieldsets
             const existingFieldTypes = new Set();
@@ -14798,20 +14804,28 @@ function makePosts(){
               dropdownMenu.appendChild(optionBtn);
             });
             
-            // Position dropdown relative to button wrapper
-            dropdownMenu.style.position = 'absolute';
-            dropdownMenu.style.top = 'calc(100% + 4px)';
-            dropdownMenu.style.left = '0';
-            dropdownMenu.style.minWidth = '100%';
+            // Position dropdown relative to button - use fixed positioning to avoid clipping
+            const buttonRect = addFieldBtn.getBoundingClientRect();
+            dropdownMenu.style.position = 'fixed';
+            dropdownMenu.style.top = `${buttonRect.bottom + 4}px`;
+            dropdownMenu.style.left = `${buttonRect.left}px`;
+            dropdownMenu.style.width = `${buttonRect.width}px`;
+            dropdownMenu.style.minWidth = `${buttonRect.width}px`;
+            dropdownMenu.style.maxWidth = `${buttonRect.width}px`;
+            dropdownMenu.style.height = 'auto';
+            dropdownMenu.style.minHeight = 'auto';
+            dropdownMenu.style.maxHeight = 'none';
+            dropdownMenu.style.overflow = 'visible';
             dropdownMenu.style.zIndex = 'var(--layer-menu)';
+            dropdownMenu.style.boxSizing = 'border-box';
             dropdownMenu.hidden = false;
             
-            // Append to wrapper for positioning context
-            addFieldBtnWrapper.appendChild(dropdownMenu);
+            // Append to body to avoid clipping by parent containers
+            document.body.appendChild(dropdownMenu);
             
             // Close dropdown when clicking outside
             const outsideHandler = (ev) => {
-              if(!addFieldBtnWrapper.contains(ev.target)){
+              if(!addFieldBtnWrapper.contains(ev.target) && !dropdownMenu.contains(ev.target)){
                 dropdownMenu.hidden = true;
                 dropdownMenu.remove();
                 document.removeEventListener('click', outsideHandler);
