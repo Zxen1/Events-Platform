@@ -6149,12 +6149,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .post-body .desc{
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-  text-overflow:ellipsis;
   cursor:pointer;
   white-space:normal;
 }
@@ -6164,44 +6158,19 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .post-body .desc.expanded{
-  display:block;
-  -webkit-line-clamp:unset;
-  line-clamp:unset;
-  overflow:visible;
-  text-overflow:unset;
 }
 
 /* See More / See Less toggle - Facebook style */
 .desc-wrap{
-  position:relative;
   cursor:pointer;
-}
-
-.desc-wrap .see-more-toggle{
-  position:absolute;
-  bottom:0;
-  right:0;
-  color:#888888;
-  font-size:14px;
-  font-weight:400;
-  user-select:none;
-  -webkit-user-select:none;
-  background:linear-gradient(to right, transparent, var(--background) 20%);
-  padding-left:2em;
-}
-
-.open-post.desc-expanded .desc-wrap .see-more-toggle{
-  position:static;
-  background:none;
-  padding-left:0.5em;
-}
-
-.desc-wrap .see-more-toggle:hover{
-  text-decoration:underline;
 }
 
 .desc-wrap:focus{
   outline:none;
+}
+
+.see-more-toggle{
+  color:#888888;
 }
 
 .open-post .location-section,
