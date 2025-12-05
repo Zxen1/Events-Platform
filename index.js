@@ -18827,6 +18827,11 @@ function makePosts(){
           if(controlEl){
             geolocateButton = controlEl.querySelector('button');
             if(geolocateButton){
+              // Replace the icon with a proper SVG we can animate
+              const iconSpan = geolocateButton.querySelector('.mapboxgl-ctrl-icon');
+              if(iconSpan){
+                iconSpan.innerHTML = '<svg class="geolocate-icon" viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path d="M10 4a1 1 0 011 1v.09A5.502 5.502 0 0114.91 9H15a1 1 0 110 2h-.09A5.502 5.502 0 0111 14.91V15a1 1 0 11-2 0v-.09A5.502 5.502 0 015.09 11H5a1 1 0 110-2h.09A5.502 5.502 0 019 5.09V5a1 1 0 011-1zm0 4a2 2 0 100 4 2 2 0 000-4z"/></svg>';
+              }
               const handlePress = (evt) => {
                 if(evt && evt.type === 'keydown'){
                   const key = evt.key || evt.code;
