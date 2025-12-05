@@ -15406,6 +15406,8 @@ function makePosts(){
       formbuilderCats.appendChild(frag);
       refreshFormbuilderSubcategoryLogos();
     };
+    // Expose renderFormbuilderCats globally so it can be called when Forms tab opens
+    window.renderFormbuilderCats = renderFormbuilderCats;
     if(formbuilderAddCategoryBtn){
       async function handleFormbuilderAddCategoryClick(){
         const confirmed = await confirmFormbuilderAction({
@@ -15577,8 +15579,9 @@ function makePosts(){
       };
     }
     let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
-    function restoreFormbuilderSnapshot(snapshot){
+    function restoreFormbuilderSnapshot(snapshot, options = {}){
       if(!snapshot) return;
+      const skipFormbuilderUI = options.skipFormbuilderUI === true;
       const existingFieldTypes = (() => {
         if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
           return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
@@ -15658,7 +15661,10 @@ function makePosts(){
         });
       }
       renderFilterCategories();
-      renderFormbuilderCats();
+      // SKIP renderFormbuilderCats() on startup - only render when Forms tab opens (this is the slow part)
+      if(!skipFormbuilderUI){
+        renderFormbuilderCats();
+      }
       refreshFormbuilderSubcategoryLogos();
       if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
         try{
@@ -15678,15 +15684,21 @@ function makePosts(){
       restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
       save(){ updateFormbuilderSnapshot(); },
       getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
-      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); },
+      restore(snapshot, options){ restoreFormbuilderSnapshot(snapshot, options); },
       // LAZY LOADING: Load and restore formbuilder snapshot on-demand
-      async ensureLoaded(){
-        if(this._loaded) return;
+      async ensureLoaded(options = {}){
+        if(this._loaded && !options.forceReload) {
+          // If already loaded but we need to render formbuilder UI (was skipped on startup), do it now
+          if(!options.skipFormbuilderUI && typeof window.renderFormbuilderCats === 'function'){
+            window.renderFormbuilderCats();
+          }
+          return;
+        }
         try {
           const snapshot = await getFormbuilderSnapshotPromise();
           if(!snapshot) return;
           if(typeof this.restore === 'function'){
-            this.restore(snapshot);
+            this.restore(snapshot, options);
           }
           if(typeof this.save === 'function'){
             this.save();
@@ -22359,6 +22371,14 @@ function openPostModal(id){
       }
     }
 
+    // Load categories and render filter on startup (skip slow formbuilder UI)
+    // This is needed for filter panel and posts to work, but we skip renderFormbuilderCats() which is slow
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.ensureLoaded === 'function'){
+      window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: true }).catch(err => {
+        console.error('Failed to load categories for filter panel:', err);
+      });
+    }
+    
     // applyFilters();
     setMode(mode);
     if(historyWasActive && mode === 'posts'){
@@ -24749,9 +24769,10 @@ document.addEventListener('pointerdown', (e) => {
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
-      // LAZY LOAD: Load formbuilder when admin opens Forms tab (only when tab is clicked, not on startup)
+      // LAZY LOAD: Load formbuilder UI when admin opens Forms tab (only when tab is clicked, not on startup)
       if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
-        window.formbuilderStateManager.ensureLoaded();
+        // Load full formbuilder UI (renderFormbuilderCats) which was skipped on startup
+        window.formbuilderStateManager.ensureLoaded({ forceReload: true, skipFormbuilderUI: false });
       }
     });
   });
@@ -24773,7 +24794,7 @@ document.addEventListener('pointerdown', (e) => {
       }
       // LAZY LOAD: Load formbuilder when member opens Create Post tab
       if(btn.dataset.tab === 'create' && window.formbuilderStateManager){
-        window.formbuilderStateManager.ensureLoaded();
+        window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: false });
       }
     });
   });
