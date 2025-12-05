@@ -1,4 +1,4 @@
-﻿// === Centralized API Request Manager (Deduplication) ===
+// === Centralized API Request Manager (Deduplication) ===
 const apiRequestInFlight = new Map();
 
 /**
@@ -11762,7 +11762,7 @@ function makePosts(){
                 const sorted = Array.from(selectedDates).sort();
                 const existingSessions = Array.isArray(venue.sessions) ? [...venue.sessions] : [];
                 const maxTimes = Math.max(
-                  ...existingSessions.map(sess => Array.isArray(sess?.session_times) ? sess.session_times.length : 1),
+                  ...existingSessions.map(sess => Array.isArray(sess?.times) ? sess.times.length : 1),
                   1
                 );
                 const sessionsByIso = new Map();
@@ -11803,8 +11803,8 @@ function makePosts(){
                   }
                   if(!active){
                     active = venueSessionCreateSession();
-                    while(active.session_times.length < maxTimes){
-                      active.session_times.push(venueSessionCreateSessionTime());
+                    while(active.times.length < maxTimes){
+                      active.times.push(venueSessionCreateSessionTime());
                     }
                     applyAutofillToSession(venue, active);
                   }
