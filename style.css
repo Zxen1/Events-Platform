@@ -5504,14 +5504,19 @@ body.filters-active #filterBtn{
   background-color:#ffffff;
 }
 
-/* Geolocate button loading animation */
+/* Geolocate button loading animation - fixes Mapbox CSS selector mismatch */
 @keyframes mapboxgl-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting button,
-.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon {
+/* Mapbox's CSS targets .mapboxgl-ctrl-icon.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting
+   but in v3.15 these classes are on different elements (button vs span inside).
+   This fixes the selector to match the actual HTML structure. */
+.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon,
+.geolocate-waiting .mapboxgl-ctrl-icon,
+button.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon,
+button.geolocate-waiting .mapboxgl-ctrl-icon {
   animation: mapboxgl-spin 2s linear infinite !important;
 }
 

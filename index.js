@@ -18716,6 +18716,10 @@ function makePosts(){
           if(loader){
             loader.removeMotion(geolocateToken);
           }
+          // Remove waiting class from button
+          if(geolocateButton){
+            geolocateButton.classList.remove('geolocate-waiting');
+          }
         };
 
         const ensureGeolocateLoading = () => {
@@ -18730,6 +18734,10 @@ function makePosts(){
             const loader = getMapLoading();
             if(loader){
               loader.removeMotion(geolocateToken);
+            }
+            // Remove waiting class from button on timeout
+            if(geolocateButton){
+              geolocateButton.classList.remove('geolocate-waiting');
             }
           }, 15000);
         };
@@ -18824,6 +18832,10 @@ function makePosts(){
                   const key = evt.key || evt.code;
                   if(!key) return;
                   if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
+                }
+                // Add waiting class for button animation
+                if(geolocateButton){
+                  geolocateButton.classList.add('geolocate-waiting');
                 }
                 ensureGeolocateLoading();
               };
