@@ -9333,72 +9333,59 @@ function makePosts(){
         const allCheckoutOptions = (window.CHECKOUT_OPTIONS || []).filter(opt => opt.is_active !== false && opt.is_active !== 0);
         
         if(allCheckoutOptions.length > 0){
-          // Get subcategory surcharge if available
+          // Get subcategory data
           let surcharge = 0;
+          let subcategoryType = 'Standard';
           if(window.categories && Array.isArray(window.categories)){
             const category = window.categories.find(c => c && c.name === categoryName);
             if(category && category.subFees && category.subFees[subcategoryName]){
-              const rawSurcharge = category.subFees[subcategoryName].checkout_surcharge;
+              const subData = category.subFees[subcategoryName];
+              const rawSurcharge = subData.checkout_surcharge;
               if(rawSurcharge !== null && rawSurcharge !== undefined){
                 surcharge = parseFloat(rawSurcharge) || 0;
+              }
+              if(subData.subcategory_type){
+                subcategoryType = subData.subcategory_type;
               }
             }
           }
           
+          const isEvent = subcategoryType === 'Events';
+          
           // Calculate days from submission to final session date for events
-          function calculateDaysToFinalSessionForSubcategory(){
+          let calculatedDays = null;
+          if(isEvent){
             try {
-              // Find venue-ticketing field in the form fields
               const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
-              if(!venueTicketingField || !venueTicketingField.options || !Array.isArray(venueTicketingField.options)) return null;
-              
-              let latestDate = null;
-              
-              // Iterate through all venues
-              venueTicketingField.options.forEach(venue => {
-                if(!venue || !Array.isArray(venue.sessions)) return;
-                
-                // Iterate through all sessions in this venue
-                venue.sessions.forEach(session => {
-                  if(!session || typeof session.date !== 'string' || !session.date.trim()) return;
-                  
-                  // Parse session date - could be ISO format or other
-                  const dateStr = session.date.trim();
-                  let date = null;
-                  
-                  // Try ISO format first (YYYY-MM-DD)
-                  if(dateStr.match(/^\d{4}-\d{2}-\d{2}/)){
-                    date = new Date(dateStr.split(' ')[0] + 'T00:00:00');
-                  } else {
-                    date = new Date(dateStr);
-                  }
-                  
-                  if(date && !isNaN(date.getTime())){
-                    date.setHours(0, 0, 0, 0);
-                    if(!latestDate || date > latestDate){
-                      latestDate = date;
+              if(venueTicketingField && venueTicketingField.options && Array.isArray(venueTicketingField.options)){
+                let latestDate = null;
+                venueTicketingField.options.forEach(venue => {
+                  if(!venue || !Array.isArray(venue.sessions)) return;
+                  venue.sessions.forEach(session => {
+                    if(!session || typeof session.date !== 'string' || !session.date.trim()) return;
+                    const dateStr = session.date.trim();
+                    let date = dateStr.match(/^\d{4}-\d{2}-\d{2}/) 
+                      ? new Date(dateStr.split(' ')[0] + 'T00:00:00')
+                      : new Date(dateStr);
+                    if(date && !isNaN(date.getTime())){
+                      date.setHours(0, 0, 0, 0);
+                      if(!latestDate || date > latestDate) latestDate = date;
                     }
-                  }
+                  });
                 });
-              });
-              
-              if(!latestDate) return null;
-              
-              // Calculate days from today (submission date) to final session
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              
-              const diffTime = latestDate.getTime() - today.getTime();
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-              
-              return diffDays > 0 ? diffDays : null;
+                if(latestDate){
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const diffDays = Math.ceil((latestDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                  calculatedDays = diffDays > 0 ? diffDays : 1;
+                }
+              }
             } catch(err){
               console.warn('Failed to calculate days to final session:', err);
-              return null;
             }
+            // Default to 30 days for events without session dates
+            if(calculatedDays === null) calculatedDays = 30;
           }
-          
-          const calculatedDays = calculateDaysToFinalSessionForSubcategory();
           
           const wrapper = document.createElement('div');
           wrapper.className = 'panel-field form-field form-field--checkout';
@@ -9411,81 +9398,80 @@ function makePosts(){
           
           const checkoutGroup = document.createElement('div');
           checkoutGroup.className = 'form-checkout-group';
+          checkoutGroup.dataset.subcategoryType = subcategoryType;
           const groupName = `${baseId}-checkout`;
           
+          let buttonIndex = 0;
+          
+          // Build checkout buttons based on subcategory type
+          // Events: 3 buttons (one per option with calculated days)
+          // Standard: 6 buttons (30-day and 365-day for each option, side by side)
           allCheckoutOptions.forEach((option, optionIndex) => {
-            const radioLabel = document.createElement('label');
-            radioLabel.className = 'form-checkout-option';
-            
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = groupName;
-            radio.value = String(option.id || '');
-            radio.id = `${baseId}-checkout-${optionIndex}`;
-            if(optionIndex === 0) radio.checked = true;
-            radio.required = true;
-            
-            const optionContent = document.createElement('div');
-            optionContent.className = 'form-checkout-option-content';
-            
-            const titleRow = document.createElement('div');
-            titleRow.className = 'form-checkout-option-title';
-            
-            const titleText = document.createElement('span');
-            titleText.className = 'form-checkout-option-name';
-            titleText.textContent = option.checkout_title || 'Untitled';
-            
-            const priceText = document.createElement('span');
-            priceText.className = 'form-checkout-option-price';
-            
-            // Calculate prices for 30 and 365 day options, or use calculated days for events
-            // Add surcharge to base flagfall price
             const flagfallPrice = (parseFloat(option.checkout_flagfall_price) || 0) + surcharge;
             const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate) : null;
             const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate) : null;
             const currency = option.checkout_currency || 'USD';
+            const title = option.checkout_title || 'Untitled';
+            const description = option.checkout_description || '';
             
-            const price30Days = basicDayRate !== null ? flagfallPrice + (basicDayRate * 30) : flagfallPrice;
-            const price365Days = discountDayRate !== null ? flagfallPrice + (discountDayRate * 365) : (basicDayRate !== null ? flagfallPrice + (basicDayRate * 365) : flagfallPrice);
+            const createButton = (days, dayRate, isFirst) => {
+              const price = dayRate !== null ? flagfallPrice + (dayRate * days) : flagfallPrice;
+              const radioLabel = document.createElement('label');
+              radioLabel.className = 'form-checkout-option';
+              
+              const radio = document.createElement('input');
+              radio.type = 'radio';
+              radio.name = groupName;
+              radio.value = `${option.id || ''}-${days}`;
+              radio.id = `${baseId}-checkout-${buttonIndex}`;
+              radio.dataset.optionId = String(option.id || '');
+              radio.dataset.days = String(days);
+              if(buttonIndex === 0) radio.checked = true;
+              radio.required = true;
+              buttonIndex++;
+              
+              const optionContent = document.createElement('div');
+              optionContent.className = 'form-checkout-option-content';
+              
+              const titleRow = document.createElement('div');
+              titleRow.className = 'form-checkout-option-title';
+              
+              const titleText = document.createElement('span');
+              titleText.className = 'form-checkout-option-name';
+              titleText.textContent = title;
+              
+              const priceText = document.createElement('span');
+              priceText.className = 'form-checkout-option-price';
+              priceText.textContent = `(${days} days) — ${price > 0 ? `${currency} ${price.toFixed(2)}` : 'Free'}`;
+              
+              titleRow.appendChild(titleText);
+              titleRow.appendChild(priceText);
+              optionContent.appendChild(titleRow);
+              
+              if(description){
+                const descText = document.createElement('div');
+                descText.className = 'form-checkout-option-description';
+                descText.textContent = description;
+                optionContent.appendChild(descText);
+              }
+              
+              radioLabel.appendChild(radio);
+              radioLabel.appendChild(optionContent);
+              return radioLabel;
+            };
             
-            // If calculated days available (event with sessions), show calculated price
-            if(calculatedDays !== null && calculatedDays > 0){
-              const dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : (basicDayRate !== null ? basicDayRate : null);
-              const calculatedPrice = dayRate !== null ? flagfallPrice + (dayRate * calculatedDays) : flagfallPrice;
-              priceText.textContent = `(${calculatedDays} days) — ${calculatedPrice > 0 ? `${currency} ${calculatedPrice.toFixed(2)}` : 'Free'}`;
+            if(isEvent){
+              // Events: one button per option with calculated days
+              const dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : basicDayRate;
+              checkoutGroup.appendChild(createButton(calculatedDays, dayRate, optionIndex === 0));
             } else {
-              // Show both duration options for standard posts
-              const durationWrapper = document.createElement('div');
-              durationWrapper.className = 'form-checkout-duration-wrapper';
-              
-              const duration30 = document.createElement('span');
-              duration30.className = 'form-checkout-duration-option';
-              duration30.textContent = `(30 days) — ${price30Days > 0 ? `${currency} ${price30Days.toFixed(2)}` : 'Free'}`;
-              
-              const duration365 = document.createElement('span');
-              duration365.className = 'form-checkout-duration-option';
-              duration365.textContent = `(365 days) — ${price365Days > 0 ? `${currency} ${price365Days.toFixed(2)}` : 'Free'}`;
-              
-              durationWrapper.appendChild(duration30);
-              durationWrapper.appendChild(duration365);
-              
-              priceText.appendChild(durationWrapper);
+              // Standard: two buttons per option (30 and 365 days) in a row
+              const optionRow = document.createElement('div');
+              optionRow.className = 'form-checkout-option-row';
+              optionRow.appendChild(createButton(30, basicDayRate, optionIndex === 0));
+              optionRow.appendChild(createButton(365, discountDayRate !== null ? discountDayRate : basicDayRate, false));
+              checkoutGroup.appendChild(optionRow);
             }
-            
-            titleRow.appendChild(titleText);
-            titleRow.appendChild(priceText);
-            optionContent.appendChild(titleRow);
-            
-            if(option.checkout_description){
-              const descText = document.createElement('div');
-              descText.className = 'form-checkout-option-description';
-              descText.textContent = option.checkout_description;
-              optionContent.appendChild(descText);
-            }
-            
-            radioLabel.appendChild(radio);
-            radioLabel.appendChild(optionContent);
-            checkoutGroup.appendChild(radioLabel);
           });
           
           const header = document.createElement('div');

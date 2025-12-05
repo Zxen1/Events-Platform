@@ -4848,6 +4848,17 @@ body.hide-ads .ad-board{
   font-style:italic;
   padding:12px;
 }
+/* Checkout option row - 30/365 day buttons side by side for Standard type */
+#tab-forms .form-container .form-checkout-option-row,
+#memberPanel .member-create-fields .form-checkout-option-row{
+  display:flex;
+  gap:10px;
+}
+#tab-forms .form-container .form-checkout-option-row .form-checkout-option,
+#memberPanel .member-create-fields .form-checkout-option-row .form-checkout-option{
+  flex:1;
+  min-width:0;
+}
 #tab-forms .form-field--url .form-url-wrapper,
 #memberPanel .member-create-fields .form-field--url .form-url-wrapper{
   display:flex;
