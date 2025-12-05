@@ -603,7 +603,7 @@ try {
                     if (!is_array($fieldPayload)) {
                         continue;
                     }
-                    $sanitizedFields[] = sanitizeField($fieldPayload);
+                    $sanitizedFields[] = sanitizeField($fieldPayload, $fieldTypeDefinitions);
                 }
             }
             // Fields come from field types, not from metadata_json
@@ -1346,29 +1346,28 @@ function filterPositiveInt($value): ?int
     return null;
 }
 
-function sanitizeField(array $field): array
+function sanitizeField(array $field, array $fieldTypeDefinitions = []): array
 {
-    $allowedTypes = [
-        'title',
-        'description',
-        'text-box',
-        'text-area',
-        'dropdown',
-        'radio',
-        'radio-toggle',
-        'email',
-        'phone',
-        'website-url',
-        'tickets-url',
-        'images',
-        'coupon',
-        'variant-pricing',
-        'checkout',
-        'venue-session-version-tier-price',
-    ];
+    // Build allowed types from database fieldsets instead of hardcoding
+    $allowedTypes = [];
+    foreach ($fieldTypeDefinitions as $ftDef) {
+        if (isset($ftDef['key']) && is_string($ftDef['key']) && $ftDef['key'] !== '') {
+            $allowedTypes[] = $ftDef['key'];
+        }
+    }
+    
+    // No fallback - throw error if no fieldset definitions available
+    if (empty($allowedTypes)) {
+        throw new RuntimeException('No fieldset definitions available from database. Cannot validate field types.');
+    }
 
     // Support both 'type' (old) and 'input_type' (new) for backwards compatibility
-    $inputType = $field['input_type'] ?? $field['type'] ?? 'text-box';
+    $inputType = $field['input_type'] ?? $field['type'] ?? null;
+    
+    // No fallback - require explicit field type
+    if ($inputType === null || $inputType === '') {
+        throw new RuntimeException('Field type is required. Missing both input_type and type in field data: ' . json_encode($field));
+    }
     
     $safe = [
         'id' => sanitizeString($field['id'] ?? '', 128),
@@ -1379,8 +1378,9 @@ function sanitizeField(array $field): array
         'required' => sanitizeBool($field['required'] ?? false),
     ];
 
+    // No fallback - throw error if field type is not in allowed list
     if (!in_array($safe['type'], $allowedTypes, true)) {
-        $safe['type'] = 'text-box';
+        throw new RuntimeException('Invalid field type "' . $safe['type'] . '". Must be one of: ' . implode(', ', $allowedTypes));
     }
 
     if ($safe['id'] === '') {

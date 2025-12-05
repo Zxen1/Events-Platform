@@ -1235,8 +1235,9 @@
       // Use fieldTypeKey or key as source of truth if type is not set or is just input_type
       const fieldTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
       if(typeof safeField.type !== 'string' || !safeField.type.trim()){
-        // If we have a fieldTypeKey, use it; otherwise default to text-box
-        safeField.type = fieldTypeKey || 'text-box';
+        // If we have a fieldTypeKey, use it; otherwise throw error
+        if(!fieldTypeKey) throw new Error('Field type is required. Missing both type and fieldTypeKey for field: ' + JSON.stringify(field));
+        safeField.type = fieldTypeKey;
       } else {
         // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
         // BUT preserve description and text-area types BEFORE normalization
@@ -1347,8 +1348,12 @@
         if(!field || !element){
           continue;
         }
-        const rawType = typeof field.type === 'string' ? field.type : 'text-box';
-        const type = getBaseFieldType(rawType) || 'text-box';
+        if(typeof field.type !== 'string' || !field.type.trim()) {
+          throw new Error('Field type is required. Missing type for field: ' + JSON.stringify(field));
+        }
+        const rawType = field.type;
+        const type = getBaseFieldType(rawType);
+        if(!type) throw new Error('Field type is required. Cannot determine type from rawType: ' + rawType);
         const label = field.name && field.name.trim() ? field.name.trim() : 'This field';
         let value;
 

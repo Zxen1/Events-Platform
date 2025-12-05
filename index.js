@@ -8204,10 +8204,12 @@ function makePosts(){
           if (fieldsetKey === 'radio' || fieldsetKey === 'dropdown' || fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown') {
             baseType = fieldsetKey || fieldTypeKey;
           } else {
-            baseType = fieldsetKey || fieldTypeKey || field.type || 'text-box';
+            baseType = fieldsetKey || fieldTypeKey || field.type;
+            if(!baseType) throw new Error('Field type is required. Missing fieldsetKey, fieldTypeKey, and type for field: ' + JSON.stringify(field));
           }
         } else {
-          baseType = getBaseFieldType(field.type) || 'text-box';
+          baseType = getBaseFieldType(field.type);
+          if(!baseType) throw new Error('Field type is required. Cannot determine baseType from field.type: ' + JSON.stringify(field));
         }
         
         if(baseType === 'text-area' || baseType === 'description'){
@@ -13642,7 +13644,8 @@ function makePosts(){
                 const nextType = optionBtn.dataset.value || '';
                 if(!nextType) return;
                 
-                const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+                const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : null;
+                if(!nextValidType) throw new Error('Invalid field type "' + nextType + '". Must be one of: ' + FORM_FIELD_TYPES.map(opt => opt.value).join(', '));
                 safeField.fieldsetKey = nextValidType;
                 safeField.fieldTypeKey = nextValidType;
                 safeField.key = nextValidType;

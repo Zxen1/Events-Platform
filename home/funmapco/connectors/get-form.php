@@ -935,9 +935,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // but the actual field type identifier is fieldset_key (e.g., "description", "text-area")
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 
-                // If fieldset_key is description or text-area, use it directly
-                // Otherwise, fall back to normalizing from fields.input_type
-                if ($fieldsetKey === 'description' || $fieldsetKey === 'text-area') {
+                // Always use fieldset_key from database when available (no hardcoded checks)
+                if ($fieldsetKey !== '') {
                     $normalizedType = $fieldsetKey;
                 } else {
                     // Fallback: normalize from fields.input_type column (for other field types)
@@ -946,13 +945,6 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     
                     if ($rawType !== '' && preg_match('/^([^\s\[]+)/', $rawType, $matches)) {
                         $normalizedType = trim($matches[1]);
-                    }
-                    
-                    // Also check if fields.input_type contains description/text-area
-                    if (stripos($rawType, 'description') !== false) {
-                        $normalizedType = 'description';
-                    } elseif (stripos($rawType, 'text-area') !== false || stripos($rawType, 'textarea') !== false) {
-                        $normalizedType = 'text-area';
                     }
                 }
                 
