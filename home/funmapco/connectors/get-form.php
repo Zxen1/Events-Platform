@@ -98,9 +98,8 @@ try {
         $fieldTypes = fetchFieldTypes($pdo, $fieldTypeColumns);
     }
 
-    // Fetch all fields and fieldsets from database
+    // Fetch all fields from database
     $allFields = [];
-    $allFieldsets = [];
     $currencyOptions = [];
     
     try {
@@ -127,15 +126,6 @@ try {
     } catch (PDOException $e) {
         // Continue without fields
     }
-    
-    try {
-        $fieldsetColumns = fetchTableColumns($pdo, 'fieldsets');
-        if ($fieldsetColumns) {
-            $allFieldsets = fetchAllFieldsets($pdo, $fieldsetColumns);
-        }
-    } catch (PDOException $e) {
-        // Continue without fieldsets
-    }
 
     // Fetch checkout options from database
     $checkoutOptions = [];
@@ -161,7 +151,7 @@ try {
         // Use default if query fails
     }
 
-    $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes, $iconFolder);
+    $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $fieldTypes, $iconFolder);
     $snapshot['fieldTypes'] = $fieldTypes;
     $snapshot['field_types'] = $fieldTypes;
     $snapshot['checkout_options'] = $checkoutOptions;
@@ -641,53 +631,6 @@ function fetchAllFields(PDO $pdo, array $columns): array
     return $fields;
 }
 
-function fetchAllFieldsets(PDO $pdo, array $columns): array
-{
-    $selectColumns = [];
-    foreach (['id', 'fieldset_key', 'description', 'field_id', 'field_key'] as $col) {
-        if (in_array($col, $columns, true)) {
-            $selectColumns[] = "`$col`";
-        }
-    }
-    
-    if (empty($selectColumns)) {
-        $selectColumns[] = '*';
-    }
-    
-    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM `fieldsets` ORDER BY `id` ASC';
-    $stmt = $pdo->query($sql);
-    
-    $fieldsets = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        if (!isset($row['id'])) continue;
-        
-        $fieldIds = [];
-        if (isset($row['field_id']) && is_string($row['field_id'])) {
-            $fieldIds = array_filter(array_map('trim', explode(',', $row['field_id'])), function($id) {
-                return $id !== '';
-            });
-        }
-        
-        $fieldKeys = [];
-        if (isset($row['field_key']) && is_string($row['field_key'])) {
-            $fieldKeys = array_filter(array_map('trim', explode(',', $row['field_key'])), function($key) {
-                return $key !== '';
-            });
-        }
-        
-        $fieldset = [
-            'id' => (int) $row['id'],
-            'fieldset_key' => isset($row['fieldset_key']) ? trim((string) $row['fieldset_key']) : '',
-            'description' => isset($row['description']) ? trim((string) $row['description']) : '',
-            'field_ids' => $fieldIds,
-            'field_keys' => $fieldKeys,
-        ];
-        
-        $fieldsets[] = $fieldset;
-    }
-    
-    return $fieldsets;
-}
 
 function fetchCheckoutOptions(PDO $pdo): array
 {
@@ -718,7 +661,7 @@ function fetchCheckoutOptions(PDO $pdo): array
     return $checkoutOptions;
 }
 
-function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = [], string $iconFolder = 'assets/icons-30'): array
+function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $fieldTypes = [], string $iconFolder = 'assets/icons-30'): array
 {
     // Index fields by ID and by key for quick lookup
     $fieldsById = [];
@@ -729,13 +672,6 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
         if (isset($field['field_key']) && is_string($field['field_key']) && $field['field_key'] !== '') {
             $fieldsByKey[$field['field_key']] = $field;
-        }
-    }
-    
-    $fieldsetsById = [];
-    foreach ($allFieldsets as $fieldset) {
-        if (isset($fieldset['id'])) {
-            $fieldsetsById[$fieldset['id']] = $fieldset;
         }
     }
     
@@ -868,7 +804,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             $checkoutOptionsIds = $sub['checkout_options_id'];
         }
         
-        // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
+        // Build field objects by looking up field_types and extracting field IDs from ENUMs
         $builtFields = [];
         foreach ($fieldTypeIds as $index => $fieldTypeId) {
             // Get required flag for this field (default to false if not set)

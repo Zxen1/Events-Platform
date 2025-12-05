@@ -1101,19 +1101,6 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
 }
-#adminPanel .admin-fieldset,
-.admin-fieldset{
-  margin:0 auto;
-  border:0;
-  border-radius:8px;
-  padding:0;
-  width:100%;
-  max-width:420px;
-  box-sizing:border-box;
-}
-#adminPanel .admin-fieldset.collapsed{
-  padding:0;
-}
   #adminPanel .panel-content,
   #memberPanel .panel-content{
     width:min(440px, 100%);
@@ -1547,8 +1534,6 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
-#adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
-#adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:420px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;-webkit-user-select:none;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
@@ -2258,12 +2243,6 @@ button[aria-expanded="true"] .results-arrow{
   height:40px;
   border-radius:var(--dropdown-radius);
   padding:0;
-  box-sizing:border-box;
-}
-#adminPanel .admin-fieldset input,
-#adminPanel .admin-fieldset select,
-#adminPanel .admin-fieldset textarea{
-  max-width:200px;
   box-sizing:border-box;
 }
 #adminPanel .control-row select{
