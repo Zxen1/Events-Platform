@@ -17526,7 +17526,7 @@ function makePosts(){
             </div>
           </div>
           <div class="post-details-description-container">
-            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div><span class="see-more-toggle">See More</span></div>
+            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false"></div></div>
             <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
           </div>
         </div>
@@ -20794,35 +20794,47 @@ function openPostModal(id){
 
       if(descEl){
         const descWrap = descEl.closest('.desc-wrap');
-        const seeMoreToggle = descWrap ? descWrap.querySelector('.see-more-toggle') : null;
+        const fullText = p.desc || '';
+        let needsTruncation = false;
         
-        const updateToggleText = (expanded) => {
-          if(seeMoreToggle){
-            seeMoreToggle.textContent = expanded ? 'See Less' : 'See More';
+        const truncateToTwoLines = () => {
+          descEl.textContent = fullText;
+          const lineHeight = parseFloat(getComputedStyle(descEl).lineHeight) || 20;
+          const maxHeight = lineHeight * 2;
+          if(descEl.scrollHeight <= maxHeight){
+            needsTruncation = false;
+            return;
+          }
+          needsTruncation = true;
+          const suffix = '... See More';
+          let text = fullText;
+          while(text.length > 0 && descEl.scrollHeight > maxHeight){
+            text = text.slice(0, -10);
+            descEl.innerHTML = text.trim() + suffix.replace('See More', '<span class="see-more-toggle">See More</span>');
+          }
+        };
+        
+        const render = (expanded) => {
+          if(expanded){
+            descEl.innerHTML = fullText + ' <span class="see-more-toggle">See Less</span>';
+          } else {
+            truncateToTwoLines();
           }
         };
         
         const handleDescToggle = evt => {
-          const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
-          if(evt.type === 'keydown' && !allowed.includes(evt.key)){
-            return;
-          }
+          if(!needsTruncation) return;
+          if(evt.type === 'keydown' && !['Enter',' '].includes(evt.key)) return;
           evt.preventDefault();
-          const openPostEl = el;
-          const isExpanded = openPostEl
-            ? openPostEl.classList.contains('desc-expanded')
-            : descEl.classList.contains('expanded');
+          const isExpanded = el.classList.contains('desc-expanded');
           setDescExpandedState(!isExpanded);
-          updateToggleText(!isExpanded);
+          render(!isExpanded);
         };
         
-        // Description click toggles collapsed state
         descWrap.addEventListener('click', handleDescToggle);
         descWrap.addEventListener('keydown', handleDescToggle);
-        descWrap.style.cursor = 'pointer';
-        
-        // Initialize
-        updateToggleText(false);
+        render(false);
+        if(needsTruncation) descWrap.style.cursor = 'pointer';
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];

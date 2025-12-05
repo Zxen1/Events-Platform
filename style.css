@@ -6149,50 +6149,19 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .post-body .desc{
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
   cursor:pointer;
-  white-space:normal;
 }
 
 .post-body .desc:focus{
   outline:none;
 }
 
-.post-body .desc.expanded{
-  display:block;
-  -webkit-line-clamp:unset;
-  line-clamp:unset;
-  overflow:visible;
-}
-
-/* See More / See Less toggle - Facebook style */
 .desc-wrap{
-  position:relative;
   cursor:pointer;
 }
 
-.desc-wrap:focus{
-  outline:none;
-}
-
-.desc-wrap .see-more-toggle{
-  position:absolute;
-  right:0;
-  bottom:0;
+.see-more-toggle{
   color:#888888;
-  background:var(--background);
-  padding-left:4px;
-}
-
-.open-post.desc-expanded .desc-wrap .see-more-toggle{
-  position:static;
-  background:none;
-  padding-left:0;
-  margin-left:4px;
 }
 
 .open-post .location-section,
