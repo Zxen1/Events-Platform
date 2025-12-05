@@ -4848,16 +4848,58 @@ body.hide-ads .ad-board{
   font-style:italic;
   padding:12px;
 }
-/* Checkout option row - 30/365 day buttons side by side for Standard type */
-#tab-forms .form-container .form-checkout-option-row,
-#memberPanel .member-create-fields .form-checkout-option-row{
-  display:flex;
-  gap:10px;
+/* Checkout message for events without sessions */
+#tab-forms .form-container .form-checkout-message,
+#memberPanel .member-create-fields .form-checkout-message{
+  color:var(--text-muted, #999);
+  font-style:italic;
+  padding:16px;
+  text-align:center;
+  border:1px dashed var(--border-color, #444);
+  border-radius:6px;
 }
-#tab-forms .form-container .form-checkout-option-row .form-checkout-option,
-#memberPanel .member-create-fields .form-checkout-option-row .form-checkout-option{
+/* Checkout price section */
+#tab-forms .form-container .form-checkout-price-section,
+#memberPanel .member-create-fields .form-checkout-price-section{
+  margin-top:8px;
+}
+/* Event price display */
+#tab-forms .form-container .form-checkout-price-display,
+#memberPanel .member-create-fields .form-checkout-price-display{
+  color:var(--accent-color, #8ab4ff);
+  font-weight:500;
+  font-size:14px;
+}
+/* Duration buttons container */
+#tab-forms .form-container .form-checkout-duration-buttons,
+#memberPanel .member-create-fields .form-checkout-duration-buttons{
+  display:flex;
+  gap:8px;
+}
+/* Duration buttons */
+#tab-forms .form-container .form-checkout-duration-btn,
+#memberPanel .member-create-fields .form-checkout-duration-btn{
   flex:1;
-  min-width:0;
+  padding:8px 12px;
+  font-size:13px;
+  font-weight:500;
+  border:1px solid var(--border-color, #444);
+  border-radius:4px;
+  background:transparent;
+  color:var(--text-muted, #999);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+#tab-forms .form-container .form-checkout-duration-btn:hover,
+#memberPanel .member-create-fields .form-checkout-duration-btn:hover{
+  border-color:var(--accent-color, #8ab4ff);
+  color:var(--text-color, #fff);
+}
+#tab-forms .form-container .form-checkout-duration-btn.selected,
+#memberPanel .member-create-fields .form-checkout-duration-btn.selected{
+  border-color:var(--accent-color, #8ab4ff);
+  background:rgba(138, 180, 255, 0.15);
+  color:var(--accent-color, #8ab4ff);
 }
 #tab-forms .form-field--url .form-url-wrapper,
 #memberPanel .member-create-fields .form-field--url .form-url-wrapper{

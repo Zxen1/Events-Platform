@@ -9383,8 +9383,6 @@ function makePosts(){
             } catch(err){
               console.warn('Failed to calculate days to final session:', err);
             }
-            // Default to 30 days for events without session dates
-            if(calculatedDays === null) calculatedDays = 30;
           }
           
           const wrapper = document.createElement('div');
@@ -9400,35 +9398,35 @@ function makePosts(){
           checkoutGroup.className = 'form-checkout-group';
           checkoutGroup.dataset.subcategoryType = subcategoryType;
           const groupName = `${baseId}-checkout`;
+          const durationGroupName = `${baseId}-duration`;
           
-          let buttonIndex = 0;
-          
-          // Build checkout buttons based on subcategory type
-          // Events: 3 buttons (one per option with calculated days)
-          // Standard: 6 buttons (30-day and 365-day for each option, side by side)
-          allCheckoutOptions.forEach((option, optionIndex) => {
-            const flagfallPrice = (parseFloat(option.checkout_flagfall_price) || 0) + surcharge;
-            const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate) : null;
-            const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate) : null;
-            const currency = option.checkout_currency || 'USD';
-            const title = option.checkout_title || 'Untitled';
-            const description = option.checkout_description || '';
-            
-            const createButton = (days, dayRate, isFirst) => {
-              const price = dayRate !== null ? flagfallPrice + (dayRate * days) : flagfallPrice;
-              const radioLabel = document.createElement('label');
-              radioLabel.className = 'form-checkout-option';
+          // For events without session dates, show message instead of options
+          if(isEvent && calculatedDays === null){
+            const message = document.createElement('div');
+            message.className = 'form-checkout-message';
+            message.textContent = 'Add session dates to see checkout options';
+            checkoutGroup.appendChild(message);
+          } else {
+            // Build checkout option cards
+            allCheckoutOptions.forEach((option, optionIndex) => {
+              const flagfallPrice = (parseFloat(option.checkout_flagfall_price) || 0) + surcharge;
+              const basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate) : null;
+              const discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate) : null;
+              const currency = option.checkout_currency || 'USD';
+              const title = option.checkout_title || 'Untitled';
+              const description = option.checkout_description || '';
+              
+              const card = document.createElement('label');
+              card.className = 'form-checkout-option';
               
               const radio = document.createElement('input');
               radio.type = 'radio';
               radio.name = groupName;
-              radio.value = `${option.id || ''}-${days}`;
-              radio.id = `${baseId}-checkout-${buttonIndex}`;
+              radio.value = String(option.id || '');
+              radio.id = `${baseId}-checkout-${optionIndex}`;
               radio.dataset.optionId = String(option.id || '');
-              radio.dataset.days = String(days);
-              if(buttonIndex === 0) radio.checked = true;
+              if(optionIndex === 0) radio.checked = true;
               radio.required = true;
-              buttonIndex++;
               
               const optionContent = document.createElement('div');
               optionContent.className = 'form-checkout-option-content';
@@ -9440,12 +9438,7 @@ function makePosts(){
               titleText.className = 'form-checkout-option-name';
               titleText.textContent = title;
               
-              const priceText = document.createElement('span');
-              priceText.className = 'form-checkout-option-price';
-              priceText.textContent = `(${days} days) — ${price > 0 ? `${currency} ${price.toFixed(2)}` : 'Free'}`;
-              
               titleRow.appendChild(titleText);
-              titleRow.appendChild(priceText);
               optionContent.appendChild(titleRow);
               
               if(description){
@@ -9455,24 +9448,70 @@ function makePosts(){
                 optionContent.appendChild(descText);
               }
               
-              radioLabel.appendChild(radio);
-              radioLabel.appendChild(optionContent);
-              return radioLabel;
-            };
-            
-            if(isEvent){
-              // Events: one button per option with calculated days
-              const dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : basicDayRate;
-              checkoutGroup.appendChild(createButton(calculatedDays, dayRate, optionIndex === 0));
-            } else {
-              // Standard: two buttons per option (30 and 365 days) in a row
-              const optionRow = document.createElement('div');
-              optionRow.className = 'form-checkout-option-row';
-              optionRow.appendChild(createButton(30, basicDayRate, optionIndex === 0));
-              optionRow.appendChild(createButton(365, discountDayRate !== null ? discountDayRate : basicDayRate, false));
-              checkoutGroup.appendChild(optionRow);
-            }
-          });
+              // Price/duration section
+              const priceSection = document.createElement('div');
+              priceSection.className = 'form-checkout-price-section';
+              
+              if(isEvent){
+                // Events: Single calculated price display
+                const dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : basicDayRate;
+                const price = dayRate !== null ? flagfallPrice + (dayRate * calculatedDays) : flagfallPrice;
+                const priceText = document.createElement('span');
+                priceText.className = 'form-checkout-price-display';
+                priceText.textContent = `(${calculatedDays} days) — ${price > 0 ? `${currency} ${price.toFixed(2)}` : 'Free'}`;
+                priceSection.appendChild(priceText);
+              } else {
+                // Standard: Two duration buttons inside card
+                const durationBtns = document.createElement('div');
+                durationBtns.className = 'form-checkout-duration-buttons';
+                
+                const price30 = basicDayRate !== null ? flagfallPrice + (basicDayRate * 30) : flagfallPrice;
+                const price365 = discountDayRate !== null ? flagfallPrice + (discountDayRate * 365) : (basicDayRate !== null ? flagfallPrice + (basicDayRate * 365) : flagfallPrice);
+                
+                const btn30 = document.createElement('button');
+                btn30.type = 'button';
+                btn30.className = 'form-checkout-duration-btn';
+                btn30.dataset.days = '30';
+                btn30.dataset.price = price30.toFixed(2);
+                btn30.textContent = `30 days — ${price30 > 0 ? `${currency} ${price30.toFixed(2)}` : 'Free'}`;
+                if(optionIndex === 0) btn30.classList.add('selected');
+                
+                const btn365 = document.createElement('button');
+                btn365.type = 'button';
+                btn365.className = 'form-checkout-duration-btn';
+                btn365.dataset.days = '365';
+                btn365.dataset.price = price365.toFixed(2);
+                btn365.textContent = `365 days — ${price365 > 0 ? `${currency} ${price365.toFixed(2)}` : 'Free'}`;
+                
+                // Duration button click handlers
+                [btn30, btn365].forEach(btn => {
+                  btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Select this option's radio
+                    radio.checked = true;
+                    // Toggle duration selection within this card
+                    durationBtns.querySelectorAll('.form-checkout-duration-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    // Store selected duration on radio for form submission
+                    radio.dataset.selectedDays = btn.dataset.days;
+                  });
+                });
+                
+                // Set default duration
+                radio.dataset.selectedDays = '30';
+                
+                durationBtns.appendChild(btn30);
+                durationBtns.appendChild(btn365);
+                priceSection.appendChild(durationBtns);
+              }
+              
+              optionContent.appendChild(priceSection);
+              card.appendChild(radio);
+              card.appendChild(optionContent);
+              checkoutGroup.appendChild(card);
+            });
+          }
           
           const header = document.createElement('div');
           header.className = 'form-field-header';
