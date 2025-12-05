@@ -92,7 +92,11 @@ try {
     $categories = fetchCategories($pdo, $categoryColumns);
     $subcategories = fetchSubcategories($pdo, $subcategoryColumns, $categories);
 
+    // Try fieldsets table first, fallback to field_types for backward compatibility
     $fieldsetColumns = fetchTableColumns($pdo, 'fieldsets');
+    if (!$fieldsetColumns) {
+        $fieldsetColumns = fetchTableColumns($pdo, 'field_types');
+    }
     $fieldsets = [];
     if ($fieldsetColumns) {
         $fieldsets = fetchFieldsets($pdo, $fieldsetColumns);
@@ -194,8 +198,8 @@ function fetchCategories(PDO $pdo, array $columns): array
 
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
-    $hasFieldsetIds = in_array('fieldset_ids', $columns, true);
-    $hasFieldsetName = in_array('fieldset_name', $columns, true);
+    $hasFieldsetIds = in_array('fieldset_ids', $columns, true) || in_array('field_type_id', $columns, true);
+    $hasFieldsetName = in_array('fieldset_name', $columns, true) || in_array('field_type_name', $columns, true);
 
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
@@ -211,10 +215,18 @@ function fetchCategories(PDO $pdo, array $columns): array
         $selectColumns[] = '`icon_path`';
     }
     if ($hasFieldsetIds) {
-        $selectColumns[] = '`fieldset_ids`';
+        if (in_array('fieldset_ids', $columns, true)) {
+            $selectColumns[] = '`fieldset_ids`';
+        } elseif (in_array('field_type_id', $columns, true)) {
+            $selectColumns[] = '`field_type_id`';
+        }
     }
     if ($hasFieldsetName) {
-        $selectColumns[] = '`fieldset_name`';
+        if (in_array('fieldset_name', $columns, true)) {
+            $selectColumns[] = '`fieldset_name`';
+        } elseif (in_array('field_type_name', $columns, true)) {
+            $selectColumns[] = '`field_type_name`';
+        }
     }
     if (!$selectColumns) {
         $selectColumns[] = '*';
@@ -232,11 +244,15 @@ function fetchCategories(PDO $pdo, array $columns): array
         $fieldsetIds = [];
         if ($hasFieldsetIds && isset($row['fieldset_ids']) && is_string($row['fieldset_ids'])) {
             $fieldsetIds = parseFieldsetIdsCsv($row['fieldset_ids']);
+        } elseif ($hasFieldsetIds && isset($row['field_type_id']) && is_string($row['field_type_id'])) {
+            $fieldsetIds = parseFieldsetIdsCsv($row['field_type_id']);
         }
 
         $fieldsetNames = [];
         if ($hasFieldsetName && isset($row['fieldset_name']) && is_string($row['fieldset_name'])) {
             $fieldsetNames = parseFieldsetNameCsv($row['fieldset_name']);
+        } elseif ($hasFieldsetName && isset($row['field_type_name']) && is_string($row['field_type_name'])) {
+            $fieldsetNames = parseFieldsetNameCsv($row['field_type_name']);
         }
 
         $categories[] = [
@@ -285,8 +301,8 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $hasSubcategoryKey = in_array('subcategory_key', $columns, true);
     $hasRequired = in_array('required', $columns, true);
 
-    $hasFieldsetIds = in_array('fieldset_ids', $columns, true);
-    $hasFieldsetName = in_array('fieldset_name', $columns, true);
+    $hasFieldsetIds = in_array('fieldset_ids', $columns, true) || in_array('field_type_id', $columns, true);
+    $hasFieldsetName = in_array('fieldset_name', $columns, true) || in_array('field_type_name', $columns, true);
 
     if ($hasCategoryName) {
         $select[] = 's.`category_name`';
@@ -308,15 +324,27 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
 
     if ($hasFieldsetIds) {
-        $select[] = 's.`fieldset_ids`';
+        if (in_array('fieldset_ids', $columns, true)) {
+            $select[] = 's.`fieldset_ids`';
+        } elseif (in_array('field_type_id', $columns, true)) {
+            $select[] = 's.`field_type_id`';
+        }
     }
     if ($hasFieldsetName) {
-        $select[] = 's.`fieldset_name`';
+        if (in_array('fieldset_name', $columns, true)) {
+            $select[] = 's.`fieldset_name`';
+        } elseif (in_array('field_type_name', $columns, true)) {
+            $select[] = 's.`field_type_name`';
+        }
     }
     
-    $hasEditableFieldsets = in_array('editable_fieldsets', $columns, true);
+    $hasEditableFieldsets = in_array('editable_fieldsets', $columns, true) || in_array('editable_field_types', $columns, true);
     if ($hasEditableFieldsets) {
-        $select[] = 's.`editable_fieldsets`';
+        if (in_array('editable_fieldsets', $columns, true)) {
+            $select[] = 's.`editable_fieldsets`';
+        } elseif (in_array('editable_field_types', $columns, true)) {
+            $select[] = 's.`editable_field_types`';
+        }
     }
     
     $hasCheckoutOptionsId = in_array('checkout_options_id', $columns, true);
@@ -421,6 +449,15 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
                     $result['editable_fieldsets'] = $decoded;
                 }
             }
+        } elseif ($hasEditableFieldsets && isset($row['editable_field_types'])) {
+            $editsJson = $row['editable_field_types'];
+            if (is_string($editsJson) && $editsJson !== '') {
+                $decoded = json_decode($editsJson, true);
+                if (is_array($decoded)) {
+                    $result['editable_fieldsets'] = $decoded;
+                    $result['editable_field_types'] = $decoded; // Keep for backward compatibility
+                }
+            }
         }
         if ($hasCheckoutOptionsId && isset($row['checkout_options_id'])) {
             $checkoutIdsCsv = $row['checkout_options_id'];
@@ -444,21 +481,29 @@ function fetchFieldsets(PDO $pdo, array $columns): array
     $orderBy = '';
 
     $hasId = in_array('id', $columns, true);
-    $hasKey = in_array('fieldset_key', $columns, true);
-    $hasName = in_array('fieldset_name', $columns, true);
+    $hasKey = in_array('fieldset_key', $columns, true) || in_array('field_type_key', $columns, true);
+    $hasName = in_array('fieldset_name', $columns, true) || in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasPlaceholder = in_array('placeholder', $columns, true);
     $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
-    $hasFieldsetFields = in_array('fieldset_fields', $columns, true);
+    $hasFieldsetFields = in_array('fieldset_fields', $columns, true) || in_array('field_type_fields', $columns, true);
 
     if ($hasId) {
         $selectColumns[] = '`id`';
     }
     if ($hasKey) {
-        $selectColumns[] = '`fieldset_key`';
+        if (in_array('fieldset_key', $columns, true)) {
+            $selectColumns[] = '`fieldset_key`';
+        } elseif (in_array('field_type_key', $columns, true)) {
+            $selectColumns[] = '`field_type_key`';
+        }
     }
     if ($hasName) {
-        $selectColumns[] = '`fieldset_name`';
+        if (in_array('fieldset_name', $columns, true)) {
+            $selectColumns[] = '`fieldset_name`';
+        } elseif (in_array('field_type_name', $columns, true)) {
+            $selectColumns[] = '`field_type_name`';
+        }
     }
     if ($hasPlaceholder) {
         $selectColumns[] = '`placeholder`';
@@ -467,13 +512,21 @@ function fetchFieldsets(PDO $pdo, array $columns): array
         $selectColumns[] = '`formbuilder_editable`';
     }
     if ($hasFieldsetFields) {
-        $selectColumns[] = '`fieldset_fields`';
+        if (in_array('fieldset_fields', $columns, true)) {
+            $selectColumns[] = '`fieldset_fields`';
+        } elseif (in_array('field_type_fields', $columns, true)) {
+            $selectColumns[] = '`field_type_fields`';
+        }
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
         $orderBy = ' ORDER BY `sort_order` ASC';
     } elseif ($hasName) {
-        $orderBy = ' ORDER BY `fieldset_name` ASC';
+        if (in_array('fieldset_name', $columns, true)) {
+            $orderBy = ' ORDER BY `fieldset_name` ASC';
+        } elseif (in_array('field_type_name', $columns, true)) {
+            $orderBy = ' ORDER BY `field_type_name` ASC';
+        }
     } elseif ($hasId) {
         $orderBy = ' ORDER BY `id` ASC';
     }
@@ -482,7 +535,21 @@ function fetchFieldsets(PDO $pdo, array $columns): array
         $selectColumns[] = '*';
     }
 
-    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM fieldsets' . $orderBy;
+    // Determine table name based on which columns exist
+    // If we have new column names, use fieldsets table; otherwise use field_types
+    $tableName = 'fieldsets';
+    // Check if we're actually querying the old table by seeing if we selected old column names
+    $hasOldColumns = false;
+    foreach ($selectColumns as $col) {
+        if (stripos($col, 'field_type_key') !== false || stripos($col, 'field_type_name') !== false) {
+            $hasOldColumns = true;
+            break;
+        }
+    }
+    if ($hasOldColumns && !in_array('fieldset_key', $columns, true) && !in_array('fieldset_name', $columns, true)) {
+        $tableName = 'field_types';
+    }
+    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM ' . $tableName . $orderBy;
 
     try {
         $stmt = $pdo->query($sql);
@@ -501,8 +568,12 @@ function fetchFieldsets(PDO $pdo, array $columns): array
         $rawKey = '';
         if ($hasKey && isset($row['fieldset_key'])) {
             $rawKey = trim((string) $row['fieldset_key']);
+        } elseif ($hasKey && isset($row['field_type_key'])) {
+            $rawKey = trim((string) $row['field_type_key']);
         } elseif (isset($row['fieldset_name'])) {
             $rawKey = slugify_key((string) $row['fieldset_name']);
+        } elseif (isset($row['field_type_name'])) {
+            $rawKey = slugify_key((string) $row['field_type_name']);
         } elseif ($hasId && isset($row['id'])) {
             $rawKey = (string) $row['id'];
         }
@@ -520,8 +591,12 @@ function fetchFieldsets(PDO $pdo, array $columns): array
         $rawName = '';
         if ($hasName && isset($row['fieldset_name'])) {
             $rawName = trim((string) $row['fieldset_name']);
+        } elseif ($hasName && isset($row['field_type_name'])) {
+            $rawName = trim((string) $row['field_type_name']);
         } elseif ($hasKey && isset($row['fieldset_key'])) {
             $rawName = trim((string) $row['fieldset_key']);
+        } elseif ($hasKey && isset($row['field_type_key'])) {
+            $rawName = trim((string) $row['field_type_key']);
         } elseif ($hasId && isset($row['id'])) {
             $rawName = (string) $row['id'];
         }
@@ -542,12 +617,18 @@ function fetchFieldsets(PDO $pdo, array $columns): array
         if ($hasKey && isset($row['fieldset_key'])) {
             $entry['fieldset_key'] = (string) $row['fieldset_key'];
             $entry['key'] = (string) $row['fieldset_key'];
+        } elseif ($hasKey && isset($row['field_type_key'])) {
+            $entry['fieldset_key'] = (string) $row['field_type_key'];
+            $entry['key'] = (string) $row['field_type_key'];
         } else {
             $entry['key'] = $rawKey;
         }
         if ($hasName && isset($row['fieldset_name'])) {
             $entry['fieldset_name'] = (string) $row['fieldset_name'];
             $entry['name'] = (string) $row['fieldset_name'];
+        } elseif ($hasName && isset($row['field_type_name'])) {
+            $entry['fieldset_name'] = (string) $row['field_type_name'];
+            $entry['name'] = (string) $row['field_type_name'];
         } else {
             $entry['name'] = $rawName;
         }
@@ -563,12 +644,16 @@ function fetchFieldsets(PDO $pdo, array $columns): array
                 : $row['sort_order'];
         }
         
-        // Include fieldset_fields JSON array
+        // Include fieldset_fields JSON array (fallback to field_type_fields for backward compatibility)
         if ($hasFieldsetFields) {
-            if (!array_key_exists('fieldset_fields', $row)) {
+            $fieldsetFieldsJson = null;
+            if (array_key_exists('fieldset_fields', $row)) {
+                $fieldsetFieldsJson = $row['fieldset_fields'];
+            } elseif (array_key_exists('field_type_fields', $row)) {
+                $fieldsetFieldsJson = $row['field_type_fields'];
+            } else {
                 throw new RuntimeException("fieldset_fields column missing for fieldset id: " . ($entry['id'] ?? 'unknown'));
             }
-            $fieldsetFieldsJson = $row['fieldset_fields'];
             if ($fieldsetFieldsJson === null) {
                 throw new RuntimeException("fieldset_fields is NULL for fieldset id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
             }
@@ -827,17 +912,18 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 continue;
             }
             
-            // Extract field IDs from fieldset_fields JSON array
+            // Extract field IDs from fieldset_fields JSON array (fallback to field_type_fields for backward compatibility)
             $itemIds = [];
-            if (!isset($matchingFieldset['fieldset_fields'])) {
+            $fieldsetFields = $matchingFieldset['fieldset_fields'] ?? $matchingFieldset['field_type_fields'] ?? null;
+            if (!isset($fieldsetFields)) {
                 throw new RuntimeException("fieldset_fields missing for fieldset id: " . $fieldsetId);
             }
-            if (!is_array($matchingFieldset['fieldset_fields'])) {
+            if (!is_array($fieldsetFields)) {
                 throw new RuntimeException("fieldset_fields must be an array for fieldset id: " . $fieldsetId);
             }
             
             // fieldset_fields contains array of field keys like ["title", "description"]
-            foreach ($matchingFieldset['fieldset_fields'] as $fieldKey) {
+            foreach ($fieldsetFields as $fieldKey) {
                 if (!is_string($fieldKey)) {
                     throw new RuntimeException("fieldset_fields must contain string field keys for fieldset id: " . $fieldsetId);
                 }
@@ -858,7 +944,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // CRITICAL: Use fieldset_key as the source of truth for the type
                 // The fields.input_type column (e.g., "textarea") is just the input type,
                 // but the actual field type identifier is fieldset_key (e.g., "description", "text-area")
-                $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : '';
+                $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 
                 // If fieldset_key is description or text-area, use it directly
                 // Otherwise, fall back to normalizing from fields.input_type
@@ -883,7 +969,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 
                 // Check if this field type is editable and has customizations
                 $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
-                $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : '';
+                $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 
                 $customName = null;
@@ -905,14 +991,17 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     $customCheckoutOptions = $checkoutOptionsIds;
                 }
                 
+                $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
+                $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
+                
                 $builtField = [
                     'id' => $matchingFieldset['id'],
-                    'key' => $matchingFieldset['fieldset_key'],
+                    'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
-                    'name' => $customName !== null ? $customName : $matchingFieldset['fieldset_name'],
+                    'name' => $customName !== null ? $customName : $fieldsetName,
                     'placeholder' => $matchingFieldset['placeholder'] ?? '',
                     'required' => $requiredValue,
-                    'fieldsetKey' => $matchingFieldset['fieldset_key'],
+                    'fieldsetKey' => $fieldsetKeyValue,
                 ];
                 
                 // Use custom options if available, otherwise use field options
@@ -933,7 +1022,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             else {
                 // Check if this field type is editable and has customizations
                 $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
-                $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : '';
+                $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 $customName = null;
                 $customCheckoutOptions = null;
@@ -947,14 +1036,17 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     $customCheckoutOptions = $checkoutOptionsIds;
                 }
                 
+                $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
+                $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
+                
                 $builtField = [
                     'id' => $matchingFieldset['id'],
-                    'key' => $matchingFieldset['fieldset_key'],
-                    'type' => $matchingFieldset['fieldset_key'],
-                    'name' => $customName !== null ? $customName : $matchingFieldset['fieldset_name'],
+                    'key' => $fieldsetKeyValue,
+                    'type' => $fieldsetKeyValue,
+                    'name' => $customName !== null ? $customName : $fieldsetName,
                     'placeholder' => $matchingFieldset['placeholder'] ?? '',
                     'required' => $requiredValue,
-                    'fieldsetKey' => $matchingFieldset['fieldset_key'],
+                    'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],
                 ];
                 
