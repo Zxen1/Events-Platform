@@ -17526,7 +17526,7 @@ function makePosts(){
             </div>
           </div>
           <div class="post-details-description-container">
-            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc} <span class="see-more-toggle">See More</span></div></div>
+            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div><span class="see-more-toggle">See More</span></div>
             <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
           </div>
         </div>
@@ -20794,7 +20794,7 @@ function openPostModal(id){
 
       if(descEl){
         const descWrap = descEl.closest('.desc-wrap');
-        const seeMoreToggle = descEl.querySelector('.see-more-toggle');
+        const seeMoreToggle = descWrap ? descWrap.querySelector('.see-more-toggle') : null;
         
         const updateSeeMoreText = () => {
           if(seeMoreToggle){
