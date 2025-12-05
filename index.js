@@ -1664,7 +1664,7 @@ let __notifyMapOnInteraction = null;
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = 0;
 
-      let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
+      let map, mapLoading = null, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = false,
           spinLoadType = 'everyone',
           spinLogoClick = true,
@@ -18705,32 +18705,38 @@ function makePosts(){
         let geolocateButton = null;
         let geolocateFallbackTimeout = null;
 
+        const getMapLoading = () => (typeof mapLoading !== 'undefined' ? mapLoading : null);
+
         const clearGeolocateLoading = () => {
           if(geolocateFallbackTimeout){
             clearTimeout(geolocateFallbackTimeout);
             geolocateFallbackTimeout = null;
           }
-          if(mapLoading){
-            mapLoading.removeMotion(geolocateToken);
+          const loader = getMapLoading();
+          if(loader){
+            loader.removeMotion(geolocateToken);
           }
         };
 
         const ensureGeolocateLoading = () => {
-          if(!mapLoading) return;
-          mapLoading.addMotion(geolocateToken);
+          const loader = getMapLoading();
+          if(!loader) return;
+          loader.addMotion(geolocateToken);
           if(geolocateFallbackTimeout){
             clearTimeout(geolocateFallbackTimeout);
           }
           geolocateFallbackTimeout = setTimeout(() => {
             geolocateFallbackTimeout = null;
-            if(mapLoading){
-              mapLoading.removeMotion(geolocateToken);
+            const loader = getMapLoading();
+            if(loader){
+              loader.removeMotion(geolocateToken);
             }
           }, 15000);
         };
 
         const awaitGeolocateIdle = () => {
-          if(!mapLoading){
+          const loader = getMapLoading();
+          if(!loader){
             clearGeolocateLoading();
             return;
           }
@@ -19093,7 +19099,7 @@ function makePosts(){
         catch(err){ console.error(err); }
 
         // Map loading state management
-        const mapLoading = (() => {
+        mapLoading = (() => {
           const loader = window.__logoLoading;
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
