@@ -14667,6 +14667,15 @@ function makePosts(){
             const dropdownMenu = document.createElement('div');
             dropdownMenu.className = 'options-menu add-field-dropdown-menu';
             dropdownMenu.setAttribute('role', 'menu');
+            // Apply same styling as other form builder dropdowns
+            dropdownMenu.style.background = '#222222';
+            dropdownMenu.style.border = '1px solid rgba(255,255,255,1)';
+            dropdownMenu.style.borderRadius = '8px';
+            dropdownMenu.style.padding = '10px';
+            dropdownMenu.style.display = 'flex';
+            dropdownMenu.style.flexDirection = 'column';
+            dropdownMenu.style.gap = '6px';
+            dropdownMenu.style.boxSizing = 'border-box';
             
             // Get existing field types in this subcategory to disable already-used fieldsets
             const existingFieldTypes = new Set();
@@ -14680,6 +14689,13 @@ function makePosts(){
             const placeholderBtn = document.createElement('button');
             placeholderBtn.type = 'button';
             placeholderBtn.className = 'menu-option';
+            // Apply same styling as other form builder menu options
+            placeholderBtn.style.background = 'rgba(0,0,0,0.2)';
+            placeholderBtn.style.border = 'none';
+            placeholderBtn.style.borderRadius = '0';
+            placeholderBtn.style.textAlign = 'left';
+            placeholderBtn.style.justifyContent = 'flex-start';
+            placeholderBtn.style.width = '100%';
             placeholderBtn.textContent = 'Select Fieldset...';
             placeholderBtn.disabled = true;
             dropdownMenu.appendChild(placeholderBtn);
@@ -14689,6 +14705,13 @@ function makePosts(){
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
               optionBtn.className = 'menu-option';
+              // Apply same styling as other form builder menu options
+              optionBtn.style.background = 'rgba(0,0,0,0.2)';
+              optionBtn.style.border = 'none';
+              optionBtn.style.borderRadius = '0';
+              optionBtn.style.textAlign = 'left';
+              optionBtn.style.justifyContent = 'flex-start';
+              optionBtn.style.width = '100%';
               const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
               optionBtn.textContent = optionLabel || optionDef.value;
               optionBtn.dataset.value = optionDef.value || '';
