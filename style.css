@@ -5510,8 +5510,9 @@ body.filters-active #filterBtn{
   100% { transform: rotate(360deg); }
 }
 
-.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon {
-  animation: mapboxgl-spin 1s linear infinite;
+.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting button,
+.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon {
+  animation: mapboxgl-spin 2s linear infinite !important;
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
