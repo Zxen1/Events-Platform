@@ -8076,17 +8076,18 @@ function makePosts(){
       // For editable fields, preserve existing custom names
       if(fieldsetKey && resolvedFieldTypeName){
         const matchingFieldset = FORM_FIELD_TYPES.find(ft => ft.value === fieldsetKey);
-        const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+        let isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
         if(!isEditable && fieldTypeKey){
           const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-          const isEditableAlt = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+          isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+        }
         // Only auto-name if not editable OR if name is empty
         if(!isEditable || !safeField.name || safeField.name.trim() === ''){
           safeField.name = resolvedFieldTypeName;
         }
       }
       
-        if(fieldsetKey === 'location' || fieldTypeKey === 'location'){
+      if(fieldsetKey === 'location' || fieldTypeKey === 'location'){
           if(!safeField.placeholder || !safeField.placeholder.trim()){
             safeField.placeholder = 'Search for a location';
           }

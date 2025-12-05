@@ -93,13 +93,15 @@ try {
     $subcategories = fetchSubcategories($pdo, $subcategoryColumns, $categories);
 
     // Try fieldsets table first, fallback to field_types for backward compatibility
+    $fieldsetTableName = 'fieldsets';
     $fieldsetColumns = fetchTableColumns($pdo, 'fieldsets');
     if (!$fieldsetColumns) {
+        $fieldsetTableName = 'field_types';
         $fieldsetColumns = fetchTableColumns($pdo, 'field_types');
     }
     $fieldsets = [];
     if ($fieldsetColumns) {
-        $fieldsets = fetchFieldsets($pdo, $fieldsetColumns);
+        $fieldsets = fetchFieldsets($pdo, $fieldsetColumns, $fieldsetTableName);
     }
 
     // Fetch all fields from database
@@ -475,7 +477,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     return $results;
 }
 
-function fetchFieldsets(PDO $pdo, array $columns): array
+function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets'): array
 {
     $selectColumns = [];
     $orderBy = '';
@@ -535,20 +537,7 @@ function fetchFieldsets(PDO $pdo, array $columns): array
         $selectColumns[] = '*';
     }
 
-    // Determine table name based on which columns exist
-    // If we have new column names, use fieldsets table; otherwise use field_types
-    $tableName = 'fieldsets';
-    // Check if we're actually querying the old table by seeing if we selected old column names
-    $hasOldColumns = false;
-    foreach ($selectColumns as $col) {
-        if (stripos($col, 'field_type_key') !== false || stripos($col, 'field_type_name') !== false) {
-            $hasOldColumns = true;
-            break;
-        }
-    }
-    if ($hasOldColumns && !in_array('fieldset_key', $columns, true) && !in_array('fieldset_name', $columns, true)) {
-        $tableName = 'field_types';
-    }
+    // Use the table name passed as parameter (fieldsets or field_types)
     $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM ' . $tableName . $orderBy;
 
     try {
