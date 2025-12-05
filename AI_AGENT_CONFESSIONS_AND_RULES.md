@@ -388,6 +388,32 @@ The slow code is in the formbuilder initialization chain:
 - The fact that hotspotting didn't help but other PCs were fine suggests a PC-specific issue, not network infrastructure
 - **UPDATE: The slow loading is CODE, not network. The error proves it.**
 
+**PERFORMANCE FIX (Dec 6, 2025):**
+The loading speed issue was fixed by splitting formbuilder initialization into two phases:
+
+1. **Startup Phase (Fast):**
+   - Loads only essential data: categories, currencies, field types, checkout options
+   - Calls `renderFilterCategories()` to populate the filter panel
+   - Skips `renderFormbuilderCats()` (the slow admin formbuilder UI rendering)
+   - Uses `restoreFormbuilderSnapshot(snapshot, { skipFormbuilderUI: true })`
+   - This allows posts to load and filter panel to work immediately
+
+2. **On-Demand Phase (Lazy Loading):**
+   - **Admin Forms Tab:** When opened, calls `ensureLoaded({ skipFormbuilderUI: false })` which triggers `renderFormbuilderCats()` to render the full admin formbuilder UI
+   - **Member Create Post Tab:** When opened, calls `initializeMemberFormbuilderSnapshot()` which loads the snapshot and renders the member form picker
+
+**Key Changes:**
+- Modified `restoreFormbuilderSnapshot()` to accept `options.skipFormbuilderUI` parameter
+- Added startup call: `formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: true })` in main initialization
+- Updated tab click handlers to load full formbuilder UI only when needed
+- Exposed `renderFormbuilderCats` and `initializeMemberFormbuilderSnapshot` globally for lazy loading
+
+**Result:**
+- Site loads in ~13 seconds instead of 5-20 minutes
+- Filter panel and posts work immediately on startup
+- Formbuilder UI only loads when admin opens Forms tab or member opens Create Post tab
+- No functionality lost, just optimized loading sequence
+
 ---
 
 **END OF DOCUMENT**

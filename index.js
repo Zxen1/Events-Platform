@@ -10534,12 +10534,18 @@ function makePosts(){
           fieldsList.className = 'subcategory-fields-list';
           fieldsSection.appendChild(fieldsList);
 
+          const addFieldBtnWrapper = document.createElement('div');
+          addFieldBtnWrapper.className = 'options-dropdown add-field-btn-wrapper';
+          addFieldBtnWrapper.style.position = 'relative';
+          
           const addFieldBtn = document.createElement('button');
           addFieldBtn.type = 'button';
           addFieldBtn.className = 'add-field-btn';
           addFieldBtn.dataset.messageKey = 'msg_button_add_field';
           // Text will be loaded from DB
           addFieldBtn.setAttribute('aria-label', `Add field to ${sub}`);
+          
+          addFieldBtnWrapper.appendChild(addFieldBtn);
 
           // ensureFieldDefaults is now defined at module scope, use it directly
           const buildVenueSessionPreview = (previewField, baseId, buildOptions = {})=>{
@@ -13532,7 +13538,7 @@ function makePosts(){
           // Expose buildVenueSessionPreview for use in member forms
           window.buildVenueSessionPreview = buildVenueSessionPreview;
 
-          fieldsSection.append(fieldsList, addFieldBtn, formPreviewBtn, formPreviewContainer);
+          fieldsSection.append(fieldsList, addFieldBtnWrapper, formPreviewBtn, formPreviewContainer);
 
           formPreviewBtn.addEventListener('click', ()=>{
             const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
@@ -14769,20 +14775,20 @@ function makePosts(){
               dropdownMenu.appendChild(optionBtn);
             });
             
-            // Position dropdown near the button
-            const buttonRect = addFieldBtn.getBoundingClientRect();
+            // Position dropdown relative to button wrapper
             dropdownMenu.style.position = 'absolute';
-            dropdownMenu.style.top = `${buttonRect.bottom + 4}px`;
-            dropdownMenu.style.left = `${buttonRect.left}px`;
-            dropdownMenu.style.minWidth = `${buttonRect.width}px`;
+            dropdownMenu.style.top = 'calc(100% + 4px)';
+            dropdownMenu.style.left = '0';
+            dropdownMenu.style.minWidth = '100%';
+            dropdownMenu.style.zIndex = 'var(--layer-menu)';
             dropdownMenu.hidden = false;
             
-            // Append to fieldsSection for positioning context
-            fieldsSection.appendChild(dropdownMenu);
+            // Append to wrapper for positioning context
+            addFieldBtnWrapper.appendChild(dropdownMenu);
             
             // Close dropdown when clicking outside
             const outsideHandler = (ev) => {
-              if(!dropdownMenu.contains(ev.target) && ev.target !== addFieldBtn){
+              if(!addFieldBtnWrapper.contains(ev.target)){
                 dropdownMenu.hidden = true;
                 dropdownMenu.remove();
                 document.removeEventListener('click', outsideHandler);
