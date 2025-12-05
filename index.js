@@ -3272,6 +3272,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         return '';
       }
       const candidates = [
+        option.fieldset_name,
+        option.fieldsetName,
         option.field_type_name,
         option.fieldTypeName,
         option.name,
@@ -3312,6 +3314,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           value: trimmedValue,
           label: displayName,
           name: displayName,
+          fieldsetName: displayName,
+          fieldset_name: displayName,
+          fieldsetKey: trimmedValue,
+          fieldset_key: trimmedValue,
           fieldTypeName: displayName,
           field_type_name: displayName,
           fieldTypeKey: trimmedValue,
@@ -3341,25 +3347,33 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             ? item.value.trim()
             : typeof item.key === 'string' && item.key.trim()
               ? item.key.trim()
-              : typeof item.field_type_key === 'string' && item.field_type_key.trim()
-                ? item.field_type_key.trim()
-                : typeof item.fieldTypeKey === 'string' && item.fieldTypeKey.trim()
-                  ? item.fieldTypeKey.trim()
-                  : typeof item.id === 'number' && Number.isFinite(item.id)
-                    ? String(item.id)
-                    : typeof item.id === 'string' && item.id.trim()
-                      ? item.id.trim()
-                      : '';
+              : typeof item.fieldset_key === 'string' && item.fieldset_key.trim()
+                ? item.fieldset_key.trim()
+                : typeof item.fieldsetKey === 'string' && item.fieldsetKey.trim()
+                  ? item.fieldsetKey.trim()
+                  : typeof item.field_type_key === 'string' && item.field_type_key.trim()
+                    ? item.field_type_key.trim()
+                    : typeof item.fieldTypeKey === 'string' && item.fieldTypeKey.trim()
+                      ? item.fieldTypeKey.trim()
+                      : typeof item.id === 'number' && Number.isFinite(item.id)
+                        ? String(item.id)
+                        : typeof item.id === 'string' && item.id.trim()
+                          ? item.id.trim()
+                          : '';
           if(!value){
             return;
           }
           const label = typeof item.name === 'string' && item.name.trim()
             ? item.name.trim()
-            : typeof item.field_type_name === 'string' && item.field_type_name.trim()
-              ? item.field_type_name.trim()
-              : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
-                ? item.fieldTypeName.trim()
-                : '';
+            : typeof item.fieldset_name === 'string' && item.fieldset_name.trim()
+              ? item.fieldset_name.trim()
+              : typeof item.fieldsetName === 'string' && item.fieldsetName.trim()
+                ? item.fieldsetName.trim()
+                : typeof item.field_type_name === 'string' && item.field_type_name.trim()
+                  ? item.field_type_name.trim()
+                  : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
+                    ? item.fieldTypeName.trim()
+                    : '';
           pushOption(value, label, item);
           return;
         }
@@ -3584,6 +3598,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             value: rawValue,
             label: displayName,
             name: displayName,
+            fieldsetName: displayName,
+            fieldset_name: displayName,
+            fieldsetKey: rawValue,
+            fieldset_key: rawValue,
             fieldTypeName: displayName,
             field_type_name: displayName,
             fieldTypeKey: rawValue,
@@ -3606,6 +3624,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             value: trimmed,
             label: trimmed,
             name: trimmed,
+            fieldsetName: trimmed,
+            fieldset_name: trimmed,
+            fieldsetKey: trimmed,
+            fieldset_key: trimmed,
             fieldTypeName: trimmed,
             field_type_name: trimmed,
             fieldTypeKey: trimmed,
@@ -3869,7 +3891,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    // Fields now come from backend via field_types table, no hardcoded defaults
+    // Fields now come from backend via fieldsets table, no hardcoded defaults
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -7993,9 +8015,15 @@ function makePosts(){
           }
         }
       }
-      // Ensure key and fieldTypeKey sync with each other if one is missing
+      // Ensure key, fieldsetKey, and fieldTypeKey sync with each other if one is missing
+      if(!safeField.key && safeField.fieldsetKey){
+        safeField.key = safeField.fieldsetKey;
+      }
       if(!safeField.key && safeField.fieldTypeKey){
         safeField.key = safeField.fieldTypeKey;
+      }
+      if(!safeField.fieldsetKey && safeField.key){
+        safeField.fieldsetKey = safeField.key;
       }
       if(!safeField.fieldTypeKey && safeField.key){
         safeField.fieldTypeKey = safeField.key;
@@ -8003,10 +8031,14 @@ function makePosts(){
       // For brand new fields, default to first field type in list
       // Don't default to first field type - let user select
       // Only set defaults if field type is explicitly provided
-      if(!safeField.key && !safeField.fieldTypeKey){
+      if(!safeField.key && !safeField.fieldsetKey && !safeField.fieldTypeKey){
         // Leave unset - user must select from dropdown
+      } else if(safeField.fieldsetKey && !safeField.key){
+        safeField.key = safeField.fieldsetKey;
       } else if(safeField.fieldTypeKey && !safeField.key){
         safeField.key = safeField.fieldTypeKey;
+      } else if(safeField.key && !safeField.fieldsetKey){
+        safeField.fieldsetKey = safeField.key;
       } else if(safeField.key && !safeField.fieldTypeKey){
         safeField.fieldTypeKey = safeField.key;
       }
@@ -8016,10 +8048,19 @@ function makePosts(){
           safeField.name = '';
         }
         if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-        const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+        const fieldsetKey = safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key;
+        const fieldTypeKey = safeField.fieldTypeKey || safeField.fieldsetKey || safeField.key;
+        const existingFieldsetName = typeof safeField.fieldset_name === 'string' ? safeField.fieldset_name.trim() : '';
+        const existingFieldsetNameCamel = typeof safeField.fieldsetName === 'string' ? safeField.fieldsetName.trim() : '';
         const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
         const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-        let resolvedFieldTypeName = existingFieldTypeName || existingFieldTypeNameCamel;
+        let resolvedFieldTypeName = existingFieldsetName || existingFieldsetNameCamel || existingFieldTypeName || existingFieldTypeNameCamel;
+        if(!resolvedFieldTypeName && fieldsetKey){
+          const matchingFieldset = FORM_FIELD_TYPES.find(opt => opt.value === fieldsetKey);
+          if(matchingFieldset){
+            resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldset);
+          }
+        }
         if(!resolvedFieldTypeName && fieldTypeKey){
           const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
           if(matchingFieldType){
@@ -8027,20 +8068,25 @@ function makePosts(){
           }
         }
         resolvedFieldTypeName = resolvedFieldTypeName || '';
+        safeField.fieldset_name = resolvedFieldTypeName;
+        safeField.fieldsetName = resolvedFieldTypeName;
         safeField.field_type_name = resolvedFieldTypeName;
         safeField.fieldTypeName = resolvedFieldTypeName;
       // Only auto-name if field type is set AND field doesn't already have a custom name
       // For editable fields, preserve existing custom names
-      if(fieldTypeKey && resolvedFieldTypeName){
-        const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-        const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+      if(fieldsetKey && resolvedFieldTypeName){
+        const matchingFieldset = FORM_FIELD_TYPES.find(ft => ft.value === fieldsetKey);
+        const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+        if(!isEditable && fieldTypeKey){
+          const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
+          const isEditableAlt = matchingFieldType && matchingFieldType.formbuilder_editable === true;
         // Only auto-name if not editable OR if name is empty
         if(!isEditable || !safeField.name || safeField.name.trim() === ''){
           safeField.name = resolvedFieldTypeName;
         }
       }
       
-        if(fieldTypeKey === 'location'){
+        if(fieldsetKey === 'location' || fieldTypeKey === 'location'){
           if(!safeField.placeholder || !safeField.placeholder.trim()){
             safeField.placeholder = 'Search for a location';
           }
@@ -8057,9 +8103,9 @@ function makePosts(){
         if(!Array.isArray(safeField.options)){
           safeField.options = [];
         }
-        if(fieldTypeKey === 'venue-ticketing'){
+        if(fieldsetKey === 'venue-ticketing' || fieldTypeKey === 'venue-ticketing'){
           safeField.options = normalizeVenueSessionOptions(safeField.options);
-        } else if(fieldTypeKey === 'variant-pricing'){
+        } else if(fieldsetKey === 'variant-pricing' || fieldTypeKey === 'variant-pricing'){
           safeField.options = safeField.options.map(opt => {
             if(opt && typeof opt === 'object'){
               return {
@@ -8150,13 +8196,14 @@ function makePosts(){
         labelEl.id = labelId;
         let control = null;
         
-        const fieldTypeKey = field.fieldTypeKey || field.key || '';
+        const fieldsetKey = field.fieldsetKey || field.fieldTypeKey || field.key || '';
+        const fieldTypeKey = field.fieldTypeKey || field.fieldsetKey || field.key || '';
         let baseType = '';
         if (isUserFormContext) {
-          if (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown') {
-            baseType = fieldTypeKey;
+          if (fieldsetKey === 'radio' || fieldsetKey === 'dropdown' || fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown') {
+            baseType = fieldsetKey || fieldTypeKey;
           } else {
-            baseType = fieldTypeKey || field.type || 'text-box';
+            baseType = fieldsetKey || fieldTypeKey || field.type || 'text-box';
           }
         } else {
           baseType = getBaseFieldType(field.type) || 'text-box';
@@ -9092,7 +9139,7 @@ function makePosts(){
           function calculateDaysToFinalSession(){
             try {
               // Find venue-ticketing field in the form fields
-              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
+              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldsetKey === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
               if(!venueTicketingField || !venueTicketingField.options || !Array.isArray(venueTicketingField.options)) return null;
               
               let latestDate = null;
@@ -9361,7 +9408,7 @@ function makePosts(){
           let calculatedDays = null;
           if(isEvent){
             try {
-              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
+              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldsetKey === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
               if(venueTicketingField && venueTicketingField.options && Array.isArray(venueTicketingField.options)){
                 let latestDate = null;
                 venueTicketingField.options.forEach(venue => {
@@ -13513,13 +13560,13 @@ function makePosts(){
             editPanel.className = 'field-edit-panel';
             editPanel.hidden = true;
 
-            const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
+            const matchKey = safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key || safeField.type;
             
             // Get existing field types in this subcategory (excluding current field)
             const existingFieldTypes = new Set();
             fields.forEach(f => {
-              if(f !== safeField && (f.fieldTypeKey || f.key)){
-                existingFieldTypes.add(f.fieldTypeKey || f.key);
+              if(f !== safeField && (f.fieldsetKey || f.fieldTypeKey || f.key)){
+                existingFieldTypes.add(f.fieldsetKey || f.fieldTypeKey || f.key);
               }
             });
             
@@ -13568,11 +13615,14 @@ function makePosts(){
               optionBtn.textContent = optionLabel || optionDef.value;
               optionBtn.dataset.value = optionDef.value || '';
               if(optionDef.value){
+                optionBtn.dataset.fieldsetKey = optionDef.value;
                 optionBtn.dataset.fieldTypeKey = optionDef.value;
               }
               if(optionLabel){
+                optionBtn.dataset.fieldsetName = optionLabel;
                 optionBtn.dataset.fieldTypeName = optionLabel;
               } else if(optionDef.value){
+                optionBtn.dataset.fieldsetName = optionDef.value;
                 optionBtn.dataset.fieldTypeName = optionDef.value;
               }
               
@@ -13592,12 +13642,15 @@ function makePosts(){
                 if(!nextType) return;
                 
                 const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+                safeField.fieldsetKey = nextValidType;
                 safeField.fieldTypeKey = nextValidType;
                 safeField.key = nextValidType;
                 
                 const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
                 const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
                 const updatedFieldTypeName = (matchingDisplayName || nextValidType || '').trim();
+                safeField.fieldset_name = updatedFieldTypeName;
+                safeField.fieldsetName = updatedFieldTypeName;
                 safeField.field_type_name = updatedFieldTypeName;
                 safeField.fieldTypeName = updatedFieldTypeName;
                 
@@ -14154,15 +14207,16 @@ function makePosts(){
 
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
-              // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
-              // Get fieldTypeKey from the current fieldTypeMenuBtn value if available, otherwise from safeField
+              // Use fieldsetKey/fieldTypeKey/key for field type identification (not type which is for HTML input type)
+              // Get fieldsetKey from the current fieldTypeMenuBtn value if available, otherwise from safeField
               const selectedValue = fieldTypeMenuBtn ? (fieldTypeMenuBtn.dataset.value || '') : '';
-              const fieldTypeKey = selectedValue || safeField.fieldTypeKey || safeField.key || safeField.type || '';
-              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
-              const showVariantPricing = fieldTypeKey === 'variant-pricing';
-              const showVenueSession = fieldTypeKey === 'venue-ticketing';
-              const showCheckout = fieldTypeKey === 'checkout';
-              // Check if this field type is editable - must have a valid fieldTypeKey
+              const fieldsetKey = selectedValue || safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key || safeField.type || '';
+              const fieldTypeKey = selectedValue || safeField.fieldTypeKey || safeField.fieldsetKey || safeField.key || safeField.type || '';
+              const isOptionsType = fieldsetKey === 'dropdown' || fieldsetKey === 'radio' || fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
+              const showVariantPricing = fieldsetKey === 'variant-pricing' || fieldTypeKey === 'variant-pricing';
+              const showVenueSession = fieldsetKey === 'venue-ticketing' || fieldTypeKey === 'venue-ticketing';
+              const showCheckout = fieldsetKey === 'checkout' || fieldTypeKey === 'checkout';
+              // Check if this field type is editable - must have a valid fieldsetKey/fieldTypeKey
               let isEditable = false;
               if(fieldTypeKey && fieldTypeKey !== ''){
                 const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
