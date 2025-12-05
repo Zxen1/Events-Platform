@@ -4802,6 +4802,16 @@ body.hide-ads .ad-board{
 }
 #tab-forms .form-container .form-checkout-option input[type="radio"],
 #memberPanel .member-create-fields .form-checkout-option input[type="radio"]{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+/* Show radio only for Events (no duration buttons) */
+#tab-forms .form-container .form-checkout-group[data-subcategory-type="Events"] .form-checkout-option input[type="radio"],
+#memberPanel .member-create-fields .form-checkout-group[data-subcategory-type="Events"] .form-checkout-option input[type="radio"]{
+  position:static;
+  opacity:1;
+  pointer-events:auto;
   flex-shrink:0;
   width:auto;
   height:auto;

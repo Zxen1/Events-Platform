@@ -10429,6 +10429,8 @@ function makePosts(){
                 if(target.tagName === 'BUTTON' || target.closest('button')) return false;
                 // Don't stop propagation for action button containers
                 if(target.closest('.venue-line-actions') || target.closest('.session-date-actions') || target.closest('.session-time-actions')) return false;
+                // Don't stop propagation for calendar picker elements
+                if(target.closest('.session-date-picker') || target.closest('.calendar-actions')) return false;
                 return true;
               };
               
@@ -11752,6 +11754,7 @@ function makePosts(){
                 updateCellSelection(iso);
               };
               const applySelection = ()=>{
+                try {
                 if(selectedDates.size === 0){
                   closePicker();
                   return;
@@ -11817,6 +11820,9 @@ function makePosts(){
                 safeNotifyChange();
                 closePicker();
                 renderVenues();
+                } catch(err) {
+                  console.error('[DatePicker] Error in applySelection:', err);
+                }
               };
               const buildCalendar = ()=>{
                 isoCells.clear();
