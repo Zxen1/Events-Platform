@@ -6171,6 +6171,30 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   text-overflow:unset;
 }
 
+/* See More / See Less toggle - Facebook style */
+.desc-wrap{
+  position:relative;
+  cursor:pointer;
+}
+
+.desc-wrap .see-more-toggle{
+  display:inline-block;
+  color:var(--text-muted, #65676b);
+  font-size:14px;
+  font-weight:400;
+  margin-top:4px;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.desc-wrap .see-more-toggle:hover{
+  text-decoration:underline;
+}
+
+.desc-wrap:focus{
+  outline:none;
+}
+
 .open-post .location-section,
 .post-body .location-section{
   display:none;

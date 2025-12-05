@@ -17526,7 +17526,7 @@ function makePosts(){
             </div>
           </div>
           <div class="post-details-description-container">
-            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
+            <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div><span class="see-more-toggle">See More</span></div>
             <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
           </div>
         </div>
@@ -20793,6 +20793,17 @@ function openPostModal(id){
       };
 
       if(descEl){
+        const descWrap = descEl.closest('.desc-wrap');
+        const seeMoreToggle = descWrap ? descWrap.querySelector('.see-more-toggle') : null;
+        
+        const updateSeeMoreText = () => {
+          if(seeMoreToggle){
+            const openPostEl = el;
+            const isExpanded = openPostEl && openPostEl.classList.contains('desc-expanded');
+            seeMoreToggle.textContent = isExpanded ? 'See Less' : 'See More';
+          }
+        };
+        
         const handleDescToggle = evt => {
           const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
           if(evt.type === 'keydown' && !allowed.includes(evt.key)){
@@ -20804,8 +20815,16 @@ function openPostModal(id){
             ? openPostEl.classList.contains('desc-expanded')
             : descEl.classList.contains('expanded');
           setDescExpandedState(!isExpanded);
+          updateSeeMoreText();
         };
-        // Description click no longer toggles collapsed state (removed per user request)
+        
+        // Description click toggles collapsed state
+        descWrap.addEventListener('click', handleDescToggle);
+        descWrap.addEventListener('keydown', handleDescToggle);
+        descWrap.style.cursor = 'pointer';
+        
+        // Initialize the see more text
+        updateSeeMoreText();
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
@@ -21007,13 +21026,7 @@ function openPostModal(id){
           const imgTarget = e.target.closest('.image-track img');
           if(!imgTarget) return;
           e.stopPropagation();
-          const openPostEl = imageBox.closest('.open-post');
-          if(openPostEl && !openPostEl.classList.contains('desc-expanded')){
-            const changed = setDescExpandedState(true);
-            if(changed){
-              return;
-            }
-          }
+          // Image click directly opens modal (expand/collapse is now controlled by description text)
           const currentSlide = ensureSlide(currentIdx) || slides[currentIdx] || imgTarget;
           const fullSrc = currentSlide ? (currentSlide.dataset.full || currentSlide.src) : imgs[currentIdx];
           openImageModal(fullSrc, {images: imgs, startIndex: currentIdx, origin: imgTarget});
