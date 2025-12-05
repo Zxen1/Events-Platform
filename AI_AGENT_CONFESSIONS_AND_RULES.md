@@ -251,6 +251,14 @@ Mapbox layers in rendering order (bottom to top):
 - Example: `const fn = window.MapCardComposites?.fn || function(){ return null; }` is FORBIDDEN
 - Correct: `const fn = window.MapCardComposites.fn` (will throw if missing, which is desired)
 
+### Rule 12: DATABASE CHANGES - PROVIDE SQL ONLY
+**CRITICAL:** AI does not have access to the database. For any database changes:
+- Do NOT attempt to edit the database directly
+- Provide SQL statements in the conversation for the user to execute
+- User will paste the SQL into their database management tool (phpMyAdmin, etc.)
+- Include all necessary ALTER TABLE, RENAME, UPDATE statements
+- Make SQL clear, complete, and ready to execute
+
 ---
 
 ## LIMITATIONS: WHAT AI AGENTS CANNOT DO
@@ -260,6 +268,7 @@ Mapbox layers in rendering order (bottom to top):
 3. **No Assumptions:** AI agents must not guess or assume - must ask questions
 4. **No Unauthorized Changes:** AI agents cannot add code without explicit approval
 5. **No Renaming:** AI agents cannot name or rename anything without permission
+6. **No Database Access:** AI agents cannot access or modify the database directly - must provide SQL for user to execute
 
 ---
 
