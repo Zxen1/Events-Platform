@@ -753,6 +753,10 @@
         if(postButton) postButton.disabled = true;
       }
     }
+    // Expose initializeMemberFormbuilderSnapshot globally so it can be called when Create Post tab opens
+    if(typeof window !== 'undefined'){
+      window.initializeMemberFormbuilderSnapshot = initializeMemberFormbuilderSnapshot;
+    }
 
     const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
 

@@ -24793,8 +24793,14 @@ document.addEventListener('pointerdown', (e) => {
         panel.removeAttribute('hidden');
       }
       // LAZY LOAD: Load formbuilder when member opens Create Post tab
-      if(btn.dataset.tab === 'create' && window.formbuilderStateManager){
-        window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: false });
+      if(btn.dataset.tab === 'create'){
+        // initializeMemberFormbuilderSnapshot() will load the snapshot and set up member forms
+        // It handles its own loading, so we just need to call it
+        if(typeof window.initializeMemberFormbuilderSnapshot === 'function'){
+          window.initializeMemberFormbuilderSnapshot();
+        } else {
+          console.error('initializeMemberFormbuilderSnapshot not available - forms.js may not be loaded');
+        }
       }
     });
   });
