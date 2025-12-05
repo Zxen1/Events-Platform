@@ -575,24 +575,29 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         
         // Include field_type_fields JSON array
         if ($hasFieldTypeFields) {
-            if (!isset($row['field_type_fields'])) {
+            if (!array_key_exists('field_type_fields', $row)) {
                 throw new RuntimeException("field_type_fields column missing for field_type id: " . ($entry['id'] ?? 'unknown'));
             }
             $fieldTypeFieldsJson = $row['field_type_fields'];
-            if (is_string($fieldTypeFieldsJson) && $fieldTypeFieldsJson !== '') {
+            if ($fieldTypeFieldsJson === null) {
+                throw new RuntimeException("field_type_fields is NULL for field_type id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
+            }
+            if (is_string($fieldTypeFieldsJson)) {
+                if ($fieldTypeFieldsJson === '') {
+                    throw new RuntimeException("field_type_fields is empty string for field_type id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
+                }
                 $decoded = json_decode($fieldTypeFieldsJson, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     throw new RuntimeException("Invalid JSON in field_type_fields for field_type id: " . ($entry['id'] ?? 'unknown') . " - " . json_last_error_msg());
                 }
-                if (is_array($decoded)) {
-                    $entry['field_type_fields'] = $decoded;
-                } else {
-                    throw new RuntimeException("field_type_fields must be a JSON array for field_type id: " . ($entry['id'] ?? 'unknown'));
+                if (!is_array($decoded)) {
+                    throw new RuntimeException("field_type_fields must be a JSON array for field_type id: " . ($entry['id'] ?? 'unknown') . " - got: " . gettype($decoded));
                 }
+                $entry['field_type_fields'] = $decoded;
             } elseif (is_array($fieldTypeFieldsJson)) {
                 $entry['field_type_fields'] = $fieldTypeFieldsJson;
             } else {
-                throw new RuntimeException("field_type_fields must be a JSON array or string for field_type id: " . ($entry['id'] ?? 'unknown'));
+                throw new RuntimeException("field_type_fields must be a JSON array or string for field_type id: " . ($entry['id'] ?? 'unknown') . " - got: " . gettype($fieldTypeFieldsJson));
             }
         }
 
