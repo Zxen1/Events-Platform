@@ -23173,6 +23173,8 @@ const memberPanelChangeManager = (()=>{
 function formChangedWrapper(event){
   if(event && event.target){
     const target = event.target;
+    // Ignore all interactions inside sandbox (form preview)
+    if(target.closest('[data-sandbox="true"]')) return;
     const isAuthInput = target.closest('.member-auth-panel') || 
                        target.id === 'memberLoginEmail' || 
                        target.id === 'memberLoginPassword' ||
@@ -24016,6 +24018,8 @@ const adminPanelChangeManager = (()=>{
     function formChangedWrapper(event){
       if(event && event.target){
         const target = event.target;
+        // Ignore all interactions inside sandbox (form preview)
+        if(target.closest('[data-sandbox="true"]')) return;
         const isAuthInput = target.closest('.member-auth-panel') || 
                            target.id === 'memberLoginEmail' || 
                            target.id === 'memberLoginPassword' ||
