@@ -5151,7 +5151,6 @@ body.hide-ads .ad-board{
   color:var(--button-active-text);
   font-weight:normal;
 }
-
 @media (min-width: 601px){
   .mode-toggle{
     grid-template-columns:repeat(3, auto);
@@ -5504,7 +5503,6 @@ body.filters-active #filterBtn{
 .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading){
   background-color:#ffffff;
 }
-
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
 .map-control-row .mapboxgl-ctrl-compass button:hover{

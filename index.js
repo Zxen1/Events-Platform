@@ -18765,11 +18765,9 @@ function makePosts(){
           }
         };
 
-        const isMapControl = idx === 1;
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
-          trackUserLocation: isMapControl,
-          showUserHeading: isMapControl,
+          trackUserLocation:false,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
         geolocate.on('geolocate', (event)=>{
@@ -18780,9 +18778,7 @@ function makePosts(){
           if(event && event.coords){
             setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
           }
-          // Only manually move camera for controls without trackUserLocation
-          // (Mapbox handles camera automatically when trackUserLocation is true)
-          if(!isMapControl && map && typeof map.easeTo === 'function' && event && event.coords){
+          if(map && typeof map.easeTo === 'function' && event && event.coords){
             let targetZoom = cityZoomLevel;
             if(typeof map.getMaxZoom === 'function'){
               try{
