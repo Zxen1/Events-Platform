@@ -9067,12 +9067,52 @@ function makePosts(){
           locationWrapper.className = 'location-field-wrapper';
           locationWrapper.setAttribute('role', 'group');
           const addressRow = document.createElement('div');
-          addressRow.className = 'venue-line address_line-line';
+          addressRow.className = 'address_line-line';
           const geocoderContainer = document.createElement('div');
           geocoderContainer.className = 'address_line-geocoder-container';
           const addressInputId = `${baseId}-location-address`;
           geocoderContainer.id = `${baseId}-location-geocoder`;
+          // Display element shown when not editing
+          const addressDisplay = document.createElement('div');
+          addressDisplay.className = 'address_line-display';
+          addressDisplay.tabIndex = 0;
+          addressDisplay.setAttribute('role', 'button');
+          addressDisplay.setAttribute('aria-label', 'Click to edit address');
+          const showInput = () => {
+            geocoderContainer.hidden = false;
+            addressDisplay.hidden = true;
+            const input = geocoderContainer.querySelector('input');
+            if(input) input.focus();
+          };
+          const showDisplay = () => {
+            const addr = locationState.address || '';
+            if(addr.trim()){
+              addressDisplay.textContent = addr;
+              geocoderContainer.hidden = true;
+              addressDisplay.hidden = false;
+            } else {
+              geocoderContainer.hidden = false;
+              addressDisplay.hidden = true;
+            }
+          };
+          addressDisplay.addEventListener('click', showInput);
+          addressDisplay.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ' '){
+              e.preventDefault();
+              showInput();
+            }
+          });
           addressRow.appendChild(geocoderContainer);
+          addressRow.appendChild(addressDisplay);
+          // Initialize: show display if address exists, otherwise show input
+          if(locationState.address && locationState.address.trim()){
+            addressDisplay.textContent = locationState.address;
+            geocoderContainer.hidden = true;
+            addressDisplay.hidden = false;
+          } else {
+            geocoderContainer.hidden = false;
+            addressDisplay.hidden = true;
+          }
           locationWrapper.appendChild(addressRow);
           const latitudeInput = document.createElement('input');
           latitudeInput.type = 'hidden';
@@ -9256,6 +9296,7 @@ function makePosts(){
                   }
                   syncCoordinateInputs();
                   safeNotifyFormbuilderChange();
+                  showDisplay();
                 }
                 setGeocoderActive(false);
               });
@@ -9267,6 +9308,10 @@ function makePosts(){
                 syncCoordinateInputs();
                 safeNotifyFormbuilderChange();
                 setGeocoderActive(false);
+              });
+              // Switch to display when clicking outside
+              geocoderInput.addEventListener('blur', () => {
+                setTimeout(showDisplay, 150);
               });
               geocoder.on('error', ()=> setGeocoderActive(false));
               return geocoderInput;
@@ -12405,6 +12450,7 @@ function makePosts(){
                     if(geocoderInputRef){
                       geocoderInputRef.value = placeName;
                     }
+                    showVenueDisplay();
                     syncToPreviewField();
                   }
                   if(center){
@@ -12532,10 +12578,50 @@ function makePosts(){
                 venueCard.appendChild(venueLine);
 
                 const addressLine = document.createElement('div');
-                addressLine.className = 'venue-line address_line-line';
+                addressLine.className = 'address_line-line';
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'address_line-geocoder-container';
+                // Display element shown when not editing
+                const addressDisplay = document.createElement('div');
+                addressDisplay.className = 'address_line-display';
+                addressDisplay.tabIndex = 0;
+                addressDisplay.setAttribute('role', 'button');
+                addressDisplay.setAttribute('aria-label', 'Click to edit address');
+                const showVenueInput = () => {
+                  geocoderContainer.hidden = false;
+                  addressDisplay.hidden = true;
+                  const input = geocoderContainer.querySelector('input');
+                  if(input) input.focus();
+                };
+                const showVenueDisplay = () => {
+                  const addr = venue.address || '';
+                  if(addr.trim()){
+                    addressDisplay.textContent = addr;
+                    geocoderContainer.hidden = true;
+                    addressDisplay.hidden = false;
+                  } else {
+                    geocoderContainer.hidden = false;
+                    addressDisplay.hidden = true;
+                  }
+                };
+                addressDisplay.addEventListener('click', showVenueInput);
+                addressDisplay.addEventListener('keydown', (e) => {
+                  if(e.key === 'Enter' || e.key === ' '){
+                    e.preventDefault();
+                    showVenueInput();
+                  }
+                });
                 addressLine.appendChild(geocoderContainer);
+                addressLine.appendChild(addressDisplay);
+                // Initialize: show display if address exists, otherwise show input
+                if(venue.address && venue.address.trim()){
+                  addressDisplay.textContent = venue.address;
+                  geocoderContainer.hidden = true;
+                  addressDisplay.hidden = false;
+                } else {
+                  geocoderContainer.hidden = false;
+                  addressDisplay.hidden = true;
+                }
                 venueCard.appendChild(addressLine);
                 const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
                 const createFallbackAddressInput = ()=>{
@@ -12742,6 +12828,10 @@ function makePosts(){
                       clearNameSuggestions();
                       safeNotifyChange();
                       setGeocoderActive(false);
+                    });
+                    // Switch to display when clicking outside
+                    geocoderInput.addEventListener('blur', () => {
+                      setTimeout(showVenueDisplay, 150);
                     });
                     geocoder.on('error', ()=> setGeocoderActive(false));
                   };
