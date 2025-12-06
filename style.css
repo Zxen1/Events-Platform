@@ -8706,11 +8706,25 @@ html, body { cursor: auto !important; }
               outline:none !important;
               border-color:var(--focus-color, #4a90d9) !important;
             }
+            #tab-forms .address_line-display[hidden],
+            #memberPanel .address_line-display[hidden],
+            #memberPanel .member-create-fields .address_line-display[hidden],
             .address_line-display[hidden]{
               display:none !important;
+              visibility:hidden !important;
+              height:0 !important;
+              min-height:0 !important;
+              padding:0 !important;
+              margin:0 !important;
+              border:none !important;
+              overflow:hidden !important;
             }
+            #tab-forms .address_line-geocoder-container[hidden],
+            #memberPanel .address_line-geocoder-container[hidden],
+            #memberPanel .member-create-fields .address_line-geocoder-container[hidden],
             .address_line-geocoder-container[hidden]{
               display:none !important;
+              visibility:hidden !important;
             }
             #tab-forms .form-field--location .location-field-wrapper,
             #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
