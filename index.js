@@ -3948,12 +3948,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       
       // Create styled tooltip popup (matching website style)
+      // Append to body to escape form field stacking context
       const popup = document.createElement('div');
       popup.className = 'message-hover-popup';
-      popup.style.position = 'absolute';
-      popup.style.top = '100%';
-      popup.style.left = '0';
-      popup.style.marginTop = '8px';
+      popup.style.position = 'fixed';
       popup.style.background = 'rgba(17,17,17,0.98)';
       popup.style.border = '1px solid rgba(255,255,255,0.2)';
       popup.style.borderRadius = '8px';
@@ -3961,7 +3959,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       popup.style.minWidth = '280px';
       popup.style.maxWidth = '400px';
       popup.style.boxShadow = '0 8px 24px rgba(0,0,0,0.6)';
-      popup.style.zIndex = '86';
+      popup.style.zIndex = '87';
       popup.style.opacity = '0';
       popup.style.pointerEvents = 'none';
       popup.style.transform = 'translateY(-8px)';
@@ -3971,6 +3969,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       popup.style.gap = '10px';
       popup.style.whiteSpace = 'pre-line';
       popup.style.wordWrap = 'break-word';
+      document.body.appendChild(popup);
       
       // Split tooltip into description and char limits
       const description = document.createElement('div');
@@ -3996,11 +3995,17 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         popup.appendChild(limitsDiv);
       }
       
-      hint.appendChild(popup);
+      // Position tooltip relative to hint element on hover
+      let updatePosition = () => {
+        const rect = hint.getBoundingClientRect();
+        popup.style.left = `${rect.left}px`;
+        popup.style.top = `${rect.bottom + 8}px`;
+      };
       
       // Hover effect for icon
       hint.addEventListener('mouseenter', () => { 
         hint.style.opacity = '1';
+        updatePosition();
         popup.style.opacity = '1';
         popup.style.transform = 'translateY(0)';
       });
@@ -4009,6 +4014,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         popup.style.opacity = '0';
         popup.style.transform = 'translateY(-8px)';
       });
+      
+      // Update position on scroll/resize
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
       
       return hint;
     }
