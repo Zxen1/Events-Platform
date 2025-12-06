@@ -8665,6 +8665,7 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .address_line-display,
             #memberPanel .member-create-fields .address_line-display{
+              display:block;
               width:100%;
               padding:8px 12px;
               font-family:inherit;
@@ -8674,13 +8675,14 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.35);
               border:1px solid var(--border);
               border-radius:8px;
-              line-height:1.4;
+              line-height:1.5;
               word-wrap:break-word;
               overflow-wrap:break-word;
-              white-space:normal;
+              white-space:pre-wrap;
               cursor:text;
               box-sizing:border-box;
-              min-height:36px;
+              min-height:38px;
+              text-align:left;
             }
             #tab-forms .address_line-display:hover,
             #memberPanel .member-create-fields .address_line-display:hover{
