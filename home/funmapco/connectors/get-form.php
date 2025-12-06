@@ -1026,6 +1026,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $isCheckout = ($fieldsetKey === 'checkout');
                 
                 $customName = null;
+                $customPlaceholder = null;
                 $customOptions = null;
                 $customTooltip = null;
                 $customCheckoutOptions = null;
@@ -1034,6 +1035,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
+                    }
+                    if (isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) && trim($fieldEdit['placeholder']) !== '') {
+                        $customPlaceholder = trim($fieldEdit['placeholder']);
                     }
                     if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
                         $customOptions = $fieldEdit['options'];
@@ -1056,7 +1060,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $matchingFieldset['placeholder'] ?? '',
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['placeholder'] ?? ''),
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
@@ -1085,11 +1089,15 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 $customName = null;
+                $customPlaceholder = null;
                 $customTooltip = null;
                 $customCheckoutOptions = null;
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
+                    }
+                    if (isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) && trim($fieldEdit['placeholder']) !== '') {
+                        $customPlaceholder = trim($fieldEdit['placeholder']);
                     }
                     if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
                         $customTooltip = trim($fieldEdit['tooltip']);
@@ -1108,7 +1116,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $fieldsetKeyValue,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $matchingFieldset['placeholder'] ?? '',
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['placeholder'] ?? ''),
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],

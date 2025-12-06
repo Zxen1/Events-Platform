@@ -8545,12 +8545,14 @@ function makePosts(){
         const fieldLimits = getFieldLimits(baseType);
         const minLength = fieldLimits.min_length;
         const maxLength = fieldLimits.max_length;
-        // Get custom tooltip - check field.tooltip first (from editable_fieldsets), then fieldset tooltip
+        // Get custom tooltip - check field.tooltip first (from editable_fieldsets), then fall back to fieldset tooltip
+        // If field.tooltip is empty/undefined, use fieldset default
         let customTooltip = null;
-        if(field.tooltip && typeof field.tooltip === 'string' && field.tooltip.trim()){
+        if(field.tooltip && typeof field.tooltip === 'string' && field.tooltip.trim() !== ''){
           customTooltip = field.tooltip.trim();
-        } else {
-          // Fall back to fieldset tooltip
+        }
+        // If no custom tooltip or it's empty, fall back to fieldset tooltip
+        if(!customTooltip){
           const matchingFieldset = FORM_FIELDSETS.find(fs => 
             (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
           );
@@ -14217,6 +14219,41 @@ function makePosts(){
               }
             });
 
+            // Field placeholder input (shown in edit panel for editable fields only)
+            const fieldPlaceholderContainer = document.createElement('div');
+            fieldPlaceholderContainer.className = 'field-placeholder-editor';
+            fieldPlaceholderContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            const fieldPlaceholderLabel = document.createElement('label');
+            fieldPlaceholderLabel.textContent = 'Placeholder';
+            const fieldPlaceholderInput = document.createElement('input');
+            fieldPlaceholderInput.type = 'text';
+            fieldPlaceholderInput.className = 'field-placeholder-input';
+            fieldPlaceholderInput.placeholder = 'Placeholder text';
+            // Get default placeholder from fieldset or use safeField.placeholder
+            const fieldsetKey = safeField.fieldsetKey || safeField.key || '';
+            const matchingFieldset = window.FORM_FIELDSETS?.find(fs => 
+              (fs.value === fieldsetKey || fs.key === fieldsetKey || fs.fieldset_key === fieldsetKey || fs.fieldsetKey === fieldsetKey)
+            );
+            const defaultPlaceholder = matchingFieldset?.placeholder || '';
+            fieldPlaceholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
+            // Only show value if placeholder exists and is non-empty, otherwise show placeholder
+            fieldPlaceholderInput.value = (safeField.placeholder && typeof safeField.placeholder === 'string' && safeField.placeholder.trim() !== '') ? safeField.placeholder : '';
+            fieldPlaceholderLabel.appendChild(fieldPlaceholderInput);
+            fieldPlaceholderContainer.appendChild(fieldPlaceholderLabel);
+            
+            // Track original value to only save if changed
+            const originalPlaceholder = fieldPlaceholderInput.value.trim();
+            
+            // Sync placeholder input with field data
+            fieldPlaceholderInput.addEventListener('input', ()=>{
+              const trimmedValue = fieldPlaceholderInput.value.trim();
+              safeField.placeholder = trimmedValue;
+              // Only trigger save if value actually changed
+              if(trimmedValue !== originalPlaceholder){
+                notifyFormbuilderChange();
+              }
+            });
+
             // Field tooltip input (shown in edit panel for editable fields only)
             const fieldTooltipContainer = document.createElement('div');
             fieldTooltipContainer.className = 'field-tooltip-editor';
@@ -14225,16 +14262,26 @@ function makePosts(){
             fieldTooltipLabel.textContent = 'Tooltip';
             const fieldTooltipInput = document.createElement('textarea');
             fieldTooltipInput.className = 'field-tooltip-input';
-            fieldTooltipInput.placeholder = 'Enter custom tooltip help text (character limits will be added automatically)';
+            // Use fieldset tooltip as placeholder text
+            const fieldsetTooltip = matchingFieldset?.fieldset_tooltip || '';
+            fieldTooltipInput.placeholder = fieldsetTooltip || 'Enter custom tooltip help text (character limits will be added automatically)';
             fieldTooltipInput.rows = 3;
-            fieldTooltipInput.value = safeField.tooltip || '';
+            // Only show value if tooltip exists and is non-empty, otherwise show placeholder
+            fieldTooltipInput.value = (safeField.tooltip && typeof safeField.tooltip === 'string' && safeField.tooltip.trim() !== '') ? safeField.tooltip : '';
             fieldTooltipLabel.appendChild(fieldTooltipInput);
             fieldTooltipContainer.appendChild(fieldTooltipLabel);
             
+            // Track original value to only save if changed
+            const originalTooltip = fieldTooltipInput.value.trim();
+            
             // Sync tooltip input with field data
             fieldTooltipInput.addEventListener('input', ()=>{
-              safeField.tooltip = fieldTooltipInput.value.trim();
-              notifyFormbuilderChange();
+              const trimmedValue = fieldTooltipInput.value.trim();
+              safeField.tooltip = trimmedValue;
+              // Only trigger save if value actually changed
+              if(trimmedValue !== originalTooltip){
+                notifyFormbuilderChange();
+              }
             });
             fieldTooltipInput.addEventListener('blur', ()=>{
               if(formbuilderAutoSaveTimer){
@@ -14256,7 +14303,7 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldsetWrapper);
+            editPanel.append(fieldNameContainer, fieldPlaceholderContainer, fieldRequiredToggle, fieldsetWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14725,10 +14772,15 @@ function makePosts(){
               if(isEditable){
                 fieldNameInput.value = safeField.name || '';
               }
+              // Show placeholder editor only for editable field types
+              fieldPlaceholderContainer.style.display = isEditable ? '' : 'none';
+              if(isEditable){
+                fieldPlaceholderInput.value = (safeField.placeholder && typeof safeField.placeholder === 'string' && safeField.placeholder.trim() !== '') ? safeField.placeholder : '';
+              }
               // Show tooltip editor only for editable field types
               fieldTooltipContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
-                fieldTooltipInput.value = safeField.tooltip || '';
+                fieldTooltipInput.value = (safeField.tooltip && typeof safeField.tooltip === 'string' && safeField.tooltip.trim() !== '') ? safeField.tooltip : '';
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;
@@ -14857,8 +14909,8 @@ function makePosts(){
               }
             });
 
-            // Add tooltip editor last, before delete button
-            editPanel.append(fieldTooltipContainer, actionFieldBtn);
+            // Add placeholder and tooltip editors last, before delete button
+            editPanel.append(fieldPlaceholderContainer, fieldTooltipContainer, actionFieldBtn);
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
