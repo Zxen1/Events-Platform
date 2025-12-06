@@ -10085,6 +10085,63 @@ html, body { cursor: auto !important; }
   color: #000 !important;
 }
 
+/* Test Geolocate Button */
+#testGeolocateBtn,
+.test-geolocate-btn{
+  position: fixed;
+  bottom: 10px;
+  right: 60px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #4285f4;
+  background-color: #4285f4;
+  color: #fff;
+  border: 1px solid #4285f4;
+  border-color: #4285f4;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
+}
 
+.test-geolocate-btn:hover{
+  background: #3367d6 !important;
+  background-color: #3367d6 !important;
+  border-color: #3367d6 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  transform: scale(1.05) !important;
+  color: #fff !important;
+}
+
+.test-geolocate-btn:active{
+  background: #2a56c6 !important;
+  background-color: #2a56c6 !important;
+  transform: scale(0.95) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+  color: #fff !important;
+}
+
+.test-geolocate-btn .geo-icon{
+  width: 20px;
+  height: 20px;
+  stroke: #fff;
+}
+
+@keyframes geo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.test-geolocate-btn .geo-icon.spinning{
+  animation: geo-spin 1s linear infinite;
+}
 
 
