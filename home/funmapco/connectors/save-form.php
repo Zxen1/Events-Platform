@@ -769,6 +769,14 @@ try {
                         }
                     }
                     
+                    // Save custom tooltip if provided (only for editable fieldsets)
+                    if (isset($fieldData['tooltip']) && is_string($fieldData['tooltip'])) {
+                        $customTooltip = trim($fieldData['tooltip']);
+                        if ($customTooltip !== '') {
+                            $editData['tooltip'] = $customTooltip;
+                        }
+                    }
+                    
                     if (!empty($editData)) {
                         $editableFieldsets[(string)$csvIndex] = $editData;
                     }

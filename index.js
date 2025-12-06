@@ -8545,11 +8545,17 @@ function makePosts(){
         const fieldLimits = getFieldLimits(baseType);
         const minLength = fieldLimits.min_length;
         const maxLength = fieldLimits.max_length;
-        // Get custom tooltip from fieldset - match by value, key, fieldset_key, or fieldsetKey
-        const matchingFieldset = FORM_FIELDSETS.find(fs => 
-          (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
-        );
-        const customTooltip = matchingFieldset?.fieldset_tooltip || null;
+        // Get custom tooltip - check field.tooltip first (from editable_fieldsets), then fieldset tooltip
+        let customTooltip = null;
+        if(field.tooltip && typeof field.tooltip === 'string' && field.tooltip.trim()){
+          customTooltip = field.tooltip.trim();
+        } else {
+          // Fall back to fieldset tooltip
+          const matchingFieldset = FORM_FIELDSETS.find(fs => 
+            (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
+          );
+          customTooltip = matchingFieldset?.fieldset_tooltip || null;
+        }
         let charCounter = null;
         
         if(baseType === 'text-area' || baseType === 'description'){
@@ -14211,6 +14217,35 @@ function makePosts(){
               }
             });
 
+            // Field tooltip input (shown in edit panel for editable fields only)
+            const fieldTooltipContainer = document.createElement('div');
+            fieldTooltipContainer.className = 'field-tooltip-editor';
+            fieldTooltipContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            const fieldTooltipLabel = document.createElement('label');
+            fieldTooltipLabel.textContent = 'Tooltip';
+            const fieldTooltipInput = document.createElement('textarea');
+            fieldTooltipInput.className = 'field-tooltip-input';
+            fieldTooltipInput.placeholder = 'Enter custom tooltip help text (character limits will be added automatically)';
+            fieldTooltipInput.rows = 3;
+            fieldTooltipInput.value = safeField.tooltip || '';
+            fieldTooltipLabel.appendChild(fieldTooltipInput);
+            fieldTooltipContainer.appendChild(fieldTooltipLabel);
+            
+            // Sync tooltip input with field data
+            fieldTooltipInput.addEventListener('input', ()=>{
+              safeField.tooltip = fieldTooltipInput.value.trim();
+              notifyFormbuilderChange();
+            });
+            fieldTooltipInput.addEventListener('blur', ()=>{
+              if(formbuilderAutoSaveTimer){
+                clearTimeout(formbuilderAutoSaveTimer);
+                formbuilderAutoSaveTimer = null;
+                if(typeof window.adminPanelModule?.runSave === 'function'){
+                  window.adminPanelModule.runSave({ closeAfter: false });
+                }
+              }
+            });
+
             const fieldRequiredToggle = document.createElement('label');
             fieldRequiredToggle.className = 'field-required-toggle';
             const fieldRequiredInput = document.createElement('input');
@@ -14221,7 +14256,7 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldsetWrapper);
+            editPanel.append(fieldNameContainer, fieldTooltipContainer, fieldRequiredToggle, fieldsetWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14689,6 +14724,11 @@ function makePosts(){
               fieldNameContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
                 fieldNameInput.value = safeField.name || '';
+              }
+              // Show tooltip editor only for editable field types
+              fieldTooltipContainer.style.display = isEditable ? '' : 'none';
+              if(isEditable){
+                fieldTooltipInput.value = safeField.tooltip || '';
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;

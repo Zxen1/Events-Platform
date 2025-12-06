@@ -1027,6 +1027,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 
                 $customName = null;
                 $customOptions = null;
+                $customTooltip = null;
                 $customCheckoutOptions = null;
                 
                 // Load customizations for editable fields
@@ -1036,6 +1037,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     }
                     if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
                         $customOptions = $fieldEdit['options'];
+                    }
+                    if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
+                        $customTooltip = trim($fieldEdit['tooltip']);
                     }
                 }
                 
@@ -1062,6 +1066,11 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     $builtField['options'] = $customOptions;
                 }
                 
+                // Add custom tooltip from editable_fieldsets if available
+                if ($customTooltip !== null) {
+                    $builtField['tooltip'] = $customTooltip;
+                }
+                
                 // Add checkout options if available
                 if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
                     $builtField['checkoutOptions'] = $customCheckoutOptions;
@@ -1076,10 +1085,14 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 $customName = null;
+                $customTooltip = null;
                 $customCheckoutOptions = null;
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
+                    }
+                    if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
+                        $customTooltip = trim($fieldEdit['tooltip']);
                     }
                 }
                 // For checkout fields, use checkout_options_id column
@@ -1100,6 +1113,11 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],
                 ];
+                
+                // Add custom tooltip from editable_fieldsets if available
+                if ($customTooltip !== null) {
+                    $builtField['tooltip'] = $customTooltip;
+                }
                 
                 // Add checkout options if available
                 if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
