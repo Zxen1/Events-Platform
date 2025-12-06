@@ -112,25 +112,24 @@ try {
         $fieldColumns = fetchTableColumns($pdo, 'fields');
         if ($fieldColumns) {
             $allFields = fetchAllFields($pdo, $fieldColumns);
-            
-            // Get currency options from currency field
-            $currencyField = array_filter($allFields, function($f) {
-                return isset($f['field_key']) && $f['field_key'] === 'currency' && (int)$f['id'] === 13;
-            });
-            if (!empty($currencyField)) {
-                $currencyField = reset($currencyField);
-                if (isset($currencyField['options']) && is_string($currencyField['options']) && $currencyField['options'] !== '') {
-                    $currencyOptions = array_map('trim', explode(',', $currencyField['options']));
-                    $currencyOptions = array_filter($currencyOptions, function($code) {
-                        return $code !== '';
-                    });
-                    $currencyOptions = array_map('strtoupper', $currencyOptions);
-                    $currencyOptions = array_values(array_unique($currencyOptions));
-                }
-            }
         }
     } catch (PDOException $e) {
         // Continue without fields
+    }
+    
+    // Fetch currency options from general_options table
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'general_options'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query("SELECT `option_value` FROM `general_options` WHERE `option_group` = 'currency' AND `is_active` = 1 ORDER BY `sort_order` ASC");
+            $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            if (!empty($rows)) {
+                $currencyOptions = array_map('strtoupper', $rows);
+                $currencyOptions = array_values(array_unique($currencyOptions));
+            }
+        }
+    } catch (PDOException $e) {
+        // Continue without currencies
     }
 
     // Fetch checkout options from database
@@ -675,7 +674,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
 function fetchAllFields(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
-    foreach (['id', 'field_key', 'input_type', 'options'] as $col) {
+    foreach (['id', 'field_key', 'input_type'] as $col) {
         if (in_array($col, $columns, true)) {
             $selectColumns[] = "`$col`";
         }
@@ -696,7 +695,6 @@ function fetchAllFields(PDO $pdo, array $columns): array
             'id' => (int) $row['id'],
             'field_key' => isset($row['field_key']) ? trim((string) $row['field_key']) : '',
             'input_type' => isset($row['input_type']) ? trim((string) $row['input_type']) : 'text',
-            'options' => isset($row['options']) && is_string($row['options']) ? trim($row['options']) : null,
         ];
         
         $fields[] = $field;
@@ -985,11 +983,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
                 
-                // Use custom options if available, otherwise use field options
+                // Use custom options from editable_fieldsets if available
                 if ($customOptions !== null && is_array($customOptions)) {
                     $builtField['options'] = $customOptions;
-                } elseif ($field['options'] !== null && $field['options'] !== '') {
-                    $builtField['options'] = $field['options'];
                 }
                 
                 // Add checkout options if available

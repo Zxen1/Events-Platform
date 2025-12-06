@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 06, 2025 at 12:18 AM
+-- Generation Time: Dec 06, 2025 at 06:26 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -200,10 +200,10 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (4, 'contact_email', '', 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (5, 'support_email', '', 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(7, 'welcome_enabled', 'false', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-11-30 19:33:47'),
+(7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-12-05 17:48:10'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Welcome modal title', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (9, 'welcome_message', NULL, 'json', 'Welcome modal content (JSON)', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-11-29 19:03:49'),
+(10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-12-06 05:28:17'),
 (11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-02 03:25:58'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -219,7 +219,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (23, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-11-29 09:48:35'),
-(26, 'map_shadow_mode', 'post_mode_only', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-12-01 04:16:59'),
+(26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-12-05 17:34:13'),
 (27, 'small_map_card_pill', 'assets/system-images/150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-29 08:35:15'),
 (28, 'big_map_card_pill', 'assets/system-images/225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-29 09:22:12'),
 (29, 'multi_post_icon', 'assets/system-images/multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-11-29 08:35:50'),
@@ -303,10 +303,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-05 23:44:09'),
-(2, 'standard-listing', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-05 23:44:09'),
-(3, 'featured-listing', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-05 23:44:09'),
-(4, 'featured-sidebar-ad', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-05 23:44:09');
+(1, 'free-listing', 'Free Listing', 'Basic listing visible on map for 30 days. No featured placement.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-06 18:20:52'),
+(2, 'standard-listing', 'Standard Listing', 'Standard listing visible on map for 30 days. Appears in search results.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-06 18:20:52'),
+(3, 'featured-listing', 'Featured Listing', 'Featured listing with highlighted placement for 30 days. Appears at top of search results.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-06 18:20:52'),
+(4, 'featured-sidebar-ad', 'Featured + Sidebar Ad', 'Featured listing with sidebar advertisement for 30 days. Maximum visibility.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-06 18:20:52');
 
 -- --------------------------------------------------------
 
@@ -359,7 +359,6 @@ CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `field_key` varchar(255) DEFAULT NULL,
   `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `options` varchar(255) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -368,29 +367,29 @@ CREATE TABLE `fields` (
 -- Dumping data for table `fields`
 --
 
-INSERT INTO `fields` (`id`, `field_key`, `input_type`, `options`, `created_at`, `updated_at`) VALUES
-(1, 'title', 'text', NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(2, 'description', 'textarea', NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(3, 'images', 'images', NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(4, 'venue-name', 'text', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(5, 'address-line', 'text', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(6, 'latitude', 'decimal', NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(7, 'longitude', 'decimal', NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(8, 'session-date', 'date', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(9, 'session-time', 'time', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(10, 'seating-area', 'text', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(11, 'pricing-tier', 'text', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(12, 'ticket-price', 'decimal(10,2)', NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(13, 'currency', 'dropdown', 'AUD,USD,EUR,GBP', '2025-10-29 23:32:47', '2025-11-05 13:33:54'),
-(14, 'text-box', 'text', NULL, '2025-10-30 17:11:57', '2025-11-06 13:07:35'),
-(15, 'text-area', 'textarea', NULL, '2025-10-30 17:11:57', '2025-11-06 13:07:35'),
-(16, 'dropdown', 'dropdown', NULL, '2025-10-30 17:14:25', '2025-11-07 01:59:08'),
-(17, 'radio', 'radio', NULL, '2025-10-30 17:14:25', '2025-11-17 10:09:01'),
-(18, 'email', 'email', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(19, 'phone', 'tel', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(20, 'website', 'url', NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(21, 'item-name', 'text', NULL, '2025-10-30 18:33:09', '2025-12-06 00:14:56'),
-(23, 'item-price', 'decimal(10,2)', NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
+INSERT INTO `fields` (`id`, `field_key`, `input_type`, `created_at`, `updated_at`) VALUES
+(1, 'title', 'text', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(2, 'description', 'textarea', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(3, 'images', 'images', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(4, 'venue-name', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(5, 'address-line', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(6, 'latitude', 'decimal', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(7, 'longitude', 'decimal', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(8, 'session-date', 'date', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(9, 'session-time', 'time', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(10, 'seating-area', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(11, 'pricing-tier', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(12, 'ticket-price', 'decimal(10,2)', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(13, 'currency', 'dropdown', '2025-10-29 23:32:47', '2025-11-05 13:33:54'),
+(14, 'text-box', 'text', '2025-10-30 17:11:57', '2025-11-06 13:07:35'),
+(15, 'text-area', 'textarea', '2025-10-30 17:11:57', '2025-11-06 13:07:35'),
+(16, 'dropdown', 'dropdown', '2025-10-30 17:14:25', '2025-11-07 01:59:08'),
+(17, 'radio', 'radio', '2025-10-30 17:14:25', '2025-11-17 10:09:01'),
+(18, 'email', 'email', '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(19, 'phone', 'tel', '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(20, 'website', 'url', '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(21, 'item-name', 'text', '2025-10-30 18:33:09', '2025-12-06 00:14:56'),
+(23, 'item-price', 'decimal(10,2)', '2025-10-30 18:39:14', '2025-11-06 13:07:35');
 
 -- --------------------------------------------------------
 
@@ -468,7 +467,63 @@ INSERT INTO `general_options` (`id`, `option_group`, `option_value`, `option_lab
 (15, 'currency', 'MXN', 'Mexican Peso', 15, 1),
 (16, 'currency', 'BRL', 'Brazilian Real', 16, 1),
 (17, 'currency', 'INR', 'Indian Rupee', 17, 1),
-(18, 'currency', 'ZAR', 'South African Rand', 18, 1);
+(18, 'currency', 'ZAR', 'South African Rand', 18, 1),
+(19, 'currency', 'CNY', 'Chinese Yuan', 19, 1),
+(20, 'currency', 'KRW', 'South Korean Won', 20, 1),
+(21, 'currency', 'TWD', 'Taiwan Dollar', 21, 1),
+(22, 'currency', 'THB', 'Thai Baht', 22, 1),
+(23, 'currency', 'PHP', 'Philippine Peso', 23, 1),
+(24, 'currency', 'IDR', 'Indonesian Rupiah', 24, 1),
+(25, 'currency', 'MYR', 'Malaysian Ringgit', 25, 1),
+(26, 'currency', 'VND', 'Vietnamese Dong', 26, 1),
+(27, 'currency', 'AED', 'UAE Dirham', 27, 1),
+(28, 'currency', 'SAR', 'Saudi Riyal', 28, 1),
+(29, 'currency', 'QAR', 'Qatari Riyal', 29, 1),
+(30, 'currency', 'KWD', 'Kuwaiti Dinar', 30, 1),
+(31, 'currency', 'BHD', 'Bahraini Dinar', 31, 1),
+(32, 'currency', 'OMR', 'Omani Rial', 32, 1),
+(33, 'currency', 'ILS', 'Israeli Shekel', 33, 1),
+(34, 'currency', 'CZK', 'Czech Koruna', 34, 1),
+(35, 'currency', 'HUF', 'Hungarian Forint', 35, 1),
+(36, 'currency', 'RON', 'Romanian Leu', 36, 1),
+(37, 'currency', 'BGN', 'Bulgarian Lev', 37, 1),
+(38, 'currency', 'HRK', 'Croatian Kuna', 38, 1),
+(39, 'currency', 'ISK', 'Icelandic Krona', 39, 1),
+(40, 'currency', 'RUB', 'Russian Ruble', 40, 1),
+(41, 'currency', 'UAH', 'Ukrainian Hryvnia', 41, 1),
+(42, 'currency', 'TRY', 'Turkish Lira', 42, 1),
+(43, 'currency', 'CLP', 'Chilean Peso', 43, 1),
+(44, 'currency', 'COP', 'Colombian Peso', 44, 1),
+(45, 'currency', 'ARS', 'Argentine Peso', 45, 1),
+(46, 'currency', 'PEN', 'Peruvian Sol', 46, 1),
+(47, 'currency', 'UYU', 'Uruguayan Peso', 47, 1),
+(48, 'currency', 'BOB', 'Bolivian Boliviano', 48, 1),
+(49, 'currency', 'PYG', 'Paraguayan Guarani', 49, 1),
+(50, 'currency', 'VES', 'Venezuelan Bolivar', 50, 1),
+(51, 'currency', 'DOP', 'Dominican Peso', 51, 1),
+(52, 'currency', 'JMD', 'Jamaican Dollar', 52, 1),
+(53, 'currency', 'TTD', 'Trinidad Dollar', 53, 1),
+(54, 'currency', 'GTQ', 'Guatemalan Quetzal', 54, 1),
+(55, 'currency', 'CRC', 'Costa Rican Colon', 55, 1),
+(56, 'currency', 'PAB', 'Panamanian Balboa', 56, 1),
+(57, 'currency', 'NGN', 'Nigerian Naira', 57, 1),
+(58, 'currency', 'EGP', 'Egyptian Pound', 58, 1),
+(59, 'currency', 'KES', 'Kenyan Shilling', 59, 1),
+(60, 'currency', 'GHS', 'Ghanaian Cedi', 60, 1),
+(61, 'currency', 'TZS', 'Tanzanian Shilling', 61, 1),
+(62, 'currency', 'UGX', 'Ugandan Shilling', 62, 1),
+(63, 'currency', 'MAD', 'Moroccan Dirham', 63, 1),
+(64, 'currency', 'TND', 'Tunisian Dinar', 64, 1),
+(65, 'currency', 'XOF', 'West African CFA Franc', 65, 1),
+(66, 'currency', 'XAF', 'Central African CFA Franc', 66, 1),
+(67, 'currency', 'PKR', 'Pakistani Rupee', 67, 1),
+(68, 'currency', 'BDT', 'Bangladeshi Taka', 68, 1),
+(69, 'currency', 'LKR', 'Sri Lankan Rupee', 69, 1),
+(70, 'currency', 'NPR', 'Nepalese Rupee', 70, 1),
+(71, 'currency', 'MMK', 'Myanmar Kyat', 71, 1),
+(72, 'currency', 'FJD', 'Fijian Dollar', 72, 1),
+(73, 'currency', 'PGK', 'Papua New Guinean Kina', 73, 1),
+(74, 'currency', 'XPF', 'CFP Franc', 74, 1);
 
 -- --------------------------------------------------------
 
@@ -800,7 +855,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `editable_fieldsets`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 16:06:47'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 12:44:10'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
@@ -1069,7 +1124,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3427;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3669;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1117,7 +1172,7 @@ ALTER TABLE `fieldsets`
 -- AUTO_INCREMENT for table `general_options`
 --
 ALTER TABLE `general_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`

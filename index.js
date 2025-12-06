@@ -56,6 +56,84 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
 // Expose globally for other scripts
 window.apiRequest = apiRequest;
 
+// === Currency Dropdown Keyboard Navigation ===
+// Allows typing letters to jump to matching currency codes when dropdown is open
+function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
+  let searchString = '';
+  let searchTimeout = null;
+  
+  const keydownHandler = (e) => {
+    // Only handle letter keys
+    if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
+      e.preventDefault();
+      
+      // Clear previous timeout and append to search string
+      if (searchTimeout) clearTimeout(searchTimeout);
+      searchString += e.key.toUpperCase();
+      
+      // Find matching option
+      const options = menuElement.querySelectorAll('.menu-option[data-value]');
+      for (const opt of options) {
+        const value = (opt.dataset.value || '').toUpperCase();
+        if (value && value.startsWith(searchString)) {
+          opt.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          opt.focus();
+          break;
+        }
+      }
+      
+      // Reset search string after 800ms of no typing
+      searchTimeout = setTimeout(() => {
+        searchString = '';
+      }, 800);
+    }
+    // Escape closes the menu
+    else if (e.key === 'Escape') {
+      e.preventDefault();
+      if (typeof closeMenuCallback === 'function') {
+        closeMenuCallback();
+      }
+      cleanup();
+    }
+    // Enter selects focused option
+    else if (e.key === 'Enter') {
+      const focused = menuElement.querySelector('.menu-option:focus');
+      if (focused) {
+        e.preventDefault();
+        focused.click();
+      }
+    }
+    // Arrow keys for navigation
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const options = Array.from(menuElement.querySelectorAll('.menu-option[data-value]'));
+      if (options.length === 0) return;
+      
+      const focused = menuElement.querySelector('.menu-option:focus');
+      let currentIndex = focused ? options.indexOf(focused) : -1;
+      
+      if (e.key === 'ArrowDown') {
+        currentIndex = currentIndex < options.length - 1 ? currentIndex + 1 : 0;
+      } else {
+        currentIndex = currentIndex > 0 ? currentIndex - 1 : options.length - 1;
+      }
+      
+      options[currentIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      options[currentIndex].focus();
+    }
+  };
+  
+  const cleanup = () => {
+    document.removeEventListener('keydown', keydownHandler);
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchString = '';
+  };
+  
+  document.addEventListener('keydown', keydownHandler);
+  
+  return cleanup;
+}
+
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
@@ -3710,7 +3788,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     let LAST_SELECTED_VENUE_CURRENCY = '';
 
     function venueSessionCreatePricingTier(){
-      return { name: '', currency: '', price: '' };
+      return { name: '', currency: 'USD', price: '' };
     }
     function venueSessionCreateSeatingArea(){
       return { name: '', tiers: [venueSessionCreatePricingTier()] };
@@ -8144,10 +8222,10 @@ function makePosts(){
               };
             }
             const str = typeof opt === 'string' ? opt : String(opt ?? '');
-            return { item_name: str, item_currency: '', item_price: '' };
+            return { item_name: str, item_currency: 'USD', item_price: '' };
           });
           if(safeField.options.length === 0){
-            safeField.options.push({ item_name: '', item_currency: '', item_price: '' });
+            safeField.options.push({ item_name: '', item_currency: 'USD', item_price: '' });
           }
         } else {
           safeField.options = safeField.options.map(opt => {
@@ -8413,7 +8491,7 @@ function makePosts(){
           itemList.className = 'item-pricing-options-list';
           editor.appendChild(itemList);
 
-          const createEmptyOption = ()=>({ item_name: '', item_currency: '', item_price: '' });
+          const createEmptyOption = ()=>({ item_name: '', item_currency: 'USD', item_price: '' });
 
           const normalizeOptions = ()=>{
             if(!Array.isArray(field.options)){
@@ -8428,7 +8506,7 @@ function makePosts(){
                 };
               }
               const str = typeof opt === 'string' ? opt : String(opt ?? '');
-              return { item_name: str, item_currency: '', item_price: '' };
+              return { item_name: str, item_currency: 'USD', item_price: '' };
             });
             if(field.options.length === 0){
               field.options.push(createEmptyOption());
@@ -8522,9 +8600,13 @@ function makePosts(){
               currencyMenuBtn.setAttribute('aria-expanded', 'false');
               const currencyMenuId = `item-currency-${baseId}-${optionIndex}`;
               currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-              const existingCurrency = optionValue.item_currency || '';
-              currencyMenuBtn.textContent = existingCurrency || 'Currency';
+              const existingCurrency = optionValue.item_currency || 'USD';
+              currencyMenuBtn.textContent = existingCurrency;
               currencyMenuBtn.dataset.value = existingCurrency;
+              // Set default currency in data model if not already set
+              if (!optionValue.item_currency) {
+                optionValue.item_currency = 'USD';
+              }
               const currencyArrow = document.createElement('span');
               currencyArrow.className = 'dropdown-arrow';
               currencyArrow.setAttribute('aria-hidden', 'true');
@@ -8533,29 +8615,7 @@ function makePosts(){
               currencyMenu.className = 'options-menu';
               currencyMenu.id = currencyMenuId;
               currencyMenu.hidden = true;
-              const placeholderBtn = document.createElement('button');
-              placeholderBtn.type = 'button';
-              placeholderBtn.className = 'menu-option';
-              placeholderBtn.textContent = 'Currency';
-              placeholderBtn.dataset.value = '';
-              placeholderBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                currencyMenuBtn.textContent = 'Currency';
-                if(arrow) currencyMenuBtn.appendChild(arrow);
-                currencyMenuBtn.dataset.value = '';
-                currencyMenu.hidden = true;
-                currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                const previousCurrency = field.options[optionIndex].item_currency || '';
-                field.options[optionIndex].item_currency = '';
-                const priceCleared = updatePriceState();
-                if(previousCurrency !== '' || priceCleared){
-                  safeNotifyFormbuilderChange();
-                }
-              });
-              if(!existingCurrency){
-                currencyMenu.appendChild(placeholderBtn);
-              }
+              // No placeholder needed - USD is always the default
               const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
               currencyOptions.forEach(code => {
                 const optionBtn = document.createElement('button');
@@ -8635,10 +8695,18 @@ function makePosts(){
                   }
                   currencyMenu.hidden = false;
                   currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                  
+                  // Setup keyboard navigation for currency dropdown
+                  const cleanupKeyboardNav = setupCurrencyMenuKeyboardNav(currencyMenu, () => {
+                    currencyMenu.hidden = true;
+                    currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                  });
+                  
                   const outsideHandler = (ev) => {
                     if(!currencyWrapper.contains(ev.target)){
                       currencyMenu.hidden = true;
                       currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                      cleanupKeyboardNav();
                       document.removeEventListener('click', outsideHandler);
                       document.removeEventListener('pointerdown', outsideHandler);
                     }
@@ -10819,7 +10887,7 @@ function makePosts(){
             const ensureVenueCurrencyState = venue => {
               let state = VENUE_CURRENCY_STATE.get(venue);
               if(!state){
-                state = { currency: '' };
+                state = { currency: 'USD' };
                 VENUE_CURRENCY_STATE.set(venue, state);
               }
               if(typeof state.currency !== 'string'){
@@ -13072,9 +13140,13 @@ function makePosts(){
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
                           const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
                           currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-                          const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
-                          currencyMenuBtn.textContent = existingCurrency || 'Currency';
+                          const existingCurrency = typeof tier.currency === 'string' && tier.currency.trim() !== '' ? tier.currency.trim() : 'USD';
+                          currencyMenuBtn.textContent = existingCurrency;
                           currencyMenuBtn.dataset.value = existingCurrency;
+                          // Set default currency in data model if not already set
+                          if (!tier.currency || tier.currency.trim() === '') {
+                            tier.currency = 'USD';
+                          }
                           currencyMenuBtn.dataset.venueIndex = String(venueIndex);
                           currencyMenuBtn.dataset.sessionIndex = String(sessionIndex);
                           currencyMenuBtn.dataset.timeIndex = String(timeIndex);
@@ -13088,37 +13160,7 @@ function makePosts(){
                           currencyMenu.className = 'options-menu';
                           currencyMenu.id = currencyMenuId;
                           currencyMenu.hidden = true;
-                          const placeholderBtn = document.createElement('button');
-                          placeholderBtn.type = 'button';
-                          placeholderBtn.className = 'menu-option';
-                          placeholderBtn.textContent = 'Currency';
-                          placeholderBtn.dataset.value = '';
-                          placeholderBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            currencyMenuBtn.textContent = 'Currency';
-                            currencyMenuBtn.dataset.value = '';
-                            currencyMenuBtn.appendChild(currencyArrow);
-                            currencyMenu.hidden = true;
-                            currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                            const nextCurrency = '';
-                            const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
-                            tier.currency = nextCurrency;
-                            const shouldClearPrice = nextCurrency === '';
-                            const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
-                            const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
-                              sourceTier: tier,
-                              clearPrices: shouldClearPrice
-                            });
-                            if(sessionIndex > 0 && previousCurrency !== nextCurrency){
-                              lockSessionMirror(venue);
-                            }
-                            if(previousCurrency !== nextCurrency || priceCleared || propagated){
-                              markAutoChange();
-                            }
-                          });
-                          if(!existingCurrency){
-                            currencyMenu.appendChild(placeholderBtn);
-                          }
+                          // No placeholder needed - USD is always the default
                           const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
                           currencyOptions.forEach(code => {
                             const optionBtn = document.createElement('button');
@@ -13208,10 +13250,18 @@ function makePosts(){
                               }
                               currencyMenu.hidden = false;
                               currencyMenuBtn.setAttribute('aria-expanded', 'true');
+                              
+                              // Setup keyboard navigation for currency dropdown
+                              const cleanupKeyboardNav = setupCurrencyMenuKeyboardNav(currencyMenu, () => {
+                                currencyMenu.hidden = true;
+                                currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                              });
+                              
                               const outsideHandler = (ev) => {
                                 if(!currencyWrapper.contains(ev.target)){
                                   currencyMenu.hidden = true;
                                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                                  cleanupKeyboardNav();
                                   document.removeEventListener('click', outsideHandler);
                                   document.removeEventListener('pointerdown', outsideHandler);
                                 }
@@ -14279,19 +14329,19 @@ function makePosts(){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showItemPricing){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
-                  safeField.options = [{ item_name: '', item_currency: '', item_price: '' }];
+                  safeField.options = [{ item_name: '', item_currency: 'USD', item_price: '' }];
                   notifyFormbuilderChange();
                 } else {
                   safeField.options = safeField.options.map(opt => {
                     if(opt && typeof opt === 'object'){
                       return {
                         item_name: typeof opt.item_name === 'string' ? opt.item_name : '',
-                        item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : '',
+                        item_currency: typeof opt.item_currency === 'string' && opt.item_currency !== '' ? opt.item_currency : 'USD',
                         item_price: typeof opt.item_price === 'string' ? opt.item_price : ''
                       };
                     }
                     const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                    return { item_name: str, item_currency: '', item_price: '' };
+                    return { item_name: str, item_currency: 'USD', item_price: '' };
                   });
                 }
               }
@@ -15622,12 +15672,12 @@ function makePosts(){
                       if(opt && typeof opt === 'object'){
                         return {
                           item_name: typeof opt.item_name === 'string' ? opt.item_name : '',
-                          item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : '',
+                          item_currency: typeof opt.item_currency === 'string' && opt.item_currency !== '' ? opt.item_currency : 'USD',
                           item_price: typeof opt.item_price === 'string' ? opt.item_price : ''
                         };
                       }
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                      return { item_name: str, item_currency: '', item_price: '' };
+                      return { item_name: str, item_currency: 'USD', item_price: '' };
                     }
                     if(field && field.type === 'venue-ticketing'){
                       return cloneVenueSessionVenue(opt);

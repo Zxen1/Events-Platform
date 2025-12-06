@@ -2100,13 +2100,17 @@ button[aria-expanded="true"] .results-arrow{
   border:none;
   background:rgba(0,0,0,0.2);
   color:#fff;
-  padding:8px 32px 8px 12px;
+  padding:10px 32px 10px 14px;
+  min-height:44px;
   border-radius:8px;
-  font-size:14px;
+  font-size:15px;
   cursor:pointer;
   appearance:none;
   -webkit-appearance:none;
   -moz-appearance:none;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat:no-repeat;
   background-position:right 12px center;
@@ -9353,6 +9357,88 @@ html, body { cursor: auto !important; }
               border:none;
               border-radius:0;
             }
+            
+            /* ========================================
+               Currency Dropdown Styles
+               - Touch-friendly sizing (min 44px height)
+               - Wide enough for long currency names
+               - Scrollable with max-height
+            ======================================== */
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu,
+            #tab-forms .tier-price-row .options-menu,
+            #memberPanel .member-create-fields .tier-price-row .options-menu{
+              min-width:200px;
+              width:max-content;
+              max-width:min(300px, 90vw);
+              max-height:300px;
+              overflow-y:auto;
+              overflow-x:hidden;
+              overscroll-behavior:contain;
+              -webkit-overflow-scrolling:touch;
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option,
+            #tab-forms .tier-price-row .options-menu .menu-option,
+            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
+              min-height:44px;
+              padding:10px 14px;
+              font-size:15px;
+              line-height:1.4;
+              display:flex;
+              align-items:center;
+              cursor:pointer;
+              border-radius:6px;
+              transition:background 0.15s ease;
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:hover,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:hover,
+            #tab-forms .tier-price-row .options-menu .menu-option:hover,
+            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:hover{
+              background:rgba(255,255,255,0.15);
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:active,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:active,
+            #tab-forms .tier-price-row .options-menu .menu-option:active,
+            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:active{
+              background:rgba(255,255,255,0.25);
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:focus,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:focus,
+            #tab-forms .tier-price-row .options-menu .menu-option:focus,
+            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:focus{
+              background:rgba(255,255,255,0.2);
+              outline:2px solid rgba(255,255,255,0.5);
+              outline-offset:-2px;
+            }
+            /* Scrollbar styling for currency dropdown */
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar,
+            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar{
+              width:8px;
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-track,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-track,
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-track,
+            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-track{
+              background:rgba(0,0,0,0.2);
+              border-radius:4px;
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb,
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb,
+            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-thumb{
+              background:rgba(255,255,255,0.3);
+              border-radius:4px;
+            }
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb:hover,
+            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb:hover,
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover,
+            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover{
+              background:rgba(255,255,255,0.5);
+            }
+            
             #tab-forms .item-pricing-price,
             #memberPanel .member-create-fields .item-pricing-price{
               width:100%;
