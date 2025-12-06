@@ -9067,7 +9067,7 @@ function makePosts(){
           locationWrapper.className = 'location-field-wrapper';
           locationWrapper.setAttribute('role', 'group');
           const addressRow = document.createElement('div');
-          addressRow.className = 'venue-line address_line-line';
+          addressRow.className = 'address_line-line';
           const geocoderContainer = document.createElement('div');
           geocoderContainer.className = 'address_line-geocoder-container';
           const addressInputId = `${baseId}-location-address`;
@@ -12578,7 +12578,7 @@ function makePosts(){
                 venueCard.appendChild(venueLine);
 
                 const addressLine = document.createElement('div');
-                addressLine.className = 'venue-line address_line-line';
+                addressLine.className = 'address_line-line';
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'address_line-geocoder-container';
                 // Display element shown when not editing

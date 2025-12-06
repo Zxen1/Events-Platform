@@ -8478,16 +8478,23 @@ html, body { cursor: auto !important; }
               width:100%;
             }
             #tab-forms .address_line-line,
-            #memberPanel .member-create-fields .address_line-line{
-              display:block;
-              width:100%;
-              height:auto;
+            #memberPanel .address_line-line,
+            #memberPanel .member-create-fields .address_line-line,
+            .address_line-line{
+              display:block !important;
+              width:100% !important;
+              height:auto !important;
+              max-height:none !important;
+              overflow:visible !important;
             }
             #tab-forms .address_line-line > *,
-            #memberPanel .member-create-fields .address_line-line > *{
-              width:100%;
-              min-width:0;
-              height:auto;
+            #memberPanel .address_line-line > *,
+            #memberPanel .member-create-fields .address_line-line > *,
+            .address_line-line > *{
+              width:100% !important;
+              min-width:0 !important;
+              height:auto !important;
+              max-height:none !important;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row,
@@ -8665,44 +8672,45 @@ html, body { cursor: auto !important; }
               display:none;
             }
             #tab-forms .address_line-display,
-            #memberPanel .member-create-fields .address_line-display{
-              display:block;
-              width:100%;
+            #tab-forms .address_line-line .address_line-display,
+            #memberPanel .address_line-display,
+            #memberPanel .member-create-fields .address_line-display,
+            #memberPanel .member-create-fields .address_line-line .address_line-display,
+            .address_line-display{
+              display:block !important;
+              width:100% !important;
               height:auto !important;
-              min-height:38px;
-              padding:8px 12px;
-              font-family:inherit;
-              font-size:14px;
-              font-weight:400;
-              color:var(--input-text);
-              background:rgba(0,0,0,0.35);
-              border:1px solid var(--border);
-              border-radius:8px;
-              line-height:1.5;
-              word-wrap:break-word;
-              overflow-wrap:break-word;
-              white-space:pre-wrap;
-              cursor:text;
-              box-sizing:border-box;
-              text-align:left;
-              overflow:visible;
+              max-height:none !important;
+              min-height:38px !important;
+              padding:8px 12px !important;
+              font-family:inherit !important;
+              font-size:14px !important;
+              font-weight:400 !important;
+              color:var(--input-text) !important;
+              background:rgba(0,0,0,0.35) !important;
+              border:1px solid var(--border) !important;
+              border-radius:8px !important;
+              line-height:1.5 !important;
+              word-wrap:break-word !important;
+              overflow-wrap:break-word !important;
+              white-space:pre-wrap !important;
+              cursor:text !important;
+              box-sizing:border-box !important;
+              text-align:left !important;
+              overflow:visible !important;
             }
-            #tab-forms .address_line-display:hover,
-            #memberPanel .member-create-fields .address_line-display:hover{
-              border-color:var(--border-hover, var(--border));
+            .address_line-display:hover{
+              border-color:var(--border-hover, var(--border)) !important;
             }
-            #tab-forms .address_line-display:focus,
-            #memberPanel .member-create-fields .address_line-display:focus{
-              outline:none;
-              border-color:var(--focus-color, #4a90d9);
+            .address_line-display:focus{
+              outline:none !important;
+              border-color:var(--focus-color, #4a90d9) !important;
             }
-            #tab-forms .address_line-display[hidden],
-            #memberPanel .member-create-fields .address_line-display[hidden]{
-              display:none;
+            .address_line-display[hidden]{
+              display:none !important;
             }
-            #tab-forms .address_line-geocoder-container[hidden],
-            #memberPanel .member-create-fields .address_line-geocoder-container[hidden]{
-              display:none;
+            .address_line-geocoder-container[hidden]{
+              display:none !important;
             }
             #tab-forms .form-field--location .location-field-wrapper,
             #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
