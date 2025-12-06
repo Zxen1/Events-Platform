@@ -3961,7 +3961,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       popup.style.minWidth = '280px';
       popup.style.maxWidth = '400px';
       popup.style.boxShadow = '0 8px 24px rgba(0,0,0,0.6)';
-      popup.style.zIndex = 'var(--layer-menu, 85)';
+      popup.style.zIndex = '86';
       popup.style.opacity = '0';
       popup.style.pointerEvents = 'none';
       popup.style.transform = 'translateY(-8px)';
