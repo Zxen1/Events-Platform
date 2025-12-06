@@ -568,12 +568,12 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     if ($hasFieldsetPlaceholder) {
         $selectColumns[] = '`fieldset_placeholder`';
     }
-    // Always select fieldset_fields if column exists
-    if (in_array('fieldset_fields', $columns, true)) {
-        $selectColumns[] = '`fieldset_fields`';
-        $hasFieldsetFields = true;
-    } else {
-        $hasFieldsetFields = false;
+    if ($hasFieldsetFields) {
+        if (in_array('fieldset_fields', $columns, true)) {
+            $selectColumns[] = '`fieldset_fields`';
+        } elseif (in_array('fieldset_fields', $columns, true)) {
+            $selectColumns[] = '`fieldset_fields`';
+        }
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
@@ -712,9 +712,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
                         $entry['fieldset_fields'] = [];
                     } else {
                         $decoded = json_decode($fieldsetFieldsJson, true);
-                        if (json_last_error() !== JSON_ERROR_NONE) {
-                            $entry['fieldset_fields'] = [];
-                        } elseif (!is_array($decoded)) {
+                        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
                             $entry['fieldset_fields'] = [];
                         } else {
                             $entry['fieldset_fields'] = $decoded;
@@ -994,12 +992,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             
             // Extract field IDs from fieldset_fields JSON array (fallback to fieldset_fields for backward compatibility)
             $itemIds = [];
-            $fieldsetFields = $matchingFieldset['fieldset_fields'] ?? $matchingFieldset['fieldset_fields'] ?? null;
-            if (!isset($fieldsetFields)) {
-                throw new RuntimeException("fieldset_fields missing for fieldset id: " . $fieldsetId);
-            }
+            $fieldsetFields = $matchingFieldset['fieldset_fields'] ?? $matchingFieldset['fieldset_fields'] ?? [];
             if (!is_array($fieldsetFields)) {
-                throw new RuntimeException("fieldset_fields must be an array for fieldset id: " . $fieldsetId);
+                $fieldsetFields = [];
             }
             
             // fieldset_fields contains array of field keys like ["title", "description"]
