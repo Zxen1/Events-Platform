@@ -1060,10 +1060,14 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['placeholder'] ?? ''),
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
+                
+                // Only add placeholder if custom (not default)
+                if ($customPlaceholder !== null) {
+                    $builtField['placeholder'] = $customPlaceholder;
+                }
                 
                 // Use custom options from editable_fieldsets if available
                 if ($customOptions !== null && is_array($customOptions)) {
@@ -1116,11 +1120,15 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $fieldsetKeyValue,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['placeholder'] ?? ''),
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],
                 ];
+                
+                // Only add placeholder if custom (not default)
+                if ($customPlaceholder !== null) {
+                    $builtField['placeholder'] = $customPlaceholder;
+                }
                 
                 // Add custom tooltip from editable_fieldsets if available
                 if ($customTooltip !== null) {

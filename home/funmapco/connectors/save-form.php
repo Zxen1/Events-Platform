@@ -769,29 +769,18 @@ try {
                         }
                     }
                     
-                    // Handle placeholder: if placeholder key exists in fieldData, user is explicitly setting/clearing it
-                    if (array_key_exists('placeholder', $fieldData)) {
-                        $customPlaceholder = isset($fieldData['placeholder']) && is_string($fieldData['placeholder']) ? trim($fieldData['placeholder']) : '';
-                        $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
-                        // Only save if it differs from default (non-empty custom or empty when default exists)
-                        if ($customPlaceholder !== $defaultPlaceholder) {
-                            if ($customPlaceholder !== '') {
-                                $editData['placeholder'] = $customPlaceholder;
-                            }
-                            // If placeholder is empty and differs from default, don't add it - removes from JSON
-                        }
+                    $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
+                    $customPlaceholder = $fieldData['placeholder'] ?? '';
+                    // Only save placeholder if it differs from default
+                    if ($customPlaceholder !== '' && $customPlaceholder !== $defaultPlaceholder) {
+                        $editData['placeholder'] = $customPlaceholder;
                     }
                     
-                    // Handle tooltip: if tooltip key exists in fieldData, user is explicitly setting/clearing it
-                    // If tooltip is present (even if empty string), we process it to allow clearing
-                    if (array_key_exists('tooltip', $fieldData)) {
-                        $customTooltip = isset($fieldData['tooltip']) && is_string($fieldData['tooltip']) ? trim($fieldData['tooltip']) : '';
-                        if ($customTooltip !== '') {
-                            // Save non-empty tooltip
-                            $editData['tooltip'] = $customTooltip;
-                        }
-                        // If tooltip is empty, we don't add it to editData - this removes it from JSON
-                        // allowing fallback to fieldset default when loading
+                    $defaultTooltip = $fieldsetDef['fieldset_tooltip'] ?? '';
+                    $customTooltip = $fieldData['tooltip'] ?? '';
+                    // Only save tooltip if it differs from default
+                    if ($customTooltip !== '' && $customTooltip !== $defaultTooltip) {
+                        $editData['tooltip'] = $customTooltip;
                     }
                     
                     if (!empty($editData)) {

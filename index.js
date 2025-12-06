@@ -14228,18 +14228,22 @@ function makePosts(){
             const fieldPlaceholderInput = document.createElement('input');
             fieldPlaceholderInput.type = 'text';
             fieldPlaceholderInput.className = 'field-placeholder-input';
+            fieldPlaceholderInput.value = safeField.placeholder || '';
             fieldPlaceholderLabel.appendChild(fieldPlaceholderInput);
             fieldPlaceholderContainer.appendChild(fieldPlaceholderLabel);
             
-            // Track original value to only save if changed
-            let originalPlaceholder = '';
-            
             // Sync placeholder input with field data
             fieldPlaceholderInput.addEventListener('input', ()=>{
-              const trimmedValue = fieldPlaceholderInput.value.trim();
-              safeField.placeholder = trimmedValue;
-              if(trimmedValue !== originalPlaceholder){
-                notifyFormbuilderChange();
+              safeField.placeholder = fieldPlaceholderInput.value;
+              notifyFormbuilderChange();
+            });
+            fieldPlaceholderInput.addEventListener('blur', ()=>{
+              if(formbuilderAutoSaveTimer){
+                clearTimeout(formbuilderAutoSaveTimer);
+                formbuilderAutoSaveTimer = null;
+                if(typeof window.adminPanelModule?.runSave === 'function'){
+                  window.adminPanelModule.runSave({ closeAfter: false });
+                }
               }
             });
 
@@ -14252,19 +14256,14 @@ function makePosts(){
             const fieldTooltipInput = document.createElement('textarea');
             fieldTooltipInput.className = 'field-tooltip-input';
             fieldTooltipInput.rows = 3;
+            fieldTooltipInput.value = safeField.tooltip || '';
             fieldTooltipLabel.appendChild(fieldTooltipInput);
             fieldTooltipContainer.appendChild(fieldTooltipLabel);
             
-            // Track original value to only save if changed
-            let originalTooltip = '';
-            
             // Sync tooltip input with field data
             fieldTooltipInput.addEventListener('input', ()=>{
-              const trimmedValue = fieldTooltipInput.value.trim();
-              safeField.tooltip = trimmedValue;
-              if(trimmedValue !== originalTooltip){
-                notifyFormbuilderChange();
-              }
+              safeField.tooltip = fieldTooltipInput.value;
+              notifyFormbuilderChange();
             });
             fieldTooltipInput.addEventListener('blur', ()=>{
               if(formbuilderAutoSaveTimer){
@@ -14761,8 +14760,7 @@ function makePosts(){
                 const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
                 const defaultPlaceholder = matchingFieldset?.placeholder || '';
                 fieldPlaceholderInput.placeholder = defaultPlaceholder;
-                fieldPlaceholderInput.value = (safeField.placeholder && typeof safeField.placeholder === 'string' && safeField.placeholder.trim() !== '') ? safeField.placeholder : '';
-                originalPlaceholder = fieldPlaceholderInput.value.trim();
+                fieldPlaceholderInput.value = safeField.placeholder || '';
               }
               // Show tooltip editor only for editable field types
               fieldTooltipContainer.style.display = isEditable ? '' : 'none';
@@ -14770,8 +14768,7 @@ function makePosts(){
                 const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
                 const defaultTooltip = matchingFieldset?.fieldset_tooltip || '';
                 fieldTooltipInput.placeholder = defaultTooltip;
-                fieldTooltipInput.value = (safeField.tooltip && typeof safeField.tooltip === 'string' && safeField.tooltip.trim() !== '') ? safeField.tooltip : '';
-                originalTooltip = fieldTooltipInput.value.trim();
+                fieldTooltipInput.value = safeField.tooltip || '';
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;
@@ -24443,7 +24440,7 @@ form.addEventListener('input', formChangedWrapper, true);
             console.error('Failed to save messages/tooltips:', messageResult.message || 'Unknown error');
           } else {
             if(modifiedMessages.length > 0){
-              console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+            console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
             }
             if(modifiedFieldsetTooltips.length > 0){
               console.log(`Fieldset tooltips saved successfully (${messageResult.fieldset_tooltips_updated || 0} updated)`);
