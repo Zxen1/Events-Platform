@@ -5505,48 +5505,6 @@ body.filters-active #filterBtn{
   background-color:#ffffff;
 }
 
-/* Custom geolocate button icon */
-.mapboxgl-ctrl-geolocate button .mapboxgl-ctrl-geolocate-icon{
-  width:20px;
-  height:20px;
-  fill:#333;
-}
-/* Active state with pulsing ring animation */
-.mapboxgl-ctrl-geolocate button{
-  position:relative;
-  overflow:visible;
-}
-.mapboxgl-ctrl-geolocate button.mapboxgl-ctrl-geolocate-active{
-  background-color:#33b5e5 !important;
-  border-color:#33b5e5 !important;
-}
-.mapboxgl-ctrl-geolocate button.mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-geolocate-icon{
-  fill:#fff;
-}
-.mapboxgl-ctrl-geolocate button.mapboxgl-ctrl-geolocate-active::before{
-  content:'';
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:100%;
-  height:100%;
-  background-color:rgba(51, 181, 229, 0.4);
-  border-radius:8px;
-  transform:translate(-50%, -50%);
-  animation:geolocate-pulse-ring 1.5s ease-out infinite;
-  pointer-events:none;
-  z-index:-1;
-}
-@keyframes geolocate-pulse-ring{
-  0%{
-    transform:translate(-50%, -50%) scale(1);
-    opacity:0.6;
-  }
-  100%{
-    transform:translate(-50%, -50%) scale(1.8);
-    opacity:0;
-  }
-}
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
 .map-control-row .mapboxgl-ctrl-compass button:hover{

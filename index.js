@@ -18473,31 +18473,8 @@ function makePosts(){
       ];
       const cityZoomLevel = 12;
 
-      // Create ONE shared GeolocateControl to avoid conflicts between multiple instances
-      const sharedGeolocate = new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserHeading: true,
-        fitBoundsOptions: { maxZoom: cityZoomLevel }
-      });
-
-      // Add the shared control to the map (hidden, we'll use custom buttons)
-      const sharedGeolocateEl = sharedGeolocate.onAdd(map);
-      sharedGeolocateEl.style.display = 'none';
-      document.body.appendChild(sharedGeolocateEl);
-
-      // Track all custom geolocate buttons for syncing animation state
-      const geolocateButtons = [];
-
-      // Sync animation state across all buttons
-      const syncGeolocateState = (isActive) => {
-        geolocateButtons.forEach(btn => {
-          if (btn) {
-            btn.classList.toggle('mapboxgl-ctrl-geolocate-active', isActive);
-            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-          }
-        });
-      };
+      // Track all geolocate controls for coordination
+      const allGeolocateControls = [];
 
       // Loading state management
       const geolocateToken = 'geolocate:shared';
@@ -18562,10 +18539,9 @@ function makePosts(){
         }
       };
 
-      // Handle geolocate events on the shared control
-      sharedGeolocate.on('geolocate', (event) => {
+      // Shared geolocate event handler
+      const handleGeolocateEvent = (event) => {
         ensureGeolocateLoading();
-        syncGeolocateState(true);
         spinEnabled = false;
         stopSpin();
         closeWelcomeModalIfOpen();
@@ -18603,20 +18579,7 @@ function makePosts(){
           }
         }
         awaitGeolocateIdle();
-      });
-
-      sharedGeolocate.on('error', () => {
-        clearGeolocateLoading();
-        syncGeolocateState(false);
-      });
-
-      sharedGeolocate.on('trackuserlocationstart', () => {
-        syncGeolocateState(true);
-      });
-
-      sharedGeolocate.on('trackuserlocationend', () => {
-        syncGeolocateState(false);
-      });
+      };
 
       sets.forEach((sel, idx)=>{
         const geocoderOptions = {
@@ -18846,45 +18809,41 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
-        // Create custom geolocate button that triggers the shared control
+        // Create real Mapbox GeolocateControl for official animation
+        const geolocate = new mapboxgl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: true,
+          showUserHeading: true,
+          fitBoundsOptions: { maxZoom: cityZoomLevel }
+        });
+
+        // Handle geolocate events
+        geolocate.on('geolocate', handleGeolocateEvent);
+        geolocate.on('error', () => {
+          clearGeolocateLoading();
+        });
+
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if (geoHolder) {
-          // Create a simple container (no ctrl-group to avoid double background)
-          const controlContainer = document.createElement('div');
-          controlContainer.className = 'mapboxgl-ctrl mapboxgl-ctrl-geolocate';
-          controlContainer.style.background = 'transparent';
-          controlContainer.style.boxShadow = 'none';
+          const controlEl = geolocate.onAdd(map);
+          geoHolder.appendChild(controlEl);
 
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.setAttribute('aria-label', 'Find my location');
-          button.setAttribute('aria-pressed', 'false');
+          // Track this control
+          allGeolocateControls.push(geolocate);
 
-          // Add the geolocate icon SVG (matches Mapbox's icon)
-          button.innerHTML = `<svg class="mapboxgl-ctrl-geolocate-icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7"/><circle cx="10" cy="10" r="2"/></svg>`;
-
-          controlContainer.appendChild(button);
-          geoHolder.appendChild(controlContainer);
-
-          // Track this button for animation state syncing
-          geolocateButtons.push(button);
-
-          // Handle click to trigger the shared geolocate control
-          const handlePress = (evt) => {
-            if (evt && evt.type === 'keydown') {
-              const key = evt.key || evt.code;
-              if (!key) return;
-              if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
-            }
-            ensureGeolocateLoading();
-            // Trigger the shared geolocate control
-            if (sharedGeolocate && typeof sharedGeolocate.trigger === 'function') {
-              sharedGeolocate.trigger();
-            }
-          };
-
-          button.addEventListener('click', handlePress);
-          button.addEventListener('keydown', handlePress);
+          // Add click handler to trigger all controls for sync
+          const button = controlEl.querySelector('button');
+          if (button) {
+            button.addEventListener('click', () => {
+              ensureGeolocateLoading();
+              // Trigger all other geolocate controls to sync their state
+              allGeolocateControls.forEach(ctrl => {
+                if (ctrl !== geolocate && typeof ctrl.trigger === 'function') {
+                  try { ctrl.trigger(); } catch(e) {}
+                }
+              });
+            }, { capture: true });
+          }
         }
 
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
