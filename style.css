@@ -5510,12 +5510,12 @@ body.filters-active #filterBtn{
   100% { transform: rotate(360deg); }
 }
 
-/* Custom geolocate icon styling */
-.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+/* Custom geolocate icon - only hide background when custom icon is inserted */
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon.has-custom-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none !important;
+  background-image: none !important;
 }
 
 .mapboxgl-ctrl-geolocate .geolocate-icon {
