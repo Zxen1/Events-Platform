@@ -8423,7 +8423,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .venue-card{
               border:none;
               border-radius:10px;
-              background:rgba(0,0,0,0.2);
+              background:none;
               padding:0;
               display:flex;
               flex-direction:column;
