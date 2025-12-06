@@ -8746,8 +8746,8 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .pricing_tier-label{
               display:block;
               margin-bottom:0;
-              font-size:14px;
-              font-weight:600;
+              font-size:13px;
+              font-weight:normal;
             }
             #tab-forms .session-pricing-card,
             #tab-forms .tier-row,
