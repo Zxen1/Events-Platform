@@ -683,14 +683,17 @@ button:not([class*="mapboxgl-"]).disabled:hover,
 input::placeholder,
 textarea::placeholder{
   color: var(--placeholder-text);
+  font-family: inherit;
   font-size: inherit;
 }
 #filterPanel #keyword-textbox::placeholder{
   color: var(--filter-placeholder-text);
+  font-family: inherit;
   font-size: inherit;
 }
 #filterPanel #daterange-textbox::placeholder{
   color: var(--filter-placeholder-text);
+  font-family: inherit;
   font-size: inherit;
 }
 
@@ -1763,6 +1766,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 .checkout-option-description::placeholder{
   color:#555;
+  font-family:inherit;
 }
 
 /* Edit Panel Fields */
