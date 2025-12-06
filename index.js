@@ -9073,6 +9073,24 @@ function makePosts(){
           const addressInputId = `${baseId}-location-address`;
           geocoderContainer.id = `${baseId}-location-geocoder`;
           addressRow.appendChild(geocoderContainer);
+          // Full address display element that wraps text
+          const addressDisplay = document.createElement('div');
+          addressDisplay.className = 'address_line-full-display';
+          addressDisplay.hidden = true;
+          addressRow.appendChild(addressDisplay);
+          const updateAddressDisplay = (address) => {
+            if(address && address.trim()){
+              addressDisplay.textContent = address;
+              addressDisplay.hidden = false;
+            } else {
+              addressDisplay.textContent = '';
+              addressDisplay.hidden = true;
+            }
+          };
+          // Initialize with existing address if present
+          if(locationState.address && locationState.address.trim()){
+            updateAddressDisplay(locationState.address);
+          }
           locationWrapper.appendChild(addressRow);
           const latitudeInput = document.createElement('input');
           latitudeInput.type = 'hidden';
@@ -9245,8 +9263,10 @@ function makePosts(){
                   if(placeName){
                     locationState.address = placeName;
                     geocoderInput.value = placeName;
+                    updateAddressDisplay(placeName);
                   } else {
                     locationState.address = geocoderInput.value || '';
+                    updateAddressDisplay(geocoderInput.value || '');
                   }
                   const center = getMapboxVenueFeatureCenter(clone);
                   if(center && center.length >= 2){
@@ -9264,6 +9284,7 @@ function makePosts(){
                 locationState.latitude = '';
                 locationState.longitude = '';
                 geocoderInput.value = '';
+                updateAddressDisplay('');
                 syncCoordinateInputs();
                 safeNotifyFormbuilderChange();
                 setGeocoderActive(false);
@@ -12405,6 +12426,7 @@ function makePosts(){
                     if(geocoderInputRef){
                       geocoderInputRef.value = placeName;
                     }
+                    updateAddressDisplay(placeName);
                     syncToPreviewField();
                   }
                   if(center){
@@ -12536,6 +12558,24 @@ function makePosts(){
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'address_line-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
+                // Full address display element that wraps text
+                const addressDisplay = document.createElement('div');
+                addressDisplay.className = 'address_line-full-display';
+                addressDisplay.hidden = true;
+                addressLine.appendChild(addressDisplay);
+                const updateAddressDisplay = (address) => {
+                  if(address && address.trim()){
+                    addressDisplay.textContent = address;
+                    addressDisplay.hidden = false;
+                  } else {
+                    addressDisplay.textContent = '';
+                    addressDisplay.hidden = true;
+                  }
+                };
+                // Initialize with existing address if present
+                if(venue.address && venue.address.trim()){
+                  updateAddressDisplay(venue.address);
+                }
                 venueCard.appendChild(addressLine);
                 const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
                 const createFallbackAddressInput = ()=>{
@@ -12739,6 +12779,7 @@ function makePosts(){
                     geocoder.on('clear', ()=>{
                       venue.address = '';
                       venue.location = null;
+                      updateAddressDisplay('');
                       clearNameSuggestions();
                       safeNotifyChange();
                       setGeocoderActive(false);

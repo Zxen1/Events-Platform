@@ -701,14 +701,17 @@ textarea::placeholder{
 
 /* Ensure all Mapbox geocoder inputs inherit font */
 .mapboxgl-ctrl-geocoder input,
-.mapboxgl-ctrl-geocoder--input{
-  font-family: inherit;
-  font-size: 14px;
+.mapboxgl-ctrl-geocoder--input,
+.mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
 }
 .mapboxgl-ctrl-geocoder input::placeholder,
 .mapboxgl-ctrl-geocoder--input::placeholder{
-  font-family: inherit;
-  font-size: 14px;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
 }
 
 .field label{
@@ -8614,17 +8617,20 @@ html, body { cursor: auto !important; }
               z-index:var(--forms-layer-overlay);
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input,
-            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
               height:36px;
               min-height:36px;
               line-height:36px;
-              padding:0 12px;
-              color:var(--input-text);
-              background:transparent;
-              font-family:inherit;
-              font-size:14px;
+              padding:0 12px !important;
+              color:var(--input-text) !important;
+              background:transparent !important;
+              font-family:inherit !important;
+              font-size:14px !important;
+              font-weight:400 !important;
               width:100% !important;
-              max-width:100%;
+              max-width:100% !important;
               box-sizing:border-box;
               overflow:hidden;
               text-overflow:ellipsis;
@@ -8632,13 +8638,16 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
-              font-family:inherit;
-              font-size:14px;
+              font-family:inherit !important;
+              font-size:14px !important;
             }
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions li,
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions li a,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions li,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions li a{
-              font-family:inherit;
-              font-size:14px;
+              font-family:inherit !important;
+              font-size:14px !important;
+              font-weight:400 !important;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading,
@@ -8652,6 +8661,26 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+              display:none;
+            }
+            #tab-forms .address_line-full-display,
+            #memberPanel .member-create-fields .address_line-full-display{
+              width:100%;
+              padding:8px 12px;
+              margin-top:4px;
+              font-family:inherit;
+              font-size:14px;
+              font-weight:400;
+              color:var(--input-text);
+              background:rgba(0,0,0,0.2);
+              border-radius:8px;
+              line-height:1.4;
+              word-wrap:break-word;
+              overflow-wrap:break-word;
+              white-space:normal;
+            }
+            #tab-forms .address_line-full-display[hidden],
+            #memberPanel .member-create-fields .address_line-full-display[hidden]{
               display:none;
             }
             #tab-forms .form-field--location .location-field-wrapper,
