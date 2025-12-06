@@ -3914,7 +3914,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     function createLimitHint(minLength, maxLength, customTooltip){
       const hint = document.createElement('span');
       hint.className = 'char-limit-hint';
-      hint.style.cssText = 'margin-left: 6px; cursor: help; opacity: 0.6; font-size: 12px;';
+      hint.style.cssText = 'margin-left: 6px; cursor: help; opacity: 0.6; font-size: 12px; position: relative; display: inline-block;';
       hint.textContent = 'ⓘ';
       hint.setAttribute('aria-label', 'Character limit info');
       
@@ -3947,11 +3947,68 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         return hint;
       }
       
-      hint.title = tooltipText;
+      // Create styled tooltip popup (matching website style)
+      const popup = document.createElement('div');
+      popup.className = 'message-hover-popup';
+      popup.style.position = 'absolute';
+      popup.style.top = '100%';
+      popup.style.left = '0';
+      popup.style.marginTop = '8px';
+      popup.style.background = 'rgba(17,17,17,0.98)';
+      popup.style.border = '1px solid rgba(255,255,255,0.2)';
+      popup.style.borderRadius = '8px';
+      popup.style.padding = '12px';
+      popup.style.minWidth = '280px';
+      popup.style.maxWidth = '400px';
+      popup.style.boxShadow = '0 8px 24px rgba(0,0,0,0.6)';
+      popup.style.zIndex = 'var(--layer-menu, 85)';
+      popup.style.opacity = '0';
+      popup.style.pointerEvents = 'none';
+      popup.style.transform = 'translateY(-8px)';
+      popup.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+      popup.style.display = 'flex';
+      popup.style.flexDirection = 'column';
+      popup.style.gap = '10px';
+      popup.style.whiteSpace = 'pre-line';
+      popup.style.wordWrap = 'break-word';
       
-      // Hover effect
-      hint.addEventListener('mouseenter', () => { hint.style.opacity = '1'; });
-      hint.addEventListener('mouseleave', () => { hint.style.opacity = '0.6'; });
+      // Split tooltip into description and char limits
+      const description = document.createElement('div');
+      description.className = 'message-popup-description';
+      description.style.fontSize = '13px';
+      description.style.color = 'rgba(255,255,255,0.7)';
+      description.style.lineHeight = '1.4';
+      
+      if(customTooltip && typeof customTooltip === 'string' && customTooltip.trim()){
+        description.textContent = customTooltip.trim();
+        popup.appendChild(description);
+      }
+      
+      if(charLimitText){
+        const limitsDiv = document.createElement('div');
+        limitsDiv.style.fontSize = '12px';
+        limitsDiv.style.color = 'rgba(255,255,255,0.6)';
+        limitsDiv.style.lineHeight = '1.5';
+        limitsDiv.style.marginTop = customTooltip ? '8px' : '0';
+        limitsDiv.style.paddingTop = customTooltip ? '8px' : '0';
+        limitsDiv.style.borderTop = customTooltip ? '1px solid rgba(255,255,255,0.1)' : 'none';
+        limitsDiv.textContent = charLimitText;
+        popup.appendChild(limitsDiv);
+      }
+      
+      hint.appendChild(popup);
+      
+      // Hover effect for icon
+      hint.addEventListener('mouseenter', () => { 
+        hint.style.opacity = '1';
+        popup.style.opacity = '1';
+        popup.style.transform = 'translateY(0)';
+      });
+      hint.addEventListener('mouseleave', () => { 
+        hint.style.opacity = '0.6';
+        popup.style.opacity = '0';
+        popup.style.transform = 'translateY(-8px)';
+      });
       
       return hint;
     }
