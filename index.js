@@ -14222,33 +14222,22 @@ function makePosts(){
             // Field placeholder input (shown in edit panel for editable fields only)
             const fieldPlaceholderContainer = document.createElement('div');
             fieldPlaceholderContainer.className = 'field-placeholder-editor';
-            fieldPlaceholderContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            fieldPlaceholderContainer.style.display = 'none';
             const fieldPlaceholderLabel = document.createElement('label');
             fieldPlaceholderLabel.textContent = 'Placeholder';
             const fieldPlaceholderInput = document.createElement('input');
             fieldPlaceholderInput.type = 'text';
             fieldPlaceholderInput.className = 'field-placeholder-input';
-            fieldPlaceholderInput.placeholder = 'Placeholder text';
-            // Get default placeholder from fieldset or use safeField.placeholder
-            const fieldsetKey = safeField.fieldsetKey || safeField.key || '';
-            const matchingFieldset = window.FORM_FIELDSETS?.find(fs => 
-              (fs.value === fieldsetKey || fs.key === fieldsetKey || fs.fieldset_key === fieldsetKey || fs.fieldsetKey === fieldsetKey)
-            );
-            const defaultPlaceholder = matchingFieldset?.placeholder || '';
-            fieldPlaceholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
-            // Only show value if placeholder exists and is non-empty, otherwise show placeholder
-            fieldPlaceholderInput.value = (safeField.placeholder && typeof safeField.placeholder === 'string' && safeField.placeholder.trim() !== '') ? safeField.placeholder : '';
             fieldPlaceholderLabel.appendChild(fieldPlaceholderInput);
             fieldPlaceholderContainer.appendChild(fieldPlaceholderLabel);
             
             // Track original value to only save if changed
-            const originalPlaceholder = fieldPlaceholderInput.value.trim();
+            let originalPlaceholder = '';
             
             // Sync placeholder input with field data
             fieldPlaceholderInput.addEventListener('input', ()=>{
               const trimmedValue = fieldPlaceholderInput.value.trim();
               safeField.placeholder = trimmedValue;
-              // Only trigger save if value actually changed
               if(trimmedValue !== originalPlaceholder){
                 notifyFormbuilderChange();
               }
@@ -14257,28 +14246,22 @@ function makePosts(){
             // Field tooltip input (shown in edit panel for editable fields only)
             const fieldTooltipContainer = document.createElement('div');
             fieldTooltipContainer.className = 'field-tooltip-editor';
-            fieldTooltipContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            fieldTooltipContainer.style.display = 'none';
             const fieldTooltipLabel = document.createElement('label');
             fieldTooltipLabel.textContent = 'Tooltip';
             const fieldTooltipInput = document.createElement('textarea');
             fieldTooltipInput.className = 'field-tooltip-input';
-            // Use fieldset tooltip as placeholder text
-            const fieldsetTooltip = matchingFieldset?.fieldset_tooltip || '';
-            fieldTooltipInput.placeholder = fieldsetTooltip || 'Enter custom tooltip help text (character limits will be added automatically)';
             fieldTooltipInput.rows = 3;
-            // Only show value if tooltip exists and is non-empty, otherwise show placeholder
-            fieldTooltipInput.value = (safeField.tooltip && typeof safeField.tooltip === 'string' && safeField.tooltip.trim() !== '') ? safeField.tooltip : '';
             fieldTooltipLabel.appendChild(fieldTooltipInput);
             fieldTooltipContainer.appendChild(fieldTooltipLabel);
             
             // Track original value to only save if changed
-            const originalTooltip = fieldTooltipInput.value.trim();
+            let originalTooltip = '';
             
             // Sync tooltip input with field data
             fieldTooltipInput.addEventListener('input', ()=>{
               const trimmedValue = fieldTooltipInput.value.trim();
               safeField.tooltip = trimmedValue;
-              // Only trigger save if value actually changed
               if(trimmedValue !== originalTooltip){
                 notifyFormbuilderChange();
               }
@@ -14775,12 +14758,20 @@ function makePosts(){
               // Show placeholder editor only for editable field types
               fieldPlaceholderContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
+                const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
+                const defaultPlaceholder = matchingFieldset?.placeholder || '';
+                fieldPlaceholderInput.placeholder = defaultPlaceholder;
                 fieldPlaceholderInput.value = (safeField.placeholder && typeof safeField.placeholder === 'string' && safeField.placeholder.trim() !== '') ? safeField.placeholder : '';
+                originalPlaceholder = fieldPlaceholderInput.value.trim();
               }
               // Show tooltip editor only for editable field types
               fieldTooltipContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
+                const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
+                const defaultTooltip = matchingFieldset?.fieldset_tooltip || '';
+                fieldTooltipInput.placeholder = defaultTooltip;
                 fieldTooltipInput.value = (safeField.tooltip && typeof safeField.tooltip === 'string' && safeField.tooltip.trim() !== '') ? safeField.tooltip : '';
+                originalTooltip = fieldTooltipInput.value.trim();
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;
