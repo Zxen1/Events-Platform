@@ -11405,7 +11405,7 @@ function makePosts(){
 
             const addVenue = (afterIndex)=>{
               ensureOptions();
-              const venues = previewField.options;
+              const venues = localField.options;
               const newVenue = venueSessionCreateVenue();
               let defaultCurrency = '';
               if(Array.isArray(venues) && venues.length > 0){
@@ -11423,6 +11423,10 @@ function makePosts(){
                 setVenueCurrencyState(newVenue, defaultCurrency);
               }
               venues.splice(afterIndex + 1, 0, newVenue);
+              // Sync to previewField if in formbuilder
+              if(isFormbuilder){
+                previewField.options = localField.options.map(venue => cloneVenueSessionVenue(venue));
+              }
               openSessions.clear();
               safeNotifyChange();
               renderVenues({ type: 'venue-name', venueIndex: afterIndex + 1 });
