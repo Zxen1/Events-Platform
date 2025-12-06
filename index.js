@@ -3648,13 +3648,32 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
       const normalizedCheckoutOptions = normalizeCheckoutOptions(snapshot && snapshot.checkout_options);
+      // Normalize banned words
+      const normalizedBannedWords = (snapshot && Array.isArray(snapshot.banned_words))
+        ? snapshot.banned_words.filter(w => typeof w === 'string' && w.trim()).map(w => w.toLowerCase().trim())
+        : [];
+      // Build field limits map from fieldsets (fieldsets contain min_length/max_length from fields table)
+      const fieldLimits = {};
+      if(snapshot && Array.isArray(snapshot.fieldsets)){
+        snapshot.fieldsets.forEach(fs => {
+          const key = fs.fieldset_key || fs.key || '';
+          if(key){
+            fieldLimits[key] = {
+              min_length: fs.min_length !== undefined && fs.min_length !== null ? parseInt(fs.min_length, 10) : null,
+              max_length: fs.max_length !== undefined && fs.max_length !== null ? parseInt(fs.max_length, 10) : null
+            };
+          }
+        });
+      }
       return {
         categories: normalizedCategories,
         currencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
         fieldsets: normalizedFieldsets,
-        checkoutOptions: normalizedCheckoutOptions
+        checkoutOptions: normalizedCheckoutOptions,
+        bannedWords: normalizedBannedWords,
+        fieldLimits: fieldLimits
       };
     }
 
@@ -3806,7 +3825,100 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const CHECKOUT_OPTIONS = window.CHECKOUT_OPTIONS = Array.isArray(initialFormbuilderSnapshot.checkoutOptions)
       ? initialFormbuilderSnapshot.checkoutOptions.map(opt => ({ ...opt }))
       : [];
+    const BANNED_WORDS = window.BANNED_WORDS = Array.isArray(initialFormbuilderSnapshot.bannedWords)
+      ? [...initialFormbuilderSnapshot.bannedWords]
+      : [];
+    const FIELD_LIMITS = window.FIELD_LIMITS = (initialFormbuilderSnapshot.fieldLimits && typeof initialFormbuilderSnapshot.fieldLimits === 'object')
+      ? { ...initialFormbuilderSnapshot.fieldLimits }
+      : {};
     window.__formbuilderSnapshot = initialFormbuilderSnapshot;
+    
+    // Bad word masking: replaces bad words with first letter + asterisks (e.g., "fuck" -> "f***")
+    function maskBadWords(text){
+      if(!text || typeof text !== 'string') return text;
+      const bannedWords = window.BANNED_WORDS || [];
+      if(!bannedWords.length) return text;
+      let result = text;
+      bannedWords.forEach(word => {
+        if(!word || word.length < 2) return;
+        // Create regex that matches the word (case insensitive, whole word)
+        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+        result = result.replace(regex, match => {
+          return match.charAt(0) + '*'.repeat(match.length - 1);
+        });
+      });
+      return result;
+    }
+    window.maskBadWords = maskBadWords;
+    
+    // Get field limits for a fieldset key
+    function getFieldLimits(fieldsetKey){
+      const limits = window.FIELD_LIMITS || {};
+      return limits[fieldsetKey] || { min_length: null, max_length: null };
+    }
+    window.getFieldLimits = getFieldLimits;
+    
+    // Create character counter element for text inputs
+    function createCharCounter(input, maxLength, minLength){
+      const counter = document.createElement('span');
+      counter.className = 'char-counter';
+      counter.style.cssText = 'font-size: 11px; color: var(--text-muted, #888); margin-left: 8px; display: none;';
+      
+      const updateCounter = () => {
+        const len = (input.value || '').length;
+        const remaining = maxLength - len;
+        
+        // Show counter when within 10 chars of max or over limit
+        if(remaining <= 10 || remaining < 0){
+          counter.style.display = 'inline';
+          if(remaining < 0){
+            counter.textContent = `${Math.abs(remaining)} over limit`;
+            counter.style.color = 'var(--error-color, #e74c3c)';
+            counter.style.fontWeight = '600';
+          } else if(remaining === 0){
+            counter.textContent = '0 remaining';
+            counter.style.color = 'var(--warning-color, #f39c12)';
+            counter.style.fontWeight = '600';
+          } else {
+            counter.textContent = `${remaining} remaining`;
+            counter.style.color = 'var(--warning-color, #f39c12)';
+            counter.style.fontWeight = 'normal';
+          }
+        } else {
+          counter.style.display = 'none';
+        }
+      };
+      
+      input.addEventListener('input', updateCounter);
+      input.addEventListener('change', updateCounter);
+      // Initial update
+      updateCounter();
+      
+      return counter;
+    }
+    window.createCharCounter = createCharCounter;
+    
+    // Create limit hint element showing min/max chars
+    function createLimitHint(minLength, maxLength){
+      const hint = document.createElement('span');
+      hint.className = 'char-limit-hint';
+      hint.style.cssText = 'font-size: 11px; color: var(--text-muted, #888); margin-left: 8px;';
+      
+      if(minLength !== null && maxLength !== null){
+        hint.textContent = `(${minLength}-${maxLength} chars)`;
+      } else if(maxLength !== null){
+        hint.textContent = `(max ${maxLength} chars)`;
+      } else if(minLength !== null){
+        hint.textContent = `(min ${minLength} chars)`;
+      } else {
+        hint.style.display = 'none';
+      }
+      
+      return hint;
+    }
+    window.createLimitHint = createLimitHint;
+    
     const getFormFieldsetLabel = (value)=>{
       const match = FORM_FIELDSETS.find(opt => opt.value === value);
       if(!match){
@@ -8325,6 +8437,12 @@ function makePosts(){
           if(!baseType) throw new Error('Field type is required. Cannot determine baseType from field.type: ' + JSON.stringify(field));
         }
         
+        // Get field limits for character counting
+        const fieldLimits = getFieldLimits(baseType);
+        const minLength = fieldLimits.min_length;
+        const maxLength = fieldLimits.max_length;
+        let charCounter = null;
+        
         if(baseType === 'text-area' || baseType === 'description'){
           const textarea = document.createElement('textarea');
           textarea.rows = 5;
@@ -8345,6 +8463,10 @@ function makePosts(){
             textarea.classList.add('form-description');
           }
           if(field.required) textarea.required = true;
+          // Add character counter for textarea if max_length is set
+          if(maxLength !== null){
+            charCounter = createCharCounter(textarea, maxLength, minLength);
+          }
           control = textarea;
         } else if(field.type === 'dropdown' || baseType === 'dropdown'){
           wrapper.classList.add('form-field--dropdown');
@@ -9463,6 +9585,10 @@ function makePosts(){
               e.stopPropagation();
             });
           }
+          // Add character counter for text input if max_length is set
+          if(maxLength !== null){
+            charCounter = createCharCounter(input, maxLength, minLength);
+          }
           control = input;
         }
         if(control){
@@ -9480,6 +9606,11 @@ function makePosts(){
           asterisk.className = 'required-asterisk';
           asterisk.textContent = '*';
           labelEl.appendChild(asterisk);
+        }
+        // Add limit hint after label (when limits are set)
+        if(minLength !== null || maxLength !== null){
+          const limitHint = createLimitHint(minLength, maxLength);
+          labelEl.appendChild(limitHint);
         }
         const header = document.createElement('div');
         header.className = 'form-field-header';
@@ -9517,6 +9648,14 @@ function makePosts(){
         }
 
         wrapper.append(header, control);
+        // Add character counter after control (for user forms)
+        if(charCounter){
+          const counterWrapper = document.createElement('div');
+          counterWrapper.className = 'char-counter-wrapper';
+          counterWrapper.style.cssText = 'text-align: right; margin-top: 4px;';
+          counterWrapper.appendChild(charCounter);
+          wrapper.appendChild(counterWrapper);
+        }
         formFields.appendChild(wrapper);
         
         if(options.onFieldRendered && typeof options.onFieldRendered === 'function'){
@@ -15892,6 +16031,21 @@ function makePosts(){
         initialFormbuilderSnapshot.checkoutOptions = normalized.checkoutOptions.map(opt => ({ ...opt }));
         CHECKOUT_OPTIONS.splice(0, CHECKOUT_OPTIONS.length, ...initialFormbuilderSnapshot.checkoutOptions);
         window.CHECKOUT_OPTIONS = CHECKOUT_OPTIONS;
+      }
+      
+      // Update banned words from snapshot
+      if(Array.isArray(normalized.bannedWords)){
+        initialFormbuilderSnapshot.bannedWords = [...normalized.bannedWords];
+        BANNED_WORDS.splice(0, BANNED_WORDS.length, ...initialFormbuilderSnapshot.bannedWords);
+        window.BANNED_WORDS = BANNED_WORDS;
+      }
+      
+      // Update field limits from snapshot
+      if(normalized.fieldLimits && typeof normalized.fieldLimits === 'object'){
+        initialFormbuilderSnapshot.fieldLimits = { ...normalized.fieldLimits };
+        Object.keys(FIELD_LIMITS).forEach(key => delete FIELD_LIMITS[key]);
+        Object.assign(FIELD_LIMITS, initialFormbuilderSnapshot.fieldLimits);
+        window.FIELD_LIMITS = FIELD_LIMITS;
       }
 
       // Update currencies from snapshot

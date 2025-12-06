@@ -152,9 +152,58 @@ try {
         // Use default if query fails
     }
 
+    // Fetch banned words
+    $bannedWords = [];
+    try {
+        $bannedWords = fetchBannedWords($pdo);
+    } catch (PDOException $e) {
+        // Continue without banned words
+    }
+
+    // Build field key to min/max lookup from allFields
+    $fieldLimitsLookup = [];
+    foreach ($allFields as $field) {
+        $fieldKey = isset($field['field_key']) ? trim((string)$field['field_key']) : '';
+        if ($fieldKey !== '') {
+            $fieldLimitsLookup[$fieldKey] = [
+                'min_length' => $field['min_length'] ?? null,
+                'max_length' => $field['max_length'] ?? null,
+            ];
+        }
+    }
+    
+    // Add min/max limits to fieldsets from their primary field
+    foreach ($fieldsets as &$fieldset) {
+        $fieldsetKey = $fieldset['key'] ?? $fieldset['fieldset_key'] ?? '';
+        $fieldsetFields = $fieldset['fieldset_fields'] ?? [];
+        
+        // For single-field fieldsets, use the field's limits
+        // For multi-field fieldsets, try to match by fieldset_key or use first text field
+        $minLength = null;
+        $maxLength = null;
+        
+        if (count($fieldsetFields) === 1) {
+            // Single field - use its limits directly
+            $fieldKey = $fieldsetFields[0];
+            if (isset($fieldLimitsLookup[$fieldKey])) {
+                $minLength = $fieldLimitsLookup[$fieldKey]['min_length'];
+                $maxLength = $fieldLimitsLookup[$fieldKey]['max_length'];
+            }
+        } elseif ($fieldsetKey !== '' && isset($fieldLimitsLookup[$fieldsetKey])) {
+            // Try matching fieldset_key to a field_key (e.g., "title" fieldset -> "title" field)
+            $minLength = $fieldLimitsLookup[$fieldsetKey]['min_length'];
+            $maxLength = $fieldLimitsLookup[$fieldsetKey]['max_length'];
+        }
+        
+        $fieldset['min_length'] = $minLength;
+        $fieldset['max_length'] = $maxLength;
+    }
+    unset($fieldset); // Break reference
+
     $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $fieldsets, $iconFolder);
     $snapshot['fieldsets'] = $fieldsets;
     $snapshot['checkout_options'] = $checkoutOptions;
+    $snapshot['banned_words'] = $bannedWords;
 
     // Flush output immediately
     echo json_encode([
@@ -667,7 +716,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
 function fetchAllFields(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
-    foreach (['id', 'field_key', 'input_type'] as $col) {
+    foreach (['id', 'field_key', 'input_type', 'min_length', 'max_length'] as $col) {
         if (in_array($col, $columns, true)) {
             $selectColumns[] = "`$col`";
         }
@@ -688,12 +737,37 @@ function fetchAllFields(PDO $pdo, array $columns): array
             'id' => (int) $row['id'],
             'field_key' => isset($row['field_key']) ? trim((string) $row['field_key']) : '',
             'input_type' => isset($row['input_type']) ? trim((string) $row['input_type']) : 'text',
+            'min_length' => isset($row['min_length']) && $row['min_length'] !== null ? (int) $row['min_length'] : null,
+            'max_length' => isset($row['max_length']) && $row['max_length'] !== null ? (int) $row['max_length'] : null,
         ];
         
         $fields[] = $field;
     }
     
     return $fields;
+}
+
+function fetchBannedWords(PDO $pdo): array
+{
+    $bannedWords = [];
+    
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'banned_words'");
+        if (!$stmt->fetch()) {
+            return $bannedWords;
+        }
+        
+        $stmt = $pdo->query("SELECT `word` FROM `banned_words` ORDER BY `id` ASC");
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (isset($row['word']) && is_string($row['word']) && trim($row['word']) !== '') {
+                $bannedWords[] = strtolower(trim($row['word']));
+            }
+        }
+    } catch (PDOException $e) {
+        // Continue without banned words
+    }
+    
+    return $bannedWords;
 }
 
 
