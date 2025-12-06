@@ -103,13 +103,18 @@ try {
         return;
     }
 
-    // Separate messages and checkout_options from settings
+    // Separate messages, fieldset_tooltips, and checkout_options from settings
     $messages = null;
+    $fieldsetTooltips = null;
     $checkoutOptions = null;
     $settings = $data;
     if (isset($data['messages']) && is_array($data['messages'])) {
         $messages = $data['messages'];
         unset($settings['messages']);
+    }
+    if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
+        $fieldsetTooltips = $data['fieldset_tooltips'];
+        unset($settings['fieldset_tooltips']);
     }
     if (isset($data['checkout_options']) && is_array($data['checkout_options'])) {
         $checkoutOptions = $data['checkout_options'];
@@ -199,6 +204,34 @@ try {
                 ]);
                 if ($stmt->rowCount() > 0) {
                     $messagesUpdated++;
+                }
+            }
+        }
+    }
+
+    // Save fieldset tooltips if provided
+    $fieldsetTooltipsUpdated = 0;
+    if ($fieldsetTooltips !== null && is_array($fieldsetTooltips) && !empty($fieldsetTooltips)) {
+        // Check if fieldsets table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'fieldsets'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `fieldsets`
+                SET `fieldset_tooltip` = :fieldset_tooltip,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+
+            foreach ($fieldsetTooltips as $tooltip) {
+                if (!isset($tooltip['id']) || !isset($tooltip['fieldset_tooltip'])) {
+                    continue;
+                }
+                $stmt->execute([
+                    ':id' => (int)$tooltip['id'],
+                    ':fieldset_tooltip' => (string)$tooltip['fieldset_tooltip'],
+                ]);
+                if ($stmt->rowCount() > 0) {
+                    $fieldsetTooltipsUpdated++;
                 }
             }
         }
@@ -373,6 +406,10 @@ try {
 
     if ($messagesUpdated > 0) {
         $response['messages_updated'] = $messagesUpdated;
+    }
+    
+    if ($fieldsetTooltipsUpdated > 0) {
+        $response['fieldset_tooltips_updated'] = $fieldsetTooltipsUpdated;
     }
     if ($checkoutUpdated > 0 || $checkoutInserted > 0 || $checkoutDeleted > 0) {
         $response['checkout_options'] = [

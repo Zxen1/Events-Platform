@@ -3899,21 +3899,48 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     window.createCharCounter = createCharCounter;
     
-    // Create limit hint element showing min/max chars
-    function createLimitHint(minLength, maxLength){
+    // Create limit hint element as tooltip icon (combines custom tooltip + char limits)
+    function createLimitHint(minLength, maxLength, customTooltip){
       const hint = document.createElement('span');
       hint.className = 'char-limit-hint';
-      hint.style.cssText = 'font-size: 11px; color: var(--text-muted, #888); margin-left: 8px;';
+      hint.style.cssText = 'margin-left: 6px; cursor: help; opacity: 0.6; font-size: 12px;';
+      hint.textContent = 'ⓘ';
+      hint.setAttribute('aria-label', 'Character limit info');
       
-      if(minLength !== null && maxLength !== null){
-        hint.textContent = `(${minLength}-${maxLength} chars)`;
-      } else if(maxLength !== null){
-        hint.textContent = `(max ${maxLength} chars)`;
-      } else if(minLength !== null){
-        hint.textContent = `(min ${minLength} chars)`;
-      } else {
-        hint.style.display = 'none';
+      // Build tooltip text: custom tooltip + char limits (always appended)
+      let tooltipText = '';
+      if(customTooltip && typeof customTooltip === 'string' && customTooltip.trim()){
+        tooltipText = customTooltip.trim();
       }
+      
+      // Always append char limits
+      let charLimitText = '';
+      if(minLength !== null && maxLength !== null){
+        charLimitText = `${minLength}-${maxLength} characters`;
+      } else if(maxLength !== null){
+        charLimitText = `Maximum ${maxLength} characters`;
+      } else if(minLength !== null){
+        charLimitText = `Minimum ${minLength} characters`;
+      }
+      
+      if(charLimitText){
+        if(tooltipText){
+          tooltipText = `${tooltipText}\n\n${charLimitText}`;
+        } else {
+          tooltipText = charLimitText;
+        }
+      }
+      
+      if(!tooltipText){
+        hint.style.display = 'none';
+        return hint;
+      }
+      
+      hint.title = tooltipText;
+      
+      // Hover effect
+      hint.addEventListener('mouseenter', () => { hint.style.opacity = '1'; });
+      hint.addEventListener('mouseleave', () => { hint.style.opacity = '0.6'; });
       
       return hint;
     }
@@ -8441,6 +8468,9 @@ function makePosts(){
         const fieldLimits = getFieldLimits(baseType);
         const minLength = fieldLimits.min_length;
         const maxLength = fieldLimits.max_length;
+        // Get custom tooltip from fieldset
+        const matchingFieldset = FORM_FIELDSETS.find(fs => (fs.value === baseType || fs.key === baseType));
+        const customTooltip = matchingFieldset?.fieldset_tooltip || null;
         let charCounter = null;
         
         if(baseType === 'text-area' || baseType === 'description'){
@@ -9607,9 +9637,9 @@ function makePosts(){
           asterisk.textContent = '*';
           labelEl.appendChild(asterisk);
         }
-        // Add limit hint after label (when limits are set)
-        if(minLength !== null || maxLength !== null){
-          const limitHint = createLimitHint(minLength, maxLength);
+        // Add limit hint after label (when limits are set or custom tooltip exists)
+        if(minLength !== null || maxLength !== null || customTooltip){
+          const limitHint = createLimitHint(minLength, maxLength, customTooltip);
           labelEl.appendChild(limitHint);
         }
         const header = document.createElement('div');
@@ -16025,6 +16055,12 @@ function makePosts(){
       }
       initialFormbuilderSnapshot.fieldsets = sanitizedFieldsets.map(option => ({ ...option }));
       FORM_FIELDSETS.splice(0, FORM_FIELDSETS.length, ...initialFormbuilderSnapshot.fieldsets.map(option => ({ ...option })));
+      window.FORM_FIELDSETS = FORM_FIELDSETS;
+      
+      // Reload fieldset tooltips if messages tab is open
+      if(typeof loadFieldsetTooltips === 'function'){
+        loadFieldsetTooltips();
+      }
       
       // Update checkout options from snapshot
       if(Array.isArray(normalized.checkoutOptions)){
@@ -16174,7 +16210,8 @@ function makePosts(){
       { name: 'User Messages', key: 'user', icon: '', description: 'Messages for public visitors' },
       { name: 'Member Messages', key: 'member', icon: '', description: 'Messages for authenticated members' },
       { name: 'Admin Messages', key: 'admin', icon: '', description: 'Messages for admin panel' },
-      { name: 'Email Messages', key: 'email', icon: '', description: 'Email communications' }
+      { name: 'Email Messages', key: 'email', icon: '', description: 'Email communications' },
+      { name: 'Fieldset Tooltips', key: 'fieldset-tooltips', icon: '', description: 'Tooltip help text for form fieldsets' }
     ];
     
     // Load message category icons from admin_settings
@@ -16467,6 +16504,141 @@ function makePosts(){
       }
     }
     
+    // Load and populate fieldset tooltips
+    async function loadFieldsetTooltips(){
+      try {
+        // Get fieldsets from the snapshot (already loaded)
+        const fieldsets = window.FORM_FIELDSETS || [];
+        if(!fieldsets.length) return;
+        
+        // Find the fieldset-tooltips category menu
+        const categoryMenu = messagesCats?.querySelector(`[data-message-category="fieldset-tooltips"]`);
+        if(!categoryMenu) return;
+        
+        const content = categoryMenu.querySelector('.category-form-content');
+        if(!content) return;
+        
+        // Clear existing content
+        content.innerHTML = '';
+        
+        // Create tooltips list
+        if(fieldsets.length > 0){
+          const tooltipsList = document.createElement('div');
+          tooltipsList.className = 'messages-list';
+          
+          // Sort fieldsets by sort_order or name
+          const sortedFieldsets = [...fieldsets].sort((a, b) => {
+            const orderA = a.sort_order !== undefined ? a.sort_order : 999;
+            const orderB = b.sort_order !== undefined ? b.sort_order : 999;
+            if(orderA !== orderB) return orderA - orderB;
+            const nameA = (a.name || a.label || a.value || '').toLowerCase();
+            const nameB = (b.name || b.label || b.value || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+          
+          sortedFieldsets.forEach(fieldset => {
+            const tooltipItem = document.createElement('div');
+            tooltipItem.className = 'message-item';
+            tooltipItem.dataset.fieldsetId = fieldset.id;
+            tooltipItem.dataset.fieldsetKey = fieldset.key || fieldset.value || '';
+            
+            // Fieldset label
+            const fieldsetLabel = document.createElement('div');
+            fieldsetLabel.className = 'message-label';
+            fieldsetLabel.textContent = fieldset.name || fieldset.label || fieldset.value || 'Unknown Fieldset';
+            
+            // Tooltip text display (shown by default)
+            const tooltipDisplay = document.createElement('div');
+            tooltipDisplay.className = 'message-text-display';
+            tooltipDisplay.textContent = fieldset.fieldset_tooltip || '(empty)';
+            tooltipDisplay.title = 'Click to edit';
+            if(!fieldset.fieldset_tooltip){
+              tooltipDisplay.style.color = 'var(--text-muted, #888)';
+              tooltipDisplay.style.fontStyle = 'italic';
+            }
+            
+            // Tooltip text input (hidden by default)
+            const textArea = document.createElement('textarea');
+            textArea.className = 'message-text-input';
+            textArea.value = fieldset.fieldset_tooltip || '';
+            textArea.rows = 3;
+            textArea.placeholder = 'Enter tooltip help text (character limits will be added automatically)';
+            textArea.dataset.fieldsetId = fieldset.id;
+            textArea.dataset.fieldsetKey = fieldset.key || fieldset.value || '';
+            textArea.dataset.originalValue = fieldset.fieldset_tooltip || '';
+            textArea.hidden = true;
+            
+            // Track changes
+            textArea.addEventListener('input', () => {
+              if(textArea.value !== textArea.dataset.originalValue){
+                tooltipItem.classList.add('modified');
+                tooltipDisplay.textContent = textArea.value || '(empty)';
+                if(!textArea.value){
+                  tooltipDisplay.style.color = 'var(--text-muted, #888)';
+                  tooltipDisplay.style.fontStyle = 'italic';
+                } else {
+                  tooltipDisplay.style.color = '';
+                  tooltipDisplay.style.fontStyle = '';
+                }
+                // Mark admin panel as dirty
+                if(typeof window.adminPanelModule?.markDirty === 'function'){
+                  window.adminPanelModule.markDirty();
+                }
+              } else {
+                tooltipItem.classList.remove('modified');
+              }
+            });
+            
+            // Click to switch to edit mode
+            tooltipDisplay.addEventListener('click', () => {
+              tooltipDisplay.hidden = true;
+              textArea.hidden = false;
+              textArea.focus();
+            });
+            
+            // Click outside or blur to switch back to display mode
+            textArea.addEventListener('blur', () => {
+              // Update display with current textarea value before hiding
+              tooltipDisplay.textContent = textArea.value || '(empty)';
+              
+              // Update modified state based on comparison with original
+              if(textArea.value !== textArea.dataset.originalValue){
+                tooltipItem.classList.add('modified');
+                if(!textArea.value){
+                  tooltipDisplay.style.color = 'var(--text-muted, #888)';
+                  tooltipDisplay.style.fontStyle = 'italic';
+                } else {
+                  tooltipDisplay.style.color = '';
+                  tooltipDisplay.style.fontStyle = '';
+                }
+                // Mark admin panel as dirty
+                if(typeof window.adminPanelModule?.markDirty === 'function'){
+                  window.adminPanelModule.markDirty();
+                }
+              } else {
+                tooltipItem.classList.remove('modified');
+              }
+              
+              tooltipDisplay.hidden = false;
+              textArea.hidden = true;
+            });
+            
+            tooltipItem.append(fieldsetLabel, tooltipDisplay, textArea);
+            tooltipsList.appendChild(tooltipItem);
+          });
+          
+          content.appendChild(tooltipsList);
+        } else {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'messages-empty';
+          emptyMsg.textContent = 'No fieldsets found';
+          content.appendChild(emptyMsg);
+        }
+      } catch(error){
+        console.error('Error loading fieldset tooltips:', error);
+      }
+    }
+    
     function populateMessagesIntoContainers(messageContainers){
       // Map container_key to MESSAGE_CATEGORIES key
       const containerKeyMap = {
@@ -16614,6 +16786,9 @@ function makePosts(){
       
       // Load messages from database (admin panel sees all messages including email/admin)
       loadAdminMessages();
+      
+      // Load fieldset tooltips
+      loadFieldsetTooltips();
       
       // Add drag and drop functionality for Messages tab categories
       let draggedMessageCategory = null;
@@ -23997,10 +24172,23 @@ form.addEventListener('input', formChangedWrapper, true);
     // Collect modified admin messages
     const modifiedMessages = [];
     document.querySelectorAll('.message-text-input').forEach(textarea => {
+      // Skip fieldset tooltip inputs (they have data-fieldset-id, not data-message-id)
+      if(textarea.dataset.fieldsetId) return;
       if(textarea.value !== textarea.dataset.originalValue){
         modifiedMessages.push({
           id: parseInt(textarea.dataset.messageId),
           message_text: textarea.value
+        });
+      }
+    });
+    
+    // Collect modified fieldset tooltips
+    const modifiedFieldsetTooltips = [];
+    document.querySelectorAll('.message-text-input[data-fieldset-id]').forEach(textarea => {
+      if(textarea.value !== textarea.dataset.originalValue){
+        modifiedFieldsetTooltips.push({
+          id: parseInt(textarea.dataset.fieldsetId),
+          fieldset_tooltip: textarea.value.trim()
         });
       }
     });
@@ -24052,23 +24240,36 @@ form.addEventListener('input', formChangedWrapper, true);
     // Always include checkout options if they exist (even if empty array, to handle deletions)
     websiteSettings.checkout_options = checkoutOptions;
     
-    // Save messages separately to admin-settings endpoint (not formbuilder)
-    if(modifiedMessages.length > 0){
+    // Save messages and fieldset tooltips separately to admin-settings endpoint (not formbuilder)
+    if(modifiedMessages.length > 0 || modifiedFieldsetTooltips.length > 0){
       try {
+        const savePayload = {};
+        if(modifiedMessages.length > 0){
+          savePayload.messages = modifiedMessages;
+        }
+        if(modifiedFieldsetTooltips.length > 0){
+          savePayload.fieldset_tooltips = modifiedFieldsetTooltips;
+        }
+        
         const messageResponse = await fetch('/gateway.php?action=save-admin-settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: modifiedMessages })
+          body: JSON.stringify(savePayload)
         });
         
         if(!messageResponse.ok){
-          console.error('Failed to save messages - HTTP status:', messageResponse.status);
+          console.error('Failed to save messages/tooltips - HTTP status:', messageResponse.status);
         } else {
           const messageResult = await messageResponse.json();
           if(!messageResult.success){
-            console.error('Failed to save messages:', messageResult.message || 'Unknown error');
+            console.error('Failed to save messages/tooltips:', messageResult.message || 'Unknown error');
           } else {
-            console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+            if(modifiedMessages.length > 0){
+              console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+            }
+            if(modifiedFieldsetTooltips.length > 0){
+              console.log(`Fieldset tooltips saved successfully (${messageResult.fieldset_tooltips_updated || 0} updated)`);
+            }
             
             // Invalidate message cache so new messages are fetched
             if(typeof invalidateMessagesCache === 'function'){
@@ -24095,10 +24296,38 @@ form.addEventListener('input', formChangedWrapper, true);
                 }
               }
             });
+            
+            // Update originalValue for all successfully saved fieldset tooltips
+            modifiedFieldsetTooltips.forEach(savedTooltip => {
+              const textArea = document.querySelector(`.message-text-input[data-fieldset-id="${savedTooltip.id}"]`);
+              if(textArea){
+                // Update the originalValue to the current value (now saved)
+                textArea.dataset.originalValue = textArea.value;
+                
+                // Update the display
+                const tooltipItem = textArea.closest('.message-item');
+                if(tooltipItem){
+                  const tooltipDisplay = tooltipItem.querySelector('.message-text-display');
+                  if(tooltipDisplay){
+                    tooltipDisplay.textContent = textArea.value || '(empty)';
+                    if(!textArea.value){
+                      tooltipDisplay.style.color = 'var(--text-muted, #888)';
+                      tooltipDisplay.style.fontStyle = 'italic';
+                    } else {
+                      tooltipDisplay.style.color = '';
+                      tooltipDisplay.style.fontStyle = '';
+                    }
+                  }
+                  
+                  // Remove modified class since it's now saved
+                  tooltipItem.classList.remove('modified');
+                }
+              }
+            });
           }
         }
       } catch(err) {
-        console.error('Failed to save messages:', err);
+        console.error('Failed to save messages/tooltips:', err);
       }
     }
     
@@ -24677,6 +24906,26 @@ const adminPanelChangeManager = (()=>{
     // Formbuilder auto-saves on each action anyway
     // Reset admin messages to original values
     document.querySelectorAll('.message-text-input').forEach(textarea => {
+      // Skip fieldset tooltip inputs (they have data-fieldset-id, not data-message-id)
+      if(textarea.dataset.fieldsetId){
+        textarea.value = textarea.dataset.originalValue;
+        const tooltipItem = textarea.closest('.message-item');
+        if(tooltipItem){
+          tooltipItem.classList.remove('modified');
+          const tooltipDisplay = tooltipItem.querySelector('.message-text-display');
+          if(tooltipDisplay){
+            tooltipDisplay.textContent = textarea.dataset.originalValue || '(empty)';
+            if(!textarea.dataset.originalValue){
+              tooltipDisplay.style.color = 'var(--text-muted, #888)';
+              tooltipDisplay.style.fontStyle = 'italic';
+            } else {
+              tooltipDisplay.style.color = '';
+              tooltipDisplay.style.fontStyle = '';
+            }
+          }
+        }
+        return;
+      }
       textarea.value = textarea.dataset.originalValue;
       const messageItem = textarea.closest('.message-item');
       if(messageItem){
@@ -25257,6 +25506,10 @@ document.addEventListener('pointerdown', (e) => {
       if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
         // Load full formbuilder UI (renderFormbuilderCats) which was skipped on startup
         window.formbuilderStateManager.ensureLoaded({ forceReload: true, skipFormbuilderUI: false });
+      }
+      // Reload fieldset tooltips when messages tab is opened
+      if(btn.dataset.tab === 'messages' && typeof loadFieldsetTooltips === 'function'){
+        loadFieldsetTooltips();
       }
     });
   });

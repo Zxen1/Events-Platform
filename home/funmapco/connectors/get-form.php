@@ -528,6 +528,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $hasName = in_array('fieldset_name', $columns, true) || in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasPlaceholder = in_array('placeholder', $columns, true);
+    $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
     $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
     $hasFieldsetFields = in_array('fieldset_fields', $columns, true) || in_array('fieldset_fields', $columns, true);
 
@@ -550,6 +551,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     }
     if ($hasPlaceholder) {
         $selectColumns[] = '`placeholder`';
+    }
+    if ($hasFieldsetTooltip) {
+        $selectColumns[] = '`fieldset_tooltip`';
     }
     if ($hasFormbuilderEditable) {
         $selectColumns[] = '`formbuilder_editable`';
@@ -664,6 +668,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         }
         if ($hasPlaceholder && isset($row['placeholder']) && is_string($row['placeholder'])) {
             $entry['placeholder'] = trim($row['placeholder']);
+        }
+        if ($hasFieldsetTooltip && isset($row['fieldset_tooltip']) && is_string($row['fieldset_tooltip'])) {
+            $entry['fieldset_tooltip'] = trim($row['fieldset_tooltip']);
         }
         if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
             $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
