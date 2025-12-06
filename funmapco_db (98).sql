@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 03:15 AM
+-- Generation Time: Dec 07, 2025 at 04:08 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -311,10 +311,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 03:03:15'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 03:03:15'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 03:03:15'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 03:03:15');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 03:47:23'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 03:47:23'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 03:47:23'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 03:47:23');
 
 -- --------------------------------------------------------
 
@@ -387,17 +387,17 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length
 (7, 'longitude', 'decimal', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
 (8, 'session-date', 'date', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
 (9, 'session-time', 'time', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(10, 'seating-area', 'text', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(11, 'pricing-tier', 'text', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(10, 'seating-area', 'text', 1, 100, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
+(11, 'pricing-tier', 'text', 1, 100, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
 (12, 'ticket-price', 'decimal(10,2)', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
 (13, 'currency', 'dropdown', NULL, NULL, '2025-10-29 23:32:47', '2025-11-05 13:33:54'),
 (14, 'text-box', 'text', 1, 500, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
 (15, 'text-area', 'textarea', 1, 2000, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
 (16, 'dropdown', 'dropdown', NULL, NULL, '2025-10-30 17:14:25', '2025-11-07 01:59:08'),
 (17, 'radio', 'radio', NULL, NULL, '2025-10-30 17:14:25', '2025-11-17 10:09:01'),
-(18, 'email', 'email', NULL, NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(19, 'phone', 'tel', NULL, NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(20, 'website', 'url', NULL, NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(18, 'email', 'email', 5, 254, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(19, 'phone', 'tel', 6, 30, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(20, 'website', 'url', 5, 500, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
 (21, 'item-name', 'text', 2, 200, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
 (23, 'item-price', 'decimal(10,2)', NULL, NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
 
@@ -412,6 +412,7 @@ CREATE TABLE `fieldsets` (
   `fieldset_name` varchar(255) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
   `placeholder` varchar(512) DEFAULT NULL,
+  `tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover',
   `formbuilder_editable` tinyint(1) NOT NULL DEFAULT 0,
   `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `sort_order` int(10) UNSIGNED DEFAULT 0,
@@ -423,22 +424,22 @@ CREATE TABLE `fieldsets` (
 -- Dumping data for table `fieldsets`
 --
 
-INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'Title', 'title', 'eg. Summer Rain', 0, '[\"title\"]', 1, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(2, 'Description', 'description', 'eg. Come and Express Yourself!', 0, '[\"description\"]', 2, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(3, 'Text Box (editable)', 'text-box', 'text', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(4, 'Text Area (editable)', 'text-area', 'The quick brown fox jumped over the lazy dogs.', 1, '[\"text-area\"]', 100, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(5, 'Dropdown (editable)', 'dropdown', '1A,2A,3A', 1, '[\"dropdown\"]', 100, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(6, 'Radio Toggle (editable)', 'radio', 'A,B,C', 1, '[\"radio\"]', 100, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(7, 'Email', 'email', 'you@there.com', 0, '[\"email\"]', 7, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(8, 'Phone', 'phone', '+61 455 555 555', 0, '[\"phone\"]', 8, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(9, 'Location', 'location', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 0, '[\"address-line\", \"latitude\", \"longitude\"]', 9, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(10, 'Website (URL)', 'website-url', 'www.website.com', 0, '[\"website\"]', 10, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 0, '[\"website\"]', 11, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(12, 'Images', 'images', 'images', 0, '[\"images\"]', 12, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(13, 'Coupon', 'coupon', 'eg. FreeStuff', 0, '[\"text-box\"]', 13, '2025-10-29 19:03:05', '2025-12-05 05:32:15'),
-(14, 'Item Pricing', 'item-pricing', 'eg. Ruby Slippers - Small', 0, '[\"item-name\", \"item-price\", \"currency\"]', 14, '2025-10-29 19:03:05', '2025-12-05 13:14:42'),
-(15, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 0, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 16, '2025-10-29 19:03:05', '2025-12-05 05:32:15');
+INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `tooltip`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 'Title', 'title', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, '[\"title\"]', 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(2, 'Description', 'description', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, '[\"description\"]', 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(3, 'Text Box (editable)', 'text-box', 'text', 'Enter any additional text information for this field.', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(4, 'Text Area (editable)', 'text-area', 'The quick brown fox jumped over the lazy dogs.', 'Enter longer text content. Use this for detailed descriptions, instructions, or additional information.', 1, '[\"text-area\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(5, 'Dropdown (editable)', 'dropdown', '1A,2A,3A', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, '[\"dropdown\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(6, 'Radio Toggle (editable)', 'radio', 'A,B,C', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, '[\"radio\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(7, 'Email', 'email', 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, '[\"email\"]', 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(8, 'Phone', 'phone', '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, '[\"phone\"]', 8, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(9, 'Location', 'location', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'Search for and select the location of your event or listing. The map will help you find the exact spot.', 0, '[\"address-line\", \"latitude\", \"longitude\"]', 9, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(10, 'Website (URL)', 'website-url', 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 0, '[\"website\"]', 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, '[\"website\"]', 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(12, 'Images', 'images', 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, '[\"images\"]', 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(13, 'Coupon', 'coupon', 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, '[\"text-box\"]', 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(14, 'Item Pricing', 'item-pricing', 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, '[\"item-name\", \"item-price\", \"currency\"]', 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(15, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 16, '2025-10-29 19:03:05', '2025-12-06 17:08:19');
 
 -- --------------------------------------------------------
 
@@ -1134,7 +1135,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4578;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4592;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
