@@ -8746,14 +8746,14 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .pricing_tier-label{
               display:block;
               margin-bottom:0;
-              font-size:12px;
+              font-size:14px;
               font-weight:600;
             }
             #tab-forms .session-pricing-card,
             #tab-forms .tier-row,
             #memberPanel .member-create-fields .session-pricing-card,
             #memberPanel .member-create-fields .tier-row{
-              row-gap:4px;
+              row-gap:8px;
             }
             #tab-forms .session-pricing-card .seating_area-label,
             #tab-forms .tier-row .pricing_tier-label,
