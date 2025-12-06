@@ -1036,7 +1036,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 }
                 
                 // Check if this field type is editable and has customizations
-                $isEditable = isset($matchingFieldset['fieldset_editable']) && $matchingFieldset['fieldset_editable'] === true;
+                $isEditable = (isset($matchingFieldset['fieldset_editable']) && $matchingFieldset['fieldset_editable'] === true) || 
+                              (isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true);
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 
@@ -1117,7 +1118,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             // Otherwise → create ONE field object using fieldset properties, with all items as children
             else {
                 // Check if this field type is editable and has customizations
-                $isEditable = isset($matchingFieldset['fieldset_editable']) && $matchingFieldset['fieldset_editable'] === true;
+                $isEditable = (isset($matchingFieldset['fieldset_editable']) && $matchingFieldset['fieldset_editable'] === true) || 
+                              (isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true);
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 
