@@ -738,7 +738,8 @@ try {
                     if (!$fieldsetKey) continue;
                     
                     // Only process field types marked as editable in the database
-                    $isEditable = isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true;
+                    $isEditable = (isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true) || 
+                                  (isset($fieldsetDef['formbuilder_editable']) && $fieldsetDef['formbuilder_editable'] === true);
                     if (!$isEditable) continue;
                     
                     $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
@@ -1943,9 +1944,17 @@ function fetchFieldsetDefinitions(PDO $pdo): array
         } elseif (in_array('fieldset_key', $columns, true)) {
             $select[] = 'fieldset_key';
         }
+        $hasFieldsetEditable = in_array('fieldset_editable', $columns, true);
+        if ($hasFieldsetEditable) {
+            $select[] = 'fieldset_editable';
+        }
         $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
         if ($hasFormbuilderEditable) {
             $select[] = 'formbuilder_editable';
+        }
+        $hasFieldsetPlaceholder = in_array('fieldset_placeholder', $columns, true);
+        if ($hasFieldsetPlaceholder) {
+            $select[] = 'fieldset_placeholder';
         }
         $hasPlaceholder = in_array('placeholder', $columns, true);
         if ($hasPlaceholder) {
@@ -1970,10 +1979,17 @@ function fetchFieldsetDefinitions(PDO $pdo): array
                 'name' => $name,
                 'key' => $key,
             ];
-            if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
+            if ($hasFieldsetEditable && isset($row['fieldset_editable'])) {
+                $entry['fieldset_editable'] = (bool) $row['fieldset_editable'];
+                $entry['formbuilder_editable'] = (bool) $row['fieldset_editable'];
+            } elseif ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
                 $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
+                $entry['fieldset_editable'] = (bool) $row['formbuilder_editable'];
             }
-            if ($hasPlaceholder && isset($row['placeholder'])) {
+            if ($hasFieldsetPlaceholder && isset($row['fieldset_placeholder'])) {
+                $entry['fieldset_placeholder'] = trim((string) $row['fieldset_placeholder']);
+                $entry['placeholder'] = trim((string) $row['fieldset_placeholder']);
+            } elseif ($hasPlaceholder && isset($row['placeholder'])) {
                 $entry['placeholder'] = trim((string) $row['placeholder']);
             }
             $map[$id] = $entry;
