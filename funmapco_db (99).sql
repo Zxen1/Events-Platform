@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 04:08 AM
+-- Generation Time: Dec 07, 2025 at 04:12 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -412,7 +412,7 @@ CREATE TABLE `fieldsets` (
   `fieldset_name` varchar(255) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
   `placeholder` varchar(512) DEFAULT NULL,
-  `tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover',
+  `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
   `formbuilder_editable` tinyint(1) NOT NULL DEFAULT 0,
   `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `sort_order` int(10) UNSIGNED DEFAULT 0,
@@ -424,7 +424,7 @@ CREATE TABLE `fieldsets` (
 -- Dumping data for table `fieldsets`
 --
 
-INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `tooltip`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
+INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `fieldset_tooltip`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
 (1, 'Title', 'title', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, '[\"title\"]', 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (2, 'Description', 'description', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, '[\"description\"]', 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (3, 'Text Box (editable)', 'text-box', 'text', 'Enter any additional text information for this field.', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
