@@ -702,12 +702,13 @@ textarea::placeholder{
 /* Ensure all Mapbox geocoder inputs inherit font */
 .mapboxgl-ctrl-geocoder input,
 .mapboxgl-ctrl-geocoder--input{
-  font: inherit;
+  font-family: inherit;
+  font-size: 14px;
 }
 .mapboxgl-ctrl-geocoder input::placeholder,
 .mapboxgl-ctrl-geocoder--input::placeholder{
   font-family: inherit;
-  font-size: inherit;
+  font-size: 14px;
 }
 
 .field label{
@@ -8586,16 +8587,19 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .address_line-geocoder-container,
             #memberPanel .member-create-fields .address_line-fallback{
               position:relative;
+              width:100%;
             }
             #tab-forms .address_line-geocoder-container,
             #memberPanel .member-create-fields .address_line-geocoder-container{
               z-index:var(--forms-layer-stacked);
+              width:100%;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl{
-              width:100%;
+              width:100% !important;
+              max-width:100% !important;
               min-width:0;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
@@ -8605,17 +8609,36 @@ html, body { cursor: auto !important; }
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
               min-height:36px;
+              height:auto;
               position:relative;
               z-index:var(--forms-layer-overlay);
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input,
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
+              min-height:36px;
               line-height:36px;
               padding:0 12px;
               color:var(--input-text);
               background:transparent;
-              font:inherit;
+              font-family:inherit;
+              font-size:14px;
+              width:100% !important;
+              max-width:100%;
+              box-sizing:border-box;
+              overflow:hidden;
+              text-overflow:ellipsis;
+              white-space:nowrap;
+            }
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
+              font-family:inherit;
+              font-size:14px;
+            }
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions li a,
+            #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions li a{
+              font-family:inherit;
+              font-size:14px;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading,
