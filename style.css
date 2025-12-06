@@ -8960,9 +8960,32 @@ html, body { cursor: auto !important; }
               text-overflow:ellipsis;
               white-space:nowrap;
             }
-            #tab-forms .field-inline-name{
+            #tab-forms .field-inline-name-display{
               flex:1;
               min-width:0;
+              color:var(--button-text);
+              font-size:13px;
+              font-weight:500;
+              white-space:nowrap;
+              overflow:hidden;
+              text-overflow:ellipsis;
+            }
+            #tab-forms .field-name-editor{
+              display:flex;
+              flex-direction:column;
+              gap:4px;
+              margin-bottom:8px;
+            }
+            #tab-forms .field-name-editor label{
+              display:flex;
+              flex-direction:column;
+              gap:4px;
+              font-size:12px;
+              color:var(--button-text);
+              opacity:0.8;
+            }
+            #tab-forms .field-name-input{
+              width:100%;
               height:36px;
               padding:0 12px;
               border:1px solid var(--border);
@@ -8971,7 +8994,7 @@ html, body { cursor: auto !important; }
               color:var(--button-text);
               font-size:13px;
             }
-            #tab-forms .field-inline-name:focus{
+            #tab-forms .field-name-input:focus{
               outline:none;
               border-color:var(--btn-hover, #2e3a72);
               background:rgba(0,0,0,0.3);

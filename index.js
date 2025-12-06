@@ -13887,6 +13887,39 @@ function makePosts(){
             
             fieldTypeWrapper.append(fieldTypeMenuBtn, fieldTypeMenu);
 
+            // Field name input (shown in edit panel for editable fields)
+            const fieldNameContainer = document.createElement('div');
+            fieldNameContainer.className = 'field-name-editor';
+            fieldNameContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            const fieldNameLabel = document.createElement('label');
+            fieldNameLabel.textContent = 'Field Name';
+            const fieldNameInput = document.createElement('input');
+            fieldNameInput.type = 'text';
+            fieldNameInput.className = 'field-name-input';
+            fieldNameInput.placeholder = 'Field name';
+            fieldNameInput.value = safeField.name || '';
+            fieldNameLabel.appendChild(fieldNameInput);
+            fieldNameContainer.appendChild(fieldNameLabel);
+            
+            // Sync field name input with field data and display
+            fieldNameInput.addEventListener('input', ()=>{
+              safeField.name = fieldNameInput.value;
+              // Update the display span in the row header
+              if(hostElement && hostElement._inlineNameDisplay){
+                hostElement._inlineNameDisplay.textContent = fieldNameInput.value.trim() || 'Untitled';
+              }
+              notifyFormbuilderChange();
+            });
+            fieldNameInput.addEventListener('blur', ()=>{
+              if(formbuilderAutoSaveTimer){
+                clearTimeout(formbuilderAutoSaveTimer);
+                formbuilderAutoSaveTimer = null;
+                if(typeof window.adminPanelModule?.runSave === 'function'){
+                  window.adminPanelModule.runSave({ closeAfter: false });
+                }
+              }
+            });
+
             const fieldRequiredToggle = document.createElement('label');
             fieldRequiredToggle.className = 'field-required-toggle';
             const fieldRequiredInput = document.createElement('input');
@@ -13897,7 +13930,7 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldRequiredToggle, fieldTypeWrapper);
+            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldTypeWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14362,6 +14395,11 @@ function makePosts(){
                 safeField.placeholder = '';
                 notifyFormbuilderChange();
               }
+              // Show field name editor only for editable field types
+              fieldNameContainer.style.display = isEditable ? '' : 'none';
+              if(isEditable){
+                fieldNameInput.value = safeField.name || '';
+              }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;
               if(showCheckout){
@@ -14552,13 +14590,11 @@ function makePosts(){
             const header = document.createElement('div');
             header.className = 'field-row-header';
 
-            // Inline name input for editable field types
-            const inlineNameInput = document.createElement('input');
-            inlineNameInput.type = 'text';
-            inlineNameInput.className = 'field-inline-name';
-            inlineNameInput.placeholder = 'Field name';
-            inlineNameInput.value = safeField.name || '';
-            inlineNameInput.style.display = 'none';
+            // Display span for field name (editable only in edit panel)
+            const inlineNameDisplay = document.createElement('span');
+            inlineNameDisplay.className = 'field-inline-name-display';
+            inlineNameDisplay.textContent = safeField.name || 'Untitled';
+            inlineNameDisplay.style.display = 'none';
 
             const summary = document.createElement('div');
             summary.className = 'field-row-summary';
@@ -14571,7 +14607,7 @@ function makePosts(){
             const summaryRequired = document.createElement('span');
             summaryRequired.className = 'field-summary-required';
 
-            header.append(inlineNameInput, summary, summaryRequired);
+            header.append(inlineNameDisplay, summary, summaryRequired);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
             const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
@@ -14607,13 +14643,13 @@ function makePosts(){
               const typeLabelRaw = (storedTypeName || getFormFieldTypeLabel(typeKey)).trim();
               const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
               
-              // Show inline input for editable fields, summary for non-editable
+              // Show inline name display for editable fields, summary for non-editable
               if(isEditable){
-                inlineNameInput.style.display = '';
-                inlineNameInput.value = safeField.name || '';
+                inlineNameDisplay.style.display = '';
+                inlineNameDisplay.textContent = safeField.name || 'Untitled';
                 summary.style.display = 'none';
               } else {
-                inlineNameInput.style.display = 'none';
+                inlineNameDisplay.style.display = 'none';
                 summary.style.display = '';
                 summaryLabel.textContent = typeLabel || 'Field';
               }
@@ -14632,22 +14668,9 @@ function makePosts(){
             fieldEditUI.setSummaryUpdater(updateFieldSummary);
             fieldEditUI.runSummaryUpdater();
 
-            // Sync inline name input with field data
-            inlineNameInput.addEventListener('input', ()=>{
-              safeField.name = inlineNameInput.value;
-              notifyFormbuilderChange();
-            });
-            // Save immediately when clicking outside the input (only if edited)
-            inlineNameInput.addEventListener('blur', ()=>{
-              if(formbuilderAutoSaveTimer){
-                clearTimeout(formbuilderAutoSaveTimer);
-                formbuilderAutoSaveTimer = null;
-                // Timer was pending, so there were changes - save now
-                if(typeof window.adminPanelModule?.runSave === 'function'){
-                  window.adminPanelModule.runSave({ closeAfter: false });
-                }
-              }
-            });
+            // Field name input is now in the edit panel, sync handled there via fieldEditUI
+            // Store reference to display element for updates from edit panel
+            row._inlineNameDisplay = inlineNameDisplay;
 
             const handleDeleteField = async ()=>{
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';
