@@ -18825,7 +18825,6 @@ function makePosts(){
                   if(!key) return;
                   if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
                 }
-                // Trigger logo loading animation
                 ensureGeolocateLoading();
               };
               geolocateButton.addEventListener('click', handlePress, { passive: true });

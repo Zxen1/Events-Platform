@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link rel="stylesheet" href="style.css?v=20251206c" />
+  <link rel="stylesheet" href="style.css?v=20251201l" />
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" /></noscript>
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" media="print" onload="this.media='all'" />
@@ -569,48 +569,13 @@
     }
   </script>
   <script src="map.js?v=20251201h" defer></script>
-  <script src="index.js?v=20251206b" defer></script>
+  <script src="index.js?v=20251201h" defer></script>
   <script src="forms.js?v=20251201h" defer></script>
 
   <!-- LocalStorage Clear Button -->
   <button id="clearLocalStorageBtn" class="clear-localstorage-btn" aria-label="Clear LocalStorage" title="Clear LocalStorage">
     LS
   </button>
-  
-  <!-- Test Geolocate Button -->
-  <button id="testGeolocateBtn" class="test-geolocate-btn" aria-label="Find my location" title="Find my location">
-    <svg class="geo-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
-    </svg>
-  </button>
-  <script>
-    // Test geolocate button
-    document.getElementById('testGeolocateBtn').onclick = function(e) {
-      e.preventDefault();
-      var btn = this;
-      var icon = btn.querySelector('.geo-icon');
-      icon.classList.add('spinning');
-      
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          function(pos) {
-            icon.classList.remove('spinning');
-            alert('Location: ' + pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4));
-          },
-          function(err) {
-            icon.classList.remove('spinning');
-            alert('Error: ' + err.message);
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      } else {
-        icon.classList.remove('spinning');
-        alert('Geolocation not supported');
-      }
-    };
-  </script>
-  
   <script>
     // Initialize LS button immediately (before other scripts load)
     document.getElementById('clearLocalStorageBtn').onclick = function(e) {
