@@ -8631,7 +8631,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .session-card{
               border:none;
               border-radius:10px;
-              background:rgba(0,0,0,0.2);
+              background:none;
               padding:0;
               display:flex;
               flex-direction:column;
@@ -8652,7 +8652,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .session-time-row{
               border:none;
               border-radius:8px;
-              background:rgba(0,0,0,0.25);
+              background:none;
               padding:0;
             }
             #tab-forms .seating_area-list,
@@ -8666,7 +8666,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .session-pricing-card{
               border:none;
               border-radius:8px;
-              background:rgba(0,0,0,0.2);
+              background:none;
               padding:0;
             }
             #tab-forms .pricing_tier-list,
@@ -9263,7 +9263,7 @@ html, body { cursor: auto !important; }
               gap:10px;
               padding:0;
               border-radius:8px;
-              background:rgba(0,0,0,0.2);
+              background:none;
             }
             #tab-forms .item-pricing-row,
             #memberPanel .member-create-fields .item-pricing-row{
