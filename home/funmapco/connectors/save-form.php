@@ -1490,9 +1490,9 @@ function sanitizeItemPricingOptions(array $options): array
             continue;
         }
         $clean[] = [
-            'item_name' => sanitizeString($option['item_name'] ?? $option['variant_name'] ?? $option['version'] ?? '', 255),
-            'item_currency' => strtoupper(sanitizeString($option['item_currency'] ?? $option['variant_currency'] ?? $option['currency'] ?? '', 12)),
-            'item_price' => sanitizeString($option['item_price'] ?? $option['variant_price'] ?? $option['price'] ?? '', 64),
+            'item_name' => sanitizeString($option['item_name'] ?? '', 255),
+            'item_currency' => strtoupper(sanitizeString($option['item_currency'] ?? '', 12)),
+            'item_price' => sanitizeString($option['item_price'] ?? '', 64),
         ];
     }
     return $clean;

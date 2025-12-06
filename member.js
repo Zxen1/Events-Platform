@@ -725,8 +725,8 @@
         versionInput.type = 'text';
         versionInput.className = 'item-pricing-name form-preview-item-pricing-name';
         versionInput.placeholder = 'Item Name';
-        versionInput.value = option.item_name || option.variant_name || option.version || '';
-        versionInput.addEventListener('input', ()=>{ option.item_name = versionInput.value; if(option.variant_name) delete option.variant_name; if(option.version) delete option.version; });
+        versionInput.value = option.item_name || '';
+        versionInput.addEventListener('input', ()=>{ option.item_name = versionInput.value; });
         topRow.appendChild(versionInput);
 
         const bottomRow = document.createElement('div');
@@ -738,7 +738,7 @@
         currencyMenuBtn.className = 'item-pricing-currency';
         currencyMenuBtn.setAttribute('aria-haspopup', 'true');
         currencyMenuBtn.setAttribute('aria-expanded', 'false');
-        const currencyMenuId = `member-variant-currency-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const currencyMenuId = `member-item-currency-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
         const existingCurrency = option.currency || '';
         currencyMenuBtn.textContent = existingCurrency || 'Currency';

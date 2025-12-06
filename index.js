@@ -8138,9 +8138,9 @@ function makePosts(){
           safeField.options = safeField.options.map(opt => {
             if(opt && typeof opt === 'object'){
               return {
-                item_name: typeof opt.item_name === 'string' ? opt.item_name : (typeof opt.variant_name === 'string' ? opt.variant_name : ''),
-                item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : (typeof opt.variant_currency === 'string' ? opt.variant_currency : ''),
-                item_price: typeof opt.item_price === 'string' ? opt.item_price : (typeof opt.variant_price === 'string' ? opt.variant_price : '')
+                item_name: typeof opt.item_name === 'string' ? opt.item_name : '',
+                item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : '',
+                item_price: typeof opt.item_price === 'string' ? opt.item_price : ''
               };
             }
             const str = typeof opt === 'string' ? opt : String(opt ?? '');
@@ -8152,8 +8152,8 @@ function makePosts(){
         } else {
           safeField.options = safeField.options.map(opt => {
             if(typeof opt === 'string') return opt;
-            if(opt && typeof opt === 'object' && (typeof opt.item_name === 'string' || typeof opt.variant_name === 'string')){
-              return opt.item_name || opt.variant_name;
+            if(opt && typeof opt === 'object' && typeof opt.item_name === 'string'){
+              return opt.item_name;
             }
             return String(opt ?? '');
           });
@@ -8422,9 +8422,9 @@ function makePosts(){
             field.options = field.options.map(opt => {
               if(opt && typeof opt === 'object'){
                 return {
-                  item_name: typeof opt.item_name === 'string' ? opt.item_name : (typeof opt.variant_name === 'string' ? opt.variant_name : ''),
-                  item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : (typeof opt.variant_currency === 'string' ? opt.variant_currency : ''),
-                  item_price: typeof opt.item_price === 'string' ? opt.item_price : (typeof opt.variant_price === 'string' ? opt.variant_price : '')
+                  item_name: typeof opt.item_name === 'string' ? opt.item_name : '',
+                  item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : '',
+                  item_price: typeof opt.item_price === 'string' ? opt.item_price : ''
                 };
               }
               const str = typeof opt === 'string' ? opt : String(opt ?? '');
@@ -8503,7 +8503,7 @@ function makePosts(){
               if(optionIndex === 0){
                 firstId = itemNameInputId;
               }
-              itemNameInput.value = optionValue.item_name || optionValue.variant_name || '';
+              itemNameInput.value = optionValue.item_name || '';
               itemNameInput.addEventListener('input', ()=>{
                 field.options[optionIndex].item_name = itemNameInput.value;
                 safeNotifyFormbuilderChange();
@@ -8522,7 +8522,7 @@ function makePosts(){
               currencyMenuBtn.setAttribute('aria-expanded', 'false');
               const currencyMenuId = `item-currency-${baseId}-${optionIndex}`;
               currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-              const existingCurrency = optionValue.item_currency || optionValue.variant_currency || '';
+              const existingCurrency = optionValue.item_currency || '';
               currencyMenuBtn.textContent = existingCurrency || 'Currency';
               currencyMenuBtn.dataset.value = existingCurrency;
               const currencyArrow = document.createElement('span');
@@ -8546,9 +8546,8 @@ function makePosts(){
                 currencyMenuBtn.dataset.value = '';
                 currencyMenu.hidden = true;
                 currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                const previousCurrency = field.options[optionIndex].item_currency || field.options[optionIndex].variant_currency || '';
+                const previousCurrency = field.options[optionIndex].item_currency || '';
                 field.options[optionIndex].item_currency = '';
-                if(field.options[optionIndex].variant_currency) delete field.options[optionIndex].variant_currency;
                 const priceCleared = updatePriceState();
                 if(previousCurrency !== '' || priceCleared){
                   safeNotifyFormbuilderChange();
@@ -8572,9 +8571,8 @@ function makePosts(){
                   currencyMenuBtn.dataset.value = code;
                   currencyMenu.hidden = true;
                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                  const previousCurrency = field.options[optionIndex].item_currency || field.options[optionIndex].variant_currency || '';
+                  const previousCurrency = field.options[optionIndex].item_currency || '';
                   field.options[optionIndex].item_currency = code;
-                  if(field.options[optionIndex].variant_currency) delete field.options[optionIndex].variant_currency;
                   const priceCleared = updatePriceState();
                   if(isCurrencySelected()){
                     commitPriceValue();
@@ -8617,9 +8615,8 @@ function makePosts(){
                           currencyMenuBtn.dataset.value = code;
                           currencyMenu.hidden = true;
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                          const previousCurrency = field.options[optionIndex].item_currency || field.options[optionIndex].variant_currency || '';
+                          const previousCurrency = field.options[optionIndex].item_currency || '';
                           field.options[optionIndex].item_currency = code;
-                          if(field.options[optionIndex].variant_currency) delete field.options[optionIndex].variant_currency;
                           const priceCleared = updatePriceState();
                           if(isCurrencySelected()){
                             commitPriceValue();
@@ -8691,13 +8688,12 @@ function makePosts(){
                 }
                 return `${integerPart}.${decimalPart}`;
               };
-              const initialPriceValue = sanitizePriceValue(optionValue.price || optionValue.item_price || optionValue.variant_price || '');
+              const initialPriceValue = sanitizePriceValue(optionValue.price || optionValue.item_price || '');
               const formattedInitialPrice = formatPriceValue(initialPriceValue);
               priceInput.value = formattedInitialPrice;
-              const currentPrice = field.options[optionIndex].item_price || field.options[optionIndex].variant_price || '';
+              const currentPrice = field.options[optionIndex].item_price || '';
               if(formattedInitialPrice !== currentPrice){
                 field.options[optionIndex].item_price = formattedInitialPrice;
-                if(field.options[optionIndex].variant_price) delete field.options[optionIndex].variant_price;
               }
               const clearPriceValue = ()=>{
                 let changed = false;
@@ -8705,12 +8701,11 @@ function makePosts(){
                   priceInput.value = '';
                   changed = true;
                 }
-                const currentPrice = field.options[optionIndex].item_price || field.options[optionIndex].variant_price || '';
+                const currentPrice = field.options[optionIndex].item_price || '';
                 if(currentPrice !== ''){
                   field.options[optionIndex].item_price = '';
-                  if(field.options[optionIndex].variant_price) delete field.options[optionIndex].variant_price;
                   changed = true;
-                } else if(typeof field.options[optionIndex].item_price !== 'string' && typeof field.options[optionIndex].variant_price !== 'string'){
+                } else if(typeof field.options[optionIndex].item_price !== 'string'){
                   field.options[optionIndex].item_price = '';
                 }
                 return changed;
@@ -8783,10 +8778,9 @@ function makePosts(){
                     }
                   }
                 }
-                const previous = field.options[optionIndex].item_price || field.options[optionIndex].variant_price || '';
+                const previous = field.options[optionIndex].item_price || '';
                 if(previous !== formatted){
                   field.options[optionIndex].item_price = formatted;
-                  if(field.options[optionIndex].variant_price) delete field.options[optionIndex].variant_price;
                   safeNotifyFormbuilderChange();
                 }
               };
@@ -14068,8 +14062,8 @@ function makePosts(){
               safeField.options.forEach((optionValue, optionIndex)=>{
                 const optionText = typeof optionValue === 'string'
                   ? optionValue
-                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.variant_name === 'string'
-                    ? optionValue.variant_name
+                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.item_name === 'string'
+                    ? optionValue.item_name
                     : '');
                 const optionRow = document.createElement('div');
                 optionRow.className = 'dropdown-option-row';
@@ -14291,9 +14285,9 @@ function makePosts(){
                   safeField.options = safeField.options.map(opt => {
                     if(opt && typeof opt === 'object'){
                       return {
-                        item_name: typeof opt.item_name === 'string' ? opt.item_name : (typeof opt.variant_name === 'string' ? opt.variant_name : ''),
-                        item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : (typeof opt.variant_currency === 'string' ? opt.variant_currency : ''),
-                        item_price: typeof opt.item_price === 'string' ? opt.item_price : (typeof opt.variant_price === 'string' ? opt.variant_price : '')
+                        item_name: typeof opt.item_name === 'string' ? opt.item_name : '',
+                        item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : '',
+                        item_price: typeof opt.item_price === 'string' ? opt.item_price : ''
                       };
                     }
                     const str = typeof opt === 'string' ? opt : String(opt ?? '');
@@ -15627,9 +15621,9 @@ function makePosts(){
                     if(field && field.type === 'item-pricing'){
                       if(opt && typeof opt === 'object'){
                         return {
-                          variant_name: typeof opt.variant_name === 'string' ? opt.variant_name : '',
-                          variant_currency: typeof opt.variant_currency === 'string' ? opt.variant_currency : '',
-                          variant_price: typeof opt.variant_price === 'string' ? opt.variant_price : ''
+                          item_name: typeof opt.item_name === 'string' ? opt.item_name : '',
+                          item_currency: typeof opt.item_currency === 'string' ? opt.item_currency : '',
+                          item_price: typeof opt.item_price === 'string' ? opt.item_price : ''
                         };
                       }
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
@@ -15639,8 +15633,8 @@ function makePosts(){
                       return cloneVenueSessionVenue(opt);
                     }
                     if(typeof opt === 'string') return opt;
-                    if(opt && typeof opt === 'object' && typeof opt.variant_name === 'string'){
-                      return opt.item_name || opt.variant_name;
+                    if(opt && typeof opt === 'object' && typeof opt.item_name === 'string'){
+                      return opt.item_name;
                     }
                     return String(opt ?? '');
                   })
