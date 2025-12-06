@@ -18469,10 +18469,154 @@ function makePosts(){
         {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
         {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
         {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
-        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'},
-        {geo:null, locate:'#geolocate-header', compass:null}
+        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
       ];
       const cityZoomLevel = 12;
+
+      // Create ONE shared GeolocateControl to avoid conflicts between multiple instances
+      const sharedGeolocate = new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true,
+        fitBoundsOptions: { maxZoom: cityZoomLevel }
+      });
+
+      // Add the shared control to the map (hidden, we'll use custom buttons)
+      const sharedGeolocateEl = sharedGeolocate.onAdd(map);
+      sharedGeolocateEl.style.display = 'none';
+      document.body.appendChild(sharedGeolocateEl);
+
+      // Track all custom geolocate buttons for syncing animation state
+      const geolocateButtons = [];
+
+      // Sync animation state across all buttons
+      const syncGeolocateState = (isActive) => {
+        geolocateButtons.forEach(btn => {
+          if (btn) {
+            btn.classList.toggle('mapboxgl-ctrl-geolocate-active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+          }
+        });
+      };
+
+      // Loading state management
+      const geolocateToken = 'geolocate:shared';
+      let geolocateFallbackTimeout = null;
+      const getMapLoading = () => (typeof mapLoading !== 'undefined' ? mapLoading : null);
+
+      const clearGeolocateLoading = () => {
+        if (geolocateFallbackTimeout) {
+          clearTimeout(geolocateFallbackTimeout);
+          geolocateFallbackTimeout = null;
+        }
+        const loader = getMapLoading();
+        if (loader) {
+          loader.removeMotion(geolocateToken);
+        }
+      };
+
+      const ensureGeolocateLoading = () => {
+        const loader = getMapLoading();
+        if (!loader) return;
+        loader.addMotion(geolocateToken);
+        if (geolocateFallbackTimeout) {
+          clearTimeout(geolocateFallbackTimeout);
+        }
+        geolocateFallbackTimeout = setTimeout(() => {
+          geolocateFallbackTimeout = null;
+          const loader = getMapLoading();
+          if (loader) {
+            loader.removeMotion(geolocateToken);
+          }
+        }, 15000);
+      };
+
+      const awaitGeolocateIdle = () => {
+        const loader = getMapLoading();
+        if (!loader) {
+          clearGeolocateLoading();
+          return;
+        }
+        const finalize = () => {
+          clearGeolocateLoading();
+        };
+        let bound = false;
+        if (map && typeof map.once === 'function') {
+          try {
+            map.once('idle', finalize);
+            bound = true;
+          } catch (err) {
+            finalize();
+            return;
+          }
+        }
+        if (!bound) {
+          finalize();
+        } else {
+          if (geolocateFallbackTimeout) {
+            clearTimeout(geolocateFallbackTimeout);
+          }
+          geolocateFallbackTimeout = setTimeout(() => {
+            finalize();
+          }, 8000);
+        }
+      };
+
+      // Handle geolocate events on the shared control
+      sharedGeolocate.on('geolocate', (event) => {
+        ensureGeolocateLoading();
+        syncGeolocateState(true);
+        spinEnabled = false;
+        stopSpin();
+        closeWelcomeModalIfOpen();
+        if (mode !== 'map') setModeFromUser('map');
+        if (event && event.coords) {
+          setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
+        }
+        if (map && typeof map.easeTo === 'function' && event && event.coords) {
+          let targetZoom = cityZoomLevel;
+          if (typeof map.getMaxZoom === 'function') {
+            try {
+              const maxZoom = map.getMaxZoom();
+              if (typeof maxZoom === 'number' && maxZoom < targetZoom) {
+                targetZoom = maxZoom;
+              }
+            } catch (err) {}
+          }
+          const currentZoom = (typeof map.getZoom === 'function') ? map.getZoom() : null;
+          const needsZoomAdjust = !Number.isFinite(currentZoom) || Math.abs(currentZoom - targetZoom) > 0.05;
+          const center = [event.coords.longitude, event.coords.latitude];
+          if (needsZoomAdjust) {
+            let currentPitch = null;
+            try {
+              currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : null;
+            } catch (err) {
+              currentPitch = null;
+            }
+            const options = { center, zoom: targetZoom, duration: 800, essential: true };
+            if (Number.isFinite(currentPitch)) {
+              options.pitch = currentPitch;
+            }
+            try {
+              map.easeTo(options);
+            } catch (err) {}
+          }
+        }
+        awaitGeolocateIdle();
+      });
+
+      sharedGeolocate.on('error', () => {
+        clearGeolocateLoading();
+        syncGeolocateState(false);
+      });
+
+      sharedGeolocate.on('trackuserlocationstart', () => {
+        syncGeolocateState(true);
+      });
+
+      sharedGeolocate.on('trackuserlocationend', () => {
+        syncGeolocateState(false);
+      });
 
       sets.forEach((sel, idx)=>{
         const geocoderOptions = {
@@ -18702,138 +18846,46 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
-        const geolocateToken = `geolocate:${idx}`;
-        let geolocateButton = null;
-        let geolocateFallbackTimeout = null;
-
-        const getMapLoading = () => (typeof mapLoading !== 'undefined' ? mapLoading : null);
-
-        const clearGeolocateLoading = () => {
-          if(geolocateFallbackTimeout){
-            clearTimeout(geolocateFallbackTimeout);
-            geolocateFallbackTimeout = null;
-          }
-          const loader = getMapLoading();
-          if(loader){
-            loader.removeMotion(geolocateToken);
-          }
-        };
-
-        const ensureGeolocateLoading = () => {
-          const loader = getMapLoading();
-          if(!loader) return;
-          loader.addMotion(geolocateToken);
-          if(geolocateFallbackTimeout){
-            clearTimeout(geolocateFallbackTimeout);
-          }
-          geolocateFallbackTimeout = setTimeout(() => {
-            geolocateFallbackTimeout = null;
-            const loader = getMapLoading();
-            if(loader){
-              loader.removeMotion(geolocateToken);
-            }
-          }, 15000);
-        };
-
-        const awaitGeolocateIdle = () => {
-          const loader = getMapLoading();
-          if(!loader){
-            clearGeolocateLoading();
-            return;
-          }
-          const finalize = () => {
-            clearGeolocateLoading();
-          };
-          let bound = false;
-          if(map && typeof map.once === 'function'){
-            try{
-              map.once('idle', finalize);
-              bound = true;
-            }catch(err){
-              finalize();
-              return;
-            }
-          }
-          if(!bound){
-            finalize();
-          } else {
-            if(geolocateFallbackTimeout){
-              clearTimeout(geolocateFallbackTimeout);
-            }
-            geolocateFallbackTimeout = setTimeout(() => {
-              finalize();
-            }, 8000);
-          }
-        };
-
-        const geolocate = new mapboxgl.GeolocateControl({
-          positionOptions:{ enableHighAccuracy:true },
-          trackUserLocation:true,
-          showUserHeading:true,
-          fitBoundsOptions:{ maxZoom: cityZoomLevel }
-        });
-        geolocate.on('geolocate', (event)=>{
-          ensureGeolocateLoading();
-          spinEnabled = false; stopSpin();
-          closeWelcomeModalIfOpen();
-          if(mode!=='map') setModeFromUser('map');
-          if(event && event.coords){
-            setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
-          }
-          if(map && typeof map.easeTo === 'function' && event && event.coords){
-            let targetZoom = cityZoomLevel;
-            if(typeof map.getMaxZoom === 'function'){
-              try{
-                const maxZoom = map.getMaxZoom();
-                if(typeof maxZoom === 'number' && maxZoom < targetZoom){
-                  targetZoom = maxZoom;
-                }
-              }catch(err){}
-            }
-            const currentZoom = (typeof map.getZoom === 'function') ? map.getZoom() : null;
-            const needsZoomAdjust = !Number.isFinite(currentZoom) || Math.abs(currentZoom - targetZoom) > 0.05;
-            const center = [event.coords.longitude, event.coords.latitude];
-            if(needsZoomAdjust){
-              let currentPitch = null;
-              try{
-                currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : null;
-              }catch(err){
-                currentPitch = null;
-              }
-              const options = { center, zoom: targetZoom, duration: 800, essential: true };
-              if(Number.isFinite(currentPitch)){
-                options.pitch = currentPitch;
-              }
-              try{
-                map.easeTo(options);
-              }catch(err){}
-            }
-          }
-          awaitGeolocateIdle();
-        });
-        geolocate.on('error', () => {
-          clearGeolocateLoading();
-        });
+        // Create custom geolocate button that triggers the shared control
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
-        if(geoHolder){
-          const controlEl = geolocate.onAdd(map);
-          geoHolder.appendChild(controlEl);
-          if(controlEl){
-            geolocateButton = controlEl.querySelector('button');
-            if(geolocateButton){
-              const handlePress = (evt) => {
-                if(evt && evt.type === 'keydown'){
-                  const key = evt.key || evt.code;
-                  if(!key) return;
-                  if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
-                }
-                ensureGeolocateLoading();
-              };
-              geolocateButton.addEventListener('click', handlePress, { passive: true });
-              geolocateButton.addEventListener('keydown', handlePress);
+        if (geoHolder) {
+          // Create a container that mimics the Mapbox control structure
+          const controlContainer = document.createElement('div');
+          controlContainer.className = 'mapboxgl-ctrl mapboxgl-ctrl-group mapboxgl-ctrl-geolocate';
+
+          const button = document.createElement('button');
+          button.className = 'mapboxgl-ctrl-geolocate-button';
+          button.type = 'button';
+          button.setAttribute('aria-label', 'Find my location');
+          button.setAttribute('aria-pressed', 'false');
+
+          // Add the geolocate icon SVG (same as Mapbox uses)
+          button.innerHTML = `<span class="mapboxgl-ctrl-icon" aria-hidden="true"></span>`;
+
+          controlContainer.appendChild(button);
+          geoHolder.appendChild(controlContainer);
+
+          // Track this button for animation state syncing
+          geolocateButtons.push(button);
+
+          // Handle click to trigger the shared geolocate control
+          const handlePress = (evt) => {
+            if (evt && evt.type === 'keydown') {
+              const key = evt.key || evt.code;
+              if (!key) return;
+              if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
             }
-          }
+            ensureGeolocateLoading();
+            // Trigger the shared geolocate control
+            if (sharedGeolocate && typeof sharedGeolocate.trigger === 'function') {
+              sharedGeolocate.trigger();
+            }
+          };
+
+          button.addEventListener('click', handlePress);
+          button.addEventListener('keydown', handlePress);
         }
+
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));

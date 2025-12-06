@@ -5152,37 +5152,6 @@ body.hide-ads .ad-board{
   font-weight:normal;
 }
 
-/* Header Geolocate Button */
-.header-geolocate{
-  margin-left:10px;
-  flex-shrink:0;
-}
-.header-geolocate .mapboxgl-ctrl-geolocate{
-  background:transparent;
-  box-shadow:none;
-  border-radius:8px;
-}
-.header-geolocate .mapboxgl-ctrl-geolocate button{
-  width:40px !important;
-  height:40px !important;
-  background:var(--btn) !important;
-  border:1px solid var(--btn) !important;
-  border-radius:8px !important;
-  color:var(--button-text);
-  transition:background .2s, border-color .2s;
-}
-.header-geolocate .mapboxgl-ctrl-geolocate button:hover{
-  background:var(--btn-hover, rgba(255,255,255,0.2)) !important;
-}
-.header-geolocate .mapboxgl-ctrl-geolocate button svg{
-  fill:var(--button-text);
-}
-.header-geolocate .mapboxgl-ctrl-geolocate-active button,
-.header-geolocate .mapboxgl-ctrl-geolocate-active-error button{
-  background:var(--btn-selected) !important;
-  border-color:var(--btn-selected) !important;
-}
-
 @media (min-width: 601px){
   .mode-toggle{
     grid-template-columns:repeat(3, auto);
@@ -5534,6 +5503,53 @@ body.filters-active #filterBtn{
 
 .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading){
   background-color:#ffffff;
+}
+
+/* Custom geolocate button styling */
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-geolocate-button{
+  width:35px;
+  height:35px;
+  padding:0;
+  border:1px solid rgba(0,0,0,0.15);
+  border-radius:8px;
+  background-color:#ffffff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background-color 0.2s;
+}
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-geolocate-button:hover{
+  background-color:#f2f2f2;
+}
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-geolocate-button .mapboxgl-ctrl-icon{
+  display:block;
+  width:22px;
+  height:22px;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' fill='%23333'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:22px;
+}
+/* Active/tracking state with pulsing animation */
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-geolocate-button.mapboxgl-ctrl-geolocate-active{
+  background-color:#33b5e5;
+  border-color:#33b5e5;
+  animation:geolocate-pulse 2s ease-in-out infinite;
+}
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-geolocate-button.mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-icon{
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' fill='%23fff'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E");
+}
+@keyframes geolocate-pulse{
+  0%{
+    box-shadow:0 0 0 0 rgba(51, 181, 229, 0.6);
+  }
+  50%{
+    box-shadow:0 0 0 8px rgba(51, 181, 229, 0);
+  }
+  100%{
+    box-shadow:0 0 0 0 rgba(51, 181, 229, 0);
+  }
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
