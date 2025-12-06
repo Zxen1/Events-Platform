@@ -18469,7 +18469,8 @@ function makePosts(){
         {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
         {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
         {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
-        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
+        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'},
+        {geo:null, locate:'#geolocate-header', compass:null}
       ];
       const cityZoomLevel = 12;
 
@@ -18767,7 +18768,8 @@ function makePosts(){
 
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
-          trackUserLocation:false,
+          trackUserLocation:true,
+          showUserHeading:true,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
         geolocate.on('geolocate', (event)=>{

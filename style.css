@@ -5151,6 +5151,38 @@ body.hide-ads .ad-board{
   color:var(--button-active-text);
   font-weight:normal;
 }
+
+/* Header Geolocate Button */
+.header-geolocate{
+  margin-left:10px;
+  flex-shrink:0;
+}
+.header-geolocate .mapboxgl-ctrl-geolocate{
+  background:transparent;
+  box-shadow:none;
+  border-radius:8px;
+}
+.header-geolocate .mapboxgl-ctrl-geolocate button{
+  width:40px !important;
+  height:40px !important;
+  background:var(--btn) !important;
+  border:1px solid var(--btn) !important;
+  border-radius:8px !important;
+  color:var(--button-text);
+  transition:background .2s, border-color .2s;
+}
+.header-geolocate .mapboxgl-ctrl-geolocate button:hover{
+  background:var(--btn-hover, rgba(255,255,255,0.2)) !important;
+}
+.header-geolocate .mapboxgl-ctrl-geolocate button svg{
+  fill:var(--button-text);
+}
+.header-geolocate .mapboxgl-ctrl-geolocate-active button,
+.header-geolocate .mapboxgl-ctrl-geolocate-active-error button{
+  background:var(--btn-selected) !important;
+  border-color:var(--btn-selected) !important;
+}
+
 @media (min-width: 601px){
   .mode-toggle{
     grid-template-columns:repeat(3, auto);
