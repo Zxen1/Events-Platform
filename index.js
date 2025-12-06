@@ -3481,6 +3481,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           fieldset_key: trimmedValue
         };
         if(source && typeof source === 'object'){
+          // Preserve ALL properties from source (especially id and fieldset_tooltip)
+          Object.keys(source).forEach(key => {
+            if(source[key] !== undefined && source[key] !== null){
+              option[key] = source[key];
+            }
+          });
+          // Override with specific normalized values
           if(typeof source.placeholder === 'string' && source.placeholder){
             option.placeholder = source.placeholder;
           }
