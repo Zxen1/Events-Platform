@@ -9122,6 +9122,37 @@ html, body { cursor: auto !important; }
               border-color:var(--btn-hover, #2e3a72);
               background:rgba(0,0,0,0.3);
             }
+            #tab-forms .field-tooltip-editor{
+              display:flex;
+              flex-direction:column;
+              gap:4px;
+              margin-bottom:8px;
+            }
+            #tab-forms .field-tooltip-editor label{
+              display:flex;
+              flex-direction:column;
+              gap:4px;
+              font-size:12px;
+              color:var(--button-text);
+              opacity:0.8;
+            }
+            #tab-forms .field-tooltip-input{
+              width:100%;
+              min-height:72px;
+              padding:8px 12px;
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              color:var(--button-text);
+              font-size:13px;
+              font-family:inherit;
+              resize:vertical;
+            }
+            #tab-forms .field-tooltip-input:focus{
+              outline:none;
+              border-color:var(--btn-hover, #2e3a72);
+              background:rgba(0,0,0,0.3);
+            }
             #tab-forms .field-summary-required{
               font-size:12px;
               text-transform:uppercase;

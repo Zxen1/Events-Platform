@@ -14256,7 +14256,7 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldNameContainer, fieldTooltipContainer, fieldRequiredToggle, fieldsetWrapper);
+            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldsetWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14857,7 +14857,8 @@ function makePosts(){
               }
             });
 
-            editPanel.append(actionFieldBtn);
+            // Add tooltip editor last, before delete button
+            editPanel.append(fieldTooltipContainer, actionFieldBtn);
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
