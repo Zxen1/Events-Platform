@@ -18767,8 +18767,7 @@ function makePosts(){
 
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
-          trackUserLocation: idx === 1, // Only map control (idx 1) gets animation
-          showUserHeading: idx === 1,
+          trackUserLocation:false,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
         geolocate.on('geolocate', (event)=>{
