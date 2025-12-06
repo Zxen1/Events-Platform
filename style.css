@@ -8479,14 +8479,15 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .address_line-line,
             #memberPanel .member-create-fields .address_line-line{
-              grid-template-columns:1fr;
-              justify-items:stretch;
-              align-items:stretch;
+              display:block;
+              width:100%;
+              height:auto;
             }
             #tab-forms .address_line-line > *,
             #memberPanel .member-create-fields .address_line-line > *{
               width:100%;
               min-width:0;
+              height:auto;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row,
@@ -8667,6 +8668,8 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .address_line-display{
               display:block;
               width:100%;
+              height:auto !important;
+              min-height:38px;
               padding:8px 12px;
               font-family:inherit;
               font-size:14px;
@@ -8681,8 +8684,8 @@ html, body { cursor: auto !important; }
               white-space:pre-wrap;
               cursor:text;
               box-sizing:border-box;
-              min-height:38px;
               text-align:left;
+              overflow:visible;
             }
             #tab-forms .address_line-display:hover,
             #memberPanel .member-create-fields .address_line-display:hover{
