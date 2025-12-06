@@ -738,24 +738,29 @@ try {
                     if (!$fieldsetKey) continue;
                     
                     // Only process field types marked as editable in the database
-                    $isEditable = isset($fieldsetDef['formbuilder_editable']) && $fieldsetDef['formbuilder_editable'] === true;
+                    $isEditable = isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true;
                     if (!$isEditable) continue;
                     
                     $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
                     if (!$fieldData) continue;
                     
                     $editData = [];
-                    $defaultName = $fieldsetDef['name'] ?? '';
-                    $customName = $fieldData['name'] ?? '';
-                    // Only save name if it differs from default
-                    if ($customName !== '' && $customName !== $defaultName) {
-                        $editData['name'] = $customName;
+                    
+                    // For editable fieldsets, always save name/placeholder/tooltip to JSON
+                    if (isset($fieldData['name'])) {
+                        $editData['name'] = is_string($fieldData['name']) ? trim($fieldData['name']) : '';
+                    }
+                    if (isset($fieldData['placeholder'])) {
+                        $editData['placeholder'] = is_string($fieldData['placeholder']) ? trim($fieldData['placeholder']) : '';
+                    }
+                    if (isset($fieldData['tooltip'])) {
+                        $editData['tooltip'] = is_string($fieldData['tooltip']) ? trim($fieldData['tooltip']) : '';
                     }
                     
                     // For dropdown/radio types, save options ONLY if they differ from default placeholder
                     if (isset($fieldData['options'])) {
                         $customOptions = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
-                        $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
+                        $defaultPlaceholder = isset($fieldsetDef['fieldset_placeholder']) ? $fieldsetDef['fieldset_placeholder'] : ($fieldsetDef['placeholder'] ?? '');
                         $defaultOptions = [];
                         if ($defaultPlaceholder !== '') {
                             $defaultOptions = array_values(array_filter(
@@ -767,20 +772,6 @@ try {
                         if (!empty($customOptions) && $customOptions !== $defaultOptions) {
                             $editData['options'] = $customOptions;
                         }
-                    }
-                    
-                    $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
-                    $customPlaceholder = $fieldData['placeholder'] ?? '';
-                    // Only save placeholder if it differs from default
-                    if ($customPlaceholder !== '' && $customPlaceholder !== $defaultPlaceholder) {
-                        $editData['placeholder'] = $customPlaceholder;
-                    }
-                    
-                    $defaultTooltip = $fieldsetDef['fieldset_tooltip'] ?? '';
-                    $customTooltip = $fieldData['tooltip'] ?? '';
-                    // Only save tooltip if it differs from default
-                    if ($customTooltip !== '' && $customTooltip !== $defaultTooltip) {
-                        $editData['tooltip'] = $customTooltip;
                     }
                     
                     if (!empty($editData)) {

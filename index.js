@@ -3494,9 +3494,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(typeof source.type === 'string' && source.type){
             option.type = source.type;
           }
-          if(typeof source.formbuilder_editable !== 'undefined'){
+          if(typeof source.fieldset_editable !== 'undefined'){
             // Handle both boolean (true/false) and numeric (0/1) values from database
-            option.formbuilder_editable = source.formbuilder_editable === true || source.formbuilder_editable === 1 || source.formbuilder_editable === '1';
+            option.fieldset_editable = source.fieldset_editable === true || source.fieldset_editable === 1 || source.fieldset_editable === '1';
+          }
+          // Backward compatibility
+          if(typeof source.formbuilder_editable !== 'undefined' && typeof option.fieldset_editable === 'undefined'){
+            option.fieldset_editable = source.formbuilder_editable === true || source.formbuilder_editable === 1 || source.formbuilder_editable === '1';
           }
           if(typeof source.sort_order !== 'undefined'){
             option.sort_order = source.sort_order;
@@ -8410,7 +8414,7 @@ function makePosts(){
       // For editable fields, preserve existing custom names
       if(fieldsetKey && resolvedFieldsetName){
         const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
-        const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+        const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
         // Only auto-name if not editable OR if name is empty
         if(!isEditable || !safeField.name || safeField.name.trim() === ''){
           safeField.name = resolvedFieldsetName;
@@ -14084,7 +14088,7 @@ function makePosts(){
                 safeField.fieldset_name = updatedFieldsetName;
                 safeField.fieldsetName = updatedFieldsetName;
                 
-                const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+                const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
                 if(!isEditable && updatedFieldsetName){
                   safeField.name = updatedFieldsetName;
                 } else if(isEditable && !safeField.name){
@@ -14195,7 +14199,6 @@ function makePosts(){
             const fieldNameInput = document.createElement('input');
             fieldNameInput.type = 'text';
             fieldNameInput.className = 'field-name-input';
-            fieldNameInput.placeholder = 'Field name';
             fieldNameInput.value = safeField.name || '';
             fieldNameLabel.appendChild(fieldNameInput);
             fieldNameContainer.appendChild(fieldNameLabel);
@@ -14753,22 +14756,31 @@ function makePosts(){
               fieldNameContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
                 fieldNameInput.value = safeField.name || '';
+                // Initialize JSON with defaults if not already set
+                if(!safeField.name && matchingFieldset){
+                  safeField.name = matchingFieldset.fieldset_name || matchingFieldset.name || '';
+                  notifyFormbuilderChange();
+                }
               }
               // Show placeholder editor only for editable field types
               fieldPlaceholderContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
-                const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
-                const defaultPlaceholder = matchingFieldset?.placeholder || '';
-                fieldPlaceholderInput.placeholder = defaultPlaceholder;
                 fieldPlaceholderInput.value = safeField.placeholder || '';
+                // Initialize JSON with defaults if not already set
+                if(safeField.placeholder === undefined && matchingFieldset){
+                  safeField.placeholder = matchingFieldset.fieldset_placeholder || matchingFieldset.placeholder || '';
+                  notifyFormbuilderChange();
+                }
               }
               // Show tooltip editor only for editable field types
               fieldTooltipContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
-                const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
-                const defaultTooltip = matchingFieldset?.fieldset_tooltip || '';
-                fieldTooltipInput.placeholder = defaultTooltip;
                 fieldTooltipInput.value = safeField.tooltip || '';
+                // Initialize JSON with defaults if not already set
+                if(safeField.tooltip === undefined && matchingFieldset){
+                  safeField.tooltip = matchingFieldset.fieldset_tooltip || '';
+                  notifyFormbuilderChange();
+                }
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;
@@ -15003,7 +15015,7 @@ function makePosts(){
             const updateFieldSummary = ()=>{
               const fieldsetKey = safeField.fieldsetKey || safeField.key || safeField.type || '';
               const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
-              const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+              const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
               
               const customName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : '';
               const storedFieldsetName = (typeof safeField.fieldset_name === 'string' && safeField.fieldset_name.trim())
@@ -15204,7 +15216,7 @@ function makePosts(){
               newField.fieldset_name = fieldsetName;
               newField.fieldsetName = fieldsetName;
               
-              const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+              const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
               if(!isEditable && fieldsetName){
                 newField.name = fieldsetName;
               } else if(isEditable && !newField.name){
