@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 03:01 AM
+-- Generation Time: Dec 07, 2025 at 03:15 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -245,6 +245,14 @@ CREATE TABLE `banned_words` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
+--
+-- Dumping data for table `banned_words`
+--
+
+INSERT INTO `banned_words` (`id`, `word`, `language`, `reason`, `created_at`) VALUES
+(1, 'fuck', 'en', 'profanity', '2025-12-07 03:13:38'),
+(2, 'cunt', 'en', 'profanity', '2025-12-07 03:13:38');
+
 -- --------------------------------------------------------
 
 --
@@ -303,10 +311,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 03:01:18'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 03:01:18'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 03:01:18'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 03:01:18');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 03:03:15'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 03:03:15'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 03:03:15'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 03:03:15');
 
 -- --------------------------------------------------------
 
@@ -359,6 +367,8 @@ CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `field_key` varchar(255) DEFAULT NULL,
   `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `min_length` int(11) DEFAULT NULL,
+  `max_length` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -367,29 +377,29 @@ CREATE TABLE `fields` (
 -- Dumping data for table `fields`
 --
 
-INSERT INTO `fields` (`id`, `field_key`, `input_type`, `created_at`, `updated_at`) VALUES
-(1, 'title', 'text', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(2, 'description', 'textarea', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(3, 'images', 'images', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(4, 'venue-name', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(5, 'address-line', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(6, 'latitude', 'decimal', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(7, 'longitude', 'decimal', '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(8, 'session-date', 'date', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(9, 'session-time', 'time', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(10, 'seating-area', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(11, 'pricing-tier', 'text', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(12, 'ticket-price', 'decimal(10,2)', '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(13, 'currency', 'dropdown', '2025-10-29 23:32:47', '2025-11-05 13:33:54'),
-(14, 'text-box', 'text', '2025-10-30 17:11:57', '2025-11-06 13:07:35'),
-(15, 'text-area', 'textarea', '2025-10-30 17:11:57', '2025-11-06 13:07:35'),
-(16, 'dropdown', 'dropdown', '2025-10-30 17:14:25', '2025-11-07 01:59:08'),
-(17, 'radio', 'radio', '2025-10-30 17:14:25', '2025-11-17 10:09:01'),
-(18, 'email', 'email', '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(19, 'phone', 'tel', '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(20, 'website', 'url', '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
-(21, 'item-name', 'text', '2025-10-30 18:33:09', '2025-12-06 00:14:56'),
-(23, 'item-price', 'decimal(10,2)', '2025-10-30 18:39:14', '2025-11-06 13:07:35');
+INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length`, `created_at`, `updated_at`) VALUES
+(1, 'title', 'text', 3, 150, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(2, 'description', 'textarea', 10, 5000, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(3, 'images', 'images', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(4, 'venue-name', 'text', 2, 200, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(5, 'address-line', 'text', 5, 500, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(6, 'latitude', 'decimal', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(7, 'longitude', 'decimal', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
+(8, 'session-date', 'date', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(9, 'session-time', 'time', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(10, 'seating-area', 'text', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(11, 'pricing-tier', 'text', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(12, 'ticket-price', 'decimal(10,2)', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
+(13, 'currency', 'dropdown', NULL, NULL, '2025-10-29 23:32:47', '2025-11-05 13:33:54'),
+(14, 'text-box', 'text', 1, 500, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
+(15, 'text-area', 'textarea', 1, 2000, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
+(16, 'dropdown', 'dropdown', NULL, NULL, '2025-10-30 17:14:25', '2025-11-07 01:59:08'),
+(17, 'radio', 'radio', NULL, NULL, '2025-10-30 17:14:25', '2025-11-17 10:09:01'),
+(18, 'email', 'email', NULL, NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(19, 'phone', 'tel', NULL, NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(20, 'website', 'url', NULL, NULL, '2025-10-30 17:25:10', '2025-10-30 17:25:10'),
+(21, 'item-name', 'text', 2, 200, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
+(23, 'item-price', 'decimal(10,2)', NULL, NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
 
 -- --------------------------------------------------------
 
@@ -879,7 +889,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Images, Coupon, Item Pricing, Venue Ticketing', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 16:01:18');
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 16:03:16');
 
 -- --------------------------------------------------------
 
@@ -1124,13 +1134,13 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4571;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4578;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
 --
 ALTER TABLE `banned_words`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `categories`
