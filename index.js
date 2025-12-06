@@ -9309,8 +9309,12 @@ function makePosts(){
                 safeNotifyFormbuilderChange();
                 setGeocoderActive(false);
               });
-              // Switch to display when clicking outside
-              geocoderInput.addEventListener('blur', () => {
+              // Switch to display when clicking outside (but not when clicking buttons)
+              geocoderInput.addEventListener('blur', (e) => {
+                const relatedTarget = e.relatedTarget;
+                if(relatedTarget && (relatedTarget.tagName === 'BUTTON' || relatedTarget.closest('button'))){
+                  return;
+                }
                 setTimeout(showDisplay, 150);
               });
               geocoder.on('error', ()=> setGeocoderActive(false));
@@ -12829,8 +12833,12 @@ function makePosts(){
                       safeNotifyChange();
                       setGeocoderActive(false);
                     });
-                    // Switch to display when clicking outside
-                    geocoderInput.addEventListener('blur', () => {
+                    // Switch to display when clicking outside (but not when clicking buttons)
+                    geocoderInput.addEventListener('blur', (e) => {
+                      const relatedTarget = e.relatedTarget;
+                      if(relatedTarget && (relatedTarget.tagName === 'BUTTON' || relatedTarget.closest('button'))){
+                        return;
+                      }
                       setTimeout(showVenueDisplay, 150);
                     });
                     geocoder.on('error', ()=> setGeocoderActive(false));
