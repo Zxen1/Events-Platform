@@ -18473,114 +18473,6 @@ function makePosts(){
       ];
       const cityZoomLevel = 12;
 
-      // Track all geolocate controls for coordination
-      const allGeolocateControls = [];
-
-      // Loading state management
-      const geolocateToken = 'geolocate:shared';
-      let geolocateFallbackTimeout = null;
-      const getMapLoading = () => (typeof mapLoading !== 'undefined' ? mapLoading : null);
-
-      const clearGeolocateLoading = () => {
-        if (geolocateFallbackTimeout) {
-          clearTimeout(geolocateFallbackTimeout);
-          geolocateFallbackTimeout = null;
-        }
-        const loader = getMapLoading();
-        if (loader) {
-          loader.removeMotion(geolocateToken);
-        }
-      };
-
-      const ensureGeolocateLoading = () => {
-        const loader = getMapLoading();
-        if (!loader) return;
-        loader.addMotion(geolocateToken);
-        if (geolocateFallbackTimeout) {
-          clearTimeout(geolocateFallbackTimeout);
-        }
-        geolocateFallbackTimeout = setTimeout(() => {
-          geolocateFallbackTimeout = null;
-          const loader = getMapLoading();
-          if (loader) {
-            loader.removeMotion(geolocateToken);
-          }
-        }, 15000);
-      };
-
-      const awaitGeolocateIdle = () => {
-        const loader = getMapLoading();
-        if (!loader) {
-          clearGeolocateLoading();
-          return;
-        }
-        const finalize = () => {
-          clearGeolocateLoading();
-        };
-        let bound = false;
-        if (map && typeof map.once === 'function') {
-          try {
-            map.once('idle', finalize);
-            bound = true;
-          } catch (err) {
-            finalize();
-            return;
-          }
-        }
-        if (!bound) {
-          finalize();
-        } else {
-          if (geolocateFallbackTimeout) {
-            clearTimeout(geolocateFallbackTimeout);
-          }
-          geolocateFallbackTimeout = setTimeout(() => {
-            finalize();
-          }, 8000);
-        }
-      };
-
-      // Shared geolocate event handler
-      const handleGeolocateEvent = (event) => {
-        ensureGeolocateLoading();
-        spinEnabled = false;
-        stopSpin();
-        closeWelcomeModalIfOpen();
-        if (mode !== 'map') setModeFromUser('map');
-        if (event && event.coords) {
-          setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
-        }
-        if (map && typeof map.easeTo === 'function' && event && event.coords) {
-          let targetZoom = cityZoomLevel;
-          if (typeof map.getMaxZoom === 'function') {
-            try {
-              const maxZoom = map.getMaxZoom();
-              if (typeof maxZoom === 'number' && maxZoom < targetZoom) {
-                targetZoom = maxZoom;
-              }
-            } catch (err) {}
-          }
-          const currentZoom = (typeof map.getZoom === 'function') ? map.getZoom() : null;
-          const needsZoomAdjust = !Number.isFinite(currentZoom) || Math.abs(currentZoom - targetZoom) > 0.05;
-          const center = [event.coords.longitude, event.coords.latitude];
-          if (needsZoomAdjust) {
-            let currentPitch = null;
-            try {
-              currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : null;
-            } catch (err) {
-              currentPitch = null;
-            }
-            const options = { center, zoom: targetZoom, duration: 800, essential: true };
-            if (Number.isFinite(currentPitch)) {
-              options.pitch = currentPitch;
-            }
-            try {
-              map.easeTo(options);
-            } catch (err) {}
-          }
-        }
-        awaitGeolocateIdle();
-      };
-
       sets.forEach((sel, idx)=>{
         const geocoderOptions = {
           accessToken: mapboxgl.accessToken,
@@ -18809,43 +18701,137 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
-        // Create real Mapbox GeolocateControl for official animation
-        const geolocate = new mapboxgl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true },
-          trackUserLocation: true,
-          showUserHeading: true,
-          fitBoundsOptions: { maxZoom: cityZoomLevel }
-        });
+        const geolocateToken = `geolocate:${idx}`;
+        let geolocateButton = null;
+        let geolocateFallbackTimeout = null;
 
-        // Handle geolocate events
-        geolocate.on('geolocate', handleGeolocateEvent);
+        const getMapLoading = () => (typeof mapLoading !== 'undefined' ? mapLoading : null);
+
+        const clearGeolocateLoading = () => {
+          if(geolocateFallbackTimeout){
+            clearTimeout(geolocateFallbackTimeout);
+            geolocateFallbackTimeout = null;
+          }
+          const loader = getMapLoading();
+          if(loader){
+            loader.removeMotion(geolocateToken);
+          }
+        };
+
+        const ensureGeolocateLoading = () => {
+          const loader = getMapLoading();
+          if(!loader) return;
+          loader.addMotion(geolocateToken);
+          if(geolocateFallbackTimeout){
+            clearTimeout(geolocateFallbackTimeout);
+          }
+          geolocateFallbackTimeout = setTimeout(() => {
+            geolocateFallbackTimeout = null;
+            const loader = getMapLoading();
+            if(loader){
+              loader.removeMotion(geolocateToken);
+            }
+          }, 15000);
+        };
+
+        const awaitGeolocateIdle = () => {
+          const loader = getMapLoading();
+          if(!loader){
+            clearGeolocateLoading();
+            return;
+          }
+          const finalize = () => {
+            clearGeolocateLoading();
+          };
+          let bound = false;
+          if(map && typeof map.once === 'function'){
+            try{
+              map.once('idle', finalize);
+              bound = true;
+            }catch(err){
+              finalize();
+              return;
+            }
+          }
+          if(!bound){
+            finalize();
+          } else {
+            if(geolocateFallbackTimeout){
+              clearTimeout(geolocateFallbackTimeout);
+            }
+            geolocateFallbackTimeout = setTimeout(() => {
+              finalize();
+            }, 8000);
+          }
+        };
+
+        const geolocate = new mapboxgl.GeolocateControl({
+          positionOptions:{ enableHighAccuracy:true },
+          trackUserLocation:false,
+          fitBoundsOptions:{ maxZoom: cityZoomLevel }
+        });
+        geolocate.on('geolocate', (event)=>{
+          ensureGeolocateLoading();
+          spinEnabled = false; stopSpin();
+          closeWelcomeModalIfOpen();
+          if(mode!=='map') setModeFromUser('map');
+          if(event && event.coords){
+            setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
+          }
+          if(map && typeof map.easeTo === 'function' && event && event.coords){
+            let targetZoom = cityZoomLevel;
+            if(typeof map.getMaxZoom === 'function'){
+              try{
+                const maxZoom = map.getMaxZoom();
+                if(typeof maxZoom === 'number' && maxZoom < targetZoom){
+                  targetZoom = maxZoom;
+                }
+              }catch(err){}
+            }
+            const currentZoom = (typeof map.getZoom === 'function') ? map.getZoom() : null;
+            const needsZoomAdjust = !Number.isFinite(currentZoom) || Math.abs(currentZoom - targetZoom) > 0.05;
+            const center = [event.coords.longitude, event.coords.latitude];
+            if(needsZoomAdjust){
+              let currentPitch = null;
+              try{
+                currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : null;
+              }catch(err){
+                currentPitch = null;
+              }
+              const options = { center, zoom: targetZoom, duration: 800, essential: true };
+              if(Number.isFinite(currentPitch)){
+                options.pitch = currentPitch;
+              }
+              try{
+                map.easeTo(options);
+              }catch(err){}
+            }
+          }
+          awaitGeolocateIdle();
+        });
         geolocate.on('error', () => {
           clearGeolocateLoading();
         });
-
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
-        if (geoHolder) {
+        if(geoHolder){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
-
-          // Track this control
-          allGeolocateControls.push(geolocate);
-
-          // Add click handler to trigger all controls for sync
-          const button = controlEl.querySelector('button');
-          if (button) {
-            button.addEventListener('click', () => {
-              ensureGeolocateLoading();
-              // Trigger all other geolocate controls to sync their state
-              allGeolocateControls.forEach(ctrl => {
-                if (ctrl !== geolocate && typeof ctrl.trigger === 'function') {
-                  try { ctrl.trigger(); } catch(e) {}
+          if(controlEl){
+            geolocateButton = controlEl.querySelector('button');
+            if(geolocateButton){
+              const handlePress = (evt) => {
+                if(evt && evt.type === 'keydown'){
+                  const key = evt.key || evt.code;
+                  if(!key) return;
+                  if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
                 }
-              });
-            }, { capture: true });
+                ensureGeolocateLoading();
+              };
+              geolocateButton.addEventListener('click', handlePress, { passive: true });
+              geolocateButton.addEventListener('keydown', handlePress);
+            }
           }
         }
-
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
