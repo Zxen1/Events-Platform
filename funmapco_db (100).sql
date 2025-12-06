@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 04:12 AM
+-- Generation Time: Dec 07, 2025 at 04:41 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -229,7 +229,8 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (33, 'msg_category_admin_icon', 'assets/system-images/admin-messages.svg', 'string', 'Path to admin messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
 (34, 'msg_category_email_icon', 'assets/system-images/email-messages.svg', 'string', 'Path to email messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
 (35, 'marker_cluster_icon', 'assets/system-images/red-balloon-40.png', 'string', 'Path to marker cluster/balloon icon', '2025-11-27 21:40:22', '2025-11-29 06:55:06'),
-(1657, 'system_images_folder', 'assets/system-images', 'string', NULL, '2025-11-27 21:47:00', '2025-11-27 21:47:00');
+(1657, 'system_images_folder', 'assets/system-images', 'string', NULL, '2025-11-27 21:47:00', '2025-11-27 21:47:00'),
+(4592, 'msg_category_fieldset-tooltips_icon', '/assets/system-images/fieldset-tooltips.svg', 'string', NULL, '2025-12-06 17:40:32', '2025-12-06 17:40:32');
 
 -- --------------------------------------------------------
 
@@ -1135,7 +1136,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4592;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4593;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
