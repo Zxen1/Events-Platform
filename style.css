@@ -556,7 +556,9 @@ html,body{
 
 input,
 textarea,
+select,
 .wysiwyg{
+  font: inherit;
   caret-color: auto;
   -webkit-user-select: text;
   user-select: text;
@@ -693,6 +695,17 @@ textarea::placeholder{
 }
 #filterPanel #daterange-textbox::placeholder{
   color: var(--filter-placeholder-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Ensure all Mapbox geocoder inputs inherit font */
+.mapboxgl-ctrl-geocoder input,
+.mapboxgl-ctrl-geocoder--input{
+  font: inherit;
+}
+.mapboxgl-ctrl-geocoder input::placeholder,
+.mapboxgl-ctrl-geocoder--input::placeholder{
   font-family: inherit;
   font-size: inherit;
 }
@@ -4706,6 +4719,8 @@ body.hide-ads .ad-board{
   background:rgba(0,0,0,0.2);
   border:none;
   border-radius:0;
+  text-align:left;
+  justify-content:flex-start;
 }
 #tab-forms .form-container .form-field--dropdown .options-menu .menu-option:disabled,
 #tab-forms .form-container .form-field--dropdown .options-menu .menu-option.field-type-disabled,
@@ -5196,7 +5211,8 @@ body.filters-active #filterBtn{
 .options-menu{ position:absolute; bottom:calc(100% + 4px); left:0; right:0; width:100%; min-width:100%; max-width:100%; box-sizing:border-box; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index: var(--layer-menu); }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
-.options-menu .menu-option{ text-align:left; justify-content:flex-start; }
+.options-menu .menu-option,
+.options-menu button.menu-option{ text-align:left; justify-content:flex-start; }
 
 .card,
 .recents-card,
@@ -5556,6 +5572,7 @@ body.filters-active #filterBtn{
   padding-left:12px;
   padding-right:12px;
   line-height:var(--geocoder-h);
+  font:inherit;
 }
 
 .map-control-row .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
@@ -5634,6 +5651,7 @@ body.filters-active #filterBtn{
   padding-left:12px;
   padding-right:12px;
   line-height:var(--control-h);
+  font:inherit;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder,
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder *,
@@ -8597,7 +8615,7 @@ html, body { cursor: auto !important; }
               padding:0 12px;
               color:var(--input-text);
               background:transparent;
-              font-size:inherit;
+              font:inherit;
             }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading,
