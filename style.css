@@ -8646,7 +8646,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .session-times{
               display:flex;
               flex-direction:column;
-              gap:10px;
+              gap:12px;
             }
             #tab-forms .session-time-row,
             #memberPanel .member-create-fields .session-time-row{
@@ -8659,7 +8659,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .seating_area-list{
               display:flex;
               flex-direction:column;
-              gap:10px;
+              gap:12px;
               width:100%;
             }
             #tab-forms .session-pricing-card,
@@ -8673,7 +8673,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .pricing_tier-list{
               display:flex;
               flex-direction:column;
-              gap:8px;
+              gap:12px;
               width:100%;
             }
             #tab-forms .tier-price-row,
@@ -8745,9 +8745,15 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .seating_area-label,
             #memberPanel .member-create-fields .pricing_tier-label{
               display:block;
-              margin-bottom:4px;
+              margin-bottom:0;
               font-size:12px;
               font-weight:600;
+            }
+            #tab-forms .session-pricing-card,
+            #tab-forms .tier-row,
+            #memberPanel .member-create-fields .session-pricing-card,
+            #memberPanel .member-create-fields .tier-row{
+              row-gap:4px;
             }
             #tab-forms .session-pricing-card .seating_area-label,
             #tab-forms .tier-row .pricing_tier-label,
