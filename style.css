@@ -5504,29 +5504,16 @@ body.filters-active #filterBtn{
   background-color:#ffffff;
 }
 
-/* Geolocate button loading animation */
+/* Geolocate button loading animation - Mapbox adds waiting class to button */
 @keyframes geolocate-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* Custom geolocate icon - only hide background when custom icon is inserted */
-.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon.has-custom-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: none !important;
-}
-
-.mapboxgl-ctrl-geolocate .geolocate-icon {
-  width: 20px;
-  height: 20px;
-  color: #333;
-}
-
-/* Animate the icon when waiting */
-.geolocate-waiting .geolocate-icon {
-  animation: geolocate-spin 1s linear infinite;
+/* Mapbox's CSS has wrong selector (.mapboxgl-ctrl-icon.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting)
+   but the classes are on different elements. This fixes it to target the icon inside the waiting button. */
+button.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-waiting .mapboxgl-ctrl-icon {
+  animation: geolocate-spin 1s linear infinite !important;
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
