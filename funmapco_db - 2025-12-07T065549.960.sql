@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 04:41 AM
+-- Generation Time: Dec 07, 2025 at 06:55 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -312,10 +312,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 03:47:23'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 03:47:23'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 03:47:23'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 03:47:23');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 06:44:15'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 06:44:15'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 06:44:15'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 06:44:15');
 
 -- --------------------------------------------------------
 
@@ -412,9 +412,9 @@ CREATE TABLE `fieldsets` (
   `id` int(11) NOT NULL,
   `fieldset_name` varchar(255) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
-  `placeholder` varchar(512) DEFAULT NULL,
+  `fieldset_placeholder` varchar(512) DEFAULT NULL,
   `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
-  `formbuilder_editable` tinyint(1) NOT NULL DEFAULT 0,
+  `fieldset_editable` tinyint(1) NOT NULL DEFAULT 0,
   `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `sort_order` int(10) UNSIGNED DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -425,13 +425,13 @@ CREATE TABLE `fieldsets` (
 -- Dumping data for table `fieldsets`
 --
 
-INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `fieldset_tooltip`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
+INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_placeholder`, `fieldset_tooltip`, `fieldset_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
 (1, 'Title', 'title', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, '[\"title\"]', 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (2, 'Description', 'description', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, '[\"description\"]', 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(3, 'Text Box (editable)', 'text-box', 'text', 'Enter any additional text information for this field.', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(4, 'Text Area (editable)', 'text-area', 'The quick brown fox jumped over the lazy dogs.', 'Enter longer text content. Use this for detailed descriptions, instructions, or additional information.', 1, '[\"text-area\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(5, 'Dropdown (editable)', 'dropdown', '1A,2A,3A', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, '[\"dropdown\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(6, 'Radio Toggle (editable)', 'radio', 'A,B,C', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, '[\"radio\"]', 100, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(3, 'Text Box (editable)', 'text-box', 'eg. Diamonds and Pearls', 'Write stuff here.', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
+(4, 'Text Area (editable)', 'text-area', 'eg. Sing along!', 'Write more stuff here.', 1, '[\"text-area\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
+(5, 'Dropdown (editable)', 'dropdown', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, '[\"dropdown\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:55:39'),
+(6, 'Radio Toggle (editable)', 'radio', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, '[\"radio\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:55:36'),
 (7, 'Email', 'email', 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, '[\"email\"]', 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (8, 'Phone', 'phone', '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, '[\"phone\"]', 8, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (9, 'Location', 'location', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'Search for and select the location of your event or listing. The map will help you find the exact spot.', 0, '[\"address-line\", \"latitude\", \"longitude\"]', 9, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
@@ -867,7 +867,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `editable_fieldsets`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 16:06:47'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Venue Ticketing, Text Box (editable)', '1,1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-06 19:43:59'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 12:44:10'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
@@ -1136,7 +1136,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4593;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4817;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
