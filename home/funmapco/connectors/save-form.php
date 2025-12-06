@@ -91,7 +91,7 @@ try {
     $subcategoriesByKey = fetchSubcategoriesByCompositeKey($pdo, $subcategoryColumns);
     $subcategoriesById = fetchSubcategoriesById($pdo, $subcategoryColumns);
     $fieldCatalog = fetchFieldCatalog($pdo);
-    $fieldTypeDefinitions = fetchFieldTypeDefinitions($pdo);
+    $fieldsetDefinitions = fetchFieldsetDefinitions($pdo);
 
     $versionCurrencies = [];
     if (isset($decoded['currencies']) && is_array($decoded['currencies'])) {
@@ -403,18 +403,18 @@ try {
             $subName = '';
             $subKey = '';
             $subId = null;
-            $fieldTypeIds = [];
+            $fieldsetIds = [];
 
             if (is_array($subEntry)) {
                 $subName = sanitizeString($subEntry['name'] ?? '');
                 $subKey = sanitizeKey($subEntry['key'] ?? '');
                 $subId = filterPositiveInt($subEntry['id'] ?? null);
-                if (isset($subEntry['fieldTypeIds']) && is_array($subEntry['fieldTypeIds'])) {
-                    foreach ($subEntry['fieldTypeIds'] as $typeId) {
+                if (isset($subEntry['fieldsetIds']) && is_array($subEntry['fieldsetIds'])) {
+                    foreach ($subEntry['fieldsetIds'] as $typeId) {
                         if (is_int($typeId)) {
-                            $fieldTypeIds[] = $typeId;
+                            $fieldsetIds[] = $typeId;
                         } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
-                            $fieldTypeIds[] = (int) $typeId;
+                            $fieldsetIds[] = (int) $typeId;
                         }
                     }
                 }
@@ -603,20 +603,20 @@ try {
                     if (!is_array($fieldPayload)) {
                         continue;
                     }
-                    $sanitizedFields[] = sanitizeField($fieldPayload, $fieldTypeDefinitions);
+                    $sanitizedFields[] = sanitizeField($fieldPayload, $fieldsetDefinitions);
                 }
             }
             // Fields come from field types, not from metadata_json
 
             // Extract field types, order, and required from fieldsPayload
-            $hasFieldTypesForThisSub = false;
-            $fieldTypesAreInPayload = false;
-            $fieldTypeIdsFromPayload = [];
-            $requiredFieldTypeIdsFromPayload = [];
+            $hasFieldsetsForThisSub = false;
+            $fieldsetsAreInPayload = false;
+            $fieldsetIdsFromPayload = [];
+            $requiredFieldsetIdsFromPayload = [];
             
             // If fields array exists in payload (even if empty), field types should be updated
             if ($fieldsAreInPayload) {
-                $fieldTypesAreInPayload = true;
+                $fieldsetsAreInPayload = true;
             }
             
             if ($hasFieldsForThisSub && !empty($fieldsPayload)) {
@@ -624,21 +624,20 @@ try {
                 foreach ($fieldsPayload as $fieldIndex => $fieldData) {
                     if (!is_array($fieldData)) continue;
                     
-                    // Get fieldset_id from the field's key, fieldsetKey, or fieldTypeKey
-                    $fieldsetKey = $fieldData['fieldsetKey'] ?? $fieldData['fieldTypeKey'] ?? $fieldData['key'] ?? null;
-                    $fieldTypeKey = $fieldData['fieldTypeKey'] ?? $fieldData['fieldsetKey'] ?? $fieldData['key'] ?? null;
-                    $fieldType = $fieldData['input_type'] ?? $fieldData['type'] ?? 'null';
-                    error_log("DEBUG: Field $fieldIndex - key=$fieldTypeKey, type=" . $fieldType . ", name=" . ($fieldData['name'] ?? 'null') . ", required=" . json_encode($fieldData['required'] ?? null));
+                    // Get fieldset_id from the field's key or fieldsetKey
+                    $fieldsetKey = $fieldData['fieldsetKey'] ?? $fieldData['key'] ?? null;
+                    $inputType = $fieldData['input_type'] ?? $fieldData['type'] ?? 'null';
+                    error_log("DEBUG: Field $fieldIndex - key=$fieldsetKey, type=" . $inputType . ", name=" . ($fieldData['name'] ?? 'null') . ", required=" . json_encode($fieldData['required'] ?? null));
                     
-                    if (($fieldsetKey || $fieldTypeKey) && is_string($fieldsetKey ?: $fieldTypeKey)) {
+                    if ($fieldsetKey && is_string($fieldsetKey)) {
                         // Look up fieldset_id by key
-                        $searchKey = $fieldsetKey ?: $fieldTypeKey;
-                        foreach ($fieldTypeDefinitions as $ftId => $ftDef) {
+                        $searchKey = $fieldsetKey;
+                        foreach ($fieldsetDefinitions as $ftId => $ftDef) {
                             if (isset($ftDef['key']) && $ftDef['key'] === $searchKey) {
-                                $fieldTypeIdsFromPayload[] = $ftId;
+                                $fieldsetIdsFromPayload[] = $ftId;
                                 // Check if required
                                 if (!empty($fieldData['required'])) {
-                                    $requiredFieldTypeIdsFromPayload[] = $ftId;
+                                    $requiredFieldsetIdsFromPayload[] = $ftId;
                                 }
                                 break;
                             }
@@ -646,39 +645,39 @@ try {
                     }
                 }
                 
-                if (!empty($fieldTypeIdsFromPayload)) {
-                    $fieldTypeIds = $fieldTypeIdsFromPayload;
-                    $requiredFieldTypeIds = $requiredFieldTypeIdsFromPayload;
-                    $hasFieldTypesForThisSub = true;
+                if (!empty($fieldsetIdsFromPayload)) {
+                    $fieldsetIds = $fieldsetIdsFromPayload;
+                    $requiredFieldsetIds = $requiredFieldsetIdsFromPayload;
+                    $hasFieldsetsForThisSub = true;
                 }
             }
             
             // Only check subFieldTypesMap if fields are NOT in payload
             // If fields are in payload (even empty), we already have the field types from there
-            if (!$hasFieldTypesForThisSub && !$fieldsAreInPayload) {
-                $fieldTypeSource = null;
+            if (!$hasFieldsetsForThisSub && !$fieldsAreInPayload) {
+                $fieldsetSource = null;
                 if ($subKey !== '' && isset($subFieldTypesMap[$subKey])) {
-                    $fieldTypeSource = $subFieldTypesMap[$subKey];
-                    $hasFieldTypesForThisSub = true;
-                    $fieldTypesAreInPayload = true;
+                    $fieldsetSource = $subFieldTypesMap[$subKey];
+                    $hasFieldsetsForThisSub = true;
+                    $fieldsetsAreInPayload = true;
                 } elseif ($subName !== '' && isset($subFieldTypesMap[$subName])) {
-                    $fieldTypeSource = $subFieldTypesMap[$subName];
-                    $hasFieldTypesForThisSub = true;
-                    $fieldTypesAreInPayload = true;
+                    $fieldsetSource = $subFieldTypesMap[$subName];
+                    $hasFieldsetsForThisSub = true;
+                    $fieldsetsAreInPayload = true;
                 }
-                if (is_array($fieldTypeSource)) {
-                    foreach ($fieldTypeSource as $typeId) {
+                if (is_array($fieldsetSource)) {
+                    foreach ($fieldsetSource as $typeId) {
                         if (is_int($typeId)) {
-                            $fieldTypeIds[] = $typeId;
+                            $fieldsetIds[] = $typeId;
                         } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
-                            $fieldTypeIds[] = (int) $typeId;
+                            $fieldsetIds[] = (int) $typeId;
                         }
                     }
                 }
             }
             
             // If still no field types AND fields are NOT in payload, preserve existing from database columns
-            if (!$hasFieldTypesForThisSub && !$fieldsAreInPayload && isset($subcategoryRow['fieldset_ids']) && is_string($subcategoryRow['fieldset_ids']) && $subcategoryRow['fieldset_ids'] !== '') {
+            if (!$hasFieldsetsForThisSub && !$fieldsAreInPayload && isset($subcategoryRow['fieldset_ids']) && is_string($subcategoryRow['fieldset_ids']) && $subcategoryRow['fieldset_ids'] !== '') {
                 $trimmed = trim($subcategoryRow['fieldset_ids']);
                 if ($trimmed !== '') {
                     $parts = preg_split('/\s*,\s*/', $trimmed);
@@ -686,67 +685,67 @@ try {
                         foreach ($parts as $part) {
                             $id = filterPositiveInt($part);
                             if ($id !== null) {
-                                $fieldTypeIds[] = $id;
+                                $fieldsetIds[] = $id;
                             }
                         }
                     }
                     // Also mark as having field types so junction table gets updated
-                    if (!empty($fieldTypeIds)) {
-                        $hasFieldTypesForThisSub = true;
+                    if (!empty($fieldsetIds)) {
+                        $hasFieldsetsForThisSub = true;
                     }
                 }
-            } elseif (!$hasFieldTypesForThisSub && !$fieldsAreInPayload && isset($subcategoryRow['field_type_id']) && is_string($subcategoryRow['field_type_id']) && $subcategoryRow['field_type_id'] !== '') {
-                $trimmed = trim($subcategoryRow['field_type_id']);
+            } elseif (!$hasFieldsetsForThisSub && !$fieldsAreInPayload && isset($subcategoryRow['fieldset_ids']) && is_string($subcategoryRow['fieldset_ids']) && $subcategoryRow['fieldset_ids'] !== '') {
+                $trimmed = trim($subcategoryRow['fieldset_ids']);
                 if ($trimmed !== '') {
                     $parts = preg_split('/\s*,\s*/', $trimmed);
                     if (is_array($parts)) {
                         foreach ($parts as $part) {
                             $id = filterPositiveInt($part);
                             if ($id !== null) {
-                                $fieldTypeIds[] = $id;
+                                $fieldsetIds[] = $id;
                             }
                         }
                     }
                     // Also mark as having field types so junction table gets updated
-                    if (!empty($fieldTypeIds)) {
-                        $hasFieldTypesForThisSub = true;
+                    if (!empty($fieldsetIds)) {
+                        $hasFieldsetsForThisSub = true;
                     }
                 }
             }
 
-            $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
+            $fieldsetIds = array_values(array_unique(array_map('intval', $fieldsetIds)));
 
             // Build editable_fieldsets JSON for editable fields ONLY (text, text-area, dropdown, radio)
             // This is completely separate from checkout options
-            $editableFieldTypes = [];
+            $editableFieldsets = [];
             
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
-                // Create a map of fieldTypeKey to field data for quick lookup
-                $fieldsByTypeKey = [];
+                // Create a map of fieldsetKey to field data for quick lookup
+                $fieldsByFieldsetKey = [];
                 foreach ($sanitizedFields as $field) {
-                    $key = $field['fieldTypeKey'] ?? $field['key'] ?? null;
+                    $key = $field['fieldsetKey'] ?? $field['key'] ?? null;
                     if ($key) {
-                        $fieldsByTypeKey[$key] = $field;
+                        $fieldsByFieldsetKey[$key] = $field;
                     }
                 }
                 
-                // Iterate through fieldTypeIds (CSV order) and match with fields
-                foreach ($fieldTypeIds as $csvIndex => $fieldTypeId) {
-                    $fieldTypeDef = isset($fieldTypeDefinitions[$fieldTypeId]) ? $fieldTypeDefinitions[$fieldTypeId] : null;
-                    if (!$fieldTypeDef) continue;
+                // Iterate through fieldsetIds (CSV order) and match with fields
+                foreach ($fieldsetIds as $csvIndex => $fieldsetId) {
+                    $fieldsetDef = isset($fieldsetDefinitions[$fieldsetId]) ? $fieldsetDefinitions[$fieldsetId] : null;
+                    if (!$fieldsetDef) continue;
                     
-                    $fieldTypeKey = $fieldTypeDef['key'] ?? null;
-                    if (!$fieldTypeKey) continue;
+                    $fieldsetKey = $fieldsetDef['key'] ?? null;
+                    if (!$fieldsetKey) continue;
                     
                     // Only process field types marked as editable in the database
-                    $isEditable = isset($fieldTypeDef['formbuilder_editable']) && $fieldTypeDef['formbuilder_editable'] === true;
+                    $isEditable = isset($fieldsetDef['formbuilder_editable']) && $fieldsetDef['formbuilder_editable'] === true;
                     if (!$isEditable) continue;
                     
-                    $fieldData = isset($fieldsByTypeKey[$fieldTypeKey]) ? $fieldsByTypeKey[$fieldTypeKey] : null;
+                    $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
                     if (!$fieldData) continue;
                     
                     $editData = [];
-                    $defaultName = $fieldTypeDef['name'] ?? '';
+                    $defaultName = $fieldsetDef['name'] ?? '';
                     $customName = $fieldData['name'] ?? '';
                     // Only save name if it differs from default
                     if ($customName !== '' && $customName !== $defaultName) {
@@ -756,7 +755,7 @@ try {
                     // For dropdown/radio types, save options ONLY if they differ from default placeholder
                     if (isset($fieldData['options'])) {
                         $customOptions = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
-                        $defaultPlaceholder = $fieldTypeDef['placeholder'] ?? '';
+                        $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
                         $defaultOptions = [];
                         if ($defaultPlaceholder !== '') {
                             $defaultOptions = array_values(array_filter(
@@ -771,7 +770,7 @@ try {
                     }
                     
                     if (!empty($editData)) {
-                        $editableFieldTypes[(string)$csvIndex] = $editData;
+                        $editableFieldsets[(string)$csvIndex] = $editData;
                     }
                 }
             }
@@ -780,7 +779,7 @@ try {
             $checkoutOptionsIds = [];
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
                 foreach ($sanitizedFields as $field) {
-                    $fieldKey = $field['fieldTypeKey'] ?? $field['key'] ?? null;
+                    $fieldKey = $field['fieldsetKey'] ?? $field['key'] ?? null;
                     if ($fieldKey === 'checkout' && isset($field['checkoutOptions']) && is_array($field['checkoutOptions'])) {
                         $validIds = [];
                         foreach ($field['checkoutOptions'] as $opt) {
@@ -797,25 +796,25 @@ try {
                 }
             }
             
-            $fieldTypeIdCsv = $fieldTypeIds ? implode(',', array_unique($fieldTypeIds)) : null;
-            $fieldTypeNameList = [];
-            if ($fieldTypeIds) {
-                foreach ($fieldTypeIds as $typeId) {
-                    if (isset($fieldTypeDefinitions[$typeId]['name']) && $fieldTypeDefinitions[$typeId]['name'] !== '') {
-                        $fieldTypeNameList[] = $fieldTypeDefinitions[$typeId]['name'];
+            $fieldsetIdCsv = $fieldsetIds ? implode(',', array_unique($fieldsetIds)) : null;
+            $fieldsetNameList = [];
+            if ($fieldsetIds) {
+                foreach ($fieldsetIds as $typeId) {
+                    if (isset($fieldsetDefinitions[$typeId]['name']) && $fieldsetDefinitions[$typeId]['name'] !== '') {
+                        $fieldsetNameList[] = $fieldsetDefinitions[$typeId]['name'];
                     }
                 }
             }
-            $fieldTypeNameList = array_values(array_unique($fieldTypeNameList));
-            $fieldTypeNameCsv = $fieldTypeNameList ? implode(', ', $fieldTypeNameList) : null;
+            $fieldsetNameList = array_values(array_unique($fieldsetNameList));
+            $fieldsetNameCsv = $fieldsetNameList ? implode(', ', $fieldsetNameList) : null;
 
             $fieldNames = [];
             $fieldIds = [];
             if ($hasFieldsForThisSub) {
                 foreach ($sanitizedFields as $field) {
-                    // Use field type (fieldset_key/field_type_key) as fallback for field name, not input_type
-                    $fieldTypeKey = $field['fieldTypeKey'] ?? $field['key'] ?? $field['input_type'] ?? $field['type'] ?? '';
-                    $fieldNames[] = $field['name'] !== '' ? $field['name'] : $fieldTypeKey;
+                    // Use field type (fieldset_key/fieldset_key) as fallback for field name, not input_type
+                    $fieldsetKey = $field['fieldsetKey'] ?? $field['key'] ?? $field['input_type'] ?? $field['type'] ?? '';
+                    $fieldNames[] = $field['name'] !== '' ? $field['name'] : $fieldsetKey;
                     $matchedId = matchFieldId($fieldCatalog, $field);
                     if ($matchedId !== null) {
                         $fieldIds[] = $matchedId;
@@ -859,10 +858,10 @@ try {
                 $metaIcon = sanitizeIcon($iconSource);
             }
 
-            // Build required CSV in boolean format (1,0,1,0,0) aligned with field_type_id order
+            // Build required CSV in boolean format (1,0,1,0,0) aligned with fieldset_ids order
             $requiredBooleans = [];
-            foreach ($fieldTypeIds as $fieldTypeId) {
-                $isRequired = in_array($fieldTypeId, $requiredFieldTypeIds, true);
+            foreach ($fieldsetIds as $fieldsetId) {
+                $isRequired = in_array($fieldsetId, $requiredFieldsetIds, true);
                 $requiredBooleans[] = $isRequired ? '1' : '0';
             }
             $requiredCsv = !empty($requiredBooleans) ? implode(',', $requiredBooleans) : null;
@@ -907,25 +906,25 @@ try {
                 error_log("DEBUG: NOT updating fields for sub '$subName' - fieldsAreInPayload is false");
             }
             // Always update fieldset_ids and fieldset_name when field types are provided in payload (even if empty)
-            if ($fieldTypesAreInPayload) {
-                error_log("DEBUG: Updating field types for '$subName' - fieldTypeIdCsv: '$fieldTypeIdCsv', fieldTypeNameCsv: '$fieldTypeNameCsv'");
+            if ($fieldsetsAreInPayload) {
+                error_log("DEBUG: Updating field types for '$subName' - fieldsetIdCsv: '$fieldsetIdCsv', fieldsetNameCsv: '$fieldsetNameCsv'");
                 if (in_array('fieldset_ids', $subcategoryColumns, true)) {
                     $updateParts[] = 'fieldset_ids = :fieldset_ids';
-                    $params[':fieldset_ids'] = $fieldTypeIdCsv !== null && $fieldTypeIdCsv !== '' ? $fieldTypeIdCsv : null;
+                    $params[':fieldset_ids'] = $fieldsetIdCsv !== null && $fieldsetIdCsv !== '' ? $fieldsetIdCsv : null;
                     error_log("DEBUG: Setting fieldset_ids to: " . ($params[':fieldset_ids'] === null ? 'NULL' : $params[':fieldset_ids']));
-                } elseif (in_array('field_type_id', $subcategoryColumns, true)) {
-                    $updateParts[] = 'field_type_id = :field_type_id';
-                    $params[':field_type_id'] = $fieldTypeIdCsv !== null && $fieldTypeIdCsv !== '' ? $fieldTypeIdCsv : null;
-                    error_log("DEBUG: Setting field_type_id to: " . ($params[':field_type_id'] === null ? 'NULL' : $params[':field_type_id']));
+                } elseif (in_array('fieldset_ids', $subcategoryColumns, true)) {
+                    $updateParts[] = 'fieldset_ids = :fieldset_ids';
+                    $params[':fieldset_ids'] = $fieldsetIdCsv !== null && $fieldsetIdCsv !== '' ? $fieldsetIdCsv : null;
+                    error_log("DEBUG: Setting fieldset_ids to: " . ($params[':fieldset_ids'] === null ? 'NULL' : $params[':fieldset_ids']));
                 }
                 if (in_array('fieldset_name', $subcategoryColumns, true)) {
                     $updateParts[] = 'fieldset_name = :fieldset_name';
-                    $params[':fieldset_name'] = $fieldTypeNameCsv !== null && $fieldTypeNameCsv !== '' ? $fieldTypeNameCsv : null;
+                    $params[':fieldset_name'] = $fieldsetNameCsv !== null && $fieldsetNameCsv !== '' ? $fieldsetNameCsv : null;
                     error_log("DEBUG: Setting fieldset_name to: " . ($params[':fieldset_name'] === null ? 'NULL' : $params[':fieldset_name']));
-                } elseif (in_array('field_type_name', $subcategoryColumns, true)) {
-                    $updateParts[] = 'field_type_name = :field_type_name';
-                    $params[':field_type_name'] = $fieldTypeNameCsv !== null && $fieldTypeNameCsv !== '' ? $fieldTypeNameCsv : null;
-                    error_log("DEBUG: Setting field_type_name to: " . ($params[':field_type_name'] === null ? 'NULL' : $params[':field_type_name']));
+                } elseif (in_array('fieldset_name', $subcategoryColumns, true)) {
+                    $updateParts[] = 'fieldset_name = :fieldset_name';
+                    $params[':fieldset_name'] = $fieldsetNameCsv !== null && $fieldsetNameCsv !== '' ? $fieldsetNameCsv : null;
+                    error_log("DEBUG: Setting fieldset_name to: " . ($params[':fieldset_name'] === null ? 'NULL' : $params[':fieldset_name']));
                 }
                 if (in_array('required', $subcategoryColumns, true)) {
                     $updateParts[] = 'required = :required';
@@ -933,13 +932,13 @@ try {
                 }
                 // Save editable_fieldsets JSON if fields were provided
                 if ($hasFieldsForThisSub && in_array('editable_fieldsets', $subcategoryColumns, true)) {
-                    $editableFieldsetsJson = !empty($editableFieldTypes) ? json_encode($editableFieldTypes, JSON_UNESCAPED_UNICODE) : null;
+                    $editableFieldsetsJson = !empty($editableFieldsets) ? json_encode($editableFieldsets, JSON_UNESCAPED_UNICODE) : null;
                     $updateParts[] = 'editable_fieldsets = :editable_fieldsets';
                     $params[':editable_fieldsets'] = $editableFieldsetsJson;
-                } elseif ($hasFieldsForThisSub && in_array('editable_field_types', $subcategoryColumns, true)) {
-                    $editableFieldTypesJson = !empty($editableFieldTypes) ? json_encode($editableFieldTypes, JSON_UNESCAPED_UNICODE) : null;
-                    $updateParts[] = 'editable_field_types = :editable_field_types';
-                    $params[':editable_field_types'] = $editableFieldTypesJson;
+                } elseif ($hasFieldsForThisSub && in_array('editable_fieldsets', $subcategoryColumns, true)) {
+                    $editableFieldsetsJson = !empty($editableFieldsets) ? json_encode($editableFieldsets, JSON_UNESCAPED_UNICODE) : null;
+                    $updateParts[] = 'editable_fieldsets = :editable_fieldsets';
+                    $params[':editable_fieldsets'] = $editableFieldsetsJson;
                 }
                 // Save checkout_options_id as CSV of checkout option IDs
                 if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {
@@ -948,7 +947,7 @@ try {
                     $params[':checkout_options_id'] = $checkoutOptionsIdCsv;
                 }
             } else {
-                error_log("DEBUG: NOT updating field types for '$subName' - fieldTypesAreInPayload is false");
+                error_log("DEBUG: NOT updating field types for '$subName' - fieldsetsAreInPayload is false");
             }
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
@@ -994,11 +993,11 @@ try {
             $subcategoriesById[$subId]['subcategory_key'] = $subKey;
             $subcategoriesById[$subId]['category_name'] = $categoryName;
             $subcategoriesById[$subId]['category_key'] = $categoryKey;
-            $subcategoriesById[$subId]['fieldset_ids'] = $fieldTypeIdCsv;
-            $subcategoriesById[$subId]['fieldset_name'] = $fieldTypeNameCsv;
+            $subcategoriesById[$subId]['fieldset_ids'] = $fieldsetIdCsv;
+            $subcategoriesById[$subId]['fieldset_name'] = $fieldsetNameCsv;
             // Keep old names for backward compatibility
-            $subcategoriesById[$subId]['field_type_id'] = $fieldTypeIdCsv;
-            $subcategoriesById[$subId]['field_type_name'] = $fieldTypeNameCsv;
+            $subcategoriesById[$subId]['fieldset_ids'] = $fieldsetIdCsv;
+            $subcategoriesById[$subId]['fieldset_name'] = $fieldsetNameCsv;
 
             $compositeCandidates = [];
             if ($categoryKey !== '' && $subKey !== '') {
@@ -1020,10 +1019,10 @@ try {
                     'category_name' => $categoryName,
                     'subcategory_key' => $subKey,
                     'category_key' => $categoryKey,
-                    'fieldset_ids' => $fieldTypeIdCsv,
-                    'fieldset_name' => $fieldTypeNameCsv,
-                    'field_type_id' => $fieldTypeIdCsv,
-                    'field_type_name' => $fieldTypeNameCsv,
+                    'fieldset_ids' => $fieldsetIdCsv,
+                    'fieldset_name' => $fieldsetNameCsv,
+                    'fieldset_ids' => $fieldsetIdCsv,
+                    'fieldset_name' => $fieldsetNameCsv,
                 ];
             }
         }
@@ -1346,11 +1345,11 @@ function filterPositiveInt($value): ?int
     return null;
 }
 
-function sanitizeField(array $field, array $fieldTypeDefinitions = []): array
+function sanitizeField(array $field, array $fieldsetDefinitions = []): array
 {
     // Build allowed types from database fieldsets instead of hardcoding
     $allowedTypes = [];
-    foreach ($fieldTypeDefinitions as $ftDef) {
+    foreach ($fieldsetDefinitions as $ftDef) {
         if (isset($ftDef['key']) && is_string($ftDef['key']) && $ftDef['key'] !== '') {
             $allowedTypes[] = $ftDef['key'];
         }
@@ -1424,11 +1423,11 @@ function sanitizeField(array $field, array $fieldTypeDefinitions = []): array
         $safe['helpText'] = sanitizeString($field['helpText'], 512);
     }
     
-    // Include fieldsetKey/fieldTypeKey for matching during editable_fieldsets build
-    if (isset($field['fieldTypeKey'])) {
-        $safe['fieldTypeKey'] = sanitizeString($field['fieldTypeKey'], 128);
+    // Include fieldsetKey/fieldsetKey for matching during editable_fieldsets build
+    if (isset($field['fieldsetKey'])) {
+        $safe['fieldsetKey'] = sanitizeString($field['fieldsetKey'], 128);
     } elseif (isset($field['key'])) {
-        $safe['fieldTypeKey'] = sanitizeString($field['key'], 128);
+        $safe['fieldsetKey'] = sanitizeString($field['key'], 128);
     }
     
     // Include checkoutOptions for checkout field type (stores numeric IDs)
@@ -1755,8 +1754,8 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
     $hasCategoryKey = $columns && in_array('category_key', $columns, true);
     $hasFieldsetIds = $columns && in_array('fieldset_ids', $columns, true);
     $hasFieldsetName = $columns && in_array('fieldset_name', $columns, true);
-    $hasFieldTypeId = $columns && in_array('field_type_id', $columns, true);
-    $hasFieldTypeName = $columns && in_array('field_type_name', $columns, true);
+    $hasFieldsetIds = $columns && in_array('fieldset_ids', $columns, true);
+    $hasFieldsetName = $columns && in_array('fieldset_name', $columns, true);
 
     $selectParts = ['s.id', 's.`' . $nameColumn . '` AS name'];
     if ($hasSubKey) {
@@ -1774,11 +1773,11 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
     if ($hasFieldsetName) {
         $selectParts[] = 's.`fieldset_name`';
     }
-    if ($hasFieldTypeId) {
-        $selectParts[] = 's.`field_type_id`';
+    if ($hasFieldsetIds) {
+        $selectParts[] = 's.`fieldset_ids`';
     }
-    if ($hasFieldTypeName) {
-        $selectParts[] = 's.`field_type_name`';
+    if ($hasFieldsetName) {
+        $selectParts[] = 's.`fieldset_name`';
     }
 
     if (!$hasCategoryName || !$hasCategoryKey) {
@@ -1831,11 +1830,11 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
         if ($hasFieldsetName && isset($row['fieldset_name'])) {
             $record['fieldset_name'] = $row['fieldset_name'];
         }
-        if ($hasFieldTypeId && isset($row['field_type_id'])) {
-            $record['field_type_id'] = $row['field_type_id'];
+        if ($hasFieldsetIds && isset($row['fieldset_ids'])) {
+            $record['fieldset_ids'] = $row['fieldset_ids'];
         }
-        if ($hasFieldTypeName && isset($row['field_type_name'])) {
-            $record['field_type_name'] = $row['field_type_name'];
+        if ($hasFieldsetName && isset($row['fieldset_name'])) {
+            $record['fieldset_name'] = $row['fieldset_name'];
         }
 
         $candidates = [];
@@ -1920,7 +1919,7 @@ function fetchFieldCatalog(PDO $pdo): array
     }
 }
 
-function fetchFieldTypeDefinitions(PDO $pdo): array
+function fetchFieldsetDefinitions(PDO $pdo): array
 {
     try {
         $columns = fetchTableColumns($pdo, 'fieldsets');
@@ -1931,13 +1930,13 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
         $select = ['id'];
         if (in_array('fieldset_name', $columns, true)) {
             $select[] = 'fieldset_name';
-        } elseif (in_array('field_type_name', $columns, true)) {
-            $select[] = 'field_type_name';
+        } elseif (in_array('fieldset_name', $columns, true)) {
+            $select[] = 'fieldset_name';
         }
         if (in_array('fieldset_key', $columns, true)) {
             $select[] = 'fieldset_key';
-        } elseif (in_array('field_type_key', $columns, true)) {
-            $select[] = 'field_type_key';
+        } elseif (in_array('fieldset_key', $columns, true)) {
+            $select[] = 'fieldset_key';
         }
         $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
         if ($hasFormbuilderEditable) {
@@ -1959,8 +1958,8 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
                 continue;
             }
             $id = (int) $row['id'];
-            $name = isset($row['fieldset_name']) ? trim((string) $row['fieldset_name']) : (isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '');
-            $key = isset($row['fieldset_key']) ? sanitizeKey((string) $row['fieldset_key']) : (isset($row['field_type_key']) ? sanitizeKey((string) $row['field_type_key']) : '');
+            $name = isset($row['fieldset_name']) ? trim((string) $row['fieldset_name']) : (isset($row['fieldset_name']) ? trim((string) $row['fieldset_name']) : '');
+            $key = isset($row['fieldset_key']) ? sanitizeKey((string) $row['fieldset_key']) : (isset($row['fieldset_key']) ? sanitizeKey((string) $row['fieldset_key']) : '');
             $entry = [
                 'id' => $id,
                 'name' => $name,

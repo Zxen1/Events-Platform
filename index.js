@@ -210,13 +210,13 @@ function normalizeCategorySortOrderValue(raw) {
   return null;
 }
 
-function getBaseFieldType(fieldType){
-  if(typeof fieldType !== 'string' || !fieldType.trim()){
+function getBaseFieldset(fieldset){
+  if(typeof fieldset !== 'string' || !fieldset.trim()){
     return '';
   }
   // Extract base type from formats like "description [field=2]" or "text-area [field=15]"
-  const match = fieldType.match(/^([^\s\[]+)/);
-  return match ? match[1].trim() : fieldType.trim();
+  const match = fieldset.match(/^([^\s\[]+)/);
+  return match ? match[1].trim() : fieldset.trim();
 }
 
 function compareCategoriesForDisplay(a, b) {
@@ -3426,18 +3426,17 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       currencies: [],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
-      fieldTypes: []
+      fieldsets: []
     };
 
-    function resolveFieldTypeDisplayName(option){
+    function resolveFieldsetDisplayName(option){
       if(!option || typeof option !== 'object'){
         return '';
       }
       const candidates = [
         option.fieldset_name,
         option.fieldsetName,
-        option.field_type_name,
-        option.fieldTypeName,
+        option.fieldset_name,
         option.name,
         option.label
       ];
@@ -3452,11 +3451,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return '';
     }
 
-    function normalizeFieldTypeOptions(options){
+    function normalizeFieldsetOptions(options){
       const list = Array.isArray(options)
         ? options
-        : Array.isArray(options && options.fieldTypes)
-          ? options.fieldTypes
+        : Array.isArray(options && options.fieldsets)
+          ? options.fieldsets
           : [];
       const normalized = [];
       const seen = new Set();
@@ -3470,7 +3469,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         const trimmedLabel = typeof label === 'string' ? label.trim() : '';
-        const sourceName = resolveFieldTypeDisplayName(source);
+        const sourceName = resolveFieldsetDisplayName(source);
         const displayName = sourceName || trimmedLabel || trimmedValue;
         const option = {
           value: trimmedValue,
@@ -3479,11 +3478,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           fieldsetName: displayName,
           fieldset_name: displayName,
           fieldsetKey: trimmedValue,
-          fieldset_key: trimmedValue,
-          fieldTypeName: displayName,
-          field_type_name: displayName,
-          fieldTypeKey: trimmedValue,
-          field_type_key: trimmedValue
+          fieldset_key: trimmedValue
         };
         if(source && typeof source === 'object'){
           if(typeof source.placeholder === 'string' && source.placeholder){
@@ -3513,11 +3508,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
                 ? item.fieldset_key.trim()
                 : typeof item.fieldsetKey === 'string' && item.fieldsetKey.trim()
                   ? item.fieldsetKey.trim()
-                  : typeof item.field_type_key === 'string' && item.field_type_key.trim()
-                    ? item.field_type_key.trim()
-                    : typeof item.fieldTypeKey === 'string' && item.fieldTypeKey.trim()
-                      ? item.fieldTypeKey.trim()
-                      : typeof item.id === 'number' && Number.isFinite(item.id)
+                  : typeof item.id === 'number' && Number.isFinite(item.id)
                         ? String(item.id)
                         : typeof item.id === 'string' && item.id.trim()
                           ? item.id.trim()
@@ -3531,11 +3522,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
               ? item.fieldset_name.trim()
               : typeof item.fieldsetName === 'string' && item.fieldsetName.trim()
                 ? item.fieldsetName.trim()
-                : typeof item.field_type_name === 'string' && item.field_type_name.trim()
-                  ? item.field_type_name.trim()
-                  : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
-                    ? item.fieldTypeName.trim()
-                    : '';
+                : '';
           pushOption(value, label, item);
           return;
         }
@@ -3655,8 +3642,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedCurrencies = Array.from(new Set(rawCurrencies
         .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
         .filter(Boolean)));
-      const normalizedFieldTypes = normalizeFieldTypeOptions(
-        snapshot && (snapshot.fieldTypes || snapshot.field_types)
+      const normalizedFieldsets = normalizeFieldsetOptions(
+        snapshot && snapshot.fieldsets
       );
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
@@ -3666,7 +3653,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         currencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        fieldTypes: normalizedFieldTypes,
+        fieldsets: normalizedFieldsets,
         checkoutOptions: normalizedCheckoutOptions
       };
     }
@@ -3739,8 +3726,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return normalizeFormbuilderSnapshot(null);
     };
     const initialFormbuilderSnapshot = getInitialSnapshot();
-    function sanitizeFieldTypeOptions(options){
-      const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
+    function sanitizeFieldsetOptions(options){
+      const list = Array.isArray(options) ? options : normalizeFieldsetOptions(options);
       const sanitized = [];
       const seenValues = new Set();
       list.forEach(option => {
@@ -3754,7 +3741,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             return;
           }
           seenValues.add(dedupeKey);
-          const displayName = resolveFieldTypeDisplayName(option) || rawValue;
+          const displayName = resolveFieldsetDisplayName(option) || rawValue;
           const sanitizedOption = {
             ...option,
             value: rawValue,
@@ -3763,11 +3750,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             fieldsetName: displayName,
             fieldset_name: displayName,
             fieldsetKey: rawValue,
-            fieldset_key: rawValue,
-            fieldTypeName: displayName,
-            field_type_name: displayName,
-            fieldTypeKey: rawValue,
-            field_type_key: rawValue
+            fieldset_key: rawValue
           };
           sanitized.push(sanitizedOption);
           return;
@@ -3789,11 +3772,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             fieldsetName: trimmed,
             fieldset_name: trimmed,
             fieldsetKey: trimmed,
-            fieldset_key: trimmed,
-            fieldTypeName: trimmed,
-            field_type_name: trimmed,
-            fieldTypeKey: trimmed,
-            field_type_key: trimmed
+            fieldset_key: trimmed
           });
         }
       });
@@ -3818,22 +3797,22 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
     assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
     assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
-    const snapshotFieldTypeOptions = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
-      ? initialFormbuilderSnapshot.fieldTypes
+    const snapshotFieldsetOptions = Array.isArray(initialFormbuilderSnapshot.fieldsets)
+      ? initialFormbuilderSnapshot.fieldsets
       : [];
-    const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
-    initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+    const finalFieldsetOptions = sanitizeFieldsetOptions(snapshotFieldsetOptions);
+    initialFormbuilderSnapshot.fieldsets = finalFieldsetOptions.map(option => ({ ...option }));
+    const FORM_FIELDSETS = window.FORM_FIELDSETS = initialFormbuilderSnapshot.fieldsets.map(option => ({ ...option }));
     const CHECKOUT_OPTIONS = window.CHECKOUT_OPTIONS = Array.isArray(initialFormbuilderSnapshot.checkoutOptions)
       ? initialFormbuilderSnapshot.checkoutOptions.map(opt => ({ ...opt }))
       : [];
     window.__formbuilderSnapshot = initialFormbuilderSnapshot;
-    const getFormFieldTypeLabel = (value)=>{
-      const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
+    const getFormFieldsetLabel = (value)=>{
+      const match = FORM_FIELDSETS.find(opt => opt.value === value);
       if(!match){
         return '';
       }
-      const label = resolveFieldTypeDisplayName(match);
+      const label = resolveFieldsetDisplayName(match);
       if(label){
         return label;
       }
@@ -8160,7 +8139,7 @@ function makePosts(){
         
         if(isDescriptionType){
           // Normalize but preserve description/text-area
-          const normalizedType = getBaseFieldType(originalType);
+          const normalizedType = getBaseFieldset(originalType);
           if(normalizedType === 'description' || normalizedType === 'text-area'){
             safeField.type = normalizedType;
           } else if(originalType === 'description' || originalType === 'text-area'){
@@ -8171,38 +8150,26 @@ function makePosts(){
           }
         } else {
           // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-          const normalizedType = getBaseFieldType(safeField.type);
+          const normalizedType = getBaseFieldset(safeField.type);
           if(normalizedType){
             safeField.type = normalizedType;
           }
         }
       }
-      // Ensure key, fieldsetKey, and fieldTypeKey sync with each other if one is missing
+      // Ensure key and fieldsetKey sync with each other if one is missing
       if(!safeField.key && safeField.fieldsetKey){
         safeField.key = safeField.fieldsetKey;
-      }
-      if(!safeField.key && safeField.fieldTypeKey){
-        safeField.key = safeField.fieldTypeKey;
       }
       if(!safeField.fieldsetKey && safeField.key){
         safeField.fieldsetKey = safeField.key;
       }
-      if(!safeField.fieldTypeKey && safeField.key){
-        safeField.fieldTypeKey = safeField.key;
-      }
-      // For brand new fields, default to first field type in list
-      // Don't default to first field type - let user select
-      // Only set defaults if field type is explicitly provided
-      if(!safeField.key && !safeField.fieldsetKey && !safeField.fieldTypeKey){
+      // For brand new fields, don't default - let user select from dropdown
+      if(!safeField.key && !safeField.fieldsetKey){
         // Leave unset - user must select from dropdown
       } else if(safeField.fieldsetKey && !safeField.key){
         safeField.key = safeField.fieldsetKey;
-      } else if(safeField.fieldTypeKey && !safeField.key){
-        safeField.key = safeField.fieldTypeKey;
       } else if(safeField.key && !safeField.fieldsetKey){
         safeField.fieldsetKey = safeField.key;
-      } else if(safeField.key && !safeField.fieldTypeKey){
-        safeField.fieldTypeKey = safeField.key;
       }
       
       // Only auto-name if field type is explicitly set (not defaulted)
@@ -8210,46 +8177,31 @@ function makePosts(){
           safeField.name = '';
         }
         if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-        const fieldsetKey = safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key;
-        const fieldTypeKey = safeField.fieldTypeKey || safeField.fieldsetKey || safeField.key;
+        const fieldsetKey = safeField.fieldsetKey || safeField.key;
         const existingFieldsetName = typeof safeField.fieldset_name === 'string' ? safeField.fieldset_name.trim() : '';
         const existingFieldsetNameCamel = typeof safeField.fieldsetName === 'string' ? safeField.fieldsetName.trim() : '';
-        const existingFieldTypeName = typeof safeField.field_type_name === 'string' ? safeField.field_type_name.trim() : '';
-        const existingFieldTypeNameCamel = typeof safeField.fieldTypeName === 'string' ? safeField.fieldTypeName.trim() : '';
-        let resolvedFieldTypeName = existingFieldsetName || existingFieldsetNameCamel || existingFieldTypeName || existingFieldTypeNameCamel;
-        if(!resolvedFieldTypeName && fieldsetKey){
-          const matchingFieldset = FORM_FIELD_TYPES.find(opt => opt.value === fieldsetKey);
+        let resolvedFieldsetName = existingFieldsetName || existingFieldsetNameCamel;
+        if(!resolvedFieldsetName && fieldsetKey){
+          const matchingFieldset = FORM_FIELDSETS.find(opt => opt.value === fieldsetKey);
           if(matchingFieldset){
-            resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldset);
+            resolvedFieldsetName = resolveFieldsetDisplayName(matchingFieldset);
           }
         }
-        if(!resolvedFieldTypeName && fieldTypeKey){
-          const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-          if(matchingFieldType){
-            resolvedFieldTypeName = resolveFieldTypeDisplayName(matchingFieldType);
-          }
-        }
-        resolvedFieldTypeName = resolvedFieldTypeName || '';
-        safeField.fieldset_name = resolvedFieldTypeName;
-        safeField.fieldsetName = resolvedFieldTypeName;
-        safeField.field_type_name = resolvedFieldTypeName;
-        safeField.fieldTypeName = resolvedFieldTypeName;
-      // Only auto-name if field type is set AND field doesn't already have a custom name
+        resolvedFieldsetName = resolvedFieldsetName || '';
+        safeField.fieldset_name = resolvedFieldsetName;
+        safeField.fieldsetName = resolvedFieldsetName;
+      // Only auto-name if fieldset is set AND field doesn't already have a custom name
       // For editable fields, preserve existing custom names
-      if(fieldsetKey && resolvedFieldTypeName){
-        const matchingFieldset = FORM_FIELD_TYPES.find(ft => ft.value === fieldsetKey);
-        let isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
-        if(!isEditable && fieldTypeKey){
-          const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-          isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
-        }
+      if(fieldsetKey && resolvedFieldsetName){
+        const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
+        const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
         // Only auto-name if not editable OR if name is empty
         if(!isEditable || !safeField.name || safeField.name.trim() === ''){
-          safeField.name = resolvedFieldTypeName;
+          safeField.name = resolvedFieldsetName;
         }
       }
       
-      if(fieldsetKey === 'location' || fieldTypeKey === 'location'){
+      if(fieldsetKey === 'location'){
           if(!safeField.placeholder || !safeField.placeholder.trim()){
             safeField.placeholder = 'Search for a location';
           }
@@ -8266,9 +8218,9 @@ function makePosts(){
         if(!Array.isArray(safeField.options)){
           safeField.options = [];
         }
-        if(fieldsetKey === 'venue-ticketing' || fieldTypeKey === 'venue-ticketing'){
+        if(fieldsetKey === 'venue-ticketing'){
           safeField.options = normalizeVenueSessionOptions(safeField.options);
-        } else if(fieldsetKey === 'item-pricing' || fieldTypeKey === 'item-pricing'){
+        } else if(fieldsetKey === 'item-pricing'){
           safeField.options = safeField.options.map(opt => {
             if(opt && typeof opt === 'object'){
               return {
@@ -8359,18 +8311,17 @@ function makePosts(){
         labelEl.id = labelId;
         let control = null;
         
-        const fieldsetKey = field.fieldsetKey || field.fieldTypeKey || field.key || '';
-        const fieldTypeKey = field.fieldTypeKey || field.fieldsetKey || field.key || '';
+        const fieldsetKey = field.fieldsetKey || field.key || '';
         let baseType = '';
         if (isUserFormContext) {
-          if (fieldsetKey === 'radio' || fieldsetKey === 'dropdown' || fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown') {
-            baseType = fieldsetKey || fieldTypeKey;
+          if (fieldsetKey === 'radio' || fieldsetKey === 'dropdown') {
+            baseType = fieldsetKey;
           } else {
-            baseType = fieldsetKey || fieldTypeKey || field.type;
-            if(!baseType) throw new Error('Field type is required. Missing fieldsetKey, fieldTypeKey, and type for field: ' + JSON.stringify(field));
+            baseType = fieldsetKey || field.type;
+            if(!baseType) throw new Error('Fieldset is required. Missing fieldsetKey and type for field: ' + JSON.stringify(field));
           }
         } else {
-          baseType = getBaseFieldType(field.type);
+          baseType = getBaseFieldset(field.type);
           if(!baseType) throw new Error('Field type is required. Cannot determine baseType from field.type: ' + JSON.stringify(field));
         }
         
@@ -9334,7 +9285,7 @@ function makePosts(){
           function calculateDaysToFinalSession(){
             try {
               // Find venue-ticketing field in the form fields
-              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldsetKey === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
+              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldsetKey === 'venue-ticketing'));
               if(!venueTicketingField || !venueTicketingField.options || !Array.isArray(venueTicketingField.options)) return null;
               
               let latestDate = null;
@@ -9603,7 +9554,7 @@ function makePosts(){
           let calculatedDays = null;
           if(isEvent){
             try {
-              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldsetKey === 'venue-ticketing' || f.fieldTypeKey === 'venue-ticketing'));
+              const venueTicketingField = fields.find(f => f && (f.type === 'venue-ticketing' || f.fieldsetKey === 'venue-ticketing'));
               if(venueTicketingField && venueTicketingField.options && Array.isArray(venueTicketingField.options)){
                 let latestDate = null;
                 venueTicketingField.options.forEach(venue => {
@@ -13717,7 +13668,7 @@ function makePosts(){
             return editor;
           };
 
-          // Fields now come from backend via field_types, no hardcoded defaults
+          // Fields now come from backend via fieldsets, no hardcoded defaults
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
 
@@ -13774,7 +13725,7 @@ function makePosts(){
             hostElement = null,
             summaryUpdater: initialSummaryUpdater = ()=>{}
           } = {}) => {
-            // Declare actionFieldBtn early so it can be referenced in updateFieldEditorsByType
+            // Declare actionFieldBtn early so it can be referenced in updateFieldEditorsByFieldset
             let actionFieldBtn = null;
             
             const editBtn = document.createElement('button');
@@ -13788,43 +13739,43 @@ function makePosts(){
             editPanel.className = 'field-edit-panel';
             editPanel.hidden = true;
 
-            const matchKey = safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key || safeField.type;
+            const matchKey = safeField.fieldsetKey || safeField.key || safeField.type;
             
             // Get existing field types in this subcategory (excluding current field)
-            const existingFieldTypes = new Set();
+            const existingFieldsets = new Set();
             fields.forEach(f => {
-              if(f !== safeField && (f.fieldsetKey || f.fieldTypeKey || f.key)){
-                existingFieldTypes.add(f.fieldsetKey || f.fieldTypeKey || f.key);
+              if(f !== safeField && (f.fieldsetKey || f.key)){
+                existingFieldsets.add(f.fieldsetKey || f.key);
               }
             });
             
-            const fieldTypeWrapper = document.createElement('div');
-            fieldTypeWrapper.className = 'field-type-select-wrapper options-dropdown';
+            const fieldsetWrapper = document.createElement('div');
+            fieldsetWrapper.className = 'field-type-select-wrapper options-dropdown';
             
-            const fieldTypeMenuBtn = document.createElement('button');
-            fieldTypeMenuBtn.type = 'button';
-            fieldTypeMenuBtn.className = 'field-type-select';
-            fieldTypeMenuBtn.setAttribute('aria-haspopup', 'true');
-            fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+            const fieldsetMenuBtn = document.createElement('button');
+            fieldsetMenuBtn.type = 'button';
+            fieldsetMenuBtn.className = 'field-type-select';
+            fieldsetMenuBtn.setAttribute('aria-haspopup', 'true');
+            fieldsetMenuBtn.setAttribute('aria-expanded', 'false');
             const menuId = `field-type-menu-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            fieldTypeMenuBtn.setAttribute('aria-controls', menuId);
+            fieldsetMenuBtn.setAttribute('aria-controls', menuId);
             
-            const selectedFieldType = FORM_FIELD_TYPES.find(opt => opt.value === matchKey);
+            const selectedFieldType = FORM_FIELDSETS.find(opt => opt.value === matchKey);
             const defaultLabel = selectedFieldType 
-              ? (resolveFieldTypeDisplayName(selectedFieldType) || selectedFieldType.label || selectedFieldType.value || 'Select Fieldset...')
+              ? (resolveFieldsetDisplayName(selectedFieldType) || selectedFieldType.label || selectedFieldType.value || 'Select Fieldset...')
               : 'Select Fieldset...';
-            fieldTypeMenuBtn.textContent = defaultLabel;
-            fieldTypeMenuBtn.dataset.value = matchKey || '';
+            fieldsetMenuBtn.textContent = defaultLabel;
+            fieldsetMenuBtn.dataset.value = matchKey || '';
             
             const arrow = document.createElement('span');
             arrow.className = 'dropdown-arrow';
             arrow.setAttribute('aria-hidden', 'true');
-            fieldTypeMenuBtn.appendChild(arrow);
+            fieldsetMenuBtn.appendChild(arrow);
             
-            const fieldTypeMenu = document.createElement('div');
-            fieldTypeMenu.className = 'options-menu';
-            fieldTypeMenu.id = menuId;
-            fieldTypeMenu.hidden = true;
+            const fieldsetMenu = document.createElement('div');
+            fieldsetMenu.className = 'options-menu';
+            fieldsetMenu.id = menuId;
+            fieldsetMenu.hidden = true;
             
             if(!matchKey){
               const placeholderBtn = document.createElement('button');
@@ -13832,30 +13783,27 @@ function makePosts(){
               placeholderBtn.className = 'menu-option';
               placeholderBtn.textContent = 'Select Fieldset...';
               placeholderBtn.disabled = true;
-              fieldTypeMenu.appendChild(placeholderBtn);
+              fieldsetMenu.appendChild(placeholderBtn);
             }
             
-            FORM_FIELD_TYPES.forEach(optionDef => {
+            FORM_FIELDSETS.forEach(optionDef => {
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
               optionBtn.className = 'menu-option';
-              const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
+              const optionLabel = resolveFieldsetDisplayName(optionDef) || optionDef.label || optionDef.value || '';
               optionBtn.textContent = optionLabel || optionDef.value;
               optionBtn.dataset.value = optionDef.value || '';
               if(optionDef.value){
                 optionBtn.dataset.fieldsetKey = optionDef.value;
-                optionBtn.dataset.fieldTypeKey = optionDef.value;
               }
               if(optionLabel){
                 optionBtn.dataset.fieldsetName = optionLabel;
-                optionBtn.dataset.fieldTypeName = optionLabel;
               } else if(optionDef.value){
                 optionBtn.dataset.fieldsetName = optionDef.value;
-                optionBtn.dataset.fieldTypeName = optionDef.value;
               }
               
               // Disable if this field type already exists in the subcategory
-              if(existingFieldTypes.has(optionDef.value) && optionDef.value !== matchKey){
+              if(existingFieldsets.has(optionDef.value) && optionDef.value !== matchKey){
                 optionBtn.disabled = true;
                 optionBtn.classList.add('field-type-disabled');
               }
@@ -13869,41 +13817,38 @@ function makePosts(){
                 const nextType = optionBtn.dataset.value || '';
                 if(!nextType) return;
                 
-                const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : null;
-                if(!nextValidType) throw new Error('Invalid field type "' + nextType + '". Must be one of: ' + FORM_FIELD_TYPES.map(opt => opt.value).join(', '));
+                const nextValidType = FORM_FIELDSETS.some(opt => opt.value === nextType) ? nextType : null;
+                if(!nextValidType) throw new Error('Invalid field type "' + nextType + '". Must be one of: ' + FORM_FIELDSETS.map(opt => opt.value).join(', '));
                 safeField.fieldsetKey = nextValidType;
-                safeField.fieldTypeKey = nextValidType;
                 safeField.key = nextValidType;
                 
-                const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
-                const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
-                const updatedFieldTypeName = (matchingDisplayName || nextValidType || '').trim();
-                safeField.fieldset_name = updatedFieldTypeName;
-                safeField.fieldsetName = updatedFieldTypeName;
-                safeField.field_type_name = updatedFieldTypeName;
-                safeField.fieldTypeName = updatedFieldTypeName;
+                const matchingFieldset = FORM_FIELDSETS.find(opt => opt.value === nextValidType);
+                const matchingDisplayName = matchingFieldset ? resolveFieldsetDisplayName(matchingFieldset) : '';
+                const updatedFieldsetName = (matchingDisplayName || nextValidType || '').trim();
+                safeField.fieldset_name = updatedFieldsetName;
+                safeField.fieldsetName = updatedFieldsetName;
                 
-                const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
-                if(!isEditable && updatedFieldTypeName){
-                  safeField.name = updatedFieldTypeName;
+                const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
+                if(!isEditable && updatedFieldsetName){
+                  safeField.name = updatedFieldsetName;
                 } else if(isEditable && !safeField.name){
-                  safeField.name = updatedFieldTypeName;
+                  safeField.name = updatedFieldsetName;
                 }
-                if(matchingFieldType){
-                  if(matchingFieldType.placeholder){
-                    safeField.placeholder = matchingFieldType.placeholder;
+                if(matchingFieldset){
+                  if(matchingFieldset.placeholder){
+                    safeField.placeholder = matchingFieldset.placeholder;
                   }
                   safeField.type = nextValidType;
                 }
                 
-                fieldTypeMenuBtn.textContent = optionLabel || nextValidType;
-                fieldTypeMenuBtn.dataset.value = nextValidType;
-                fieldTypeMenuBtn.appendChild(arrow);
-                fieldTypeMenu.hidden = true;
-                fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+                fieldsetMenuBtn.textContent = optionLabel || nextValidType;
+                fieldsetMenuBtn.dataset.value = nextValidType;
+                fieldsetMenuBtn.appendChild(arrow);
+                fieldsetMenu.hidden = true;
+                fieldsetMenuBtn.setAttribute('aria-expanded', 'false');
                 
                 // Update all option buttons aria-pressed
-                fieldTypeMenu.querySelectorAll('button.menu-option').forEach(btn => {
+                fieldsetMenu.querySelectorAll('button.menu-option').forEach(btn => {
                   btn.setAttribute('aria-pressed', btn === optionBtn ? 'true' : 'false');
                 });
                 
@@ -13919,7 +13864,7 @@ function makePosts(){
                 }
                 
                 notifyFormbuilderChange();
-                updateFieldEditorsByType();
+                updateFieldEditorsByFieldset();
                 renderForm({
                   formFields: formPreviewFields,
                   formId: formPreviewId,
@@ -13933,18 +13878,18 @@ function makePosts(){
                 runSummaryUpdater();
               });
               
-              fieldTypeMenu.appendChild(optionBtn);
+              fieldsetMenu.appendChild(optionBtn);
             });
             
-            fieldTypeMenuBtn.addEventListener('click', (e) => {
+            fieldsetMenuBtn.addEventListener('click', (e) => {
               e.stopPropagation();
-              const open = !fieldTypeMenu.hasAttribute('hidden');
+              const open = !fieldsetMenu.hasAttribute('hidden');
               if(open){
-                fieldTypeMenu.hidden = true;
-                fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+                fieldsetMenu.hidden = true;
+                fieldsetMenuBtn.setAttribute('aria-expanded', 'false');
                 
                 // If dropdown closes without a type selected, delete the field
-                const currentType = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+                const currentType = safeField.fieldsetKey || safeField.key || safeField.type || '';
                 if(!currentType || currentType === '' || currentType === 'text'){
                   const handler = typeof safeField.__handleDeleteField === 'function' 
                     ? safeField.__handleDeleteField 
@@ -13954,17 +13899,17 @@ function makePosts(){
                   }
                 }
               } else {
-                fieldTypeMenu.hidden = false;
-                fieldTypeMenuBtn.setAttribute('aria-expanded', 'true');
+                fieldsetMenu.hidden = false;
+                fieldsetMenuBtn.setAttribute('aria-expanded', 'true');
                 const outsideHandler = (ev) => {
-                  if(!fieldTypeWrapper.contains(ev.target)){
-                    fieldTypeMenu.hidden = true;
-                    fieldTypeMenuBtn.setAttribute('aria-expanded', 'false');
+                  if(!fieldsetWrapper.contains(ev.target)){
+                    fieldsetMenu.hidden = true;
+                    fieldsetMenuBtn.setAttribute('aria-expanded', 'false');
                     document.removeEventListener('click', outsideHandler);
                     document.removeEventListener('pointerdown', outsideHandler);
                     
                     // If dropdown closes without a type selected, delete the field
-                    const currentType = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+                    const currentType = safeField.fieldsetKey || safeField.key || safeField.type || '';
                     if(!currentType || currentType === '' || currentType === 'text'){
                       const handler = typeof safeField.__handleDeleteField === 'function' 
                         ? safeField.__handleDeleteField 
@@ -13981,9 +13926,9 @@ function makePosts(){
                 }, 0);
               }
             });
-            fieldTypeMenu.addEventListener('click', (e) => e.stopPropagation());
+            fieldsetMenu.addEventListener('click', (e) => e.stopPropagation());
             
-            fieldTypeWrapper.append(fieldTypeMenuBtn, fieldTypeMenu);
+            fieldsetWrapper.append(fieldsetMenuBtn, fieldsetMenu);
 
             // Field name input (shown in edit panel for editable fields)
             const fieldNameContainer = document.createElement('div');
@@ -14028,7 +13973,7 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldTypeWrapper);
+            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldsetWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14055,8 +14000,8 @@ function makePosts(){
               // Auto-delete fields without a type selected when panel is closed
               // (unless explicitly skipped via options)
               if(!options.skipAutoDelete){
-                const hasFieldType = safeField.fieldTypeKey || safeField.key || (safeField.type && safeField.type !== 'text');
-                if(!hasFieldType){
+                const hasFieldset = safeField.fieldsetKey || safeField.key || (safeField.type && safeField.type !== 'text');
+                if(!hasFieldset){
                   // Try to get delete handler from safeField
                   const handler = typeof safeField.__handleDeleteField === 'function' 
                     ? safeField.__handleDeleteField 
@@ -14244,14 +14189,14 @@ function makePosts(){
               if(!Array.isArray(safeField.options)){
                 safeField.options = [];
               }
-              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              if((fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio')){
+              const fieldsetKey = safeField.fieldsetKey || safeField.key || '';
+              if((fieldsetKey === 'dropdown' || fieldsetKey === 'radio')){
                 // Check if options are empty or only have empty strings
                 const hasNonEmptyOptions = safeField.options.some(opt => opt && typeof opt === 'string' && opt.trim() !== '');
                 if(!hasNonEmptyOptions){
-                  // Try to get placeholder from field type to seed options
-                  const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === fieldTypeKey);
-                  if(matchingFieldType && matchingFieldType.placeholder){
+                  // Try to get placeholder from fieldset to seed options
+                  const matchingFieldset = FORM_FIELDSETS.find(opt => opt.value === fieldsetKey);
+                  if(matchingFieldset && matchingFieldset.placeholder){
                     // Parse placeholder like "A,B,C" or "1A,2A,3A" into array
                     const placeholderStr = matchingFieldType.placeholder.trim();
                     if(placeholderStr){
@@ -14273,9 +14218,9 @@ function makePosts(){
             };
 
             const renderDropdownOptions = (focusIndex = null)=>{
-              // Use fieldTypeKey/key for field type identification (not type which is for HTML input type)
-              const fieldTypeKey = safeField.fieldTypeKey || safeField.key || '';
-              const isOptionsType = fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
+              // Use fieldsetKey/key for fieldset identification (not type which is for HTML input type)
+              const fieldsetKey = safeField.fieldsetKey || safeField.key || '';
+              const isOptionsType = fieldsetKey === 'dropdown' || fieldsetKey === 'radio';
               if(!isOptionsType){
                 dropdownOptionsList.innerHTML = '';
                 return;
@@ -14467,22 +14412,21 @@ function makePosts(){
               });
             });
 
-            const updateFieldEditorsByType = ()=>{
-              const type = safeField.type || safeField.fieldTypeKey || safeField.key || '';
-              // Use fieldsetKey/fieldTypeKey/key for field type identification (not type which is for HTML input type)
-              // Get fieldsetKey from the current fieldTypeMenuBtn value if available, otherwise from safeField
-              const selectedValue = fieldTypeMenuBtn ? (fieldTypeMenuBtn.dataset.value || '') : '';
-              const fieldsetKey = selectedValue || safeField.fieldsetKey || safeField.fieldTypeKey || safeField.key || safeField.type || '';
-              const fieldTypeKey = selectedValue || safeField.fieldTypeKey || safeField.fieldsetKey || safeField.key || safeField.type || '';
-              const isOptionsType = fieldsetKey === 'dropdown' || fieldsetKey === 'radio' || fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio';
-              const showItemPricing = fieldsetKey === 'item-pricing' || fieldTypeKey === 'item-pricing';
-              const showVenueSession = fieldsetKey === 'venue-ticketing' || fieldTypeKey === 'venue-ticketing';
-              const showCheckout = fieldsetKey === 'checkout' || fieldTypeKey === 'checkout';
-              // Check if this field type is editable - must have a valid fieldsetKey/fieldTypeKey
+            const updateFieldEditorsByFieldset = ()=>{
+              const type = safeField.type || safeField.fieldsetKey || safeField.key || '';
+              // Use fieldsetKey/key for fieldset identification (not type which is for HTML input type)
+              // Get fieldsetKey from the current fieldsetMenuBtn value if available, otherwise from safeField
+              const selectedValue = fieldsetMenuBtn ? (fieldsetMenuBtn.dataset.value || '') : '';
+              const fieldsetKey = selectedValue || safeField.fieldsetKey || safeField.key || safeField.type || '';
+              const isOptionsType = fieldsetKey === 'dropdown' || fieldsetKey === 'radio';
+              const showItemPricing = fieldsetKey === 'item-pricing';
+              const showVenueSession = fieldsetKey === 'venue-ticketing';
+              const showCheckout = fieldsetKey === 'checkout';
+              // Check if this fieldset is editable - must have a valid fieldsetKey
               let isEditable = false;
-              if(fieldTypeKey && fieldTypeKey !== ''){
-                const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-                isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              if(fieldsetKey && fieldsetKey !== ''){
+                const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
+                isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
               }
               if(type === 'images'){
                 if(safeField.placeholder){
@@ -14557,7 +14501,7 @@ function makePosts(){
               runSummaryUpdater();
             };
 
-            updateFieldEditorsByType();
+            updateFieldEditorsByFieldset();
 
             const openEditPanel = ()=>{
               if(!editPanel.hidden) return;
@@ -14567,19 +14511,19 @@ function makePosts(){
                 hostElement.classList.add('field-edit-open');
               }
               // Update field editors to show/hide name input for editable fields
-              // Force update to ensure fieldTypeKey is checked
-              updateFieldEditorsByType();
+              // Force update to ensure fieldsetKey is checked
+              updateFieldEditorsByFieldset();
               // Double-check after a brief delay to catch any async updates
               requestAnimationFrame(()=>{
-                updateFieldEditorsByType();
+                updateFieldEditorsByFieldset();
                 try{
-                  if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
-                    fieldTypeMenuBtn.focus({ preventScroll: true });
+                  if(fieldsetMenuBtn && typeof fieldsetMenuBtn.focus === 'function'){
+                    fieldsetMenuBtn.focus({ preventScroll: true });
                   }
                 }catch(err){
                   try{ 
-                    if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
-                      fieldTypeMenuBtn.focus(); 
+                    if(fieldsetMenuBtn && typeof fieldsetMenuBtn.focus === 'function'){
+                      fieldsetMenuBtn.focus(); 
                     }
                   }catch(e){}
                 }
@@ -14646,7 +14590,7 @@ function makePosts(){
             return {
               editBtn,
               editPanel,
-              fieldTypeMenuBtn,
+              fieldsetMenuBtn,
               fieldRequiredInput,
               dropdownOptionsContainer,
               dropdownOptionsList,
@@ -14657,7 +14601,7 @@ function makePosts(){
               openEditPanel,
               setSummaryUpdater,
               runSummaryUpdater,
-              updateFieldEditorsByType,
+              updateFieldEditorsByFieldset,
               destroy,
               setDeleteHandler
             };
@@ -14708,7 +14652,7 @@ function makePosts(){
             header.append(inlineNameDisplay, summary, summaryRequired);
 
             const fieldEditUI = createFieldEditUI(safeField, { hostElement: row });
-            const { editBtn: fieldEditBtn, editPanel, fieldTypeMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
+            const { editBtn: fieldEditBtn, editPanel, fieldsetMenuBtn, deleteFieldBtn, closeEditPanel, openEditPanel, destroy: destroyEditUI, setDeleteHandler, runSummaryUpdater: fieldRunSummaryUpdater } = fieldEditUI;
             const fieldDragHandle = createFormbuilderDragHandle('Reorder field', 'field-drag-handle');
             
             header.append(fieldDragHandle, fieldEditBtn);
@@ -14728,18 +14672,18 @@ function makePosts(){
             row.addEventListener('click', stopRowPropagation);
 
             const updateFieldSummary = ()=>{
-              const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
-              const matchingFieldType = FORM_FIELD_TYPES.find(ft => ft.value === typeKey);
-              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              const fieldsetKey = safeField.fieldsetKey || safeField.key || safeField.type || '';
+              const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
+              const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
               
               const customName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : '';
-              const storedTypeName = (typeof safeField.field_type_name === 'string' && safeField.field_type_name.trim())
-                ? safeField.field_type_name.trim()
-                : (typeof safeField.fieldTypeName === 'string' && safeField.fieldTypeName.trim())
-                  ? safeField.fieldTypeName.trim()
+              const storedFieldsetName = (typeof safeField.fieldset_name === 'string' && safeField.fieldset_name.trim())
+                ? safeField.fieldset_name.trim()
+                : (typeof safeField.fieldsetName === 'string' && safeField.fieldsetName.trim())
+                  ? safeField.fieldsetName.trim()
                   : '';
-              const typeLabelRaw = (storedTypeName || getFormFieldTypeLabel(typeKey)).trim();
-              const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
+              const fieldsetLabelRaw = (storedFieldsetName || getFormFieldsetLabel(fieldsetKey)).trim();
+              const fieldsetLabel = fieldsetLabelRaw || (typeof fieldsetKey === 'string' && fieldsetKey.trim() ? fieldsetKey.trim() : 'Field');
               
               // Show inline name display for editable fields, summary for non-editable
               if(isEditable){
@@ -14749,16 +14693,16 @@ function makePosts(){
               } else {
                 inlineNameDisplay.style.display = 'none';
                 summary.style.display = '';
-                summaryLabel.textContent = typeLabel || 'Field';
+                summaryLabel.textContent = fieldsetLabel || 'Field';
               }
               
               const isRequired = !!safeField.required;
               summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
               summaryRequired.classList.toggle('is-required', isRequired);
-              fieldEditBtn.setAttribute('aria-label', `Edit ${typeLabel || 'field'} settings`);
-              updateDragHandleLabel(fieldDragHandle, `Reorder ${typeLabel || 'field'} field`);
+              fieldEditBtn.setAttribute('aria-label', `Edit ${fieldsetLabel || 'field'} settings`);
+              updateDragHandleLabel(fieldDragHandle, `Reorder ${fieldsetLabel || 'field'} field`);
               if(deleteFieldBtn){
-                const deleteLabel = typeLabel || 'field';
+                const deleteLabel = fieldsetLabel || 'field';
                 deleteFieldBtn.setAttribute('aria-label', `Delete ${deleteLabel} field`);
               }
             };
@@ -14823,7 +14767,7 @@ function makePosts(){
             setDeleteHandler(handleDeleteField);
             row.__deleteHandler = handleDeleteField;
 
-            fieldEditUI.updateFieldEditorsByType();
+            fieldEditUI.updateFieldEditorsByFieldset();
             row.__fieldRef = safeField;
             safeField.__rowEl = row;
             return {
@@ -14834,13 +14778,13 @@ function makePosts(){
               openEditPanel,
               focus(){
                 try{
-                  if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
-                    fieldTypeMenuBtn.focus({ preventScroll: true });
+                  if(fieldsetMenuBtn && typeof fieldsetMenuBtn.focus === 'function'){
+                    fieldsetMenuBtn.focus({ preventScroll: true });
                   }
                 }catch(err){
                   try{ 
-                    if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
-                      fieldTypeMenuBtn.focus(); 
+                    if(fieldsetMenuBtn && typeof fieldsetMenuBtn.focus === 'function'){
+                      fieldsetMenuBtn.focus(); 
                     }
                   }catch(e){}
                 }
@@ -14848,13 +14792,13 @@ function makePosts(){
               focusTypePicker(){
                 const focusSelect = ()=>{
                   try{
-                    if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
-                      fieldTypeMenuBtn.focus({ preventScroll: true });
+                    if(fieldsetMenuBtn && typeof fieldsetMenuBtn.focus === 'function'){
+                      fieldsetMenuBtn.focus({ preventScroll: true });
                     }
                   }catch(err){
                     try{ 
-                      if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.focus === 'function'){
-                        fieldTypeMenuBtn.focus(); 
+                      if(fieldsetMenuBtn && typeof fieldsetMenuBtn.focus === 'function'){
+                        fieldsetMenuBtn.focus(); 
                       }
                     }catch(e){}
                   }
@@ -14863,9 +14807,9 @@ function makePosts(){
                 requestAnimationFrame(()=>{
                   // Button elements don't have showPicker, menu is controlled by click handler
                   // Just click the button to open the menu
-                  if(fieldTypeMenuBtn && typeof fieldTypeMenuBtn.click === 'function'){
+                  if(fieldsetMenuBtn && typeof fieldsetMenuBtn.click === 'function'){
                     try{
-                      fieldTypeMenuBtn.click();
+                      fieldsetMenuBtn.click();
                     }catch(err){}
                   }
                 });
@@ -14896,23 +14840,20 @@ function makePosts(){
           addFieldMenu.appendChild(addFieldPlaceholder);
           
           // Add fieldset options
-          FORM_FIELD_TYPES.forEach(optionDef => {
+          FORM_FIELDSETS.forEach(optionDef => {
             const optionBtn = document.createElement('button');
             optionBtn.type = 'button';
             optionBtn.className = 'menu-option';
-            const optionLabel = resolveFieldTypeDisplayName(optionDef) || optionDef.label || optionDef.value || '';
+            const optionLabel = resolveFieldsetDisplayName(optionDef) || optionDef.label || optionDef.value || '';
             optionBtn.textContent = optionLabel || optionDef.value;
             optionBtn.dataset.value = optionDef.value || '';
             if(optionDef.value){
               optionBtn.dataset.fieldsetKey = optionDef.value;
-              optionBtn.dataset.fieldTypeKey = optionDef.value;
             }
             if(optionLabel){
               optionBtn.dataset.fieldsetName = optionLabel;
-              optionBtn.dataset.fieldTypeName = optionLabel;
             } else if(optionDef.value){
               optionBtn.dataset.fieldsetName = optionDef.value;
-              optionBtn.dataset.fieldTypeName = optionDef.value;
             }
             
             optionBtn.addEventListener('click', (ev) => {
@@ -14925,27 +14866,24 @@ function makePosts(){
               
               // Create new field with selected fieldset
               const newField = ensureFieldDefaults({});
-              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === selectedFieldsetKey);
-              const matchingDisplayName = matchingFieldType ? resolveFieldTypeDisplayName(matchingFieldType) : '';
+              const matchingFieldset = FORM_FIELDSETS.find(opt => opt.value === selectedFieldsetKey);
+              const matchingDisplayName = matchingFieldset ? resolveFieldsetDisplayName(matchingFieldset) : '';
               const fieldsetName = (matchingDisplayName || selectedFieldsetKey || '').trim();
               
               newField.fieldsetKey = selectedFieldsetKey;
-              newField.fieldTypeKey = selectedFieldsetKey;
               newField.key = selectedFieldsetKey;
               newField.fieldset_name = fieldsetName;
               newField.fieldsetName = fieldsetName;
-              newField.field_type_name = fieldsetName;
-              newField.fieldTypeName = fieldsetName;
               
-              const isEditable = matchingFieldType && matchingFieldType.formbuilder_editable === true;
+              const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
               if(!isEditable && fieldsetName){
                 newField.name = fieldsetName;
               } else if(isEditable && !newField.name){
                 newField.name = fieldsetName;
               }
-              if(matchingFieldType){
-                if(matchingFieldType.placeholder){
-                  newField.placeholder = matchingFieldType.placeholder;
+              if(matchingFieldset){
+                if(matchingFieldset.placeholder){
+                  newField.placeholder = matchingFieldset.placeholder;
                 }
                 newField.type = selectedFieldsetKey;
               }
@@ -14984,15 +14922,15 @@ function makePosts(){
           
           // Function to update disabled state of options based on existing fields
           const updateAddFieldMenuOptions = () => {
-            const existingFieldTypes = new Set();
+            const existingFieldsets = new Set();
             fields.forEach(f => {
-              if(f && (f.fieldsetKey || f.fieldTypeKey || f.key)){
-                existingFieldTypes.add(f.fieldsetKey || f.fieldTypeKey || f.key);
+              if(f && (f.fieldsetKey || f.key)){
+                existingFieldsets.add(f.fieldsetKey || f.key);
               }
             });
             addFieldMenu.querySelectorAll('.menu-option[data-value]').forEach(btn => {
               const val = btn.dataset.value;
-              if(existingFieldTypes.has(val)){
+              if(existingFieldsets.has(val)){
                 btn.disabled = true;
                 btn.classList.add('field-type-disabled');
               } else {
@@ -15343,7 +15281,7 @@ function makePosts(){
             let checkoutOptionIds = [];
             if(subFields && Array.isArray(subFields)){
               for(const field of subFields){
-                if(field && typeof field === 'object' && (field.fieldTypeKey === 'checkout' || field.key === 'checkout')){
+                if(field && typeof field === 'object' && (field.fieldsetKey === 'checkout' || field.key === 'checkout')){
                   if(Array.isArray(field.checkoutOptions)){
                     checkoutOptionIds = field.checkoutOptions.filter(id => id && id > 0).map(id => parseInt(id, 10) || 0).filter(id => id > 0);
                   }
@@ -15824,7 +15762,7 @@ function makePosts(){
               const cloned = {
                 id: field && field.id,
                 key: field && typeof field.key === 'string' ? field.key : undefined,
-                fieldTypeKey: field && typeof field.fieldTypeKey === 'string' ? field.fieldTypeKey : undefined,
+                fieldsetKey: field && typeof field.fieldsetKey === 'string' ? field.fieldsetKey : undefined,
                 name: field && typeof field.name === 'string' ? field.name : '',
                 type: field && typeof field.type === 'string' ? field.type : '',
                 placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
@@ -15862,7 +15800,7 @@ function makePosts(){
               if(Array.isArray(field && field.checkoutOptions)){
                 // Filter out zeros and invalid values (only keep valid IDs)
                 cloned.checkoutOptions = field.checkoutOptions.filter(opt => opt !== 0 && opt !== '' && opt !== null);
-              } else if(field && (field.type === 'checkout' || field.fieldTypeKey === 'checkout')){
+              } else if(field && (field.type === 'checkout' || field.fieldsetKey === 'checkout')){
                 // Initialize empty array for checkout fields if missing
                 cloned.checkoutOptions = [];
               }
@@ -15917,8 +15855,8 @@ function makePosts(){
         categoryIconPaths: cloneMapLike(categoryIconPaths),
         subcategoryIconPaths: cloneMapLike(subcategoryIconPaths),
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
-        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
-          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+        fieldsets: Array.isArray(FORM_FIELDSETS)
+          ? FORM_FIELDSETS.map(option => ({ ...option }))
           : [],
         checkoutOptions: Array.isArray(CHECKOUT_OPTIONS)
           ? CHECKOUT_OPTIONS.map(opt => ({ ...opt }))
@@ -15932,22 +15870,22 @@ function makePosts(){
     function restoreFormbuilderSnapshot(snapshot, options = {}){
       if(!snapshot) return;
       const skipFormbuilderUI = options.skipFormbuilderUI === true;
-      const existingFieldTypes = (() => {
-        if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
-          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+      const existingFieldsets = (() => {
+        if(Array.isArray(initialFormbuilderSnapshot.fieldsets) && initialFormbuilderSnapshot.fieldsets.length){
+          return initialFormbuilderSnapshot.fieldsets.map(option => ({ ...option }));
         }
-        if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
-          return FORM_FIELD_TYPES.map(option => ({ ...option }));
+        if(Array.isArray(FORM_FIELDSETS) && FORM_FIELDSETS.length){
+          return FORM_FIELDSETS.map(option => ({ ...option }));
         }
         return [];
       })();
       const normalized = normalizeFormbuilderSnapshot(snapshot);
-      let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
-      if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
-        sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
+      let sanitizedFieldsets = sanitizeFieldsetOptions(normalized.fieldsets);
+      if(sanitizedFieldsets.length === 0 && existingFieldsets.length){
+        sanitizedFieldsets = sanitizeFieldsetOptions(existingFieldsets);
       }
-      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
-      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
+      initialFormbuilderSnapshot.fieldsets = sanitizedFieldsets.map(option => ({ ...option }));
+      FORM_FIELDSETS.splice(0, FORM_FIELDSETS.length, ...initialFormbuilderSnapshot.fieldsets.map(option => ({ ...option })));
       
       // Update checkout options from snapshot
       if(Array.isArray(normalized.checkoutOptions)){

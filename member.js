@@ -14,7 +14,7 @@
     }
     
     // Check for required dependencies
-    if(typeof getBaseFieldType !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
+    if(typeof getBaseFieldset !== "function" || typeof getMessage !== "function" || typeof normalizeFormbuilderSnapshot !== "function"){
       if(++initRetries < MAX_INIT_RETRIES){
         console.warn("[Forms] Waiting for dependencies...");
         setTimeout(init, 100);
@@ -309,7 +309,7 @@
       return result;
     }
 
-    // Fields now come from backend via field_types table, no hardcoded defaults
+    // Fields now come from backend via fieldsets table, no hardcoded defaults
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -546,7 +546,7 @@
         
         if(isDescriptionType){
           // Normalize but preserve description/text-area
-          const normalizedType = getBaseFieldType(type);
+          const normalizedType = getBaseFieldset(type);
           if(normalizedType === 'description' || normalizedType === 'text-area'){
             safe.type = normalizedType;
           } else if(type === 'description' || type === 'text-area'){
@@ -557,12 +557,12 @@
           }
         } else {
           // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
-          const normalizedType = getBaseFieldType(type);
+          const normalizedType = getBaseFieldset(type);
           if(normalizedType){
             type = normalizedType;
           }
-          // Validate against FORM_FIELD_TYPES
-          if(!(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELD_TYPES) ? window.FORM_FIELD_TYPES : []).some(opt => opt.value === type)){
+          // Validate against FORM_FIELDSETS
+          if(!(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELDSETS) ? window.FORM_FIELDSETS : []).some(opt => opt.value === type)){
             type = 'text-box';
           }
           safe.type = type;
@@ -591,13 +591,13 @@
           // If options are empty or only have empty strings, try to seed from field type placeholder (e.g., "A,B,C")
           const hasNonEmptyOptions = safe.options.some(opt => opt && typeof opt === 'string' && opt.trim() !== '');
           if(!hasNonEmptyOptions){
-            const fieldTypeKey = field.fieldTypeKey || field.key || '';
-            if(fieldTypeKey === 'dropdown' || fieldTypeKey === 'radio'){
-              // Try to get placeholder from FORM_FIELD_TYPES
-              if(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELD_TYPES)){
-                const matchingFieldType = window.FORM_FIELD_TYPES.find(ft => ft.value === fieldTypeKey);
-                if(matchingFieldType && matchingFieldType.placeholder){
-                  const placeholderStr = matchingFieldType.placeholder.trim();
+            const fieldsetKey = field.fieldsetKey || field.key || '';
+            if(fieldsetKey === 'dropdown' || fieldsetKey === 'radio'){
+              // Try to get placeholder from FORM_FIELDSETS
+              if(typeof window !== 'undefined' && Array.isArray(window.FORM_FIELDSETS)){
+                const matchingFieldset = window.FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
+                if(matchingFieldset && matchingFieldset.placeholder){
+                  const placeholderStr = matchingFieldset.placeholder.trim();
                   if(placeholderStr){
                     const parsed = placeholderStr.split(',').map(s => s.trim()).filter(s => s);
                     if(parsed.length > 0){
@@ -639,7 +639,7 @@
         }
         
         // Preserve checkoutOptions for checkout fields
-        if(safe.type === 'checkout' || field.type === 'checkout' || field.fieldTypeKey === 'checkout'){
+        if(safe.type === 'checkout' || field.type === 'checkout' || field.fieldsetKey === 'checkout'){
           if(Array.isArray(field.checkoutOptions)){
             safe.checkoutOptions = field.checkoutOptions.slice();
           } else {
@@ -1249,24 +1249,24 @@
       } else if(!safeField.name.trim()){
         safeField.name = '';
       }
-      // Use fieldTypeKey or key as source of truth if type is not set or is just input_type
-      const fieldTypeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+      // Use fieldsetKey or key as source of truth if type is not set or is just input_type
+      const fieldsetKey = safeField.fieldsetKey || safeField.key || safeField.type || '';
       if(typeof safeField.type !== 'string' || !safeField.type.trim()){
-        // If we have a fieldTypeKey, use it; otherwise throw error
-        if(!fieldTypeKey) throw new Error('Field type is required. Missing both type and fieldTypeKey for field: ' + JSON.stringify(field));
-        safeField.type = fieldTypeKey;
+        // If we have a fieldsetKey, use it; otherwise throw error
+        if(!fieldsetKey) throw new Error('Fieldset is required. Missing both type and fieldsetKey for field: ' + JSON.stringify(field));
+        safeField.type = fieldsetKey;
       } else {
         // Normalize field type to extract base type (e.g., "description [field=2]" -> "description")
         // BUT preserve description and text-area types BEFORE normalization
         const originalType = safeField.type;
-        const normalizedType = getBaseFieldType(originalType);
+        const normalizedType = getBaseFieldset(originalType);
         
-        // If fieldTypeKey exists and is different from normalized type, prefer fieldTypeKey
+        // If fieldsetKey exists and is different from normalized type, prefer fieldsetKey
         // This ensures radio uses 'radio' not something else
-        if(fieldTypeKey && fieldTypeKey !== normalizedType && 
-           (fieldTypeKey === 'radio' || fieldTypeKey === 'dropdown' || 
-            fieldTypeKey === 'description' || fieldTypeKey === 'text-area')){
-          safeField.type = fieldTypeKey;
+        if(fieldsetKey && fieldsetKey !== normalizedType && 
+           (fieldsetKey === 'radio' || fieldsetKey === 'dropdown' || 
+            fieldsetKey === 'description' || fieldsetKey === 'text-area')){
+          safeField.type = fieldsetKey;
         }
         // If the original type or normalized type is description/text-area, preserve it
         else if(originalType === 'description' || originalType === 'text-area' || 
@@ -1297,9 +1297,9 @@
       if(!Array.isArray(safeField.options)){
         safeField.options = [];
       }
-      // CRITICAL: Preserve fieldTypeKey and key on the returned object
+      // CRITICAL: Preserve fieldsetKey and key on the returned object
       if(field && typeof field === 'object'){
-        if(field.fieldTypeKey) safeField.fieldTypeKey = field.fieldTypeKey;
+        if(field.fieldsetKey) safeField.fieldsetKey = field.fieldsetKey;
         if(field.key) safeField.key = field.key;
       }
       return safeField;
@@ -1369,7 +1369,7 @@
           throw new Error('Field type is required. Missing type for field: ' + JSON.stringify(field));
         }
         const rawType = field.type;
-        const type = getBaseFieldType(rawType);
+        const type = getBaseFieldset(rawType);
         if(!type) throw new Error('Field type is required. Cannot determine type from rawType: ' + rawType);
         const label = field.name && field.name.trim() ? field.name.trim() : 'This field';
         let value;
