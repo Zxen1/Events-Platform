@@ -2325,6 +2325,14 @@ let __notifyMapOnInteraction = null;
               // Mark settings as loaded - safe to save now
               window._adminSettingsLoaded = true;
               console.log('[Admin Settings] Loaded successfully - saving enabled');
+              
+              // Refresh saved state to capture all loaded settings as the baseline
+              // This ensures the save button only enables when there are actual changes
+              setTimeout(() => {
+                if(window.adminPanelModule && typeof window.adminPanelModule.markSaved === 'function'){
+                  window.adminPanelModule.markSaved();
+                }
+              }, 100);
           }
         } catch(err){
           console.error('Failed to load admin settings from database:', err);
@@ -24553,13 +24561,21 @@ const adminPanelChangeManager = (()=>{
 
   ensureElements();
   attachListeners();
-  // REMOVED: initializeSavedState() - formbuilder should only load when Forms tab is opened, not on startup
-  // This was causing 5-20 minute load times
+  // Initialize saved state immediately for Settings tab dirty tracking (no formbuilder wait)
+  // Formbuilder data loads lazily when Forms tab is opened
+  if(form){
+    savedState = serializeState();
+    savedStateInitialized = true;
+  }
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(()=>{
       ensureElements();
       attachListeners();
-      // REMOVED: initializeSavedState() - formbuilder should only load when Forms tab is opened, not on startup
+      // Initialize saved state if not already done
+      if(!savedStateInitialized && form){
+        savedState = serializeState();
+        savedStateInitialized = true;
+      }
     }, 0);
   });
 
