@@ -527,11 +527,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $hasKey = in_array('fieldset_key', $columns, true) || in_array('fieldset_key', $columns, true);
     $hasName = in_array('fieldset_name', $columns, true) || in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
-    $hasPlaceholder = in_array('placeholder', $columns, true) || in_array('fieldset_placeholder', $columns, true);
-    $hasFieldsetPlaceholder = in_array('fieldset_placeholder', $columns, true);
+    $hasPlaceholder = in_array('placeholder', $columns, true);
     $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
     $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
-    $hasFieldsetEditable = in_array('fieldset_editable', $columns, true);
     $hasFieldsetFields = in_array('fieldset_fields', $columns, true) || in_array('fieldset_fields', $columns, true);
 
     if ($hasId) {
@@ -551,9 +549,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $selectColumns[] = '`fieldset_name`';
         }
     }
-    if ($hasFieldsetPlaceholder) {
-        $selectColumns[] = '`fieldset_placeholder`';
-    } elseif ($hasPlaceholder) {
+    if ($hasPlaceholder) {
         $selectColumns[] = '`placeholder`';
     }
     if ($hasFieldsetTooltip) {
@@ -561,12 +557,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     }
     if ($hasFormbuilderEditable) {
         $selectColumns[] = '`formbuilder_editable`';
-    }
-    if ($hasFieldsetEditable) {
-        $selectColumns[] = '`fieldset_editable`';
-    }
-    if ($hasFieldsetPlaceholder) {
-        $selectColumns[] = '`fieldset_placeholder`';
     }
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
@@ -676,21 +666,14 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         } else {
             $entry['name'] = $rawName;
         }
-        if ($hasFieldsetPlaceholder && isset($row['fieldset_placeholder']) && is_string($row['fieldset_placeholder'])) {
-            $entry['fieldset_placeholder'] = trim($row['fieldset_placeholder']);
-            $entry['placeholder'] = trim($row['fieldset_placeholder']);
-        } elseif ($hasPlaceholder && isset($row['placeholder']) && is_string($row['placeholder'])) {
+        if ($hasPlaceholder && isset($row['placeholder']) && is_string($row['placeholder'])) {
             $entry['placeholder'] = trim($row['placeholder']);
         }
         if ($hasFieldsetTooltip && isset($row['fieldset_tooltip']) && is_string($row['fieldset_tooltip'])) {
             $entry['fieldset_tooltip'] = trim($row['fieldset_tooltip']);
         }
-        if ($hasFieldsetEditable && isset($row['fieldset_editable'])) {
-            $entry['fieldset_editable'] = (bool) $row['fieldset_editable'];
-            $entry['formbuilder_editable'] = (bool) $row['fieldset_editable'];
-        } elseif ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
+        if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
             $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
-            $entry['fieldset_editable'] = (bool) $row['formbuilder_editable'];
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
@@ -705,29 +688,29 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
                 $fieldsetFieldsJson = $row['fieldset_fields'];
             } elseif (array_key_exists('fieldset_fields', $row)) {
                 $fieldsetFieldsJson = $row['fieldset_fields'];
-            }
-            if ($fieldsetFieldsJson !== null) {
-                if (is_string($fieldsetFieldsJson)) {
-                    if ($fieldsetFieldsJson === '') {
-                        $entry['fieldset_fields'] = [];
-                    } else {
-                        $decoded = json_decode($fieldsetFieldsJson, true);
-                        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-                            $entry['fieldset_fields'] = [];
-                        } else {
-                            $entry['fieldset_fields'] = $decoded;
-                        }
-                    }
-                } elseif (is_array($fieldsetFieldsJson)) {
-                    $entry['fieldset_fields'] = $fieldsetFieldsJson;
-                } else {
-                    $entry['fieldset_fields'] = [];
-                }
             } else {
-                $entry['fieldset_fields'] = [];
+                throw new RuntimeException("fieldset_fields column missing for fieldset id: " . ($entry['id'] ?? 'unknown'));
             }
-        } else {
-            $entry['fieldset_fields'] = [];
+            if ($fieldsetFieldsJson === null) {
+                throw new RuntimeException("fieldset_fields is NULL for fieldset id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
+            }
+            if (is_string($fieldsetFieldsJson)) {
+                if ($fieldsetFieldsJson === '') {
+                    throw new RuntimeException("fieldset_fields is empty string for fieldset id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
+                }
+                $decoded = json_decode($fieldsetFieldsJson, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new RuntimeException("Invalid JSON in fieldset_fields for fieldset id: " . ($entry['id'] ?? 'unknown') . " - " . json_last_error_msg());
+                }
+                if (!is_array($decoded)) {
+                    throw new RuntimeException("fieldset_fields must be a JSON array for fieldset id: " . ($entry['id'] ?? 'unknown') . " - got: " . gettype($decoded));
+                }
+                $entry['fieldset_fields'] = $decoded;
+            } elseif (is_array($fieldsetFieldsJson)) {
+                $entry['fieldset_fields'] = $fieldsetFieldsJson;
+            } else {
+                throw new RuntimeException("fieldset_fields must be a JSON array or string for fieldset id: " . ($entry['id'] ?? 'unknown') . " - got: " . gettype($fieldsetFieldsJson));
+            }
         }
 
         $fieldsets[] = $entry;
@@ -992,9 +975,12 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             
             // Extract field IDs from fieldset_fields JSON array (fallback to fieldset_fields for backward compatibility)
             $itemIds = [];
-            $fieldsetFields = $matchingFieldset['fieldset_fields'] ?? $matchingFieldset['fieldset_fields'] ?? [];
+            $fieldsetFields = $matchingFieldset['fieldset_fields'] ?? $matchingFieldset['fieldset_fields'] ?? null;
+            if (!isset($fieldsetFields)) {
+                throw new RuntimeException("fieldset_fields missing for fieldset id: " . $fieldsetId);
+            }
             if (!is_array($fieldsetFields)) {
-                $fieldsetFields = [];
+                throw new RuntimeException("fieldset_fields must be an array for fieldset id: " . $fieldsetId);
             }
             
             // fieldset_fields contains array of field keys like ["title", "description"]
@@ -1035,42 +1021,22 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 }
                 
                 // Check if this field type is editable and has customizations
-                $isEditable = (isset($matchingFieldset['fieldset_editable']) && $matchingFieldset['fieldset_editable'] === true) || 
-                              (isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true);
+                $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 
                 $customName = null;
-                $customPlaceholder = null;
                 $customOptions = null;
-                $customTooltip = null;
                 $customCheckoutOptions = null;
                 
-                $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
-                $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
-                $defaultPlaceholder = isset($matchingFieldset['fieldset_placeholder']) ? $matchingFieldset['fieldset_placeholder'] : (isset($matchingFieldset['placeholder']) ? $matchingFieldset['placeholder'] : '');
-                $defaultTooltip = isset($matchingFieldset['fieldset_tooltip']) ? $matchingFieldset['fieldset_tooltip'] : '';
-                
-                // For editable fieldsets, always read from JSON (fallback to fieldset defaults if not in JSON)
-                if ($isEditable) {
-                    if ($fieldEdit && is_array($fieldEdit)) {
-                        $customName = isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '' ? trim($fieldEdit['name']) : $fieldsetName;
-                        $customPlaceholder = isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) ? trim($fieldEdit['placeholder']) : $defaultPlaceholder;
-                        $customTooltip = isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) ? trim($fieldEdit['tooltip']) : $defaultTooltip;
-                        if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
-                            $customOptions = $fieldEdit['options'];
-                        }
-                    } else {
-                        // No JSON entry yet, use fieldset defaults
-                        $customName = $fieldsetName;
-                        $customPlaceholder = $defaultPlaceholder;
-                        $customTooltip = $defaultTooltip;
+                // Load customizations for editable fields
+                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                    if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
+                        $customName = trim($fieldEdit['name']);
                     }
-                } else {
-                    // Non-editable: use fieldset defaults
-                    $customName = $fieldsetName;
-                    $customPlaceholder = $defaultPlaceholder;
-                    $customTooltip = $defaultTooltip;
+                    if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
+                        $customOptions = $fieldEdit['options'];
+                    }
                 }
                 
                 // For checkout fields, use checkout_options_id column (array of checkout option IDs)
@@ -1078,33 +1044,22 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     $customCheckoutOptions = $checkoutOptionsIds;
                 }
                 
+                $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
+                $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
+                
                 $builtField = [
                     'id' => $matchingFieldset['id'],
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
-                    'name' => $customName,
+                    'name' => $customName !== null ? $customName : $fieldsetName,
+                    'placeholder' => $matchingFieldset['placeholder'] ?? '',
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
                 
-                // Always include placeholder and tooltip for editable fieldsets
-                if ($isEditable) {
-                    $builtField['placeholder'] = $customPlaceholder;
-                    $builtField['tooltip'] = $customTooltip;
-                } else {
-                    if ($customPlaceholder !== '') {
-                        $builtField['placeholder'] = $customPlaceholder;
-                    }
-                }
-                
                 // Use custom options from editable_fieldsets if available
                 if ($customOptions !== null && is_array($customOptions)) {
                     $builtField['options'] = $customOptions;
-                }
-                
-                // Add custom tooltip for non-editable if it exists
-                if (!$isEditable && $customTooltip !== '') {
-                    $builtField['tooltip'] = $customTooltip;
                 }
                 
                 // Add checkout options if available
@@ -1117,65 +1072,34 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             // Otherwise → create ONE field object using fieldset properties, with all items as children
             else {
                 // Check if this field type is editable and has customizations
-                $isEditable = (isset($matchingFieldset['fieldset_editable']) && $matchingFieldset['fieldset_editable'] === true) || 
-                              (isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true);
+                $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
-                
-                $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
-                $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
-                $defaultPlaceholder = isset($matchingFieldset['fieldset_placeholder']) ? $matchingFieldset['fieldset_placeholder'] : (isset($matchingFieldset['placeholder']) ? $matchingFieldset['placeholder'] : '');
-                $defaultTooltip = isset($matchingFieldset['fieldset_tooltip']) ? $matchingFieldset['fieldset_tooltip'] : '';
-                
-                // For editable fieldsets, always read from JSON (fallback to fieldset defaults if not in JSON)
-                if ($isEditable) {
-                    if ($fieldEdit && is_array($fieldEdit)) {
-                        $customName = isset($fieldEdit['name']) && is_string($fieldEdit['name']) ? trim($fieldEdit['name']) : $fieldsetName;
-                        $customPlaceholder = isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) ? trim($fieldEdit['placeholder']) : $defaultPlaceholder;
-                        $customTooltip = isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) ? trim($fieldEdit['tooltip']) : $defaultTooltip;
-                    } else {
-                        // No JSON entry yet, use fieldset defaults
-                        $customName = $fieldsetName;
-                        $customPlaceholder = $defaultPlaceholder;
-                        $customTooltip = $defaultTooltip;
-                    }
-                } else {
-                    // Non-editable: use fieldset defaults
-                    $customName = $fieldsetName;
-                    $customPlaceholder = $defaultPlaceholder;
-                    $customTooltip = $defaultTooltip;
-                }
-                
-                // For checkout fields, use checkout_options_id column
+                $customName = null;
                 $customCheckoutOptions = null;
+                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                    if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
+                        $customName = trim($fieldEdit['name']);
+                    }
+                }
+                // For checkout fields, use checkout_options_id column
                 if ($isCheckout && !empty($checkoutOptionsIds)) {
                     $customCheckoutOptions = $checkoutOptionsIds;
                 }
+                
+                $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
+                $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
                 
                 $builtField = [
                     'id' => $matchingFieldset['id'],
                     'key' => $fieldsetKeyValue,
                     'type' => $fieldsetKeyValue,
-                    'name' => $customName,
+                    'name' => $customName !== null ? $customName : $fieldsetName,
+                    'placeholder' => $matchingFieldset['placeholder'] ?? '',
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],
                 ];
-                
-                // Always include placeholder and tooltip for editable fieldsets
-                if ($isEditable) {
-                    $builtField['placeholder'] = $customPlaceholder;
-                    $builtField['tooltip'] = $customTooltip;
-                } else {
-                    if ($customPlaceholder !== '') {
-                        $builtField['placeholder'] = $customPlaceholder;
-                    }
-                }
-                
-                // Add custom tooltip for non-editable if it exists
-                if (!$isEditable && $customTooltip !== '') {
-                    $builtField['tooltip'] = $customTooltip;
-                }
                 
                 // Add checkout options if available
                 if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {

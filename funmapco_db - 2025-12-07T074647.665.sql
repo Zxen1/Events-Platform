@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 06:55 AM
+-- Generation Time: Dec 07, 2025 at 07:46 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -312,10 +312,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 06:44:15'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 06:44:15'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 06:44:15'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 06:44:15');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 07:43:27'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 07:43:27'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 07:43:27'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 07:43:27');
 
 -- --------------------------------------------------------
 
@@ -412,9 +412,9 @@ CREATE TABLE `fieldsets` (
   `id` int(11) NOT NULL,
   `fieldset_name` varchar(255) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
-  `fieldset_placeholder` varchar(512) DEFAULT NULL,
+  `placeholder` text DEFAULT NULL,
   `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
-  `fieldset_editable` tinyint(1) NOT NULL DEFAULT 0,
+  `formbuilder_editable` tinyint(1) DEFAULT NULL,
   `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `sort_order` int(10) UNSIGNED DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -425,7 +425,7 @@ CREATE TABLE `fieldsets` (
 -- Dumping data for table `fieldsets`
 --
 
-INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_placeholder`, `fieldset_tooltip`, `fieldset_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
+INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `fieldset_tooltip`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
 (1, 'Title', 'title', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, '[\"title\"]', 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (2, 'Description', 'description', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, '[\"description\"]', 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (3, 'Text Box (editable)', 'text-box', 'eg. Diamonds and Pearls', 'Write stuff here.', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
@@ -867,7 +867,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `editable_fieldsets`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Venue Ticketing, Text Box (editable)', '1,1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-06 19:43:59'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Venue Ticketing, Text Box (editable)', '1,1,1,1,1', '{\"4\":{\"name\":\"Text Box (editable)\",\"placeholder\":\"eg. Diamonds and Pearls\"}}', NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-06 20:38:04'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 12:44:10'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
@@ -891,7 +891,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 16:03:16');
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\",\"placeholder\":\"eg. Diamonds and Pearls\"},\"3\":{\"name\":\"Write an Essay\",\"placeholder\":\"eg. Sing along!\"},\"4\":{\"name\":\"Droppable\",\"placeholder\":\"One,Two,Three\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"placeholder\":\"Four,Five,Six\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 20:38:04');
 
 -- --------------------------------------------------------
 
@@ -1136,7 +1136,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4817;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4852;
 
 --
 -- AUTO_INCREMENT for table `banned_words`

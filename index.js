@@ -3494,13 +3494,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(typeof source.type === 'string' && source.type){
             option.type = source.type;
           }
-          if(typeof source.fieldset_editable !== 'undefined'){
+          if(typeof source.formbuilder_editable !== 'undefined'){
             // Handle both boolean (true/false) and numeric (0/1) values from database
-            option.fieldset_editable = source.fieldset_editable === true || source.fieldset_editable === 1 || source.fieldset_editable === '1';
-          }
-          // Backward compatibility
-          if(typeof source.formbuilder_editable !== 'undefined' && typeof option.fieldset_editable === 'undefined'){
-            option.fieldset_editable = source.formbuilder_editable === true || source.formbuilder_editable === 1 || source.formbuilder_editable === '1';
+            option.formbuilder_editable = source.formbuilder_editable === true || source.formbuilder_editable === 1 || source.formbuilder_editable === '1';
           }
           if(typeof source.sort_order !== 'undefined'){
             option.sort_order = source.sort_order;
@@ -8414,7 +8410,7 @@ function makePosts(){
       // For editable fields, preserve existing custom names
       if(fieldsetKey && resolvedFieldsetName){
         const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
-        const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
+        const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
         // Only auto-name if not editable OR if name is empty
         if(!isEditable || !safeField.name || safeField.name.trim() === ''){
           safeField.name = resolvedFieldsetName;
@@ -8549,19 +8545,11 @@ function makePosts(){
         const fieldLimits = getFieldLimits(baseType);
         const minLength = fieldLimits.min_length;
         const maxLength = fieldLimits.max_length;
-        // Get custom tooltip - check field.tooltip first (from editable_fieldsets), then fall back to fieldset tooltip
-        // If field.tooltip is empty/undefined, use fieldset default
-        let customTooltip = null;
-        if(field.tooltip && typeof field.tooltip === 'string' && field.tooltip.trim() !== ''){
-          customTooltip = field.tooltip.trim();
-        }
-        // If no custom tooltip or it's empty, fall back to fieldset tooltip
-        if(!customTooltip){
-          const matchingFieldset = FORM_FIELDSETS.find(fs => 
-            (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
-          );
-          customTooltip = matchingFieldset?.fieldset_tooltip || null;
-        }
+        // Get custom tooltip from fieldset - match by value, key, fieldset_key, or fieldsetKey
+        const matchingFieldset = FORM_FIELDSETS.find(fs => 
+          (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
+        );
+        const customTooltip = matchingFieldset?.fieldset_tooltip || null;
         let charCounter = null;
         
         if(baseType === 'text-area' || baseType === 'description'){
@@ -14088,7 +14076,7 @@ function makePosts(){
                 safeField.fieldset_name = updatedFieldsetName;
                 safeField.fieldsetName = updatedFieldsetName;
                 
-                const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
+                const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
                 if(!isEditable && updatedFieldsetName){
                   safeField.name = updatedFieldsetName;
                 } else if(isEditable && !safeField.name){
@@ -14199,6 +14187,7 @@ function makePosts(){
             const fieldNameInput = document.createElement('input');
             fieldNameInput.type = 'text';
             fieldNameInput.className = 'field-name-input';
+            fieldNameInput.placeholder = 'Field name';
             fieldNameInput.value = safeField.name || '';
             fieldNameLabel.appendChild(fieldNameInput);
             fieldNameContainer.appendChild(fieldNameLabel);
@@ -14222,62 +14211,6 @@ function makePosts(){
               }
             });
 
-            // Field placeholder input (shown in edit panel for editable fields only)
-            const fieldPlaceholderContainer = document.createElement('div');
-            fieldPlaceholderContainer.className = 'field-placeholder-editor';
-            fieldPlaceholderContainer.style.display = 'none';
-            const fieldPlaceholderLabel = document.createElement('label');
-            fieldPlaceholderLabel.textContent = 'Placeholder';
-            const fieldPlaceholderInput = document.createElement('input');
-            fieldPlaceholderInput.type = 'text';
-            fieldPlaceholderInput.className = 'field-placeholder-input';
-            fieldPlaceholderInput.value = safeField.placeholder || '';
-            fieldPlaceholderLabel.appendChild(fieldPlaceholderInput);
-            fieldPlaceholderContainer.appendChild(fieldPlaceholderLabel);
-            
-            // Sync placeholder input with field data
-            fieldPlaceholderInput.addEventListener('input', ()=>{
-              safeField.placeholder = fieldPlaceholderInput.value;
-              notifyFormbuilderChange();
-            });
-            fieldPlaceholderInput.addEventListener('blur', ()=>{
-              if(formbuilderAutoSaveTimer){
-                clearTimeout(formbuilderAutoSaveTimer);
-                formbuilderAutoSaveTimer = null;
-                if(typeof window.adminPanelModule?.runSave === 'function'){
-                  window.adminPanelModule.runSave({ closeAfter: false });
-                }
-              }
-            });
-
-            // Field tooltip input (shown in edit panel for editable fields only)
-            const fieldTooltipContainer = document.createElement('div');
-            fieldTooltipContainer.className = 'field-tooltip-editor';
-            fieldTooltipContainer.style.display = 'none';
-            const fieldTooltipLabel = document.createElement('label');
-            fieldTooltipLabel.textContent = 'Tooltip';
-            const fieldTooltipInput = document.createElement('textarea');
-            fieldTooltipInput.className = 'field-tooltip-input';
-            fieldTooltipInput.rows = 3;
-            fieldTooltipInput.value = safeField.tooltip || '';
-            fieldTooltipLabel.appendChild(fieldTooltipInput);
-            fieldTooltipContainer.appendChild(fieldTooltipLabel);
-            
-            // Sync tooltip input with field data
-            fieldTooltipInput.addEventListener('input', ()=>{
-              safeField.tooltip = fieldTooltipInput.value;
-              notifyFormbuilderChange();
-            });
-            fieldTooltipInput.addEventListener('blur', ()=>{
-              if(formbuilderAutoSaveTimer){
-                clearTimeout(formbuilderAutoSaveTimer);
-                formbuilderAutoSaveTimer = null;
-                if(typeof window.adminPanelModule?.runSave === 'function'){
-                  window.adminPanelModule.runSave({ closeAfter: false });
-                }
-              }
-            });
-
             const fieldRequiredToggle = document.createElement('label');
             fieldRequiredToggle.className = 'field-required-toggle';
             const fieldRequiredInput = document.createElement('input');
@@ -14288,7 +14221,7 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldNameContainer, fieldPlaceholderContainer, fieldRequiredToggle, fieldsetWrapper);
+            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldsetWrapper);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14756,31 +14689,6 @@ function makePosts(){
               fieldNameContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
                 fieldNameInput.value = safeField.name || '';
-                // Initialize JSON with defaults if not already set
-                if(!safeField.name && matchingFieldset){
-                  safeField.name = matchingFieldset.fieldset_name || matchingFieldset.name || '';
-                  notifyFormbuilderChange();
-                }
-              }
-              // Show placeholder editor only for editable field types
-              fieldPlaceholderContainer.style.display = isEditable ? '' : 'none';
-              if(isEditable){
-                fieldPlaceholderInput.value = safeField.placeholder || '';
-                // Initialize JSON with defaults if not already set
-                if(safeField.placeholder === undefined && matchingFieldset){
-                  safeField.placeholder = matchingFieldset.fieldset_placeholder || matchingFieldset.placeholder || '';
-                  notifyFormbuilderChange();
-                }
-              }
-              // Show tooltip editor only for editable field types
-              fieldTooltipContainer.style.display = isEditable ? '' : 'none';
-              if(isEditable){
-                fieldTooltipInput.value = safeField.tooltip || '';
-                // Initialize JSON with defaults if not already set
-                if(safeField.tooltip === undefined && matchingFieldset){
-                  safeField.tooltip = matchingFieldset.fieldset_tooltip || '';
-                  notifyFormbuilderChange();
-                }
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;
@@ -14909,8 +14817,7 @@ function makePosts(){
               }
             });
 
-            // Add placeholder and tooltip editors last, before delete button
-            editPanel.append(fieldPlaceholderContainer, fieldTooltipContainer, actionFieldBtn);
+            editPanel.append(actionFieldBtn);
 
             const destroy = ()=>{
               document.removeEventListener('pointerdown', handleFieldEditPointerDown, true);
@@ -15015,7 +14922,7 @@ function makePosts(){
             const updateFieldSummary = ()=>{
               const fieldsetKey = safeField.fieldsetKey || safeField.key || safeField.type || '';
               const matchingFieldset = FORM_FIELDSETS.find(ft => ft.value === fieldsetKey);
-              const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
+              const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
               
               const customName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : '';
               const storedFieldsetName = (typeof safeField.fieldset_name === 'string' && safeField.fieldset_name.trim())
@@ -15216,7 +15123,7 @@ function makePosts(){
               newField.fieldset_name = fieldsetName;
               newField.fieldsetName = fieldsetName;
               
-              const isEditable = matchingFieldset && (matchingFieldset.fieldset_editable === true || matchingFieldset.formbuilder_editable === true);
+              const isEditable = matchingFieldset && matchingFieldset.formbuilder_editable === true;
               if(!isEditable && fieldsetName){
                 newField.name = fieldsetName;
               } else if(isEditable && !newField.name){
@@ -24452,7 +24359,7 @@ form.addEventListener('input', formChangedWrapper, true);
             console.error('Failed to save messages/tooltips:', messageResult.message || 'Unknown error');
           } else {
             if(modifiedMessages.length > 0){
-            console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+              console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
             }
             if(modifiedFieldsetTooltips.length > 0){
               console.log(`Fieldset tooltips saved successfully (${messageResult.fieldset_tooltips_updated || 0} updated)`);
