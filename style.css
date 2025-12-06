@@ -9387,6 +9387,8 @@ html, body { cursor: auto !important; }
               line-height:1.4;
               display:flex;
               align-items:center;
+              justify-content:flex-start;
+              text-align:left;
               cursor:pointer;
               border-radius:6px;
               transition:background 0.15s ease;
