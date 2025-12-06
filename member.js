@@ -740,8 +740,10 @@
         currencyMenuBtn.setAttribute('aria-expanded', 'false');
         const currencyMenuId = `member-item-currency-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
-        const existingCurrency = option.currency || '';
-        currencyMenuBtn.textContent = existingCurrency || 'Currency';
+        // Default to USD if no currency set
+        const existingCurrency = option.currency || 'USD';
+        if (!option.currency) option.currency = 'USD';
+        currencyMenuBtn.textContent = existingCurrency;
         currencyMenuBtn.dataset.value = existingCurrency;
         const currencyArrow = document.createElement('span');
         currencyArrow.className = 'dropdown-arrow';
@@ -751,31 +753,31 @@
         currencyMenu.className = 'options-menu';
         currencyMenu.id = currencyMenuId;
         currencyMenu.hidden = true;
-        const placeholderBtn = document.createElement('button');
-        placeholderBtn.type = 'button';
-        placeholderBtn.className = 'menu-option';
-        placeholderBtn.textContent = 'Currency';
-        placeholderBtn.dataset.value = '';
-        placeholderBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          currencyMenuBtn.textContent = 'Currency';
-          currencyMenuBtn.dataset.value = '';
-          currencyMenu.hidden = true;
-          currencyMenuBtn.setAttribute('aria-expanded', 'false');
-          option.currency = '';
-          updatePostButtonState();
-        });
-        currencyMenu.appendChild(placeholderBtn);
-        const availableCurrencies = currencies.length > 0 ? currencies : (Array.isArray(window.currencies) ? window.currencies : []);
-        availableCurrencies.forEach(code => {
+        
+        // Helper to get currency display text
+        const getCurrencyDisplay = (code) => {
+          if (Array.isArray(window.currencyData)) {
+            const match = window.currencyData.find(c => c.value === code);
+            if (match && match.label) return `${code} - ${match.label}`;
+          }
+          return code;
+        };
+        
+        // Populate currency options with full labels
+        const availableCurrencies = Array.isArray(window.currencyData) && window.currencyData.length > 0 
+          ? window.currencyData 
+          : (currencies.length > 0 ? currencies.map(c => ({value: c, label: ''})) : (Array.isArray(window.currencies) ? window.currencies.map(c => ({value: c, label: ''})) : []));
+        
+        availableCurrencies.forEach(opt => {
+          const code = typeof opt === 'string' ? opt : opt.value;
           const optionBtn = document.createElement('button');
           optionBtn.type = 'button';
           optionBtn.className = 'menu-option';
-          optionBtn.textContent = code;
+          optionBtn.textContent = getCurrencyDisplay(code);
           optionBtn.dataset.value = code;
           optionBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            currencyMenuBtn.textContent = code;
+            currencyMenuBtn.textContent = code; // Button shows just the code
             currencyMenuBtn.dataset.value = code;
             currencyMenu.hidden = true;
             currencyMenuBtn.setAttribute('aria-expanded', 'false');
@@ -793,10 +795,21 @@
           } else {
             currencyMenu.hidden = false;
             currencyMenuBtn.setAttribute('aria-expanded', 'true');
+            
+            // Keyboard navigation for currency dropdown
+            if (typeof setupCurrencyMenuKeyboardNav === 'function') {
+              const cleanupKeyboardNav = setupCurrencyMenuKeyboardNav(currencyMenu, () => {
+                currencyMenu.hidden = true;
+                currencyMenuBtn.setAttribute('aria-expanded', 'false');
+              });
+              var keyboardCleanup = cleanupKeyboardNav;
+            }
+            
             const outsideHandler = (ev) => {
               if(!ev.target.closest(currencyWrapper)){
                 currencyMenu.hidden = true;
                 currencyMenuBtn.setAttribute('aria-expanded', 'false');
+                if (typeof keyboardCleanup === 'function') keyboardCleanup();
                 document.removeEventListener('click', outsideHandler);
                 document.removeEventListener('pointerdown', outsideHandler);
               }

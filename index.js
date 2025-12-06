@@ -56,6 +56,36 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
 // Expose globally for other scripts
 window.apiRequest = apiRequest;
 
+// === Currency Helpers ===
+// Get full label for a currency code (e.g., "USD" -> "US Dollar")
+function getCurrencyLabel(code) {
+  if (!code) return '';
+  const upperCode = code.toUpperCase();
+  if (Array.isArray(window.currencyData)) {
+    const match = window.currencyData.find(c => c.value === upperCode);
+    if (match) return match.label;
+  }
+  return '';
+}
+
+// Get display text for dropdown option (e.g., "USD - US Dollar")
+function getCurrencyDisplayText(code) {
+  const label = getCurrencyLabel(code);
+  return label ? `${code} - ${label}` : code;
+}
+
+// Get all currency options with labels
+function getCurrencyOptions() {
+  if (Array.isArray(window.currencyData) && window.currencyData.length > 0) {
+    return window.currencyData;
+  }
+  // Fallback to codes only if currencyData not loaded
+  if (Array.isArray(window.currencies)) {
+    return window.currencies.map(code => ({ value: code, label: '' }));
+  }
+  return [];
+}
+
 // === Currency Dropdown Keyboard Navigation ===
 // Allows typing letters to jump to matching currency codes when dropdown is open
 function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
@@ -2157,6 +2187,11 @@ let __notifyMapOnInteraction = null;
               if(websiteCurrencySelect){
                 // Populate dropdown from general_options
                 if(data.general_options && data.general_options.currency){
+                  // Store currency data with labels globally for member dropdowns
+                  window.currencyData = data.general_options.currency.map(opt => ({
+                    value: opt.value,
+                    label: opt.label
+                  }));
                   // Keep the first "Select Currency" option
                   websiteCurrencySelect.innerHTML = '<option value="">Select Currency</option>';
                   data.general_options.currency.forEach(function(opt){
@@ -8616,17 +8651,18 @@ function makePosts(){
               currencyMenu.id = currencyMenuId;
               currencyMenu.hidden = true;
               // No placeholder needed - USD is always the default
-              const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
-              currencyOptions.forEach(code => {
+              // Populate currency options with full labels
+              getCurrencyOptions().forEach(opt => {
+                const code = opt.value;
                 const optionBtn = document.createElement('button');
                 optionBtn.type = 'button';
                 optionBtn.className = 'menu-option';
-                optionBtn.textContent = code;
+                optionBtn.textContent = getCurrencyDisplayText(code);
                 optionBtn.dataset.value = code;
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                  currencyMenuBtn.textContent = code;
+                  currencyMenuBtn.textContent = code; // Button shows just the code
                   if(arrow) currencyMenuBtn.appendChild(arrow);
                   currencyMenuBtn.dataset.value = code;
                   currencyMenu.hidden = true;
@@ -8639,10 +8675,6 @@ function makePosts(){
                   }
                   if(previousCurrency !== code || priceCleared){
                     safeNotifyFormbuilderChange();
-                  }
-                  const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                  if(placeholder){
-                    placeholder.remove();
                   }
                 });
                 currencyMenu.appendChild(optionBtn);
@@ -8657,20 +8689,20 @@ function makePosts(){
                   // Ensure currency options are populated when menu opens
                   const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
                   if(existingOptions.length === 0){
-                    const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
-                    currencyOptions.forEach(code => {
+                    getCurrencyOptions().forEach(opt => {
+                      const code = opt.value;
                       // Check if option already exists
                       const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
                       if(!existing){
                         const optionBtn = document.createElement('button');
                         optionBtn.type = 'button';
                         optionBtn.className = 'menu-option';
-                        optionBtn.textContent = code;
+                        optionBtn.textContent = getCurrencyDisplayText(code);
                         optionBtn.dataset.value = code;
                         optionBtn.addEventListener('click', (e) => {
                           e.stopPropagation();
                           const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                          currencyMenuBtn.textContent = code;
+                          currencyMenuBtn.textContent = code; // Button shows just the code
                           if(arrow) currencyMenuBtn.appendChild(arrow);
                           currencyMenuBtn.dataset.value = code;
                           currencyMenu.hidden = true;
@@ -8683,10 +8715,6 @@ function makePosts(){
                           }
                           if(previousCurrency !== code || priceCleared){
                             safeNotifyFormbuilderChange();
-                          }
-                          const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                          if(placeholder){
-                            placeholder.remove();
                           }
                         });
                         currencyMenu.appendChild(optionBtn);
@@ -13161,16 +13189,17 @@ function makePosts(){
                           currencyMenu.id = currencyMenuId;
                           currencyMenu.hidden = true;
                           // No placeholder needed - USD is always the default
-                          const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
-                          currencyOptions.forEach(code => {
+                          // Populate currency options with full labels
+                          getCurrencyOptions().forEach(opt => {
+                            const code = opt.value;
                             const optionBtn = document.createElement('button');
                             optionBtn.type = 'button';
                             optionBtn.className = 'menu-option';
-                            optionBtn.textContent = code;
+                            optionBtn.textContent = getCurrencyDisplayText(code);
                             optionBtn.dataset.value = code;
                             optionBtn.addEventListener('click', (e) => {
                               e.stopPropagation();
-                              currencyMenuBtn.textContent = code;
+                              currencyMenuBtn.textContent = code; // Button shows just the code
                               currencyMenuBtn.dataset.value = code;
                               currencyMenuBtn.appendChild(currencyArrow);
                               currencyMenu.hidden = true;
@@ -13190,10 +13219,6 @@ function makePosts(){
                               if(previousCurrency !== nextCurrency || priceCleared || propagated){
                                 markAutoChange();
                               }
-                              const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                              if(placeholder){
-                                placeholder.remove();
-                              }
                             });
                             currencyMenu.appendChild(optionBtn);
                           });
@@ -13207,19 +13232,19 @@ function makePosts(){
                               // Ensure currency options are populated when menu opens
                               const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
                               if(existingOptions.length === 0){
-                                const currencyOptions = Array.isArray(window.currencies) ? window.currencies : [];
-                                currencyOptions.forEach(code => {
+                                getCurrencyOptions().forEach(opt => {
+                                  const code = opt.value;
                                   // Check if option already exists
                                   const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
                                   if(!existing){
                                     const optionBtn = document.createElement('button');
                                     optionBtn.type = 'button';
                                     optionBtn.className = 'menu-option';
-                                    optionBtn.textContent = code;
+                                    optionBtn.textContent = getCurrencyDisplayText(code);
                                     optionBtn.dataset.value = code;
                                     optionBtn.addEventListener('click', (e) => {
                                       e.stopPropagation();
-                                      currencyMenuBtn.textContent = code;
+                                      currencyMenuBtn.textContent = code; // Button shows just the code
                                       currencyMenuBtn.dataset.value = code;
                                       currencyMenuBtn.appendChild(currencyArrow);
                                       currencyMenu.hidden = true;
@@ -13238,10 +13263,6 @@ function makePosts(){
                                       }
                                       if(previousCurrency !== nextCurrency || priceCleared || propagated){
                                         markAutoChange();
-                                      }
-                                      const placeholder = currencyMenu.querySelector('.menu-option[data-value=""]');
-                                      if(placeholder){
-                                        placeholder.remove();
                                       }
                                     });
                                     currencyMenu.appendChild(optionBtn);
