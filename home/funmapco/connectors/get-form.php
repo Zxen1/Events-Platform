@@ -551,7 +551,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $selectColumns[] = '`fieldset_name`';
         }
     }
-    if ($hasPlaceholder) {
+    if ($hasFieldsetPlaceholder) {
+        $selectColumns[] = '`fieldset_placeholder`';
+    } elseif ($hasPlaceholder) {
         $selectColumns[] = '`placeholder`';
     }
     if ($hasFieldsetTooltip) {
@@ -566,12 +568,12 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     if ($hasFieldsetPlaceholder) {
         $selectColumns[] = '`fieldset_placeholder`';
     }
-    if ($hasFieldsetFields) {
-        if (in_array('fieldset_fields', $columns, true)) {
-            $selectColumns[] = '`fieldset_fields`';
-        } elseif (in_array('fieldset_fields', $columns, true)) {
-            $selectColumns[] = '`fieldset_fields`';
-        }
+    // Always select fieldset_fields if column exists
+    if (in_array('fieldset_fields', $columns, true)) {
+        $selectColumns[] = '`fieldset_fields`';
+        $hasFieldsetFields = true;
+    } else {
+        $hasFieldsetFields = false;
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
@@ -703,29 +705,31 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
                 $fieldsetFieldsJson = $row['fieldset_fields'];
             } elseif (array_key_exists('fieldset_fields', $row)) {
                 $fieldsetFieldsJson = $row['fieldset_fields'];
+            }
+            if ($fieldsetFieldsJson !== null) {
+                if (is_string($fieldsetFieldsJson)) {
+                    if ($fieldsetFieldsJson === '') {
+                        $entry['fieldset_fields'] = [];
+                    } else {
+                        $decoded = json_decode($fieldsetFieldsJson, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $entry['fieldset_fields'] = [];
+                        } elseif (!is_array($decoded)) {
+                            $entry['fieldset_fields'] = [];
+                        } else {
+                            $entry['fieldset_fields'] = $decoded;
+                        }
+                    }
+                } elseif (is_array($fieldsetFieldsJson)) {
+                    $entry['fieldset_fields'] = $fieldsetFieldsJson;
+                } else {
+                    $entry['fieldset_fields'] = [];
+                }
             } else {
-                throw new RuntimeException("fieldset_fields column missing for fieldset id: " . ($entry['id'] ?? 'unknown'));
+                $entry['fieldset_fields'] = [];
             }
-            if ($fieldsetFieldsJson === null) {
-                throw new RuntimeException("fieldset_fields is NULL for fieldset id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
-            }
-            if (is_string($fieldsetFieldsJson)) {
-                if ($fieldsetFieldsJson === '') {
-                    throw new RuntimeException("fieldset_fields is empty string for fieldset id: " . ($entry['id'] ?? 'unknown') . " - must be a JSON array (use [] for empty)");
-                }
-                $decoded = json_decode($fieldsetFieldsJson, true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new RuntimeException("Invalid JSON in fieldset_fields for fieldset id: " . ($entry['id'] ?? 'unknown') . " - " . json_last_error_msg());
-                }
-                if (!is_array($decoded)) {
-                    throw new RuntimeException("fieldset_fields must be a JSON array for fieldset id: " . ($entry['id'] ?? 'unknown') . " - got: " . gettype($decoded));
-                }
-                $entry['fieldset_fields'] = $decoded;
-            } elseif (is_array($fieldsetFieldsJson)) {
-                $entry['fieldset_fields'] = $fieldsetFieldsJson;
-            } else {
-                throw new RuntimeException("fieldset_fields must be a JSON array or string for fieldset id: " . ($entry['id'] ?? 'unknown') . " - got: " . gettype($fieldsetFieldsJson));
-            }
+        } else {
+            $entry['fieldset_fields'] = [];
         }
 
         $fieldsets[] = $entry;
@@ -1055,7 +1059,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // For editable fieldsets, always read from JSON (fallback to fieldset defaults if not in JSON)
                 if ($isEditable) {
                     if ($fieldEdit && is_array($fieldEdit)) {
-                        $customName = isset($fieldEdit['name']) && is_string($fieldEdit['name']) ? trim($fieldEdit['name']) : $fieldsetName;
+                        $customName = isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '' ? trim($fieldEdit['name']) : $fieldsetName;
                         $customPlaceholder = isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) ? trim($fieldEdit['placeholder']) : $defaultPlaceholder;
                         $customTooltip = isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) ? trim($fieldEdit['tooltip']) : $defaultTooltip;
                         if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
