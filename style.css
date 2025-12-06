@@ -1629,9 +1629,18 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:10px;
 }
-.checkout-option-title{
+.checkout-option-title-display{
   flex:1;
   min-width:0;
+  color:#fff;
+  font-size:13px;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.checkout-option-title{
+  width:100%;
   background:rgba(0,0,0,0.2);
   border:1px solid rgba(255,255,255,0.15);
   border-radius:8px;

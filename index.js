@@ -305,13 +305,17 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
     
     tierCard.innerHTML = `
       <div class="checkout-option-header">
-        <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
+        <span class="checkout-option-title-display">${escapeHtml(option.checkout_title) || 'Untitled'}</span>
         <span class="checkout-option-tier-badge ${featuredBadgeText}">${featuredBadgeText}</span>
         <button type="button" class="checkout-options-edit-btn" aria-haspopup="true" aria-expanded="false" title="Edit">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>
         </button>
       </div>
       <div class="checkout-options-edit-panel" hidden>
+        <div class="checkout-option-field">
+          <label>Title</label>
+          <input type="text" class="checkout-option-title" value="${escapeHtml(option.checkout_title)}" placeholder="Title" />
+        </div>
         <label class="checkout-option-active">
           <input type="checkbox" ${option.is_active ? 'checked' : ''} />
           <span>Active</span>
@@ -366,6 +370,15 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
       tierCard.classList.toggle('edit-open', !isOpen);
       editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     });
+    
+    // Title input updates display
+    const titleInput = tierCard.querySelector('.checkout-option-title');
+    const titleDisplay = tierCard.querySelector('.checkout-option-title-display');
+    if(titleInput && titleDisplay){
+      titleInput.addEventListener('input', function(){
+        titleDisplay.textContent = titleInput.value.trim() || 'Untitled';
+      });
+    }
     
     // Featured checkbox updates badge (form's event delegation handles dirty state)
     const featuredCheckbox = tierCard.querySelector('.checkout-option-featured');
