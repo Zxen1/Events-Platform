@@ -9072,24 +9072,46 @@ function makePosts(){
           geocoderContainer.className = 'address_line-geocoder-container';
           const addressInputId = `${baseId}-location-address`;
           geocoderContainer.id = `${baseId}-location-geocoder`;
-          addressRow.appendChild(geocoderContainer);
-          // Full address display element that wraps text
+          // Display element shown when not editing
           const addressDisplay = document.createElement('div');
-          addressDisplay.className = 'address_line-full-display';
-          addressDisplay.hidden = true;
-          addressRow.appendChild(addressDisplay);
-          const updateAddressDisplay = (address) => {
-            if(address && address.trim()){
-              addressDisplay.textContent = address;
+          addressDisplay.className = 'address_line-display';
+          addressDisplay.tabIndex = 0;
+          addressDisplay.setAttribute('role', 'button');
+          addressDisplay.setAttribute('aria-label', 'Click to edit address');
+          const showInput = () => {
+            geocoderContainer.hidden = false;
+            addressDisplay.hidden = true;
+            const input = geocoderContainer.querySelector('input');
+            if(input) input.focus();
+          };
+          const showDisplay = () => {
+            const addr = locationState.address || '';
+            if(addr.trim()){
+              addressDisplay.textContent = addr;
+              geocoderContainer.hidden = true;
               addressDisplay.hidden = false;
             } else {
-              addressDisplay.textContent = '';
+              geocoderContainer.hidden = false;
               addressDisplay.hidden = true;
             }
           };
-          // Initialize with existing address if present
+          addressDisplay.addEventListener('click', showInput);
+          addressDisplay.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ' '){
+              e.preventDefault();
+              showInput();
+            }
+          });
+          addressRow.appendChild(geocoderContainer);
+          addressRow.appendChild(addressDisplay);
+          // Initialize: show display if address exists, otherwise show input
           if(locationState.address && locationState.address.trim()){
-            updateAddressDisplay(locationState.address);
+            addressDisplay.textContent = locationState.address;
+            geocoderContainer.hidden = true;
+            addressDisplay.hidden = false;
+          } else {
+            geocoderContainer.hidden = false;
+            addressDisplay.hidden = true;
           }
           locationWrapper.appendChild(addressRow);
           const latitudeInput = document.createElement('input');
@@ -9263,10 +9285,8 @@ function makePosts(){
                   if(placeName){
                     locationState.address = placeName;
                     geocoderInput.value = placeName;
-                    updateAddressDisplay(placeName);
                   } else {
                     locationState.address = geocoderInput.value || '';
-                    updateAddressDisplay(geocoderInput.value || '');
                   }
                   const center = getMapboxVenueFeatureCenter(clone);
                   if(center && center.length >= 2){
@@ -9276,6 +9296,7 @@ function makePosts(){
                   }
                   syncCoordinateInputs();
                   safeNotifyFormbuilderChange();
+                  showDisplay();
                 }
                 setGeocoderActive(false);
               });
@@ -9284,10 +9305,13 @@ function makePosts(){
                 locationState.latitude = '';
                 locationState.longitude = '';
                 geocoderInput.value = '';
-                updateAddressDisplay('');
                 syncCoordinateInputs();
                 safeNotifyFormbuilderChange();
                 setGeocoderActive(false);
+              });
+              // Switch to display when clicking outside
+              geocoderInput.addEventListener('blur', () => {
+                setTimeout(showDisplay, 150);
               });
               geocoder.on('error', ()=> setGeocoderActive(false));
               return geocoderInput;
@@ -12426,7 +12450,7 @@ function makePosts(){
                     if(geocoderInputRef){
                       geocoderInputRef.value = placeName;
                     }
-                    updateAddressDisplay(placeName);
+                    showVenueDisplay();
                     syncToPreviewField();
                   }
                   if(center){
@@ -12557,24 +12581,46 @@ function makePosts(){
                 addressLine.className = 'venue-line address_line-line';
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'address_line-geocoder-container';
-                addressLine.appendChild(geocoderContainer);
-                // Full address display element that wraps text
+                // Display element shown when not editing
                 const addressDisplay = document.createElement('div');
-                addressDisplay.className = 'address_line-full-display';
-                addressDisplay.hidden = true;
-                addressLine.appendChild(addressDisplay);
-                const updateAddressDisplay = (address) => {
-                  if(address && address.trim()){
-                    addressDisplay.textContent = address;
+                addressDisplay.className = 'address_line-display';
+                addressDisplay.tabIndex = 0;
+                addressDisplay.setAttribute('role', 'button');
+                addressDisplay.setAttribute('aria-label', 'Click to edit address');
+                const showVenueInput = () => {
+                  geocoderContainer.hidden = false;
+                  addressDisplay.hidden = true;
+                  const input = geocoderContainer.querySelector('input');
+                  if(input) input.focus();
+                };
+                const showVenueDisplay = () => {
+                  const addr = venue.address || '';
+                  if(addr.trim()){
+                    addressDisplay.textContent = addr;
+                    geocoderContainer.hidden = true;
                     addressDisplay.hidden = false;
                   } else {
-                    addressDisplay.textContent = '';
+                    geocoderContainer.hidden = false;
                     addressDisplay.hidden = true;
                   }
                 };
-                // Initialize with existing address if present
+                addressDisplay.addEventListener('click', showVenueInput);
+                addressDisplay.addEventListener('keydown', (e) => {
+                  if(e.key === 'Enter' || e.key === ' '){
+                    e.preventDefault();
+                    showVenueInput();
+                  }
+                });
+                addressLine.appendChild(geocoderContainer);
+                addressLine.appendChild(addressDisplay);
+                // Initialize: show display if address exists, otherwise show input
                 if(venue.address && venue.address.trim()){
-                  updateAddressDisplay(venue.address);
+                  addressDisplay.textContent = venue.address;
+                  geocoderContainer.hidden = true;
+                  addressDisplay.hidden = false;
+                } else {
+                  geocoderContainer.hidden = false;
+                  addressDisplay.hidden = true;
                 }
                 venueCard.appendChild(addressLine);
                 const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
@@ -12779,10 +12825,13 @@ function makePosts(){
                     geocoder.on('clear', ()=>{
                       venue.address = '';
                       venue.location = null;
-                      updateAddressDisplay('');
                       clearNameSuggestions();
                       safeNotifyChange();
                       setGeocoderActive(false);
+                    });
+                    // Switch to display when clicking outside
+                    geocoderInput.addEventListener('blur', () => {
+                      setTimeout(showVenueDisplay, 150);
                     });
                     geocoder.on('error', ()=> setGeocoderActive(false));
                   };

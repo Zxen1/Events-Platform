@@ -8663,24 +8663,40 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
               display:none;
             }
-            #tab-forms .address_line-full-display,
-            #memberPanel .member-create-fields .address_line-full-display{
+            #tab-forms .address_line-display,
+            #memberPanel .member-create-fields .address_line-display{
               width:100%;
               padding:8px 12px;
-              margin-top:4px;
               font-family:inherit;
               font-size:14px;
               font-weight:400;
               color:var(--input-text);
-              background:rgba(0,0,0,0.2);
+              background:rgba(0,0,0,0.35);
+              border:1px solid var(--border);
               border-radius:8px;
               line-height:1.4;
               word-wrap:break-word;
               overflow-wrap:break-word;
               white-space:normal;
+              cursor:text;
+              box-sizing:border-box;
+              min-height:36px;
             }
-            #tab-forms .address_line-full-display[hidden],
-            #memberPanel .member-create-fields .address_line-full-display[hidden]{
+            #tab-forms .address_line-display:hover,
+            #memberPanel .member-create-fields .address_line-display:hover{
+              border-color:var(--border-hover, var(--border));
+            }
+            #tab-forms .address_line-display:focus,
+            #memberPanel .member-create-fields .address_line-display:focus{
+              outline:none;
+              border-color:var(--focus-color, #4a90d9);
+            }
+            #tab-forms .address_line-display[hidden],
+            #memberPanel .member-create-fields .address_line-display[hidden]{
+              display:none;
+            }
+            #tab-forms .address_line-geocoder-container[hidden],
+            #memberPanel .member-create-fields .address_line-geocoder-container[hidden]{
               display:none;
             }
             #tab-forms .form-field--location .location-field-wrapper,
