@@ -8740,14 +8740,14 @@ html, body { cursor: auto !important; }
               min-width:0;
               width:100%;
             }
-            #tab-forms .seating_area-label,
-            #tab-forms .pricing_tier-label,
-            #memberPanel .member-create-fields .seating_area-label,
-            #memberPanel .member-create-fields .pricing_tier-label{
+            #tab-forms .panel-field .seating_area-label,
+            #tab-forms .panel-field .pricing_tier-label,
+            #memberPanel .member-create-fields .panel-field .seating_area-label,
+            #memberPanel .member-create-fields .panel-field .pricing_tier-label{
               display:block;
               margin-bottom:0;
               font-size:13px;
-              font-weight:normal;
+              font-weight:400;
             }
             #tab-forms .session-pricing-card,
             #tab-forms .tier-row,
