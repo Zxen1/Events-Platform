@@ -423,15 +423,39 @@ function escapeHtml(str){
 }
 
 // === Message Utility Functions ===
-// NO CACHING - Always fetch fresh messages for development
+// In-memory cache for messages to avoid repeated network requests
+const messagesCache = {
+  user: null,      // Cached user messages (msg_user, msg_member)
+  admin: null,     // Cached admin messages (includes all)
+  lastFetch: 0,    // Timestamp of last fetch
+  maxAge: 60000    // Cache valid for 60 seconds
+};
 
 /**
- * Load messages from database (NO CACHING - always fresh)
+ * Invalidate message cache (call after admin saves messages)
+ */
+function invalidateMessagesCache(){
+  messagesCache.user = null;
+  messagesCache.admin = null;
+  messagesCache.lastFetch = 0;
+}
+window.invalidateMessagesCache = invalidateMessagesCache;
+
+/**
+ * Load messages from database with in-memory caching
  * @param {boolean} includeAdmin - If true, includes admin and email messages (for admin panel)
  * @returns {Promise<Object>} Object mapping message_key to message data
  */
 async function loadMessagesFromDatabase(includeAdmin = false){
   try {
+    const cacheKey = includeAdmin ? 'admin' : 'user';
+    const now = Date.now();
+    
+    // Return cached messages if still valid
+    if(messagesCache[cacheKey] && (now - messagesCache.lastFetch) < messagesCache.maxAge){
+      return messagesCache[cacheKey];
+    }
+    
     // Use deduplicated API request (5 second cache to prevent rapid duplicate calls)
     const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {}, 5000);
     
@@ -470,6 +494,10 @@ async function loadMessagesFromDatabase(includeAdmin = false){
         }
       });
     });
+    
+    // Cache the result
+    messagesCache[cacheKey] = messagesMap;
+    messagesCache.lastFetch = now;
     
     return messagesMap;
   } catch(error){
@@ -23742,6 +23770,11 @@ form.addEventListener('input', formChangedWrapper, true);
             console.error('Failed to save messages:', messageResult.message || 'Unknown error');
           } else {
             console.log(`Messages saved successfully (${messageResult.messages_updated || 0} updated)`);
+            
+            // Invalidate message cache so new messages are fetched
+            if(typeof invalidateMessagesCache === 'function'){
+              invalidateMessagesCache();
+            }
             
             // Update originalValue for all successfully saved messages
             modifiedMessages.forEach(savedMessage => {
