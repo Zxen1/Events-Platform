@@ -3771,6 +3771,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             fieldsetKey: rawValue,
             fieldset_key: rawValue
           };
+          // Explicitly preserve fieldset_tooltip if it exists
+          if(option.fieldset_tooltip !== undefined){
+            sanitizedOption.fieldset_tooltip = option.fieldset_tooltip;
+          }
           sanitized.push(sanitizedOption);
           return;
         }
@@ -8468,8 +8472,10 @@ function makePosts(){
         const fieldLimits = getFieldLimits(baseType);
         const minLength = fieldLimits.min_length;
         const maxLength = fieldLimits.max_length;
-        // Get custom tooltip from fieldset
-        const matchingFieldset = FORM_FIELDSETS.find(fs => (fs.value === baseType || fs.key === baseType));
+        // Get custom tooltip from fieldset - match by value, key, fieldset_key, or fieldsetKey
+        const matchingFieldset = FORM_FIELDSETS.find(fs => 
+          (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
+        );
         const customTooltip = matchingFieldset?.fieldset_tooltip || null;
         let charCounter = null;
         
@@ -16057,9 +16063,9 @@ function makePosts(){
       FORM_FIELDSETS.splice(0, FORM_FIELDSETS.length, ...initialFormbuilderSnapshot.fieldsets.map(option => ({ ...option })));
       window.FORM_FIELDSETS = FORM_FIELDSETS;
       
-      // Reload fieldset tooltips if messages tab is open
+      // Reload fieldset tooltips if messages tab is open (always try to reload)
       if(typeof loadFieldsetTooltips === 'function'){
-        loadFieldsetTooltips();
+        setTimeout(() => loadFieldsetTooltips(), 100);
       }
       
       // Update checkout options from snapshot
@@ -16509,7 +16515,22 @@ function makePosts(){
       try {
         // Get fieldsets from the snapshot (already loaded)
         const fieldsets = window.FORM_FIELDSETS || [];
-        if(!fieldsets.length) return;
+        if(!fieldsets.length){
+          console.log('[FieldsetTooltips] No fieldsets found');
+          return;
+        }
+        
+        // Debug: Log first fieldset to check structure
+        if(fieldsets.length > 0){
+          console.log('[FieldsetTooltips] Sample fieldset:', {
+            id: fieldsets[0].id,
+            value: fieldsets[0].value,
+            key: fieldsets[0].key,
+            fieldset_key: fieldsets[0].fieldset_key,
+            fieldset_tooltip: fieldsets[0].fieldset_tooltip,
+            hasTooltip: !!fieldsets[0].fieldset_tooltip
+          });
+        }
         
         // Find the fieldset-tooltips category menu
         const categoryMenu = messagesCats?.querySelector(`[data-message-category="fieldset-tooltips"]`);
