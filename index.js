@@ -18849,18 +18849,19 @@ function makePosts(){
         // Create custom geolocate button that triggers the shared control
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if (geoHolder) {
-          // Create a container that mimics the Mapbox control structure
+          // Create a simple container (no ctrl-group to avoid double background)
           const controlContainer = document.createElement('div');
-          controlContainer.className = 'mapboxgl-ctrl mapboxgl-ctrl-group mapboxgl-ctrl-geolocate';
+          controlContainer.className = 'mapboxgl-ctrl mapboxgl-ctrl-geolocate';
+          controlContainer.style.background = 'transparent';
+          controlContainer.style.boxShadow = 'none';
 
           const button = document.createElement('button');
-          button.className = 'mapboxgl-ctrl-geolocate-button';
           button.type = 'button';
           button.setAttribute('aria-label', 'Find my location');
           button.setAttribute('aria-pressed', 'false');
 
-          // Add the geolocate icon SVG (same as Mapbox uses)
-          button.innerHTML = `<span class="mapboxgl-ctrl-icon" aria-hidden="true"></span>`;
+          // Add the geolocate icon SVG (matches Mapbox's icon)
+          button.innerHTML = `<svg class="mapboxgl-ctrl-geolocate-icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7"/><circle cx="10" cy="10" r="2"/></svg>`;
 
           controlContainer.appendChild(button);
           geoHolder.appendChild(controlContainer);
