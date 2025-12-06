@@ -397,9 +397,9 @@
                 sessions.forEach(session => {
                   const times = Array.isArray(session && session.times) ? session.times : [];
                   times.forEach(time => {
-                    const versions = Array.isArray(time && time.versions) ? time.versions : [];
-                    versions.forEach(version => {
-                      const tiers = Array.isArray(version && version.tiers) ? version.tiers : [];
+                    const seatingAreas = Array.isArray(time && time.seating_areas) ? time.seating_areas : [];
+                    seatingAreas.forEach(seatingArea => {
+                      const tiers = Array.isArray(seatingArea && seatingArea.tiers) ? seatingArea.tiers : [];
                       tiers.forEach(tier => {
                         const code = tier && typeof tier.currency === 'string' ? tier.currency.trim().toUpperCase() : '';
                         if(code) codes.add(code);
@@ -574,18 +574,18 @@
         if(type === 'item-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => ({
-            version: opt && typeof opt.version === 'string' ? opt.version : '',
+            item_name: opt && typeof opt.item_name === 'string' ? opt.item_name : '',
             currency: opt && typeof opt.currency === 'string' ? opt.currency : '',
             price: opt && typeof opt.price === 'string' ? opt.price : ''
           }));
           if(safe.options.length === 0){
-            safe.options.push({ version: '', currency: '', price: '' });
+            safe.options.push({ item_name: '', currency: '', price: '' });
           }
         } else if(type === 'dropdown' || type === 'radio'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => {
             if(typeof opt === 'string') return opt;
-            if(opt && typeof opt === 'object' && typeof opt.version === 'string') return opt.version;
+            if(opt && typeof opt === 'object' && typeof opt.item_name === 'string') return opt.item_name;
             return '';
           });
           // If options are empty or only have empty strings, try to seed from field type placeholder (e.g., "A,B,C")
@@ -1321,10 +1321,10 @@
         } else if(type === 'item-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           value = options.map(opt => ({
-            version: typeof opt.version === 'string' ? opt.version.trim() : '',
+            item_name: typeof opt.item_name === 'string' ? opt.item_name.trim() : '',
             currency: typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '',
             price: formatPriceValue(opt.price || '')
-          })).filter(opt => opt.version || opt.currency || opt.price);
+          })).filter(opt => opt.item_name || opt.currency || opt.price);
           if(field.required){
             const hasComplete = value.some(opt => opt.currency && opt.price);
             if(!hasComplete){
@@ -1340,7 +1340,7 @@
           const venues = Array.isArray(field.options) ? field.options : [];
           value = venues.map(cloneVenueSessionVenueFromWindow);
           if(field.required){
-            const hasTierPrice = value.some(venue => Array.isArray(venue.sessions) && venue.sessions.some(session => Array.isArray(session.times) && session.times.some(time => Array.isArray(time.versions) && time.versions.some(version => Array.isArray(version.tiers) && version.tiers.some(tier => {
+            const hasTierPrice = value.some(venue => Array.isArray(venue.sessions) && venue.sessions.some(session => Array.isArray(session.times) && session.times.some(time => Array.isArray(time.seating_areas) && time.seating_areas.some(seatingArea => Array.isArray(seatingArea.tiers) && seatingArea.tiers.some(tier => {
               const price = typeof tier.price === 'string' ? tier.price.trim() : '';
               const currency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
               return price && currency;

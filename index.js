@@ -8826,7 +8826,7 @@ function makePosts(){
               removeBtn.type = 'button';
               removeBtn.className = 'dropdown-option-remove';
               removeBtn.textContent = '-';
-              removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
+              removeBtn.setAttribute('aria-label', `Remove Item ${optionIndex + 1}`);
               removeBtn.disabled = field.options.length <= 1;
               removeBtn.addEventListener('click', ()=>{
                 if(field.options.length <= 1){
@@ -11037,7 +11037,7 @@ function makePosts(){
               });
             };
 
-            const cloneVersionsFromTime = sourceTime => {
+            const cloneSeatingAreasFromTime = sourceTime => {
               const seatingAreas = sourceTime && Array.isArray(sourceTime.seating_areas) ? sourceTime.seating_areas : [];
               return seatingAreas.length ? seatingAreas.map(cloneVenueSessionSeatingArea) : [venueSessionCreateSeatingArea()];
             };
@@ -11067,7 +11067,7 @@ function makePosts(){
                   if(index === 0){
                     if(referenceFirstTime){
                       time.samePricingAsAbove = true;
-                      time.seating_areas = cloneVersionsFromTime(referenceFirstTime);
+                      time.seating_areas = cloneSeatingAreasFromTime(referenceFirstTime);
                       time.tierAutofillLocked = true;
                     } else {
                       time.samePricingAsAbove = false;
@@ -11083,7 +11083,7 @@ function makePosts(){
                   if(index > 0){
                     time.samePricingAsAbove = true;
                     if(targetFirstTime && targetFirstTime !== time){
-                      time.seating_areas = cloneVersionsFromTime(targetFirstTime);
+                      time.seating_areas = cloneSeatingAreasFromTime(targetFirstTime);
                     }
                     time.tierAutofillLocked = true;
                   }
@@ -11307,7 +11307,7 @@ function makePosts(){
                 if(index === 0){
                   if(primaryFirstTime){
                     time.samePricingAsAbove = true;
-                    time.seating_areas = cloneVersionsFromTime(primaryFirstTime);
+                    time.seating_areas = cloneSeatingAreasFromTime(primaryFirstTime);
                     time.tierAutofillLocked = true;
                   } else {
                     time.samePricingAsAbove = false;
@@ -11318,9 +11318,9 @@ function makePosts(){
                   const baseTime = newSession.session_times[0];
                   if(primaryTimes[index]){
                     const referenceTime = primaryTimes[index];
-                    time.seating_areas = cloneVersionsFromTime(referenceTime);
+                    time.seating_areas = cloneSeatingAreasFromTime(referenceTime);
                   } else if(baseTime && baseTime !== time){
-                    time.seating_areas = cloneVersionsFromTime(baseTime);
+                    time.seating_areas = cloneSeatingAreasFromTime(baseTime);
                   }
                   time.tierAutofillLocked = true;
                 }
@@ -11458,28 +11458,28 @@ function makePosts(){
 
             const addSeatingArea = (venue, venueIndex, sessionIndex, timeIndex, afterIndex)=>{
               const time = venue.sessions[sessionIndex].session_times[timeIndex];
-              const timeVersionsRef = time.seating_areas;
-              const newVersion = venueSessionCreateSeatingArea();
+              const timeSeatingAreasRef = time.seating_areas;
+              const newSeatingArea = venueSessionCreateSeatingArea();
               const venueCurrency = getVenueCurrencyValue(venue);
-              if(venueCurrency && Array.isArray(newVersion.pricing_tiers)){
-                newVersion.pricing_tiers.forEach(tier => {
+              if(venueCurrency && Array.isArray(newSeatingArea.pricing_tiers)){
+                newSeatingArea.pricing_tiers.forEach(tier => {
                   if(tier && !tier.currency){
                     tier.currency = venueCurrency;
                   }
                 });
               }
-              copyTemplateTiersToSeatingArea(time, newVersion);
-              time.seating_areas.splice(afterIndex + 1, 0, newVersion);
+              copyTemplateTiersToSeatingArea(time, newSeatingArea);
+              time.seating_areas.splice(afterIndex + 1, 0, newSeatingArea);
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.session_times[timeIndex] || (otherSess.session_times[timeIndex] = venueSessionCreateSessionTime());
                   if(!Array.isArray(otherTime.seating_areas)){
                     otherTime.seating_areas = [venueSessionCreateSeatingArea()];
                   }
-                  if(otherTime.seating_areas === timeVersionsRef){
+                  if(otherTime.seating_areas === timeSeatingAreasRef){
                     return;
                   }
-                  const clone = cloneVenueSessionSeatingArea(newVersion);
+                  const clone = cloneVenueSessionSeatingArea(newSeatingArea);
                   otherTime.seating_areas.splice(afterIndex + 1, 0, clone);
                 });
               } else if(sessionIndex > 0){
@@ -11659,8 +11659,8 @@ function makePosts(){
             const lockTierAutofillIfNeeded = (time, seatingAreaIndex)=>{
               if(!time || time.tierAutofillLocked) return false;
               if(typeof seatingAreaIndex !== 'number' || seatingAreaIndex <= 0) return false;
-              const versionCount = Array.isArray(time.seating_areas) ? time.seating_areas.length : 0;
-              if(versionCount <= 1) return false;
+              const seatingAreaCount = Array.isArray(time.seating_areas) ? time.seating_areas.length : 0;
+              if(seatingAreaCount <= 1) return false;
               time.tierAutofillLocked = true;
               return true;
             };

@@ -1401,9 +1401,9 @@ function sanitizeField(array $field, array $fieldTypeDefinitions = []): array
         case 'radio-toggle':
             $safe['options'] = sanitizeOptionList($options);
             break;
-        case 'venue-session-version-tier-price':
+        case 'venue-ticketing':
             try {
-                error_log("DEBUG: Processing venue-session-version-tier-price field. Options count: " . count($options));
+                error_log("DEBUG: Processing venue-ticketing field. Options count: " . count($options));
                 $safe['options'] = sanitizeVenueOptions($options);
                 error_log("DEBUG: Successfully sanitized venue options. Result count: " . count($safe['options']));
             } catch (Exception $e) {
@@ -1458,7 +1458,7 @@ function sanitizeOptionList(array $options): array
         if (is_string($option) || is_numeric($option)) {
             $value = sanitizeString($option);
         } elseif (is_array($option)) {
-            $value = sanitizeString($option['value'] ?? $option['name'] ?? $option['version'] ?? '', 255);
+            $value = sanitizeString($option['value'] ?? $option['name'] ?? $option['item_name'] ?? '', 255);
         } else {
             $value = '';
         }
@@ -1601,25 +1601,25 @@ function sanitizeTimes($times): array
             'samePricingAsAbove' => sanitizeBool($time['samePricingAsAbove'] ?? false),
             'samePricingSourceIndex' => max(0, (int) ($time['samePricingSourceIndex'] ?? 0)),
             'tierAutofillLocked' => sanitizeBool($time['tierAutofillLocked'] ?? false),
-            'versions' => sanitizeVersions($time['versions'] ?? []),
+            'seating_areas' => sanitizeSeatingAreas($time['seating_areas'] ?? []),
         ];
     }
     return $clean;
 }
 
-function sanitizeVersions($versions): array
+function sanitizeSeatingAreas($seatingAreas): array
 {
-    if (!is_array($versions)) {
+    if (!is_array($seatingAreas)) {
         return [];
     }
     $clean = [];
-    foreach ($versions as $version) {
-        if (!is_array($version)) {
+    foreach ($seatingAreas as $seatingArea) {
+        if (!is_array($seatingArea)) {
             continue;
         }
         $clean[] = [
-            'name' => sanitizeString($version['name'] ?? '', 255),
-            'tiers' => sanitizeTiers($version['tiers'] ?? []),
+            'name' => sanitizeString($seatingArea['name'] ?? '', 255),
+            'tiers' => sanitizeTiers($seatingArea['tiers'] ?? []),
         ];
     }
     return $clean;
