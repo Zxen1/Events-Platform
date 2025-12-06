@@ -12806,6 +12806,10 @@ function makePosts(){
                   sessionDetails.className = 'session-details';
                   const detailsId = `session-details-${venueIndex}-${sessionIndex}`;
                   sessionDetails.id = detailsId;
+                  // Automatically expand session date 1 (first session) by default
+                  if(sessionIndex === 0 && !openSessions.has(session)){
+                    openSessions.add(session);
+                  }
                   const isOpen = openSessions.has(session);
                   sessionDetails.hidden = !isOpen;
                   dateInputWrapper.classList.toggle('is-open', isOpen);
