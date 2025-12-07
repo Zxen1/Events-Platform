@@ -14740,11 +14740,11 @@ function makePosts(){
               if(type === 'images'){
                 if(safeField.placeholder){
                   safeField.placeholder = '';
-                  notifyFormbuilderChange();
+                  // Don't notify - this is data normalization during render, not a user change
                 }
               } else if(showVenueSession && safeField.placeholder){
                 safeField.placeholder = '';
-                notifyFormbuilderChange();
+                // Don't notify - this is data normalization during render, not a user change
               }
               // Show field name, placeholder, tooltip editors only for editable field types
               fieldNameContainer.style.display = isEditable ? '' : 'none';
@@ -24823,9 +24823,6 @@ const adminPanelChangeManager = (()=>{
   }
 
   function setDirty(value){
-    if(value && !dirty){
-      console.trace('[DEBUG] setDirty(true) - Save button will light up');
-    }
     dirty = !!value;
     if(panel){
       panel.classList.toggle('has-unsaved', dirty);
@@ -25278,7 +25275,6 @@ const adminPanelChangeManager = (()=>{
       if(message) showStatus(message);
     },
     markDirty(){
-      console.trace('[DEBUG] markDirty called');
       ensureElements();
       setDirty(true);
     },
