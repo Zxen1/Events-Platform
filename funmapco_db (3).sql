@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 10:28 PM
+-- Generation Time: Dec 08, 2025 at 01:16 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -312,10 +312,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 22:27:01'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 22:27:01'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 22:27:01'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 22:27:01');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 23:33:32'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 23:33:32'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 23:33:32'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 23:33:32');
 
 -- --------------------------------------------------------
 
@@ -370,6 +370,7 @@ CREATE TABLE `fields` (
   `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `min_length` int(11) DEFAULT NULL,
   `max_length` int(11) DEFAULT NULL,
+  `show_limit` tinyint(1) DEFAULT 1,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -378,29 +379,29 @@ CREATE TABLE `fields` (
 -- Dumping data for table `fields`
 --
 
-INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length`, `created_at`, `updated_at`) VALUES
-(1, 'title', 'text', 3, 150, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(2, 'description', 'textarea', 10, 5000, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(3, 'images', 'images', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(4, 'venue-name', 'text', 2, 200, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(5, 'address-line', 'text', 5, 500, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(6, 'latitude', 'decimal', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(7, 'longitude', 'decimal', NULL, NULL, '2025-10-29 23:32:47', '2025-10-29 23:32:47'),
-(8, 'session-date', 'date', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(9, 'session-time', 'time', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(10, 'seating-area', 'text', 1, 100, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
-(11, 'pricing-tier', 'text', 1, 100, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
-(12, 'ticket-price', 'decimal(10,2)', NULL, NULL, '2025-10-29 23:32:47', '2025-11-06 13:07:35'),
-(13, 'currency', 'dropdown', NULL, NULL, '2025-10-29 23:32:47', '2025-11-05 13:33:54'),
-(14, 'text-box', 'text', 1, 500, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
-(15, 'text-area', 'textarea', 1, 2000, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
-(16, 'dropdown', 'dropdown', NULL, NULL, '2025-10-30 17:14:25', '2025-11-07 01:59:08'),
-(17, 'radio', 'radio', NULL, NULL, '2025-10-30 17:14:25', '2025-11-17 10:09:01'),
-(18, 'email', 'email', 5, 254, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(19, 'phone', 'tel', 6, 30, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(20, 'website', 'url', 5, 500, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(21, 'item-name', 'text', 2, 200, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
-(23, 'item-price', 'decimal(10,2)', NULL, NULL, '2025-10-30 18:39:14', '2025-11-06 13:07:35');
+INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
+(1, 'title', 'text', 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(2, 'description', 'textarea', 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(3, 'images', 'images', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(4, 'venue-name', 'text', 2, 200, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(5, 'address-line', 'text', 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(6, 'latitude', 'decimal', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(7, 'longitude', 'decimal', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(8, 'session-date', 'date', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(9, 'session-time', 'time', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(10, 'seating-area', 'text', 1, 100, 1, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
+(11, 'pricing-tier', 'text', 1, 100, 1, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
+(12, 'ticket-price', 'decimal(10,2)', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(13, 'currency', 'dropdown', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(14, 'text-box', 'text', 1, 500, 1, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
+(15, 'text-area', 'textarea', 1, 2000, 1, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
+(16, 'dropdown', 'dropdown', 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
+(17, 'radio', 'radio', 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
+(18, 'email', 'email', 5, 254, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(19, 'phone', 'tel', 6, 30, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(20, 'website', 'url', 5, 500, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(21, 'item-name', 'text', 2, 200, 1, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
+(23, 'item-price', 'decimal(10,2)', 1, 50, 0, '2025-10-30 18:39:14', '2025-12-08 01:15:56');
 
 -- --------------------------------------------------------
 
@@ -886,7 +887,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-05 13:17:33'),
+(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-07 12:08:29'),
 (21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
@@ -917,14 +918,15 @@ CREATE TABLE `subcategory_edits` (
 --
 
 INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
-(745, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(746, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(747, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(748, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(749, 'test-2-subcategory', 'text-area', 'Text Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(750, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(751, 'test-2-subcategory', 'text-box', NULL, NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
-(752, 'test-2-subcategory', 'radio', NULL, NULL, 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-07 11:27:01', '2025-12-07 11:27:01');
+(781, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(782, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(783, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(784, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(785, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(786, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(787, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(788, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-07 12:33:33', '2025-12-07 12:33:33'),
+(789, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-07 12:33:33', '2025-12-07 12:33:33');
 
 -- --------------------------------------------------------
 
@@ -1178,7 +1180,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5853;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5881;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1304,7 +1306,7 @@ ALTER TABLE `subcategories`
 -- AUTO_INCREMENT for table `subcategory_edits`
 --
 ALTER TABLE `subcategory_edits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=753;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=790;
 
 --
 -- AUTO_INCREMENT for table `transactions`

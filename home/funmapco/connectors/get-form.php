@@ -168,6 +168,7 @@ try {
             $fieldLimitsLookup[$fieldKey] = [
                 'min_length' => $field['min_length'] ?? null,
                 'max_length' => $field['max_length'] ?? null,
+                'show_limit' => isset($field['show_limit']) ? (int)$field['show_limit'] : 1,
             ];
         }
     }
@@ -181,6 +182,7 @@ try {
         // For multi-field fieldsets, try to match by fieldset_key or use first text field
         $minLength = null;
         $maxLength = null;
+        $showLimit = 1; // Default to showing limits
         
         if (count($fieldsetFields) === 1) {
             // Single field - use its limits directly
@@ -188,15 +190,18 @@ try {
             if (isset($fieldLimitsLookup[$fieldKey])) {
                 $minLength = $fieldLimitsLookup[$fieldKey]['min_length'];
                 $maxLength = $fieldLimitsLookup[$fieldKey]['max_length'];
+                $showLimit = $fieldLimitsLookup[$fieldKey]['show_limit'] ?? 1;
             }
         } elseif ($fieldsetKey !== '' && isset($fieldLimitsLookup[$fieldsetKey])) {
             // Try matching fieldset_key to a field_key (e.g., "title" fieldset -> "title" field)
             $minLength = $fieldLimitsLookup[$fieldsetKey]['min_length'];
             $maxLength = $fieldLimitsLookup[$fieldsetKey]['max_length'];
+            $showLimit = $fieldLimitsLookup[$fieldsetKey]['show_limit'] ?? 1;
         }
         
         $fieldset['min_length'] = $minLength;
         $fieldset['max_length'] = $maxLength;
+        $fieldset['show_limit'] = $showLimit;
     }
     unset($fieldset); // Break reference
 
@@ -204,6 +209,7 @@ try {
     $snapshot['fieldsets'] = $fieldsets;
     $snapshot['checkout_options'] = $checkoutOptions;
     $snapshot['banned_words'] = $bannedWords;
+    $snapshot['field_limits'] = $fieldLimitsLookup;
 
     // Flush output immediately
     echo json_encode([

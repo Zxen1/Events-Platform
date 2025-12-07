@@ -3659,15 +3659,30 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedBannedWords = (snapshot && Array.isArray(snapshot.banned_words))
         ? snapshot.banned_words.filter(w => typeof w === 'string' && w.trim()).map(w => w.toLowerCase().trim())
         : [];
-      // Build field limits map from fieldsets (fieldsets contain min_length/max_length from fields table)
-      const fieldLimits = {};
+      // Build fieldset limits map from fieldsets (for simple fieldsets like title, description)
+      const fieldsetLimits = {};
       if(snapshot && Array.isArray(snapshot.fieldsets)){
         snapshot.fieldsets.forEach(fs => {
           const key = fs.fieldset_key || fs.key || '';
           if(key){
-            fieldLimits[key] = {
+            fieldsetLimits[key] = {
               min_length: fs.min_length !== undefined && fs.min_length !== null ? parseInt(fs.min_length, 10) : null,
-              max_length: fs.max_length !== undefined && fs.max_length !== null ? parseInt(fs.max_length, 10) : null
+              max_length: fs.max_length !== undefined && fs.max_length !== null ? parseInt(fs.max_length, 10) : null,
+              show_limit: fs.show_limit !== undefined ? !!fs.show_limit : true
+            };
+          }
+        });
+      }
+      // Build field limits map from fields table (for sub-fields like item-name, venue-name, address-line)
+      const fieldLimits = {};
+      if(snapshot && snapshot.field_limits && typeof snapshot.field_limits === 'object'){
+        Object.keys(snapshot.field_limits).forEach(fieldKey => {
+          const limits = snapshot.field_limits[fieldKey];
+          if(limits){
+            fieldLimits[fieldKey] = {
+              min_length: limits.min_length !== undefined && limits.min_length !== null ? parseInt(limits.min_length, 10) : null,
+              max_length: limits.max_length !== undefined && limits.max_length !== null ? parseInt(limits.max_length, 10) : null,
+              show_limit: limits.show_limit !== undefined ? !!limits.show_limit : true
             };
           }
         });
@@ -3680,6 +3695,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         fieldsets: normalizedFieldsets,
         checkoutOptions: normalizedCheckoutOptions,
         bannedWords: normalizedBannedWords,
+        fieldsetLimits: fieldsetLimits,
         fieldLimits: fieldLimits
       };
     }
@@ -3839,7 +3855,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const BANNED_WORDS = window.BANNED_WORDS = Array.isArray(initialFormbuilderSnapshot.bannedWords)
       ? [...initialFormbuilderSnapshot.bannedWords]
       : [];
-    const FIELD_LIMITS = window.FIELD_LIMITS = (initialFormbuilderSnapshot.fieldLimits && typeof initialFormbuilderSnapshot.fieldLimits === 'object')
+    // FIELD_LIMITS: keyed by fieldset_key (for simple fieldsets like title, description)
+    const FIELD_LIMITS = window.FIELD_LIMITS = (initialFormbuilderSnapshot.fieldsetLimits && typeof initialFormbuilderSnapshot.fieldsetLimits === 'object')
+      ? { ...initialFormbuilderSnapshot.fieldsetLimits }
+      : {};
+    // FIELD_RAW_LIMITS: keyed by field_key (for sub-fields like item-name, venue-name, address-line)
+    const FIELD_RAW_LIMITS = window.FIELD_RAW_LIMITS = (initialFormbuilderSnapshot.fieldLimits && typeof initialFormbuilderSnapshot.fieldLimits === 'object')
       ? { ...initialFormbuilderSnapshot.fieldLimits }
       : {};
     window.__formbuilderSnapshot = initialFormbuilderSnapshot;
@@ -3863,18 +3884,56 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     window.maskBadWords = maskBadWords;
     
-    // Get field limits for a fieldset key
+    // Get limits for a fieldset (keyed by fieldset_key like 'title', 'description')
     function getFieldLimits(fieldsetKey){
       const limits = window.FIELD_LIMITS || {};
-      return limits[fieldsetKey] || { min_length: null, max_length: null };
+      return limits[fieldsetKey] || { min_length: null, max_length: null, show_limit: true };
     }
     window.getFieldLimits = getFieldLimits;
     
-    // Create character counter element for text inputs
+    // Get limits for a field (keyed by field_key like 'item-name', 'venue-name', 'address-line')
+    function getFieldLimitsByKey(fieldKey){
+      const limits = window.FIELD_RAW_LIMITS || {};
+      return limits[fieldKey] || { min_length: null, max_length: null, show_limit: true };
+    }
+    window.getFieldLimitsByKey = getFieldLimitsByKey;
+    
+    // Create character counter element for text inputs AND enforce maxlength
     function createCharCounter(input, maxLength, minLength){
       const counter = document.createElement('span');
       counter.className = 'char-counter';
       counter.style.cssText = 'font-size: 11px; color: var(--text-muted, #888); margin-left: 8px; display: none;';
+      
+      // ENFORCE maxlength via HTML attribute (prevents most excessive input)
+      if(maxLength !== null && maxLength > 0){
+        input.setAttribute('maxlength', maxLength);
+      }
+      
+      // Handle paste events to truncate oversized content safely
+      input.addEventListener('paste', (e) => {
+        if(maxLength === null || maxLength <= 0) return;
+        
+        const pastedText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+        const currentValue = input.value || '';
+        const selectionStart = input.selectionStart ?? currentValue.length;
+        const selectionEnd = input.selectionEnd ?? currentValue.length;
+        
+        // Calculate what the new value would be after paste
+        const beforeSelection = currentValue.slice(0, selectionStart);
+        const afterSelection = currentValue.slice(selectionEnd);
+        const newValue = beforeSelection + pastedText + afterSelection;
+        
+        // If paste would exceed maxlength, truncate and prevent default
+        if(newValue.length > maxLength){
+          e.preventDefault();
+          const availableSpace = maxLength - beforeSelection.length - afterSelection.length;
+          const truncatedPaste = pastedText.slice(0, Math.max(0, availableSpace));
+          const finalValue = beforeSelection + truncatedPaste + afterSelection;
+          input.value = finalValue.slice(0, maxLength);
+          // Trigger input event for any listeners
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
       
       const updateCounter = () => {
         const len = (input.value || '').length;
@@ -3909,6 +3968,40 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return counter;
     }
     window.createCharCounter = createCharCounter;
+    
+    // Protect any text input with maxlength enforcement (standalone helper)
+    // Use this for inputs that don't need a visible counter but still need protection
+    function protectInputMaxLength(input, maxLength){
+      if(!input || maxLength === null || maxLength === undefined || maxLength <= 0) return;
+      
+      // Set maxlength attribute
+      input.setAttribute('maxlength', maxLength);
+      
+      // Handle paste events to truncate oversized content safely
+      input.addEventListener('paste', (e) => {
+        const pastedText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+        const currentValue = input.value || '';
+        const selectionStart = input.selectionStart ?? currentValue.length;
+        const selectionEnd = input.selectionEnd ?? currentValue.length;
+        
+        // Calculate what the new value would be after paste
+        const beforeSelection = currentValue.slice(0, selectionStart);
+        const afterSelection = currentValue.slice(selectionEnd);
+        const newValue = beforeSelection + pastedText + afterSelection;
+        
+        // If paste would exceed maxlength, truncate and prevent default
+        if(newValue.length > maxLength){
+          e.preventDefault();
+          const availableSpace = maxLength - beforeSelection.length - afterSelection.length;
+          const truncatedPaste = pastedText.slice(0, Math.max(0, availableSpace));
+          const finalValue = beforeSelection + truncatedPaste + afterSelection;
+          input.value = finalValue.slice(0, maxLength);
+          // Trigger input event for any listeners
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    }
+    window.protectInputMaxLength = protectInputMaxLength;
     
     // Create limit hint element as tooltip icon (combines custom tooltip + char limits)
     function createLimitHint(minLength, maxLength, customTooltip){
@@ -8574,6 +8667,7 @@ function makePosts(){
         const fieldLimits = getFieldLimits(baseType);
         const minLength = fieldLimits.min_length;
         const maxLength = fieldLimits.max_length;
+        const showLimit = fieldLimits.show_limit !== false;
         // Get custom tooltip from fieldset - match by value, key, fieldset_key, or fieldsetKey
         const matchingFieldset = FORM_FIELDSETS.find(fs => 
           (fs.value === baseType || fs.key === baseType || fs.fieldset_key === baseType || fs.fieldsetKey === baseType)
@@ -8849,6 +8943,7 @@ function makePosts(){
                 firstId = itemNameInputId;
               }
               itemNameInput.value = optionValue.item_name || '';
+              protectInputMaxLength(itemNameInput, getFieldLimitsByKey('item-name').max_length);
               itemNameInput.addEventListener('input', ()=>{
                 field.options[optionIndex].item_name = itemNameInput.value;
                 safeNotifyFormbuilderChange();
@@ -9745,8 +9840,8 @@ function makePosts(){
           asterisk.textContent = '*';
           labelEl.appendChild(asterisk);
         }
-        // Add limit hint after label (when limits are set or custom tooltip exists)
-        if(minLength !== null || maxLength !== null || customTooltip){
+        // Add limit hint after label (when limits are set AND show_limit is true, or custom tooltip exists)
+        if(showLimit && (minLength !== null || maxLength !== null || customTooltip)){
           const limitHint = createLimitHint(minLength, maxLength, customTooltip);
           labelEl.appendChild(limitHint);
         }
@@ -16248,12 +16343,19 @@ function makePosts(){
         window.BANNED_WORDS = BANNED_WORDS;
       }
       
-      // Update field limits from snapshot
+      // Update fieldset limits from snapshot (keyed by fieldset_key)
+      if(normalized.fieldsetLimits && typeof normalized.fieldsetLimits === 'object'){
+        initialFormbuilderSnapshot.fieldsetLimits = { ...normalized.fieldsetLimits };
+        Object.keys(FIELD_LIMITS).forEach(key => delete FIELD_LIMITS[key]);
+        Object.assign(FIELD_LIMITS, initialFormbuilderSnapshot.fieldsetLimits);
+        window.FIELD_LIMITS = FIELD_LIMITS;
+      }
+      // Update field limits from snapshot (keyed by field_key)
       if(normalized.fieldLimits && typeof normalized.fieldLimits === 'object'){
         initialFormbuilderSnapshot.fieldLimits = { ...normalized.fieldLimits };
-        Object.keys(FIELD_LIMITS).forEach(key => delete FIELD_LIMITS[key]);
-        Object.assign(FIELD_LIMITS, initialFormbuilderSnapshot.fieldLimits);
-        window.FIELD_LIMITS = FIELD_LIMITS;
+        Object.keys(FIELD_RAW_LIMITS).forEach(key => delete FIELD_RAW_LIMITS[key]);
+        Object.assign(FIELD_RAW_LIMITS, initialFormbuilderSnapshot.fieldLimits);
+        window.FIELD_RAW_LIMITS = FIELD_RAW_LIMITS;
       }
 
       // Update currencies from snapshot
