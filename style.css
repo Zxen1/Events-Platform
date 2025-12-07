@@ -872,11 +872,14 @@ input[type="checkbox"]{
   border:none !important;
   border-radius:8px !important;
   background:transparent !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   cursor:pointer;
   transition:background 0.15s;
+}
+.header-icon-btn[hidden]{
+  display:none !important;
 }
 .header-icon-btn:hover{
   background:rgba(255,255,255,0.1) !important;
