@@ -1974,14 +1974,18 @@ function fetchFieldsetDefinitions(PDO $pdo): array
         } elseif (in_array('fieldset_key', $columns, true)) {
             $select[] = 'fieldset_key';
         }
-        $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true);
-        error_log('DEBUG hasFormbuilderEditable: ' . ($hasFormbuilderEditable ? 'true' : 'false'));
+        // Check for new column name, fallback to old column name
+        $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true) || in_array('formbuilder_editable', $columns, true);
+        $editableColumnName = in_array('fieldset_editable', $columns, true) ? 'fieldset_editable' : 'formbuilder_editable';
+        error_log('DEBUG hasFormbuilderEditable: ' . ($hasFormbuilderEditable ? 'true' : 'false') . ', column: ' . $editableColumnName);
         if ($hasFormbuilderEditable) {
-            $select[] = 'fieldset_editable';
+            $select[] = $editableColumnName;
         }
-        $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
+        // Check for new column name, fallback to old column name
+        $hasPlaceholder = in_array('fieldset_placeholder', $columns, true) || in_array('placeholder', $columns, true);
+        $placeholderColumnName = in_array('fieldset_placeholder', $columns, true) ? 'fieldset_placeholder' : 'placeholder';
         if ($hasPlaceholder) {
-            $select[] = 'fieldset_placeholder';
+            $select[] = $placeholderColumnName;
         }
 
         $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
@@ -2002,11 +2006,11 @@ function fetchFieldsetDefinitions(PDO $pdo): array
                 'name' => $name,
                 'key' => $key,
             ];
-            if ($hasFormbuilderEditable && isset($row['fieldset_editable'])) {
-                $entry['fieldset_editable'] = (bool) $row['fieldset_editable'];
+            if ($hasFormbuilderEditable && isset($row[$editableColumnName])) {
+                $entry['fieldset_editable'] = (bool) $row[$editableColumnName];
             }
-            if ($hasPlaceholder && isset($row['fieldset_placeholder'])) {
-                $entry['fieldset_placeholder'] = trim((string) $row['fieldset_placeholder']);
+            if ($hasPlaceholder && isset($row[$placeholderColumnName])) {
+                $entry['fieldset_placeholder'] = trim((string) $row[$placeholderColumnName]);
             }
             $map[$id] = $entry;
         }

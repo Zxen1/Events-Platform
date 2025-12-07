@@ -388,7 +388,8 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
     
     // Note: editable_fieldsets column is deprecated, now using subcategory_edits table
-    $hasEditableFieldsets = in_array('editable_fieldsets', $columns, true) || in_array('editable_fieldsets', $columns, true);
+    // Always load from subcategory_edits table (regardless of whether old column exists)
+    $hasEditableFieldsets = true;
     
     $hasCheckoutOptionsId = in_array('checkout_options_id', $columns, true);
     if ($hasCheckoutOptionsId) {
@@ -544,13 +545,17 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $orderBy = '';
 
     $hasId = in_array('id', $columns, true);
-    $hasKey = in_array('fieldset_key', $columns, true) || in_array('fieldset_key', $columns, true);
-    $hasName = in_array('fieldset_name', $columns, true) || in_array('fieldset_name', $columns, true);
+    $hasKey = in_array('fieldset_key', $columns, true);
+    $hasName = in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
-    $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
+    // Check for new column name, fallback to old column name
+    $hasPlaceholder = in_array('fieldset_placeholder', $columns, true) || in_array('placeholder', $columns, true);
+    $placeholderColumnName = in_array('fieldset_placeholder', $columns, true) ? 'fieldset_placeholder' : 'placeholder';
     $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
-    $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true);
-    $hasFieldsetFields = in_array('fieldset_fields', $columns, true) || in_array('fieldset_fields', $columns, true);
+    // Check for new column name, fallback to old column name
+    $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true) || in_array('formbuilder_editable', $columns, true);
+    $editableColumnName = in_array('fieldset_editable', $columns, true) ? 'fieldset_editable' : 'formbuilder_editable';
+    $hasFieldsetFields = in_array('fieldset_fields', $columns, true);
 
     if ($hasId) {
         $selectColumns[] = '`id`';
@@ -570,13 +575,13 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         }
     }
     if ($hasPlaceholder) {
-        $selectColumns[] = '`fieldset_placeholder`';
+        $selectColumns[] = '`' . $placeholderColumnName . '`';
     }
     if ($hasFieldsetTooltip) {
         $selectColumns[] = '`fieldset_tooltip`';
     }
     if ($hasFormbuilderEditable) {
-        $selectColumns[] = '`fieldset_editable`';
+        $selectColumns[] = '`' . $editableColumnName . '`';
     }
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
@@ -686,14 +691,17 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         } else {
             $entry['name'] = $rawName;
         }
-        if ($hasPlaceholder && isset($row['fieldset_placeholder']) && is_string($row['fieldset_placeholder'])) {
-            $entry['placeholder'] = trim($row['fieldset_placeholder']);
+        if ($hasPlaceholder && isset($row[$placeholderColumnName]) && is_string($row[$placeholderColumnName])) {
+            $entry['placeholder'] = trim($row[$placeholderColumnName]);
         }
         if ($hasFieldsetTooltip && isset($row['fieldset_tooltip']) && is_string($row['fieldset_tooltip'])) {
             $entry['fieldset_tooltip'] = trim($row['fieldset_tooltip']);
         }
-        if ($hasFormbuilderEditable && isset($row['fieldset_editable'])) {
-            $entry['formbuilder_editable'] = (bool) $row['fieldset_editable'];
+        // Always set formbuilder_editable (default to false if column missing or NULL)
+        if ($hasFormbuilderEditable && isset($row[$editableColumnName])) {
+            $entry['formbuilder_editable'] = (bool) $row[$editableColumnName];
+        } else {
+            $entry['formbuilder_editable'] = false;
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
