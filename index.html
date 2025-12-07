@@ -423,9 +423,13 @@
           </div>
           <div class="panel-field">
             <label for="adminWebsiteCurrency">Website Currency</label>
-            <select id="adminWebsiteCurrency">
-              <option value="">Select Currency</option>
-            </select>
+            <div class="options-dropdown">
+              <button type="button" id="adminWebsiteCurrency" class="form-select" aria-haspopup="true" aria-expanded="false" aria-controls="adminWebsiteCurrency-menu">
+                Select Currency
+                <span class="dropdown-arrow" aria-hidden="true"></span>
+              </button>
+              <div class="options-menu" id="adminWebsiteCurrency-menu" hidden></div>
+            </div>
           </div>
           <div class="panel-field">
             <label for="adminContactEmail">Contact Email</label>

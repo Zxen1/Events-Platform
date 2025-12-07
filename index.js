@@ -2232,8 +2232,9 @@ let __notifyMapOnInteraction = null;
                 websiteTaglineInput.value = data.settings.site_tagline;
               }
               
-              const websiteCurrencySelect = document.getElementById('adminWebsiteCurrency');
-              if(websiteCurrencySelect){
+              const websiteCurrencyBtn = document.getElementById('adminWebsiteCurrency');
+              const websiteCurrencyMenu = document.getElementById('adminWebsiteCurrency-menu');
+              if(websiteCurrencyBtn && websiteCurrencyMenu){
                 // Populate dropdown from general_options
                 if(data.general_options && data.general_options.currency){
                   // Store currency data with labels globally for member dropdowns
@@ -2241,20 +2242,62 @@ let __notifyMapOnInteraction = null;
                     value: opt.value,
                     label: opt.label
                   }));
-                  // Keep the first "Select Currency" option
-                  websiteCurrencySelect.innerHTML = '<option value="">Select Currency</option>';
+                  
+                  // Populate menu with currency options
                   data.general_options.currency.forEach(function(opt){
-                    const option = document.createElement('option');
-                    option.value = opt.value;
-                    // Remove emoji and add flag for native select (if supported, otherwise just remove emoji)
-                    const labelWithoutEmoji = opt.label.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').trim();
-                    option.textContent = opt.value + ' - ' + labelWithoutEmoji;
-                    websiteCurrencySelect.appendChild(option);
+                    const optionBtn = document.createElement('button');
+                    optionBtn.type = 'button';
+                    optionBtn.className = 'menu-option';
+                    optionBtn.innerHTML = getCurrencyDisplayText(opt.value);
+                    optionBtn.dataset.value = opt.value;
+                    optionBtn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
+                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(opt.value);
+                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
+                      websiteCurrencyBtn.dataset.value = opt.value;
+                      websiteCurrencyMenu.hidden = true;
+                      websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
+                    });
+                    websiteCurrencyMenu.appendChild(optionBtn);
                   });
-                }
-                // Set selected value
-                if(data.settings.site_currency){
-                  websiteCurrencySelect.value = data.settings.site_currency;
+                  
+                  // Set selected value
+                  if(data.settings.site_currency){
+                    const selected = data.general_options.currency.find(opt => opt.value === data.settings.site_currency);
+                    if(selected){
+                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
+                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(selected.value);
+                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
+                      websiteCurrencyBtn.dataset.value = selected.value;
+                    }
+                  }
+                  
+                  // Toggle menu on button click
+                  websiteCurrencyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const open = !websiteCurrencyMenu.hasAttribute('hidden');
+                    if(open){
+                      websiteCurrencyMenu.hidden = true;
+                      websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
+                    } else {
+                      websiteCurrencyMenu.hidden = false;
+                      websiteCurrencyBtn.setAttribute('aria-expanded', 'true');
+                      const outsideHandler = (ev) => {
+                        if(!websiteCurrencyBtn.closest('.options-dropdown').contains(ev.target)){
+                          websiteCurrencyMenu.hidden = true;
+                          websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
+                          document.removeEventListener('click', outsideHandler);
+                          document.removeEventListener('pointerdown', outsideHandler);
+                        }
+                      };
+                      setTimeout(() => {
+                        document.addEventListener('click', outsideHandler);
+                        document.addEventListener('pointerdown', outsideHandler);
+                      }, 0);
+                    }
+                  });
+                  websiteCurrencyMenu.addEventListener('click', (e) => e.stopPropagation());
                 }
               }
               
@@ -24614,7 +24657,7 @@ form.addEventListener('input', formChangedWrapper, true);
     
     const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
     if(websiteCurrencyInput){
-      websiteSettings.site_currency = websiteCurrencyInput.value.trim();
+      websiteSettings.site_currency = (websiteCurrencyInput.dataset.value || websiteCurrencyInput.value || '').trim();
     }
     
     const contactEmailInput = document.getElementById('adminContactEmail');
