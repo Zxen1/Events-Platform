@@ -7311,8 +7311,8 @@ function makePosts(){
         formbuilderCats.dispatchEvent(evt);
       }
       // Directly mark admin panel as dirty since formbuilder state isn't tracked via form inputs
-      // Only after formbuilder is fully loaded to avoid marking dirty during initialization
-      if(window.formbuilderStateManager && window.formbuilderStateManager._loaded){
+      // Only after formbuilder is fully loaded and not currently loading to avoid marking dirty during initialization
+      if(window.formbuilderStateManager && window.formbuilderStateManager._loaded && !window.formbuilderStateManager._loading){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
@@ -16345,8 +16345,17 @@ function makePosts(){
           return;
         }
         try {
+          // Temporarily mark as not loaded to prevent markDirty during initialization
+          const wasLoaded = this._loaded;
+          this._loaded = false;
+          this._loading = true;
+          
           const snapshot = await getFormbuilderSnapshotPromise();
-          if(!snapshot) return;
+          if(!snapshot) {
+            this._loaded = wasLoaded;
+            this._loading = false;
+            return;
+          }
           if(typeof this.restore === 'function'){
             this.restore(snapshot, options);
           }
@@ -16354,11 +16363,14 @@ function makePosts(){
             this.save();
           }
           this._loaded = true;
+          this._loading = false;
         } catch(err) {
           console.error('Failed to load formbuilder snapshot:', err);
+          this._loading = false;
         }
       },
-      _loaded: false
+      _loaded: false,
+      _loading: false
     };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
