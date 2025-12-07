@@ -4903,6 +4903,21 @@ body.hide-ads .ad-board{
 #memberPanel .member-create-fields .form-url-input.input-invalid{
   border:2px solid red;
 }
+#tab-forms .form-container .form-phone-wrapper,
+#memberPanel .member-create-fields .form-phone-wrapper{
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+#tab-forms .form-container .form-phone-wrapper .options-dropdown,
+#memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
+  flex-shrink:0;
+}
+#tab-forms .form-container .form-phone-wrapper input[type="tel"],
+#memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
+  flex:1;
+  min-width:0;
+}
 #tab-forms .form-container .panel-field select:focus,
 #tab-forms .form-container .form-field--dropdown .form-select:focus,
 #memberPanel .member-create-fields .panel-field select:focus,

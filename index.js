@@ -9958,11 +9958,11 @@ function makePosts(){
         } else {
           const input = document.createElement('input');
           // Set input type based on fieldset for proper validation
-          if(baseType === 'email' || field.type === 'email'){
+          if(baseType === 'email' || field.type === 'email' || fieldsetKey === 'email'){
             input.type = 'email';
             input.autocomplete = 'email';
             input.inputMode = 'email';
-          } else if(baseType === 'phone' || field.type === 'phone'){
+          } else if(baseType === 'phone' || field.type === 'phone' || fieldsetKey === 'phone'){
             // Phone fieldset ALWAYS has phone-prefix dropdown + phone input
             const phoneWrapper = document.createElement('div');
             phoneWrapper.className = 'form-phone-wrapper';
@@ -10058,7 +10058,7 @@ function makePosts(){
             input.type = 'tel';
             input.autocomplete = 'tel';
             input.inputMode = 'tel';
-            input.pattern = '[-+() 0-9]+';
+            input.pattern = '[0-9+() -]+';
             input.style.flex = '1';
             input.style.minWidth = '0';
             // Prevent non-digit characters (except allowed formatting)
@@ -10094,7 +10094,7 @@ function makePosts(){
             charCounter = createCharCounter(input, maxLength, minLength);
           }
           // Add blur validation for email/phone/url with red border
-          if(baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url'){
+          if(baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || fieldsetKey === 'email' || fieldsetKey === 'phone' || fieldsetKey === 'website-url' || fieldsetKey === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url'){
             input.addEventListener('blur', function(){
               const val = (this.value || '').trim();
               const isRequired = this.required || field.required || false;
