@@ -9775,7 +9775,13 @@ html, body { cursor: auto !important; }
               max-width:min(280px, 90vw);
               max-height:300px;
               overflow-y:auto;
+              overflow-x:hidden;
               z-index:var(--layer-menu);
+              margin:0;
+              background:#222222;
+              border:1px solid rgba(255,255,255,1);
+              border-radius:8px;
+              padding:10px;
             }
             #tab-forms .form-phone-wrapper .options-menu .menu-option,
             #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option{
@@ -9783,8 +9789,23 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               gap:8px;
-              padding:8px 12px;
+              padding:10px 14px;
               white-space:nowrap;
+              background:rgba(0,0,0,0.2);
+              border:none;
+              border-radius:0;
+              font-size:15px;
+              line-height:1.4;
+              cursor:pointer;
+              transition:background 0.15s ease;
+            }
+            #tab-forms .form-phone-wrapper .options-menu .menu-option:hover,
+            #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:hover{
+              background:rgba(255,255,255,0.15);
+            }
+            #tab-forms .form-phone-wrapper .options-menu .menu-option:active,
+            #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:active{
+              background:rgba(255,255,255,0.25);
             }
             #tab-forms .form-phone-wrapper input[type="tel"],
             #memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
