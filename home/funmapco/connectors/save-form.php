@@ -775,7 +775,9 @@ try {
                     if ($customName !== null || $customOptions !== null) {
                         $subcategoryEditsToSave[] = [
                             'subcategory_id' => $subId,
+                            'subcategory_key' => $subKey,
                             'fieldset_id' => $fieldsetId,
+                            'fieldset_key' => $fieldsetKey,
                             'custom_name' => $customName,
                             'custom_options' => $customOptions,
                         ];
@@ -946,14 +948,16 @@ try {
                     
                     // Insert new edits
                     $insertStmt = $pdo->prepare("
-                        INSERT INTO subcategory_edits (subcategory_id, fieldset_id, custom_name, custom_options)
-                        VALUES (:subcategory_id, :fieldset_id, :custom_name, :custom_options)
+                        INSERT INTO subcategory_edits (subcategory_id, subcategory_key, fieldset_id, fieldset_key, custom_name, custom_options)
+                        VALUES (:subcategory_id, :subcategory_key, :fieldset_id, :fieldset_key, :custom_name, :custom_options)
                     ");
                     
                     foreach ($subcategoryEditsToSave as $edit) {
                         $insertStmt->execute([
                             ':subcategory_id' => $edit['subcategory_id'],
+                            ':subcategory_key' => $edit['subcategory_key'],
                             ':fieldset_id' => $edit['fieldset_id'],
+                            ':fieldset_key' => $edit['fieldset_key'],
                             ':custom_name' => $edit['custom_name'],
                             ':custom_options' => $edit['custom_options'],
                         ]);

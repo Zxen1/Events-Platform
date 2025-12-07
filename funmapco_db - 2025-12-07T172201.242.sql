@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 05:17 PM
+-- Generation Time: Dec 07, 2025 at 05:22 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -909,6 +909,16 @@ CREATE TABLE `subcategory_edits` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `subcategory_edits`
+--
+
+INSERT INTO `subcategory_edits` (`id`, `subcategory_id`, `fieldset_id`, `custom_name`, `custom_options`, `created_at`, `updated_at`) VALUES
+(1, 27, 3, 'Textify!', NULL, '2025-12-07 06:18:52', '2025-12-07 06:18:52'),
+(2, 27, 4, 'Write an Essay', NULL, '2025-12-07 06:18:52', '2025-12-07 06:18:52'),
+(3, 27, 5, 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', '2025-12-07 06:18:52', '2025-12-07 06:18:52'),
+(4, 27, 6, 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', '2025-12-07 06:18:52', '2025-12-07 06:18:52');
+
 -- --------------------------------------------------------
 
 --
@@ -1287,7 +1297,7 @@ ALTER TABLE `subcategories`
 -- AUTO_INCREMENT for table `subcategory_edits`
 --
 ALTER TABLE `subcategory_edits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `transactions`
