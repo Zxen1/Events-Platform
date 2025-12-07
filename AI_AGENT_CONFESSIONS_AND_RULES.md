@@ -94,6 +94,26 @@ if(activeEl && activeEl.closest('[data-sandbox="true"]')) return;
 
 **Lesson:** Before modifying multiple components, ask: "Can I solve this with ONE change at a higher level?" Look for umbrella solutions, not per-component fixes. The higher up the chain you can intercept, the simpler and more future-proof the solution.
 
+### 10. NOT COPYING EXISTING PATTERNS WHEN EXPLICITLY TOLD TO (Dec 7, 2025)
+**Mistake:** User explicitly said "currency dropdowns exist in both member forms and form preview and none of them have width or loading issues of any kind. its common sense to just copy everything from that right? you're solving an identical problem."
+
+Instead of copying the currency dropdown CSS exactly, I:
+- Wrote new CSS with different values (`width:auto`, `min-width:70px`, `max-width:100px`)
+- Used different background colors and styling
+- Created inconsistent width that "flicked around"
+- Resulted in phone prefix dropdown looking completely wrong in both admin and member forms
+
+The user had to:
+1. Tell me to make the width 150px fixed (not variable)
+2. Point out the backgrounds were wrong colors
+3. Ask why I didn't copy it in the first place
+
+**The answer was obvious:** Copy the exact CSS from `.item-pricing-row--bottom .options-dropdown .options-menu` - same `background:#222222`, same `border:1px solid rgba(255,255,255,1)`, same everything. Don't invent new values.
+
+**Impact:** Wasted user's time with 3 rounds of fixes when ONE copy-paste would have worked. User gave clear instruction to copy, I acknowledged the instruction, then didn't do it.
+
+**Lesson:** When user says "copy this pattern exactly" - COPY IT EXACTLY. Don't write new CSS values. Don't be "creative." Copy the selectors, copy the values, change only what's necessary (class names). If the existing code works, the copied code will work.
+
 ---
 
 ## PROJECT SCOPE: EVENTS PLATFORM CMS
