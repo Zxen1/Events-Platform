@@ -57,36 +57,14 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
 window.apiRequest = apiRequest;
 
 // === Currency Helpers ===
-// Get full label for a currency code (e.g., "USD" -> "US Dollar")
-function getCurrencyLabel(code) {
-  if (!code) return '';
-  const upperCode = code.toUpperCase();
-  if (Array.isArray(window.currencyData)) {
-    const match = window.currencyData.find(c => c.value === upperCode);
-    if (match) return match.label;
+// Parse option_value format "countryCode currencyCode" (e.g., "us USD")
+function parseCurrencyValue(optionValue) {
+  if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, currencyCode: optionValue || '' };
+  const parts = optionValue.trim().split(' ');
+  if (parts.length >= 2) {
+    return { countryCode: parts[0].toLowerCase(), currencyCode: parts.slice(1).join(' ') };
   }
-  return '';
-}
-
-// Map currency code to country code for flag icons
-function getCurrencyCountryCode(code) {
-  if (!code) return null;
-  const upperCode = code.toUpperCase();
-  const currencyToCountry = {
-    'USD': 'us', 'EUR': 'eu', 'GBP': 'gb', 'AUD': 'au', 'CAD': 'ca', 'NZD': 'nz',
-    'JPY': 'jp', 'CHF': 'ch', 'SGD': 'sg', 'HKD': 'hk', 'SEK': 'se', 'NOK': 'no',
-    'DKK': 'dk', 'PLN': 'pl', 'MXN': 'mx', 'BRL': 'br', 'INR': 'in', 'ZAR': 'za',
-    'CNY': 'cn', 'KRW': 'kr', 'TWD': 'tw', 'THB': 'th', 'PHP': 'ph', 'IDR': 'id',
-    'MYR': 'my', 'VND': 'vn', 'AED': 'ae', 'SAR': 'sa', 'QAR': 'qa', 'KWD': 'kw',
-    'BHD': 'bh', 'OMR': 'om', 'ILS': 'il', 'CZK': 'cz', 'HUF': 'hu', 'RON': 'ro',
-    'BGN': 'bg', 'HRK': 'hr', 'ISK': 'is', 'RUB': 'ru', 'UAH': 'ua', 'TRY': 'tr',
-    'CLP': 'cl', 'COP': 'co', 'ARS': 'ar', 'PEN': 'pe', 'UYU': 'uy', 'BOB': 'bo',
-    'PYG': 'py', 'VES': 've', 'DOP': 'do', 'JMD': 'jm', 'TTD': 'tt', 'GTQ': 'gt',
-    'CRC': 'cr', 'PAB': 'pa', 'NGN': 'ng', 'EGP': 'eg', 'KES': 'ke', 'GHS': 'gh',
-    'TZS': 'tz', 'UGX': 'ug', 'MAD': 'ma', 'TND': 'tn', 'PKR': 'pk', 'BDT': 'bd',
-    'LKR': 'lk', 'NPR': 'np', 'MMK': 'mm', 'FJD': 'fj', 'PGK': 'pg'
-  };
-  return currencyToCountry[upperCode] || null;
+  return { countryCode: null, currencyCode: optionValue };
 }
 
 // Get flag HTML element
@@ -95,80 +73,43 @@ function getFlagHTML(countryCode) {
   return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle; margin-right: 4px;" />`;
 }
 
-// Get display HTML for dropdown option with flag icon (replaces emoji)
-function getCurrencyDisplayText(code) {
-  const label = getCurrencyLabel(code);
-  if (!label) return code;
-  
-  // Remove emoji from label (emoji is typically at the start)
-  const labelWithoutEmoji = label.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').trim();
-  
-  // Get country code for flag
-  const countryCode = getCurrencyCountryCode(code);
+// Get display HTML for currency dropdown option with flag icon
+// opt = { value: "us USD", label: "US Dollar" }
+function getCurrencyDisplayText(opt) {
+  if (!opt) return '';
+  const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
+  const label = opt.label || '';
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  
-  return `${code} - ${flagHTML}${labelWithoutEmoji}`;
+  return `${flagHTML}${currencyCode} - ${label}`;
 }
 
-// Get all currency options with labels
+// Get all currency options with parsed values
 function getCurrencyOptions() {
   if (Array.isArray(window.currencyData) && window.currencyData.length > 0) {
     return window.currencyData;
-  }
-  // Fallback to codes only if currencyData not loaded
-  if (Array.isArray(window.currencies)) {
-    return window.currencies.map(code => ({ value: code, label: '' }));
   }
   return [];
 }
 
 // === Phone Prefix Helpers ===
-// Get country code from phone prefix label (e.g., "🇺🇸 +1 United States" -> "us")
-function getPhonePrefixCountryCode(label) {
-  if (!label || typeof label !== 'string') return null;
-  // Map country names to country codes
-  const countryNameToCode = {
-    'united states': 'us', 'canada': 'ca', 'united kingdom': 'gb', 'australia': 'au',
-    'new zealand': 'nz', 'japan': 'jp', 'singapore': 'sg', 'hong kong': 'hk',
-    'sweden': 'se', 'norway': 'no', 'denmark': 'dk', 'poland': 'pl', 'mexico': 'mx',
-    'brazil': 'br', 'india': 'in', 'south africa': 'za', 'china': 'cn', 'south korea': 'kr',
-    'taiwan': 'tw', 'thailand': 'th', 'philippines': 'ph', 'indonesia': 'id', 'malaysia': 'my',
-    'vietnam': 'vn', 'uae': 'ae', 'saudi arabia': 'sa', 'qatar': 'qa', 'kuwait': 'kw',
-    'bahrain': 'bh', 'oman': 'om', 'israel': 'il', 'czech republic': 'cz', 'hungary': 'hu',
-    'romania': 'ro', 'bulgaria': 'bg', 'croatia': 'hr', 'iceland': 'is', 'russia': 'ru',
-    'ukraine': 'ua', 'turkey': 'tr', 'chile': 'cl', 'colombia': 'co', 'argentina': 'ar',
-    'peru': 'pe', 'uruguay': 'uy', 'bolivia': 'bo', 'paraguay': 'py', 'venezuela': 've',
-    'dominican republic': 'do', 'jamaica': 'jm', 'trinidad and tobago': 'tt', 'guatemala': 'gt',
-    'costa rica': 'cr', 'panama': 'pa', 'nigeria': 'ng', 'egypt': 'eg', 'kenya': 'ke',
-    'ghana': 'gh', 'tanzania': 'tz', 'uganda': 'ug', 'morocco': 'ma', 'tunisia': 'tn',
-    'pakistan': 'pk', 'bangladesh': 'bd', 'sri lanka': 'lk', 'nepal': 'np', 'myanmar': 'mm',
-    'fiji': 'fj', 'papua new guinea': 'pg', 'france': 'fr', 'germany': 'de', 'italy': 'it',
-    'spain': 'es', 'netherlands': 'nl', 'belgium': 'be', 'switzerland': 'ch', 'austria': 'at',
-    'portugal': 'pt', 'ireland': 'ie', 'finland': 'fi', 'greece': 'gr'
-  };
-  const lowerLabel = label.toLowerCase();
-  for (const [name, code] of Object.entries(countryNameToCode)) {
-    if (lowerLabel.includes(name)) {
-      return code;
-    }
+// Parse option_value format "countryCode prefix" (e.g., "us +1")
+function parsePhonePrefixValue(optionValue) {
+  if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, prefix: optionValue || '' };
+  const parts = optionValue.trim().split(' ');
+  if (parts.length >= 2) {
+    return { countryCode: parts[0].toLowerCase(), prefix: parts.slice(1).join(' ') };
   }
-  return null;
+  return { countryCode: null, prefix: optionValue };
 }
 
-// Get display HTML for phone prefix option with flag icon
+// Get display HTML for phone prefix dropdown option with flag icon
+// opt = { value: "us +1", label: "United States" }
 function getPhonePrefixDisplayText(opt) {
   if (!opt) return '';
-  const label = opt.label || opt.value || '';
-  const value = opt.value || '';
-  
-  // Remove emoji from label
-  const labelWithoutEmoji = label.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').trim();
-  
-  // Get country code for flag
-  const countryCode = getPhonePrefixCountryCode(label);
+  const { countryCode, prefix } = parsePhonePrefixValue(opt.value);
+  const label = opt.label || '';
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  
-  return `${flagHTML}${labelWithoutEmoji}`;
+  return `${flagHTML}${prefix} ${label}`;
 }
 
 // Get all phone prefix options
@@ -2314,16 +2255,18 @@ let __notifyMapOnInteraction = null;
                   
                   // Populate menu with currency options
                   data.general_options.currency.forEach(function(opt){
+                    const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                     const optionBtn = document.createElement('button');
                     optionBtn.type = 'button';
                     optionBtn.className = 'menu-option';
-                    optionBtn.innerHTML = getCurrencyDisplayText(opt.value);
-                    optionBtn.dataset.value = opt.value;
+                    optionBtn.innerHTML = getCurrencyDisplayText(opt);
+                    optionBtn.dataset.value = currencyCode;
+                    optionBtn.dataset.countryCode = countryCode || '';
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      websiteCurrencyBtn.textContent = opt.value;
+                      websiteCurrencyBtn.textContent = currencyCode;
                       websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
-                      websiteCurrencyBtn.dataset.value = opt.value;
+                      websiteCurrencyBtn.dataset.value = currencyCode;
                       websiteCurrencyMenu.hidden = true;
                       websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
                     });
@@ -9171,27 +9114,28 @@ function makePosts(){
               // No placeholder needed - USD is always the default
               // Populate currency options with full labels
               getCurrencyOptions().forEach(opt => {
-                const code = opt.value;
+                const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                 const optionBtn = document.createElement('button');
                 optionBtn.type = 'button';
                 optionBtn.className = 'menu-option';
-                optionBtn.innerHTML = getCurrencyDisplayText(code);
-                optionBtn.dataset.value = code;
+                optionBtn.innerHTML = getCurrencyDisplayText(opt);
+                optionBtn.dataset.value = currencyCode;
+                optionBtn.dataset.countryCode = countryCode || '';
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                  currencyMenuBtn.textContent = code; // Button shows just the code
+                  currencyMenuBtn.textContent = currencyCode; // Button shows just the code
                   if(arrow) currencyMenuBtn.appendChild(arrow);
-                  currencyMenuBtn.dataset.value = code;
+                  currencyMenuBtn.dataset.value = currencyCode;
                   currencyMenu.hidden = true;
                   currencyMenuBtn.setAttribute('aria-expanded', 'false');
                   const previousCurrency = field.options[optionIndex].item_currency || '';
-                  field.options[optionIndex].item_currency = code;
+                  field.options[optionIndex].item_currency = currencyCode;
                   const priceCleared = updatePriceState();
                   if(isCurrencySelected()){
                     commitPriceValue();
                   }
-                  if(previousCurrency !== code || priceCleared){
+                  if(previousCurrency !== currencyCode || priceCleared){
                     safeNotifyFormbuilderChange();
                   }
                 });
@@ -9208,30 +9152,31 @@ function makePosts(){
                   const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
                   if(existingOptions.length === 0){
                     getCurrencyOptions().forEach(opt => {
-                      const code = opt.value;
+                      const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                       // Check if option already exists
-                      const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
+                      const existing = currencyMenu.querySelector(`.menu-option[data-value="${currencyCode}"]`);
                       if(!existing){
                         const optionBtn = document.createElement('button');
                         optionBtn.type = 'button';
                         optionBtn.className = 'menu-option';
-                        optionBtn.textContent = getCurrencyDisplayText(code);
-                        optionBtn.dataset.value = code;
+                        optionBtn.innerHTML = getCurrencyDisplayText(opt);
+                        optionBtn.dataset.value = currencyCode;
+                        optionBtn.dataset.countryCode = countryCode || '';
                         optionBtn.addEventListener('click', (e) => {
                           e.stopPropagation();
                           const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                          currencyMenuBtn.textContent = code; // Button shows just the code
+                          currencyMenuBtn.textContent = currencyCode; // Button shows just the code
                           if(arrow) currencyMenuBtn.appendChild(arrow);
-                          currencyMenuBtn.dataset.value = code;
+                          currencyMenuBtn.dataset.value = currencyCode;
                           currencyMenu.hidden = true;
                           currencyMenuBtn.setAttribute('aria-expanded', 'false');
                           const previousCurrency = field.options[optionIndex].item_currency || '';
-                          field.options[optionIndex].item_currency = code;
+                          field.options[optionIndex].item_currency = currencyCode;
                           const priceCleared = updatePriceState();
                           if(isCurrencySelected()){
                             commitPriceValue();
                           }
-                          if(previousCurrency !== code || priceCleared){
+                          if(previousCurrency !== currencyCode || priceCleared){
                             safeNotifyFormbuilderChange();
                           }
                         });
@@ -10041,9 +9986,11 @@ function makePosts(){
             prefixBtn.setAttribute('aria-controls', prefixMenuId);
             
             const phonePrefixOptions = getPhonePrefixOptions();
-            const defaultOpt = phonePrefixOptions.length > 0 ? phonePrefixOptions[0] : { value: '+1', label: '+1' };
-            prefixBtn.textContent = defaultOpt.value;
-            prefixBtn.dataset.value = defaultOpt.value;
+            const defaultOpt = phonePrefixOptions.length > 0 ? phonePrefixOptions[0] : { value: 'au +61', label: 'Australia' };
+            const { countryCode: defaultCountry, prefix: defaultPrefix } = parsePhonePrefixValue(defaultOpt.value);
+            prefixBtn.textContent = defaultPrefix;
+            prefixBtn.dataset.value = defaultPrefix;
+            prefixBtn.dataset.countryCode = defaultCountry || '';
             
             const prefixArrow = document.createElement('span');
             prefixArrow.className = 'dropdown-arrow';
@@ -10057,17 +10004,20 @@ function makePosts(){
             
             // Populate phone prefix options with flags (same as currency)
             phonePrefixOptions.forEach(opt => {
+              const { countryCode, prefix } = parsePhonePrefixValue(opt.value);
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
               optionBtn.className = 'menu-option';
               optionBtn.innerHTML = getPhonePrefixDisplayText(opt);
-              optionBtn.dataset.value = opt.value;
+              optionBtn.dataset.value = prefix;
+              optionBtn.dataset.countryCode = countryCode || '';
               optionBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const arrow = prefixBtn.querySelector('.dropdown-arrow');
-                prefixBtn.textContent = opt.value;
+                prefixBtn.textContent = prefix;
                 if(arrow) prefixBtn.appendChild(arrow);
-                prefixBtn.dataset.value = opt.value;
+                prefixBtn.dataset.value = prefix;
+                prefixBtn.dataset.countryCode = countryCode || '';
                 prefixMenu.hidden = true;
                 prefixBtn.setAttribute('aria-expanded', 'false');
               });
@@ -14004,20 +13954,21 @@ function makePosts(){
                           // No placeholder needed - USD is always the default
                           // Populate currency options with full labels
                           getCurrencyOptions().forEach(opt => {
-                            const code = opt.value;
+                            const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                             const optionBtn = document.createElement('button');
                             optionBtn.type = 'button';
                             optionBtn.className = 'menu-option';
-                            optionBtn.innerHTML = getCurrencyDisplayText(code);
-                            optionBtn.dataset.value = code;
+                            optionBtn.innerHTML = getCurrencyDisplayText(opt);
+                            optionBtn.dataset.value = currencyCode;
+                            optionBtn.dataset.countryCode = countryCode || '';
                             optionBtn.addEventListener('click', (e) => {
                               e.stopPropagation();
-                              currencyMenuBtn.textContent = code;
+                              currencyMenuBtn.textContent = currencyCode;
                               currencyMenuBtn.appendChild(currencyArrow);
-                              currencyMenuBtn.dataset.value = code;
+                              currencyMenuBtn.dataset.value = currencyCode;
                               currencyMenu.hidden = true;
                               currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                              const nextCurrency = code.trim();
+                              const nextCurrency = currencyCode.trim();
                               const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
                               tier.currency = nextCurrency;
                               const shouldClearPrice = nextCurrency === '';
@@ -14046,23 +13997,24 @@ function makePosts(){
                               const existingOptions = currencyMenu.querySelectorAll('.menu-option[data-value]:not([data-value=""])');
                               if(existingOptions.length === 0){
                                 getCurrencyOptions().forEach(opt => {
-                                  const code = opt.value;
+                                  const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                                   // Check if option already exists
-                                  const existing = currencyMenu.querySelector(`.menu-option[data-value="${code}"]`);
+                                  const existing = currencyMenu.querySelector(`.menu-option[data-value="${currencyCode}"]`);
                                   if(!existing){
                                     const optionBtn = document.createElement('button');
                                     optionBtn.type = 'button';
                                     optionBtn.className = 'menu-option';
-                                    optionBtn.innerHTML = getCurrencyDisplayText(code);
-                                    optionBtn.dataset.value = code;
+                                    optionBtn.innerHTML = getCurrencyDisplayText(opt);
+                                    optionBtn.dataset.value = currencyCode;
+                                    optionBtn.dataset.countryCode = countryCode || '';
                                     optionBtn.addEventListener('click', (e) => {
                                       e.stopPropagation();
-                                      currencyMenuBtn.textContent = code;
+                                      currencyMenuBtn.textContent = currencyCode;
                                       currencyMenuBtn.appendChild(currencyArrow);
-                                      currencyMenuBtn.dataset.value = code;
+                                      currencyMenuBtn.dataset.value = currencyCode;
                                       currencyMenu.hidden = true;
                                       currencyMenuBtn.setAttribute('aria-expanded', 'false');
-                                      const nextCurrency = code.trim();
+                                      const nextCurrency = currencyCode.trim();
                                       const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
                                       tier.currency = nextCurrency;
                                       const shouldClearPrice = nextCurrency === '';
