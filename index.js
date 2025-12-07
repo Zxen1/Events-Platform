@@ -25474,6 +25474,13 @@ function togglePanel(m){
     openPanel(m);
   }
 }
+function showPanel(m){
+  if(!m.classList.contains('show')){
+    openPanel(m);
+  } else {
+    bringToTop(m);
+  }
+}
 function movePanelToEdge(panel, side){
   if(!panel) return;
   const content = panel.querySelector('.panel-content') || panel.querySelector('.modal-content');
@@ -25593,10 +25600,10 @@ document.addEventListener('pointerdown', (e) => {
   const filterPanel = document.getElementById('filterPanel');
 
   if(memberBtn && memberPanel){
-    memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
+    memberBtn.addEventListener('click', ()=> showPanel(memberPanel));
   }
   if(adminBtn && adminPanel){
-    adminBtn.addEventListener('click', ()=> togglePanel(adminPanel));
+    adminBtn.addEventListener('click', ()=> showPanel(adminPanel));
   }
   filterBtn && filterBtn.addEventListener('click', ()=> {
     closeWelcomeModalIfOpen();
