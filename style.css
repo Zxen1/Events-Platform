@@ -2428,7 +2428,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 #adminPanel .tab-bar,
 #memberPanel .tab-bar{display:flex;gap:6px;}
-#memberPanel .tab-bar{margin-top:8px;}
 #adminPanel .tab-bar .tab-btn,
 #memberPanel .tab-bar .tab-btn{
   flex:1;
