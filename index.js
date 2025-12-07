@@ -23261,6 +23261,36 @@ function getViewportHeight(){
   return Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0 ? __stableViewportHeight : 0;
 }
 const panelStack = [];
+function updateHeaderButtonStates(){
+  const adminPanel = document.getElementById('adminPanel');
+  const memberPanel = document.getElementById('memberPanel');
+  const adminBtn = document.getElementById('adminBtn');
+  const memberBtn = document.getElementById('memberBtn');
+  
+  // Find the topmost showing panel
+  let topPanel = null;
+  for(let i = panelStack.length - 1; i >= 0; i--){
+    const p = panelStack[i];
+    if(p instanceof Element && p.classList.contains('show')){
+      topPanel = p;
+      break;
+    }
+  }
+  
+  // Update admin button
+  if(adminBtn){
+    const isTop = topPanel === adminPanel && adminPanel && adminPanel.classList.contains('show');
+    adminBtn.classList.toggle('active', isTop);
+    adminBtn.setAttribute('aria-pressed', isTop ? 'true' : 'false');
+  }
+  
+  // Update member button
+  if(memberBtn){
+    const isTop = topPanel === memberPanel && memberPanel && memberPanel.classList.contains('show');
+    memberBtn.classList.toggle('active', isTop);
+    memberBtn.setAttribute('aria-pressed', isTop ? 'true' : 'false');
+  }
+}
 function bringToTop(item){
   const idx = panelStack.indexOf(item);
   if(idx!==-1) panelStack.splice(idx,1);
@@ -23272,6 +23302,7 @@ function bringToTop(item){
       p.style.zIndex = String(baseZ + i);
     }
   });
+  updateHeaderButtonStates();
 }
 function registerPopup(p){
   bringToTop(p);
@@ -25318,6 +25349,7 @@ function closePanel(m){
       localStorage.setItem(`panel-open-${m.id}`,'false');
       const idx = panelStack.indexOf(m);
       if(idx!==-1) panelStack.splice(idx,1);
+      updateHeaderButtonStates();
       if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
       if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
     }, {once:true});
@@ -25327,6 +25359,7 @@ function closePanel(m){
     localStorage.setItem(`panel-open-${m.id}`,'false');
     const idx = panelStack.indexOf(m);
     if(idx!==-1) panelStack.splice(idx,1);
+    updateHeaderButtonStates();
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
     if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
   }
@@ -26099,7 +26132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       const getFull = () => document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
       const updateFsState = () => {
-        fsBtn.setAttribute('aria-pressed', getFull() ? 'true' : 'false');
+        const isFull = getFull();
+        fsBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
+        fsBtn.classList.toggle('is-fullscreen', !!isFull);
       };
       updateFsState();
       ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt => {
