@@ -7268,6 +7268,34 @@ function makePosts(){
       handle.title = label;
     }
 
+    let formbuilderAutoSaveTimer = null;
+    
+    // Auto-save toggle - stored in localStorage
+    function isAutoSaveEnabled(){
+      return localStorage.getItem('adminAutoSave') === 'true';
+    }
+    function setAutoSaveEnabled(enabled){
+      localStorage.setItem('adminAutoSave', enabled ? 'true' : 'false');
+    }
+    
+    // Initialize auto-save toggle checkbox
+    function initAutoSaveToggle(){
+      const toggle = document.getElementById('adminAutosaveToggle');
+      if(toggle){
+        toggle.checked = isAutoSaveEnabled();
+        toggle.addEventListener('change', ()=>{
+          setAutoSaveEnabled(toggle.checked);
+        });
+      }
+    }
+    
+    // Initialize when DOM is ready
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', initAutoSaveToggle);
+    } else {
+      initAutoSaveToggle();
+    }
+    
     function notifyFormbuilderChange(){
       if(!formbuilderCats) return;
       // Don't trigger save if interaction is inside a sandbox (form preview)
@@ -7288,7 +7316,17 @@ function makePosts(){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
-        // Auto-save disabled - use Save/Cancel buttons instead
+        // Auto-save with debounce (only if enabled)
+        if(isAutoSaveEnabled()){
+          if(formbuilderAutoSaveTimer){
+            clearTimeout(formbuilderAutoSaveTimer);
+          }
+          formbuilderAutoSaveTimer = setTimeout(()=>{
+            if(typeof window.adminPanelModule?.runSave === 'function'){
+              window.adminPanelModule.runSave({ closeAfter: false });
+            }
+          }, 800);
+        }
       }
     }
 
@@ -24503,6 +24541,14 @@ form.addEventListener('input', formChangedWrapper, true);
       if(typeof window.formbuilderStateManager.capture === 'function'){
         try {
           payload = window.formbuilderStateManager.capture();
+          // DEBUG: Log captured payload to verify customPlaceholder/customTooltip
+          console.log('[SaveAdminChanges] Captured payload categories:', payload?.categories?.map(c => ({
+            name: c.name,
+            subFields: Object.fromEntries(Object.entries(c.subFields || {}).map(([sub, fields]) => [
+              sub,
+              fields.map(f => ({ name: f.name, customPlaceholder: f.customPlaceholder, customTooltip: f.customTooltip }))
+            ]))
+          })));
         } catch (err) {
           console.error('formbuilderStateManager.capture failed', err);
         }
