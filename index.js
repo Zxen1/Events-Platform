@@ -16677,12 +16677,19 @@ function makePosts(){
     }
     
     // Load and populate fieldset tooltips
-    async function loadFieldsetTooltips(){
+    async function loadFieldsetTooltips(retryCount = 0){
       try {
         // Get fieldsets from the snapshot (already loaded)
-        const fieldsets = window.FORM_FIELDSETS || [];
+        let fieldsets = window.FORM_FIELDSETS || [];
+        
+        // If fieldsets not loaded yet, wait and retry (up to 5 times)
+        if(!fieldsets.length && retryCount < 5){
+          setTimeout(() => loadFieldsetTooltips(retryCount + 1), 300);
+          return;
+        }
+        
         if(!fieldsets.length){
-          console.log('[FieldsetTooltips] No fieldsets found');
+          console.log('[FieldsetTooltips] No fieldsets found after retries');
           return;
         }
         
