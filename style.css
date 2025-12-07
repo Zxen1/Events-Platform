@@ -3193,13 +3193,13 @@ button[aria-expanded="true"] .results-arrow{
 .slider-value-input{
   -moz-appearance:textfield;
 }
-.save-changes:disabled,
-.discard-changes{
+.save-changes:not(.icon-btn):disabled,
+.discard-changes:not(.icon-btn){
   background:rgba(0,0,0,0.3);
   color:rgba(255,255,255,0.5);
   cursor:not-allowed;
 }
-.save-changes:not(:disabled){
+.save-changes:not(.icon-btn):not(:disabled){
   background:rgba(0,0,0,0.2);
   color:#fff;
   border:1px solid rgba(255,255,255,0.1);
