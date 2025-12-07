@@ -91,6 +91,22 @@ function getCurrencyOptions() {
   return [];
 }
 
+// Get button HTML for currency (flag + code only, for the dropdown button)
+function getCurrencyButtonHTML(countryCode, currencyCode) {
+  const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+  return `${flagHTML}${currencyCode}`;
+}
+
+// Find country code for a currency code (for initial button display)
+function findCurrencyCountryCode(currencyCode) {
+  const options = getCurrencyOptions();
+  for (let i = 0; i < options.length; i++) {
+    const { countryCode, currencyCode: code } = parseCurrencyValue(options[i].value);
+    if (code === currencyCode) return countryCode;
+  }
+  return null;
+}
+
 // === Phone Prefix Helpers ===
 // Parse option_value format "countryCode prefix" (e.g., "us +1")
 function parsePhonePrefixValue(optionValue) {
@@ -118,6 +134,12 @@ function getPhonePrefixOptions() {
     return window.phonePrefixData;
   }
   return [];
+}
+
+// Get button HTML for phone prefix (flag + prefix only, for the dropdown button)
+function getPhonePrefixButtonHTML(countryCode, prefix) {
+  const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+  return `${flagHTML}${prefix}`;
 }
 
 // === Currency Dropdown Keyboard Navigation ===
@@ -2264,7 +2286,7 @@ let __notifyMapOnInteraction = null;
                     optionBtn.dataset.countryCode = countryCode || '';
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      websiteCurrencyBtn.textContent = currencyCode;
+                      websiteCurrencyBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
                       websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                       websiteCurrencyBtn.dataset.value = currencyCode;
                       websiteCurrencyMenu.hidden = true;
@@ -2275,7 +2297,8 @@ let __notifyMapOnInteraction = null;
                   
                   // Set selected value
                   if(data.settings.site_currency){
-                    websiteCurrencyBtn.textContent = data.settings.site_currency;
+                    const siteCountryCode = findCurrencyCountryCode(data.settings.site_currency);
+                    websiteCurrencyBtn.innerHTML = getCurrencyButtonHTML(siteCountryCode, data.settings.site_currency);
                     websiteCurrencyBtn.dataset.value = data.settings.site_currency;
                   }
                   websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
@@ -9097,7 +9120,8 @@ function makePosts(){
               const currencyMenuId = `item-currency-${baseId}-${optionIndex}`;
               currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
               const existingCurrency = optionValue.item_currency || 'USD';
-              currencyMenuBtn.textContent = existingCurrency;
+              const existingCountryCode = findCurrencyCountryCode(existingCurrency);
+              currencyMenuBtn.innerHTML = getCurrencyButtonHTML(existingCountryCode, existingCurrency);
               currencyMenuBtn.dataset.value = existingCurrency;
               // Set default currency in data model if not already set
               if (!optionValue.item_currency) {
@@ -9124,7 +9148,7 @@ function makePosts(){
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                  currencyMenuBtn.textContent = currencyCode; // Button shows just the code
+                  currencyMenuBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
                   if(arrow) currencyMenuBtn.appendChild(arrow);
                   currencyMenuBtn.dataset.value = currencyCode;
                   currencyMenu.hidden = true;
@@ -9165,7 +9189,7 @@ function makePosts(){
                         optionBtn.addEventListener('click', (e) => {
                           e.stopPropagation();
                           const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                          currencyMenuBtn.textContent = currencyCode; // Button shows just the code
+                          currencyMenuBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
                           if(arrow) currencyMenuBtn.appendChild(arrow);
                           currencyMenuBtn.dataset.value = currencyCode;
                           currencyMenu.hidden = true;
@@ -9988,7 +10012,7 @@ function makePosts(){
             const phonePrefixOptions = getPhonePrefixOptions();
             const defaultOpt = phonePrefixOptions.length > 0 ? phonePrefixOptions[0] : { value: 'au +61', label: 'Australia' };
             const { countryCode: defaultCountry, prefix: defaultPrefix } = parsePhonePrefixValue(defaultOpt.value);
-            prefixBtn.textContent = defaultPrefix;
+            prefixBtn.innerHTML = getPhonePrefixButtonHTML(defaultCountry, defaultPrefix);
             prefixBtn.dataset.value = defaultPrefix;
             prefixBtn.dataset.countryCode = defaultCountry || '';
             
@@ -10014,7 +10038,7 @@ function makePosts(){
               optionBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const arrow = prefixBtn.querySelector('.dropdown-arrow');
-                prefixBtn.textContent = prefix;
+                prefixBtn.innerHTML = getPhonePrefixButtonHTML(countryCode, prefix);
                 if(arrow) prefixBtn.appendChild(arrow);
                 prefixBtn.dataset.value = prefix;
                 prefixBtn.dataset.countryCode = countryCode || '';
@@ -13932,10 +13956,11 @@ function makePosts(){
                           const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
                           currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
                           const existingCurrency = typeof tier.currency === 'string' && tier.currency.trim() !== '' ? tier.currency.trim() : 'USD';
+                          const existingCountryCode = findCurrencyCountryCode(existingCurrency);
                           const currencyArrow = document.createElement('span');
                           currencyArrow.className = 'dropdown-arrow';
                           currencyArrow.setAttribute('aria-hidden', 'true');
-                          currencyMenuBtn.textContent = existingCurrency;
+                          currencyMenuBtn.innerHTML = getCurrencyButtonHTML(existingCountryCode, existingCurrency);
                           currencyMenuBtn.appendChild(currencyArrow);
                           currencyMenuBtn.dataset.value = existingCurrency;
                           // Set default currency in data model if not already set
@@ -13963,7 +13988,7 @@ function makePosts(){
                             optionBtn.dataset.countryCode = countryCode || '';
                             optionBtn.addEventListener('click', (e) => {
                               e.stopPropagation();
-                              currencyMenuBtn.textContent = currencyCode;
+                              currencyMenuBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
                               currencyMenuBtn.appendChild(currencyArrow);
                               currencyMenuBtn.dataset.value = currencyCode;
                               currencyMenu.hidden = true;
@@ -14009,7 +14034,7 @@ function makePosts(){
                                     optionBtn.dataset.countryCode = countryCode || '';
                                     optionBtn.addEventListener('click', (e) => {
                                       e.stopPropagation();
-                                      currencyMenuBtn.textContent = currencyCode;
+                                      currencyMenuBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
                                       currencyMenuBtn.appendChild(currencyArrow);
                                       currencyMenuBtn.dataset.value = currencyCode;
                                       currencyMenu.hidden = true;
