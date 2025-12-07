@@ -7311,8 +7311,8 @@ function makePosts(){
         formbuilderCats.dispatchEvent(evt);
       }
       // Directly mark admin panel as dirty since formbuilder state isn't tracked via form inputs
-      // Only after formbuilder is fully loaded and not currently loading to avoid marking dirty during initialization
-      if(window.formbuilderStateManager && window.formbuilderStateManager._loaded && !window.formbuilderStateManager._loading){
+      // Only after formbuilder is fully loaded to avoid marking dirty during initialization
+      if(window.formbuilderStateManager && window.formbuilderStateManager._loaded){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
@@ -16345,17 +16345,8 @@ function makePosts(){
           return;
         }
         try {
-          // Temporarily mark as not loaded to prevent markDirty during initialization
-          const wasLoaded = this._loaded;
-          this._loaded = false;
-          this._loading = true;
-          
           const snapshot = await getFormbuilderSnapshotPromise();
-          if(!snapshot) {
-            this._loaded = wasLoaded;
-            this._loading = false;
-            return;
-          }
+          if(!snapshot) return;
           if(typeof this.restore === 'function'){
             this.restore(snapshot, options);
           }
@@ -16363,14 +16354,11 @@ function makePosts(){
             this.save();
           }
           this._loaded = true;
-          this._loading = false;
         } catch(err) {
           console.error('Failed to load formbuilder snapshot:', err);
-          this._loading = false;
         }
       },
-      _loaded: false,
-      _loading: false
+      _loaded: false
     };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
@@ -24725,6 +24713,8 @@ const adminPanelChangeManager = (()=>{
     const elements = form.querySelectorAll('input, select, textarea');
     elements.forEach(el => {
       if(!el) return;
+      // Exclude formbuilder inputs - their state is tracked separately via formbuilderStateManager
+      if(el.closest('#formbuilderCats')) return;
       const key = el.name || el.id;
       if(!key) return;
       if(el.type === 'file') return;
@@ -24744,6 +24734,7 @@ const adminPanelChangeManager = (()=>{
       data[key] = el.value;
     });
     form.querySelectorAll('[contenteditable][id]').forEach(el => {
+      if(el.closest('#formbuilderCats')) return;
       data[el.id] = el.innerHTML;
     });
     
@@ -25701,7 +25692,7 @@ document.addEventListener('pointerdown', (e) => {
       // LAZY LOAD: Load formbuilder UI when admin opens Forms tab (only when tab is clicked, not on startup)
       if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
         // Load full formbuilder UI (renderFormbuilderCats) which was skipped on startup
-        window.formbuilderStateManager.ensureLoaded({ forceReload: true, skipFormbuilderUI: false });
+        window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: false });
       }
       // Reload fieldset tooltips when messages tab is opened
       if(btn.dataset.tab === 'messages' && typeof loadFieldsetTooltips === 'function'){
