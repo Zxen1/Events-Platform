@@ -422,27 +422,28 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $subcategoryEditsMap = [];
     if ($hasEditableFieldsets) {
         $editsStmt = $pdo->query("
-            SELECT subcategory_id, fieldset_id, custom_name, custom_options
+            SELECT subcategory_key, fieldset_key, fieldset_name, fieldset_options
             FROM subcategory_edits
         ");
         while ($editRow = $editsStmt->fetch(PDO::FETCH_ASSOC)) {
-            $subId = (int)$editRow['subcategory_id'];
-            $fieldsetId = (int)$editRow['fieldset_id'];
-            if (!isset($subcategoryEditsMap[$subId])) {
-                $subcategoryEditsMap[$subId] = [];
+            $subKey = isset($editRow['subcategory_key']) ? trim($editRow['subcategory_key']) : '';
+            $fsKey = isset($editRow['fieldset_key']) ? trim($editRow['fieldset_key']) : '';
+            if ($subKey === '' || $fsKey === '') continue;
+            if (!isset($subcategoryEditsMap[$subKey])) {
+                $subcategoryEditsMap[$subKey] = [];
             }
             $editData = [];
-            if (isset($editRow['custom_name']) && $editRow['custom_name'] !== null && trim($editRow['custom_name']) !== '') {
-                $editData['name'] = trim($editRow['custom_name']);
+            if (isset($editRow['fieldset_name']) && $editRow['fieldset_name'] !== null && trim($editRow['fieldset_name']) !== '') {
+                $editData['name'] = trim($editRow['fieldset_name']);
             }
-            if (isset($editRow['custom_options']) && $editRow['custom_options'] !== null && $editRow['custom_options'] !== '') {
-                $decodedOptions = json_decode($editRow['custom_options'], true);
+            if (isset($editRow['fieldset_options']) && $editRow['fieldset_options'] !== null && $editRow['fieldset_options'] !== '') {
+                $decodedOptions = json_decode($editRow['fieldset_options'], true);
                 if (is_array($decodedOptions)) {
                     $editData['options'] = $decodedOptions;
                 }
             }
             if (!empty($editData)) {
-                $subcategoryEditsMap[$subId][$fieldsetId] = $editData;
+                $subcategoryEditsMap[$subKey][$fsKey] = $editData;
             }
         }
     }
@@ -507,14 +508,10 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (isset($row['subcategory_type'])) {
             $result['subcategory_type'] = $row['subcategory_type'];
         }
-        // Load editable fieldsets from subcategory_edits table (replaces editable_fieldsets JSON column)
+        // Load editable fieldsets from subcategory_edits table (keyed by subcategory_key -> fieldset_key)
         if ($hasEditableFieldsets) {
-            $subId = isset($row['id']) ? (int) $row['id'] : null;
-            if ($subId !== null && isset($subcategoryEditsMap[$subId])) {
-                // Convert fieldset_id keyed map to index-keyed array for backward compatibility
-                // We'll need fieldset_ids to map properly, so we'll do this in buildFields instead
-                // For now, store the fieldset_id keyed map
-                $result['editable_fieldsets'] = $subcategoryEditsMap[$subId];
+            if ($subcategoryKey !== '' && isset($subcategoryEditsMap[$subcategoryKey])) {
+                $result['editable_fieldsets'] = $subcategoryEditsMap[$subcategoryKey];
             } else {
                 $result['editable_fieldsets'] = [];
             }
@@ -544,9 +541,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $hasKey = in_array('fieldset_key', $columns, true) || in_array('fieldset_key', $columns, true);
     $hasName = in_array('fieldset_name', $columns, true) || in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
-    $hasPlaceholder = in_array('placeholder', $columns, true);
+    $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
     $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
-    $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
+    $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true);
     $hasFieldsetFields = in_array('fieldset_fields', $columns, true) || in_array('fieldset_fields', $columns, true);
 
     if ($hasId) {
@@ -567,13 +564,13 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         }
     }
     if ($hasPlaceholder) {
-        $selectColumns[] = '`placeholder`';
+        $selectColumns[] = '`fieldset_placeholder`';
     }
     if ($hasFieldsetTooltip) {
         $selectColumns[] = '`fieldset_tooltip`';
     }
     if ($hasFormbuilderEditable) {
-        $selectColumns[] = '`formbuilder_editable`';
+        $selectColumns[] = '`fieldset_editable`';
     }
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
@@ -683,14 +680,14 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         } else {
             $entry['name'] = $rawName;
         }
-        if ($hasPlaceholder && isset($row['placeholder']) && is_string($row['placeholder'])) {
-            $entry['placeholder'] = trim($row['placeholder']);
+        if ($hasPlaceholder && isset($row['fieldset_placeholder']) && is_string($row['fieldset_placeholder'])) {
+            $entry['placeholder'] = trim($row['fieldset_placeholder']);
         }
         if ($hasFieldsetTooltip && isset($row['fieldset_tooltip']) && is_string($row['fieldset_tooltip'])) {
             $entry['fieldset_tooltip'] = trim($row['fieldset_tooltip']);
         }
-        if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
-            $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
+        if ($hasFormbuilderEditable && isset($row['fieldset_editable'])) {
+            $entry['formbuilder_editable'] = (bool) $row['fieldset_editable'];
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
@@ -974,8 +971,15 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             // Get required flag for this field (default to false if not set)
             $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
             
-            // Get customizations for this fieldset if it's editable (now keyed by fieldset_id, not index)
-            $fieldEdit = isset($editableFieldsets[$fieldsetId]) ? $editableFieldsets[$fieldsetId] : null;
+            // Get customizations for this fieldset if it's editable (keyed by fieldset_key)
+            $fieldsetKeyForEdit = null;
+            foreach ($fieldsets as $ft) {
+                if (isset($ft['id']) && $ft['id'] === $fieldsetId) {
+                    $fieldsetKeyForEdit = isset($ft['fieldset_key']) ? $ft['fieldset_key'] : (isset($ft['key']) ? $ft['key'] : null);
+                    break;
+                }
+            }
+            $fieldEdit = ($fieldsetKeyForEdit !== null && isset($editableFieldsets[$fieldsetKeyForEdit])) ? $editableFieldsets[$fieldsetKeyForEdit] : null;
             
             // Find the fieldset by ID
             $matchingFieldset = null;
@@ -1069,7 +1073,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $matchingFieldset['placeholder'] ?? '',
+                    'placeholder' => $matchingFieldset['placeholder'] ?? $matchingFieldset['fieldset_placeholder'] ?? '',
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
@@ -1112,7 +1116,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $fieldsetKeyValue,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $matchingFieldset['placeholder'] ?? '',
+                    'placeholder' => $matchingFieldset['placeholder'] ?? $matchingFieldset['fieldset_placeholder'] ?? '',
                     'required' => $requiredValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],

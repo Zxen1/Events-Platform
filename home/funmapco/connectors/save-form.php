@@ -738,7 +738,7 @@ try {
                     if (!$fieldsetKey) continue;
                     
                     // Only process field types marked as editable in the database
-                    $isEditable = isset($fieldsetDef['formbuilder_editable']) && $fieldsetDef['formbuilder_editable'] === true;
+                    $isEditable = isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true;
                     if (!$isEditable) continue;
                     
                     $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
@@ -757,7 +757,7 @@ try {
                     // For dropdown/radio types, save options ONLY if they differ from default placeholder
                     if (isset($fieldData['options'])) {
                         $customOptionsArray = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
-                        $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
+                        $defaultPlaceholder = $fieldsetDef['fieldset_placeholder'] ?? '';
                         $defaultOptions = [];
                         if ($defaultPlaceholder !== '') {
                             $defaultOptions = array_values(array_filter(
@@ -774,12 +774,10 @@ try {
                     // Only save if there's actual custom data
                     if ($customName !== null || $customOptions !== null) {
                         $subcategoryEditsToSave[] = [
-                            'subcategory_id' => $subId,
                             'subcategory_key' => $subKey,
-                            'fieldset_id' => $fieldsetId,
                             'fieldset_key' => $fieldsetKey,
-                            'custom_name' => $customName,
-                            'custom_options' => $customOptions,
+                            'fieldset_name' => $customName,
+                            'fieldset_options' => $customOptions,
                         ];
                     }
                 }
@@ -943,29 +941,27 @@ try {
                 // Save subcategory_edits to database table (replaces editable_fieldsets JSON)
                 if ($hasFieldsForThisSub && !empty($subcategoryEditsToSave)) {
                     // Delete existing edits for this subcategory first
-                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_id = :subcategory_id");
-                    $deleteStmt->execute([':subcategory_id' => $subId]);
+                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_key = :subcategory_key");
+                    $deleteStmt->execute([':subcategory_key' => $subKey]);
                     
                     // Insert new edits
                     $insertStmt = $pdo->prepare("
-                        INSERT INTO subcategory_edits (subcategory_id, subcategory_key, fieldset_id, fieldset_key, custom_name, custom_options)
-                        VALUES (:subcategory_id, :subcategory_key, :fieldset_id, :fieldset_key, :custom_name, :custom_options)
+                        INSERT INTO subcategory_edits (subcategory_key, fieldset_key, fieldset_name, fieldset_options)
+                        VALUES (:subcategory_key, :fieldset_key, :fieldset_name, :fieldset_options)
                     ");
                     
                     foreach ($subcategoryEditsToSave as $edit) {
                         $insertStmt->execute([
-                            ':subcategory_id' => $edit['subcategory_id'],
                             ':subcategory_key' => $edit['subcategory_key'],
-                            ':fieldset_id' => $edit['fieldset_id'],
                             ':fieldset_key' => $edit['fieldset_key'],
-                            ':custom_name' => $edit['custom_name'],
-                            ':custom_options' => $edit['custom_options'],
+                            ':fieldset_name' => $edit['fieldset_name'],
+                            ':fieldset_options' => $edit['fieldset_options'],
                         ]);
                     }
                 } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave)) {
                     // If fields were provided but no customizations, remove any existing edits
-                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_id = :subcategory_id");
-                    $deleteStmt->execute([':subcategory_id' => $subId]);
+                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_key = :subcategory_key");
+                    $deleteStmt->execute([':subcategory_key' => $subKey]);
                 }
                 // Save checkout_options_id as CSV of checkout option IDs
                 if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {
@@ -1965,13 +1961,13 @@ function fetchFieldsetDefinitions(PDO $pdo): array
         } elseif (in_array('fieldset_key', $columns, true)) {
             $select[] = 'fieldset_key';
         }
-        $hasFormbuilderEditable = in_array('formbuilder_editable', $columns, true);
+        $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true);
         if ($hasFormbuilderEditable) {
-            $select[] = 'formbuilder_editable';
+            $select[] = 'fieldset_editable';
         }
-        $hasPlaceholder = in_array('placeholder', $columns, true);
+        $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
         if ($hasPlaceholder) {
-            $select[] = 'placeholder';
+            $select[] = 'fieldset_placeholder';
         }
 
         $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
@@ -1992,11 +1988,11 @@ function fetchFieldsetDefinitions(PDO $pdo): array
                 'name' => $name,
                 'key' => $key,
             ];
-            if ($hasFormbuilderEditable && isset($row['formbuilder_editable'])) {
-                $entry['formbuilder_editable'] = (bool) $row['formbuilder_editable'];
+            if ($hasFormbuilderEditable && isset($row['fieldset_editable'])) {
+                $entry['fieldset_editable'] = (bool) $row['fieldset_editable'];
             }
-            if ($hasPlaceholder && isset($row['placeholder'])) {
-                $entry['placeholder'] = trim((string) $row['placeholder']);
+            if ($hasPlaceholder && isset($row['fieldset_placeholder'])) {
+                $entry['fieldset_placeholder'] = trim((string) $row['fieldset_placeholder']);
             }
             $map[$id] = $entry;
         }
