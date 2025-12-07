@@ -9990,11 +9990,11 @@ function makePosts(){
             prefixMenu.id = `${prefixBtnId}-menu`;
             prefixMenu.hidden = true;
             
-            // Get phone prefix options from general_options (option_group should match field key: phone-prefix)
-            const phonePrefixOptions = window.formbuilderStateManager && window.formbuilderStateManager._data && window.formbuilderStateManager._data.general_options && (window.formbuilderStateManager._data.general_options['phone-prefix'] || window.formbuilderStateManager._data.general_options.phone_prefix)
-              ? (window.formbuilderStateManager._data.general_options['phone-prefix'] || window.formbuilderStateManager._data.general_options.phone_prefix)
-              : (window.adminPanelModule && window.adminPanelModule._lastData && window.adminPanelModule._lastData.general_options && (window.adminPanelModule._lastData.general_options['phone-prefix'] || window.adminPanelModule._lastData.general_options.phone_prefix)
-                ? (window.adminPanelModule._lastData.general_options['phone-prefix'] || window.adminPanelModule._lastData.general_options.phone_prefix)
+            // Get phone prefix options from general_options (option_group: phone-prefix)
+            const phonePrefixOptions = window.formbuilderStateManager && window.formbuilderStateManager._data && window.formbuilderStateManager._data.general_options && window.formbuilderStateManager._data.general_options['phone-prefix']
+              ? window.formbuilderStateManager._data.general_options['phone-prefix']
+              : (window.adminPanelModule && window.adminPanelModule._lastData && window.adminPanelModule._lastData.general_options && window.adminPanelModule._lastData.general_options['phone-prefix']
+                ? window.adminPanelModule._lastData.general_options['phone-prefix']
                 : []);
             
             if(phonePrefixOptions.length > 0){
