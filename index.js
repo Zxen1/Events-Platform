@@ -122,6 +122,63 @@ function getCurrencyOptions() {
   return [];
 }
 
+// === Phone Prefix Helpers ===
+// Get country code from phone prefix label (e.g., "🇺🇸 +1 United States" -> "us")
+function getPhonePrefixCountryCode(label) {
+  if (!label || typeof label !== 'string') return null;
+  // Map country names to country codes
+  const countryNameToCode = {
+    'united states': 'us', 'canada': 'ca', 'united kingdom': 'gb', 'australia': 'au',
+    'new zealand': 'nz', 'japan': 'jp', 'singapore': 'sg', 'hong kong': 'hk',
+    'sweden': 'se', 'norway': 'no', 'denmark': 'dk', 'poland': 'pl', 'mexico': 'mx',
+    'brazil': 'br', 'india': 'in', 'south africa': 'za', 'china': 'cn', 'south korea': 'kr',
+    'taiwan': 'tw', 'thailand': 'th', 'philippines': 'ph', 'indonesia': 'id', 'malaysia': 'my',
+    'vietnam': 'vn', 'uae': 'ae', 'saudi arabia': 'sa', 'qatar': 'qa', 'kuwait': 'kw',
+    'bahrain': 'bh', 'oman': 'om', 'israel': 'il', 'czech republic': 'cz', 'hungary': 'hu',
+    'romania': 'ro', 'bulgaria': 'bg', 'croatia': 'hr', 'iceland': 'is', 'russia': 'ru',
+    'ukraine': 'ua', 'turkey': 'tr', 'chile': 'cl', 'colombia': 'co', 'argentina': 'ar',
+    'peru': 'pe', 'uruguay': 'uy', 'bolivia': 'bo', 'paraguay': 'py', 'venezuela': 've',
+    'dominican republic': 'do', 'jamaica': 'jm', 'trinidad and tobago': 'tt', 'guatemala': 'gt',
+    'costa rica': 'cr', 'panama': 'pa', 'nigeria': 'ng', 'egypt': 'eg', 'kenya': 'ke',
+    'ghana': 'gh', 'tanzania': 'tz', 'uganda': 'ug', 'morocco': 'ma', 'tunisia': 'tn',
+    'pakistan': 'pk', 'bangladesh': 'bd', 'sri lanka': 'lk', 'nepal': 'np', 'myanmar': 'mm',
+    'fiji': 'fj', 'papua new guinea': 'pg', 'france': 'fr', 'germany': 'de', 'italy': 'it',
+    'spain': 'es', 'netherlands': 'nl', 'belgium': 'be', 'switzerland': 'ch', 'austria': 'at',
+    'portugal': 'pt', 'ireland': 'ie', 'finland': 'fi', 'greece': 'gr'
+  };
+  const lowerLabel = label.toLowerCase();
+  for (const [name, code] of Object.entries(countryNameToCode)) {
+    if (lowerLabel.includes(name)) {
+      return code;
+    }
+  }
+  return null;
+}
+
+// Get display HTML for phone prefix option with flag icon
+function getPhonePrefixDisplayText(opt) {
+  if (!opt) return '';
+  const label = opt.label || opt.value || '';
+  const value = opt.value || '';
+  
+  // Remove emoji from label
+  const labelWithoutEmoji = label.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').trim();
+  
+  // Get country code for flag
+  const countryCode = getPhonePrefixCountryCode(label);
+  const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+  
+  return `${flagHTML}${labelWithoutEmoji}`;
+}
+
+// Get all phone prefix options
+function getPhonePrefixOptions() {
+  if (Array.isArray(window.phonePrefixData) && window.phonePrefixData.length > 0) {
+    return window.phonePrefixData;
+  }
+  return [];
+}
+
 // === Currency Dropdown Keyboard Navigation ===
 // Allows typing letters to jump to matching currency codes when dropdown is open
 function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
@@ -2243,6 +2300,13 @@ let __notifyMapOnInteraction = null;
                     value: opt.value,
                     label: opt.label
                   }));
+                  // Store phone prefix data globally (same data source pattern)
+                  if(data.general_options['phone-prefix']){
+                    window.phonePrefixData = data.general_options['phone-prefix'].map(opt => ({
+                      value: opt.value,
+                      label: opt.label
+                    }));
+                  }
                   
                   const websiteCurrencyArrow = document.createElement('span');
                   websiteCurrencyArrow.className = 'dropdown-arrow';
@@ -9956,16 +10020,104 @@ function makePosts(){
             input.autocomplete = 'email';
             input.inputMode = 'email';
           } else if(baseType === 'phone' || field.type === 'phone'){
+            // Phone field with prefix dropdown + input (same pattern as currency dropdown)
+            const phoneWrapper = document.createElement('div');
+            phoneWrapper.className = 'form-phone-wrapper';
+            phoneWrapper.style.display = 'flex';
+            phoneWrapper.style.gap = '8px';
+            phoneWrapper.style.alignItems = 'stretch';
+            
+            // Phone prefix dropdown (same structure as item-pricing currency)
+            const prefixWrapper = document.createElement('div');
+            prefixWrapper.className = 'options-dropdown';
+            prefixWrapper.style.flexShrink = '0';
+            
+            const prefixMenuId = `phone-prefix-${baseId}`;
+            const prefixBtn = document.createElement('button');
+            prefixBtn.type = 'button';
+            prefixBtn.className = 'item-pricing-currency';
+            prefixBtn.setAttribute('aria-haspopup', 'true');
+            prefixBtn.setAttribute('aria-expanded', 'false');
+            prefixBtn.setAttribute('aria-controls', prefixMenuId);
+            
+            const phonePrefixOptions = getPhonePrefixOptions();
+            const defaultOpt = phonePrefixOptions.length > 0 ? phonePrefixOptions[0] : { value: '+1', label: '+1' };
+            prefixBtn.textContent = defaultOpt.value;
+            prefixBtn.dataset.value = defaultOpt.value;
+            
+            const prefixArrow = document.createElement('span');
+            prefixArrow.className = 'dropdown-arrow';
+            prefixArrow.setAttribute('aria-hidden', 'true');
+            prefixBtn.appendChild(prefixArrow);
+            
+            const prefixMenu = document.createElement('div');
+            prefixMenu.className = 'options-menu';
+            prefixMenu.id = prefixMenuId;
+            prefixMenu.hidden = true;
+            
+            // Populate phone prefix options with flags (same as currency)
+            phonePrefixOptions.forEach(opt => {
+              const optionBtn = document.createElement('button');
+              optionBtn.type = 'button';
+              optionBtn.className = 'menu-option';
+              optionBtn.innerHTML = getPhonePrefixDisplayText(opt);
+              optionBtn.dataset.value = opt.value;
+              optionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const arrow = prefixBtn.querySelector('.dropdown-arrow');
+                prefixBtn.textContent = opt.value;
+                if(arrow) prefixBtn.appendChild(arrow);
+                prefixBtn.dataset.value = opt.value;
+                prefixMenu.hidden = true;
+                prefixBtn.setAttribute('aria-expanded', 'false');
+              });
+              prefixMenu.appendChild(optionBtn);
+            });
+            
+            prefixBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const open = !prefixMenu.hasAttribute('hidden');
+              if(open){
+                prefixMenu.hidden = true;
+                prefixBtn.setAttribute('aria-expanded', 'false');
+              } else {
+                prefixMenu.hidden = false;
+                prefixBtn.setAttribute('aria-expanded', 'true');
+                const outsideHandler = (ev) => {
+                  if(!prefixWrapper.contains(ev.target)){
+                    prefixMenu.hidden = true;
+                    prefixBtn.setAttribute('aria-expanded', 'false');
+                    document.removeEventListener('click', outsideHandler);
+                    document.removeEventListener('pointerdown', outsideHandler);
+                  }
+                };
+                setTimeout(() => {
+                  document.addEventListener('click', outsideHandler);
+                  document.addEventListener('pointerdown', outsideHandler);
+                }, 0);
+              }
+            });
+            prefixMenu.addEventListener('click', (e) => e.stopPropagation());
+            
+            prefixWrapper.appendChild(prefixBtn);
+            prefixWrapper.appendChild(prefixMenu);
+            phoneWrapper.appendChild(prefixWrapper);
+            
+            // Phone number input
             input.type = 'tel';
             input.autocomplete = 'tel';
             input.inputMode = 'tel';
-            input.pattern = '[-+() 0-9]+';
+            input.pattern = '[0-9 ()-]+';
+            input.style.flex = '1';
+            input.style.minWidth = '0';
             // Prevent non-digit characters (except allowed formatting)
             input.addEventListener('beforeinput', function(e){
-              if(e.data && !/[-+() 0-9\s]/.test(e.data)){
+              if(e.data && !/[0-9 ()-]/.test(e.data)){
                 e.preventDefault();
               }
             });
+            phoneWrapper.appendChild(input);
+            control = phoneWrapper;
           } else {
             input.type = 'text';
           }
@@ -10034,7 +10186,10 @@ function makePosts(){
               this.classList.toggle('input-invalid', !isValid);
             });
           }
-          control = input;
+          // Only set control to input if it wasn't already set (e.g., phone fieldset sets control to phoneWrapper)
+          if(!control){
+            control = input;
+          }
         }
         if(control){
           if(control instanceof HTMLElement){
