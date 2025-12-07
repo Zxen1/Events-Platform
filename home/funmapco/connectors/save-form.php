@@ -966,12 +966,8 @@ try {
                 } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave) && $hasEditableColumnInfo) {
                     // If fields were provided but no customizations AND we confirmed editable column exists,
                     // remove any existing edits. Skip deletion if editable column wasn't detected (safety measure).
-                    error_log("DEBUG: Deleting subcategory_edits for subcategory_key='$subKey' (no customizations found)");
                     $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_key = :subcategory_key");
                     $deleteStmt->execute([':subcategory_key' => $subKey]);
-                } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave) && !$hasEditableColumnInfo) {
-                    // Safety: Skip deletion because fieldset_editable column wasn't detected
-                    error_log("DEBUG: Skipping deletion for subcategory_key='$subKey' - fieldset_editable column not detected (safety measure)");
                 }
                 // Save checkout_options_id as CSV of checkout option IDs
                 if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {
@@ -1956,9 +1952,6 @@ function fetchFieldsetDefinitions(PDO $pdo): array
 {
     try {
         $columns = fetchTableColumns($pdo, 'fieldsets');
-        // DEBUG: Log columns detected (remove after debugging)
-        error_log('DEBUG save-form fieldsetColumns: ' . json_encode($columns));
-        
         if (!$columns || !in_array('id', $columns, true)) {
             return [];
         }
@@ -1977,7 +1970,6 @@ function fetchFieldsetDefinitions(PDO $pdo): array
         // Check for new column name, fallback to old column name
         $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true) || in_array('formbuilder_editable', $columns, true);
         $editableColumnName = in_array('fieldset_editable', $columns, true) ? 'fieldset_editable' : 'formbuilder_editable';
-        error_log('DEBUG hasFormbuilderEditable: ' . ($hasFormbuilderEditable ? 'true' : 'false') . ', column: ' . $editableColumnName);
         if ($hasFormbuilderEditable) {
             $select[] = $editableColumnName;
         }

@@ -16593,20 +16593,6 @@ function makePosts(){
           return;
         }
         
-        // Debug: Log first fieldset to check structure (including editable and placeholder)
-        if(fieldsets.length > 0){
-          console.log('[FieldsetTooltips] Sample fieldset:', {
-            id: fieldsets[0].id,
-            value: fieldsets[0].value,
-            key: fieldsets[0].key,
-            fieldset_key: fieldsets[0].fieldset_key,
-            fieldset_tooltip: fieldsets[0].fieldset_tooltip,
-            placeholder: fieldsets[0].placeholder,
-            formbuilder_editable: fieldsets[0].formbuilder_editable,
-            hasTooltip: !!fieldsets[0].fieldset_tooltip,
-            allKeys: Object.keys(fieldsets[0])
-          });
-        }
         
         // Find the fieldset-tooltips category menu
         const categoryMenu = messagesCats?.querySelector(`[data-message-category="fieldset-tooltips"]`);
