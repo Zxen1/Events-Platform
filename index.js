@@ -16677,19 +16677,13 @@ function makePosts(){
     }
     
     // Load and populate fieldset tooltips
-    async function loadFieldsetTooltips(retryCount = 0){
+    async function loadFieldsetTooltips(){
       try {
-        // Get fieldsets from the snapshot (already loaded)
-        let fieldsets = window.FORM_FIELDSETS || [];
-        
-        // If fieldsets not loaded yet, wait and retry (up to 5 times)
-        if(!fieldsets.length && retryCount < 5){
-          setTimeout(() => loadFieldsetTooltips(retryCount + 1), 300);
-          return;
-        }
+        // Get fieldsets from the snapshot (should be loaded by ensureLoaded before this is called)
+        const fieldsets = window.FORM_FIELDSETS || [];
         
         if(!fieldsets.length){
-          console.log('[FieldsetTooltips] No fieldsets found after retries');
+          // Fieldsets not available - this shouldn't happen if ensureLoaded was called first
           return;
         }
         
@@ -23472,6 +23466,11 @@ function openPanel(m){
     return;
   }
   
+  // Load formbuilder DATA (not UI) when admin panel opens - needed by Messages, Map tabs
+  if(m.id === 'adminPanel' && window.formbuilderStateManager){
+    window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: true });
+  }
+  
   // Initialize admin panel spin controls with current values
   if(m.id === 'adminPanel'){
     const spinLoadStartCheckbox = document.getElementById('spinLoadStart');
@@ -25707,7 +25706,7 @@ document.addEventListener('pointerdown', (e) => {
         // Load full formbuilder UI (renderFormbuilderCats) which was skipped on startup
         window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: false });
       }
-      // Reload fieldset tooltips when messages tab is opened
+      // Reload fieldset tooltips when messages tab is opened (data already loaded when admin panel opened)
       if(btn.dataset.tab === 'messages' && typeof loadFieldsetTooltips === 'function'){
         loadFieldsetTooltips();
       }
