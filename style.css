@@ -2222,6 +2222,8 @@ button[aria-expanded="true"] .results-arrow{
   padding:10px 32px 10px 14px;
   min-height:44px;
   border-radius:8px;
+  display:flex;
+  align-items:center;
   font-size:15px;
   border:none;
   background:rgba(0,0,0,0.2);
@@ -2263,6 +2265,8 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:flex-start;
   width:100%;
   padding:10px;
+  display:flex;
+  align-items:center;
 }
 #tab-settings .panel-field .field-type-select-wrapper .options-menu .menu-option:hover{
   background:rgba(0,0,0,0.3);
@@ -5437,7 +5441,7 @@ body.filters-active #filterBtn{
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .options-menu .menu-option,
-.options-menu button.menu-option{ text-align:left; justify-content:flex-start; }
+.options-menu button.menu-option{ text-align:left; justify-content:flex-start; display:flex; align-items:center; }
 
 .card,
 .recents-card,
@@ -9631,22 +9635,23 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:visible;
-              width:150px;
-              min-width:150px;
-              max-width:150px;
+              width:100px;
+              min-width:100px;
+              max-width:100px;
               box-sizing:border-box;
-              flex:0 0 150px;
+              flex:0 0 100px;
             }
             #tab-forms .item-pricing-currency,
             #memberPanel .member-create-fields .item-pricing-currency{
-              width:150px;
-              min-width:150px;
-              max-width:150px;
+              width:100px;
+              min-width:100px;
+              max-width:100px;
               position:relative;
               overflow:hidden;
               box-sizing:border-box;
               padding-right:30px;
-              display:block;
+              display:flex;
+              align-items:center;
               flex-shrink:0;
             }
             #tab-forms .item-pricing-currency .dropdown-arrow,
@@ -9691,27 +9696,30 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.2);
               border:none;
               border-radius:0;
+              display:flex;
+              align-items:center;
             }
             /* Venue-ticketing currency dropdown - match item-pricing style */
             #tab-forms .tier-price-row .options-dropdown,
             #memberPanel .member-create-fields .tier-price-row .options-dropdown{
               position:relative;
               overflow:visible;
-              width:150px;
-              min-width:150px;
-              max-width:150px;
-              flex:0 0 150px;
+              width:100px;
+              min-width:100px;
+              max-width:100px;
+              flex:0 0 100px;
             }
             #tab-forms .tier-price-row .item-pricing-currency,
             #memberPanel .member-create-fields .tier-price-row .item-pricing-currency{
               position:relative;
               padding-right:30px;
-              width:150px;
-              min-width:150px;
-              max-width:150px;
+              width:100px;
+              min-width:100px;
+              max-width:100px;
               overflow:hidden;
               box-sizing:border-box;
-              display:block;
+              display:flex;
+              align-items:center;
             }
             #tab-forms .tier-price-row .options-menu,
             #memberPanel .member-create-fields .tier-price-row .options-menu{
@@ -9736,6 +9744,8 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.2);
               border:none;
               border-radius:0;
+              display:flex;
+              align-items:center;
             }
             
             /* ========================================
@@ -9752,17 +9762,19 @@ html, body { cursor: auto !important; }
             #tab-forms .form-phone-wrapper .options-dropdown,
             #memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
               flex-shrink:0;
-              width:150px;
-              min-width:150px;
-              max-width:150px;
-              flex:0 0 150px;
+              width:100px;
+              min-width:100px;
+              max-width:100px;
+              flex:0 0 100px;
             }
             #tab-forms .form-phone-wrapper .item-pricing-currency,
             #memberPanel .member-create-fields .form-phone-wrapper .item-pricing-currency{
-              width:150px;
-              min-width:150px;
-              max-width:150px;
+              width:100px;
+              min-width:100px;
+              max-width:100px;
               padding-right:30px;
+              display:flex;
+              align-items:center;
             }
             #tab-forms .form-phone-wrapper .options-menu,
             #memberPanel .member-create-fields .form-phone-wrapper .options-menu{

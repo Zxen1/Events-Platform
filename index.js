@@ -70,7 +70,7 @@ function parseCurrencyValue(optionValue) {
 // Get flag HTML element
 function getFlagHTML(countryCode) {
   if (!countryCode) return '';
-  return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle; margin-right: 4px;" />`;
+  return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle; margin-right: 8px;" />`;
 }
 
 // Get display HTML for currency dropdown option with flag icon
@@ -125,7 +125,7 @@ function getPhonePrefixDisplayText(opt) {
   const { countryCode, prefix } = parsePhonePrefixValue(opt.value);
   const label = opt.label || '';
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  return `${flagHTML}${prefix} ${label}`;
+  return `${flagHTML}${prefix} - ${label}`;
 }
 
 // Get all phone prefix options
