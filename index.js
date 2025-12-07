@@ -14213,7 +14213,7 @@ function makePosts(){
 
             // Fieldset placeholder input (shown in edit panel for editable fields)
             const fieldPlaceholderContainer = document.createElement('div');
-            fieldPlaceholderContainer.className = 'field-placeholder-editor';
+            fieldPlaceholderContainer.className = 'field-name-editor';
             fieldPlaceholderContainer.style.display = 'none'; // Hidden until field type is known to be editable
             const fieldPlaceholderLabel = document.createElement('label');
             fieldPlaceholderLabel.textContent = 'Field Placeholder';
@@ -14242,7 +14242,7 @@ function makePosts(){
 
             // Fieldset tooltip input (shown in edit panel for editable fields)
             const fieldTooltipContainer = document.createElement('div');
-            fieldTooltipContainer.className = 'field-tooltip-editor';
+            fieldTooltipContainer.className = 'field-name-editor';
             fieldTooltipContainer.style.display = 'none'; // Hidden until field type is known to be editable
             const fieldTooltipLabel = document.createElement('label');
             fieldTooltipLabel.textContent = 'Field Tooltip';
@@ -14279,8 +14279,8 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            // Order: fieldset dropdown, field name, placeholder, tooltip, required toggle
-            editPanel.append(fieldsetWrapper, fieldNameContainer, fieldPlaceholderContainer, fieldTooltipContainer, fieldRequiredToggle);
+            // Order: required toggle, fieldset dropdown, field name, placeholder, tooltip
+            editPanel.append(fieldRequiredToggle, fieldsetWrapper, fieldNameContainer, fieldPlaceholderContainer, fieldTooltipContainer);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
