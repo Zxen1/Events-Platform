@@ -9962,140 +9962,109 @@ function makePosts(){
             input.autocomplete = 'email';
             input.inputMode = 'email';
           } else if(baseType === 'phone' || field.type === 'phone'){
-            // Check if phone fieldset has child fields (phone-prefix + phone)
-            if(Array.isArray(field.fields) && field.fields.length > 0){
-              const phoneWrapper = document.createElement('div');
-              phoneWrapper.className = 'form-phone-wrapper';
-              phoneWrapper.style.display = 'flex';
-              phoneWrapper.style.gap = '8px';
-              phoneWrapper.style.alignItems = 'stretch';
-              
-              // Find phone-prefix field
-              const prefixField = field.fields.find(f => f.key === 'phone-prefix' || f.type === 'phone-prefix');
-              if(prefixField){
-                const prefixDropdownWrapper = document.createElement('div');
-                prefixDropdownWrapper.className = 'options-dropdown';
-                prefixDropdownWrapper.style.flexShrink = '0';
-                const prefixBtn = document.createElement('button');
-                prefixBtn.type = 'button';
-                prefixBtn.className = 'form-select';
-                prefixBtn.setAttribute('aria-haspopup', 'true');
-                prefixBtn.setAttribute('aria-expanded', 'false');
-                const prefixBtnId = `${baseId}-prefix`;
-                prefixBtn.id = prefixBtnId;
-                prefixBtn.setAttribute('aria-controls', `${prefixBtnId}-menu`);
-                const prefixArrow = document.createElement('span');
-                prefixArrow.className = 'dropdown-arrow';
-                prefixArrow.setAttribute('aria-hidden', 'true');
-                prefixBtn.appendChild(prefixArrow);
-                const prefixMenu = document.createElement('div');
-                prefixMenu.className = 'options-menu';
-                prefixMenu.id = `${prefixBtnId}-menu`;
-                prefixMenu.hidden = true;
-                
-                // Get phone prefix options from general_options
-                const phonePrefixOptions = window.formbuilderStateManager && window.formbuilderStateManager._data && window.formbuilderStateManager._data.general_options && window.formbuilderStateManager._data.general_options.phone_prefix
-                  ? window.formbuilderStateManager._data.general_options.phone_prefix
-                  : (window.adminPanelModule && window.adminPanelModule._lastData && window.adminPanelModule._lastData.general_options && window.adminPanelModule._lastData.general_options.phone_prefix
-                    ? window.adminPanelModule._lastData.general_options.phone_prefix
-                    : []);
-                
-                if(phonePrefixOptions.length > 0){
-                  phonePrefixOptions.forEach(function(opt){
-                    const optionBtn = document.createElement('button');
-                    optionBtn.type = 'button';
-                    optionBtn.className = 'menu-option';
-                    optionBtn.innerHTML = opt.label || opt.value;
-                    optionBtn.dataset.value = opt.value;
-                    optionBtn.addEventListener('click', (e) => {
-                      e.stopPropagation();
-                      prefixBtn.innerHTML = opt.label || opt.value;
-                      prefixBtn.appendChild(prefixArrow);
-                      prefixBtn.dataset.value = opt.value;
-                      prefixMenu.hidden = true;
-                      prefixBtn.setAttribute('aria-expanded', 'false');
-                    });
-                    prefixMenu.appendChild(optionBtn);
-                  });
-                  prefixBtn.innerHTML = phonePrefixOptions[0].label || phonePrefixOptions[0].value;
-                  prefixBtn.dataset.value = phonePrefixOptions[0].value;
-                } else {
-                  prefixBtn.textContent = '+1';
-                  prefixBtn.dataset.value = '+1';
-                }
-                prefixBtn.appendChild(prefixArrow);
-                
-                prefixBtn.addEventListener('click', (e) => {
+            // Phone fieldset ALWAYS has phone-prefix dropdown + phone input
+            const phoneWrapper = document.createElement('div');
+            phoneWrapper.className = 'form-phone-wrapper';
+            phoneWrapper.style.display = 'flex';
+            phoneWrapper.style.gap = '8px';
+            phoneWrapper.style.alignItems = 'stretch';
+            
+            // Phone prefix dropdown (always present)
+            const prefixDropdownWrapper = document.createElement('div');
+            prefixDropdownWrapper.className = 'options-dropdown';
+            prefixDropdownWrapper.style.flexShrink = '0';
+            const prefixBtn = document.createElement('button');
+            prefixBtn.type = 'button';
+            prefixBtn.className = 'form-select';
+            prefixBtn.setAttribute('aria-haspopup', 'true');
+            prefixBtn.setAttribute('aria-expanded', 'false');
+            const prefixBtnId = `${baseId}-prefix`;
+            prefixBtn.id = prefixBtnId;
+            prefixBtn.setAttribute('aria-controls', `${prefixBtnId}-menu`);
+            const prefixArrow = document.createElement('span');
+            prefixArrow.className = 'dropdown-arrow';
+            prefixArrow.setAttribute('aria-hidden', 'true');
+            prefixBtn.appendChild(prefixArrow);
+            const prefixMenu = document.createElement('div');
+            prefixMenu.className = 'options-menu';
+            prefixMenu.id = `${prefixBtnId}-menu`;
+            prefixMenu.hidden = true;
+            
+            // Get phone prefix options from general_options (option_group should match field key: phone-prefix)
+            const phonePrefixOptions = window.formbuilderStateManager && window.formbuilderStateManager._data && window.formbuilderStateManager._data.general_options && (window.formbuilderStateManager._data.general_options['phone-prefix'] || window.formbuilderStateManager._data.general_options.phone_prefix)
+              ? (window.formbuilderStateManager._data.general_options['phone-prefix'] || window.formbuilderStateManager._data.general_options.phone_prefix)
+              : (window.adminPanelModule && window.adminPanelModule._lastData && window.adminPanelModule._lastData.general_options && (window.adminPanelModule._lastData.general_options['phone-prefix'] || window.adminPanelModule._lastData.general_options.phone_prefix)
+                ? (window.adminPanelModule._lastData.general_options['phone-prefix'] || window.adminPanelModule._lastData.general_options.phone_prefix)
+                : []);
+            
+            if(phonePrefixOptions.length > 0){
+              phonePrefixOptions.forEach(function(opt){
+                const optionBtn = document.createElement('button');
+                optionBtn.type = 'button';
+                optionBtn.className = 'menu-option';
+                optionBtn.innerHTML = opt.label || opt.value;
+                optionBtn.dataset.value = opt.value;
+                optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
-                  const open = !prefixMenu.hasAttribute('hidden');
-                  if(open){
+                  prefixBtn.innerHTML = opt.label || opt.value;
+                  prefixBtn.appendChild(prefixArrow);
+                  prefixBtn.dataset.value = opt.value;
+                  prefixMenu.hidden = true;
+                  prefixBtn.setAttribute('aria-expanded', 'false');
+                });
+                prefixMenu.appendChild(optionBtn);
+              });
+              prefixBtn.innerHTML = phonePrefixOptions[0].label || phonePrefixOptions[0].value;
+              prefixBtn.dataset.value = phonePrefixOptions[0].value;
+            } else {
+              prefixBtn.textContent = '+1';
+              prefixBtn.dataset.value = '+1';
+            }
+            prefixBtn.appendChild(prefixArrow);
+            
+            prefixBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const open = !prefixMenu.hasAttribute('hidden');
+              if(open){
+                prefixMenu.hidden = true;
+                prefixBtn.setAttribute('aria-expanded', 'false');
+              } else {
+                prefixMenu.hidden = false;
+                prefixBtn.setAttribute('aria-expanded', 'true');
+                const outsideHandler = (ev) => {
+                  if(!prefixDropdownWrapper.contains(ev.target)){
                     prefixMenu.hidden = true;
                     prefixBtn.setAttribute('aria-expanded', 'false');
-                  } else {
-                    prefixMenu.hidden = false;
-                    prefixBtn.setAttribute('aria-expanded', 'true');
-                    const outsideHandler = (ev) => {
-                      if(!prefixDropdownWrapper.contains(ev.target)){
-                        prefixMenu.hidden = true;
-                        prefixBtn.setAttribute('aria-expanded', 'false');
-                        document.removeEventListener('click', outsideHandler);
-                        document.removeEventListener('pointerdown', outsideHandler);
-                      }
-                    };
-                    setTimeout(() => {
-                      document.addEventListener('click', outsideHandler);
-                      document.addEventListener('pointerdown', outsideHandler);
-                    }, 0);
+                    document.removeEventListener('click', outsideHandler);
+                    document.removeEventListener('pointerdown', outsideHandler);
                   }
-                });
-                prefixMenu.addEventListener('click', (e) => e.stopPropagation());
-                prefixDropdownWrapper.appendChild(prefixBtn);
-                prefixDropdownWrapper.appendChild(prefixMenu);
-                phoneWrapper.appendChild(prefixDropdownWrapper);
+                };
+                setTimeout(() => {
+                  document.addEventListener('click', outsideHandler);
+                  document.addEventListener('pointerdown', outsideHandler);
+                }, 0);
               }
-              
-              // Find phone field
-              const phoneField = field.fields.find(f => f.key === 'phone' || (f.type !== 'phone-prefix' && f.key !== 'phone-prefix'));
-              if(phoneField){
-                input.type = 'tel';
-                input.autocomplete = 'tel';
-                input.inputMode = 'tel';
-                input.pattern = '[-+() 0-9]+';
-                input.style.flex = '1';
-                input.style.minWidth = '0';
-                // Prevent non-digit characters (except allowed formatting)
-                input.addEventListener('beforeinput', function(e){
-                  if(e.data && !/[-+() 0-9\s]/.test(e.data)){
-                    e.preventDefault();
-                  }
-                });
-                phoneWrapper.appendChild(input);
-                control = phoneWrapper;
-              } else {
-                input.type = 'tel';
-                input.autocomplete = 'tel';
-                input.inputMode = 'tel';
-                input.pattern = '[-+() 0-9]+';
-                input.addEventListener('beforeinput', function(e){
-                  if(e.data && !/[-+() 0-9\s]/.test(e.data)){
-                    e.preventDefault();
-                  }
-                });
-                control = input;
+            });
+            prefixMenu.addEventListener('click', (e) => e.stopPropagation());
+            prefixDropdownWrapper.appendChild(prefixBtn);
+            prefixDropdownWrapper.appendChild(prefixMenu);
+            phoneWrapper.appendChild(prefixDropdownWrapper);
+            
+            // Phone input (always present)
+            input.type = 'tel';
+            input.autocomplete = 'tel';
+            input.inputMode = 'tel';
+            input.pattern = '[-+() 0-9]+';
+            input.style.flex = '1';
+            input.style.minWidth = '0';
+            // Prevent non-digit characters (except allowed formatting)
+            input.addEventListener('beforeinput', function(e){
+              if(e.data && !/[-+() 0-9\s]/.test(e.data)){
+                e.preventDefault();
               }
-            } else {
-              input.type = 'tel';
-              input.autocomplete = 'tel';
-              input.inputMode = 'tel';
-              input.pattern = '[-+() 0-9]+';
-              // Prevent non-digit characters (except allowed formatting)
-              input.addEventListener('beforeinput', function(e){
-                if(e.data && !/[-+() 0-9\s]/.test(e.data)){
-                  e.preventDefault();
-                }
-              });
-              control = input;
-            }
+            });
+            phoneWrapper.appendChild(input);
+            control = phoneWrapper;
           } else {
             input.type = 'text';
           }
