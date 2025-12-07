@@ -24823,6 +24823,9 @@ const adminPanelChangeManager = (()=>{
   }
 
   function setDirty(value){
+    if(value && !dirty){
+      console.trace('[DEBUG] setDirty(true) - Save button will light up');
+    }
     dirty = !!value;
     if(panel){
       panel.classList.toggle('has-unsaved', dirty);
@@ -25275,6 +25278,7 @@ const adminPanelChangeManager = (()=>{
       if(message) showStatus(message);
     },
     markDirty(){
+      console.trace('[DEBUG] markDirty called');
       ensureElements();
       setDirty(true);
     },
