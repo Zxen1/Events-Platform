@@ -15197,6 +15197,27 @@ function makePosts(){
                   newField.placeholder = matchingFieldset.placeholder;
                 }
                 newField.type = selectedFieldsetKey;
+                
+                // For editable fieldsets, copy defaults to custom fields so they get saved to subcategory_edits
+                if(isEditable){
+                  // Copy default name as custom name
+                  newField.name = fieldsetName;
+                  // Copy default placeholder as custom placeholder
+                  if(matchingFieldset.placeholder){
+                    newField.customPlaceholder = matchingFieldset.placeholder;
+                  }
+                  // Copy default tooltip as custom tooltip
+                  if(matchingFieldset.fieldset_tooltip){
+                    newField.customTooltip = matchingFieldset.fieldset_tooltip;
+                  }
+                  // For dropdown/radio, copy placeholder options as field options
+                  if((selectedFieldsetKey === 'dropdown' || selectedFieldsetKey === 'radio') && matchingFieldset.placeholder){
+                    const defaultOptions = matchingFieldset.placeholder.split(',').map(s => s.trim()).filter(s => s);
+                    if(defaultOptions.length > 0){
+                      newField.options = defaultOptions;
+                    }
+                  }
+                }
               }
               
               fields.push(newField);
@@ -16114,6 +16135,13 @@ function makePosts(){
               } else if(field && (field.type === 'checkout' || field.fieldsetKey === 'checkout')){
                 // Initialize empty array for checkout fields if missing
                 cloned.checkoutOptions = [];
+              }
+              // Preserve custom placeholder and tooltip for editable fieldsets
+              if(field && typeof field.customPlaceholder === 'string'){
+                cloned.customPlaceholder = field.customPlaceholder;
+              }
+              if(field && typeof field.customTooltip === 'string'){
+                cloned.customTooltip = field.customTooltip;
               }
               return cloned;
             });
