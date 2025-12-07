@@ -2230,6 +2230,10 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   align-items:center;
   justify-content:flex-start;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:12px;
 }
 #tab-settings .panel-field .field-type-select-wrapper .field-type-select:focus{
   outline:none;
@@ -4902,21 +4906,6 @@ body.hide-ads .ad-board{
 #tab-forms .form-container .form-url-input.input-invalid,
 #memberPanel .member-create-fields .form-url-input.input-invalid{
   border:2px solid red;
-}
-#tab-forms .form-container .form-phone-wrapper,
-#memberPanel .member-create-fields .form-phone-wrapper{
-  display:flex;
-  gap:8px;
-  align-items:stretch;
-}
-#tab-forms .form-container .form-phone-wrapper .options-dropdown,
-#memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
-  flex-shrink:0;
-}
-#tab-forms .form-container .form-phone-wrapper input[type="tel"],
-#memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
-  flex:1;
-  min-width:0;
 }
 #tab-forms .form-container .panel-field select:focus,
 #tab-forms .form-container .form-field--dropdown .form-select:focus,

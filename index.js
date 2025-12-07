@@ -2257,7 +2257,7 @@ let __notifyMapOnInteraction = null;
                     optionBtn.dataset.value = opt.value;
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(opt.value);
+                      websiteCurrencyBtn.textContent = opt.value;
                       websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                       websiteCurrencyBtn.dataset.value = opt.value;
                       websiteCurrencyMenu.hidden = true;
@@ -2268,14 +2268,8 @@ let __notifyMapOnInteraction = null;
                   
                   // Set selected value
                   if(data.settings.site_currency){
-                    const selected = data.general_options.currency.find(opt => opt.value === data.settings.site_currency);
-                    if(selected){
-                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(selected.value);
-                      websiteCurrencyBtn.dataset.value = selected.value;
-                    } else {
-                      websiteCurrencyBtn.textContent = data.settings.site_currency;
-                      websiteCurrencyBtn.dataset.value = data.settings.site_currency;
-                    }
+                    websiteCurrencyBtn.textContent = data.settings.site_currency;
+                    websiteCurrencyBtn.dataset.value = data.settings.site_currency;
                   }
                   websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                   
@@ -9452,11 +9446,8 @@ function makePosts(){
           // Add blur validation with red border
           urlInput.addEventListener('blur', function(){
             const val = (this.value || '').trim();
-            const isRequired = this.required || field.required || false;
             let isValid = true;
-            if(val === ''){
-              isValid = !isRequired;
-            } else {
+            if(val){
               let candidate = val;
               if(!candidate.includes('://')){
                 candidate = 'https://' + candidate;
@@ -9467,6 +9458,8 @@ function makePosts(){
               } catch(_e){
                 isValid = false;
               }
+            } else {
+              isValid = true; // Empty is valid if not required
             }
             this.classList.toggle('input-invalid', !isValid);
           });
@@ -9958,117 +9951,21 @@ function makePosts(){
         } else {
           const input = document.createElement('input');
           // Set input type based on fieldset for proper validation
-          if(baseType === 'email' || field.type === 'email' || fieldsetKey === 'email'){
+          if(baseType === 'email' || field.type === 'email'){
             input.type = 'email';
             input.autocomplete = 'email';
             input.inputMode = 'email';
-          } else if(baseType === 'phone' || field.type === 'phone' || fieldsetKey === 'phone'){
-            // Phone fieldset ALWAYS has phone-prefix dropdown + phone input
-            const phoneWrapper = document.createElement('div');
-            phoneWrapper.className = 'form-phone-wrapper';
-            phoneWrapper.style.display = 'flex';
-            phoneWrapper.style.gap = '8px';
-            phoneWrapper.style.alignItems = 'stretch';
-            
-            // Phone prefix dropdown (always present) - copy item pricing currency pattern exactly
-            const prefixDropdownWrapper = document.createElement('div');
-            prefixDropdownWrapper.className = 'options-dropdown';
-            prefixDropdownWrapper.style.flexShrink = '0';
-            
-            const prefixMenuId = `phone-prefix-${baseId}`;
-            const prefixBtn = document.createElement('button');
-            prefixBtn.type = 'button';
-            prefixBtn.className = 'item-pricing-currency';
-            prefixBtn.setAttribute('aria-haspopup', 'true');
-            prefixBtn.setAttribute('aria-expanded', 'false');
-            prefixBtn.setAttribute('aria-controls', prefixMenuId);
-            
-            // Get phone prefix options from general_options (option_group: phone-prefix)
-            const phonePrefixOptions = window.formbuilderStateManager && window.formbuilderStateManager._data && window.formbuilderStateManager._data.general_options && window.formbuilderStateManager._data.general_options['phone-prefix']
-              ? window.formbuilderStateManager._data.general_options['phone-prefix']
-              : (window.adminPanelModule && window.adminPanelModule._lastData && window.adminPanelModule._lastData.general_options && window.adminPanelModule._lastData.general_options['phone-prefix']
-                ? window.adminPanelModule._lastData.general_options['phone-prefix']
-                : []);
-            
-            const defaultPrefix = phonePrefixOptions.length > 0 ? phonePrefixOptions[0].value : '+1';
-            prefixBtn.textContent = defaultPrefix;
-            prefixBtn.dataset.value = defaultPrefix;
-            
-            const prefixArrow = document.createElement('span');
-            prefixArrow.className = 'dropdown-arrow';
-            prefixArrow.setAttribute('aria-hidden', 'true');
-            prefixBtn.appendChild(prefixArrow);
-            
-            const prefixMenu = document.createElement('div');
-            prefixMenu.className = 'options-menu';
-            prefixMenu.id = prefixMenuId;
-            prefixMenu.hidden = true;
-            
-            // Populate phone prefix options
-            if(phonePrefixOptions.length > 0){
-              phonePrefixOptions.forEach(function(opt){
-                const optionBtn = document.createElement('button');
-                optionBtn.type = 'button';
-                optionBtn.className = 'menu-option';
-                optionBtn.innerHTML = opt.label || opt.value;
-                optionBtn.dataset.value = opt.value;
-                optionBtn.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                  const arrow = prefixBtn.querySelector('.dropdown-arrow');
-                  prefixBtn.textContent = opt.value;
-                  if(arrow) prefixBtn.appendChild(arrow);
-                  prefixBtn.dataset.value = opt.value;
-                  prefixMenu.hidden = true;
-                  prefixBtn.setAttribute('aria-expanded', 'false');
-                });
-                prefixMenu.appendChild(optionBtn);
-              });
-            }
-            
-            prefixBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const open = !prefixMenu.hasAttribute('hidden');
-              if(open){
-                prefixMenu.hidden = true;
-                prefixBtn.setAttribute('aria-expanded', 'false');
-              } else {
-                prefixMenu.hidden = false;
-                prefixBtn.setAttribute('aria-expanded', 'true');
-                const outsideHandler = (ev) => {
-                  if(!prefixDropdownWrapper.contains(ev.target)){
-                    prefixMenu.hidden = true;
-                    prefixBtn.setAttribute('aria-expanded', 'false');
-                    document.removeEventListener('click', outsideHandler);
-                    document.removeEventListener('pointerdown', outsideHandler);
-                  }
-                };
-                setTimeout(() => {
-                  document.addEventListener('click', outsideHandler);
-                  document.addEventListener('pointerdown', outsideHandler);
-                }, 0);
-              }
-            });
-            prefixMenu.addEventListener('click', (e) => e.stopPropagation());
-            
-            prefixDropdownWrapper.appendChild(prefixBtn);
-            prefixDropdownWrapper.appendChild(prefixMenu);
-            phoneWrapper.appendChild(prefixDropdownWrapper);
-            
-            // Phone input (always present)
+          } else if(baseType === 'phone' || field.type === 'phone'){
             input.type = 'tel';
             input.autocomplete = 'tel';
             input.inputMode = 'tel';
-            input.pattern = '[0-9+() -]+';
-            input.style.flex = '1';
-            input.style.minWidth = '0';
+            input.pattern = '[-+() 0-9]+';
             // Prevent non-digit characters (except allowed formatting)
             input.addEventListener('beforeinput', function(e){
               if(e.data && !/[-+() 0-9\s]/.test(e.data)){
                 e.preventDefault();
               }
             });
-            phoneWrapper.appendChild(input);
-            control = phoneWrapper;
           } else {
             input.type = 'text';
           }
@@ -10094,21 +9991,14 @@ function makePosts(){
             charCounter = createCharCounter(input, maxLength, minLength);
           }
           // Add blur validation for email/phone/url with red border
-          if(baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || fieldsetKey === 'email' || fieldsetKey === 'phone' || fieldsetKey === 'website-url' || fieldsetKey === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url'){
+          if(baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url'){
             input.addEventListener('blur', function(){
               const val = (this.value || '').trim();
-              const isRequired = this.required || field.required || false;
               let isValid = true;
               if(this.type === 'email'){
-                if(val === ''){
-                  isValid = !isRequired;
-                } else {
-                  isValid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val);
-                }
+                isValid = val === '' || /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val);
               } else if(this.dataset && this.dataset.urlType){
-                if(val === ''){
-                  isValid = !isRequired;
-                } else {
+                if(val){
                   let candidate = val;
                   if(!candidate.includes('://')){
                     candidate = 'https://' + candidate;
@@ -10119,34 +10009,32 @@ function makePosts(){
                   } catch(_e){
                     isValid = false;
                   }
+                } else {
+                  isValid = true; // Empty is valid if not required
                 }
               } else if(this.type === 'url' || this.inputMode === 'url'){
-                if(val === ''){
-                  isValid = !isRequired;
-                } else {
+                if(val){
                   try {
                     new URL(val.includes('://') ? val : 'https://' + val);
                     isValid = true;
                   } catch(_e){
                     isValid = false;
                   }
+                } else {
+                  isValid = true; // Empty is valid if not required
                 }
               } else if(this.type === 'tel' || this.inputMode === 'tel'){
-                if(val === ''){
-                  isValid = !isRequired;
-                } else {
+                if(val){
                   const digits = val.replace(/\D+/g,'');
-                  const minDigits = minLength && minLength > 0 ? minLength : 7;
-                  isValid = digits.length >= minDigits && /^[-+() 0-9]+$/.test(val);
+                  isValid = digits.length >= 7 && /^[-+() 0-9]+$/.test(val);
+                } else {
+                  isValid = true; // Empty is valid if not required
                 }
               }
               this.classList.toggle('input-invalid', !isValid);
             });
           }
-          // Only set control to input if it wasn't already set (e.g., phone fieldset sets control to phoneWrapper)
-          if(!control){
-            control = input;
-          }
+          control = input;
         }
         if(control){
           if(control instanceof HTMLElement){
