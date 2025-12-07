@@ -9314,6 +9314,8 @@ function makePosts(){
           urlInput.dataset.urlLinkId = linkId;
           urlInput.autocomplete = 'url';
           urlInput.inputMode = 'url';
+          // Protect URL input with field limit from 'website' field
+          protectInputMaxLength(urlInput, getFieldLimitsByKey('website').max_length);
           const urlLink = document.createElement('a');
           urlLink.id = linkId;
           urlLink.href = '#';
@@ -9459,6 +9461,7 @@ function makePosts(){
             fallback.dataset.locationAddress = 'true';
             fallback.value = locationState.address || '';
             if(field.required) fallback.required = true;
+            protectInputMaxLength(fallback, getFieldLimitsByKey('address-line').max_length);
             fallback.addEventListener('input', ()=>{
               locationState.address = fallback.value;
               safeNotifyFormbuilderChange();
@@ -12798,6 +12801,7 @@ function makePosts(){
                 venueNameInput.value = venue.name || '';
                 venueNameInput.dataset.venueIndex = String(venueIndex);
                 venueNameInput.setAttribute('list', nameDatalistId);
+                protectInputMaxLength(venueNameInput, getFieldLimitsByKey('venue-name').max_length);
                 venueNameInput.addEventListener('input', ()=>{
                   const value = venueNameInput.value || '';
                   venue.name = value;
@@ -12961,6 +12965,7 @@ function makePosts(){
                   fallback.setAttribute('aria-label', addressPlaceholder);
                   fallback.value = venue.address || '';
                   fallback.dataset.venueIndex = String(venueIndex);
+                  protectInputMaxLength(fallback, getFieldLimitsByKey('address-line').max_length);
                   fallback.addEventListener('input', ()=>{
                     venue.address = fallback.value;
                     safeNotifyChange();
@@ -13464,6 +13469,7 @@ function makePosts(){
                         seatingAreaInput.dataset.sessionIndex = String(sessionIndex);
                         seatingAreaInput.dataset.timeIndex = String(timeIndex);
                         seatingAreaInput.dataset.seatingAreaIndex = String(seatingAreaIndex);
+                        protectInputMaxLength(seatingAreaInput, getFieldLimitsByKey('seating-area').max_length);
                         seatingAreaInput.addEventListener('input', ()=>{
                           const previous = typeof seatingArea.name === 'string' ? seatingArea.name : '';
                           const nextValue = seatingAreaInput.value;
@@ -13533,6 +13539,7 @@ function makePosts(){
                           tierInput.dataset.timeIndex = String(timeIndex);
                           tierInput.dataset.seatingAreaIndex = String(seatingAreaIndex);
                           tierInput.dataset.tierIndex = String(tierIndex);
+                          protectInputMaxLength(tierInput, getFieldLimitsByKey('pricing-tier').max_length);
                           tierRow.appendChild(tierLabel);
                           tierInput.addEventListener('input', ()=>{
                             const previous = typeof tier.name === 'string' ? tier.name : '';
