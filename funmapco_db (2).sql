@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 07:07 PM
+-- Generation Time: Dec 07, 2025 at 10:28 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -312,10 +312,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 18:56:49'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 18:56:49'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 18:56:49'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 18:56:49');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-07 22:27:01'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-07 22:27:01'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-07 22:27:01'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-07 22:27:01');
 
 -- --------------------------------------------------------
 
@@ -431,8 +431,8 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (2, 'description', '[\"description\"]', 'Description', NULL, 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (3, 'text-box', '[\"text-box\"]', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
 (4, 'text-area', '[\"text-area\"]', 'Text Area (editable)', NULL, 'eg. Sing along!', 'Write more stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
-(5, 'dropdown', '[\"dropdown\"]', 'Dropdown (editable)', NULL, 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:55:39'),
-(6, 'radio', '[\"radio\"]', 'Radio Toggle (editable)', NULL, 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:55:36'),
+(5, 'dropdown', '[\"dropdown\"]', 'Dropdown (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:39'),
+(6, 'radio', '[\"radio\"]', 'Radio Toggle (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:45'),
 (7, 'email', '[\"email\"]', 'Email', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (8, 'phone', '[\"phone\"]', 'Phone', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, 8, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (9, 'location', '[\"address-line\", \"latitude\", \"longitude\"]', 'Location', NULL, '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'Search for and select the location of your event or listing. The map will help you find the exact spot.', 0, 9, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
@@ -891,7 +891,8 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
 (24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 20:47:47');
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 20:47:47'),
+(28, 47, 'Test', 'Test 2 Subcategory', 'test-2-subcategory', '1,2,7,8,9,10,11,12,13,14,15,4,5,3,6', 'Title, Description, Email, Phone, Location, Website (URL), Tickets (URL), Images, Coupon, Item Pricing, Venue Ticketing, Text Area (editable), Dropdown (editable), Text Box (editable), Radio Toggle (editable)', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', NULL, 'Standard', '2025-12-07 08:14:46', '2025-12-07 11:27:01');
 
 -- --------------------------------------------------------
 
@@ -916,10 +917,14 @@ CREATE TABLE `subcategory_edits` (
 --
 
 INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
-(29, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-07 07:56:50', '2025-12-07 07:56:50'),
-(30, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-07 07:56:50', '2025-12-07 07:56:50'),
-(31, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-07 07:56:50', '2025-12-07 07:56:50'),
-(32, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-07 07:56:50', '2025-12-07 07:56:50');
+(745, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(746, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(747, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(748, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(749, 'test-2-subcategory', 'text-area', 'Text Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(750, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(751, 'test-2-subcategory', 'text-box', NULL, NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-07 11:27:01', '2025-12-07 11:27:01'),
+(752, 'test-2-subcategory', 'radio', NULL, NULL, 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-07 11:27:01', '2025-12-07 11:27:01');
 
 -- --------------------------------------------------------
 
@@ -1173,7 +1178,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4992;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5853;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1293,13 +1298,13 @@ ALTER TABLE `post_revisions`
 -- AUTO_INCREMENT for table `subcategories`
 --
 ALTER TABLE `subcategories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `subcategory_edits`
 --
 ALTER TABLE `subcategory_edits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=753;
 
 --
 -- AUTO_INCREMENT for table `transactions`
