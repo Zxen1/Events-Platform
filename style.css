@@ -2224,12 +2224,11 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
   display:flex;
   align-items:center;
-  font-size:15px;
+  font-size:13px;
   border:none;
   background:rgba(0,0,0,0.2);
   color:#fff;
   text-align:left;
-  display:flex;
   align-items:center;
   justify-content:flex-start;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -2267,6 +2266,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:10px;
   display:flex;
   align-items:center;
+  font-size:13px;
 }
 #tab-settings .panel-field .field-type-select-wrapper .options-menu .menu-option:hover{
   background:rgba(0,0,0,0.3);
@@ -9653,6 +9653,7 @@ html, body { cursor: auto !important; }
               display:flex;
               align-items:center;
               flex-shrink:0;
+              font-size:13px;
             }
             #tab-forms .item-pricing-currency .dropdown-arrow,
             #memberPanel .member-create-fields .item-pricing-currency .dropdown-arrow{
@@ -9720,6 +9721,7 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
               display:flex;
               align-items:center;
+              font-size:13px;
             }
             #tab-forms .tier-price-row .options-menu,
             #memberPanel .member-create-fields .tier-price-row .options-menu{
@@ -9775,6 +9777,7 @@ html, body { cursor: auto !important; }
               padding-right:30px;
               display:flex;
               align-items:center;
+              font-size:13px;
             }
             #tab-forms .form-phone-wrapper .options-menu,
             #memberPanel .member-create-fields .form-phone-wrapper .options-menu{
@@ -9806,7 +9809,7 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.2);
               border:none;
               border-radius:0;
-              font-size:15px;
+              font-size:13px;
               line-height:1.4;
               cursor:pointer;
               transition:background 0.15s ease;
@@ -9850,7 +9853,7 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
               min-height:44px;
               padding:10px 14px;
-              font-size:15px;
+              font-size:13px;
               line-height:1.4;
               display:flex;
               align-items:center;

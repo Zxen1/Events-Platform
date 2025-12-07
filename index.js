@@ -107,6 +107,16 @@ function findCurrencyCountryCode(currencyCode) {
   return null;
 }
 
+// Find full option object for a currency code
+function findCurrencyOption(currencyCode) {
+  const options = getCurrencyOptions();
+  for (let i = 0; i < options.length; i++) {
+    const { currencyCode: code } = parseCurrencyValue(options[i].value);
+    if (code === currencyCode) return options[i];
+  }
+  return null;
+}
+
 // === Phone Prefix Helpers ===
 // Parse option_value format "countryCode prefix" (e.g., "us +1")
 function parsePhonePrefixValue(optionValue) {
@@ -142,26 +152,27 @@ function getPhonePrefixButtonHTML(countryCode, prefix) {
   return `${flagHTML}${prefix}`;
 }
 
-// === Currency Dropdown Keyboard Navigation ===
-// Allows typing letters to jump to matching currency codes when dropdown is open
-function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
+// === Dropdown Keyboard Navigation ===
+// Allows typing letters to jump to matching options by label (country name)
+// Does not trigger virtual keyboard on touch devices
+function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
   let searchString = '';
   let searchTimeout = null;
   
   const keydownHandler = (e) => {
-    // Only handle letter keys
-    if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
+    // Only handle letter keys (from physical keyboard, not IME)
+    if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.isComposing) {
       e.preventDefault();
       
       // Clear previous timeout and append to search string
       if (searchTimeout) clearTimeout(searchTimeout);
       searchString += e.key.toUpperCase();
       
-      // Find matching option
-      const options = menuElement.querySelectorAll('.menu-option[data-value]');
+      // Find matching option by label (country/currency name)
+      const options = menuElement.querySelectorAll('.menu-option[data-label]');
       for (const opt of options) {
-        const value = (opt.dataset.value || '').toUpperCase();
-        if (value && value.startsWith(searchString)) {
+        const label = (opt.dataset.label || '').toUpperCase();
+        if (label && label.startsWith(searchString)) {
           opt.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
           opt.focus();
           break;
@@ -192,7 +203,7 @@ function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
     // Arrow keys for navigation
     else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      const options = Array.from(menuElement.querySelectorAll('.menu-option[data-value]'));
+      const options = Array.from(menuElement.querySelectorAll('.menu-option[data-label]'));
       if (options.length === 0) return;
       
       const focused = menuElement.querySelector('.menu-option:focus');
@@ -218,6 +229,11 @@ function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
   document.addEventListener('keydown', keydownHandler);
   
   return cleanup;
+}
+
+// Alias for backwards compatibility
+function setupCurrencyMenuKeyboardNav(menuElement, closeMenuCallback) {
+  return setupDropdownKeyboardNav(menuElement, closeMenuCallback);
 }
 
 // === Shared login verifier ===
@@ -2284,9 +2300,10 @@ let __notifyMapOnInteraction = null;
                     optionBtn.innerHTML = getCurrencyDisplayText(opt);
                     optionBtn.dataset.value = currencyCode;
                     optionBtn.dataset.countryCode = countryCode || '';
+                    optionBtn.dataset.label = opt.label || '';
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      websiteCurrencyBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
+                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(opt);
                       websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                       websiteCurrencyBtn.dataset.value = currencyCode;
                       websiteCurrencyMenu.hidden = true;
@@ -2297,8 +2314,12 @@ let __notifyMapOnInteraction = null;
                   
                   // Set selected value
                   if(data.settings.site_currency){
-                    const siteCountryCode = findCurrencyCountryCode(data.settings.site_currency);
-                    websiteCurrencyBtn.innerHTML = getCurrencyButtonHTML(siteCountryCode, data.settings.site_currency);
+                    const siteOpt = findCurrencyOption(data.settings.site_currency);
+                    if(siteOpt){
+                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(siteOpt);
+                    } else {
+                      websiteCurrencyBtn.textContent = data.settings.site_currency;
+                    }
                     websiteCurrencyBtn.dataset.value = data.settings.site_currency;
                   }
                   websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
@@ -2313,10 +2334,18 @@ let __notifyMapOnInteraction = null;
                     } else {
                       websiteCurrencyMenu.hidden = false;
                       websiteCurrencyBtn.setAttribute('aria-expanded', 'true');
+                      
+                      // Setup keyboard navigation
+                      const cleanupKeyboardNav = setupDropdownKeyboardNav(websiteCurrencyMenu, () => {
+                        websiteCurrencyMenu.hidden = true;
+                        websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
+                      });
+                      
                       const outsideHandler = (ev) => {
                         if(!websiteCurrencyWrapper.contains(ev.target)){
                           websiteCurrencyMenu.hidden = true;
                           websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
+                          cleanupKeyboardNav();
                           document.removeEventListener('click', outsideHandler);
                           document.removeEventListener('pointerdown', outsideHandler);
                         }
@@ -9145,6 +9174,7 @@ function makePosts(){
                 optionBtn.innerHTML = getCurrencyDisplayText(opt);
                 optionBtn.dataset.value = currencyCode;
                 optionBtn.dataset.countryCode = countryCode || '';
+                optionBtn.dataset.label = opt.label || '';
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
                   const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
@@ -9186,6 +9216,7 @@ function makePosts(){
                         optionBtn.innerHTML = getCurrencyDisplayText(opt);
                         optionBtn.dataset.value = currencyCode;
                         optionBtn.dataset.countryCode = countryCode || '';
+                        optionBtn.dataset.label = opt.label || '';
                         optionBtn.addEventListener('click', (e) => {
                           e.stopPropagation();
                           const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
@@ -10035,6 +10066,7 @@ function makePosts(){
               optionBtn.innerHTML = getPhonePrefixDisplayText(opt);
               optionBtn.dataset.value = prefix;
               optionBtn.dataset.countryCode = countryCode || '';
+              optionBtn.dataset.label = opt.label || '';
               optionBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const arrow = prefixBtn.querySelector('.dropdown-arrow');
@@ -10057,10 +10089,18 @@ function makePosts(){
               } else {
                 prefixMenu.hidden = false;
                 prefixBtn.setAttribute('aria-expanded', 'true');
+                
+                // Setup keyboard navigation for phone prefix dropdown
+                const cleanupKeyboardNav = setupDropdownKeyboardNav(prefixMenu, () => {
+                  prefixMenu.hidden = true;
+                  prefixBtn.setAttribute('aria-expanded', 'false');
+                });
+                
                 const outsideHandler = (ev) => {
                   if(!prefixWrapper.contains(ev.target)){
                     prefixMenu.hidden = true;
                     prefixBtn.setAttribute('aria-expanded', 'false');
+                    cleanupKeyboardNav();
                     document.removeEventListener('click', outsideHandler);
                     document.removeEventListener('pointerdown', outsideHandler);
                   }
@@ -13986,6 +14026,7 @@ function makePosts(){
                             optionBtn.innerHTML = getCurrencyDisplayText(opt);
                             optionBtn.dataset.value = currencyCode;
                             optionBtn.dataset.countryCode = countryCode || '';
+                            optionBtn.dataset.label = opt.label || '';
                             optionBtn.addEventListener('click', (e) => {
                               e.stopPropagation();
                               currencyMenuBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
@@ -14032,6 +14073,7 @@ function makePosts(){
                                     optionBtn.innerHTML = getCurrencyDisplayText(opt);
                                     optionBtn.dataset.value = currencyCode;
                                     optionBtn.dataset.countryCode = countryCode || '';
+                                    optionBtn.dataset.label = opt.label || '';
                                     optionBtn.addEventListener('click', (e) => {
                                       e.stopPropagation();
                                       currencyMenuBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
