@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 05:26 PM
+-- Generation Time: Dec 07, 2025 at 05:44 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -412,10 +412,10 @@ CREATE TABLE `fieldsets` (
   `id` int(11) NOT NULL,
   `fieldset_name` varchar(255) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
-  `placeholder` text DEFAULT NULL,
-  `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
-  `formbuilder_editable` tinyint(1) DEFAULT NULL,
   `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
+  `fieldset_placeholder` text DEFAULT NULL,
+  `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
+  `fieldset_editable` tinyint(1) DEFAULT NULL,
   `sort_order` int(10) UNSIGNED DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -425,22 +425,22 @@ CREATE TABLE `fieldsets` (
 -- Dumping data for table `fieldsets`
 --
 
-INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `placeholder`, `fieldset_tooltip`, `formbuilder_editable`, `fieldset_fields`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'Title', 'title', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, '[\"title\"]', 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(2, 'Description', 'description', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, '[\"description\"]', 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(3, 'Text Box (editable)', 'text-box', 'eg. Diamonds and Pearls', 'Write stuff here.', 1, '[\"text-box\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
-(4, 'Text Area (editable)', 'text-area', 'eg. Sing along!', 'Write more stuff here.', 1, '[\"text-area\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
-(5, 'Dropdown (editable)', 'dropdown', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, '[\"dropdown\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:55:39'),
-(6, 'Radio Toggle (editable)', 'radio', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, '[\"radio\"]', 100, '2025-10-29 19:03:05', '2025-12-06 19:55:36'),
-(7, 'Email', 'email', 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, '[\"email\"]', 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(8, 'Phone', 'phone', '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, '[\"phone\"]', 8, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(9, 'Location', 'location', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'Search for and select the location of your event or listing. The map will help you find the exact spot.', 0, '[\"address-line\", \"latitude\", \"longitude\"]', 9, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(10, 'Website (URL)', 'website-url', 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 0, '[\"website\"]', 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(11, 'Tickets (URL)', 'tickets-url', 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, '[\"website\"]', 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(12, 'Images', 'images', 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, '[\"images\"]', 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(13, 'Coupon', 'coupon', 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, '[\"text-box\"]', 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(14, 'Item Pricing', 'item-pricing', 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, '[\"item-name\", \"item-price\", \"currency\"]', 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(15, 'Venue Ticketing', 'venue-ticketing', 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 16, '2025-10-29 19:03:05', '2025-12-06 17:08:19');
+INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_fields`, `fieldset_placeholder`, `fieldset_tooltip`, `fieldset_editable`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 'Title', 'title', '[\"title\"]', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(2, 'Description', 'description', '[\"description\"]', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(3, 'Text Box (editable)', 'text-box', '[\"text-box\"]', 'eg. Diamonds and Pearls', 'Write stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
+(4, 'Text Area (editable)', 'text-area', '[\"text-area\"]', 'eg. Sing along!', 'Write more stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
+(5, 'Dropdown (editable)', 'dropdown', '[\"dropdown\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:55:39'),
+(6, 'Radio Toggle (editable)', 'radio', '[\"radio\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:55:36'),
+(7, 'Email', 'email', '[\"email\"]', 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(8, 'Phone', 'phone', '[\"phone\"]', '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, 8, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(9, 'Location', 'location', '[\"address-line\", \"latitude\", \"longitude\"]', '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'Search for and select the location of your event or listing. The map will help you find the exact spot.', 0, 9, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(10, 'Website (URL)', 'website-url', '[\"website\"]', 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 0, 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(11, 'Tickets (URL)', 'tickets-url', '[\"website\"]', 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(12, 'Images', 'images', '[\"images\"]', 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(13, 'Coupon', 'coupon', '[\"text-box\"]', 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(14, 'Item Pricing', 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(15, 'Venue Ticketing', 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-06 17:08:19');
 
 -- --------------------------------------------------------
 
@@ -851,7 +851,6 @@ CREATE TABLE `subcategories` (
   `fieldset_ids` varchar(255) DEFAULT NULL,
   `fieldset_name` varchar(255) DEFAULT NULL,
   `required` varchar(255) DEFAULT NULL,
-  `editable_fieldsets` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`editable_fieldsets`)),
   `checkout_surcharge` decimal(10,2) DEFAULT NULL,
   `sort_order` text DEFAULT NULL,
   `hidden` tinyint(1) NOT NULL DEFAULT 0,
@@ -866,32 +865,32 @@ CREATE TABLE `subcategories` (
 -- Dumping data for table `subcategories`
 --
 
-INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `editable_fieldsets`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Venue Ticketing, Text Box (editable)', '1,1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-06 20:47:47'),
-(2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
-(3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 12:44:10'),
-(4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
-(5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
-(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(8, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '6', 0, 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
-(9, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, NULL, '5', 0, 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
-(10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(11, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(12, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '7', 0, 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(13, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(14, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '4', 0, 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(15, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '4', 0, 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(16, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-05 13:17:33'),
-(21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', '{\"2\":{\"name\":\"Textify!\"},\"3\":{\"name\":\"Write an Essay\"},\"4\":{\"name\":\"Droppable\",\"options\":[\"I Cant\",\"Do That\",\"Dave\"]},\"5\":{\"name\":\"Radiothon\",\"options\":[\"Wake Me Up\",\"Before You\",\"Go Go\"]}}', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 20:47:47');
+INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `created_at`, `updated_at`) VALUES
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Venue Ticketing, Text Box (editable)', '1,1,1,1,1', NULL, '1', 0, 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-06 20:47:47'),
+(2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
+(3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 12:44:10'),
+(4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
+(5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
+(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(8, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '6', 0, 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
+(9, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,15', 'Title, Description, Images, Venue Ticketing', '1,1,1,1', NULL, '5', 0, 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-05 05:07:18'),
+(10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(11, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(12, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '7', 0, 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(13, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(14, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(15, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(16, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-05 13:17:33'),
+(21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Venue Ticketing, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-06 20:47:47');
 
 -- --------------------------------------------------------
 
@@ -905,8 +904,10 @@ CREATE TABLE `subcategory_edits` (
   `subcategory_key` varchar(255) DEFAULT NULL,
   `fieldset_id` int(11) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
-  `custom_name` varchar(255) DEFAULT NULL,
-  `custom_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`custom_options`)),
+  `fieldset_name` varchar(255) DEFAULT NULL,
+  `fieldset_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
+  `fieldset_placeholder` text DEFAULT NULL,
+  `fieldset_tooltip` varchar(500) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -915,11 +916,11 @@ CREATE TABLE `subcategory_edits` (
 -- Dumping data for table `subcategory_edits`
 --
 
-INSERT INTO `subcategory_edits` (`id`, `subcategory_id`, `subcategory_key`, `fieldset_id`, `fieldset_key`, `custom_name`, `custom_options`, `created_at`, `updated_at`) VALUES
-(1, 27, 'test-subcategory', 3, 'text-box', 'Textify!', NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
-(2, 27, 'test-subcategory', 4, 'text-area', 'Write an Essay', NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
-(3, 27, 'test-subcategory', 5, 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
-(4, 27, 'test-subcategory', 6, 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', '2025-12-07 06:18:52', '2025-12-07 06:25:26');
+INSERT INTO `subcategory_edits` (`id`, `subcategory_id`, `subcategory_key`, `fieldset_id`, `fieldset_key`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
+(1, 27, 'test-subcategory', 3, 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
+(2, 27, 'test-subcategory', 4, 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
+(3, 27, 'test-subcategory', 5, 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
+(4, 27, 'test-subcategory', 6, 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26');
 
 -- --------------------------------------------------------
 
