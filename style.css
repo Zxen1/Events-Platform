@@ -564,8 +564,8 @@ select,
   user-select: text;
 }
 
-button:not([class*="mapboxgl-"]),
-[role="button"]:not([class*="mapboxgl-"]){
+button:not([class*="mapboxgl-"]):not(.icon-btn),
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn){
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
@@ -582,60 +582,60 @@ button:not([class*="mapboxgl-"]),
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
 
-button:not([class*="mapboxgl-"]):hover,
-[role="button"]:not([class*="mapboxgl-"]):hover{
+button:not([class*="mapboxgl-"]):not(.icon-btn):hover,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn):hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
 
-button:not([class*="mapboxgl-"]):active,
-[role="button"]:not([class*="mapboxgl-"]):active{
+button:not([class*="mapboxgl-"]):not(.icon-btn):active,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn):active{
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
 }
 
-button:not([class*="mapboxgl-"])[aria-pressed="true"],
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
-button:not([class*="mapboxgl-"])[aria-current="page"],
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"],
-button:not([class*="mapboxgl-"])[aria-selected="true"],
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"],
-button:not([class*="mapboxgl-"]).selected,
-[role="button"]:not([class*="mapboxgl-"]).selected,
-button:not([class*="mapboxgl-"]).on,
-[role="button"]:not([class*="mapboxgl-"]).on{
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-pressed="true"],
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-pressed="true"],
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-current="page"],
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-current="page"],
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-selected="true"],
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-selected="true"],
+button:not([class*="mapboxgl-"]):not(.icon-btn).selected,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn).selected,
+button:not([class*="mapboxgl-"]):not(.icon-btn).on,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn).on{
   background: var(--button-selected-bg, var(--btn-selected));
   border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected))) !important;
   color: var(--button-selected-text, var(--button-active-text)) !important;
 }
 
-button:not([class*="mapboxgl-"])[aria-pressed="true"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"]:hover,
-button:not([class*="mapboxgl-"])[aria-current="page"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"]:hover,
-button:not([class*="mapboxgl-"])[aria-selected="true"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]:hover,
-button:not([class*="mapboxgl-"]).selected:hover,
-[role="button"]:not([class*="mapboxgl-"]).selected:hover,
-button:not([class*="mapboxgl-"]).on:hover,
-[role="button"]:not([class*="mapboxgl-"]).on:hover{
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-pressed="true"]:hover,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-pressed="true"]:hover,
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-current="page"]:hover,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-current="page"]:hover,
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-selected="true"]:hover,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-selected="true"]:hover,
+button:not([class*="mapboxgl-"]):not(.icon-btn).selected:hover,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn).selected:hover,
+button:not([class*="mapboxgl-"]):not(.icon-btn).on:hover,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn).on:hover{
   background: var(--button-selected-hover, var(--btn-selected-hover));
   border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover))) !important;
   color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text))) !important;
 }
 
-button:not([class*="mapboxgl-"])[aria-pressed="true"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"]:active,
-button:not([class*="mapboxgl-"])[aria-current="page"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"]:active,
-button:not([class*="mapboxgl-"])[aria-selected="true"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]:active,
-button:not([class*="mapboxgl-"]).selected:active,
-[role="button"]:not([class*="mapboxgl-"]).selected:active,
-button:not([class*="mapboxgl-"]).on:active,
-[role="button"]:not([class*="mapboxgl-"]).on:active{
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-pressed="true"]:active,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-pressed="true"]:active,
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-current="page"]:active,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-current="page"]:active,
+button:not([class*="mapboxgl-"]):not(.icon-btn)[aria-selected="true"]:active,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn)[aria-selected="true"]:active,
+button:not([class*="mapboxgl-"]):not(.icon-btn).selected:active,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn).selected:active,
+button:not([class*="mapboxgl-"]):not(.icon-btn).on:active,
+[role="button"]:not([class*="mapboxgl-"]):not(.icon-btn).on:active{
   background: var(--button-selected-active, var(--btn-selected-active));
   border-color: var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active))) !important;
   color: var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text))) !important;
@@ -2662,23 +2662,19 @@ button[aria-expanded="true"] .results-arrow{
   background:transparent;
 }
 /* Save button - green when active (not disabled) */
-#adminPanel .panel-actions .icon-btn.save-changes:not([disabled]),
-#memberPanel .panel-actions .icon-btn.save-changes:not([disabled]){
-  color:#22c55e !important;
+.panel-actions .icon-btn.save-changes:not([disabled]){
+  color:#22c55e;
 }
-#adminPanel .panel-actions .icon-btn.save-changes:not([disabled]):hover,
-#memberPanel .panel-actions .icon-btn.save-changes:not([disabled]):hover{
-  color:#4ade80 !important;
+.panel-actions .icon-btn.save-changes:not([disabled]):hover{
+  color:#4ade80;
   background:rgba(34,197,94,0.15);
 }
 /* Discard button - red when active (not disabled) */
-#adminPanel .panel-actions .icon-btn.discard-changes:not([disabled]),
-#memberPanel .panel-actions .icon-btn.discard-changes:not([disabled]){
-  color:#ef4444 !important;
+.panel-actions .icon-btn.discard-changes:not([disabled]){
+  color:#ef4444;
 }
-#adminPanel .panel-actions .icon-btn.discard-changes:not([disabled]):hover,
-#memberPanel .panel-actions .icon-btn.discard-changes:not([disabled]):hover{
-  color:#f87171 !important;
+.panel-actions .icon-btn.discard-changes:not([disabled]):hover{
+  color:#f87171;
   background:rgba(239,68,68,0.15);
 }
 /* Close button - white, slight brighten on hover */
