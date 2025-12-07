@@ -254,6 +254,7 @@ Mapbox layers in rendering order (bottom to top):
 ### Rule 12: DATABASE CHANGES - PROVIDE SQL ONLY
 **CRITICAL:** AI does not have access to the database. For any database changes:
 - Do NOT attempt to edit the database directly
+- Do NOT create SQL files
 - Provide SQL statements in the conversation for the user to execute
 - User will paste the SQL into their database management tool (phpMyAdmin, etc.)
 - Include all necessary ALTER TABLE, RENAME, UPDATE statements
