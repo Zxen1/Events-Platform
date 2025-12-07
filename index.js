@@ -14446,7 +14446,7 @@ function makePosts(){
                   const matchingFieldset = FORM_FIELDSETS.find(opt => opt.value === fieldsetKey);
                   if(matchingFieldset && matchingFieldset.placeholder){
                     // Parse placeholder like "A,B,C" or "1A,2A,3A" into array
-                    const placeholderStr = matchingFieldType.placeholder.trim();
+                    const placeholderStr = matchingFieldset.placeholder.trim();
                     if(placeholderStr){
                       const parsed = placeholderStr.split(',').map(s => s.trim()).filter(s => s);
                       if(parsed.length > 0){

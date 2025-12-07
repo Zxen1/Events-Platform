@@ -99,6 +99,12 @@ try {
     if ($fieldsetColumns) {
         $fieldsets = fetchFieldsets($pdo, $fieldsetColumns, $fieldsetTableName);
     }
+    
+    // DEBUG: Log fieldset columns and first fieldset (remove after debugging)
+    error_log('DEBUG fieldsetColumns: ' . json_encode($fieldsetColumns));
+    if (!empty($fieldsets)) {
+        error_log('DEBUG first fieldset: ' . json_encode($fieldsets[0]));
+    }
 
     // Fetch all fields from database
     $allFields = [];

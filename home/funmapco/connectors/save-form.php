@@ -718,6 +718,7 @@ try {
             // Process editable fieldsets and save to subcategory_edits table
             // This is completely separate from checkout options
             $subcategoryEditsToSave = [];
+            $hasEditableColumnInfo = false; // Track if we found fieldset_editable info
             
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
                 // Create a map of fieldsetKey to field data for quick lookup
@@ -738,6 +739,10 @@ try {
                     if (!$fieldsetKey) continue;
                     
                     // Only process field types marked as editable in the database
+                    // Track if we found any fieldset with editable info (to prevent accidental deletion)
+                    if (isset($fieldsetDef['fieldset_editable'])) {
+                        $hasEditableColumnInfo = true;
+                    }
                     $isEditable = isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true;
                     if (!$isEditable) continue;
                     
@@ -958,10 +963,15 @@ try {
                             ':fieldset_options' => $edit['fieldset_options'],
                         ]);
                     }
-                } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave)) {
-                    // If fields were provided but no customizations, remove any existing edits
+                } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave) && $hasEditableColumnInfo) {
+                    // If fields were provided but no customizations AND we confirmed editable column exists,
+                    // remove any existing edits. Skip deletion if editable column wasn't detected (safety measure).
+                    error_log("DEBUG: Deleting subcategory_edits for subcategory_key='$subKey' (no customizations found)");
                     $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_key = :subcategory_key");
                     $deleteStmt->execute([':subcategory_key' => $subKey]);
+                } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave) && !$hasEditableColumnInfo) {
+                    // Safety: Skip deletion because fieldset_editable column wasn't detected
+                    error_log("DEBUG: Skipping deletion for subcategory_key='$subKey' - fieldset_editable column not detected (safety measure)");
                 }
                 // Save checkout_options_id as CSV of checkout option IDs
                 if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {
@@ -1946,6 +1956,9 @@ function fetchFieldsetDefinitions(PDO $pdo): array
 {
     try {
         $columns = fetchTableColumns($pdo, 'fieldsets');
+        // DEBUG: Log columns detected (remove after debugging)
+        error_log('DEBUG save-form fieldsetColumns: ' . json_encode($columns));
+        
         if (!$columns || !in_array('id', $columns, true)) {
             return [];
         }
@@ -1962,6 +1975,7 @@ function fetchFieldsetDefinitions(PDO $pdo): array
             $select[] = 'fieldset_key';
         }
         $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true);
+        error_log('DEBUG hasFormbuilderEditable: ' . ($hasFormbuilderEditable ? 'true' : 'false'));
         if ($hasFormbuilderEditable) {
             $select[] = 'fieldset_editable';
         }
