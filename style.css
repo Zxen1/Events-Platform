@@ -9631,17 +9631,17 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:visible;
-              width:100%;
-              max-width:100%;
-              min-width:0;
+              width:150px;
+              min-width:150px;
+              max-width:150px;
               box-sizing:border-box;
-              flex:0 0 auto;
+              flex:0 0 150px;
             }
             #tab-forms .item-pricing-currency,
             #memberPanel .member-create-fields .item-pricing-currency{
-              width:100%;
-              max-width:100%;
-              min-width:0;
+              width:150px;
+              min-width:150px;
+              max-width:150px;
               position:relative;
               overflow:hidden;
               box-sizing:border-box;
@@ -9697,14 +9697,18 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .tier-price-row .options-dropdown{
               position:relative;
               overflow:visible;
+              width:150px;
+              min-width:150px;
+              max-width:150px;
+              flex:0 0 150px;
             }
             #tab-forms .tier-price-row .item-pricing-currency,
             #memberPanel .member-create-fields .tier-price-row .item-pricing-currency{
               position:relative;
               padding-right:30px;
-              width:100%;
-              max-width:100%;
-              min-width:0;
+              width:150px;
+              min-width:150px;
+              max-width:150px;
               overflow:hidden;
               box-sizing:border-box;
               display:block;
@@ -9732,6 +9736,60 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.2);
               border:none;
               border-radius:0;
+            }
+            
+            /* ========================================
+               Phone Prefix Dropdown Styles
+               - Fixed width for prefix button (not 100%)
+               - Same styling as currency dropdown menu
+            ======================================== */
+            #tab-forms .form-phone-wrapper,
+            #memberPanel .member-create-fields .form-phone-wrapper{
+              display:flex;
+              gap:8px;
+              align-items:stretch;
+            }
+            #tab-forms .form-phone-wrapper .options-dropdown,
+            #memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
+              flex-shrink:0;
+              width:150px;
+              min-width:150px;
+              max-width:150px;
+              flex:0 0 150px;
+            }
+            #tab-forms .form-phone-wrapper .item-pricing-currency,
+            #memberPanel .member-create-fields .form-phone-wrapper .item-pricing-currency{
+              width:150px;
+              min-width:150px;
+              max-width:150px;
+              padding-right:30px;
+            }
+            #tab-forms .form-phone-wrapper .options-menu,
+            #memberPanel .member-create-fields .form-phone-wrapper .options-menu{
+              position:absolute;
+              top:calc(100% + 4px);
+              bottom:auto;
+              left:0;
+              min-width:200px;
+              width:max-content;
+              max-width:min(280px, 90vw);
+              max-height:300px;
+              overflow-y:auto;
+              z-index:var(--layer-menu);
+            }
+            #tab-forms .form-phone-wrapper .options-menu .menu-option,
+            #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option{
+              min-height:44px;
+              display:flex;
+              align-items:center;
+              gap:8px;
+              padding:8px 12px;
+              white-space:nowrap;
+            }
+            #tab-forms .form-phone-wrapper input[type="tel"],
+            #memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
+              flex:1;
+              min-width:0;
             }
             
             /* ========================================
