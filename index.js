@@ -9452,8 +9452,11 @@ function makePosts(){
           // Add blur validation with red border
           urlInput.addEventListener('blur', function(){
             const val = (this.value || '').trim();
+            const isRequired = this.required || field.required || false;
             let isValid = true;
-            if(val){
+            if(val === ''){
+              isValid = !isRequired;
+            } else {
               let candidate = val;
               if(!candidate.includes('://')){
                 candidate = 'https://' + candidate;
@@ -9464,8 +9467,6 @@ function makePosts(){
               } catch(_e){
                 isValid = false;
               }
-            } else {
-              isValid = true; // Empty is valid if not required
             }
             this.classList.toggle('input-invalid', !isValid);
           });
@@ -10139,7 +10140,10 @@ function makePosts(){
               this.classList.toggle('input-invalid', !isValid);
             });
           }
-          control = input;
+          // Only set control to input if it wasn't already set (e.g., phone fieldset sets control to phoneWrapper)
+          if(!control){
+            control = input;
+          }
         }
         if(control){
           if(control instanceof HTMLElement){
