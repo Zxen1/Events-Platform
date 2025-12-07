@@ -9883,6 +9883,10 @@ html, body { cursor: auto !important; }
               outline:2px solid rgba(255,255,255,0.5);
               outline-offset:-2px;
             }
+            /* Remove extra margin from flags in menu options */
+            .options-menu .menu-option .currency-flag{
+              margin-right:0;
+            }
             /* Scrollbar styling for currency dropdown */
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,
             #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,

@@ -271,7 +271,15 @@ Mapbox layers in rendering order (bottom to top):
 - Example: `const fn = window.MapCardComposites?.fn || function(){ return null; }` is FORBIDDEN
 - Correct: `const fn = window.MapCardComposites.fn` (will throw if missing, which is desired)
 
-### Rule 12: DATABASE CHANGES - PROVIDE SQL ONLY
+### Rule 12: NO STARTUP LOAD WITHOUT PERMISSION
+**CRITICAL:** Do not add anything to the startup/page load sequence without explicit user permission.
+- Flags, images, and data should NOT load until the relevant panel/feature is opened
+- Currency data loads when admin/member panel needs it, not on page load
+- Always ask before adding anything to the initialization sequence
+- If something is needed at startup, get explicit approval first
+- This site already has startup performance issues - do not make them worse
+
+### Rule 13: DATABASE CHANGES - PROVIDE SQL ONLY
 **CRITICAL:** AI does not have access to the database. For any database changes:
 - Do NOT attempt to edit the database directly
 - Do NOT create SQL files
