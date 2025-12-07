@@ -9970,26 +9970,18 @@ function makePosts(){
             phoneWrapper.style.gap = '8px';
             phoneWrapper.style.alignItems = 'stretch';
             
-            // Phone prefix dropdown (always present)
+            // Phone prefix dropdown (always present) - copy item pricing currency pattern exactly
             const prefixDropdownWrapper = document.createElement('div');
             prefixDropdownWrapper.className = 'options-dropdown';
             prefixDropdownWrapper.style.flexShrink = '0';
+            
+            const prefixMenuId = `phone-prefix-${baseId}`;
             const prefixBtn = document.createElement('button');
             prefixBtn.type = 'button';
-            prefixBtn.className = 'form-select';
+            prefixBtn.className = 'item-pricing-currency';
             prefixBtn.setAttribute('aria-haspopup', 'true');
             prefixBtn.setAttribute('aria-expanded', 'false');
-            const prefixBtnId = `${baseId}-prefix`;
-            prefixBtn.id = prefixBtnId;
-            prefixBtn.setAttribute('aria-controls', `${prefixBtnId}-menu`);
-            const prefixArrow = document.createElement('span');
-            prefixArrow.className = 'dropdown-arrow';
-            prefixArrow.setAttribute('aria-hidden', 'true');
-            prefixBtn.appendChild(prefixArrow);
-            const prefixMenu = document.createElement('div');
-            prefixMenu.className = 'options-menu';
-            prefixMenu.id = `${prefixBtnId}-menu`;
-            prefixMenu.hidden = true;
+            prefixBtn.setAttribute('aria-controls', prefixMenuId);
             
             // Get phone prefix options from general_options (option_group: phone-prefix)
             const phonePrefixOptions = window.formbuilderStateManager && window.formbuilderStateManager._data && window.formbuilderStateManager._data.general_options && window.formbuilderStateManager._data.general_options['phone-prefix']
@@ -9998,6 +9990,21 @@ function makePosts(){
                 ? window.adminPanelModule._lastData.general_options['phone-prefix']
                 : []);
             
+            const defaultPrefix = phonePrefixOptions.length > 0 ? phonePrefixOptions[0].value : '+1';
+            prefixBtn.textContent = defaultPrefix;
+            prefixBtn.dataset.value = defaultPrefix;
+            
+            const prefixArrow = document.createElement('span');
+            prefixArrow.className = 'dropdown-arrow';
+            prefixArrow.setAttribute('aria-hidden', 'true');
+            prefixBtn.appendChild(prefixArrow);
+            
+            const prefixMenu = document.createElement('div');
+            prefixMenu.className = 'options-menu';
+            prefixMenu.id = prefixMenuId;
+            prefixMenu.hidden = true;
+            
+            // Populate phone prefix options
             if(phonePrefixOptions.length > 0){
               phonePrefixOptions.forEach(function(opt){
                 const optionBtn = document.createElement('button');
@@ -10007,21 +10014,16 @@ function makePosts(){
                 optionBtn.dataset.value = opt.value;
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
-                  prefixBtn.innerHTML = opt.label || opt.value;
-                  prefixBtn.appendChild(prefixArrow);
+                  const arrow = prefixBtn.querySelector('.dropdown-arrow');
+                  prefixBtn.textContent = opt.value;
+                  if(arrow) prefixBtn.appendChild(arrow);
                   prefixBtn.dataset.value = opt.value;
                   prefixMenu.hidden = true;
                   prefixBtn.setAttribute('aria-expanded', 'false');
                 });
                 prefixMenu.appendChild(optionBtn);
               });
-              prefixBtn.innerHTML = phonePrefixOptions[0].label || phonePrefixOptions[0].value;
-              prefixBtn.dataset.value = phonePrefixOptions[0].value;
-            } else {
-              prefixBtn.textContent = '+1';
-              prefixBtn.dataset.value = '+1';
             }
-            prefixBtn.appendChild(prefixArrow);
             
             prefixBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -10047,6 +10049,7 @@ function makePosts(){
               }
             });
             prefixMenu.addEventListener('click', (e) => e.stopPropagation());
+            
             prefixDropdownWrapper.appendChild(prefixBtn);
             prefixDropdownWrapper.appendChild(prefixMenu);
             phoneWrapper.appendChild(prefixDropdownWrapper);
