@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 07, 2025 at 05:22 PM
+-- Generation Time: Dec 07, 2025 at 05:26 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -902,7 +902,9 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 CREATE TABLE `subcategory_edits` (
   `id` int(11) NOT NULL,
   `subcategory_id` int(11) NOT NULL,
+  `subcategory_key` varchar(255) DEFAULT NULL,
   `fieldset_id` int(11) NOT NULL,
+  `fieldset_key` varchar(255) DEFAULT NULL,
   `custom_name` varchar(255) DEFAULT NULL,
   `custom_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`custom_options`)),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -913,11 +915,11 @@ CREATE TABLE `subcategory_edits` (
 -- Dumping data for table `subcategory_edits`
 --
 
-INSERT INTO `subcategory_edits` (`id`, `subcategory_id`, `fieldset_id`, `custom_name`, `custom_options`, `created_at`, `updated_at`) VALUES
-(1, 27, 3, 'Textify!', NULL, '2025-12-07 06:18:52', '2025-12-07 06:18:52'),
-(2, 27, 4, 'Write an Essay', NULL, '2025-12-07 06:18:52', '2025-12-07 06:18:52'),
-(3, 27, 5, 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', '2025-12-07 06:18:52', '2025-12-07 06:18:52'),
-(4, 27, 6, 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', '2025-12-07 06:18:52', '2025-12-07 06:18:52');
+INSERT INTO `subcategory_edits` (`id`, `subcategory_id`, `subcategory_key`, `fieldset_id`, `fieldset_key`, `custom_name`, `custom_options`, `created_at`, `updated_at`) VALUES
+(1, 27, 'test-subcategory', 3, 'text-box', 'Textify!', NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
+(2, 27, 'test-subcategory', 4, 'text-area', 'Write an Essay', NULL, '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
+(3, 27, 'test-subcategory', 5, 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', '2025-12-07 06:18:52', '2025-12-07 06:25:26'),
+(4, 27, 'test-subcategory', 6, 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', '2025-12-07 06:18:52', '2025-12-07 06:25:26');
 
 -- --------------------------------------------------------
 
@@ -1135,7 +1137,9 @@ ALTER TABLE `subcategory_edits`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `subcategory_fieldset` (`subcategory_id`,`fieldset_id`),
   ADD KEY `idx_subcategory_id` (`subcategory_id`),
-  ADD KEY `idx_fieldset_id` (`fieldset_id`);
+  ADD KEY `idx_fieldset_id` (`fieldset_id`),
+  ADD KEY `idx_subcategory_key` (`subcategory_key`),
+  ADD KEY `idx_fieldset_key` (`fieldset_key`);
 
 --
 -- Indexes for table `transactions`
