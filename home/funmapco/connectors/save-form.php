@@ -1491,6 +1491,14 @@ function sanitizeField(array $field, array $fieldsetDefinitions = []): array
             function($opt) { return $opt > 0; }
         ));
     }
+    
+    // Include customPlaceholder and customTooltip for editable fieldsets
+    if (isset($field['customPlaceholder']) && is_string($field['customPlaceholder'])) {
+        $safe['customPlaceholder'] = sanitizeString($field['customPlaceholder'], 512);
+    }
+    if (isset($field['customTooltip']) && is_string($field['customTooltip'])) {
+        $safe['customTooltip'] = sanitizeString($field['customTooltip'], 512);
+    }
 
     return $safe;
 }
