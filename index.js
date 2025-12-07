@@ -7268,7 +7268,6 @@ function makePosts(){
       handle.title = label;
     }
 
-    let formbuilderAutoSaveTimer = null;
     function notifyFormbuilderChange(){
       if(!formbuilderCats) return;
       // Don't trigger save if interaction is inside a sandbox (form preview)
@@ -7289,15 +7288,7 @@ function makePosts(){
         if(window.adminPanelModule && typeof window.adminPanelModule.markDirty === 'function'){
           window.adminPanelModule.markDirty();
         }
-        // Auto-save formbuilder changes with debounce
-        if(formbuilderAutoSaveTimer){
-          clearTimeout(formbuilderAutoSaveTimer);
-        }
-        formbuilderAutoSaveTimer = setTimeout(()=>{
-          if(typeof window.adminPanelModule?.runSave === 'function'){
-            window.adminPanelModule.runSave({ closeAfter: false });
-          }
-        }, 800);
+        // Auto-save disabled - use Save/Cancel buttons instead
       }
     }
 
@@ -14201,15 +14192,6 @@ function makePosts(){
               }
               notifyFormbuilderChange();
             });
-            fieldNameInput.addEventListener('blur', ()=>{
-              if(formbuilderAutoSaveTimer){
-                clearTimeout(formbuilderAutoSaveTimer);
-                formbuilderAutoSaveTimer = null;
-                if(typeof window.adminPanelModule?.runSave === 'function'){
-                  window.adminPanelModule.runSave({ closeAfter: false });
-                }
-              }
-            });
 
             // Fieldset placeholder input (shown in edit panel for editable fields)
             const fieldPlaceholderContainer = document.createElement('div');
@@ -14230,15 +14212,6 @@ function makePosts(){
               safeField.customPlaceholder = fieldPlaceholderInput.value;
               notifyFormbuilderChange();
             });
-            fieldPlaceholderInput.addEventListener('blur', ()=>{
-              if(formbuilderAutoSaveTimer){
-                clearTimeout(formbuilderAutoSaveTimer);
-                formbuilderAutoSaveTimer = null;
-                if(typeof window.adminPanelModule?.runSave === 'function'){
-                  window.adminPanelModule.runSave({ closeAfter: false });
-                }
-              }
-            });
 
             // Fieldset tooltip input (shown in edit panel for editable fields)
             const fieldTooltipContainer = document.createElement('div');
@@ -14258,15 +14231,6 @@ function makePosts(){
             fieldTooltipInput.addEventListener('input', ()=>{
               safeField.customTooltip = fieldTooltipInput.value;
               notifyFormbuilderChange();
-            });
-            fieldTooltipInput.addEventListener('blur', ()=>{
-              if(formbuilderAutoSaveTimer){
-                clearTimeout(formbuilderAutoSaveTimer);
-                formbuilderAutoSaveTimer = null;
-                if(typeof window.adminPanelModule?.runSave === 'function'){
-                  window.adminPanelModule.runSave({ closeAfter: false });
-                }
-              }
             });
 
             const fieldRequiredToggle = document.createElement('label');
