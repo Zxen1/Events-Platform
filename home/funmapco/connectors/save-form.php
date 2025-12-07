@@ -751,6 +751,8 @@ try {
                     
                     $customName = null;
                     $customOptions = null;
+                    $customPlaceholder = null;
+                    $customTooltip = null;
                     
                     $defaultName = $fieldsetDef['name'] ?? '';
                     $customNameValue = $fieldData['name'] ?? '';
@@ -776,13 +778,27 @@ try {
                         }
                     }
                     
+                    // Save custom placeholder if provided (any non-empty value)
+                    $customPlaceholderValue = $fieldData['customPlaceholder'] ?? '';
+                    if (is_string($customPlaceholderValue) && trim($customPlaceholderValue) !== '') {
+                        $customPlaceholder = trim($customPlaceholderValue);
+                    }
+                    
+                    // Save custom tooltip if provided (any non-empty value)
+                    $customTooltipValue = $fieldData['customTooltip'] ?? '';
+                    if (is_string($customTooltipValue) && trim($customTooltipValue) !== '') {
+                        $customTooltip = trim($customTooltipValue);
+                    }
+                    
                     // Only save if there's actual custom data
-                    if ($customName !== null || $customOptions !== null) {
+                    if ($customName !== null || $customOptions !== null || $customPlaceholder !== null || $customTooltip !== null) {
                         $subcategoryEditsToSave[] = [
                             'subcategory_key' => $subKey,
                             'fieldset_key' => $fieldsetKey,
                             'fieldset_name' => $customName,
                             'fieldset_options' => $customOptions,
+                            'fieldset_placeholder' => $customPlaceholder,
+                            'fieldset_tooltip' => $customTooltip,
                         ];
                     }
                 }
@@ -933,11 +949,9 @@ try {
                 if (in_array('fieldset_name', $subcategoryColumns, true)) {
                     $updateParts[] = 'fieldset_name = :fieldset_name';
                     $params[':fieldset_name'] = $fieldsetNameCsv !== null && $fieldsetNameCsv !== '' ? $fieldsetNameCsv : null;
-                    error_log("DEBUG: Setting fieldset_name to: " . ($params[':fieldset_name'] === null ? 'NULL' : $params[':fieldset_name']));
                 } elseif (in_array('fieldset_name', $subcategoryColumns, true)) {
                     $updateParts[] = 'fieldset_name = :fieldset_name';
                     $params[':fieldset_name'] = $fieldsetNameCsv !== null && $fieldsetNameCsv !== '' ? $fieldsetNameCsv : null;
-                    error_log("DEBUG: Setting fieldset_name to: " . ($params[':fieldset_name'] === null ? 'NULL' : $params[':fieldset_name']));
                 }
                 if (in_array('required', $subcategoryColumns, true)) {
                     $updateParts[] = 'required = :required';
@@ -951,8 +965,8 @@ try {
                     
                     // Insert new edits
                     $insertStmt = $pdo->prepare("
-                        INSERT INTO subcategory_edits (subcategory_key, fieldset_key, fieldset_name, fieldset_options)
-                        VALUES (:subcategory_key, :fieldset_key, :fieldset_name, :fieldset_options)
+                        INSERT INTO subcategory_edits (subcategory_key, fieldset_key, fieldset_name, fieldset_options, fieldset_placeholder, fieldset_tooltip)
+                        VALUES (:subcategory_key, :fieldset_key, :fieldset_name, :fieldset_options, :fieldset_placeholder, :fieldset_tooltip)
                     ");
                     
                     foreach ($subcategoryEditsToSave as $edit) {
@@ -961,6 +975,8 @@ try {
                             ':fieldset_key' => $edit['fieldset_key'],
                             ':fieldset_name' => $edit['fieldset_name'],
                             ':fieldset_options' => $edit['fieldset_options'],
+                            ':fieldset_placeholder' => $edit['fieldset_placeholder'],
+                            ':fieldset_tooltip' => $edit['fieldset_tooltip'],
                         ]);
                     }
                 } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave) && $hasEditableColumnInfo) {

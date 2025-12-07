@@ -14211,6 +14211,64 @@ function makePosts(){
               }
             });
 
+            // Fieldset placeholder input (shown in edit panel for editable fields)
+            const fieldPlaceholderContainer = document.createElement('div');
+            fieldPlaceholderContainer.className = 'field-placeholder-editor';
+            fieldPlaceholderContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            const fieldPlaceholderLabel = document.createElement('label');
+            fieldPlaceholderLabel.textContent = 'Field Placeholder';
+            const fieldPlaceholderInput = document.createElement('input');
+            fieldPlaceholderInput.type = 'text';
+            fieldPlaceholderInput.className = 'field-placeholder-input';
+            fieldPlaceholderInput.placeholder = 'Placeholder text';
+            fieldPlaceholderInput.value = safeField.customPlaceholder || '';
+            fieldPlaceholderLabel.appendChild(fieldPlaceholderInput);
+            fieldPlaceholderContainer.appendChild(fieldPlaceholderLabel);
+            
+            // Sync placeholder input with field data
+            fieldPlaceholderInput.addEventListener('input', ()=>{
+              safeField.customPlaceholder = fieldPlaceholderInput.value;
+              notifyFormbuilderChange();
+            });
+            fieldPlaceholderInput.addEventListener('blur', ()=>{
+              if(formbuilderAutoSaveTimer){
+                clearTimeout(formbuilderAutoSaveTimer);
+                formbuilderAutoSaveTimer = null;
+                if(typeof window.adminPanelModule?.runSave === 'function'){
+                  window.adminPanelModule.runSave({ closeAfter: false });
+                }
+              }
+            });
+
+            // Fieldset tooltip input (shown in edit panel for editable fields)
+            const fieldTooltipContainer = document.createElement('div');
+            fieldTooltipContainer.className = 'field-tooltip-editor';
+            fieldTooltipContainer.style.display = 'none'; // Hidden until field type is known to be editable
+            const fieldTooltipLabel = document.createElement('label');
+            fieldTooltipLabel.textContent = 'Field Tooltip';
+            const fieldTooltipInput = document.createElement('input');
+            fieldTooltipInput.type = 'text';
+            fieldTooltipInput.className = 'field-tooltip-input';
+            fieldTooltipInput.placeholder = 'Tooltip help text';
+            fieldTooltipInput.value = safeField.customTooltip || '';
+            fieldTooltipLabel.appendChild(fieldTooltipInput);
+            fieldTooltipContainer.appendChild(fieldTooltipLabel);
+            
+            // Sync tooltip input with field data
+            fieldTooltipInput.addEventListener('input', ()=>{
+              safeField.customTooltip = fieldTooltipInput.value;
+              notifyFormbuilderChange();
+            });
+            fieldTooltipInput.addEventListener('blur', ()=>{
+              if(formbuilderAutoSaveTimer){
+                clearTimeout(formbuilderAutoSaveTimer);
+                formbuilderAutoSaveTimer = null;
+                if(typeof window.adminPanelModule?.runSave === 'function'){
+                  window.adminPanelModule.runSave({ closeAfter: false });
+                }
+              }
+            });
+
             const fieldRequiredToggle = document.createElement('label');
             fieldRequiredToggle.className = 'field-required-toggle';
             const fieldRequiredInput = document.createElement('input');
@@ -14221,7 +14279,8 @@ function makePosts(){
             fieldRequiredText.textContent = 'Required';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredText);
 
-            editPanel.append(fieldNameContainer, fieldRequiredToggle, fieldsetWrapper);
+            // Order: fieldset dropdown, field name, placeholder, tooltip, required toggle
+            editPanel.append(fieldsetWrapper, fieldNameContainer, fieldPlaceholderContainer, fieldTooltipContainer, fieldRequiredToggle);
 
             let summaryUpdater = typeof initialSummaryUpdater === 'function' ? initialSummaryUpdater : ()=>{};
             const runSummaryUpdater = ()=>{
@@ -14685,10 +14744,14 @@ function makePosts(){
                 safeField.placeholder = '';
                 notifyFormbuilderChange();
               }
-              // Show field name editor only for editable field types
+              // Show field name, placeholder, tooltip editors only for editable field types
               fieldNameContainer.style.display = isEditable ? '' : 'none';
+              fieldPlaceholderContainer.style.display = isEditable ? '' : 'none';
+              fieldTooltipContainer.style.display = isEditable ? '' : 'none';
               if(isEditable){
                 fieldNameInput.value = safeField.name || '';
+                fieldPlaceholderInput.value = safeField.customPlaceholder || '';
+                fieldTooltipInput.value = safeField.customTooltip || '';
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               checkoutOptionsContainer.hidden = !showCheckout;

@@ -423,7 +423,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $subcategoryEditsMap = [];
     if ($hasEditableFieldsets) {
         $editsStmt = $pdo->query("
-            SELECT subcategory_key, fieldset_key, fieldset_name, fieldset_options
+            SELECT subcategory_key, fieldset_key, fieldset_name, fieldset_options, fieldset_placeholder, fieldset_tooltip
             FROM subcategory_edits
         ");
         while ($editRow = $editsStmt->fetch(PDO::FETCH_ASSOC)) {
@@ -442,6 +442,12 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
                 if (is_array($decodedOptions)) {
                     $editData['options'] = $decodedOptions;
                 }
+            }
+            if (isset($editRow['fieldset_placeholder']) && $editRow['fieldset_placeholder'] !== null && trim($editRow['fieldset_placeholder']) !== '') {
+                $editData['placeholder'] = trim($editRow['fieldset_placeholder']);
+            }
+            if (isset($editRow['fieldset_tooltip']) && $editRow['fieldset_tooltip'] !== null && trim($editRow['fieldset_tooltip']) !== '') {
+                $editData['tooltip'] = trim($editRow['fieldset_tooltip']);
             }
             if (!empty($editData)) {
                 $subcategoryEditsMap[$subKey][$fsKey] = $editData;
@@ -1057,6 +1063,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 $customName = null;
                 $customOptions = null;
                 $customCheckoutOptions = null;
+                $customPlaceholder = null;
+                $customTooltip = null;
                 
                 // Load customizations for editable fields
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
@@ -1065,6 +1073,12 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     }
                     if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
                         $customOptions = $fieldEdit['options'];
+                    }
+                    if (isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) && trim($fieldEdit['placeholder']) !== '') {
+                        $customPlaceholder = trim($fieldEdit['placeholder']);
+                    }
+                    if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
+                        $customTooltip = trim($fieldEdit['tooltip']);
                     }
                 }
                 
@@ -1089,6 +1103,14 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 // Use custom options from editable_fieldsets if available
                 if ($customOptions !== null && is_array($customOptions)) {
                     $builtField['options'] = $customOptions;
+                }
+                
+                // Add custom placeholder and tooltip for editable fieldsets
+                if ($customPlaceholder !== null) {
+                    $builtField['customPlaceholder'] = $customPlaceholder;
+                }
+                if ($customTooltip !== null) {
+                    $builtField['customTooltip'] = $customTooltip;
                 }
                 
                 // Add checkout options if available
