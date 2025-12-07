@@ -2252,9 +2252,7 @@ let __notifyMapOnInteraction = null;
                     optionBtn.dataset.value = opt.value;
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
                       websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(opt.value);
-                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
                       websiteCurrencyBtn.dataset.value = opt.value;
                       websiteCurrencyMenu.hidden = true;
                       websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
@@ -2266,9 +2264,7 @@ let __notifyMapOnInteraction = null;
                   if(data.settings.site_currency){
                     const selected = data.general_options.currency.find(opt => opt.value === data.settings.site_currency);
                     if(selected){
-                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
                       websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(selected.value);
-                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
                       websiteCurrencyBtn.dataset.value = selected.value;
                     }
                   }
