@@ -715,9 +715,9 @@ try {
 
             $fieldsetIds = array_values(array_unique(array_map('intval', $fieldsetIds)));
 
-            // Build editable_fieldsets JSON for editable fields ONLY (text, text-area, dropdown, radio)
+            // Process editable fieldsets and save to subcategory_edits table
             // This is completely separate from checkout options
-            $editableFieldsets = [];
+            $subcategoryEditsToSave = [];
             
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
                 // Create a map of fieldsetKey to field data for quick lookup
@@ -729,8 +729,8 @@ try {
                     }
                 }
                 
-                // Iterate through fieldsetIds (CSV order) and match with fields
-                foreach ($fieldsetIds as $csvIndex => $fieldsetId) {
+                // Iterate through fieldsetIds and match with fields
+                foreach ($fieldsetIds as $fieldsetId) {
                     $fieldsetDef = isset($fieldsetDefinitions[$fieldsetId]) ? $fieldsetDefinitions[$fieldsetId] : null;
                     if (!$fieldsetDef) continue;
                     
@@ -744,17 +744,19 @@ try {
                     $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
                     if (!$fieldData) continue;
                     
-                    $editData = [];
+                    $customName = null;
+                    $customOptions = null;
+                    
                     $defaultName = $fieldsetDef['name'] ?? '';
-                    $customName = $fieldData['name'] ?? '';
+                    $customNameValue = $fieldData['name'] ?? '';
                     // Only save name if it differs from default
-                    if ($customName !== '' && $customName !== $defaultName) {
-                        $editData['name'] = $customName;
+                    if ($customNameValue !== '' && $customNameValue !== $defaultName) {
+                        $customName = $customNameValue;
                     }
                     
                     // For dropdown/radio types, save options ONLY if they differ from default placeholder
                     if (isset($fieldData['options'])) {
-                        $customOptions = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
+                        $customOptionsArray = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
                         $defaultPlaceholder = $fieldsetDef['placeholder'] ?? '';
                         $defaultOptions = [];
                         if ($defaultPlaceholder !== '') {
@@ -764,13 +766,19 @@ try {
                             ));
                         }
                         // Only save if custom options exist AND differ from defaults
-                        if (!empty($customOptions) && $customOptions !== $defaultOptions) {
-                            $editData['options'] = $customOptions;
+                        if (!empty($customOptionsArray) && $customOptionsArray !== $defaultOptions) {
+                            $customOptions = json_encode($customOptionsArray, JSON_UNESCAPED_UNICODE);
                         }
                     }
                     
-                    if (!empty($editData)) {
-                        $editableFieldsets[(string)$csvIndex] = $editData;
+                    // Only save if there's actual custom data
+                    if ($customName !== null || $customOptions !== null) {
+                        $subcategoryEditsToSave[] = [
+                            'subcategory_id' => $subId,
+                            'fieldset_id' => $fieldsetId,
+                            'custom_name' => $customName,
+                            'custom_options' => $customOptions,
+                        ];
                     }
                 }
             }
@@ -930,15 +938,30 @@ try {
                     $updateParts[] = 'required = :required';
                     $params[':required'] = $requiredCsv !== null && $requiredCsv !== '' ? $requiredCsv : null;
                 }
-                // Save editable_fieldsets JSON if fields were provided
-                if ($hasFieldsForThisSub && in_array('editable_fieldsets', $subcategoryColumns, true)) {
-                    $editableFieldsetsJson = !empty($editableFieldsets) ? json_encode($editableFieldsets, JSON_UNESCAPED_UNICODE) : null;
-                    $updateParts[] = 'editable_fieldsets = :editable_fieldsets';
-                    $params[':editable_fieldsets'] = $editableFieldsetsJson;
-                } elseif ($hasFieldsForThisSub && in_array('editable_fieldsets', $subcategoryColumns, true)) {
-                    $editableFieldsetsJson = !empty($editableFieldsets) ? json_encode($editableFieldsets, JSON_UNESCAPED_UNICODE) : null;
-                    $updateParts[] = 'editable_fieldsets = :editable_fieldsets';
-                    $params[':editable_fieldsets'] = $editableFieldsetsJson;
+                // Save subcategory_edits to database table (replaces editable_fieldsets JSON)
+                if ($hasFieldsForThisSub && !empty($subcategoryEditsToSave)) {
+                    // Delete existing edits for this subcategory first
+                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_id = :subcategory_id");
+                    $deleteStmt->execute([':subcategory_id' => $subId]);
+                    
+                    // Insert new edits
+                    $insertStmt = $pdo->prepare("
+                        INSERT INTO subcategory_edits (subcategory_id, fieldset_id, custom_name, custom_options)
+                        VALUES (:subcategory_id, :fieldset_id, :custom_name, :custom_options)
+                    ");
+                    
+                    foreach ($subcategoryEditsToSave as $edit) {
+                        $insertStmt->execute([
+                            ':subcategory_id' => $edit['subcategory_id'],
+                            ':fieldset_id' => $edit['fieldset_id'],
+                            ':custom_name' => $edit['custom_name'],
+                            ':custom_options' => $edit['custom_options'],
+                        ]);
+                    }
+                } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave)) {
+                    // If fields were provided but no customizations, remove any existing edits
+                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_id = :subcategory_id");
+                    $deleteStmt->execute([':subcategory_id' => $subId]);
                 }
                 // Save checkout_options_id as CSV of checkout option IDs
                 if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {

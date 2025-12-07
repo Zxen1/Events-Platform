@@ -381,14 +381,8 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         }
     }
     
+    // Note: editable_fieldsets column is deprecated, now using subcategory_edits table
     $hasEditableFieldsets = in_array('editable_fieldsets', $columns, true) || in_array('editable_fieldsets', $columns, true);
-    if ($hasEditableFieldsets) {
-        if (in_array('editable_fieldsets', $columns, true)) {
-            $select[] = 's.`editable_fieldsets`';
-        } elseif (in_array('editable_fieldsets', $columns, true)) {
-            $select[] = 's.`editable_fieldsets`';
-        }
-    }
     
     $hasCheckoutOptionsId = in_array('checkout_options_id', $columns, true);
     if ($hasCheckoutOptionsId) {
@@ -423,6 +417,35 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
 
     $stmt = $pdo->query($sql);
+    
+    // Fetch subcategory_edits for all subcategories if needed
+    $subcategoryEditsMap = [];
+    if ($hasEditableFieldsets) {
+        $editsStmt = $pdo->query("
+            SELECT subcategory_id, fieldset_id, custom_name, custom_options
+            FROM subcategory_edits
+        ");
+        while ($editRow = $editsStmt->fetch(PDO::FETCH_ASSOC)) {
+            $subId = (int)$editRow['subcategory_id'];
+            $fieldsetId = (int)$editRow['fieldset_id'];
+            if (!isset($subcategoryEditsMap[$subId])) {
+                $subcategoryEditsMap[$subId] = [];
+            }
+            $editData = [];
+            if (isset($editRow['custom_name']) && $editRow['custom_name'] !== null && trim($editRow['custom_name']) !== '') {
+                $editData['name'] = trim($editRow['custom_name']);
+            }
+            if (isset($editRow['custom_options']) && $editRow['custom_options'] !== null && $editRow['custom_options'] !== '') {
+                $decodedOptions = json_decode($editRow['custom_options'], true);
+                if (is_array($decodedOptions)) {
+                    $editData['options'] = $decodedOptions;
+                }
+            }
+            if (!empty($editData)) {
+                $subcategoryEditsMap[$subId][$fieldsetId] = $editData;
+            }
+        }
+    }
 
     $categoryById = [];
     foreach ($categories as $category) {
@@ -484,22 +507,16 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (isset($row['subcategory_type'])) {
             $result['subcategory_type'] = $row['subcategory_type'];
         }
-        if ($hasEditableFieldsets && isset($row['editable_fieldsets'])) {
-            $editsJson = $row['editable_fieldsets'];
-            if (is_string($editsJson) && $editsJson !== '') {
-                $decoded = json_decode($editsJson, true);
-                if (is_array($decoded)) {
-                    $result['editable_fieldsets'] = $decoded;
-                }
-            }
-        } elseif ($hasEditableFieldsets && isset($row['editable_fieldsets'])) {
-            $editsJson = $row['editable_fieldsets'];
-            if (is_string($editsJson) && $editsJson !== '') {
-                $decoded = json_decode($editsJson, true);
-                if (is_array($decoded)) {
-                    $result['editable_fieldsets'] = $decoded;
-                    $result['editable_fieldsets'] = $decoded; // Keep for backward compatibility
-                }
+        // Load editable fieldsets from subcategory_edits table (replaces editable_fieldsets JSON column)
+        if ($hasEditableFieldsets) {
+            $subId = isset($row['id']) ? (int) $row['id'] : null;
+            if ($subId !== null && isset($subcategoryEditsMap[$subId])) {
+                // Convert fieldset_id keyed map to index-keyed array for backward compatibility
+                // We'll need fieldset_ids to map properly, so we'll do this in buildFields instead
+                // For now, store the fieldset_id keyed map
+                $result['editable_fieldsets'] = $subcategoryEditsMap[$subId];
+            } else {
+                $result['editable_fieldsets'] = [];
             }
         }
         if ($hasCheckoutOptionsId && isset($row['checkout_options_id'])) {
@@ -939,7 +956,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         }
         $fieldsetNames = array_values(array_unique($fieldsetNames));
 
-        // Load editable_fieldsets JSON if available
+        // Load editable fieldsets from subcategory_edits table (fieldset_id keyed map)
         $editableFieldsets = [];
         if (isset($sub['editable_fieldsets']) && is_array($sub['editable_fieldsets'])) {
             $editableFieldsets = $sub['editable_fieldsets'];
@@ -957,8 +974,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             // Get required flag for this field (default to false if not set)
             $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
             
-            // Get customizations for this field position if it's editable
-            $fieldEdit = isset($editableFieldsets[(string)$index]) ? $editableFieldsets[(string)$index] : null;
+            // Get customizations for this fieldset if it's editable (now keyed by fieldset_id, not index)
+            $fieldEdit = isset($editableFieldsets[$fieldsetId]) ? $editableFieldsets[$fieldsetId] : null;
             
             // Find the fieldset by ID
             $matchingFieldset = null;
