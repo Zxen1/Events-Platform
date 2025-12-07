@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 08, 2025 at 09:14 AM
+-- Generation Time: Dec 08, 2025 at 10:56 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -493,8 +493,8 @@ INSERT INTO `general_options` (`id`, `option_group`, `option_value`, `option_lab
 (26, 'currency', 'ca CAD', 'Canadian Dollar', 26, 1),
 (27, 'currency', 'cv CVE', 'Cape Verdean Escudo', 27, 1),
 (28, 'currency', 'ky KYD', 'Cayman Islands Dollar', 28, 1),
-(29, 'currency', 'xf XAF', 'Central African CFA', 29, 1),
-(30, 'currency', 'un XPF', 'CFP Franc', 30, 1),
+(29, 'currency', 'cm XAF', 'Central African CFA', 29, 1),
+(30, 'currency', 'nc XPF', 'CFP Franc', 30, 1),
 (31, 'currency', 'cl CLP', 'Chilean Peso', 31, 1),
 (32, 'currency', 'cn CNY', 'Chinese Yuan', 32, 1),
 (33, 'currency', 'co COP', 'Colombian Peso', 33, 1),
@@ -612,7 +612,7 @@ INSERT INTO `general_options` (`id`, `option_group`, `option_value`, `option_lab
 (145, 'currency', 'vu VUV', 'Vanuatu Vatu', 145, 1),
 (146, 'currency', 've VES', 'Venezuelan Bolivar', 146, 1),
 (147, 'currency', 'vn VND', 'Vietnamese Dong', 147, 1),
-(148, 'currency', 'xo XOF', 'West African CFA', 148, 1),
+(148, 'currency', 'sn XOF', 'West African CFA', 148, 1),
 (149, 'currency', 'ye YER', 'Yemeni Rial', 149, 1),
 (150, 'currency', 'zm ZMW', 'Zambian Kwacha', 150, 1),
 (151, 'currency', 'zw ZWL', 'Zimbabwean Dollar', 151, 1),
