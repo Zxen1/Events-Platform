@@ -754,26 +754,16 @@ try {
                     $customPlaceholder = null;
                     $customTooltip = null;
                     
-                    $defaultName = $fieldsetDef['name'] ?? '';
+                    // Always save name for editable fieldsets (so defaults are captured and can be customized)
                     $customNameValue = $fieldData['name'] ?? '';
-                    // Only save name if it differs from default
-                    if ($customNameValue !== '' && $customNameValue !== $defaultName) {
+                    if ($customNameValue !== '') {
                         $customName = $customNameValue;
                     }
                     
-                    // For dropdown/radio types, save options ONLY if they differ from default placeholder
+                    // Always save options for editable dropdown/radio types (so defaults are captured)
                     if (isset($fieldData['options'])) {
                         $customOptionsArray = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
-                        $defaultPlaceholder = $fieldsetDef['fieldset_placeholder'] ?? '';
-                        $defaultOptions = [];
-                        if ($defaultPlaceholder !== '') {
-                            $defaultOptions = array_values(array_filter(
-                                array_map('trim', explode(',', $defaultPlaceholder)),
-                                function($opt) { return $opt !== ''; }
-                            ));
-                        }
-                        // Only save if custom options exist AND differ from defaults
-                        if (!empty($customOptionsArray) && $customOptionsArray !== $defaultOptions) {
+                        if (!empty($customOptionsArray)) {
                             $customOptions = json_encode($customOptionsArray, JSON_UNESCAPED_UNICODE);
                         }
                     }

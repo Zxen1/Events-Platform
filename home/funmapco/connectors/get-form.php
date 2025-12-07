@@ -1068,6 +1068,7 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 
                 // Load customizations for editable fields
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                    // Use values from subcategory_edits table
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
@@ -1079,6 +1080,28 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                     }
                     if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
                         $customTooltip = trim($fieldEdit['tooltip']);
+                    }
+                } elseif ($isEditable && !$fieldEdit) {
+                    // No subcategory_edits entry yet - use defaults from fieldsets table
+                    // These will be shown in the edit panel and saved when admin saves
+                    $defaultName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
+                    if ($defaultName !== '') {
+                        $customName = $defaultName;
+                    }
+                    $defaultPlaceholder = isset($matchingFieldset['fieldset_placeholder']) ? $matchingFieldset['fieldset_placeholder'] : (isset($matchingFieldset['placeholder']) ? $matchingFieldset['placeholder'] : '');
+                    if ($defaultPlaceholder !== '') {
+                        $customPlaceholder = $defaultPlaceholder;
+                    }
+                    $defaultTooltip = isset($matchingFieldset['fieldset_tooltip']) ? $matchingFieldset['fieldset_tooltip'] : '';
+                    if ($defaultTooltip !== '') {
+                        $customTooltip = $defaultTooltip;
+                    }
+                    // For dropdown/radio, parse placeholder as comma-separated options
+                    if (($fieldsetKey === 'dropdown' || $fieldsetKey === 'radio') && $defaultPlaceholder !== '') {
+                        $defaultOptions = array_values(array_filter(array_map('trim', explode(',', $defaultPlaceholder)), function($o) { return $o !== ''; }));
+                        if (!empty($defaultOptions)) {
+                            $customOptions = $defaultOptions;
+                        }
                     }
                 }
                 
@@ -1131,6 +1154,12 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
+                    }
+                } elseif ($isEditable && !$fieldEdit) {
+                    // No subcategory_edits entry yet - use default name from fieldsets table
+                    $defaultName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
+                    if ($defaultName !== '') {
+                        $customName = $defaultName;
                     }
                 }
                 // For checkout fields, use checkout_options_id column
