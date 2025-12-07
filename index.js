@@ -2244,9 +2244,9 @@ let __notifyMapOnInteraction = null;
                     label: opt.label
                   }));
                   
-                  const arrow = document.createElement('span');
-                  arrow.className = 'dropdown-arrow';
-                  arrow.setAttribute('aria-hidden', 'true');
+                  const websiteCurrencyArrow = document.createElement('span');
+                  websiteCurrencyArrow.className = 'dropdown-arrow';
+                  websiteCurrencyArrow.setAttribute('aria-hidden', 'true');
                   
                   // Populate menu with currency options
                   data.general_options.currency.forEach(function(opt){
@@ -2257,9 +2257,8 @@ let __notifyMapOnInteraction = null;
                     optionBtn.dataset.value = opt.value;
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
-                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
-                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(opt.value);
-                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
+                      websiteCurrencyBtn.textContent = opt.value;
+                      websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                       websiteCurrencyBtn.dataset.value = opt.value;
                       websiteCurrencyMenu.hidden = true;
                       websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
@@ -2269,18 +2268,10 @@ let __notifyMapOnInteraction = null;
                   
                   // Set selected value
                   if(data.settings.site_currency){
-                    const selected = data.general_options.currency.find(opt => opt.value === data.settings.site_currency);
-                    if(selected){
-                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
-                      websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(selected.value);
-                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
-                      websiteCurrencyBtn.dataset.value = selected.value;
-                    } else {
-                      websiteCurrencyBtn.appendChild(arrow);
-                    }
-                  } else {
-                    websiteCurrencyBtn.appendChild(arrow);
+                    websiteCurrencyBtn.textContent = data.settings.site_currency;
+                    websiteCurrencyBtn.dataset.value = data.settings.site_currency;
                   }
+                  websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                   
                   // Toggle menu on button click
                   websiteCurrencyBtn.addEventListener('click', (e) => {
@@ -9452,6 +9443,26 @@ function makePosts(){
           urlInput.inputMode = 'url';
           // Protect URL input with field limit from 'website' field
           protectInputMaxLength(urlInput, getFieldLimitsByKey('website').max_length);
+          // Add blur validation with red border
+          urlInput.addEventListener('blur', function(){
+            const val = (this.value || '').trim();
+            let isValid = true;
+            if(val){
+              let candidate = val;
+              if(!candidate.includes('://')){
+                candidate = 'https://' + candidate;
+              }
+              try {
+                new URL(candidate);
+                isValid = true;
+              } catch(_e){
+                isValid = false;
+              }
+            } else {
+              isValid = true; // Empty is valid if not required
+            }
+            this.classList.toggle('input-invalid', !isValid);
+          });
           const urlLink = document.createElement('a');
           urlLink.id = linkId;
           urlLink.href = '#';
@@ -9939,7 +9950,25 @@ function makePosts(){
           control = checkoutGroup;
         } else {
           const input = document.createElement('input');
-          input.type = 'text';
+          // Set input type based on fieldset for proper validation
+          if(baseType === 'email' || field.type === 'email'){
+            input.type = 'email';
+            input.autocomplete = 'email';
+            input.inputMode = 'email';
+          } else if(baseType === 'phone' || field.type === 'phone'){
+            input.type = 'tel';
+            input.autocomplete = 'tel';
+            input.inputMode = 'tel';
+            input.pattern = '[-+() 0-9]+';
+            // Prevent non-digit characters (except allowed formatting)
+            input.addEventListener('beforeinput', function(e){
+              if(e.data && !/[-+() 0-9\s]/.test(e.data)){
+                e.preventDefault();
+              }
+            });
+          } else {
+            input.type = 'text';
+          }
           input.placeholder = field.placeholder || '';
           input.readOnly = false;
           input.tabIndex = 0;
@@ -9960,6 +9989,50 @@ function makePosts(){
           // Add character counter for text input if max_length is set
           if(maxLength !== null){
             charCounter = createCharCounter(input, maxLength, minLength);
+          }
+          // Add blur validation for email/phone/url with red border
+          if(baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url'){
+            input.addEventListener('blur', function(){
+              const val = (this.value || '').trim();
+              let isValid = true;
+              if(this.type === 'email'){
+                isValid = val === '' || /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val);
+              } else if(this.dataset && this.dataset.urlType){
+                if(val){
+                  let candidate = val;
+                  if(!candidate.includes('://')){
+                    candidate = 'https://' + candidate;
+                  }
+                  try {
+                    new URL(candidate);
+                    isValid = true;
+                  } catch(_e){
+                    isValid = false;
+                  }
+                } else {
+                  isValid = true; // Empty is valid if not required
+                }
+              } else if(this.type === 'url' || this.inputMode === 'url'){
+                if(val){
+                  try {
+                    new URL(val.includes('://') ? val : 'https://' + val);
+                    isValid = true;
+                  } catch(_e){
+                    isValid = false;
+                  }
+                } else {
+                  isValid = true; // Empty is valid if not required
+                }
+              } else if(this.type === 'tel' || this.inputMode === 'tel'){
+                if(val){
+                  const digits = val.replace(/\D+/g,'');
+                  isValid = digits.length >= 7 && /^[-+() 0-9]+$/.test(val);
+                } else {
+                  isValid = true; // Empty is valid if not required
+                }
+              }
+              this.classList.toggle('input-invalid', !isValid);
+            });
           }
           control = input;
         }
@@ -13754,11 +13827,11 @@ function makePosts(){
                           const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
                           currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
                           const existingCurrency = typeof tier.currency === 'string' && tier.currency.trim() !== '' ? tier.currency.trim() : 'USD';
-                          const arrow = document.createElement('span');
-                          arrow.className = 'dropdown-arrow';
-                          arrow.setAttribute('aria-hidden', 'true');
-                          currencyMenuBtn.innerHTML = getCurrencyDisplayText(existingCurrency);
-                          currencyMenuBtn.appendChild(arrow);
+                          const currencyArrow = document.createElement('span');
+                          currencyArrow.className = 'dropdown-arrow';
+                          currencyArrow.setAttribute('aria-hidden', 'true');
+                          currencyMenuBtn.textContent = existingCurrency;
+                          currencyMenuBtn.appendChild(currencyArrow);
                           currencyMenuBtn.dataset.value = existingCurrency;
                           // Set default currency in data model if not already set
                           if (!tier.currency || tier.currency.trim() === '') {
@@ -13784,9 +13857,8 @@ function makePosts(){
                             optionBtn.dataset.value = code;
                             optionBtn.addEventListener('click', (e) => {
                               e.stopPropagation();
-                              const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                              currencyMenuBtn.innerHTML = getCurrencyDisplayText(code);
-                              if(arrow) currencyMenuBtn.appendChild(arrow);
+                              currencyMenuBtn.textContent = code;
+                              currencyMenuBtn.appendChild(currencyArrow);
                               currencyMenuBtn.dataset.value = code;
                               currencyMenu.hidden = true;
                               currencyMenuBtn.setAttribute('aria-expanded', 'false');
@@ -13830,9 +13902,8 @@ function makePosts(){
                                     optionBtn.dataset.value = code;
                                     optionBtn.addEventListener('click', (e) => {
                                       e.stopPropagation();
-                                      const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
-                                      currencyMenuBtn.innerHTML = getCurrencyDisplayText(code);
-                                      if(arrow) currencyMenuBtn.appendChild(arrow);
+                                      currencyMenuBtn.textContent = code;
+                                      currencyMenuBtn.appendChild(currencyArrow);
                                       currencyMenuBtn.dataset.value = code;
                                       currencyMenu.hidden = true;
                                       currencyMenuBtn.setAttribute('aria-expanded', 'false');

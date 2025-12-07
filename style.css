@@ -2211,6 +2211,62 @@ button[aria-expanded="true"] .results-arrow{
   background:#2a2a2a;
   color:#fff;
 }
+#tab-settings .panel-field .field-type-select-wrapper{
+  position:relative;
+  width:100%;
+  box-sizing:border-box;
+}
+#tab-settings .panel-field .field-type-select-wrapper .field-type-select{
+  width:100%;
+  box-sizing:border-box;
+  padding:10px 32px 10px 14px;
+  min-height:44px;
+  border-radius:8px;
+  font-size:15px;
+  border:none;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:12px;
+}
+#tab-settings .panel-field .field-type-select-wrapper .field-type-select:focus{
+  outline:none;
+  background-color:rgba(0,0,0,0.3);
+}
+#tab-settings .panel-field .field-type-select-wrapper .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+#tab-settings .panel-field .field-type-select-wrapper .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  text-align:left;
+  justify-content:flex-start;
+  width:100%;
+  padding:10px;
+}
+#tab-settings .panel-field .field-type-select-wrapper .options-menu .menu-option:hover{
+  background:rgba(0,0,0,0.3);
+}
 
 .sub-icon svg{
   width:18px;
@@ -4842,6 +4898,14 @@ body.hide-ads .ad-board{
   align-items:center;
   justify-content:flex-start;
   position:relative;
+}
+#tab-forms .form-container .panel-field input.input-invalid,
+#memberPanel .member-create-fields .panel-field input.input-invalid,
+#tab-forms .form-container .form-field input.input-invalid,
+#memberPanel .member-create-fields .form-field input.input-invalid,
+#tab-forms .form-container .form-url-input.input-invalid,
+#memberPanel .member-create-fields .form-url-input.input-invalid{
+  border:2px solid red;
 }
 #tab-forms .form-container .panel-field select:focus,
 #tab-forms .form-container .form-field--dropdown .form-select:focus,
