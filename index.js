@@ -2234,7 +2234,8 @@ let __notifyMapOnInteraction = null;
               
               const websiteCurrencyBtn = document.getElementById('adminWebsiteCurrency');
               const websiteCurrencyMenu = document.getElementById('adminWebsiteCurrency-menu');
-              if(websiteCurrencyBtn && websiteCurrencyMenu){
+              const websiteCurrencyWrapper = websiteCurrencyBtn ? websiteCurrencyBtn.closest('.options-dropdown') : null;
+              if(websiteCurrencyBtn && websiteCurrencyMenu && websiteCurrencyWrapper){
                 // Populate dropdown from general_options
                 if(data.general_options && data.general_options.currency){
                   // Store currency data with labels globally for member dropdowns
@@ -2242,6 +2243,10 @@ let __notifyMapOnInteraction = null;
                     value: opt.value,
                     label: opt.label
                   }));
+                  
+                  const arrow = document.createElement('span');
+                  arrow.className = 'dropdown-arrow';
+                  arrow.setAttribute('aria-hidden', 'true');
                   
                   // Populate menu with currency options
                   data.general_options.currency.forEach(function(opt){
@@ -2252,7 +2257,9 @@ let __notifyMapOnInteraction = null;
                     optionBtn.dataset.value = opt.value;
                     optionBtn.addEventListener('click', (e) => {
                       e.stopPropagation();
+                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
                       websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(opt.value);
+                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
                       websiteCurrencyBtn.dataset.value = opt.value;
                       websiteCurrencyMenu.hidden = true;
                       websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
@@ -2264,9 +2271,15 @@ let __notifyMapOnInteraction = null;
                   if(data.settings.site_currency){
                     const selected = data.general_options.currency.find(opt => opt.value === data.settings.site_currency);
                     if(selected){
+                      const arrow = websiteCurrencyBtn.querySelector('.dropdown-arrow');
                       websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(selected.value);
+                      if(arrow) websiteCurrencyBtn.appendChild(arrow);
                       websiteCurrencyBtn.dataset.value = selected.value;
+                    } else {
+                      websiteCurrencyBtn.appendChild(arrow);
                     }
+                  } else {
+                    websiteCurrencyBtn.appendChild(arrow);
                   }
                   
                   // Toggle menu on button click
@@ -2280,7 +2293,7 @@ let __notifyMapOnInteraction = null;
                       websiteCurrencyMenu.hidden = false;
                       websiteCurrencyBtn.setAttribute('aria-expanded', 'true');
                       const outsideHandler = (ev) => {
-                        if(!websiteCurrencyBtn.closest('.options-dropdown').contains(ev.target)){
+                        if(!websiteCurrencyWrapper.contains(ev.target)){
                           websiteCurrencyMenu.hidden = true;
                           websiteCurrencyBtn.setAttribute('aria-expanded', 'false');
                           document.removeEventListener('click', outsideHandler);
@@ -13741,7 +13754,11 @@ function makePosts(){
                           const currencyMenuId = `session-currency-${venueIndex}-${sessionIndex}-${timeIndex}-${seatingAreaIndex}-${tierIndex}`;
                           currencyMenuBtn.setAttribute('aria-controls', currencyMenuId);
                           const existingCurrency = typeof tier.currency === 'string' && tier.currency.trim() !== '' ? tier.currency.trim() : 'USD';
-                          currencyMenuBtn.textContent = existingCurrency;
+                          const arrow = document.createElement('span');
+                          arrow.className = 'dropdown-arrow';
+                          arrow.setAttribute('aria-hidden', 'true');
+                          currencyMenuBtn.innerHTML = getCurrencyDisplayText(existingCurrency);
+                          currencyMenuBtn.appendChild(arrow);
                           currencyMenuBtn.dataset.value = existingCurrency;
                           // Set default currency in data model if not already set
                           if (!tier.currency || tier.currency.trim() === '') {
@@ -13752,10 +13769,6 @@ function makePosts(){
                           currencyMenuBtn.dataset.timeIndex = String(timeIndex);
                           currencyMenuBtn.dataset.seatingAreaIndex = String(seatingAreaIndex);
                           currencyMenuBtn.dataset.tierIndex = String(tierIndex);
-                          const currencyArrow = document.createElement('span');
-                          currencyArrow.className = 'dropdown-arrow';
-                          currencyArrow.setAttribute('aria-hidden', 'true');
-                          currencyMenuBtn.appendChild(currencyArrow);
                           const currencyMenu = document.createElement('div');
                           currencyMenu.className = 'options-menu';
                           currencyMenu.id = currencyMenuId;
@@ -13767,13 +13780,14 @@ function makePosts(){
                             const optionBtn = document.createElement('button');
                             optionBtn.type = 'button';
                             optionBtn.className = 'menu-option';
-                            optionBtn.textContent = getCurrencyDisplayText(code);
+                            optionBtn.innerHTML = getCurrencyDisplayText(code);
                             optionBtn.dataset.value = code;
                             optionBtn.addEventListener('click', (e) => {
                               e.stopPropagation();
-                              currencyMenuBtn.textContent = code; // Button shows just the code
+                              const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
+                              currencyMenuBtn.innerHTML = getCurrencyDisplayText(code);
+                              if(arrow) currencyMenuBtn.appendChild(arrow);
                               currencyMenuBtn.dataset.value = code;
-                              currencyMenuBtn.appendChild(currencyArrow);
                               currencyMenu.hidden = true;
                               currencyMenuBtn.setAttribute('aria-expanded', 'false');
                               const nextCurrency = code.trim();
@@ -13812,13 +13826,14 @@ function makePosts(){
                                     const optionBtn = document.createElement('button');
                                     optionBtn.type = 'button';
                                     optionBtn.className = 'menu-option';
-                                    optionBtn.textContent = getCurrencyDisplayText(code);
+                                    optionBtn.innerHTML = getCurrencyDisplayText(code);
                                     optionBtn.dataset.value = code;
                                     optionBtn.addEventListener('click', (e) => {
                                       e.stopPropagation();
-                                      currencyMenuBtn.textContent = code; // Button shows just the code
+                                      const arrow = currencyMenuBtn.querySelector('.dropdown-arrow');
+                                      currencyMenuBtn.innerHTML = getCurrencyDisplayText(code);
+                                      if(arrow) currencyMenuBtn.appendChild(arrow);
                                       currencyMenuBtn.dataset.value = code;
-                                      currencyMenuBtn.appendChild(currencyArrow);
                                       currencyMenu.hidden = true;
                                       currencyMenuBtn.setAttribute('aria-expanded', 'false');
                                       const nextCurrency = code.trim();
