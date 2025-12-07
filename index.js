@@ -4003,6 +4003,52 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     window.protectInputMaxLength = protectInputMaxLength;
     
+    // GLOBAL PASTE PROTECTION: Catches ALL paste events on text inputs/textareas
+    // This is a universal security layer that protects even third-party inputs (like Mapbox geocoder)
+    // Default security limit prevents browser crashes from massive paste attacks
+    const DEFAULT_SECURITY_LIMIT = 10000;
+    document.addEventListener('paste', (e) => {
+      const target = e.target;
+      if(!target) return;
+      
+      // Only handle text inputs and textareas
+      const isTextInput = target.tagName === 'INPUT' && 
+        (!target.type || target.type === 'text' || target.type === 'search' || target.type === 'url' || target.type === 'email' || target.type === 'tel');
+      const isTextarea = target.tagName === 'TEXTAREA';
+      if(!isTextInput && !isTextarea) return;
+      
+      // Get maxlength from element, or use default security limit
+      let maxLength = DEFAULT_SECURITY_LIMIT;
+      if(target.hasAttribute('maxlength')){
+        const attrValue = parseInt(target.getAttribute('maxlength'), 10);
+        if(attrValue > 0) maxLength = attrValue;
+      }
+      
+      const pastedText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+      if(!pastedText) return;
+      
+      const currentValue = target.value || '';
+      const selectionStart = target.selectionStart ?? currentValue.length;
+      const selectionEnd = target.selectionEnd ?? currentValue.length;
+      
+      // Calculate what the new value would be after paste
+      const beforeSelection = currentValue.slice(0, selectionStart);
+      const afterSelection = currentValue.slice(selectionEnd);
+      const newValue = beforeSelection + pastedText + afterSelection;
+      
+      // If paste would exceed limit, truncate and prevent default
+      if(newValue.length > maxLength){
+        e.preventDefault();
+        e.stopPropagation();
+        const availableSpace = maxLength - beforeSelection.length - afterSelection.length;
+        const truncatedPaste = pastedText.slice(0, Math.max(0, availableSpace));
+        const finalValue = beforeSelection + truncatedPaste + afterSelection;
+        target.value = finalValue.slice(0, maxLength);
+        // Trigger input event for any listeners
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, true); // Use capture phase to intercept before other handlers
+    
     // Create limit hint element as tooltip icon (combines custom tooltip + char limits)
     function createLimitHint(minLength, maxLength, customTooltip){
       const hint = document.createElement('span');
