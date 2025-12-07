@@ -68,10 +68,46 @@ function getCurrencyLabel(code) {
   return '';
 }
 
-// Get display text for dropdown option (e.g., "USD - US Dollar")
+// Map currency code to country code for flag icons
+function getCurrencyCountryCode(code) {
+  if (!code) return null;
+  const upperCode = code.toUpperCase();
+  const currencyToCountry = {
+    'USD': 'us', 'EUR': 'eu', 'GBP': 'gb', 'AUD': 'au', 'CAD': 'ca', 'NZD': 'nz',
+    'JPY': 'jp', 'CHF': 'ch', 'SGD': 'sg', 'HKD': 'hk', 'SEK': 'se', 'NOK': 'no',
+    'DKK': 'dk', 'PLN': 'pl', 'MXN': 'mx', 'BRL': 'br', 'INR': 'in', 'ZAR': 'za',
+    'CNY': 'cn', 'KRW': 'kr', 'TWD': 'tw', 'THB': 'th', 'PHP': 'ph', 'IDR': 'id',
+    'MYR': 'my', 'VND': 'vn', 'AED': 'ae', 'SAR': 'sa', 'QAR': 'qa', 'KWD': 'kw',
+    'BHD': 'bh', 'OMR': 'om', 'ILS': 'il', 'CZK': 'cz', 'HUF': 'hu', 'RON': 'ro',
+    'BGN': 'bg', 'HRK': 'hr', 'ISK': 'is', 'RUB': 'ru', 'UAH': 'ua', 'TRY': 'tr',
+    'CLP': 'cl', 'COP': 'co', 'ARS': 'ar', 'PEN': 'pe', 'UYU': 'uy', 'BOB': 'bo',
+    'PYG': 'py', 'VES': 've', 'DOP': 'do', 'JMD': 'jm', 'TTD': 'tt', 'GTQ': 'gt',
+    'CRC': 'cr', 'PAB': 'pa', 'NGN': 'ng', 'EGP': 'eg', 'KES': 'ke', 'GHS': 'gh',
+    'TZS': 'tz', 'UGX': 'ug', 'MAD': 'ma', 'TND': 'tn', 'PKR': 'pk', 'BDT': 'bd',
+    'LKR': 'lk', 'NPR': 'np', 'MMK': 'mm', 'FJD': 'fj', 'PGK': 'pg'
+  };
+  return currencyToCountry[upperCode] || null;
+}
+
+// Get flag HTML element
+function getFlagHTML(countryCode) {
+  if (!countryCode) return '';
+  return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle; margin-right: 4px;" />`;
+}
+
+// Get display HTML for dropdown option with flag icon (replaces emoji)
 function getCurrencyDisplayText(code) {
   const label = getCurrencyLabel(code);
-  return label ? `${code} - ${label}` : code;
+  if (!label) return code;
+  
+  // Remove emoji from label (emoji is typically at the start)
+  const labelWithoutEmoji = label.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').trim();
+  
+  // Get country code for flag
+  const countryCode = getCurrencyCountryCode(code);
+  const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+  
+  return `${code} - ${flagHTML}${labelWithoutEmoji}`;
 }
 
 // Get all currency options with labels
@@ -2210,7 +2246,9 @@ let __notifyMapOnInteraction = null;
                   data.general_options.currency.forEach(function(opt){
                     const option = document.createElement('option');
                     option.value = opt.value;
-                    option.textContent = opt.value + ' - ' + opt.label;
+                    // Remove emoji and add flag for native select (if supported, otherwise just remove emoji)
+                    const labelWithoutEmoji = opt.label.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').trim();
+                    option.textContent = opt.value + ' - ' + labelWithoutEmoji;
                     websiteCurrencySelect.appendChild(option);
                   });
                 }
@@ -9030,7 +9068,7 @@ function makePosts(){
                 const optionBtn = document.createElement('button');
                 optionBtn.type = 'button';
                 optionBtn.className = 'menu-option';
-                optionBtn.textContent = getCurrencyDisplayText(code);
+                optionBtn.innerHTML = getCurrencyDisplayText(code);
                 optionBtn.dataset.value = code;
                 optionBtn.addEventListener('click', (e) => {
                   e.stopPropagation();
