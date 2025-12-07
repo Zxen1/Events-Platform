@@ -24677,6 +24677,7 @@ const adminPanelChangeManager = (()=>{
   let promptOpener = null;
   let statusMessage = null;
   let dirty = false;
+  let formbuilderDirty = false; // Separate tracking for formbuilder changes
   let savedState = {};
   let applying = false;
   let statusTimer = null;
@@ -24867,12 +24868,15 @@ const adminPanelChangeManager = (()=>{
     if(!savedStateInitialized) return;
     ensureElements();
     const current = serializeState();
-    setDirty(!stateEquals(current, savedState));
+    const formDirty = !stateEquals(current, savedState);
+    // Combine form state dirty with formbuilder dirty
+    setDirty(formDirty || formbuilderDirty);
   }
 
   function refreshSavedState({ skipManagerSave } = {}){
     if(!form) return;
     savedState = serializeState();
+    formbuilderDirty = false; // Clear formbuilder dirty state on save
     if(!skipManagerSave && window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
       window.formbuilderStateManager.save();
     }
@@ -25124,6 +25128,7 @@ const adminPanelChangeManager = (()=>{
       }
     });
     if(savedState) applyState(savedState);
+    formbuilderDirty = false; // Clear formbuilder dirty state on discard
     setDirty(false);
     showStatus('Changes Discarded');
     notifyDiscard({ closeAfter: !!closeAfter });
@@ -25276,6 +25281,7 @@ const adminPanelChangeManager = (()=>{
     },
     markDirty(){
       ensureElements();
+      formbuilderDirty = true; // Track formbuilder changes separately
       setDirty(true);
     },
     runSave
