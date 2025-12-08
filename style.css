@@ -3341,7 +3341,7 @@ button[aria-expanded="true"] .results-arrow{
   min-height:36px;
   line-height:36px;
   padding:0 12px !important;
-  color:var(--input-text) !important;
+  color:#fff !important;
   background:transparent !important;
   border:none !important;
   border-radius:8px;
