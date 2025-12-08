@@ -67,10 +67,10 @@ function parseCurrencyValue(optionValue) {
   return { countryCode: null, currencyCode: optionValue };
 }
 
-// Get flag HTML element
+// Get flag HTML element (no margin - added via CSS where needed)
 function getFlagHTML(countryCode) {
   if (!countryCode) return '';
-  return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle; margin-right: 8px;" />`;
+  return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle;" />`;
 }
 
 // Get display HTML for currency dropdown option with flag icon
