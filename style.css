@@ -1241,11 +1241,13 @@ button[aria-expanded="true"] .results-arrow{
   #adminPanel .panel-content{
     background:#222222;
     color:#fff;
+    font-family:system-ui, sans-serif;
   }
 
   #memberPanel .panel-content{
     background:#222222;
     color:#fff;
+    font-family:system-ui, sans-serif;
   }
 
 #filterPanel .panel-content{
@@ -1253,6 +1255,7 @@ button[aria-expanded="true"] .results-arrow{
   max-width:380px;
   background:#222222;
   color:#fff;
+  font-family:system-ui, sans-serif;
   display:flex;
   flex-direction:column;
   overflow-y:auto;
@@ -9703,7 +9706,7 @@ html, body { cursor: auto !important; }
               width:100px;
               min-width:100px;
               max-width:100px;
-              height:44px;
+              height:35px;
               position:relative;
               overflow:hidden;
               box-sizing:border-box;
@@ -9777,7 +9780,7 @@ html, body { cursor: auto !important; }
               width:100px;
               min-width:100px;
               max-width:100px;
-              height:44px;
+              height:35px;
               overflow:hidden;
               box-sizing:border-box;
               display:flex;
@@ -9837,7 +9840,7 @@ html, body { cursor: auto !important; }
               width:100px;
               min-width:100px;
               max-width:100px;
-              height:44px;
+              height:35px;
               padding:0 30px 0 10px;
               display:flex;
               align-items:center;
