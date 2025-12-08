@@ -8902,8 +8902,12 @@ function makePosts(){
             this.classList.toggle('input-invalid', !isValid);
           };
           textarea.addEventListener('blur', validateTextarea);
-          // Also validate on input for real-time feedback
-          textarea.addEventListener('input', validateTextarea);
+          // Clear invalid state when user starts typing again
+          textarea.addEventListener('input', function(){
+            if(this.classList.contains('input-invalid')){
+              this.classList.remove('input-invalid');
+            }
+          });
           control = textarea;
         } else if(field.type === 'dropdown' || baseType === 'dropdown'){
           wrapper.classList.add('form-field--dropdown');
@@ -9560,8 +9564,12 @@ function makePosts(){
             this.classList.toggle('input-invalid', !isValid);
           };
           urlInput.addEventListener('blur', validateUrlInput);
-          // Also validate on input for real-time feedback
-          urlInput.addEventListener('input', validateUrlInput);
+          // Clear invalid state when user starts typing again
+          urlInput.addEventListener('input', function(){
+            if(this.classList.contains('input-invalid')){
+              this.classList.remove('input-invalid');
+            }
+          });
           const urlLink = document.createElement('a');
           urlLink.id = linkId;
           urlLink.href = '#';
@@ -10240,8 +10248,12 @@ function makePosts(){
             this.classList.toggle('input-invalid', !isValid);
           };
           input.addEventListener('blur', validateInput);
-          // Also validate on input for real-time feedback
-          input.addEventListener('input', validateInput);
+          // Clear invalid state when user starts typing again
+          input.addEventListener('input', function(){
+            if(this.classList.contains('input-invalid')){
+              this.classList.remove('input-invalid');
+            }
+          });
           // Only set control to input if it wasn't already set (e.g., phone fieldset sets control to phoneWrapper)
           if(!control){
             control = input;
