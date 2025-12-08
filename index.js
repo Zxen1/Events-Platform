@@ -8861,6 +8861,13 @@ function makePosts(){
         const customTooltip = matchingFieldset?.fieldset_tooltip || null;
         let charCounter = null;
         
+        // Helper to notify formbuilder of changes (no-op in sandbox/preview mode)
+        const safeNotifyFormbuilderChange = (options.isSandbox === true)
+          ? (()=>{})
+          : (typeof window !== 'undefined' && typeof window.notifyFormbuilderChange === 'function'
+            ? window.notifyFormbuilderChange
+            : (()=>{}));
+        
         if(baseType === 'text-area' || baseType === 'description'){
           const textarea = document.createElement('textarea');
           textarea.rows = 5;
@@ -9082,13 +9089,6 @@ function makePosts(){
               field.options.push(createEmptyOption());
             }
           };
-
-          // In sandbox mode (form preview), don't trigger save state changes
-          const safeNotifyFormbuilderChange = (options.isSandbox === true)
-            ? (()=>{})
-            : (typeof window !== 'undefined' && typeof window.notifyFormbuilderChange === 'function' 
-              ? window.notifyFormbuilderChange 
-              : (()=>{}));
 
           const renderItemEditor = (focusIndex = null, focusTarget = 'item_name')=>{
             normalizeOptions();
@@ -10164,12 +10164,12 @@ function makePosts(){
             input.type = 'tel';
             input.autocomplete = 'tel';
             input.inputMode = 'tel';
-            input.pattern = '[0-9 ()-]+';
+            input.pattern = '[0-9 ()\\-]+';
             input.style.flex = '1';
             input.style.minWidth = '0';
             // Prevent non-digit characters (except allowed formatting)
             input.addEventListener('beforeinput', function(e){
-              if(e.data && !/[0-9 ()-]/.test(e.data)){
+              if(e.data && !/[0-9 ()\-]/.test(e.data)){
                 e.preventDefault();
               }
             });
