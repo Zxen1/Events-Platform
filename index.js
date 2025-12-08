@@ -2183,9 +2183,10 @@ let __notifyMapOnInteraction = null;
               if(data.settings.welcome_enabled !== undefined){
                 window._welcomeEnabled = data.settings.welcome_enabled;
                 
-                // If welcome is enabled and user hasn't seen it, show it immediately
+                // If welcome is enabled, show it immediately on page load
                 // Messages are already cached above - no additional API call needed
-                if(data.settings.welcome_enabled && !localStorage.getItem('welcome-seen')){
+                // Note: welcome can always be shown via logo click regardless of localStorage
+                if(data.settings.welcome_enabled){
                   const welcomeModal = document.getElementById('welcome-modal');
                   if(welcomeModal && typeof window.openWelcome === 'function'){
                     window.openWelcome();
@@ -3032,6 +3033,8 @@ let __notifyMapOnInteraction = null;
 
       async function openWelcome(){
         const popup = document.getElementById('welcome-modal');
+        if(!popup) return;
+        
         const msgEl = document.getElementById('welcomeMessageBox');
         const titleEl = document.getElementById('welcomeTitle');
         
@@ -3057,11 +3060,23 @@ let __notifyMapOnInteraction = null;
           }
         }
         
-        msgEl.innerHTML = welcomeBody;
-        if(titleEl) titleEl.textContent = welcomeTitle;
+        // Ensure message content is always set (fallback to default if empty)
+        if(!welcomeBody || welcomeBody.trim() === ''){
+          welcomeBody = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
+        }
+        
+        if(msgEl){
+          msgEl.innerHTML = welcomeBody;
+        }
+        if(titleEl){
+          titleEl.textContent = welcomeTitle;
+        }
+        
         openPanel(popup);
         const body = document.getElementById('welcomeBody');
-        body.style.padding = '20px';
+        if(body){
+          body.style.padding = '20px';
+        }
       }
       window.openWelcome = openWelcome;
 
@@ -26328,8 +26343,7 @@ function closePanel(m){
   if(m.id === 'welcome-modal'){
     const mc = document.querySelector('.map-controls-map');
     if(mc) mc.style.display = '';
-    // Mark welcome as seen when user closes it
-    localStorage.setItem('welcome-seen','true');
+    // Note: We don't set welcome-seen flag anymore - welcome can always be shown via logo click or page refresh
   }
   m.setAttribute('inert','');
   if(content && content.dataset.side){
