@@ -2730,7 +2730,7 @@ button[aria-expanded="true"] .results-arrow{
   border-top-left-radius:0;
   border-top-right-radius:0;
   z-index:1;
-  cursor:move;
+  cursor:ew-resize;
   display:flex;
   flex-direction:column;
   gap:10px;
