@@ -1183,6 +1183,9 @@ button[aria-expanded="true"] .results-arrow{
 #memberForm.panel-body{
   padding:10px;
 }
+#memberForm.panel-body{
+  padding-bottom:100px;
+}
 .panel-body{
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
