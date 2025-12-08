@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 09, 2025 at 03:17 AM
+-- Generation Time: Dec 09, 2025 at 03:29 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -121,7 +121,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (27, 'Console Filter Disabled Confirmation Message', 'msg_confirm_console_filter_disable', 'confirm', 'admin', 'msg_admin', 'Console filter will be disabled on next page load. Reload now?', 'Disable console filter prompt', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
 (28, 'Map Zoom Required Message', 'msg_map_zoom_required', 'toast', 'map', 'msg_user', 'Zoom the map to see posts', 'Shown when zoom level too low', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
 (29, 'No Listings Found Message', 'msg_posts_empty_state', 'label', 'post', 'msg_member', 'There are no posts here. Try moving the map or changing your filter settings.', 'Empty posts message', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:34:06', '2025-11-13 15:45:07'),
-(82, 'Terms and Conditions Message', 'msg-terms-conditions', 'modal', 'member', 'msg_member', 'Please read and agree to the terms and conditions before submitting your post.', 'Terms and conditions text shown in modal for member forms', 1, NULL, 1, 1, 0, 0, '2025-12-08 16:16:29', '2025-12-08 16:16:29'),
+(82, 'Terms and Conditions Message', 'msg-terms-conditions', 'modal', 'member', 'msg_member', '<h3>Terms and Conditions</h3>\r\n\r\n<p>By submitting a post to this platform, you agree to the following terms and conditions:</p>\r\n\r\n<h4>1. Content Responsibility</h4>\r\n<p>You are solely responsible for all content you post, including text, images, and any other materials. You warrant that you own or have the necessary rights to all content you submit.</p>\r\n\r\n<h4>2. Accurate Information</h4>\r\n<p>You agree to provide accurate, current, and complete information in your posts. Misleading, false, or fraudulent information is strictly prohibited.</p>\r\n\r\n<h4>3. Prohibited Content</h4>\r\n<p>You agree not to post content that:</p>\r\n<ul>\r\n<li>Is illegal, harmful, or violates any applicable laws or regulations</li>\r\n<li>Infringes on intellectual property rights of others</li>\r\n<li>Contains spam, unsolicited advertising, or promotional materials</li>\r\n<li>Is defamatory, harassing, abusive, or discriminatory</li>\r\n<li>Contains viruses, malware, or other harmful code</li>\r\n<li>Violates privacy rights of others</li>\r\n</ul>\r\n\r\n<h4>4. Platform Rules</h4>\r\n<p>You agree to comply with all platform rules and guidelines. The platform reserves the right to remove any content that violates these terms without notice.</p>\r\n\r\n<h4>5. Moderation</h4>\r\n<p>All posts are subject to review and moderation. The platform reserves the right to reject, edit, or remove any content at its sole discretion.</p>\r\n\r\n<h4>6. Payment and Fees</h4>\r\n<p>If applicable, you agree to pay all fees associated with your post submission. Fees are non-refundable unless otherwise stated.</p>\r\n\r\n<h4>7. Limitation of Liability</h4>\r\n<p>The platform is not responsible for any loss, damage, or liability arising from your use of the service or content posted by you or other users.</p>\r\n\r\n<h4>8. Indemnification</h4>\r\n<p>You agree to indemnify and hold harmless the platform, its operators, and affiliates from any claims, damages, or expenses arising from your content or violation of these terms.</p>\r\n\r\n<h4>9. Changes to Terms</h4>\r\n<p>These terms may be updated at any time. Continued use of the platform constitutes acceptance of any modified terms.</p>\r\n\r\n<h4>10. Account Termination</h4>\r\n<p>The platform reserves the right to suspend or terminate your account and remove your content if you violate these terms.</p>\r\n\r\n<p><strong>By checking the box below, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.</strong></p>', 'Terms and conditions text shown in modal for member forms', 1, NULL, 1, 1, 0, 0, '2025-12-08 16:16:29', '2025-12-08 16:26:19'),
 (32, 'Member Login Reminder Message', 'msg_member_login_reminder', 'label', 'member', 'msg_member', 'When you log in as a member, I can remember your recent posts and favourites on any device.', 'Reminder shown to encourage member login', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (33, 'Member Unsaved Changes Dialog Title Message', 'msg_member_unsaved_title', 'label', 'member', 'msg_member', 'Unsaved Changes', 'Title of member unsaved changes dialog', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
 (34, 'Member Unsaved Changes Dialog Message', 'msg_member_unsaved_message', 'label', 'member', 'msg_member', 'You have unsaved changes. Save before closing the member panel?', 'Message in member unsaved changes dialog', 0, NULL, 1, 1, 0, 3000, '2025-11-13 10:43:39', '2025-11-13 15:45:07'),
@@ -206,7 +206,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-02 03:25:58'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'admin_icon_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(14, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-08 11:53:15'),
+(14, 'spin_on_load', 'false', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-08 16:19:02'),
 (15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-27 21:47:01'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 15:20:41'),
 (17, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-27 21:47:29'),
@@ -1460,7 +1460,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6013;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6020;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
