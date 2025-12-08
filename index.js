@@ -28619,23 +28619,40 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
-        // Force reload all stylesheets with cache buster
+        // Force refetch CSS files to bust HTTP cache
         const timestamp = Date.now();
+        const cssPromises = [];
         document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
           const href = link.href.split('?')[0];
-          link.href = href + '?_cb=' + timestamp;
+          cssPromises.push(
+            fetch(href + '?_cb=' + timestamp, { cache: 'no-store' })
+              .catch(err => console.warn('[Clear] CSS fetch error:', err))
+          );
         });
         
+        // Also fetch main JS with no-store
+        cssPromises.push(
+          fetch('index.js?_cb=' + timestamp, { cache: 'no-store' })
+            .catch(err => console.warn('[Clear] JS fetch error:', err))
+        );
+        cssPromises.push(
+          fetch('style.css?_cb=' + timestamp, { cache: 'no-store' })
+            .catch(err => console.warn('[Clear] CSS fetch error:', err))
+        );
+        
+        await Promise.all(cssPromises);
         console.log('[Clear] All storage cleared! Reloading...');
         
-        // Reload with cache bypass
-        setTimeout(() => {
-          window.location.reload();
-        }, 200);
+        // Navigate with cache buster to force full reload
+        const url = new URL(window.location.href);
+        url.searchParams.set('_nocache', timestamp);
+        window.location.replace(url.toString());
       } catch(err){
         console.error('[Clear] Error:', err);
-        // Still reload even if there's an error
-        window.location.reload();
+        // Still reload with cache buster even if there's an error
+        const url = new URL(window.location.href);
+        url.searchParams.set('_nocache', Date.now());
+        window.location.replace(url.toString());
       }
     });
     
