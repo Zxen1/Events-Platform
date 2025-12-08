@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 08, 2025 at 06:22 PM
+-- Generation Time: Dec 08, 2025 at 06:50 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -231,7 +231,8 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (35, 'marker_cluster_icon', 'assets/system-images/red-balloon-40.png', 'string', 'Path to marker cluster/balloon icon', '2025-11-27 21:40:22', '2025-11-29 06:55:06'),
 (1657, 'system_images_folder', 'assets/system-images', 'string', NULL, '2025-11-27 21:47:00', '2025-11-27 21:47:00'),
 (4592, 'msg_category_fieldset-tooltips_icon', '/assets/system-images/fieldset-tooltips.svg', 'string', NULL, '2025-12-06 17:40:32', '2025-12-06 17:40:32'),
-(5888, 'starting_address', 'New York, USA', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2025-12-08 07:21:39');
+(5888, 'starting_address', 'Gfrillner Weg, 39044 Neumarkt South Tyrol, Italy', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2025-12-08 07:40:48'),
+(5901, 'starting_zoom', '10', 'integer', 'Default map zoom level for new visitors (1-18)', '2025-12-08 07:49:50', '2025-12-08 07:49:50');
 
 -- --------------------------------------------------------
 
@@ -1458,7 +1459,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5889;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5902;
 
 --
 -- AUTO_INCREMENT for table `banned_words`

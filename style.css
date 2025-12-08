@@ -3366,7 +3366,7 @@ button[aria-expanded="true"] .results-arrow{
   font-family:inherit !important;
   font-size:14px !important;
   font-weight:400 !important;
-  color:var(--input-text);
+  color:#fff;
 }
 #tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li a:hover,
 #tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions .active a{

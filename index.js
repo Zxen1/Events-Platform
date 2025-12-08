@@ -1492,9 +1492,10 @@ let __notifyMapOnInteraction = null;
       }
       
       try {
+        const zoomLevel = window._startingZoom || 10;
         mapInstance.flyTo({
           center: [lng, lat],
-          zoom: 10,
+          zoom: zoomLevel,
           duration: 2000
         });
       } catch(err){
@@ -1523,9 +1524,10 @@ let __notifyMapOnInteraction = null;
       const data = await response.json();
       if(data.features && data.features.length > 0){
         const [lng, lat] = data.features[0].center;
+        const zoomLevel = window._startingZoom || 10;
         mapInstance.flyTo({
           center: [lng, lat],
-          zoom: 10,
+          zoom: zoomLevel,
           duration: 2000
         });
       } else {
@@ -2260,10 +2262,21 @@ let __notifyMapOnInteraction = null;
                 window._startingAddress = data.settings.starting_address;
               }
               
+              // Store starting zoom setting globally (default to 10 if not set)
+              window._startingZoom = data.settings.starting_zoom !== undefined ? parseFloat(data.settings.starting_zoom) : 10;
+              
               // Initialize Starting Address input
               const startingAddressInput = document.getElementById('adminStartingAddress');
               if(startingAddressInput && data.settings.starting_address){
                 startingAddressInput.value = data.settings.starting_address;
+              }
+              
+              // Initialize Starting Zoom slider
+              const startingZoomSlider = document.getElementById('startingZoom');
+              const startingZoomDisplay = document.getElementById('startingZoomDisplay');
+              if(startingZoomSlider && startingZoomDisplay){
+                startingZoomSlider.value = window._startingZoom;
+                startingZoomDisplay.textContent = Math.round(window._startingZoom).toString();
               }
               
               // Add refresh map cards button handler
@@ -24467,6 +24480,99 @@ function openPanel(m){
           saveStartingAddress(fallback.value.trim());
         });
         startingGeocoderContainer.appendChild(fallback);
+      }
+    }
+    
+    // Auto-save Starting Zoom slider
+    const startingZoomSlider = document.getElementById('startingZoom');
+    const startingZoomDisplay = document.getElementById('startingZoomDisplay');
+    if(startingZoomSlider && !startingZoomSlider.dataset.autoSaveAdded){
+      startingZoomSlider.dataset.autoSaveAdded = 'true';
+      
+      // Update display on input
+      startingZoomSlider.addEventListener('input', ()=>{
+        const value = parseInt(startingZoomSlider.value, 10);
+        if(startingZoomDisplay) startingZoomDisplay.textContent = value.toString();
+      });
+      
+      // Auto-save on change
+      startingZoomSlider.addEventListener('change', async ()=>{
+        const value = parseInt(startingZoomSlider.value, 10);
+        window._startingZoom = value;
+        if(startingZoomDisplay) startingZoomDisplay.textContent = value.toString();
+        
+        try {
+          await fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ starting_zoom: value })
+          });
+        } catch(err){
+          console.warn('Auto-save starting zoom failed:', err);
+        }
+      });
+      
+      // Make value display editable on click (like other sliders)
+      if(startingZoomDisplay && !startingZoomDisplay.dataset.editableAdded){
+        startingZoomDisplay.dataset.editableAdded = 'true';
+        startingZoomDisplay.style.cursor = 'pointer';
+        
+        startingZoomDisplay.addEventListener('click', ()=>{
+          const currentValue = startingZoomDisplay.textContent;
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.value = currentValue;
+          input.min = '1';
+          input.max = '18';
+          input.step = '1';
+          input.className = 'slider-value-input';
+          input.style.width = '60px';
+          input.style.textAlign = 'center';
+          input.style.fontSize = '16px';
+          input.style.fontWeight = 'bold';
+          input.style.background = 'rgba(0,0,0,0.5)';
+          input.style.color = '#fff';
+          input.style.border = '1px solid #2e3a72';
+          input.style.borderRadius = '4px';
+          input.style.padding = '2px';
+          
+          const commitValue = async ()=>{
+            let newValue = parseInt(input.value, 10);
+            if(isNaN(newValue)) newValue = parseInt(currentValue, 10);
+            newValue = Math.max(1, Math.min(18, newValue));
+            startingZoomDisplay.textContent = newValue.toString();
+            startingZoomDisplay.style.display = '';
+            input.remove();
+            startingZoomSlider.value = newValue;
+            window._startingZoom = newValue;
+            
+            try {
+              await fetch('/gateway.php?action=save-admin-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ starting_zoom: newValue })
+              });
+            } catch(err){
+              console.warn('Auto-save starting zoom failed:', err);
+            }
+          };
+          
+          input.addEventListener('blur', commitValue);
+          input.addEventListener('keydown', (e)=>{
+            if(e.key === 'Enter'){
+              e.preventDefault();
+              commitValue();
+            } else if(e.key === 'Escape'){
+              startingZoomDisplay.style.display = '';
+              input.remove();
+            }
+          });
+          
+          startingZoomDisplay.style.display = 'none';
+          startingZoomDisplay.parentNode.insertBefore(input, startingZoomDisplay);
+          input.focus();
+          input.select();
+        });
       }
     }
     
