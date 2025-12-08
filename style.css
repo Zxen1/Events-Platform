@@ -2596,6 +2596,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:0;
+  padding-bottom:100px;
 }
 #memberPanel .member-create-checkout{
   display:flex;
