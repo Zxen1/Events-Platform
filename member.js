@@ -1092,7 +1092,108 @@
     function updatePostButtonState(){
       if(!postButton) return;
       const ready = isCreateFormValid();
-      postButton.disabled = !ready;
+      const termsAgreed = postButton.dataset.termsAgreed === 'true';
+      postButton.disabled = !ready || !termsAgreed;
+      
+      // Also update admin skip payment button state
+      const adminSkipButton = document.getElementById('adminSkipPaymentBtn');
+      if(adminSkipButton){
+        adminSkipButton.disabled = !ready || !termsAgreed;
+      }
+    }
+    
+    // Terms and Conditions Modal
+    let termsModalContainer = null;
+    let termsAgreedCheckbox = null;
+    
+    async function openTermsModal(){
+      if(!termsModalContainer){
+        // Create modal container
+        termsModalContainer = document.createElement('div');
+        termsModalContainer.id = 'termsModalContainer';
+        termsModalContainer.className = 'terms-modal-container hidden';
+        
+        const modal = document.createElement('div');
+        modal.className = 'terms-modal';
+        
+        const header = document.createElement('div');
+        header.className = 'terms-modal-header';
+        const title = document.createElement('h2');
+        title.textContent = 'Terms and Conditions';
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'terms-modal-close';
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.textContent = '✖';
+        closeBtn.addEventListener('click', closeTermsModal);
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+        
+        const content = document.createElement('div');
+        content.className = 'terms-modal-content';
+        
+        // Load terms message
+        const termsText = await getMessage('msg-terms-conditions', {}, false) || 'Please read and agree to the terms and conditions before submitting your post.';
+        const termsPara = document.createElement('div');
+        termsPara.className = 'terms-text';
+        termsPara.innerHTML = termsText;
+        content.appendChild(termsPara);
+        
+        const checkboxWrapper = document.createElement('div');
+        checkboxWrapper.className = 'terms-checkbox-wrapper';
+        termsAgreedCheckbox = document.createElement('input');
+        termsAgreedCheckbox.type = 'checkbox';
+        termsAgreedCheckbox.id = 'termsAgreedCheckbox';
+        termsAgreedCheckbox.addEventListener('change', () => {
+          const agreed = termsAgreedCheckbox.checked;
+          if(postButton){
+            postButton.dataset.termsAgreed = agreed ? 'true' : 'false';
+            updatePostButtonState();
+          }
+        });
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.htmlFor = 'termsAgreedCheckbox';
+        checkboxLabel.textContent = 'I agree to these terms';
+        checkboxWrapper.appendChild(termsAgreedCheckbox);
+        checkboxWrapper.appendChild(checkboxLabel);
+        content.appendChild(checkboxWrapper);
+        
+        const footer = document.createElement('div');
+        footer.className = 'terms-modal-footer';
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'primary-action';
+        closeButton.textContent = 'Close';
+        closeButton.addEventListener('click', closeTermsModal);
+        footer.appendChild(closeButton);
+        
+        modal.appendChild(header);
+        modal.appendChild(content);
+        modal.appendChild(footer);
+        termsModalContainer.appendChild(modal);
+        
+        // Close on background click
+        termsModalContainer.addEventListener('click', (e) => {
+          if(e.target === termsModalContainer){
+            closeTermsModal();
+          }
+        });
+        
+        document.body.appendChild(termsModalContainer);
+      }
+      
+      // Check if already agreed
+      if(postButton && postButton.dataset.termsAgreed === 'true' && termsAgreedCheckbox){
+        termsAgreedCheckbox.checked = true;
+      }
+      
+      termsModalContainer.classList.remove('hidden');
+    }
+    
+    function closeTermsModal(){
+      if(termsModalContainer){
+        termsModalContainer.classList.add('hidden');
+      }
     }
 
     // Track last renderConfiguredFields call to prevent rapid-fire loop
@@ -1175,6 +1276,29 @@
       }
       if(formWrapper) formWrapper.hidden = false;
       if(postActions){ postActions.hidden = false; postActions.style.display = ''; }
+      // Add terms and conditions link before submit button
+      let termsLink = document.getElementById('memberTermsLink');
+      if(!termsLink && postActions && postButton){
+        termsLink = document.createElement('a');
+        termsLink.id = 'memberTermsLink';
+        termsLink.href = '#';
+        termsLink.className = 'terms-conditions-link';
+        termsLink.textContent = 'Terms and Conditions';
+        termsLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          openTermsModal();
+        });
+        // Insert before the submit button
+        postButton.parentNode.insertBefore(termsLink, postButton);
+      }
+      
+      // Initially disable submit button until terms are agreed
+      if(postButton){
+        if(!postButton.dataset.termsAgreed){
+          postButton.dataset.termsAgreed = 'false';
+        }
+      }
+      
       if(postButton){ postButton.hidden = false; postButton.style.display = ''; updatePostButtonState(); }
 			
 			// Apply any saved draft and bind autosave for dynamic fields
