@@ -8870,10 +8870,14 @@ html, body { cursor: auto !important; }
             #tab-forms .seating_area-input,
             #tab-forms .pricing_tier-input,
             #tab-forms .session-price-input,
+            #tab-forms .venue-name-input,
+            #tab-forms .session-date-input,
             #memberPanel .member-create-fields .session-time-input,
             #memberPanel .member-create-fields .seating_area-input,
             #memberPanel .member-create-fields .pricing_tier-input,
-            #memberPanel .member-create-fields .session-price-input{
+            #memberPanel .member-create-fields .session-price-input,
+            #memberPanel .member-create-fields .venue-name-input,
+            #memberPanel .member-create-fields .session-date-input{
               width:100%;
               height:36px;
               border-radius:8px;
@@ -8887,13 +8891,12 @@ html, body { cursor: auto !important; }
             #tab-forms .session-date-input,
             #memberPanel .member-create-fields .venue-name-input,
             #memberPanel .member-create-fields .session-date-input{
-              background:rgba(0,0,0,0.35);
-              color:#2e3b73;
-              font-weight:bold;
+              color:#2e3b73 !important;
+              font-weight:bold !important;
             }
             #tab-forms .venue-name-input,
             #memberPanel .member-create-fields .venue-name-input{
-              font-size:16px;
+              font-size:16px !important;
             }
             #tab-forms .session-time-input,
             #memberPanel .member-create-fields .session-time-input{
