@@ -1072,7 +1072,7 @@
 			if(!ok) return false;
 		}
 
-		// Composite validation: Venue Ticketing (must have at least one tier with currency+price)
+		// Composite validation: Event Session Details (must have at least one tier with currency+price)
 		const requiredVenueEditors = formFields.querySelectorAll('.venue-session-editor[aria-required="true"]');
 		for(const editor of requiredVenueEditors){
 			let valid = false;

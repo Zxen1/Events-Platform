@@ -9055,7 +9055,7 @@ function makePosts(){
             control = window.buildVenueSessionPreview(field, baseId, { isSandbox: options.isSandbox === true });
           } else {
             control = document.createElement('div');
-            control.textContent = 'Venue ticketing field';
+            control.textContent = 'Event session details field';
           }
           if(control && field.required){
             control.setAttribute('aria-required','true');
