@@ -2113,6 +2113,10 @@ let __notifyMapOnInteraction = null;
           if(response.ok){
             const data = await response.json();
             if(data.success && data.settings){
+              // Store admin settings globally for access by welcome modal and other components
+              if(!window.adminSettings) window.adminSettings = {};
+              Object.assign(window.adminSettings, data.settings);
+              
               // Cache messages immediately (for welcome modal - no second API call needed)
               if(data.messages && Array.isArray(data.messages)){
                 const messagesMap = {};
@@ -3051,9 +3055,27 @@ let __notifyMapOnInteraction = null;
         const msgEl = document.getElementById('welcomeMessageBox');
         const titleEl = document.getElementById('welcomeTitle');
         
-        // Load welcome messages from DB
-        const welcomeBody = await getMessage('msg_welcome_body', {}, false) || '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
-        const welcomeTitle = await getMessage('msg_welcome_title', {}, false) || 'Welcome to FunMap';
+        // Load welcome messages from admin_settings (faster - no messages table query needed)
+        // Wait for admin settings to be loaded if not already available
+        if(!window.adminSettings || !window._adminSettingsLoaded){
+          await window._adminSettingsReady;
+        }
+        
+        // Get welcome title and message from admin_settings
+        let welcomeTitle = 'Welcome to FunMap';
+        let welcomeBody = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
+        
+        if(window.adminSettings){
+          if(window.adminSettings.welcome_title){
+            welcomeTitle = window.adminSettings.welcome_title;
+          }
+          
+          if(window.adminSettings.welcome_message){
+            // welcome_message is stored as JSON type in DB, but PHP already decodes it
+            // It should be a string (the HTML content) when it reaches JavaScript
+            welcomeBody = window.adminSettings.welcome_message || welcomeBody;
+          }
+        }
         
         msgEl.innerHTML = welcomeBody;
         if(titleEl) titleEl.textContent = welcomeTitle;
