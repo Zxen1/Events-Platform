@@ -10164,12 +10164,11 @@ function makePosts(){
             input.type = 'tel';
             input.autocomplete = 'tel';
             input.inputMode = 'tel';
-            input.pattern = '[0-9 +()-]+';
             input.style.flex = '1';
             input.style.minWidth = '0';
-            // Prevent non-digit characters (except allowed formatting)
+            // Prevent non-digit characters (except allowed formatting: spaces, +, (), -)
             input.addEventListener('beforeinput', function(e){
-              if(e.data && !/[0-9 +()-]/.test(e.data)){
+              if(e.data && !/^[0-9 +()-]+$/.test(e.data)){
                 e.preventDefault();
               }
             });
