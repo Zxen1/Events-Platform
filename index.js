@@ -70,7 +70,7 @@ function parseCurrencyValue(optionValue) {
 // Get flag HTML element (no margin - added via CSS where needed)
 function getFlagHTML(countryCode) {
   if (!countryCode) return '';
-  return `<img src="assets/flags/${countryCode}.svg" alt="" class="currency-flag" style="width: 20px; height: 15px; vertical-align: middle;" />`;
+  return `<span class="dropdown-flag"><img src="assets/flags/${countryCode}.svg" alt="" /></span>`;
 }
 
 // Get display HTML for currency dropdown option with flag icon
@@ -80,7 +80,7 @@ function getCurrencyDisplayText(opt) {
   const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
   const label = opt.label || '';
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  return `${flagHTML}${currencyCode} - ${label}`;
+  return `${flagHTML}<span class="dropdown-text">${currencyCode} - ${label}</span>`;
 }
 
 // Get all currency options with parsed values
@@ -94,7 +94,7 @@ function getCurrencyOptions() {
 // Get button HTML for currency (flag + code only, for the dropdown button)
 function getCurrencyButtonHTML(countryCode, currencyCode) {
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  return `${flagHTML}${currencyCode}`;
+  return `${flagHTML}<span class="dropdown-text">${currencyCode}</span>`;
 }
 
 // Find country code for a currency code (for initial button display)
@@ -135,7 +135,7 @@ function getPhonePrefixDisplayText(opt) {
   const { countryCode, prefix } = parsePhonePrefixValue(opt.value);
   const label = opt.label || '';
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  return `${flagHTML}${prefix} - ${label}`;
+  return `${flagHTML}<span class="dropdown-text">${prefix} - ${label}</span>`;
 }
 
 // Get all phone prefix options
@@ -149,7 +149,7 @@ function getPhonePrefixOptions() {
 // Get button HTML for phone prefix (flag + prefix only, for the dropdown button)
 function getPhonePrefixButtonHTML(countryCode, prefix) {
   const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-  return `${flagHTML}${prefix}`;
+  return `${flagHTML}<span class="dropdown-text">${prefix}</span>`;
 }
 
 // === Dropdown Keyboard Navigation ===
