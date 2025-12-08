@@ -1248,28 +1248,8 @@ function handlePromptKeydown(event, context){
     // Set up observer for dynamically created elements (do this immediately)
     setupMessageObserver();
     
-    // Load messages in background - don't block page rendering
-    setTimeout(() => {
-      // Load user-visible messages on page load (excludes admin and email messages)
-      loadMessagesFromDatabase(false).then(() => {
-        // Update all message elements after loading
-        updateAllMessageElements(false).catch(err => {
-          console.warn('Failed to update message elements:', err);
-        });
-      }).catch(err => {
-        console.warn('Failed to preload messages:', err);
-      });
-      
-      // Load admin messages and update all elements (including dynamically created ones)
-      (async () => {
-        try {
-          await loadMessagesFromDatabase(true);
-          await updateAllMessageElements(true);
-        } catch(err){
-          console.warn('Failed to load admin messages:', err);
-        }
-      })();
-    }, 100); // Small delay to let page render first
+    // Messages are now loaded on-demand when needed (when panels open or when getMessage() is called)
+    // No longer loading on startup - welcome messages are in admin_settings
   });
 })();
 
@@ -20253,6 +20233,14 @@ function makePosts(){
         startZoom = 1.5;
       }
       
+        // Hide map initially until tiles are loaded
+        const mapContainer = document.getElementById('map');
+        let mapFadedIn = false;
+        if(mapContainer){
+          mapContainer.style.opacity = '0';
+          mapContainer.style.transition = 'opacity 0.8s ease-in';
+        }
+        
         map = new mapboxgl.Map({
           container:'map',
           style:'mapbox://styles/mapbox/standard',
@@ -20269,6 +20257,45 @@ function makePosts(){
             console.error('Mapbox authentication error:', e.error);
           }
         });
+        
+        // Fade in map when tiles are fully loaded
+        const fadeInMap = () => {
+          if(mapContainer && !mapFadedIn && mapContainer.style.opacity === '0'){
+            mapFadedIn = true;
+            requestAnimationFrame(() => {
+              mapContainer.style.opacity = '1';
+            });
+          }
+        };
+        
+        // Hook into mapLoading to fade in when tiles finish loading
+        if(mapLoading && typeof mapLoading.onTilesLoaded === 'function'){
+          mapLoading.onTilesLoaded(fadeInMap);
+        }
+        
+        // Fallback: also fade in on 'idle' event if mapLoading callback didn't fire
+        map.on('idle', () => {
+          // Small delay to let mapLoading callback fire first
+          setTimeout(() => {
+            if(mapContainer && !mapFadedIn && mapContainer.style.opacity === '0'){
+              // Check if tiles are actually loaded
+              if(map && typeof map.isStyleLoaded === 'function' && map.isStyleLoaded()){
+                try{
+                  if(typeof map.areTilesLoaded === 'function' && map.areTilesLoaded()){
+                    fadeInMap();
+                  } else {
+                    // Fallback: fade in on idle if areTilesLoaded doesn't exist
+                    fadeInMap();
+                  }
+                }catch(err){
+                  // Fallback: fade in on idle even if check fails
+                  fadeInMap();
+                }
+              }
+            }
+          }, 100);
+        });
+        
         try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
@@ -20499,6 +20526,7 @@ function makePosts(){
           const motionTokens = new Set();
           let tilesPending = false;
           let active = false;
+          let tilesLoadedCallback = null;
 
           const isMapMovingNow = () => {
             if(!map) return false;
@@ -20529,9 +20557,17 @@ function makePosts(){
           return {
             apply,
             setTiles(pending){
+              const wasPending = tilesPending;
               if(tilesPending === pending) return;
               tilesPending = pending;
               apply();
+              // Fade in map when tiles finish loading (transition from pending to not pending)
+              if(wasPending && !pending && tilesLoadedCallback){
+                tilesLoadedCallback();
+              }
+            },
+            onTilesLoaded(callback){
+              tilesLoadedCallback = callback;
             },
             addMotion(token){
               if(motionTokens.has(token)) return;
