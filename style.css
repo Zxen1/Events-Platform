@@ -4955,7 +4955,16 @@ body.hide-ads .ad-board{
 #tab-forms .form-container .form-field input.input-invalid,
 #memberPanel .member-create-fields .form-field input.input-invalid,
 #tab-forms .form-container .form-url-input.input-invalid,
-#memberPanel .member-create-fields .form-url-input.input-invalid{
+#memberPanel .member-create-fields .form-url-input.input-invalid,
+#tab-forms .form-container .panel-field textarea.input-invalid,
+#memberPanel .member-create-fields .panel-field textarea.input-invalid,
+#tab-forms .form-container .form-field textarea.input-invalid,
+#memberPanel .member-create-fields .form-field textarea.input-invalid,
+.form-field input.input-invalid,
+.form-field textarea.input-invalid,
+.form-url-input.input-invalid,
+input.input-invalid,
+textarea.input-invalid{
   border:2px solid red;
 }
 #tab-forms .form-container .panel-field select:focus,

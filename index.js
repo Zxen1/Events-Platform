@@ -8885,6 +8885,31 @@ function makePosts(){
           if(maxLength !== null){
             charCounter = createCharCounter(textarea, maxLength, minLength);
           }
+          // Add blur validation for character limits with red border
+          if(minLength !== null || maxLength !== null){
+            const validateTextarea = function(){
+              const val = (this.value || '');
+              const len = val.length;
+              let isValid = true;
+              // Only validate if there's content (empty is valid unless required)
+              if(len > 0){
+                if(minLength !== null && len < minLength){
+                  isValid = false;
+                }
+                if(maxLength !== null && len > maxLength){
+                  isValid = false;
+                }
+              }
+              this.classList.toggle('input-invalid', !isValid);
+            };
+            textarea.addEventListener('blur', validateTextarea);
+            // Re-validate on input to clear red border when user fixes the issue
+            textarea.addEventListener('input', function(){
+              if(this.classList.contains('input-invalid')){
+                validateTextarea.call(this);
+              }
+            });
+          }
           control = textarea;
         } else if(field.type === 'dropdown' || baseType === 'dropdown'){
           wrapper.classList.add('form-field--dropdown');
@@ -9506,10 +9531,14 @@ function makePosts(){
           urlInput.autocomplete = 'url';
           urlInput.inputMode = 'url';
           // Protect URL input with field limit from 'website' field
-          protectInputMaxLength(urlInput, getFieldLimitsByKey('website').max_length);
+          const urlFieldLimits = getFieldLimitsByKey('website');
+          const urlMinLength = urlFieldLimits.min_length;
+          const urlMaxLength = urlFieldLimits.max_length;
+          protectInputMaxLength(urlInput, urlMaxLength);
           // Add blur validation with red border
-          urlInput.addEventListener('blur', function(){
+          const validateUrlInput = function(){
             const val = (this.value || '').trim();
+            const len = val.length;
             let isValid = true;
             if(val){
               let candidate = val;
@@ -9522,10 +9551,26 @@ function makePosts(){
               } catch(_e){
                 isValid = false;
               }
+              // Character length validation
+              if(isValid){
+                if(urlMinLength !== null && len < urlMinLength){
+                  isValid = false;
+                }
+                if(urlMaxLength !== null && len > urlMaxLength){
+                  isValid = false;
+                }
+              }
             } else {
               isValid = true; // Empty is valid if not required
             }
             this.classList.toggle('input-invalid', !isValid);
+          };
+          urlInput.addEventListener('blur', validateUrlInput);
+          // Re-validate on input to clear red border when user fixes the issue
+          urlInput.addEventListener('input', function(){
+            if(this.classList.contains('input-invalid')){
+              validateUrlInput.call(this);
+            }
           });
           const urlLink = document.createElement('a');
           urlLink.id = linkId;
@@ -10156,11 +10201,16 @@ function makePosts(){
           if(maxLength !== null){
             charCounter = createCharCounter(input, maxLength, minLength);
           }
-          // Add blur validation for email/phone/url with red border
-          if(baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url'){
-            input.addEventListener('blur', function(){
+          // Add blur validation for email/phone/url/character limits with red border
+          const hasFormatValidation = baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url';
+          const hasLengthValidation = minLength !== null || maxLength !== null;
+          if(hasFormatValidation || hasLengthValidation){
+            const validateInput = function(){
               const val = (this.value || '').trim();
+              const len = val.length;
               let isValid = true;
+              
+              // Format validation for special input types
               if(this.type === 'email'){
                 isValid = val === '' || /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val);
               } else if(this.dataset && this.dataset.urlType){
@@ -10197,7 +10247,25 @@ function makePosts(){
                   isValid = true; // Empty is valid if not required
                 }
               }
+              
+              // Character length validation (only if content exists)
+              if(isValid && len > 0){
+                if(minLength !== null && len < minLength){
+                  isValid = false;
+                }
+                if(maxLength !== null && len > maxLength){
+                  isValid = false;
+                }
+              }
+              
               this.classList.toggle('input-invalid', !isValid);
+            };
+            input.addEventListener('blur', validateInput);
+            // Re-validate on input to clear red border when user fixes the issue
+            input.addEventListener('input', function(){
+              if(this.classList.contains('input-invalid')){
+                validateInput.call(this);
+              }
             });
           }
           // Only set control to input if it wasn't already set (e.g., phone fieldset sets control to phoneWrapper)
