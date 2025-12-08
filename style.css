@@ -3384,6 +3384,23 @@ button[aria-expanded="true"] .results-arrow{
 #tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
   display:none;
 }
+#tab-map .map-controls-admin-starting .address-display{
+  width:100%;
+  min-height:36px;
+  padding:8px 12px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:#fff;
+  font-size:14px;
+  line-height:1.4;
+  cursor:pointer;
+  word-break:break-word;
+}
+#tab-map .map-controls-admin-starting .address-display:hover{
+  background:rgba(0,0,0,0.5);
+  border-color:rgba(255,255,255,0.3);
+}
 
 .spin-control-row{
   display:flex;

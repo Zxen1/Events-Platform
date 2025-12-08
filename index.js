@@ -2262,6 +2262,14 @@ let __notifyMapOnInteraction = null;
                 window._startingAddress = data.settings.starting_address;
               }
               
+              // Store starting coordinates globally
+              if(data.settings.starting_lat !== undefined){
+                window._startingLat = parseFloat(data.settings.starting_lat);
+              }
+              if(data.settings.starting_lng !== undefined){
+                window._startingLng = parseFloat(data.settings.starting_lng);
+              }
+              
               // Store starting zoom setting globally (default to 10 if not set)
               window._startingZoom = data.settings.starting_zoom !== undefined ? parseFloat(data.settings.starting_zoom) : 10;
               
@@ -20668,7 +20676,15 @@ function makePosts(){
         requestAnimationFrame(step);
       }else{
         const targetPitch = Number.isFinite(startPitch) ? startPitch : LEGACY_DEFAULT_PITCH;
-        map.easeTo({center:[0,0], zoom:startZoom, pitch:targetPitch, essential:true});
+        // Use starting address coordinates if available, otherwise default to [0,0]
+        let spinCenter = [0, 0];
+        let spinZoom = startZoom;
+        if(window._startingLat && window._startingLng && 
+           Number.isFinite(window._startingLat) && Number.isFinite(window._startingLng)){
+          spinCenter = [window._startingLng, window._startingLat];
+          spinZoom = window._startingZoom || 10;
+        }
+        map.easeTo({center:spinCenter, zoom:spinZoom, pitch:targetPitch, essential:true});
         map.once('moveend', () => requestAnimationFrame(step));
       }
     }
@@ -24394,22 +24410,66 @@ function openPanel(m){
     
     // Initialize Starting Location Geocoder in admin panel
     const startingAddressInput = document.getElementById('adminStartingAddress');
+    const startingLatInput = document.getElementById('adminStartingLat');
+    const startingLngInput = document.getElementById('adminStartingLng');
     const startingGeocoderContainer = document.getElementById('geocoder-admin-starting');
+    const startingAddressDisplay = document.getElementById('startingAddressDisplay');
+    
     if(startingGeocoderContainer && !startingGeocoderContainer.dataset.geocoderAdded){
       startingGeocoderContainer.dataset.geocoderAdded = 'true';
       
-      const saveStartingAddress = async (value)=>{
-        window._startingAddress = value || null;
-        if(startingAddressInput) startingAddressInput.value = value || '';
+      const showGeocoderInput = ()=>{
+        startingGeocoderContainer.hidden = false;
+        if(startingAddressDisplay) startingAddressDisplay.hidden = true;
+        setTimeout(()=>{
+          const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+          if(input) input.focus();
+        }, 50);
+      };
+      
+      const showAddressDisplay = ()=>{
+        const addr = window._startingAddress || '';
+        if(addr.trim() && startingAddressDisplay){
+          startingAddressDisplay.textContent = addr;
+          startingGeocoderContainer.hidden = true;
+          startingAddressDisplay.hidden = false;
+        } else {
+          startingGeocoderContainer.hidden = false;
+          if(startingAddressDisplay) startingAddressDisplay.hidden = true;
+        }
+      };
+      
+      // Click on display to edit
+      if(startingAddressDisplay){
+        startingAddressDisplay.addEventListener('click', showGeocoderInput);
+      }
+      
+      const saveStartingLocation = async (address, lat, lng)=>{
+        window._startingAddress = address || null;
+        window._startingLat = lat || null;
+        window._startingLng = lng || null;
+        
+        if(startingAddressInput) startingAddressInput.value = address || '';
+        if(startingLatInput) startingLatInput.value = lat || '';
+        if(startingLngInput) startingLngInput.value = lng || '';
+        
+        const settings = { starting_address: address || '' };
+        if(lat && lng){
+          settings.starting_lat = lat;
+          settings.starting_lng = lng;
+        }
+        
         try {
           await fetch('/gateway.php?action=save-admin-settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({ starting_address: value })
+            body: JSON.stringify(settings)
           });
         } catch(err){
-          console.warn('Auto-save starting address failed:', err);
+          console.warn('Auto-save starting location failed:', err);
         }
+        
+        showAddressDisplay();
       };
       
       const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
@@ -24419,67 +24479,78 @@ function openPanel(m){
           mapboxgl: window.mapboxgl,
           marker: false,
           placeholder: 'Search for a location...',
-          types: 'place,address,poi',
+          types: 'place,address,poi,region,country',
           limit: 7,
           language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
         };
         const startingGeocoder = new MapboxGeocoder(geocoderOptions);
         
-        // Add geocoder to container
-        startingGeocoderContainer.appendChild(startingGeocoder.onAdd());
+        // Use addTo method for proper initialization
+        startingGeocoder.addTo(startingGeocoderContainer);
         
-        // Set initial value if exists
-        if(window._startingAddress){
-          setTimeout(()=>{
-            const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
-            if(input){
-              input.value = window._startingAddress;
-            }
-          }, 100);
-        }
-        
-        // Handle result selection
+        // Handle result selection - extract coordinates
         startingGeocoder.on('result', (e)=>{
-          if(e.result && e.result.place_name){
-            saveStartingAddress(e.result.place_name);
+          if(e.result){
+            const placeName = e.result.place_name || '';
+            const coords = e.result.center; // [lng, lat]
+            if(coords && coords.length === 2){
+              saveStartingLocation(placeName, coords[1], coords[0]);
+            } else {
+              saveStartingLocation(placeName, null, null);
+            }
           }
         });
         
         // Handle clear
         startingGeocoder.on('clear', ()=>{
-          saveStartingAddress('');
+          saveStartingLocation('', null, null);
         });
         
-        // Also save on blur if user types custom text
+        // Set initial value and show display if exists
         setTimeout(()=>{
           const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
-          if(input && !input.dataset.blurAdded){
-            input.dataset.blurAdded = 'true';
-            input.addEventListener('blur', ()=>{
-              const value = input.value.trim();
-              if(value !== (window._startingAddress || '')){
-                saveStartingAddress(value);
-              }
-            });
+          if(input){
+            if(window._startingAddress){
+              input.value = window._startingAddress;
+            }
+            
+            // Save on blur if user types custom text
+            if(!input.dataset.blurAdded){
+              input.dataset.blurAdded = 'true';
+              input.addEventListener('blur', ()=>{
+                const value = input.value.trim();
+                if(value !== (window._startingAddress || '')){
+                  // Custom text entered - no coordinates
+                  saveStartingLocation(value, null, null);
+                } else if(window._startingAddress){
+                  // Value unchanged, just show display
+                  showAddressDisplay();
+                }
+              });
+            }
           }
-        }, 200);
+          
+          // Show display if we have an address
+          showAddressDisplay();
+        }, 100);
       } else {
         // Fallback: create simple input if Mapbox not ready
         const fallback = document.createElement('input');
         fallback.type = 'text';
         fallback.placeholder = 'Search for a location...';
         fallback.className = 'mapboxgl-ctrl-geocoder--input';
-        fallback.style.cssText = 'width:100%;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.35);color:var(--input-text);font:inherit;';
+        fallback.style.cssText = 'width:100%;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.35);color:#fff;font:inherit;';
         if(window._startingAddress){
           fallback.value = window._startingAddress;
         }
         fallback.addEventListener('blur', ()=>{
-          saveStartingAddress(fallback.value.trim());
+          saveStartingLocation(fallback.value.trim(), null, null);
         });
         fallback.addEventListener('change', ()=>{
-          saveStartingAddress(fallback.value.trim());
+          saveStartingLocation(fallback.value.trim(), null, null);
         });
         startingGeocoderContainer.appendChild(fallback);
+        showAddressDisplay();
       }
     }
     
