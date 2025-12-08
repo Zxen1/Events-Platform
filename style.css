@@ -5832,6 +5832,7 @@ body.filters-active #filterBtn{
 #map{
   position: absolute;
   inset: 0;
+  opacity: 0;
 }
 
 .map-overlay{
