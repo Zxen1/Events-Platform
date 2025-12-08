@@ -750,19 +750,22 @@ select.venue-select,
   content:'';
   position:absolute;
   top:50%;
-  right:12px;
+  right:10px;
   width:8px;
   height:8px;
   border-style:solid;
   border-width:0 2px 2px 0;
   border-color:var(--button-text, #ffffff);
-  transform:translateY(-50%) rotate(45deg);
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
   transition:transform .3s ease;
   pointer-events:none;
   z-index:2;
+  transform-origin:center center;
 }
 *:has(.venue-select:focus)::after{
-  transform:translateY(-50%) rotate(-135deg);
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
 }
 select option{
   background: var(--dropdown-bg);
@@ -981,6 +984,7 @@ input[type="checkbox"]{
   border-color:currentColor !important;
   color:inherit;
   transition:transform .3s;
+  transform-origin:center center;
 }
 
 .options-dropdown > button{
@@ -1000,15 +1004,16 @@ input[type="checkbox"]{
 .options-dropdown .results-arrow{
   position:absolute;
   top:50%;
-  right:12px;
-  transform:translateY(-50%) rotate(45deg);
-  margin-right:0;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
   pointer-events:none;
 }
 
 button[aria-expanded="true"] .dropdown-arrow,
 button[aria-expanded="true"] .results-arrow{
-  transform:translateY(-50%) rotate(-135deg);
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
 }
 
 /* ========================================
@@ -4153,7 +4158,7 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
   border:1px solid rgba(255,255,255,0.1);
   text-align:left !important;
-  padding-left:12px;
+  padding-left:10px;
   padding-right:30px;
   z-index:65;
   display:flex;
@@ -4916,6 +4921,11 @@ body.hide-ads .ad-board{
   border-radius:8px;
   background:rgba(0,0,0,0.35);
   color:var(--button-text);
+  padding-left:10px;
+  padding-right:10px;
+  display:flex;
+  align-items:center;
+  box-sizing:border-box;
 }
 #tab-forms .form-container .panel-field input[readonly],
 #memberPanel .member-create-fields .panel-field input[readonly]{
@@ -4936,14 +4946,14 @@ body.hide-ads .ad-board{
 #memberPanel .member-create-fields .panel-field textarea{
   resize:vertical;
   min-height:120px;
-  padding:8px 12px;
+  padding:10px;
 }
 #tab-forms .form-container .panel-field select,
 #tab-forms .form-container .form-field--dropdown .form-select,
 #memberPanel .member-create-fields .panel-field select,
 #memberPanel .member-create-fields .form-field--dropdown .form-select{
   height:36px;
-  padding:0 30px 0 12px;
+  padding:0 30px 0 10px;
   width:100%;
   box-sizing:border-box;
   max-width:100%;
@@ -4970,6 +4980,37 @@ input.input-invalid,
 textarea.input-invalid{
   border:2px solid red;
 }
+
+/* ========================================
+   Form Input Consistency
+   - All inputs: 10px left padding, vertically centered content
+   - All dropdowns: 10px right padding for arrow, arrow centered
+======================================== */
+#tab-forms .form-container input[type="text"],
+#tab-forms .form-container input[type="email"],
+#tab-forms .form-container input[type="tel"],
+#tab-forms .form-container input[type="url"],
+#tab-forms .form-container input[type="number"],
+#memberPanel .member-create-fields input[type="text"],
+#memberPanel .member-create-fields input[type="email"],
+#memberPanel .member-create-fields input[type="tel"],
+#memberPanel .member-create-fields input[type="url"],
+#memberPanel .member-create-fields input[type="number"]{
+  padding-left:10px;
+  padding-right:10px;
+  display:flex;
+  align-items:center;
+  box-sizing:border-box;
+}
+#tab-forms .form-container .options-dropdown > button,
+#memberPanel .member-create-fields .options-dropdown > button{
+  padding-left:10px;
+  padding-right:30px;
+  display:flex;
+  align-items:center;
+  text-align:left;
+}
+
 #tab-forms .form-container .panel-field select:focus,
 #tab-forms .form-container .form-field--dropdown .form-select:focus,
 #memberPanel .member-create-fields .panel-field select:focus,
@@ -5241,8 +5282,10 @@ textarea.input-invalid{
 #memberPanel .member-create-fields .form-url-input{
   width:100%;
   height:36px;
-  padding:0 12px;
+  padding:0 10px;
   box-sizing:border-box;
+  display:flex;
+  align-items:center;
 }
 #tab-forms .form-url-link,
 #memberPanel .member-create-fields .form-url-link{
@@ -8714,9 +8757,13 @@ html, body { cursor: auto !important; }
               margin-left:auto;
               transform:rotate(45deg);
               transition:transform .3s ease;
+              transform-origin:center center;
             }
             #tab-forms .form-btn[aria-expanded="true"] .dropdown-arrow{
               transform:rotate(-135deg);
+            }
+            #tab-forms .form-btn{
+              padding:0 10px;
             }
             #tab-forms .form-field--venues-sessions-pricing .venue-session-editor,
             #memberPanel .member-create-fields .form-field--venues-sessions-pricing .venue-session-editor{
@@ -9723,7 +9770,8 @@ html, body { cursor: auto !important; }
               position:absolute;
               top:50%;
               right:10px;
-              transform:translateY(-50%) rotate(45deg);
+              transform:translate(0, -50%) rotate(45deg);
+              margin-top:-1px;
               display:inline-block;
               width:8px;
               height:8px;
@@ -9732,10 +9780,12 @@ html, body { cursor: auto !important; }
               border-color:currentColor;
               color:inherit;
               pointer-events:none;
+              transform-origin:center center;
             }
             #tab-forms .item-pricing-currency[aria-expanded="true"] .dropdown-arrow,
             #memberPanel .member-create-fields .item-pricing-currency[aria-expanded="true"] .dropdown-arrow{
-              transform:translateY(-50%) rotate(-135deg);
+              transform:translate(0, -50%) rotate(-135deg);
+              margin-top:1px;
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu,
             #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu{
