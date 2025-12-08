@@ -8885,31 +8885,25 @@ function makePosts(){
           if(maxLength !== null){
             charCounter = createCharCounter(textarea, maxLength, minLength);
           }
-          // Add blur validation for character limits with red border
-          if(minLength !== null || maxLength !== null){
-            const validateTextarea = function(){
-              const val = (this.value || '');
-              const len = val.length;
-              let isValid = true;
-              // Only validate if there's content (empty is valid unless required)
-              if(len > 0){
-                if(minLength !== null && len < minLength){
-                  isValid = false;
-                }
-                if(maxLength !== null && len > maxLength){
-                  isValid = false;
-                }
+          // Add blur/input validation for textareas with red border
+          const validateTextarea = function(){
+            const val = (this.value || '');
+            const len = val.length;
+            let isValid = true;
+            // Only validate if there's content
+            if(len > 0){
+              if(minLength !== null && len < minLength){
+                isValid = false;
               }
-              this.classList.toggle('input-invalid', !isValid);
-            };
-            textarea.addEventListener('blur', validateTextarea);
-            // Re-validate on input to clear red border when user fixes the issue
-            textarea.addEventListener('input', function(){
-              if(this.classList.contains('input-invalid')){
-                validateTextarea.call(this);
+              if(maxLength !== null && len > maxLength){
+                isValid = false;
               }
-            });
-          }
+            }
+            this.classList.toggle('input-invalid', !isValid);
+          };
+          textarea.addEventListener('blur', validateTextarea);
+          // Also validate on input for real-time feedback
+          textarea.addEventListener('input', validateTextarea);
           control = textarea;
         } else if(field.type === 'dropdown' || baseType === 'dropdown'){
           wrapper.classList.add('form-field--dropdown');
@@ -9566,12 +9560,8 @@ function makePosts(){
             this.classList.toggle('input-invalid', !isValid);
           };
           urlInput.addEventListener('blur', validateUrlInput);
-          // Re-validate on input to clear red border when user fixes the issue
-          urlInput.addEventListener('input', function(){
-            if(this.classList.contains('input-invalid')){
-              validateUrlInput.call(this);
-            }
-          });
+          // Also validate on input for real-time feedback
+          urlInput.addEventListener('input', validateUrlInput);
           const urlLink = document.createElement('a');
           urlLink.id = linkId;
           urlLink.href = '#';
@@ -10201,55 +10191,43 @@ function makePosts(){
           if(maxLength !== null){
             charCounter = createCharCounter(input, maxLength, minLength);
           }
-          // Add blur validation for email/phone/url/character limits with red border
-          const hasFormatValidation = baseType === 'email' || baseType === 'phone' || baseType === 'website-url' || baseType === 'tickets-url' || input.type === 'email' || input.type === 'tel' || input.dataset.urlType || input.inputMode === 'url';
-          const hasLengthValidation = minLength !== null || maxLength !== null;
-          if(hasFormatValidation || hasLengthValidation){
-            const validateInput = function(){
-              const val = (this.value || '').trim();
-              const len = val.length;
-              let isValid = true;
-              
+          // Add blur/input validation for ALL text inputs with red border
+          // Validates: email format, phone format, URL format, and character limits
+          const validateInput = function(){
+            const val = (this.value || '').trim();
+            const len = val.length;
+            let isValid = true;
+            
+            // Only validate if there's content
+            if(len > 0){
               // Format validation for special input types
-              if(this.type === 'email'){
-                isValid = val === '' || /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val);
+              if(this.type === 'email' || baseType === 'email'){
+                isValid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val);
               } else if(this.dataset && this.dataset.urlType){
-                if(val){
-                  let candidate = val;
-                  if(!candidate.includes('://')){
-                    candidate = 'https://' + candidate;
-                  }
-                  try {
-                    new URL(candidate);
-                    isValid = true;
-                  } catch(_e){
-                    isValid = false;
-                  }
-                } else {
-                  isValid = true; // Empty is valid if not required
+                let candidate = val;
+                if(!candidate.includes('://')){
+                  candidate = 'https://' + candidate;
                 }
-              } else if(this.type === 'url' || this.inputMode === 'url'){
-                if(val){
-                  try {
-                    new URL(val.includes('://') ? val : 'https://' + val);
-                    isValid = true;
-                  } catch(_e){
-                    isValid = false;
-                  }
-                } else {
-                  isValid = true; // Empty is valid if not required
+                try {
+                  new URL(candidate);
+                  isValid = true;
+                } catch(_e){
+                  isValid = false;
                 }
-              } else if(this.type === 'tel' || this.inputMode === 'tel'){
-                if(val){
-                  const digits = val.replace(/\D+/g,'');
-                  isValid = digits.length >= 7 && /^[-+() 0-9]+$/.test(val);
-                } else {
-                  isValid = true; // Empty is valid if not required
+              } else if(this.type === 'url' || this.inputMode === 'url' || baseType === 'website-url' || baseType === 'tickets-url'){
+                try {
+                  new URL(val.includes('://') ? val : 'https://' + val);
+                  isValid = true;
+                } catch(_e){
+                  isValid = false;
                 }
+              } else if(this.type === 'tel' || this.inputMode === 'tel' || baseType === 'phone'){
+                const digits = val.replace(/\D+/g,'');
+                isValid = digits.length >= 7 && /^[-+() 0-9]+$/.test(val);
               }
               
-              // Character length validation (only if content exists)
-              if(isValid && len > 0){
+              // Character length validation
+              if(isValid){
                 if(minLength !== null && len < minLength){
                   isValid = false;
                 }
@@ -10257,17 +10235,13 @@ function makePosts(){
                   isValid = false;
                 }
               }
-              
-              this.classList.toggle('input-invalid', !isValid);
-            };
-            input.addEventListener('blur', validateInput);
-            // Re-validate on input to clear red border when user fixes the issue
-            input.addEventListener('input', function(){
-              if(this.classList.contains('input-invalid')){
-                validateInput.call(this);
-              }
-            });
-          }
+            }
+            
+            this.classList.toggle('input-invalid', !isValid);
+          };
+          input.addEventListener('blur', validateInput);
+          // Also validate on input for real-time feedback
+          input.addEventListener('input', validateInput);
           // Only set control to input if it wasn't already set (e.g., phone fieldset sets control to phoneWrapper)
           if(!control){
             control = input;
