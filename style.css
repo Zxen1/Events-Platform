@@ -3306,6 +3306,85 @@ button[aria-expanded="true"] .results-arrow{
   text-align:left;
   margin:0;
 }
+
+/* Admin Starting Location Geocoder */
+#tab-map .map-defaults-container{
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  background:rgba(0,0,0,0.2);
+  border-radius:8px;
+  padding:16px;
+}
+#tab-map .map-controls-admin-starting{
+  width:100%;
+}
+#tab-map .map-controls-admin-starting .geocoder{
+  flex:1 1 100%;
+  max-width:100%;
+  background:transparent;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0;
+  box-shadow:none;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.35);
+  min-height:36px;
+  height:auto;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder input,
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  height:36px;
+  min-height:36px;
+  line-height:36px;
+  padding:0 12px !important;
+  color:var(--input-text) !important;
+  background:transparent !important;
+  border:none !important;
+  border-radius:8px;
+  font-family:inherit;
+  font-size:14px;
+  width:100%;
+  box-sizing:border-box;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder input::placeholder{
+  color:rgba(255,255,255,0.5);
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions{
+  font-family:inherit !important;
+  font-size:14px !important;
+  background:#1a1a2e;
+  border:1px solid var(--border);
+  border-radius:8px;
+  margin-top:4px;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li,
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li a{
+  font-family:inherit !important;
+  font-size:14px !important;
+  font-weight:400 !important;
+  color:var(--input-text);
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li a:hover,
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions .active a{
+  background:rgba(46,58,114,0.5);
+  color:#fff;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--icon,
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--icon-loading,
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--icon-search{
+  display:none;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--button{
+  background:transparent;
+}
+#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+  display:none;
+}
+
 .spin-control-row{
   display:flex;
   align-items:center;

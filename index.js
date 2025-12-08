@@ -1457,6 +1457,85 @@ let __notifyMapOnInteraction = null;
     });
   }
 
+  /**
+   * Apply starting address - fly map to the configured starting location
+   * Only called when user has no saved location from previous interaction
+   * @param {Object} mapInstance - Mapbox map instance
+   * @param {string} address - Address string (can be coordinates like "40.7128,-74.0060" or place name)
+   */
+  async function applyStartingAddress(mapInstance, address){
+    if(!mapInstance || !address) return;
+    
+    const trimmed = address.trim();
+    if(!trimmed) return;
+    
+    // Check if it looks like coordinates (lat,lng or lng,lat)
+    const coordMatch = trimmed.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+    if(coordMatch){
+      const num1 = parseFloat(coordMatch[1]);
+      const num2 = parseFloat(coordMatch[2]);
+      
+      // Determine if it's lat,lng or lng,lat based on value ranges
+      // Latitude: -90 to 90, Longitude: -180 to 180
+      let lng, lat;
+      if(Math.abs(num1) <= 90 && Math.abs(num2) <= 180){
+        // Assume lat,lng format (common user input)
+        lat = num1;
+        lng = num2;
+      } else if(Math.abs(num2) <= 90 && Math.abs(num1) <= 180){
+        // Assume lng,lat format (GeoJSON/Mapbox format)
+        lng = num1;
+        lat = num2;
+      } else {
+        console.warn('[Starting Address] Invalid coordinates:', trimmed);
+        return;
+      }
+      
+      try {
+        mapInstance.flyTo({
+          center: [lng, lat],
+          zoom: 10,
+          duration: 2000
+        });
+      } catch(err){
+        console.warn('[Starting Address] Failed to fly to coordinates:', err);
+      }
+      return;
+    }
+    
+    // Not coordinates - geocode the address using Mapbox Geocoding API
+    try {
+      const accessToken = mapboxgl.accessToken;
+      if(!accessToken){
+        console.warn('[Starting Address] No Mapbox access token available');
+        return;
+      }
+      
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(trimmed)}.json?access_token=${accessToken}&limit=1`
+      );
+      
+      if(!response.ok){
+        console.warn('[Starting Address] Geocoding request failed');
+        return;
+      }
+      
+      const data = await response.json();
+      if(data.features && data.features.length > 0){
+        const [lng, lat] = data.features[0].center;
+        mapInstance.flyTo({
+          center: [lng, lat],
+          zoom: 10,
+          duration: 2000
+        });
+      } else {
+        console.warn('[Starting Address] No results found for:', trimmed);
+      }
+    } catch(err){
+      console.warn('[Starting Address] Geocoding failed:', err);
+    }
+  }
+
   function createTransparentPlaceholder(width, height){
     const canvas = document.createElement('canvas');
     const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
@@ -1863,22 +1942,19 @@ let __notifyMapOnInteraction = null;
     // Map center is a UI preference - use sensible default if not available, but log it
     let startCenter;
     let startZoom;
+    let hasSavedUserLocation = false; // Track if user has a saved location from interaction
     if(savedView && savedView.center && Array.isArray(savedView.center) && savedView.center.length === 2){
       startCenter = savedView.center;
       startZoom = savedView.zoom || 1.5;
+      hasSavedUserLocation = true;
     } else {
       // No saved view - use sensible default (center of world map) but log it
+      // Don't save to localStorage yet - let starting address take over if set
       console.warn('No saved map view found - using default center. This is expected on first visit.');
       startCenter = [0, 0]; // Center of world map - sensible default
       startZoom = 1.5;
-      // Save this default so it's available next time
-      try{
-        const defaultView = { center: startCenter, zoom: startZoom, bearing: 0 };
-        localStorage.setItem('mapView', JSON.stringify(defaultView));
-      }catch(err){
-        console.error('Failed to save default map view:', err);
-      }
     }
+    window._hasSavedUserLocation = hasSavedUserLocation;
     let lastKnownZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
@@ -2178,6 +2254,17 @@ let __notifyMapOnInteraction = null;
               
               // Apply map card display setting
               document.body.setAttribute('data-map-card-display', mapCardDisplay);
+              
+              // Store starting address setting globally
+              if(data.settings.starting_address){
+                window._startingAddress = data.settings.starting_address;
+              }
+              
+              // Initialize Starting Address input
+              const startingAddressInput = document.getElementById('adminStartingAddress');
+              if(startingAddressInput && data.settings.starting_address){
+                startingAddressInput.value = data.settings.starting_address;
+              }
               
               // Add refresh map cards button handler
               // Add change listeners for map card display radios
@@ -20507,6 +20594,11 @@ function makePosts(){
             applyFilters();
           }
         });
+        
+        // Apply starting address if user has no saved location
+        if(!window._hasSavedUserLocation && window._startingAddress){
+          applyStartingAddress(map, window._startingAddress);
+        }
       });
 
       map.on('style.load', ()=>{
@@ -24285,6 +24377,97 @@ function openPanel(m){
           }
         }
       });
+    }
+    
+    // Initialize Starting Location Geocoder in admin panel
+    const startingAddressInput = document.getElementById('adminStartingAddress');
+    const startingGeocoderContainer = document.getElementById('geocoder-admin-starting');
+    if(startingGeocoderContainer && !startingGeocoderContainer.dataset.geocoderAdded){
+      startingGeocoderContainer.dataset.geocoderAdded = 'true';
+      
+      const saveStartingAddress = async (value)=>{
+        window._startingAddress = value || null;
+        if(startingAddressInput) startingAddressInput.value = value || '';
+        try {
+          await fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ starting_address: value })
+          });
+        } catch(err){
+          console.warn('Auto-save starting address failed:', err);
+        }
+      };
+      
+      const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+      if(mapboxReady){
+        const geocoderOptions = {
+          accessToken: window.mapboxgl.accessToken,
+          mapboxgl: window.mapboxgl,
+          marker: false,
+          placeholder: 'Search for a location...',
+          types: 'place,address,poi',
+          limit: 7,
+          language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+        };
+        const startingGeocoder = new MapboxGeocoder(geocoderOptions);
+        
+        // Add geocoder to container
+        startingGeocoderContainer.appendChild(startingGeocoder.onAdd());
+        
+        // Set initial value if exists
+        if(window._startingAddress){
+          setTimeout(()=>{
+            const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+            if(input){
+              input.value = window._startingAddress;
+            }
+          }, 100);
+        }
+        
+        // Handle result selection
+        startingGeocoder.on('result', (e)=>{
+          if(e.result && e.result.place_name){
+            saveStartingAddress(e.result.place_name);
+          }
+        });
+        
+        // Handle clear
+        startingGeocoder.on('clear', ()=>{
+          saveStartingAddress('');
+        });
+        
+        // Also save on blur if user types custom text
+        setTimeout(()=>{
+          const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+          if(input && !input.dataset.blurAdded){
+            input.dataset.blurAdded = 'true';
+            input.addEventListener('blur', ()=>{
+              const value = input.value.trim();
+              if(value !== (window._startingAddress || '')){
+                saveStartingAddress(value);
+              }
+            });
+          }
+        }, 200);
+      } else {
+        // Fallback: create simple input if Mapbox not ready
+        const fallback = document.createElement('input');
+        fallback.type = 'text';
+        fallback.placeholder = 'Search for a location...';
+        fallback.className = 'mapboxgl-ctrl-geocoder--input';
+        fallback.style.cssText = 'width:100%;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.35);color:var(--input-text);font:inherit;';
+        if(window._startingAddress){
+          fallback.value = window._startingAddress;
+        }
+        fallback.addEventListener('blur', ()=>{
+          saveStartingAddress(fallback.value.trim());
+        });
+        fallback.addEventListener('change', ()=>{
+          saveStartingAddress(fallback.value.trim());
+        });
+        startingGeocoderContainer.appendChild(fallback);
+      }
     }
     
     // Auto-save welcome message enabled checkbox
