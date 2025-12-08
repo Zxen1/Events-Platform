@@ -28619,16 +28619,23 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
+        // Force reload all stylesheets with cache buster
+        const timestamp = Date.now();
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+          const href = link.href.split('?')[0];
+          link.href = href + '?_cb=' + timestamp;
+        });
+        
         console.log('[Clear] All storage cleared! Reloading...');
         
-        // Reload with cache bypass (force reload from server)
+        // Reload with cache bypass
         setTimeout(() => {
-          location.reload(true);
-        }, 100);
+          window.location.reload();
+        }, 200);
       } catch(err){
         console.error('[Clear] Error:', err);
         // Still reload even if there's an error
-        location.reload(true);
+        window.location.reload();
       }
     });
     
