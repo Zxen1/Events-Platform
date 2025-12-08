@@ -2189,7 +2189,7 @@ let __notifyMapOnInteraction = null;
                   const welcomeModal = document.getElementById('welcome-modal');
                   if(welcomeModal && typeof window.openWelcome === 'function'){
                     window.openWelcome();
-                    localStorage.setItem('welcome-seen','true');
+                    // Don't set welcome-seen here - it will be set when user closes the modal
                   }
                 }
               }
@@ -26328,6 +26328,8 @@ function closePanel(m){
   if(m.id === 'welcome-modal'){
     const mc = document.querySelector('.map-controls-map');
     if(mc) mc.style.display = '';
+    // Mark welcome as seen when user closes it
+    localStorage.setItem('welcome-seen','true');
   }
   m.setAttribute('inert','');
   if(content && content.dataset.side){
