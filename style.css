@@ -8887,8 +8887,13 @@ html, body { cursor: auto !important; }
             #tab-forms .session-date-input,
             #memberPanel .member-create-fields .venue-name-input,
             #memberPanel .member-create-fields .session-date-input{
-              background:#2e3a72 !important;
-              color:var(--button-text);
+              background:rgba(0,0,0,0.35);
+              color:#2e3b73;
+              font-weight:bold;
+            }
+            #tab-forms .venue-name-input,
+            #memberPanel .member-create-fields .venue-name-input{
+              font-size:16px;
             }
             #tab-forms .session-time-input,
             #memberPanel .member-create-fields .session-time-input{
