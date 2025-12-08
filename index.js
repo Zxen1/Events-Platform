@@ -1941,21 +1941,16 @@ let __notifyMapOnInteraction = null;
       }
     }
 
-    // Map center is a UI preference - use sensible default if not available, but log it
-    let startCenter;
-    let startZoom;
+    // Map center is a UI preference - use saved location if available
+    let startCenter = null; // Will be set from saved location or admin starting location
+    let startZoom = null;
     let hasSavedUserLocation = false; // Track if user has a saved location from interaction
     if(savedView && savedView.center && Array.isArray(savedView.center) && savedView.center.length === 2){
       startCenter = savedView.center;
       startZoom = savedView.zoom || 1.5;
       hasSavedUserLocation = true;
-    } else {
-      // No saved view - use sensible default (center of world map) but log it
-      // Don't save to localStorage yet - let starting address take over if set
-      console.warn('No saved map view found - using default center. This is expected on first visit.');
-      startCenter = [0, 0]; // Center of world map - sensible default
-      startZoom = 1.5;
     }
+    // If no saved location, startCenter will be set from admin settings when they load
     window._hasSavedUserLocation = hasSavedUserLocation;
     let lastKnownZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
@@ -2104,16 +2099,37 @@ let __notifyMapOnInteraction = null;
       // Flag to track if admin settings have been loaded - prevents saving empty values
       window._adminSettingsLoaded = false;
       
-      // Load admin settings from database
+      // Promise for map creation to wait on (settings load is fast - just DB query)
+      let resolveAdminSettings;
+      window._adminSettingsReady = new Promise(resolve => { resolveAdminSettings = resolve; });
+
+      // Load admin settings from database (includes messages for welcome modal)
       (async function loadAdminSettings(){
         try {
-          const response = await apiRequest('/gateway.php?action=get-admin-settings', {
+          const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
           }, 5000); // 5 second cache
           if(response.ok){
             const data = await response.json();
             if(data.success && data.settings){
+              // Cache messages immediately (for welcome modal - no second API call needed)
+              if(data.messages && Array.isArray(data.messages)){
+                const messagesMap = {};
+                data.messages.forEach(container => {
+                  if(!container.messages || !Array.isArray(container.messages)) return;
+                  container.messages.forEach(message => {
+                    if(message.is_active !== false && message.is_active !== 0){
+                      messagesMap[message.message_key] = message;
+                    }
+                  });
+                });
+                // Cache for both user and admin (includes all messages)
+                messagesCache.user = messagesMap;
+                messagesCache.admin = messagesMap;
+                messagesCache.lastFetch = Date.now();
+              }
+              
               // Update the local variables directly first
               spinLoadStart = data.settings.spin_on_load || false;
               spinLoadType = data.settings.spin_load_type || 'everyone';
@@ -2138,6 +2154,11 @@ let __notifyMapOnInteraction = null;
                 if(window.subcategoryMarkers){
                   window.subcategoryMarkers['multi-post-icon'] = multiPostIconPath;
                 }
+              }
+              
+              // Store marker cluster icon globally (used by ensureClusterIconImage)
+              if(data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
+                window._markerClusterIcon = data.settings.marker_cluster_icon.trim();
               }
               
               // Apply map shadow and console filter settings (no localStorage caching)
@@ -2178,14 +2199,13 @@ let __notifyMapOnInteraction = null;
               if(data.settings.welcome_enabled !== undefined){
                 window._welcomeEnabled = data.settings.welcome_enabled;
                 
-                // If welcome is enabled and user hasn't seen it, show it now
+                // If welcome is enabled and user hasn't seen it, show it immediately
+                // Messages are already cached above - no additional API call needed
                 if(data.settings.welcome_enabled && !localStorage.getItem('welcome-seen')){
                   const welcomeModal = document.getElementById('welcome-modal');
                   if(welcomeModal && typeof window.openWelcome === 'function'){
-                    setTimeout(() => {
-                      window.openWelcome();
-                      localStorage.setItem('welcome-seen','true');
-                    }, 500); // Small delay to ensure page is ready
+                    window.openWelcome();
+                    localStorage.setItem('welcome-seen','true');
                   }
                 }
               }
@@ -2272,6 +2292,20 @@ let __notifyMapOnInteraction = null;
               
               // Store starting zoom setting globally (default to 10 if not set)
               window._startingZoom = data.settings.starting_zoom !== undefined ? parseFloat(data.settings.starting_zoom) : 10;
+              
+              // Set startCenter/startZoom from admin starting location if user has no saved location
+              // ONLY uses coordinates - no geocoding on page load (admin saves coordinates via geocoder)
+              if(!window._hasSavedUserLocation){
+                if(window._startingLat && window._startingLng &&
+                   Number.isFinite(window._startingLat) && Number.isFinite(window._startingLng)){
+                  startCenter = [window._startingLng, window._startingLat];
+                  startZoom = window._startingZoom || 10;
+                } else {
+                  // No coordinates - admin needs to set starting location via geocoder
+                  startCenter = [0, 0];
+                  startZoom = 1.5;
+                }
+              }
               
               // Initialize Starting Address input
               const startingAddressInput = document.getElementById('adminStartingAddress');
@@ -2585,6 +2619,7 @@ let __notifyMapOnInteraction = null;
             }
               // Mark settings as loaded - safe to save now
               window._adminSettingsLoaded = true;
+              resolveAdminSettings();
               console.log('[Admin Settings] Loaded successfully - saving enabled');
               
               // Refresh saved state to capture all loaded settings as the baseline
@@ -2600,6 +2635,7 @@ let __notifyMapOnInteraction = null;
           // Don't use defaults - error should be visible
           // Settings remain unloaded - saving will be blocked
           window._adminSettingsLoaded = false;
+          resolveAdminSettings(); // Still resolve so map doesn't hang
         }
       })();
       let markersLoaded = false;
@@ -2632,17 +2668,9 @@ let __notifyMapOnInteraction = null;
         let clusterLayersVisible = true;
 
         async function ensureClusterIconImage(mapInstance){
-          // Load cluster icon URL from admin_settings - no fallbacks
-            try {
-              const response = await apiRequest('/gateway.php?action=get-admin-settings', {}, 5000);
-              if(response.ok){
-                const data = await response.json();
-              if(data.success && data.settings && data.settings.marker_cluster_icon && typeof data.settings.marker_cluster_icon === 'string' && data.settings.marker_cluster_icon.trim()){
-                CLUSTER_ICON_URL = data.settings.marker_cluster_icon.trim();
-                }
-              }
-            } catch(err) {
-              console.error('Failed to load marker cluster icon setting:', err);
+          // Use cluster icon URL from main settings load (no additional API call)
+          if(window._markerClusterIcon){
+            CLUSTER_ICON_URL = window._markerClusterIcon;
           }
           
           return new Promise(resolve => {
@@ -20193,6 +20221,16 @@ function makePosts(){
       if(typeof mapboxgl.setLogLevel === 'function'){
         mapboxgl.setLogLevel('error');
       }
+      
+      // Wait for settings to load (fast - just DB query for coordinates)
+      await window._adminSettingsReady;
+      
+      // Ensure startCenter has a value (settings should have set it, fallback if not)
+      if(!startCenter){
+        startCenter = [0, 0];
+        startZoom = 1.5;
+      }
+      
         map = new mapboxgl.Map({
           container:'map',
           style:'mapbox://styles/mapbox/standard',
@@ -20616,10 +20654,6 @@ function makePosts(){
           }
         });
         
-        // Apply starting address if user has no saved location
-        if(!window._hasSavedUserLocation && window._startingAddress){
-          applyStartingAddress(map, window._startingAddress);
-        }
       });
 
       map.on('style.load', ()=>{
@@ -20676,15 +20710,8 @@ function makePosts(){
         requestAnimationFrame(step);
       }else{
         const targetPitch = Number.isFinite(startPitch) ? startPitch : LEGACY_DEFAULT_PITCH;
-        // Use starting address coordinates if available, otherwise default to [0,0]
-        let spinCenter = [0, 0];
-        let spinZoom = startZoom;
-        if(window._startingLat && window._startingLng && 
-           Number.isFinite(window._startingLat) && Number.isFinite(window._startingLng)){
-          spinCenter = [window._startingLng, window._startingLat];
-          spinZoom = window._startingZoom || 10;
-        }
-        map.easeTo({center:spinCenter, zoom:spinZoom, pitch:targetPitch, essential:true});
+        // Use startCenter which is already set from saved location or admin starting location
+        map.easeTo({center:startCenter, zoom:startZoom, pitch:targetPitch, essential:true});
         map.once('moveend', () => requestAnimationFrame(step));
       }
     }
