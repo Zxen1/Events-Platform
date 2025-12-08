@@ -2614,6 +2614,9 @@ button[aria-expanded="true"] .results-arrow{
   flex:1 1 120px;
   min-width:120px;
 }
+#memberPanel .member-form{
+  margin-bottom:100px;
+}
 #memberPanel .member-create-actions{
   display:flex;
   flex-wrap:wrap;
