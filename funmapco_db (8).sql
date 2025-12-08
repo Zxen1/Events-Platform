@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 08, 2025 at 10:56 AM
+-- Generation Time: Dec 08, 2025 at 05:43 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -383,18 +383,18 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length
 (1, 'title', 'text', 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
 (2, 'description', 'textarea', 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
 (3, 'images', 'images', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(4, 'venue-name', 'text', 2, 200, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(4, 'venue-name', 'text', 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
 (5, 'address-line', 'text', 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(6, 'latitude', 'decimal', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(7, 'longitude', 'decimal', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(8, 'session-date', 'date', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(9, 'session-time', 'time', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(10, 'seating-area', 'text', 1, 100, 1, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
-(11, 'pricing-tier', 'text', 1, 100, 1, '2025-10-29 23:32:47', '2025-12-07 03:34:36'),
-(12, 'ticket-price', 'decimal(10,2)', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(6, 'latitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
+(7, 'longitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
+(8, 'session-date', 'date', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:22'),
+(9, 'session-time', 'time', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:27'),
+(10, 'seating-area', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:44'),
+(11, 'pricing-tier', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
+(12, 'ticket-price', 'decimal(10,2)', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
 (13, 'currency', 'dropdown', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(14, 'text-box', 'text', 1, 500, 1, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
-(15, 'text-area', 'textarea', 1, 2000, 1, '2025-10-30 17:11:57', '2025-12-07 03:13:38'),
+(14, 'text-box', 'text', 3, 500, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:12'),
+(15, 'text-area', 'textarea', 10, 2000, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:18'),
 (16, 'dropdown', 'dropdown', 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
 (17, 'radio', 'radio', 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
 (18, 'email', 'email', 5, 254, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
@@ -443,7 +443,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (14, 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Venue Ticketing', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-06 17:08:19');
+(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Session Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-08 06:42:42');
 
 -- --------------------------------------------------------
 
