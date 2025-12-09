@@ -2183,79 +2183,6 @@ let __notifyMapOnInteraction = null;
                       console.error(`Failed to save/update ${picker.label}:`, err);
                       alert(`Failed to save ${picker.label}: ${err.message}`);
                     }
-                  
-                  // Update local settings immediately
-                  settings[picker.settingKey] = value;
-                  
-                  // Get map instance - try multiple methods
-                  let mapInstance = null;
-                  if(typeof window.getMapInstance === 'function'){
-                    mapInstance = window.getMapInstance();
-                  } else if(typeof map !== 'undefined' && map){
-                    mapInstance = map;
-                  } else if(typeof window.map !== 'undefined' && window.map){
-                    mapInstance = window.map;
-                  }
-                  
-                  // Save to admin_settings FIRST
-                  const settingsToSave = {};
-                  settingsToSave[picker.settingKey] = value;
-                  
-                  try {
-                    const response = await fetch('/gateway.php?action=save-admin-settings', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                      body: JSON.stringify(settingsToSave)
-                    });
-                    if(!response.ok){
-                      throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    if(!data.success){
-                      throw new Error(data.message || 'Save failed');
-                    }
-                    console.log(`${picker.label} saved to database.`);
-                    
-                    // Now refresh map with saved value
-                    if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
-                      // Handle cluster icon update
-                      const CLUSTER_ICON_ID = 'cluster-icon';
-                      const CLUSTER_LAYER_ID = 'post-clusters';
-                      if(mapInstance.hasImage(CLUSTER_ICON_ID)){
-                        mapInstance.removeImage(CLUSTER_ICON_ID);
-                      }
-                      const img = await loadMarkerLabelImage(value);
-                      if(img && img.width > 0 && img.height > 0){
-                        const pixelRatio = img.width >= 256 ? 2 : 1;
-                        mapInstance.addImage(CLUSTER_ICON_ID, img, { pixelRatio });
-                        const layer = mapInstance.getLayer(CLUSTER_LAYER_ID);
-                        if(layer){
-                          mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'icon-image', CLUSTER_ICON_ID);
-                        }
-                      }
-                    } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
-                      // Update window.adminSettings immediately for instant effect
-                      if(!window.adminSettings) window.adminSettings = {};
-                      window.adminSettings[picker.settingKey] = value;
-                      // Refresh map card styles
-                      if(window.MapCards && window.MapCards.refreshMapCardStyles){
-                        window.MapCards.refreshMapCardStyles();
-                      }
-                    } else if(picker.settingKey === 'multi_post_icon'){
-                      // Update both stores immediately
-                      if(!window.adminSettings) window.adminSettings = {};
-                      window.adminSettings.multi_post_icon = value;
-                      if(window.subcategoryMarkers){
-                        window.subcategoryMarkers['multi-post-icon'] = value;
-                      }
-                      // Refresh marker icons
-                      if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
-                        window.MapCards.refreshAllMarkerIcons();
-                      }
-                    }
-                  } catch(err) {
-                    console.error(`Failed to save/update ${picker.label}:`, err);
-                    alert(`Failed to save ${picker.label}: ${err.message}`);
                   }
                 }
               },
@@ -2266,7 +2193,6 @@ let __notifyMapOnInteraction = null;
                 return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || null;
               })()
             });
-          }
           }
         });
       }
@@ -17524,6 +17450,11 @@ function makePosts(){
         if(typeof window.attachSystemImagePicker === 'function'){
           window.attachSystemImagePicker(iconPickerButton, iconPicker, {
             getCurrentPath: () => cat.icon || '',
+            iconFolder: (() => {
+              const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+              return systemImagesFolderInput?.value.trim() || window.adminSettings?.system_images_folder || window.systemImagesFolder || null;
+            })(),
+            useIconFolder: true,
             onSelect: (value) => {
               // Update button immediately
               if(value){
