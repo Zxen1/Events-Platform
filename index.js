@@ -3264,67 +3264,15 @@ let __notifyMapOnInteraction = null;
       }
       updateLogoClickState();
 
-      // Scale welcome modal map controls to match logo width using CSS zoom (not transform, which breaks dropdowns)
-      function scaleWelcomeControls(){
-        const logo = document.querySelector('#welcomeBody .welcome-logo');
-        const controls = document.querySelector('#welcomeBody .map-controls-welcome');
-        if(!logo || !controls) return;
-        
-        // Reset zoom to measure natural width
-        controls.style.zoom = '1';
-        const controlsWidth = controls.offsetWidth;
-        const logoWidth = logo.offsetWidth;
-        
-        if(controlsWidth > 0 && logoWidth > 0){
-          const scale = logoWidth / controlsWidth;
-          controls.style.zoom = scale;
-          // Show controls now that they're scaled
-          controls.style.visibility = 'visible';
-          controls.style.opacity = '1';
-        }
-      }
-      
-      // Debounced resize handler for welcome controls
-      let welcomeResizeTimer = null;
-      function handleWelcomeResize(){
-        clearTimeout(welcomeResizeTimer);
-        welcomeResizeTimer = setTimeout(scaleWelcomeControls, 100);
-      }
-      
       async function openWelcome(){
         const popup = document.getElementById('welcome-modal');
         if(!popup) return;
-        
-        const logo = document.querySelector('#welcomeBody .welcome-logo');
-        const controls = document.querySelector('#welcomeBody .map-controls-welcome');
-        
-        // Hide controls initially until logo loads
-        if(controls){
-          controls.style.visibility = 'hidden';
-          controls.style.opacity = '0';
-        }
         
         openPanel(popup);
         const body = document.getElementById('welcomeBody');
         if(body){
           body.style.padding = '20px';
         }
-        
-        // Wait for logo to load before scaling controls
-        if(logo && logo.src){
-          if(logo.complete && logo.naturalWidth > 0){
-            // Logo already loaded
-            requestAnimationFrame(() => scaleWelcomeControls());
-          } else {
-            // Wait for logo to load
-            logo.onload = () => {
-              requestAnimationFrame(() => scaleWelcomeControls());
-            };
-          }
-        }
-        
-        // Listen for resize while modal is open
-        window.addEventListener('resize', handleWelcomeResize);
       }
       window.openWelcome = openWelcome;
 
@@ -3332,8 +3280,6 @@ let __notifyMapOnInteraction = null;
         const popup = document.getElementById('welcome-modal');
         if(popup.classList.contains('show')){
           closePanel(popup);
-          // Remove resize listener when modal closes
-          window.removeEventListener('resize', handleWelcomeResize);
         } else {
           openWelcome();
         }
