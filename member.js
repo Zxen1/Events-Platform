@@ -911,17 +911,32 @@
     // buildVenueSessionEditor removed - using working buildVenueSessionPreview from index.js instead
 
     async function initializeMemberFormbuilderSnapshot(){
-      const loadingMsg = await getMessage('msg_post_loading_form', {}, false) || 'Loading form fields…';
+      // If snapshot is already loaded, just render formpicker immediately
+      if(memberSnapshot && typeof memberSnapshot === 'object' && memberSnapshot.categories && Array.isArray(memberSnapshot.categories)){
+        // Snapshot already loaded - render immediately
+        renderFormPicker();
+        return;
+      }
+      
+      // Show loading state immediately but don't block tab opening
       // Don't close form if venue editor exists (check before clearing)
       const hasVenueEditor = formFields && formFields.querySelector('.venue-session-editor');
       if(!hasVenueEditor){
-        renderEmptyState(loadingMsg);
+        // Show loading state immediately without waiting for message
+        renderEmptyState('Loading form fields…');
         if(formWrapper) formWrapper.hidden = true;
         if(formFields) formFields.innerHTML = '';
         if(postButton) postButton.disabled = true;
+        // Update message asynchronously if available
+        getMessage('msg_post_loading_form', {}, false).then(msg => {
+          if(msg && msg !== 'Loading form fields…'){
+            renderEmptyState(msg);
+          }
+        }).catch(() => {});
       }
       try{
         // LAZY LOADING: Use getFormbuilderSnapshotPromise() which loads on-demand
+        // It will use cached snapshot if available
         const getSnapshotPromise = (typeof window !== 'undefined' && typeof window.getFormbuilderSnapshotPromise === 'function')
           ? window.getFormbuilderSnapshotPromise
           : null;

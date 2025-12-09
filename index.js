@@ -4025,12 +4025,17 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     // NO CACHING - Always fetch fresh formbuilder snapshot for development
 
     function getFormbuilderSnapshotPromise() {
-      // NO CACHING - always fetch fresh snapshot
+      // Check cache first - if already loaded, return immediately
+      if (window.__persistedFormbuilderSnapshot && typeof window.__persistedFormbuilderSnapshot === 'object') {
+        return Promise.resolve(window.__persistedFormbuilderSnapshot);
+      }
+      // Check for inline snapshot
       const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
       if (inlineSnapshot) {
         window.__persistedFormbuilderSnapshot = inlineSnapshot;
         return Promise.resolve(inlineSnapshot);
       }
+      // Only fetch if not cached
       if (typeof fetchSavedFormbuilderSnapshot === 'function') {
         return fetchSavedFormbuilderSnapshot().then(snapshot => {
           window.__persistedFormbuilderSnapshot = snapshot;
@@ -26775,11 +26780,14 @@ document.addEventListener('pointerdown', (e) => {
         panel.removeAttribute('hidden');
       }
       // LAZY LOAD: Load formbuilder when member opens Create Post tab
+      // Tab opens immediately, content loads asynchronously
       if(btn.dataset.tab === 'create'){
-        // initializeMemberFormbuilderSnapshot() will load the snapshot and set up member forms
-        // It handles its own loading, so we just need to call it
+        // Open tab first, then load content asynchronously
         if(typeof window.initializeMemberFormbuilderSnapshot === 'function'){
-          window.initializeMemberFormbuilderSnapshot();
+          // Use setTimeout to ensure tab opens first, then load content
+          setTimeout(() => {
+            window.initializeMemberFormbuilderSnapshot();
+          }, 0);
         } else {
           console.error('initializeMemberFormbuilderSnapshot not available - forms.js may not be loaded');
         }
