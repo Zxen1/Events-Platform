@@ -3275,9 +3275,12 @@ let __notifyMapOnInteraction = null;
         const controlsWidth = controls.offsetWidth;
         const logoWidth = logo.offsetWidth;
         
+        // Only scale if both have valid widths and scale is reasonable (0.5 to 2.0)
         if(controlsWidth > 0 && logoWidth > 0){
           const scale = logoWidth / controlsWidth;
-          controls.style.zoom = scale;
+          if(scale >= 0.5 && scale <= 2.0){
+            controls.style.zoom = scale;
+          }
         }
       }
       

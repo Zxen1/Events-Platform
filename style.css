@@ -6418,7 +6418,7 @@ body.filters-active #filterBtn{
 #welcomeBody .map-control-row{
   justify-content:center;
   width:fit-content;
-  max-width:100%;
+  max-width:600px;
   margin:0 auto;
   gap:10px;
   flex-wrap:nowrap;
