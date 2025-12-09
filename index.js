@@ -17897,17 +17897,20 @@ function makePosts(){
     
     // Initialize messages categories when admin panel opens
     if(messagesCats){
-      // Load message category icons before rendering
+      // Load message category icons before rendering, then load messages and tooltips
       (async function(){
         await loadMessageCategoryIcons();
         renderMessagesCategories();
+        
+        // Wait for DOM to update after rendering categories
+        await new Promise(resolve => setTimeout(resolve, 0));
+        
+        // Load messages from database (admin panel sees all messages including email/admin)
+        await loadAdminMessages();
+        
+        // Load fieldset tooltips
+        await loadFieldsetTooltips();
       })();
-      
-      // Load messages from database (admin panel sees all messages including email/admin)
-      loadAdminMessages();
-      
-      // Load fieldset tooltips
-      loadFieldsetTooltips();
       
       // Add drag and drop functionality for Messages tab categories
       let draggedMessageCategory = null;
