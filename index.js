@@ -2193,7 +2193,8 @@ let __notifyMapOnInteraction = null;
               })()
             });
           }
-        });
+        }
+      });
       }
       
       // Flag to track if admin settings have been loaded - prevents saving empty values
