@@ -2079,22 +2079,29 @@ let __notifyMapOnInteraction = null;
       window._adminSettingsReady = new Promise(resolve => { resolveAdminSettings = resolve; });
 
       // Performance timing: Track startup component load times
-      const pageStartTime = performance.timing ? performance.timing.navigationStart : performance.now();
+      // Use performance.now() for consistent relative timing
+      const pageStartTime = performance.now();
       window.__startupTimings = {
         start: pageStartTime,
         components: {},
         // Function to log all timings
         log: function(){
-          const total = performance.now() - this.start;
+          const now = performance.now();
+          const total = now - this.start;
           console.group('🚀 Startup Performance Timings');
           console.log(`Total time: ${total.toFixed(2)}ms`);
           console.log('');
-          Object.keys(this.components).forEach(key => {
+          // Sort by duration (longest first)
+          const sorted = Object.keys(this.components).sort((a, b) => {
+            return this.components[b].duration - this.components[a].duration;
+          });
+          sorted.forEach(key => {
             const comp = this.components[key];
-            const pct = ((comp.duration / total) * 100).toFixed(1);
+            const pct = total > 0 ? ((comp.duration / total) * 100).toFixed(1) : '0.0';
             const status = comp.error ? '❌' : '✅';
             console.log(`${status} ${key}: ${comp.duration.toFixed(2)}ms (${pct}%)`);
             if(comp.error) console.log(`   Error: ${comp.error}`);
+            if(comp.tilesLoaded !== undefined) console.log(`   Tiles loaded: ${comp.tilesLoaded}`);
           });
           console.groupEnd();
         }
@@ -2105,9 +2112,9 @@ let __notifyMapOnInteraction = null;
       if(headerEl){
         const headerEnd = performance.now();
         window.__startupTimings.components.header = {
-          start: window.__startupTimings.start,
+          start: pageStartTime,
           end: headerEnd,
-          duration: headerEnd - window.__startupTimings.start
+          duration: headerEnd - pageStartTime
         };
       }
       
