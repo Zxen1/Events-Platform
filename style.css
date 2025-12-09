@@ -6426,6 +6426,12 @@ body.filters-active #filterBtn{
 #welcomeBody .map-controls-welcome{
   pointer-events:auto;
   order:-1;
+  --welcome-control-h:28px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geolocate button,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-compass button{
+  width:var(--welcome-control-h);
+  height:var(--welcome-control-h);
 }
 #welcomeBody .map-control-row > *{
   flex:0 0 auto;
@@ -6445,7 +6451,7 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   gap:0;
-  height:var(--control-h);
+  height:var(--welcome-control-h);
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
   flex:1 1 auto;
@@ -6454,8 +6460,9 @@ body.filters-active #filterBtn{
   padding-bottom:0;
   padding-left:12px;
   padding-right:12px;
-  line-height:var(--control-h);
+  line-height:var(--welcome-control-h);
   font:inherit;
+  font-size:13px;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder,
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder *,
