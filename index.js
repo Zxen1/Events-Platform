@@ -3264,6 +3264,23 @@ let __notifyMapOnInteraction = null;
       }
       updateLogoClickState();
 
+      // Scale welcome modal map controls to match logo width
+      function scaleWelcomeControls(){
+        const logo = document.querySelector('#welcomeBody .welcome-logo');
+        const controls = document.querySelector('#welcomeBody .map-controls-welcome');
+        if(!logo || !controls) return;
+        
+        // Reset zoom to measure natural width
+        controls.style.zoom = '1';
+        const controlsWidth = controls.offsetWidth;
+        const logoWidth = logo.offsetWidth;
+        
+        if(controlsWidth > 0 && logoWidth > 0){
+          const scale = logoWidth / controlsWidth;
+          controls.style.zoom = scale;
+        }
+      }
+      
       async function openWelcome(){
         const popup = document.getElementById('welcome-modal');
         if(!popup) return;
@@ -3273,6 +3290,9 @@ let __notifyMapOnInteraction = null;
         if(body){
           body.style.padding = '20px';
         }
+        
+        // Scale controls to match logo width
+        requestAnimationFrame(() => scaleWelcomeControls());
       }
       window.openWelcome = openWelcome;
 
