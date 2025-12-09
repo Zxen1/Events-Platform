@@ -3268,18 +3268,20 @@ let __notifyMapOnInteraction = null;
       function scaleWelcomeControls(){
         const logo = document.querySelector('#welcomeBody .welcome-logo');
         const controls = document.querySelector('#welcomeBody .map-controls-welcome');
-        if(!logo || !controls) return;
+        const modalContent = document.querySelector('#welcome-modal .modal-content');
+        if(!controls || !modalContent) return;
         
         // Reset zoom to measure natural width
         controls.style.zoom = '1';
         const controlsWidth = controls.offsetWidth;
-        const logoWidth = logo.offsetWidth;
+        // Use logo width if available, otherwise use modal content width minus padding
+        const logoWidth = (logo && logo.offsetWidth > 0) ? logo.offsetWidth : (modalContent.offsetWidth - 40);
         
         if(controlsWidth > 0 && logoWidth > 0){
           const scale = logoWidth / controlsWidth;
           controls.style.zoom = scale;
-          }
         }
+      }
         
       async function openWelcome(){
         const popup = document.getElementById('welcome-modal');
