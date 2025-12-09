@@ -3264,6 +3264,31 @@ let __notifyMapOnInteraction = null;
       }
       updateLogoClickState();
 
+      // Scale welcome modal map controls to match logo width
+      function scaleWelcomeControls(){
+        const logo = document.querySelector('#welcomeBody .welcome-logo');
+        const controls = document.querySelector('#welcomeBody .map-controls-welcome');
+        if(!logo || !controls) return;
+        
+        // Reset scale to measure natural width
+        controls.style.transform = 'none';
+        const controlsWidth = controls.offsetWidth;
+        const logoWidth = logo.offsetWidth;
+        
+        if(controlsWidth > 0 && logoWidth > 0){
+          const scale = logoWidth / controlsWidth;
+          controls.style.transformOrigin = 'center top';
+          controls.style.transform = `scale(${scale})`;
+        }
+      }
+      
+      // Debounced resize handler for welcome controls
+      let welcomeResizeTimer = null;
+      function handleWelcomeResize(){
+        clearTimeout(welcomeResizeTimer);
+        welcomeResizeTimer = setTimeout(scaleWelcomeControls, 100);
+      }
+      
       async function openWelcome(){
         const popup = document.getElementById('welcome-modal');
         if(!popup) return;
@@ -3310,6 +3335,14 @@ let __notifyMapOnInteraction = null;
         if(body){
           body.style.padding = '20px';
         }
+        
+        // Scale controls to match logo width after modal is visible
+        requestAnimationFrame(() => {
+          scaleWelcomeControls();
+        });
+        
+        // Listen for resize while modal is open
+        window.addEventListener('resize', handleWelcomeResize);
       }
       window.openWelcome = openWelcome;
 
@@ -3317,6 +3350,8 @@ let __notifyMapOnInteraction = null;
         const popup = document.getElementById('welcome-modal');
         if(popup.classList.contains('show')){
           closePanel(popup);
+          // Remove resize listener when modal closes
+          window.removeEventListener('resize', handleWelcomeResize);
         } else {
           openWelcome();
         }
