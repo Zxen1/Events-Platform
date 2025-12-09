@@ -3291,8 +3291,8 @@ let __notifyMapOnInteraction = null;
           body.style.padding = '20px';
         }
         
-        // Scale controls to match logo width
-        requestAnimationFrame(() => scaleWelcomeControls());
+        // Scale controls to match logo width (delay for modal layout to settle)
+        setTimeout(() => scaleWelcomeControls(), 50);
       }
       window.openWelcome = openWelcome;
 
