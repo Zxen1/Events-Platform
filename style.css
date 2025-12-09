@@ -9102,10 +9102,11 @@ html, body { cursor: auto !important; }
               overflow-x:hidden;
             }
             
-            /* Vertical layout with filenames for map, messages, and forms tabs */
+            /* Vertical layout with filenames for map, messages, forms, and settings tabs */
             #tab-map .icon-picker-grid,
             #tab-messages .icon-picker-grid,
-            #tab-forms .icon-picker-grid{
+            #tab-forms .icon-picker-grid,
+            #tab-settings .icon-picker-grid{
               display:flex;
               flex-direction:column;
               gap:8px;
@@ -9113,7 +9114,8 @@ html, body { cursor: auto !important; }
             
             #tab-map .icon-picker-option,
             #tab-messages .icon-picker-option,
-            #tab-forms .icon-picker-option{
+            #tab-forms .icon-picker-option,
+            #tab-settings .icon-picker-option{
               display:flex;
               flex-direction:row;
               align-items:center;
@@ -9130,16 +9132,19 @@ html, body { cursor: auto !important; }
             #tab-map .icon-picker-option:hover,
             #tab-messages .icon-picker-option:hover,
             #tab-forms .icon-picker-option:hover,
+            #tab-settings .icon-picker-option:hover,
             #tab-map .icon-picker-option:focus-visible,
             #tab-messages .icon-picker-option:focus-visible,
-            #tab-forms .icon-picker-option:focus-visible{
+            #tab-forms .icon-picker-option:focus-visible,
+            #tab-settings .icon-picker-option:focus-visible{
               background:rgba(255,255,255,0.1);
               border:none;
             }
             
             #tab-map .icon-picker-option img,
             #tab-messages .icon-picker-option img,
-            #tab-forms .icon-picker-option img{
+            #tab-forms .icon-picker-option img,
+            #tab-settings .icon-picker-option img{
               max-width:50px;
               max-height:50px;
               width:auto;
@@ -9150,7 +9155,8 @@ html, body { cursor: auto !important; }
             
             #tab-map .icon-picker-option .icon-filename,
             #tab-messages .icon-picker-option .icon-filename,
-            #tab-forms .icon-picker-option .icon-filename{
+            #tab-forms .icon-picker-option .icon-filename,
+            #tab-settings .icon-picker-option .icon-filename{
               font-size:12px;
               color:rgba(255,255,255,0.9);
               text-align:left;
@@ -9161,7 +9167,8 @@ html, body { cursor: auto !important; }
             
             #tab-map .icon-picker-option--clear,
             #tab-messages .icon-picker-option--clear,
-            #tab-forms .icon-picker-option--clear{
+            #tab-forms .icon-picker-option--clear,
+            #tab-settings .icon-picker-option--clear{
               justify-content:center;
               flex-direction:column;
               text-align:center;

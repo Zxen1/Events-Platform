@@ -11149,8 +11149,8 @@ function makePosts(){
               optionsList.push({ value: applyNormalizeIconPath(path) });
             }
           });
-          // Check if we're in map, messages, or forms tab for vertical layout with filenames
-          const isMapMessagesOrFormsTab = container.closest('#tab-map, #tab-messages, #tab-forms') !== null;
+          // Check if we're in map, messages, forms, or settings tab for vertical layout with filenames
+          const isMapMessagesOrFormsTab = container.closest('#tab-map, #tab-messages, #tab-forms, #tab-settings') !== null;
           
           for(const entry of optionsList){
             const btn = document.createElement('button');
