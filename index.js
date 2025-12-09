@@ -3264,21 +3264,23 @@ let __notifyMapOnInteraction = null;
       }
       updateLogoClickState();
 
-      // Scale welcome modal map controls to match logo width
+      // Scale welcome modal map controls to match logo width using CSS zoom (not transform, which breaks dropdowns)
       function scaleWelcomeControls(){
         const logo = document.querySelector('#welcomeBody .welcome-logo');
         const controls = document.querySelector('#welcomeBody .map-controls-welcome');
         if(!logo || !controls) return;
         
-        // Reset scale to measure natural width
-        controls.style.transform = 'none';
+        // Reset zoom to measure natural width
+        controls.style.zoom = '1';
         const controlsWidth = controls.offsetWidth;
         const logoWidth = logo.offsetWidth;
         
         if(controlsWidth > 0 && logoWidth > 0){
           const scale = logoWidth / controlsWidth;
-          controls.style.transformOrigin = 'center top';
-          controls.style.transform = `scale(${scale})`;
+          controls.style.zoom = scale;
+          // Show controls now that they're scaled
+          controls.style.visibility = 'visible';
+          controls.style.opacity = '1';
         }
       }
       
@@ -3293,42 +3295,14 @@ let __notifyMapOnInteraction = null;
         const popup = document.getElementById('welcome-modal');
         if(!popup) return;
         
-        // const msgEl = document.getElementById('welcomeMessageBox');
-        // const titleEl = document.getElementById('welcomeTitle');
+        const logo = document.querySelector('#welcomeBody .welcome-logo');
+        const controls = document.querySelector('#welcomeBody .map-controls-welcome');
         
-        // // Load welcome messages from admin_settings (faster - no messages table query needed)
-        // // Wait for admin settings to be loaded if not already available
-        // if(!window.adminSettings || !window._adminSettingsLoaded){
-        //   await window._adminSettingsReady;
-        // }
-        
-        // // Get welcome title and message from admin_settings
-        // let welcomeTitle = 'Welcome to FunMap';
-        // let welcomeBody = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
-        
-        // if(window.adminSettings){
-        //   if(window.adminSettings.welcome_title){
-        //     welcomeTitle = window.adminSettings.welcome_title;
-        //   }
-          
-        //   if(window.adminSettings.welcome_message){
-        //     // welcome_message is stored as JSON type in DB, but PHP already decodes it
-        //     // It should be a string (the HTML content) when it reaches JavaScript
-        //     welcomeBody = window.adminSettings.welcome_message || welcomeBody;
-        //   }
-        // }
-        
-        // // Ensure message content is always set (fallback to default if empty)
-        // if(!welcomeBody || welcomeBody.trim() === ''){
-        //   welcomeBody = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
-        // }
-        
-        // if(msgEl){
-        //   msgEl.innerHTML = welcomeBody;
-        // }
-        // if(titleEl){
-        //   titleEl.textContent = welcomeTitle;
-        // }
+        // Hide controls initially until logo loads
+        if(controls){
+          controls.style.visibility = 'hidden';
+          controls.style.opacity = '0';
+        }
         
         openPanel(popup);
         const body = document.getElementById('welcomeBody');
@@ -3336,10 +3310,18 @@ let __notifyMapOnInteraction = null;
           body.style.padding = '20px';
         }
         
-        // Scale controls to match logo width after modal is visible
-        requestAnimationFrame(() => {
-          scaleWelcomeControls();
-        });
+        // Wait for logo to load before scaling controls
+        if(logo && logo.src){
+          if(logo.complete && logo.naturalWidth > 0){
+            // Logo already loaded
+            requestAnimationFrame(() => scaleWelcomeControls());
+          } else {
+            // Wait for logo to load
+            logo.onload = () => {
+              requestAnimationFrame(() => scaleWelcomeControls());
+            };
+          }
+        }
         
         // Listen for resize while modal is open
         window.addEventListener('resize', handleWelcomeResize);

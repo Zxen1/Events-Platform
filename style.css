@@ -6424,6 +6424,9 @@ body.filters-active #filterBtn{
 }
 #welcomeBody .map-controls-welcome{
   pointer-events:auto;
+  visibility:hidden;
+  opacity:0;
+  transition:opacity 0.3s ease, visibility 0.3s ease;
 }
 #welcomeBody .map-control-row > *{
   flex:0 0 auto;
