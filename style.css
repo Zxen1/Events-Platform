@@ -9684,6 +9684,12 @@ html, body { cursor: auto !important; }
               display:none !important;
               visibility:hidden !important;
             }
+            /* Map tab starting location geocoder - same pattern */
+            #tab-map .map-controls-admin-starting .geocoder[hidden],
+            #geocoder-admin-starting[hidden]{
+              display:none !important;
+              visibility:hidden !important;
+            }
             #tab-forms .form-field--location .location-field-wrapper,
             #memberPanel .member-create-fields .form-field--location .location-field-wrapper{
               display:flex;

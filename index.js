@@ -10429,8 +10429,10 @@ function makePosts(){
             prefixBtn.setAttribute('aria-controls', prefixMenuId);
             
             const phonePrefixOptions = getPhonePrefixOptions();
-            const defaultOpt = phonePrefixOptions.length > 0 ? phonePrefixOptions[0] : { value: 'au +61', label: 'Australia' };
-            const { countryCode: defaultCountry, prefix: defaultPrefix } = parsePhonePrefixValue(defaultOpt.value);
+            // Use USA as default (same pattern as currency uses 'USD')
+            const usaOpt = phonePrefixOptions.find(opt => opt.value && opt.value.startsWith('us ')) 
+                        || { value: 'us +1', label: 'United States' };
+            const { countryCode: defaultCountry, prefix: defaultPrefix } = parsePhonePrefixValue(usaOpt.value);
             prefixBtn.innerHTML = getPhonePrefixButtonHTML(defaultCountry, defaultPrefix);
             prefixBtn.dataset.value = defaultPrefix;
             prefixBtn.dataset.countryCode = defaultCountry || '';
