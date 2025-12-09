@@ -3266,21 +3266,11 @@ let __notifyMapOnInteraction = null;
 
       // Scale welcome modal map controls to match logo width
       function scaleWelcomeControls(){
-        const logo = document.querySelector('#welcomeBody .welcome-logo');
         const controls = document.querySelector('#welcomeBody .map-controls-welcome');
-        const modalContent = document.querySelector('#welcome-modal .modal-content');
-        if(!controls || !modalContent) return;
+        if(!controls) return;
         
-        // Reset zoom to measure natural width
-        controls.style.zoom = '1';
-        const controlsWidth = controls.offsetWidth;
-        // Use logo width if available, otherwise use modal content width minus padding
-        const logoWidth = (logo && logo.offsetWidth > 0) ? logo.offsetWidth : (modalContent.offsetWidth - 40);
-        
-        if(controlsWidth > 0 && logoWidth > 0){
-          const scale = logoWidth / controlsWidth;
-          controls.style.zoom = scale;
-        }
+        // Test with hardcoded zoom to verify it works
+        controls.style.zoom = '1.3';
       }
         
       async function openWelcome(){
