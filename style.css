@@ -2172,22 +2172,55 @@ button[aria-expanded="true"] .results-arrow{
 
 .menu-button .dropdown-arrow{
   position:absolute;
-  right:10px;
+  right:12px;
   top:50%;
   transform:translateY(-50%);
-  width:0;
-  height:0;
-  border-left:4px solid transparent;
-  border-right:4px solid transparent;
-  border-top:5px solid rgba(255,255,255,0.6);
-  transition:transform 0.2s, border-top-color 0.2s;
+  width:12px;
+  height:12px;
   pointer-events:none;
+  opacity:0.7;
+  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+}
+
+.menu-button .dropdown-arrow::before,
+.menu-button .dropdown-arrow::after{
+  content:'';
+  position:absolute;
+  width:2px;
+  height:8px;
+  background:rgba(255,255,255,0.8);
+  border-radius:1px;
+  top:2px;
+  transition:background 0.2s;
+}
+
+.menu-button .dropdown-arrow::before{
+  left:4px;
+  transform:rotate(45deg);
+  transform-origin:bottom left;
+}
+
+.menu-button .dropdown-arrow::after{
+  right:4px;
+  transform:rotate(-45deg);
+  transform-origin:bottom right;
+}
+
+.menu-button:hover .dropdown-arrow{
+  opacity:1;
 }
 
 .menu.menu-open .menu-button .dropdown-arrow,
 .menu.iconpicker-open .menu-button .dropdown-arrow{
   transform:translateY(-50%) rotate(180deg);
-  border-top-color:rgba(255,255,255,0.8);
+  opacity:1;
+}
+
+.menu.menu-open .menu-button .dropdown-arrow::before,
+.menu.iconpicker-open .menu-button .dropdown-arrow::before,
+.menu.menu-open .menu-button .dropdown-arrow::after,
+.menu.iconpicker-open .menu-button .dropdown-arrow::after{
+  background:rgba(255,255,255,1);
 }
 
 /* Container-scoped to beat #adminPanel button (1,0,1) */
@@ -2262,19 +2295,26 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.5);
 }
 
-/* Popup matches forms tab exactly */
+/* Popup matches button width exactly for settings tab system images */
+#tab-settings .menu--system-images{
+  width:100%;
+  position:relative;
+}
+
 #tab-settings .menu--system-images .icon-picker-popup{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  right:0;
+  right:auto;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
   border-radius:10px;
   border:1px solid var(--border);
   background:rgba(10,10,20,0.95);
   box-shadow:0 18px 40px rgba(0,0,0,0.45);
   padding:12px;
-  width:100%;
-  box-sizing:border-box;
   max-height:300px;
   overflow:auto;
   z-index:var(--forms-layer-popover, 80);
