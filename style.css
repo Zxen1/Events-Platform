@@ -1623,8 +1623,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   text-align:center;
   padding:0;
-  gap:0;
-  position:relative;
+  gap:100px;
 }
 #welcomeBody > :not(.map-control-row){
   pointer-events:none;
@@ -6425,12 +6424,6 @@ body.filters-active #filterBtn{
 }
 #welcomeBody .map-controls-welcome{
   pointer-events:auto;
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
-  width:calc(100% - 40px);
-  max-width:500px;
 }
 #welcomeBody .map-control-row > *{
   flex:0 0 auto;
