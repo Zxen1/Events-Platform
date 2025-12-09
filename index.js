@@ -10778,6 +10778,10 @@ function makePosts(){
     
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
+      // Skip re-rendering if already rendered (prevents visible refresh when tab opens)
+      if(formbuilderCats.querySelector('.category-form-menu')){
+        return;
+      }
       if(typeof closeSubcategoryFieldOverlay === 'function'){
         closeSubcategoryFieldOverlay();
       }
