@@ -20280,7 +20280,11 @@ function makePosts(){
           }
         });
         
-        // Fade in map when style is loaded (tiles are cached in browser, so show map immediately)
+        // Determine if markers need to be ready before showing map
+        // Markers are visible at zoom >= 8, so if starting zoom >= 8, wait for markers
+        const needsMarkers = startZoom !== null && Number.isFinite(startZoom) && startZoom >= 8;
+        
+        // Fade in map only when required elements are loaded
         const fadeInMap = () => {
           if(mapContainer && !mapFadedIn && mapContainer.style.opacity === '0'){
             mapFadedIn = true;
@@ -20290,28 +20294,81 @@ function makePosts(){
           }
         };
         
-        // Show map as soon as style loads (tiles are browser-cached, so this is fast)
-        map.once('style.load', () => {
-          // Style loaded - show map immediately (tiles will load from cache)
-          fadeInMap();
-        });
+        // Check if tiles are loaded
+        const areTilesLoaded = () => {
+          if(typeof map.areTilesLoaded === 'function'){
+            return map.areTilesLoaded();
+          }
+          return false;
+        };
         
-        // Fallback: also fade in on 'load' event (fires when style + initial tiles are ready)
-        map.once('load', () => {
-          fadeInMap();
-        });
+        // Check if markers are ready (only needed if starting zoom >= 8)
+        const areMarkersReady = () => {
+          if(!needsMarkers) return true; // Don't wait for markers if they won't be visible
+          return markersLoaded || window.__markersLoaded || false;
+        };
         
-        // Safety timeout: show map after 2 seconds max (prevents waiting forever)
-        setTimeout(() => {
-          fadeInMap();
-        }, 2000);
+        // Check if everything is ready and fade in map
+        const checkReadyAndFadeIn = () => {
+          if(mapFadedIn) return true;
+          if(areTilesLoaded() && areMarkersReady()){
+            fadeInMap();
+            return true;
+          }
+          return false;
+        };
         
-        // Hook into mapLoading for loading indicator (but don't block map display)
+        // Hook into mapLoading to fade in when tiles finish loading
         if(mapLoading && typeof mapLoading.onTilesLoaded === 'function'){
           mapLoading.onTilesLoaded(() => {
-            // Just update loading state, map is already visible
+            // Tiles are loaded, check if markers are also ready (if needed)
+            if(!needsMarkers || areMarkersReady()){
+              fadeInMap();
+            }
           });
         }
+        
+        // Also check on 'idle' event (fires when map is idle and tiles are loaded)
+        map.once('idle', () => {
+          checkReadyAndFadeIn();
+        });
+        
+        // Also check on 'load' event (fires when style + initial tiles are ready)
+        map.once('load', () => {
+          // Start checking periodically for tiles and markers (if needed)
+          if(!checkReadyAndFadeIn()){
+            const checkInterval = setInterval(() => {
+              if(checkReadyAndFadeIn() || mapFadedIn){
+                clearInterval(checkInterval);
+              }
+            }, 100);
+            // Stop checking after 5 seconds
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              if(!mapFadedIn) fadeInMap(); // Safety fallback - show map even if markers aren't ready
+            }, 5000);
+          }
+        });
+        
+        // If markers are needed, also check when they load
+        if(needsMarkers){
+          // Monitor for markers loading
+          const checkMarkersInterval = setInterval(() => {
+            if(areMarkersReady() && areTilesLoaded() && !mapFadedIn){
+              fadeInMap();
+              clearInterval(checkMarkersInterval);
+            }
+          }, 100);
+          // Stop checking after 5 seconds
+          setTimeout(() => {
+            clearInterval(checkMarkersInterval);
+          }, 5000);
+        }
+        
+        // Safety timeout: show map after 5 seconds max (prevents waiting forever)
+        setTimeout(() => {
+          fadeInMap();
+        }, 5000);
         
         try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
