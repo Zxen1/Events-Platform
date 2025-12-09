@@ -2171,9 +2171,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Menu button arrow - override global dropdown-arrow styles */
-.menu-button .dropdown-arrow,
-#adminPanel .menu-button .dropdown-arrow,
-#memberPanel .menu-button .dropdown-arrow{
+.menu-button .dropdown-arrow{
   position:absolute;
   right:12px;
   top:50%;
@@ -2184,13 +2182,12 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0.7;
   transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
   display:block;
-  border:none;
-  border-style:none;
-  border-width:0;
-  border-color:transparent;
-  background:none;
-  color:transparent;
-  vertical-align:baseline;
+  border:none !important;
+  border-style:none !important;
+  border-width:0 !important;
+  border-color:transparent !important;
+  background:none !important;
+  color:transparent !important;
 }
 
 .menu-button .dropdown-arrow::before,
@@ -2209,12 +2206,14 @@ button[aria-expanded="true"] .results-arrow{
   left:4px;
   transform:rotate(45deg);
   transform-origin:bottom left;
+  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .menu-button .dropdown-arrow::after{
   right:4px;
   transform:rotate(-45deg);
   transform-origin:bottom right;
+  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .menu-button:hover .dropdown-arrow{
@@ -2225,6 +2224,16 @@ button[aria-expanded="true"] .results-arrow{
 .menu.iconpicker-open .menu-button .dropdown-arrow{
   transform:translateY(-50%) rotate(180deg);
   opacity:1;
+}
+
+.menu.menu-open .menu-button .dropdown-arrow::before,
+.menu.iconpicker-open .menu-button .dropdown-arrow::before{
+  transform:rotate(225deg);
+}
+
+.menu.menu-open .menu-button .dropdown-arrow::after,
+.menu.iconpicker-open .menu-button .dropdown-arrow::after{
+  transform:rotate(-225deg);
 }
 
 .menu.menu-open .menu-button .dropdown-arrow::before,
@@ -2314,8 +2323,8 @@ button[aria-expanded="true"] .results-arrow{
   left:0;
   right:0;
   width:100%;
-  min-width:100%;
-  max-width:100%;
+  min-width:unset;
+  max-width:unset;
   box-sizing:border-box;
   border-radius:10px;
   border:1px solid var(--border);
@@ -2327,19 +2336,6 @@ button[aria-expanded="true"] .results-arrow{
   z-index:var(--forms-layer-popover, 80);
 }
 
-/* Ensure popup width matches button exactly by using container width */
-.menu--system-images,
-.menu--category-icons{
-  width:100%;
-  position:relative;
-}
-
-.menu--system-images .icon-picker-popup,
-.menu--category-icons .icon-picker-popup{
-  width:100%;
-  min-width:100%;
-  max-width:100%;
-}
 
 /* Grid */
 .menu--system-images .icon-picker-grid{

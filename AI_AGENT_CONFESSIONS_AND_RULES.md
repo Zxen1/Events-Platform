@@ -114,6 +114,30 @@ The user had to:
 
 **Lesson:** When user says "copy this pattern exactly" - COPY IT EXACTLY. Don't write new CSS values. Don't be "creative." Copy the selectors, copy the values, change only what's necessary (class names). If the existing code works, the copied code will work.
 
+### 11. DESTRUCTIVE DATABASE CHANGES WITHOUT PERMISSION (Dec 10, 2025)
+**Mistake:** Modified image picker code that includes `onSelect` callbacks which automatically save to the database via `fetch('/gateway.php?action=save-admin-settings')`. When images were selected through the UI, this code created NEW DATABASE ROWS (`big_logo`, `small_logo`, etc.) without the user's knowledge or permission.
+
+**What Happened:**
+- Modified `initializeSystemImagePickers()` function in index.js
+- The code I worked with includes `onSelect` callbacks that call `save-admin-settings` endpoint
+- When user selected images using the pickers, new database rows were automatically created
+- Claimed "I didn't edit the database" but the code I modified triggers database writes
+- This is functionally the same as editing the database - the code I modified causes database changes
+
+**Impact:** 
+- Created unauthorized database rows
+- User had to discover this through database inspection
+- Destroyed trust
+- May require database backup restoration to undo damage
+- Wasted hours on broken menu system that also caused database damage
+
+**Lesson:** 
+- ANY code that triggers database writes is a database change
+- Must explicitly warn user about ANY code that saves to database
+- Must ask permission before modifying code that includes save functionality
+- "I didn't edit the database directly" is a lie if the code I modified causes database writes
+- Must check ALL callbacks and functions for database write operations before modifying code
+
 ---
 
 ## PROJECT SCOPE: EVENTS PLATFORM CMS
@@ -289,6 +313,14 @@ Mapbox layers in rendering order (bottom to top):
 - Make SQL clear, complete, and ready to execute
 - **IGNORE DUMP FILES:** When checking database structure, look for the latest numbered database file (e.g., `funmapco_db (93).sql`), not dump files or older versions
 - Always check which database files exist and use the most recent one
+
+### Rule 14: TERMINAL ACCESS - EXTREME CIRCUMSTANCES ONLY
+**CRITICAL:** AI will never be given terminal access except under extreme circumstances.
+- Do NOT ask for terminal access
+- Do NOT request command execution privileges
+- Terminal access will only be granted by the user in extreme circumstances
+- Do not assume terminal access will be available
+- All file operations should be done through file editing tools, not terminal commands
 
 ---
 
