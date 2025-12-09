@@ -24845,10 +24845,6 @@ function openPanel(m){
   m.removeAttribute('inert');
   // Re-enable member auth inputs when member panel opens
   if(m.id === 'memberPanel'){
-    // Load formpicker immediately when member panel opens (lightweight, uses window.categories)
-    if(typeof window.renderMemberFormPicker === 'function'){
-      window.renderMemberFormPicker();
-    }
     const loginPanel = document.getElementById('memberLoginPanel');
     const registerPanel = document.getElementById('memberRegisterPanel');
     // Remove inert from auth panels to ensure inputs are focusable

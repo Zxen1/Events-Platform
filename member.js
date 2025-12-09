@@ -995,10 +995,8 @@
       }
     }
     // Expose initializeMemberFormbuilderSnapshot globally so it can be called when Create Post tab opens
-    // Also expose renderFormPicker so it can be called when member panel opens (lightweight, uses window.categories)
     if(typeof window !== 'undefined'){
       window.initializeMemberFormbuilderSnapshot = initializeMemberFormbuilderSnapshot;
-      window.renderMemberFormPicker = renderFormPicker;
     }
 
     const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
@@ -1886,25 +1884,23 @@
       if(postButton){ postButton.disabled = true; postButton.hidden = true; postButton.style.display = 'none'; }
       if(postActions){ postActions.hidden = true; postActions.style.display = 'none'; }
       
-      // Use window.categories if available (loaded on page load), otherwise use memberCategories
-      const categoriesToUse = (window.categories && Array.isArray(window.categories) && window.categories.length > 0) 
-        ? window.categories 
-        : (memberCategories && Array.isArray(memberCategories) && memberCategories.length > 0 ? memberCategories : []);
+      const sortedCategories = (typeof window !== 'undefined' && typeof window.getSortedCategories === 'function' ? window.getSortedCategories : (cats => cats || []))(memberCategories);
       
-      if(!categoriesToUse || categoriesToUse.length === 0){
-        console.error('[Forms] renderFormPicker: No categories available');
+      // Get icon paths from snapshot (fetched from database)
+      if(!memberSnapshot){
+        console.error('[Forms] memberSnapshot is null or undefined');
         return;
       }
-      
-      const sortedCategories = (typeof window !== 'undefined' && typeof window.getSortedCategories === 'function' ? window.getSortedCategories : (cats => cats || []))(categoriesToUse);
-      
-      // Get icon paths from window (loaded on page load) or from snapshot
-      const categoryIconPaths = (window.categoryIconPaths && typeof window.categoryIconPaths === 'object') 
-        ? window.categoryIconPaths 
-        : (memberSnapshot && memberSnapshot.categoryIconPaths ? memberSnapshot.categoryIconPaths : {});
-      const subcategoryIconPaths = (window.subcategoryIconPaths && typeof window.subcategoryIconPaths === 'object') 
-        ? window.subcategoryIconPaths 
-        : (memberSnapshot && memberSnapshot.subcategoryIconPaths ? memberSnapshot.subcategoryIconPaths : {});
+      if(typeof memberSnapshot.categoryIconPaths !== 'object' || typeof memberSnapshot.subcategoryIconPaths !== 'object'){
+        console.error('[Forms] memberSnapshot missing categoryIconPaths or subcategoryIconPaths', {
+          hasCategoryIconPaths: typeof memberSnapshot.categoryIconPaths,
+          hasSubcategoryIconPaths: typeof memberSnapshot.subcategoryIconPaths,
+          snapshotKeys: Object.keys(memberSnapshot || {})
+        });
+        return;
+      }
+      const categoryIconPaths = memberSnapshot.categoryIconPaths;
+      const subcategoryIconPaths = memberSnapshot.subcategoryIconPaths;
       
       // Icon paths are normalized by normalizeIconPathMap which transforms keys to "name:${name.toLowerCase()}" format
       
@@ -2145,16 +2141,7 @@
                   subcategoryMenuBtn.setAttribute('aria-expanded', 'false');
                   selectedSubcategory = subcategoryName;
                   try{ localStorage.setItem('member-create-active-v1', JSON.stringify({ cat: selectedCategory || '', sub: selectedSubcategory || '' })); }catch(_e){}
-                  // Load full snapshot if not already loaded (needed for form fields)
-                  if(!memberSnapshot && typeof window.initializeMemberFormbuilderSnapshot === 'function'){
-                    window.initializeMemberFormbuilderSnapshot().then(() => {
-                      renderConfiguredFields();
-                    }).catch(err => {
-                      console.error('[Forms] Error loading snapshot for form fields:', err);
-                    });
-                  } else {
-                    renderConfiguredFields();
-                  }
+                  renderConfiguredFields();
                 });
                 subcategoryMenu.appendChild(subOptionBtn);
               });
