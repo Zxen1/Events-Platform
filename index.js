@@ -17042,8 +17042,11 @@ function makePosts(){
       async ensureLoaded(options = {}){
         if(this._loaded && !options.forceReload) {
           // If already loaded but we need to render formbuilder UI (was skipped on startup), do it now
+          // Defer rendering to ensure tab opens first
           if(!options.skipFormbuilderUI && typeof window.renderFormbuilderCats === 'function'){
-            window.renderFormbuilderCats();
+            setTimeout(() => {
+              window.renderFormbuilderCats();
+            }, 0);
           }
           return;
         }
@@ -26753,9 +26756,13 @@ document.addEventListener('pointerdown', (e) => {
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
       // LAZY LOAD: Load formbuilder UI when admin opens Forms tab (only when tab is clicked, not on startup)
+      // Tab opens immediately, content loads asynchronously
       if(btn.dataset.tab === 'forms' && window.formbuilderStateManager){
-        // Load full formbuilder UI (renderFormbuilderCats) which was skipped on startup
-        window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: false });
+        // Open tab first, then load content asynchronously
+        setTimeout(() => {
+          // Load full formbuilder UI (renderFormbuilderCats) which was skipped on startup
+          window.formbuilderStateManager.ensureLoaded({ skipFormbuilderUI: false });
+        }, 0);
       }
       // Reload fieldset tooltips when messages tab is opened (data already loaded when admin panel opened)
       if(btn.dataset.tab === 'messages' && typeof loadFieldsetTooltips === 'function'){
