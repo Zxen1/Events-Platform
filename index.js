@@ -1914,13 +1914,6 @@ let __notifyMapOnInteraction = null;
       // Don't use fallback - will need to get center from backend or show error
     }
 
-    if(savedView && typeof savedView === 'object'){
-      savedView.bearing = 0;
-      try{ localStorage.setItem('mapView', JSON.stringify(savedView)); }catch(err){
-        console.error('Failed to save map view:', err);
-      }
-    }
-
     // Map center is a UI preference - use saved location if available
     let startCenter = null; // Will be set from saved location or admin starting location
     let startZoom = null;
@@ -1936,7 +1929,9 @@ let __notifyMapOnInteraction = null;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
     startPitch = window.startPitch = initialPitch;
-    startBearing = window.startBearing = 0;
+    // Restore bearing from saved view if available (don't reset to 0)
+    const hasSavedBearing = typeof savedView?.bearing === 'number';
+    startBearing = window.startBearing = hasSavedBearing ? savedView.bearing : 0;
 
       let map, mapLoading = null, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = false,
@@ -20756,6 +20751,12 @@ function makePosts(){
           updateClusterSourceForZoom(zoom);
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         };
+        // Suppress initial save when map loads with saved view to prevent overwriting saved state
+        suppressNextRefresh = true;
+        map.once('load', () => {
+          // Allow saves after initial load completes
+          setTimeout(() => { suppressNextRefresh = false; }, 100);
+        });
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
         map.on('dragend', clearMapGeocoder);
         map.on('click', clearMapGeocoder);
