@@ -2148,8 +2148,8 @@ button[aria-expanded="true"] .results-arrow{
 
 /* Menu button image and label (for image menus) */
 .menu-button-img{
-  width:30px;
-  height:30px;
+  width:50px;
+  height:50px;
   object-fit:contain;
   flex-shrink:0;
   display:none;
@@ -2170,7 +2170,10 @@ button[aria-expanded="true"] .results-arrow{
   color:rgba(255,255,255,0.5);
 }
 
-.menu-button .dropdown-arrow{
+/* Menu button arrow - override global dropdown-arrow styles */
+.menu-button .dropdown-arrow,
+#adminPanel .menu-button .dropdown-arrow,
+#memberPanel .menu-button .dropdown-arrow{
   position:absolute;
   right:12px;
   top:50%;
@@ -2180,6 +2183,14 @@ button[aria-expanded="true"] .results-arrow{
   pointer-events:none;
   opacity:0.7;
   transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+  display:block;
+  border:none;
+  border-style:none;
+  border-width:0;
+  border-color:transparent;
+  background:none;
+  color:transparent;
+  vertical-align:baseline;
 }
 
 .menu-button .dropdown-arrow::before,
@@ -2268,8 +2279,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 #tab-settings .menu--system-images .menu-button-img{
-  width:30px;
-  height:30px;
+  width:50px;
+  height:50px;
   object-fit:contain;
   flex-shrink:0;
   display:none;

@@ -2088,7 +2088,10 @@ let __notifyMapOnInteraction = null;
             if(initialPath){
               buttonImg.src = initialPath;
               button.classList.add('has-image');
-              buttonLabel.textContent = 'Change Image';
+              // Extract filename from path
+              const pathParts = initialPath.split('/');
+              const filename = pathParts[pathParts.length - 1] || initialPath;
+              buttonLabel.textContent = filename;
             } else {
               button.classList.remove('has-image');
               buttonLabel.textContent = 'Choose Image';
@@ -2102,7 +2105,10 @@ let __notifyMapOnInteraction = null;
                   if(value){
                     buttonImg.src = value;
                     button.classList.add('has-image');
-                    buttonLabel.textContent = 'Change Image';
+                    // Extract filename from path
+                    const pathParts = value.split('/');
+                    const filename = pathParts[pathParts.length - 1] || value;
+                    buttonLabel.textContent = filename;
                   
                   // Update local settings immediately
                   settings[picker.settingKey] = value;
