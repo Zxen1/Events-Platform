@@ -2171,7 +2171,9 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Menu button arrow - override global dropdown-arrow styles */
-.menu-button .dropdown-arrow{
+.menu-button .dropdown-arrow,
+#adminPanel .menu-button .dropdown-arrow,
+#memberPanel .menu-button .dropdown-arrow{
   position:absolute;
   right:12px;
   top:50%;
@@ -2182,12 +2184,13 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0.7;
   transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
   display:block;
-  border:none !important;
-  border-style:none !important;
-  border-width:0 !important;
-  border-color:transparent !important;
-  background:none !important;
-  color:transparent !important;
+  border:none;
+  border-style:none;
+  border-width:0;
+  border-color:transparent;
+  background:none;
+  color:transparent;
+  vertical-align:baseline;
 }
 
 .menu-button .dropdown-arrow::before,
@@ -2206,14 +2209,12 @@ button[aria-expanded="true"] .results-arrow{
   left:4px;
   transform:rotate(45deg);
   transform-origin:bottom left;
-  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .menu-button .dropdown-arrow::after{
   right:4px;
   transform:rotate(-45deg);
   transform-origin:bottom right;
-  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .menu-button:hover .dropdown-arrow{
@@ -2224,16 +2225,6 @@ button[aria-expanded="true"] .results-arrow{
 .menu.iconpicker-open .menu-button .dropdown-arrow{
   transform:translateY(-50%) rotate(180deg);
   opacity:1;
-}
-
-.menu.menu-open .menu-button .dropdown-arrow::before,
-.menu.iconpicker-open .menu-button .dropdown-arrow::before{
-  transform:rotate(225deg);
-}
-
-.menu.menu-open .menu-button .dropdown-arrow::after,
-.menu.iconpicker-open .menu-button .dropdown-arrow::after{
-  transform:rotate(-225deg);
 }
 
 .menu.menu-open .menu-button .dropdown-arrow::before,
@@ -2259,14 +2250,14 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.5);
 }
 
-/* System Images Menu Modifier - Shared styles for all tabs (settings, map, messages) */
-.menu--system-images{
-  width:100%;
-  position:relative;
-}
-
+/* System Images Menu Modifier - Match forms tab exactly */
 .menu--system-images .menu-button{
   width:100%;
+}
+
+/* Make menu button match forms tab iconpicker-button exactly */
+#tab-settings .menu--system-images .menu-button{
+  width:100%;
   display:flex;
   align-items:center;
   gap:10px;
@@ -2282,12 +2273,12 @@ button[aria-expanded="true"] .results-arrow{
   transition:border-color 0.15s, background 0.15s;
 }
 
-.menu--system-images .menu-button:hover{
+#tab-settings .menu--system-images .menu-button:hover{
   border-color:rgba(255,255,255,0.25);
   background:rgba(0,0,0,0.45);
 }
 
-.menu--system-images .menu-button-img{
+#tab-settings .menu--system-images .menu-button-img{
   width:50px;
   height:50px;
   object-fit:contain;
@@ -2295,161 +2286,37 @@ button[aria-expanded="true"] .results-arrow{
   display:none;
 }
 
-.menu--system-images .menu-button.has-image .menu-button-img{
+#tab-settings .menu--system-images .menu-button.has-image .menu-button-img{
   display:block;
 }
 
-.menu--system-images .menu-button-label{
+#tab-settings .menu--system-images .menu-button-label{
   flex:1;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
 
-.menu--system-images .menu-button:not(.has-image) .menu-button-label{
+#tab-settings .menu--system-images .menu-button:not(.has-image) .menu-button-label{
   color:rgba(255,255,255,0.5);
 }
 
-.menu--system-images.iconpicker-open .menu-button{
+#tab-settings .menu--system-images.iconpicker-open .menu-button{
   border-color:rgba(255,255,255,0.3);
   background:rgba(0,0,0,0.5);
 }
 
-/* Popup matches button width exactly */
-.menu--system-images .icon-picker-popup,
-.menu--category-icons .icon-picker-popup{
-  position:absolute;
-  top:calc(100% + 4px);
-  left:0;
-  right:0;
-  width:100%;
-  min-width:unset;
-  max-width:unset;
-  box-sizing:border-box;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(10,10,20,0.95);
-  box-shadow:0 18px 40px rgba(0,0,0,0.45);
-  padding:12px;
-  max-height:300px;
-  overflow:auto;
-  z-index:var(--forms-layer-popover, 80);
-}
-
-
-/* Grid */
-.menu--system-images .icon-picker-grid{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-/* Options */
-.menu--system-images .icon-picker-option{
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start;
-  width:100%;
-  min-height:60px;
-  height:auto;
-  padding:8px 12px;
-  gap:12px;
-  border:none;
-  background:transparent;
-}
-
-.menu--system-images .icon-picker-option:hover,
-.menu--system-images .icon-picker-option:focus-visible{
-  background:rgba(255,255,255,0.1);
-  border:none;
-}
-
-.menu--system-images .icon-picker-option img{
-  max-width:50px;
-  max-height:50px;
-  width:auto;
-  height:auto;
-  object-fit:contain;
-  flex-shrink:0;
-}
-
-.menu--system-images .icon-picker-option .icon-filename{
-  font-size:12px;
-  color:rgba(255,255,255,0.9);
-  text-align:left;
-  word-break:break-word;
-  line-height:1.4;
-  flex:1;
-}
-
-.menu--system-images .icon-picker-option--clear{
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-}
-
-/* Category Icons Menu Modifier - Identical to system-images (uses icon folder) */
-.menu--category-icons{
+/* Popup matches button width exactly for settings tab system images */
+#tab-settings .menu--system-images{
   width:100%;
   position:relative;
 }
 
-.menu--category-icons .menu-button{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  height:60px;
-  padding:0 30px 0 10px;
-  background:rgba(0,0,0,0.35);
-  border:1px solid var(--border);
-  border-radius:8px;
-  color:var(--button-text);
-  font-size:13px;
-  cursor:pointer;
-  text-align:left;
-  transition:border-color 0.15s, background 0.15s;
-}
-
-.menu--category-icons .menu-button:hover{
-  border-color:rgba(255,255,255,0.25);
-  background:rgba(0,0,0,0.45);
-}
-
-.menu--category-icons .menu-button-img{
-  width:50px;
-  height:50px;
-  object-fit:contain;
-  flex-shrink:0;
-  display:none;
-}
-
-.menu--category-icons .menu-button.has-image .menu-button-img{
-  display:block;
-}
-
-.menu--category-icons .menu-button-label{
-  flex:1;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.menu--category-icons .menu-button:not(.has-image) .menu-button-label{
-  color:rgba(255,255,255,0.5);
-}
-
-.menu--category-icons.iconpicker-open .menu-button{
-  border-color:rgba(255,255,255,0.3);
-  background:rgba(0,0,0,0.5);
-}
-
-.menu--category-icons .icon-picker-popup{
+#tab-settings .menu--system-images .icon-picker-popup{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  right:0;
+  right:auto;
   width:100%;
   min-width:100%;
   max-width:100%;
@@ -2464,13 +2331,15 @@ button[aria-expanded="true"] .results-arrow{
   z-index:var(--forms-layer-popover, 80);
 }
 
-.menu--category-icons .icon-picker-grid{
+/* Grid matches forms tab */
+#tab-settings .menu--system-images .icon-picker-grid{
   display:flex;
   flex-direction:column;
   gap:8px;
 }
 
-.menu--category-icons .icon-picker-option{
+/* Options match forms tab exactly */
+#tab-settings .menu--system-images .icon-picker-option{
   display:flex;
   flex-direction:row;
   align-items:center;
@@ -2484,13 +2353,13 @@ button[aria-expanded="true"] .results-arrow{
   background:transparent;
 }
 
-.menu--category-icons .icon-picker-option:hover,
-.menu--category-icons .icon-picker-option:focus-visible{
+#tab-settings .menu--system-images .icon-picker-option:hover,
+#tab-settings .menu--system-images .icon-picker-option:focus-visible{
   background:rgba(255,255,255,0.1);
   border:none;
 }
 
-.menu--category-icons .icon-picker-option img{
+#tab-settings .menu--system-images .icon-picker-option img{
   max-width:50px;
   max-height:50px;
   width:auto;
@@ -2499,7 +2368,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-shrink:0;
 }
 
-.menu--category-icons .icon-picker-option .icon-filename{
+#tab-settings .menu--system-images .icon-picker-option .icon-filename{
   font-size:12px;
   color:rgba(255,255,255,0.9);
   text-align:left;
@@ -2508,12 +2377,11 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
 }
 
-.menu--category-icons .icon-picker-option--clear{
+#tab-settings .menu--system-images .icon-picker-option--clear{
   justify-content:center;
   flex-direction:column;
   text-align:center;
 }
-
 
 /* Settings tab iconpicker styles (matching formbuilder) - DEPRECATED, use .menu instead */
 .system-image-picker-container .iconpicker-container{

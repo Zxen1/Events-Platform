@@ -2082,7 +2082,7 @@ let __notifyMapOnInteraction = null;
               });
             }
           } else {
-            // New menu structure (settings tab, map tab)
+            // New menu structure (settings tab)
             // Load initial value from settings
             const initialPath = settings[picker.settingKey] || '';
             if(initialPath){
@@ -2109,92 +2109,92 @@ let __notifyMapOnInteraction = null;
                     const pathParts = value.split('/');
                     const filename = pathParts[pathParts.length - 1] || value;
                     buttonLabel.textContent = filename;
-                    
-                    // Update local settings immediately
-                    settings[picker.settingKey] = value;
-                    
-                    // Get map instance - try multiple methods
-                    let mapInstance = null;
-                    if(typeof window.getMapInstance === 'function'){
-                      mapInstance = window.getMapInstance();
-                    } else if(typeof map !== 'undefined' && map){
-                      mapInstance = map;
-                    } else if(typeof window.map !== 'undefined' && window.map){
-                      mapInstance = window.map;
-                    }
-                    
-                    // Save to admin_settings FIRST
-                    const settingsToSave = {};
-                    settingsToSave[picker.settingKey] = value;
-                    
-                    try {
-                      const response = await fetch('/gateway.php?action=save-admin-settings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                        body: JSON.stringify(settingsToSave)
-                      });
-                      if(!response.ok){
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                      }
-                      const data = await response.json();
-                      if(!data.success){
-                        throw new Error(data.message || 'Save failed');
-                      }
-                      console.log(`${picker.label} saved to database.`);
-                      
-                      // Now refresh map with saved value (for map tab pickers)
-                      if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
-                        // Handle cluster icon update
-                        const CLUSTER_ICON_ID = 'cluster-icon';
-                        const CLUSTER_LAYER_ID = 'post-clusters';
-                        if(mapInstance.hasImage(CLUSTER_ICON_ID)){
-                          mapInstance.removeImage(CLUSTER_ICON_ID);
-                        }
-                        const img = await loadMarkerLabelImage(value);
-                        if(img && img.width > 0 && img.height > 0){
-                          const pixelRatio = img.width >= 256 ? 2 : 1;
-                          mapInstance.addImage(CLUSTER_ICON_ID, img, { pixelRatio });
-                          const layer = mapInstance.getLayer(CLUSTER_LAYER_ID);
-                          if(layer){
-                            mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'icon-image', CLUSTER_ICON_ID);
-                          }
-                        }
-                      } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
-                        // Update window.adminSettings immediately for instant effect
-                        if(!window.adminSettings) window.adminSettings = {};
-                        window.adminSettings[picker.settingKey] = value;
-                        // Refresh map card styles
-                        if(window.MapCards && window.MapCards.refreshMapCardStyles){
-                          window.MapCards.refreshMapCardStyles();
-                        }
-                      } else if(picker.settingKey === 'multi_post_icon'){
-                        // Update both stores immediately
-                        if(!window.adminSettings) window.adminSettings = {};
-                        window.adminSettings.multi_post_icon = value;
-                        if(window.subcategoryMarkers){
-                          window.subcategoryMarkers['multi-post-icon'] = value;
-                        }
-                        // Refresh marker icons
-                        if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
-                          window.MapCards.refreshAllMarkerIcons();
-                        }
-                      }
-                    } catch(err) {
-                      console.error(`Failed to save/update ${picker.label}:`, err);
-                      alert(`Failed to save ${picker.label}: ${err.message}`);
-                    }
+                  
+                  // Update local settings immediately
+                  settings[picker.settingKey] = value;
+                  
+                  // Get map instance - try multiple methods
+                  let mapInstance = null;
+                  if(typeof window.getMapInstance === 'function'){
+                    mapInstance = window.getMapInstance();
+                  } else if(typeof map !== 'undefined' && map){
+                    mapInstance = map;
+                  } else if(typeof window.map !== 'undefined' && window.map){
+                    mapInstance = window.map;
                   }
-                },
-                label: `Choose icon for ${picker.label}`,
-                parentMenu: container.closest('.panel-field'),
-                iconFolder: (() => {
+                  
+                  // Save to admin_settings FIRST
+                  const settingsToSave = {};
+                  settingsToSave[picker.settingKey] = value;
+                  
+                  try {
+                    const response = await fetch('/gateway.php?action=save-admin-settings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                      body: JSON.stringify(settingsToSave)
+                    });
+                    if(!response.ok){
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if(!data.success){
+                      throw new Error(data.message || 'Save failed');
+                    }
+                    console.log(`${picker.label} saved to database.`);
+                    
+                    // Now refresh map with saved value
+                    if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
+                      // Handle cluster icon update
+                      const CLUSTER_ICON_ID = 'cluster-icon';
+                      const CLUSTER_LAYER_ID = 'post-clusters';
+                      if(mapInstance.hasImage(CLUSTER_ICON_ID)){
+                        mapInstance.removeImage(CLUSTER_ICON_ID);
+                      }
+                      const img = await loadMarkerLabelImage(value);
+                      if(img && img.width > 0 && img.height > 0){
+                        const pixelRatio = img.width >= 256 ? 2 : 1;
+                        mapInstance.addImage(CLUSTER_ICON_ID, img, { pixelRatio });
+                        const layer = mapInstance.getLayer(CLUSTER_LAYER_ID);
+                        if(layer){
+                          mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'icon-image', CLUSTER_ICON_ID);
+                        }
+                      }
+                    } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
+                      // Update window.adminSettings immediately for instant effect
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings[picker.settingKey] = value;
+                      // Refresh map card styles
+                      if(window.MapCards && window.MapCards.refreshMapCardStyles){
+                        window.MapCards.refreshMapCardStyles();
+                      }
+                    } else if(picker.settingKey === 'multi_post_icon'){
+                      // Update both stores immediately
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings.multi_post_icon = value;
+                      if(window.subcategoryMarkers){
+                        window.subcategoryMarkers['multi-post-icon'] = value;
+                      }
+                      // Refresh marker icons
+                      if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
+                        window.MapCards.refreshAllMarkerIcons();
+                      }
+                    }
+                  } catch(err) {
+                    console.error(`Failed to save/update ${picker.label}:`, err);
+                    alert(`Failed to save ${picker.label}: ${err.message}`);
+                  }
+                }
+              },
+              label: `Choose icon for ${picker.label}`,
+              parentMenu: container.closest('.panel-field'),
+              iconFolder: (() => {
                 const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
                 return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || null;
               })()
             });
           }
-        }
-      });
+          }
+        });
       }
       
       // Flag to track if admin settings have been loaded - prevents saving empty values
@@ -11029,42 +11029,34 @@ function makePosts(){
           }
           const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
           const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-          // Check if this is a menu with fixed width (system-images or category-icons)
-          const isFixedWidthMenu = container.classList.contains('menu--system-images') || container.classList.contains('menu--category-icons');
-          const spacing = 4; // Consistent spacing for all menus
+          let left = triggerRect.left - containerRect.left;
+          // Use 10px spacing for map tab, 4px for others (matches .options-menu)
+          const isMapTab = container.closest('#tab-map') !== null;
+          const spacing = isMapTab ? 10 : 4;
           let top = triggerRect.bottom - containerRect.top + spacing;
-          // For fixed-width menus, always align to left edge of container
-          if(isFixedWidthMenu){
-            popup.style.left = '0px';
-            popup.style.right = '0px';
-            popup.style.width = '100%';
-            popup.style.top = `${Math.round(top)}px`;
-          } else {
-            let left = triggerRect.left - containerRect.left;
-            popup.style.left = '0px';
-            popup.style.top = '0px';
-            const popupRect = popup.getBoundingClientRect();
-            const overflowRight = triggerRect.left + popupRect.width - viewportWidth + 12;
-            if(overflowRight > 0){
-              left -= overflowRight;
-            }
-            const overflowLeft = containerRect.left + left;
-            if(overflowLeft < 8){
-              left += 8 - overflowLeft;
-            }
-            const desiredBottom = triggerRect.bottom + spacing + popupRect.height;
-            if(desiredBottom > viewportHeight - 12){
-              const altTop = triggerRect.top - containerRect.top - popupRect.height - spacing;
-              if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
-                top = Math.max(0, altTop);
-              }
-            }
-            if(containerRect.left + left < 0){
-              left = -containerRect.left;
-            }
-            popup.style.left = `${Math.round(left)}px`;
-            popup.style.top = `${Math.round(Math.max(0, top))}px`;
+          popup.style.left = '0px';
+          popup.style.top = '0px';
+          const popupRect = popup.getBoundingClientRect();
+          const overflowRight = triggerRect.left + popupRect.width - viewportWidth + 12;
+          if(overflowRight > 0){
+            left -= overflowRight;
           }
+          const overflowLeft = containerRect.left + left;
+          if(overflowLeft < 8){
+            left += 8 - overflowLeft;
+          }
+          const desiredBottom = triggerRect.bottom + spacing + popupRect.height;
+          if(desiredBottom > viewportHeight - 12){
+            const altTop = triggerRect.top - containerRect.top - popupRect.height - spacing;
+            if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
+              top = Math.max(0, altTop);
+            }
+          }
+          if(containerRect.left + left < 0){
+            left = -containerRect.left;
+          }
+          popup.style.left = `${Math.round(left)}px`;
+          popup.style.top = `${Math.round(Math.max(0, top))}px`;
         };
 
         const scheduleAlign = ()=>{
@@ -11202,7 +11194,6 @@ function makePosts(){
             grid.appendChild(btn);
           }
           }
-          if(!popup || !container) return;
           popup.appendChild(grid);
           container.appendChild(popup);
           container.classList.add('iconpicker-open');
@@ -11392,19 +11383,20 @@ function makePosts(){
         overflowMenu.hidden = true;
 
         const iconPicker = document.createElement('div');
-        iconPicker.className = 'menu menu--category-icons';
+        iconPicker.className = 'options-dropdown iconpicker-container';
 
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
-        iconPickerButton.className = 'menu-button';
+        iconPickerButton.className = 'iconpicker-button';
         iconPickerButton.setAttribute('aria-haspopup', 'true');
         iconPickerButton.setAttribute('aria-expanded', 'false');
 
         const iconPickerImg = document.createElement('img');
-        iconPickerImg.className = 'menu-button-img';
+        iconPickerImg.className = 'iconpicker-btn-img';
         iconPickerImg.alt = '';
         const iconPickerLabel = document.createElement('span');
-        iconPickerLabel.className = 'menu-button-label';
+        iconPickerLabel.className = 'iconpicker-btn-label';
+        iconPickerLabel.textContent = 'Choose Icon';
         const iconPickerArrow = document.createElement('span');
         iconPickerArrow.className = 'dropdown-arrow';
         iconPickerArrow.setAttribute('aria-hidden', 'true');
@@ -11413,16 +11405,13 @@ function makePosts(){
         const normalizedCategoryIconPath = applyNormalizeIconPath(initialCategoryIconSrc);
         if(normalizedCategoryIconPath){
           iconPickerImg.src = normalizedCategoryIconPath;
-          iconPickerButton.classList.add('has-image');
+          iconPickerButton.classList.add('has-icon');
           // Extract filename from path
           const filename = normalizedCategoryIconPath.split('/').pop();
           iconPickerLabel.textContent = filename;
           if(!categoryIconLookup.found){
             writeIconPath(categoryIconPaths, c.id, c.name, normalizedCategoryIconPath);
           }
-        } else {
-          iconPickerButton.classList.remove('has-image');
-          iconPickerLabel.textContent = 'Choose Icon';
         }
         iconPicker.append(iconPickerButton);
         // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
@@ -11430,18 +11419,6 @@ function makePosts(){
           window.attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
             onSelect: value => {
-              // Update button immediately
-              if(value){
-                const normalizedValue = applyNormalizeIconPath(value);
-                iconPickerImg.src = normalizedValue;
-                iconPickerButton.classList.add('has-image');
-                const filename = normalizedValue.split('/').pop();
-                iconPickerLabel.textContent = filename;
-              } else {
-                iconPickerImg.src = '';
-                iconPickerButton.classList.remove('has-image');
-                iconPickerLabel.textContent = 'Choose Icon';
-              }
               updateCategoryIconDisplay(value);
               notifyFormbuilderChange();
             },
@@ -17421,61 +17398,39 @@ function makePosts(){
         });
         
         const iconPicker = document.createElement('div');
-        iconPicker.className = 'menu menu--system-images';
+        iconPicker.className = 'iconpicker-container';
         
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
-        iconPickerButton.className = 'menu-button';
-        iconPickerButton.setAttribute('aria-haspopup', 'true');
-        iconPickerButton.setAttribute('aria-expanded', 'false');
+        iconPickerButton.className = 'iconpicker-button';
+        iconPickerButton.textContent = 'Change Icon';
         
-        const iconPickerImg = document.createElement('img');
-        iconPickerImg.className = 'menu-button-img';
-        iconPickerImg.alt = '';
+        const preview = document.createElement('div');
+        preview.className = 'iconpicker-preview has-image';
+        const previewLabel = document.createElement('span');
+        previewLabel.textContent = '';
+        const previewImg = document.createElement('img');
+        previewImg.src = cat.icon;
+        previewImg.alt = `${cat.name} icon preview`;
+        preview.append(previewLabel, previewImg);
+        iconPicker.append(preview, iconPickerButton);
         
-        const iconPickerLabel = document.createElement('span');
-        iconPickerLabel.className = 'menu-button-label';
-        
-        const iconPickerArrow = document.createElement('span');
-        iconPickerArrow.className = 'dropdown-arrow';
-        iconPickerArrow.setAttribute('aria-hidden', 'true');
-        
-        iconPickerButton.append(iconPickerImg, iconPickerLabel, iconPickerArrow);
-        iconPicker.append(iconPickerButton);
-        
-        // Load initial value
-        if(cat.icon){
-          iconPickerImg.src = cat.icon;
-          iconPickerButton.classList.add('has-image');
-          const pathParts = cat.icon.split('/');
-          const filename = pathParts[pathParts.length - 1] || cat.icon;
-          iconPickerLabel.textContent = filename;
-        } else {
-          iconPickerButton.classList.remove('has-image');
-          iconPickerLabel.textContent = 'Choose Image';
-        }
-        
-        // Attach system image picker functionality (uses system-images folder)
-        if(typeof window.attachSystemImagePicker === 'function'){
-          window.attachSystemImagePicker(iconPickerButton, iconPicker, {
-            getCurrentPath: () => cat.icon || '',
-            iconFolder: (() => {
-              const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
-              return systemImagesFolderInput?.value.trim() || window.adminSettings?.system_images_folder || window.systemImagesFolder || null;
-            })(),
-            useIconFolder: true,
+        // Attach icon picker functionality
+        if(typeof window.attachIconPicker === 'function'){
+          window.attachIconPicker(iconPickerButton, iconPicker, {
+            getCurrentPath: () => cat.icon,
             onSelect: (value) => {
-              // Update button immediately
+              // Update preview immediately
               if(value){
-                iconPickerImg.src = value;
-                iconPickerButton.classList.add('has-image');
-                const pathParts = value.split('/');
-                const filename = pathParts[pathParts.length - 1] || value;
-                iconPickerLabel.textContent = filename;
+                previewImg.src = value;
+                preview.classList.add('has-image');
+                previewLabel.textContent = '';
+                iconPickerButton.textContent = 'Change Icon';
               } else {
-                iconPickerImg.src = '';
-                iconPickerButton.classList.remove('has-image');
-                iconPickerLabel.textContent = 'Choose Image';
+                previewImg.src = '';
+                preview.classList.remove('has-image');
+                previewLabel.textContent = 'No Icon';
+                iconPickerButton.textContent = 'Choose Icon';
               }
               
               // Update category icon
@@ -17897,20 +17852,17 @@ function makePosts(){
     
     // Initialize messages categories when admin panel opens
     if(messagesCats){
-      // Load message category icons before rendering, then load messages and tooltips
+      // Load message category icons before rendering
       (async function(){
         await loadMessageCategoryIcons();
         renderMessagesCategories();
-        
-        // Wait for DOM to update after rendering categories
-        await new Promise(resolve => setTimeout(resolve, 0));
-        
-        // Load messages from database (admin panel sees all messages including email/admin)
-        await loadAdminMessages();
-        
-        // Load fieldset tooltips
-        await loadFieldsetTooltips();
       })();
+      
+      // Load messages from database (admin panel sees all messages including email/admin)
+      loadAdminMessages();
+      
+      // Load fieldset tooltips
+      loadFieldsetTooltips();
       
       // Add drag and drop functionality for Messages tab categories
       let draggedMessageCategory = null;

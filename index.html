@@ -378,50 +378,59 @@
               </div>
             </div>
             <div class="panel-field" style="padding-top: 12px;">
-              <label>Small Map Card Pill</label>
-              <div class="menu menu--system-images" id="systemImageSmallMapCardPillContainer">
-                    <button type="button" class="menu-button" id="systemImageSmallMapCardPillButton" data-setting-key="small_map_card_pill" aria-haspopup="true" aria-expanded="false">
-                      <img class="menu-button-img" alt="" />
-                      <span class="menu-button-label">Choose Image</span>
-                      <span class="dropdown-arrow" aria-hidden="true"></span>
-                    </button>
+              <label style="font-weight: 600; margin-bottom: 16px; display: block;">System Images</label>
+              <div class="system-image-picker-container">
+                <div class="panel-field system-image-picker-field">
+                  <label>Small Map Card Pill</label>
+                  <div class="iconpicker-container" id="systemImageSmallMapCardPillContainer">
+                    <div class="iconpicker-preview" id="systemImageSmallMapCardPillPreview">
+                      <span></span>
+                      <img alt="Small map card pill preview" />
+                    </div>
+                    <button type="button" class="iconpicker-button" id="systemImageSmallMapCardPillButton" data-setting-key="small_map_card_pill">Choose Icon</button>
                   </div>
-              <div class="panel-field" style="padding-top: 12px;">
-                <label>Big Map Card Pill</label>
-                <div class="menu menu--system-images" id="systemImageBigMapCardPillContainer">
-                    <button type="button" class="menu-button" id="systemImageBigMapCardPillButton" data-setting-key="big_map_card_pill" aria-haspopup="true" aria-expanded="false">
-                      <img class="menu-button-img" alt="" />
-                      <span class="menu-button-label">Choose Image</span>
-                      <span class="dropdown-arrow" aria-hidden="true"></span>
-                    </button>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label>Big Map Card Pill</label>
+                  <div class="iconpicker-container" id="systemImageBigMapCardPillContainer">
+                    <div class="iconpicker-preview" id="systemImageBigMapCardPillPreview">
+                      <span></span>
+                      <img alt="Big map card pill preview" />
+                    </div>
+                    <button type="button" class="iconpicker-button" id="systemImageBigMapCardPillButton" data-setting-key="big_map_card_pill">Choose Icon</button>
                   </div>
-              <div class="panel-field" style="padding-top: 12px;">
-                <label>Hover Map Card Pill</label>
-                <div class="menu menu--system-images" id="systemImageHoverMapCardPillContainer">
-                    <button type="button" class="menu-button" id="systemImageHoverMapCardPillButton" data-setting-key="hover_map_card_pill" aria-haspopup="true" aria-expanded="false">
-                      <img class="menu-button-img" alt="" />
-                      <span class="menu-button-label">Choose Image</span>
-                      <span class="dropdown-arrow" aria-hidden="true"></span>
-                    </button>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label>Hover Map Card Pill</label>
+                  <div class="iconpicker-container" id="systemImageHoverMapCardPillContainer">
+                    <div class="iconpicker-preview" id="systemImageHoverMapCardPillPreview">
+                      <span></span>
+                      <img alt="Hover map card pill preview" />
+                    </div>
+                    <button type="button" class="iconpicker-button" id="systemImageHoverMapCardPillButton" data-setting-key="hover_map_card_pill">Choose Icon</button>
                   </div>
-              <div class="panel-field" style="padding-top: 12px;">
-                <label>Multi Post Icon</label>
-                <div class="menu menu--system-images" id="systemImageMultiPostIconContainer">
-                    <button type="button" class="menu-button" id="systemImageMultiPostIconButton" data-setting-key="multi_post_icon" aria-haspopup="true" aria-expanded="false">
-                      <img class="menu-button-img" alt="" />
-                      <span class="menu-button-label">Choose Image</span>
-                      <span class="dropdown-arrow" aria-hidden="true"></span>
-                    </button>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label>Multi Post Icon</label>
+                  <div class="iconpicker-container" id="systemImageMultiPostIconContainer">
+                    <div class="iconpicker-preview" id="systemImageMultiPostIconPreview">
+                      <span></span>
+                      <img alt="Multi post icon preview" />
+                    </div>
+                    <button type="button" class="iconpicker-button" id="systemImageMultiPostIconButton" data-setting-key="multi_post_icon">Choose Icon</button>
                   </div>
-              <div class="panel-field" style="padding-top: 12px;">
-                <label>Marker Cluster Icon</label>
-                <div class="menu menu--system-images" id="systemImageMarkerClusterContainer">
-                    <button type="button" class="menu-button" id="systemImageMarkerClusterButton" data-setting-key="marker_cluster_icon" aria-haspopup="true" aria-expanded="false">
-                      <img class="menu-button-img" alt="" />
-                      <span class="menu-button-label">Choose Image</span>
-                      <span class="dropdown-arrow" aria-hidden="true"></span>
-                    </button>
+                </div>
+                <div class="panel-field system-image-picker-field">
+                  <label>Marker Cluster Icon</label>
+                  <div class="iconpicker-container" id="systemImageMarkerClusterContainer">
+                    <div class="iconpicker-preview" id="systemImageMarkerClusterPreview">
+                      <span></span>
+                      <img alt="Marker cluster icon preview" />
+                    </div>
+                    <button type="button" class="iconpicker-button" id="systemImageMarkerClusterButton" data-setting-key="marker_cluster_icon">Choose Icon</button>
                   </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -436,32 +445,39 @@
             <input type="text" id="adminWebsiteTagline" autocomplete="off" placeholder="Enter website tagline" />
           </div>
           <div class="panel-field" style="padding-top: 12px;">
-            <label>Big Logo</label>
-            <div class="menu menu--system-images" id="systemImageBigLogoContainer">
+            <label style="font-weight: 600; margin-bottom: 16px; display: block;">Website Branding</label>
+            <div class="system-image-picker-container">
+              <div class="panel-field system-image-picker-field">
+                <label>Big Logo</label>
+                <div class="menu menu--system-images" id="systemImageBigLogoContainer">
                   <button type="button" class="menu-button" id="systemImageBigLogoButton" data-setting-key="big_logo" aria-haspopup="true" aria-expanded="false">
                     <img class="menu-button-img" alt="" />
                     <span class="menu-button-label">Choose Image</span>
                     <span class="dropdown-arrow" aria-hidden="true"></span>
                   </button>
                 </div>
-            <div class="panel-field" style="padding-top: 12px;">
-              <label>Small Logo</label>
-              <div class="menu menu--system-images" id="systemImageSmallLogoContainer">
+              </div>
+              <div class="panel-field system-image-picker-field">
+                <label>Small Logo</label>
+                <div class="menu menu--system-images" id="systemImageSmallLogoContainer">
                   <button type="button" class="menu-button" id="systemImageSmallLogoButton" data-setting-key="small_logo" aria-haspopup="true" aria-expanded="false">
                     <img class="menu-button-img" alt="" />
                     <span class="menu-button-label">Choose Image</span>
                     <span class="dropdown-arrow" aria-hidden="true"></span>
                   </button>
                 </div>
-            <div class="panel-field" style="padding-top: 12px;">
-              <label>Favicon</label>
-              <div class="menu menu--system-images" id="systemImageFaviconContainer">
+              </div>
+              <div class="panel-field system-image-picker-field">
+                <label>Favicon</label>
+                <div class="menu menu--system-images" id="systemImageFaviconContainer">
                   <button type="button" class="menu-button" id="systemImageFaviconButton" data-setting-key="favicon" aria-haspopup="true" aria-expanded="false">
                     <img class="menu-button-img" alt="" />
                     <span class="menu-button-label">Choose Image</span>
                     <span class="dropdown-arrow" aria-hidden="true"></span>
                   </button>
                 </div>
+              </div>
+            </div>
           </div>
           <div class="panel-field">
             <label for="adminWebsiteCurrency">Website Currency</label>
