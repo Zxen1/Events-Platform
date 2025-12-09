@@ -2049,8 +2049,9 @@ button[aria-expanded="true"] .results-arrow{
   position:relative;
   display:flex;
   flex-direction:row;
-  align-items:center;
+  align-items:flex-start;
   gap:12px;
+  flex-wrap:wrap;
 }
 
 .system-image-picker-container .iconpicker-button{
@@ -2107,9 +2108,17 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:border-box;
   overflow:hidden;
   background:none;
-  width:30px;
-  height:30px;
-  flex:0 0 30px;
+  border:none;
+  min-height:40px;
+  min-width:40px;
+  flex-shrink:0;
+}
+
+.system-image-picker-container .iconpicker-preview img{
+  max-width:100%;
+  max-height:100%;
+  display:none;
+  border:none;
 }
 
 .system-image-picker-container .iconpicker-preview.has-image{
@@ -2121,11 +2130,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .system-image-picker-container .iconpicker-preview img{
-  max-width:30px;
-  max-height:30px;
-  width:auto;
-  height:auto;
-  object-fit:contain;
+  width:30px;
+  height:30px;
 }
 
 .system-image-picker-container .icon-picker-popup{
