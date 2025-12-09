@@ -1961,32 +1961,148 @@ let __notifyMapOnInteraction = null;
         imagePickers.forEach(picker => {
           const button = document.getElementById(picker.buttonId);
           const container = document.getElementById(picker.containerId);
-          const preview = document.getElementById(picker.previewId);
           
-          if(!button || !container || !preview) return;
+          if(!button || !container) return;
           
-          const previewImg = preview.querySelector('img');
-          const previewLabel = preview.querySelector('span');
+          // For new menu structure (settings tab logo menus), build button structure
+          let buttonImg = button.querySelector('.menu-button-img');
+          let buttonLabel = button.querySelector('.menu-button-label');
           
-          // Load initial value from settings
-          const initialPath = settings[picker.settingKey] || '';
-          if(initialPath && previewImg){
-            previewImg.src = initialPath;
-            preview.classList.add('has-image');
-            if(previewLabel) previewLabel.textContent = '';
-            button.textContent = 'Change Icon';
-          }
-          
-          // Attach system image picker functionality (uses system-images folder)
-          if(typeof window.attachSystemImagePicker === 'function'){
-            window.attachSystemImagePicker(button, container, {
-              getCurrentPath: () => settings[picker.settingKey] || '',
-              onSelect: async (value) => {
-                if(value){
-                  if(previewImg) previewImg.src = value;
-                  preview.classList.add('has-image');
-                  if(previewLabel) previewLabel.textContent = '';
-                  button.textContent = 'Change Icon';
+          // If button structure doesn't exist yet, it's the old structure - skip for now
+          // (map tab still uses old structure, we'll convert later)
+          if(!buttonImg || !buttonLabel){
+            // Old structure - check for preview
+            const preview = document.getElementById(picker.previewId);
+            if(!preview) return;
+            
+            const previewImg = preview.querySelector('img');
+            const previewLabel = preview.querySelector('span');
+            
+            // Load initial value from settings
+            const initialPath = settings[picker.settingKey] || '';
+            if(initialPath && previewImg){
+              previewImg.src = initialPath;
+              preview.classList.add('has-image');
+              if(previewLabel) previewLabel.textContent = '';
+              button.textContent = 'Change Icon';
+            }
+            
+            // Attach system image picker functionality (uses system-images folder)
+            if(typeof window.attachSystemImagePicker === 'function'){
+              window.attachSystemImagePicker(button, container, {
+                getCurrentPath: () => settings[picker.settingKey] || '',
+                onSelect: async (value) => {
+                  if(value){
+                    if(previewImg) previewImg.src = value;
+                    preview.classList.add('has-image');
+                    if(previewLabel) previewLabel.textContent = '';
+                    button.textContent = 'Change Icon';
+                    
+                    // Update local settings immediately
+                    settings[picker.settingKey] = value;
+                    
+                    // Get map instance - try multiple methods
+                    let mapInstance = null;
+                    if(typeof window.getMapInstance === 'function'){
+                      mapInstance = window.getMapInstance();
+                    } else if(typeof map !== 'undefined' && map){
+                      mapInstance = map;
+                    } else if(typeof window.map !== 'undefined' && window.map){
+                      mapInstance = window.map;
+                    }
+                    
+                    // Save to admin_settings FIRST
+                    const settingsToSave = {};
+                    settingsToSave[picker.settingKey] = value;
+                    
+                    try {
+                      const response = await fetch('/gateway.php?action=save-admin-settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify(settingsToSave)
+                      });
+                      if(!response.ok){
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                      }
+                      const data = await response.json();
+                      if(!data.success){
+                        throw new Error(data.message || 'Save failed');
+                      }
+                      console.log(`${picker.label} saved to database.`);
+                      
+                      // Now refresh map with saved value
+                      if(picker.settingKey === 'marker_cluster_icon' && mapInstance && typeof mapInstance.hasImage === 'function'){
+                        // Handle cluster icon update
+                        const CLUSTER_ICON_ID = 'cluster-icon';
+                        const CLUSTER_LAYER_ID = 'post-clusters';
+                        if(mapInstance.hasImage(CLUSTER_ICON_ID)){
+                          mapInstance.removeImage(CLUSTER_ICON_ID);
+                        }
+                        const img = await loadMarkerLabelImage(value);
+                        if(img && img.width > 0 && img.height > 0){
+                          const pixelRatio = img.width >= 256 ? 2 : 1;
+                          mapInstance.addImage(CLUSTER_ICON_ID, img, { pixelRatio });
+                          const layer = mapInstance.getLayer(CLUSTER_LAYER_ID);
+                          if(layer){
+                            mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'icon-image', CLUSTER_ICON_ID);
+                          }
+                        }
+                      } else if(picker.settingKey === 'small_map_card_pill' || picker.settingKey === 'big_map_card_pill' || picker.settingKey === 'hover_map_card_pill'){
+                        // Update window.adminSettings immediately for instant effect
+                        if(!window.adminSettings) window.adminSettings = {};
+                        window.adminSettings[picker.settingKey] = value;
+                        // Refresh map card styles
+                        if(window.MapCards && window.MapCards.refreshMapCardStyles){
+                          window.MapCards.refreshMapCardStyles();
+                        }
+                      } else if(picker.settingKey === 'multi_post_icon'){
+                        // Update both stores immediately
+                        if(!window.adminSettings) window.adminSettings = {};
+                        window.adminSettings.multi_post_icon = value;
+                        if(window.subcategoryMarkers){
+                          window.subcategoryMarkers['multi-post-icon'] = value;
+                        }
+                        // Refresh marker icons
+                        if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
+                          window.MapCards.refreshAllMarkerIcons();
+                        }
+                      }
+                    } catch(err) {
+                      console.error(`Failed to save/update ${picker.label}:`, err);
+                      alert(`Failed to save ${picker.label}: ${err.message}`);
+                    }
+                  }
+                },
+                label: `Choose icon for ${picker.label}`,
+                parentMenu: container.closest('.panel-field'),
+                iconFolder: (() => {
+                  const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
+                  return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || null;
+                })()
+              });
+            }
+          } else {
+            // New menu structure (settings tab)
+            // Load initial value from settings
+            const initialPath = settings[picker.settingKey] || '';
+            if(initialPath){
+              buttonImg.src = initialPath;
+              button.classList.add('has-image');
+              buttonLabel.textContent = 'Change Image';
+            } else {
+              button.classList.remove('has-image');
+              buttonLabel.textContent = 'Choose Image';
+            }
+            
+            // Attach system image picker functionality (uses system-images folder)
+            if(typeof window.attachSystemImagePicker === 'function'){
+              window.attachSystemImagePicker(button, container, {
+                getCurrentPath: () => settings[picker.settingKey] || '',
+                onSelect: async (value) => {
+                  if(value){
+                    buttonImg.src = value;
+                    button.classList.add('has-image');
+                    buttonLabel.textContent = 'Change Image';
                   
                   // Update local settings immediately
                   settings[picker.settingKey] = value;

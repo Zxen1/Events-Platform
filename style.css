@@ -2044,7 +2044,208 @@ button[aria-expanded="true"] .results-arrow{
   font-weight:500;
 }
 
-/* Settings tab iconpicker styles (matching formbuilder) */
+/* ========================================
+   Base Menu System (Unified Dropdown)
+   ======================================== */
+.menu{
+  position:relative;
+}
+
+.menu-button{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  width:100%;
+  padding:0 30px 0 10px;
+  height:60px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
+  box-sizing:border-box;
+}
+
+.menu-button:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+
+.menu-button:focus-visible{
+  box-shadow:0 0 0 3px rgba(46,58,114,0.45);
+  outline:none;
+}
+
+.menu-button[disabled],
+.menu-button[aria-disabled='true']{
+  cursor:not-allowed;
+  opacity:0.65;
+}
+
+.menu-options{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  bottom:auto;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(10,10,20,0.95);
+  box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  padding:12px;
+  max-height:300px;
+  overflow:auto;
+  z-index:var(--forms-layer-popover, 80);
+  display:none;
+}
+
+.menu-options[hidden]{
+  display:none;
+}
+
+.menu.menu-open .menu-options{
+  display:block;
+}
+
+.menu-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:background 0.15s;
+  box-sizing:border-box;
+}
+
+.menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+
+.menu-option:focus-visible{
+  outline:2px solid rgba(46,58,114,0.45);
+  outline-offset:-2px;
+}
+
+.menu-option.selected{
+  background:rgba(46,58,114,0.3);
+}
+
+/* Menu button image and label (for image menus) */
+.menu-button-img{
+  width:30px;
+  height:30px;
+  object-fit:contain;
+  flex-shrink:0;
+  display:none;
+}
+
+.menu-button.has-image .menu-button-img{
+  display:block;
+}
+
+.menu-button-label{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.menu-button:not(.has-image) .menu-button-label{
+  color:rgba(255,255,255,0.5);
+}
+
+.menu-button .dropdown-arrow{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:0;
+  height:0;
+  border-left:4px solid transparent;
+  border-right:4px solid transparent;
+  border-top:5px solid rgba(255,255,255,0.6);
+  transition:transform 0.2s, border-top-color 0.2s;
+  pointer-events:none;
+}
+
+.menu.menu-open .menu-button .dropdown-arrow,
+.menu.iconpicker-open .menu-button .dropdown-arrow{
+  transform:translateY(-50%) rotate(180deg);
+  border-top-color:rgba(255,255,255,0.8);
+}
+
+/* Container-scoped to beat #adminPanel button (1,0,1) */
+#adminPanel .menu-button,
+#memberPanel .menu-button{
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  color:var(--button-text);
+  height:60px;
+  padding:0 30px 0 10px;
+}
+
+#adminPanel .menu.menu-open .menu-button,
+#memberPanel .menu.menu-open .menu-button{
+  border-color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.5);
+}
+
+/* System Images Menu Modifier */
+.menu--system-images .menu-button{
+  width:100%;
+}
+
+.menu--system-images .menu-options,
+.menu--system-images .icon-picker-popup{
+  width:100%;
+  box-sizing:border-box;
+}
+
+.menu--system-images.iconpicker-open .menu-button{
+  border-color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.5);
+}
+
+.menu--system-images .menu-option,
+.menu--system-images .icon-picker-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+}
+
+.menu--system-images .menu-option img,
+.menu--system-images .icon-picker-option img{
+  width:30px;
+  height:30px;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+.menu--system-images .menu-option .icon-filename,
+.menu--system-images .icon-picker-option .icon-filename{
+  flex:1;
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* Settings tab iconpicker styles (matching formbuilder) - DEPRECATED, use .menu instead */
 .system-image-picker-container .iconpicker-container{
   position:relative;
   display:flex;
