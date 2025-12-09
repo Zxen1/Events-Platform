@@ -2066,6 +2066,22 @@ let __notifyMapOnInteraction = null;
                         if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
                           window.MapCards.refreshAllMarkerIcons();
                         }
+                      } else if(picker.settingKey === 'big_logo'){
+                        // Update welcome modal logo immediately
+                        if(!window.adminSettings) window.adminSettings = {};
+                        window.adminSettings.big_logo = value;
+                        const welcomeLogo = document.querySelector('.welcome-logo');
+                        if(welcomeLogo){
+                          welcomeLogo.src = value;
+                        }
+                      } else if(picker.settingKey === 'small_logo'){
+                        // Update header logo immediately
+                        if(!window.adminSettings) window.adminSettings = {};
+                        window.adminSettings.small_logo = value;
+                        const headerLogo = document.querySelector('.logo img');
+                        if(headerLogo){
+                          headerLogo.src = value;
+                        }
                       }
                     } catch(err) {
                       console.error(`Failed to save/update ${picker.label}:`, err);
@@ -2177,6 +2193,22 @@ let __notifyMapOnInteraction = null;
                       // Refresh marker icons
                       if(window.MapCards && window.MapCards.refreshAllMarkerIcons){
                         window.MapCards.refreshAllMarkerIcons();
+                      }
+                    } else if(picker.settingKey === 'big_logo'){
+                      // Update welcome modal logo immediately
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings.big_logo = value;
+                      const welcomeLogo = document.querySelector('.welcome-logo');
+                      if(welcomeLogo){
+                        welcomeLogo.src = value;
+                      }
+                    } else if(picker.settingKey === 'small_logo'){
+                      // Update header logo immediately
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings.small_logo = value;
+                      const headerLogo = document.querySelector('.logo img');
+                      if(headerLogo){
+                        headerLogo.src = value;
                       }
                     }
                   } catch(err) {
@@ -2382,6 +2414,20 @@ let __notifyMapOnInteraction = null;
                   pageTitle += ' - ' + data.settings.site_tagline;
                 }
                 document.title = pageTitle;
+              }
+              
+              // Apply logo settings from admin settings
+              if(data.settings.big_logo && typeof data.settings.big_logo === 'string' && data.settings.big_logo.trim()){
+                const welcomeLogo = document.querySelector('.welcome-logo');
+                if(welcomeLogo){
+                  welcomeLogo.src = data.settings.big_logo.trim();
+                }
+              }
+              if(data.settings.small_logo && typeof data.settings.small_logo === 'string' && data.settings.small_logo.trim()){
+                const headerLogo = document.querySelector('.logo img');
+                if(headerLogo){
+                  headerLogo.src = data.settings.small_logo.trim();
+                }
               }
               
               // Calculate if spin should be enabled
