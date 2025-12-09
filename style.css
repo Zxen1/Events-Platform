@@ -2206,43 +2206,130 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.5);
 }
 
-/* System Images Menu Modifier */
+/* System Images Menu Modifier - Match forms tab exactly */
 .menu--system-images .menu-button{
   width:100%;
 }
 
-.menu--system-images .menu-options,
-.menu--system-images .icon-picker-popup{
+/* Make menu button match forms tab iconpicker-button exactly */
+#tab-settings .menu--system-images .menu-button{
   width:100%;
-  box-sizing:border-box;
-}
-
-.menu--system-images.iconpicker-open .menu-button{
-  border-color:rgba(255,255,255,0.3);
-  background:rgba(0,0,0,0.5);
-}
-
-.menu--system-images .menu-option,
-.menu--system-images .icon-picker-option{
   display:flex;
   align-items:center;
   gap:10px;
-  padding:10px;
+  height:60px;
+  padding:0 30px 0 10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
 }
 
-.menu--system-images .menu-option img,
-.menu--system-images .icon-picker-option img{
+#tab-settings .menu--system-images .menu-button:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+
+#tab-settings .menu--system-images .menu-button-img{
   width:30px;
   height:30px;
   object-fit:contain;
   flex-shrink:0;
+  display:none;
 }
 
-.menu--system-images .menu-option .icon-filename,
-.menu--system-images .icon-picker-option .icon-filename{
+#tab-settings .menu--system-images .menu-button.has-image .menu-button-img{
+  display:block;
+}
+
+#tab-settings .menu--system-images .menu-button-label{
   flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#tab-settings .menu--system-images .menu-button:not(.has-image) .menu-button-label{
+  color:rgba(255,255,255,0.5);
+}
+
+#tab-settings .menu--system-images.iconpicker-open .menu-button{
+  border-color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.5);
+}
+
+/* Popup matches forms tab exactly */
+#tab-settings .menu--system-images .icon-picker-popup{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(10,10,20,0.95);
+  box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  padding:12px;
+  width:100%;
+  box-sizing:border-box;
+  max-height:300px;
+  overflow:auto;
+  z-index:var(--forms-layer-popover, 80);
+}
+
+/* Grid matches forms tab */
+#tab-settings .menu--system-images .icon-picker-grid{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* Options match forms tab exactly */
+#tab-settings .menu--system-images .icon-picker-option{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  min-height:60px;
+  height:auto;
+  padding:8px 12px;
+  gap:12px;
+  border:none;
+  background:transparent;
+}
+
+#tab-settings .menu--system-images .icon-picker-option:hover,
+#tab-settings .menu--system-images .icon-picker-option:focus-visible{
+  background:rgba(255,255,255,0.1);
+  border:none;
+}
+
+#tab-settings .menu--system-images .icon-picker-option img{
+  max-width:50px;
+  max-height:50px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+#tab-settings .menu--system-images .icon-picker-option .icon-filename{
   font-size:12px;
-  color:var(--muted);
+  color:rgba(255,255,255,0.9);
+  text-align:left;
+  word-break:break-word;
+  line-height:1.4;
+  flex:1;
+}
+
+#tab-settings .menu--system-images .icon-picker-option--clear{
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
 }
 
 /* Settings tab iconpicker styles (matching formbuilder) - DEPRECATED, use .menu instead */
