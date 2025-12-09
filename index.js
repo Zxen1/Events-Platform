@@ -3267,10 +3267,22 @@ let __notifyMapOnInteraction = null;
       // Scale welcome modal map controls to match logo width
       function scaleWelcomeControls(){
         const controls = document.querySelector('#welcomeBody .map-controls-welcome');
-        if(!controls) return;
+        const modalContent = document.querySelector('#welcome-modal .modal-content');
+        if(!controls || !modalContent) return;
         
-        // Test with hardcoded zoom to verify it works
-        controls.style.zoom = '1.3';
+        // Reset zoom to measure natural width
+        controls.style.zoom = '1';
+        
+        // Wait a frame for layout to recalculate after zoom reset
+        requestAnimationFrame(() => {
+          const controlsWidth = controls.offsetWidth;
+          const targetWidth = modalContent.offsetWidth - 40; // Modal minus padding
+          
+          if(controlsWidth > 0 && targetWidth > 0){
+            const scale = targetWidth / controlsWidth;
+            controls.style.zoom = scale;
+          }
+        });
       }
         
       async function openWelcome(){
