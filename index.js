@@ -2078,8 +2078,42 @@ let __notifyMapOnInteraction = null;
       let resolveAdminSettings;
       window._adminSettingsReady = new Promise(resolve => { resolveAdminSettings = resolve; });
 
+      // Performance timing: Track startup component load times
+      const pageStartTime = performance.timing ? performance.timing.navigationStart : performance.now();
+      window.__startupTimings = {
+        start: pageStartTime,
+        components: {},
+        // Function to log all timings
+        log: function(){
+          const total = performance.now() - this.start;
+          console.group('🚀 Startup Performance Timings');
+          console.log(`Total time: ${total.toFixed(2)}ms`);
+          console.log('');
+          Object.keys(this.components).forEach(key => {
+            const comp = this.components[key];
+            const pct = ((comp.duration / total) * 100).toFixed(1);
+            const status = comp.error ? '❌' : '✅';
+            console.log(`${status} ${key}: ${comp.duration.toFixed(2)}ms (${pct}%)`);
+            if(comp.error) console.log(`   Error: ${comp.error}`);
+          });
+          console.groupEnd();
+        }
+      };
+      
+      // Mark header as ready (header is in HTML, just needs to be measured)
+      const headerEl = document.querySelector('header');
+      if(headerEl){
+        const headerEnd = performance.now();
+        window.__startupTimings.components.header = {
+          start: window.__startupTimings.start,
+          end: headerEnd,
+          duration: headerEnd - window.__startupTimings.start
+        };
+      }
+      
       // Load admin settings from database (includes messages for welcome modal)
       (async function loadAdminSettings(){
+        const adminSettingsStart = performance.now();
         try {
           const response = await apiRequest('/gateway.php?action=get-admin-settings&include_messages=true', {
             method: 'GET',
@@ -2174,6 +2208,14 @@ let __notifyMapOnInteraction = null;
                 window._consoleFilterEnabled = data.settings.console_filter;
               }
               
+              // Mark admin settings as loaded
+              const adminSettingsEnd = performance.now();
+              window.__startupTimings.components.adminSettings = {
+                start: adminSettingsStart,
+                end: adminSettingsEnd,
+                duration: adminSettingsEnd - adminSettingsStart
+              };
+              
               // Apply welcome_enabled setting (no localStorage caching)
               if(data.settings.welcome_enabled !== undefined){
                 window._welcomeEnabled = data.settings.welcome_enabled;
@@ -2182,9 +2224,16 @@ let __notifyMapOnInteraction = null;
                 // Messages are already cached above - no additional API call needed
                 // Note: welcome can always be shown via logo click regardless of localStorage
                 if(data.settings.welcome_enabled){
+                  const welcomeModalStart = performance.now();
                   const welcomeModal = document.getElementById('welcome-modal');
                   if(welcomeModal && typeof window.openWelcome === 'function'){
                     window.openWelcome();
+                    const welcomeModalEnd = performance.now();
+                    window.__startupTimings.components.welcomeModal = {
+                      start: welcomeModalStart,
+                      end: welcomeModalEnd,
+                      duration: welcomeModalEnd - welcomeModalStart
+                    };
                     // Don't set welcome-seen here - it will be set when user closes the modal
                   }
                 }
@@ -2612,6 +2661,16 @@ let __notifyMapOnInteraction = null;
           }
         } catch(err){
           console.error('Failed to load admin settings from database:', err);
+          // Mark admin settings as failed
+          const adminSettingsEnd = performance.now();
+          if(!window.__startupTimings.components.adminSettings){
+            window.__startupTimings.components.adminSettings = {
+              start: adminSettingsStart,
+              end: adminSettingsEnd,
+              duration: adminSettingsEnd - adminSettingsStart,
+              error: err.message || 'Unknown error'
+            };
+          }
           // Don't use defaults - error should be visible
           // Settings remain unloaded - saving will be blocked
           window._adminSettingsLoaded = false;
@@ -20255,6 +20314,9 @@ function makePosts(){
         startZoom = 1.5;
       }
       
+        // Mark map initialization start
+        const mapInitStart = performance.now();
+        
         // Hide map initially until tiles are loaded
         const mapContainer = document.getElementById('map');
         let mapFadedIn = false;
@@ -20369,6 +20431,17 @@ function makePosts(){
         setTimeout(() => {
           fadeInMap();
         }, 5000);
+        
+        // Mark map initialization complete when map loads
+        map.once('load', () => {
+          const mapInitEnd = performance.now();
+          window.__startupTimings.components.map = {
+            start: mapInitStart,
+            end: mapInitEnd,
+            duration: mapInitEnd - mapInitStart,
+            tilesLoaded: typeof map.areTilesLoaded === 'function' ? map.areTilesLoaded() : null
+          };
+        });
         
         try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
@@ -20760,6 +20833,7 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
+        const mapLoadStart = performance.now();
         setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
@@ -20770,9 +20844,31 @@ function makePosts(){
         applyFilters();
         updateZoomState(getZoomFromEvent());
         if(!markersLoaded){
+          const markersLoadStart = performance.now();
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
           if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
-            try{ loadPostMarkers(); }catch(err){ console.error(err); }
+            try{ 
+              loadPostMarkers();
+              const markersLoadEnd = performance.now();
+              if(!window.__startupTimings.components.markers){
+                window.__startupTimings.components.markers = {
+                  start: markersLoadStart,
+                  end: markersLoadEnd,
+                  duration: markersLoadEnd - markersLoadStart
+                };
+              }
+            }catch(err){ 
+              console.error(err);
+              const markersLoadEnd = performance.now();
+              if(!window.__startupTimings.components.markers){
+                window.__startupTimings.components.markers = {
+                  start: markersLoadStart,
+                  end: markersLoadEnd,
+                  duration: markersLoadEnd - markersLoadStart,
+                  error: err.message || 'Unknown error'
+                };
+              }
+            }
             markersLoaded = true;
             window.__markersLoaded = true;
           }
@@ -20786,6 +20882,14 @@ function makePosts(){
           }
         });
         
+        const mapLoadEnd = performance.now();
+        if(!window.__startupTimings.components.mapLoad){
+          window.__startupTimings.components.mapLoad = {
+            start: mapLoadStart,
+            end: mapLoadEnd,
+            duration: mapLoadEnd - mapLoadStart
+          };
+        }
       });
 
       map.on('style.load', ()=>{
