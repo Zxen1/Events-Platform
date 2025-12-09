@@ -446,7 +446,7 @@
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
-      --filter-active-color: #6b4ba8;
+      --filter-active-color: #cc6600;
       --category-switch-active: #3b82f6;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
@@ -3156,9 +3156,9 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .keyword-clear-button.active,
 #filterPanel .daterange-clear-button.active,
 #filterPanel .price-clear-button.active{
-  background:#6b4ba8;
+  background:#cc6600;
   color:#fff;
-  border-color:#6b4ba8;
+  border-color:#cc6600;
   opacity:1;
 }
 
@@ -3222,12 +3222,16 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .reset-box .btn{
   background:rgba(0,0,0,0.2);
   border:1px solid rgba(255,255,255,0.1);
-  color:#fff;
+  color:#666;
+  opacity:0.5;
+  cursor:not-allowed;
 }
 #filterPanel .reset-box .btn.active{
-  background:#6b4ba8;
-  border-color:#6b4ba8;
+  background:#cc6600;
+  border-color:#cc6600;
   color:#fff;
+  opacity:1;
+  cursor:pointer;
 }
 #filterPanel .sort-field{
   display:flex;
@@ -3251,9 +3255,9 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
 }
 .sort-options .sort-option[aria-pressed="true"]{
-  background:#6b4ba8;
+  background:#cc6600;
   color:#fff;
-  border-color:#6b4ba8;
+  border-color:#cc6600;
 }
 #tab-forms .formbuilder-container{
   width:100%;
@@ -3660,7 +3664,7 @@ button[aria-expanded="true"] .results-arrow{
   background:var(--session-selected);
 }
 #expiredToggle:checked + .slider{
-  background:#6b4ba8;
+  background:#cc6600;
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
@@ -4336,13 +4340,16 @@ button[aria-expanded="true"] .results-arrow{
   padding: 0 14px;
   font-weight: 700;
   letter-spacing: .2px;
-  color: var(--ink);
-  cursor: pointer;
+  color: #666;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .reset-box .btn.active{
-  background:#6b4ba8;
-  border-color:#6b4ba8;
+  background:#cc6600;
+  border-color:#cc6600;
   color:#fff;
+  opacity: 1;
+  cursor: pointer;
 }
 
 .reset-box .btn svg{
