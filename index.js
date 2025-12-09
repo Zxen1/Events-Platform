@@ -11029,34 +11029,42 @@ function makePosts(){
           }
           const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
           const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-          let left = triggerRect.left - containerRect.left;
-          // Use 10px spacing for map tab, 4px for others (matches .options-menu)
-          const isMapTab = container.closest('#tab-map') !== null;
-          const spacing = isMapTab ? 10 : 4;
+          // Check if this is a menu with fixed width (system-images or category-icons)
+          const isFixedWidthMenu = container.classList.contains('menu--system-images') || container.classList.contains('menu--category-icons');
+          const spacing = 4; // Consistent spacing for all menus
           let top = triggerRect.bottom - containerRect.top + spacing;
-          popup.style.left = '0px';
-          popup.style.top = '0px';
-          const popupRect = popup.getBoundingClientRect();
-          const overflowRight = triggerRect.left + popupRect.width - viewportWidth + 12;
-          if(overflowRight > 0){
-            left -= overflowRight;
-          }
-          const overflowLeft = containerRect.left + left;
-          if(overflowLeft < 8){
-            left += 8 - overflowLeft;
-          }
-          const desiredBottom = triggerRect.bottom + spacing + popupRect.height;
-          if(desiredBottom > viewportHeight - 12){
-            const altTop = triggerRect.top - containerRect.top - popupRect.height - spacing;
-            if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
-              top = Math.max(0, altTop);
+          // For fixed-width menus, always align to left edge of container
+          if(isFixedWidthMenu){
+            popup.style.left = '0px';
+            popup.style.right = '0px';
+            popup.style.width = '100%';
+            popup.style.top = `${Math.round(top)}px`;
+          } else {
+            let left = triggerRect.left - containerRect.left;
+            popup.style.left = '0px';
+            popup.style.top = '0px';
+            const popupRect = popup.getBoundingClientRect();
+            const overflowRight = triggerRect.left + popupRect.width - viewportWidth + 12;
+            if(overflowRight > 0){
+              left -= overflowRight;
             }
+            const overflowLeft = containerRect.left + left;
+            if(overflowLeft < 8){
+              left += 8 - overflowLeft;
+            }
+            const desiredBottom = triggerRect.bottom + spacing + popupRect.height;
+            if(desiredBottom > viewportHeight - 12){
+              const altTop = triggerRect.top - containerRect.top - popupRect.height - spacing;
+              if(altTop + containerRect.top >= 12 || desiredBottom >= viewportHeight){
+                top = Math.max(0, altTop);
+              }
+            }
+            if(containerRect.left + left < 0){
+              left = -containerRect.left;
+            }
+            popup.style.left = `${Math.round(left)}px`;
+            popup.style.top = `${Math.round(Math.max(0, top))}px`;
           }
-          if(containerRect.left + left < 0){
-            left = -containerRect.left;
-          }
-          popup.style.left = `${Math.round(left)}px`;
-          popup.style.top = `${Math.round(Math.max(0, top))}px`;
         };
 
         const scheduleAlign = ()=>{
@@ -11194,6 +11202,7 @@ function makePosts(){
             grid.appendChild(btn);
           }
           }
+          if(!popup || !container) return;
           popup.appendChild(grid);
           container.appendChild(popup);
           container.classList.add('iconpicker-open');

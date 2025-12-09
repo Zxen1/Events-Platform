@@ -2307,11 +2307,12 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Popup matches button width exactly */
-.menu--system-images .icon-picker-popup{
+.menu--system-images .icon-picker-popup,
+.menu--category-icons .icon-picker-popup{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  right:auto;
+  right:0;
   width:100%;
   min-width:100%;
   max-width:100%;
@@ -2324,6 +2325,20 @@ button[aria-expanded="true"] .results-arrow{
   max-height:300px;
   overflow:auto;
   z-index:var(--forms-layer-popover, 80);
+}
+
+/* Ensure popup width matches button exactly by using container width */
+.menu--system-images,
+.menu--category-icons{
+  width:100%;
+  position:relative;
+}
+
+.menu--system-images .icon-picker-popup,
+.menu--category-icons .icon-picker-popup{
+  width:100%;
+  min-width:100%;
+  max-width:100%;
 }
 
 /* Grid */
@@ -2378,8 +2393,13 @@ button[aria-expanded="true"] .results-arrow{
   text-align:center;
 }
 
-/* Category Icons Menu Modifier - Forms tab (uses icon folder, identical styles to system-images) */
-#tab-forms .menu--category-icons .menu-button{
+/* Category Icons Menu Modifier - Identical to system-images (uses icon folder) */
+.menu--category-icons{
+  width:100%;
+  position:relative;
+}
+
+.menu--category-icons .menu-button{
   width:100%;
   display:flex;
   align-items:center;
@@ -2396,12 +2416,12 @@ button[aria-expanded="true"] .results-arrow{
   transition:border-color 0.15s, background 0.15s;
 }
 
-#tab-forms .menu--category-icons .menu-button:hover{
+.menu--category-icons .menu-button:hover{
   border-color:rgba(255,255,255,0.25);
   background:rgba(0,0,0,0.45);
 }
 
-#tab-forms .menu--category-icons .menu-button-img{
+.menu--category-icons .menu-button-img{
   width:50px;
   height:50px;
   object-fit:contain;
@@ -2409,37 +2429,31 @@ button[aria-expanded="true"] .results-arrow{
   display:none;
 }
 
-#tab-forms .menu--category-icons .menu-button.has-image .menu-button-img{
+.menu--category-icons .menu-button.has-image .menu-button-img{
   display:block;
 }
 
-#tab-forms .menu--category-icons .menu-button-label{
+.menu--category-icons .menu-button-label{
   flex:1;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
 
-#tab-forms .menu--category-icons .menu-button:not(.has-image) .menu-button-label{
+.menu--category-icons .menu-button:not(.has-image) .menu-button-label{
   color:rgba(255,255,255,0.5);
 }
 
-#tab-forms .menu--category-icons.iconpicker-open .menu-button{
+.menu--category-icons.iconpicker-open .menu-button{
   border-color:rgba(255,255,255,0.3);
   background:rgba(0,0,0,0.5);
 }
 
-/* Popup matches forms tab exactly */
-#tab-forms .menu--category-icons{
-  width:100%;
-  position:relative;
-}
-
-#tab-forms .menu--category-icons .icon-picker-popup{
+.menu--category-icons .icon-picker-popup{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  right:auto;
+  right:0;
   width:100%;
   min-width:100%;
   max-width:100%;
@@ -2454,15 +2468,13 @@ button[aria-expanded="true"] .results-arrow{
   z-index:var(--forms-layer-popover, 80);
 }
 
-/* Grid matches forms tab */
-#tab-forms .menu--category-icons .icon-picker-grid{
+.menu--category-icons .icon-picker-grid{
   display:flex;
   flex-direction:column;
   gap:8px;
 }
 
-/* Options match forms tab exactly */
-#tab-forms .menu--category-icons .icon-picker-option{
+.menu--category-icons .icon-picker-option{
   display:flex;
   flex-direction:row;
   align-items:center;
@@ -2476,13 +2488,13 @@ button[aria-expanded="true"] .results-arrow{
   background:transparent;
 }
 
-#tab-forms .menu--category-icons .icon-picker-option:hover,
-#tab-forms .menu--category-icons .icon-picker-option:focus-visible{
+.menu--category-icons .icon-picker-option:hover,
+.menu--category-icons .icon-picker-option:focus-visible{
   background:rgba(255,255,255,0.1);
   border:none;
 }
 
-#tab-forms .menu--category-icons .icon-picker-option img{
+.menu--category-icons .icon-picker-option img{
   max-width:50px;
   max-height:50px;
   width:auto;
@@ -2491,7 +2503,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-shrink:0;
 }
 
-#tab-forms .menu--category-icons .icon-picker-option .icon-filename{
+.menu--category-icons .icon-picker-option .icon-filename{
   font-size:12px;
   color:rgba(255,255,255,0.9);
   text-align:left;
@@ -2500,7 +2512,7 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
 }
 
-#tab-forms .menu--category-icons .icon-picker-option--clear{
+.menu--category-icons .icon-picker-option--clear{
   justify-content:center;
   flex-direction:column;
   text-align:center;
