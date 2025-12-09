@@ -1948,6 +1948,9 @@ let __notifyMapOnInteraction = null;
       // Initialize system image pickers using iconpicker interface
       function initializeSystemImagePickers(settings){
         const imagePickers = [
+          { buttonId: 'systemImageBigLogoButton', containerId: 'systemImageBigLogoContainer', previewId: 'systemImageBigLogoPreview', settingKey: 'big_logo', label: 'Big Logo' },
+          { buttonId: 'systemImageSmallLogoButton', containerId: 'systemImageSmallLogoContainer', previewId: 'systemImageSmallLogoPreview', settingKey: 'small_logo', label: 'Small Logo' },
+          { buttonId: 'systemImageFaviconButton', containerId: 'systemImageFaviconContainer', previewId: 'systemImageFaviconPreview', settingKey: 'favicon', label: 'Favicon' },
           { buttonId: 'systemImageSmallMapCardPillButton', containerId: 'systemImageSmallMapCardPillContainer', previewId: 'systemImageSmallMapCardPillPreview', settingKey: 'small_map_card_pill', label: 'Small Map Card Pill' },
           { buttonId: 'systemImageBigMapCardPillButton', containerId: 'systemImageBigMapCardPillContainer', previewId: 'systemImageBigMapCardPillPreview', settingKey: 'big_map_card_pill', label: 'Big Map Card Pill' },
           { buttonId: 'systemImageHoverMapCardPillButton', containerId: 'systemImageHoverMapCardPillContainer', previewId: 'systemImageHoverMapCardPillPreview', settingKey: 'hover_map_card_pill', label: 'Hover Map Card Pill' },
