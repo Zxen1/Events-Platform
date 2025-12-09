@@ -2184,11 +2184,10 @@ let __notifyMapOnInteraction = null;
                       alert(`Failed to save ${picker.label}: ${err.message}`);
                     }
                   }
-                }
-              },
-              label: `Choose icon for ${picker.label}`,
-              parentMenu: container.closest('.panel-field'),
-              iconFolder: (() => {
+                },
+                label: `Choose icon for ${picker.label}`,
+                parentMenu: container.closest('.panel-field'),
+                iconFolder: (() => {
                 const systemImagesFolderInput = document.getElementById('adminSystemImagesFolder');
                 return systemImagesFolderInput?.value.trim() || settings.system_images_folder || window.systemImagesFolder || null;
               })()
