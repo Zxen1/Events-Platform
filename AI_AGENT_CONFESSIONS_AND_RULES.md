@@ -3,6 +3,19 @@
 
 ---
 
+## ABOUT THE USER
+
+**CRITICAL:** The user (Paul) is NOT a programmer/coder.
+- Does NOT understand advanced programming terminology or jargon
+- Communicate in plain, simple English
+- Avoid technical terms like "race condition", "async IIFE", "await", etc. unless explaining what they mean
+- When explaining what you're doing, use simple language: "wait for X to finish before doing Y" instead of "await the promise resolution"
+- The user relies entirely on AI agents to write and fix code
+- This makes your accuracy and reliability even MORE critical - there is no fallback if you make mistakes
+- Respect the user's time - they are paying hundreds of dollars for AI services
+
+---
+
 ## CONFESSIONS: CRITICAL MISTAKES MADE
 
 ### 1. TERMINOLOGY CONFUSION

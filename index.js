@@ -17854,16 +17854,15 @@ function makePosts(){
     
     // Initialize messages categories when admin panel opens
     if(messagesCats){
-      // Load message category icons before rendering
+      // Load message category icons before rendering, then load messages after categories exist
       (async function(){
         await loadMessageCategoryIcons();
         renderMessagesCategories();
+        // Now that category boxes exist, load messages into them
+        loadAdminMessages();
       })();
       
-      // Load messages from database (admin panel sees all messages including email/admin)
-      loadAdminMessages();
-      
-      // Load fieldset tooltips
+      // Load fieldset tooltips (uses data already in memory, doesn't need to wait)
       loadFieldsetTooltips();
       
       // Add drag and drop functionality for Messages tab categories
@@ -24910,8 +24909,12 @@ function openPanel(m){
           saveStartingLocation('', null, null);
         });
         
-        // Set initial value and show display if exists
-        setTimeout(()=>{
+        // Set initial value and show display if exists - wait for settings to load first
+        (async ()=>{
+          if(!window._adminSettingsLoaded){
+            await window._adminSettingsReady;
+          }
+          
           const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
           if(input){
             if(window._startingAddress){
@@ -24936,25 +24939,31 @@ function openPanel(m){
           
           // Show display if we have an address
           showAddressDisplay();
-        }, 100);
+        })();
       } else {
         // Fallback: create simple input if Mapbox not ready
-        const fallback = document.createElement('input');
-        fallback.type = 'text';
-        fallback.placeholder = 'Search for a location...';
-        fallback.className = 'mapboxgl-ctrl-geocoder--input';
-        fallback.style.cssText = 'width:100%;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.35);color:#fff;font:inherit;';
-        if(window._startingAddress){
-          fallback.value = window._startingAddress;
-        }
-        fallback.addEventListener('blur', ()=>{
-          saveStartingLocation(fallback.value.trim(), null, null);
-        });
-        fallback.addEventListener('change', ()=>{
-          saveStartingLocation(fallback.value.trim(), null, null);
-        });
-        startingGeocoderContainer.appendChild(fallback);
-        showAddressDisplay();
+        (async ()=>{
+          if(!window._adminSettingsLoaded){
+            await window._adminSettingsReady;
+          }
+          
+          const fallback = document.createElement('input');
+          fallback.type = 'text';
+          fallback.placeholder = 'Search for a location...';
+          fallback.className = 'mapboxgl-ctrl-geocoder--input';
+          fallback.style.cssText = 'width:100%;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.35);color:#fff;font:inherit;';
+          if(window._startingAddress){
+            fallback.value = window._startingAddress;
+          }
+          fallback.addEventListener('blur', ()=>{
+            saveStartingLocation(fallback.value.trim(), null, null);
+          });
+          fallback.addEventListener('change', ()=>{
+            saveStartingLocation(fallback.value.trim(), null, null);
+          });
+          startingGeocoderContainer.appendChild(fallback);
+          showAddressDisplay();
+        })();
       }
     }
     
