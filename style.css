@@ -6437,14 +6437,14 @@ body.filters-active #filterBtn{
   flex:0 0 auto;
 }
 #welcomeBody .map-control-row > .geocoder{
-  flex:1 1 450px;
+  flex:1 1 350px;
   min-width:0;
   width:100%;
-  max-width:450px;
+  max-width:350px;
 }
 #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
   width:100% !important;
-  max-width:450px !important;
+  max-width:350px !important;
   min-width:0 !important;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
