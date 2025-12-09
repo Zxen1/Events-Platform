@@ -420,7 +420,7 @@
       --scrollbar-thumb-hover: rgba(255,255,255,0.6);
       --scrollbar-h: 8px;
       --border: rgba(173,173,173,0.31);
-      --border-hover: rgba(255,255,255,1);
+      --border-hover: #3b82f6;
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: gray;
       --filter-placeholder-text: var(--placeholder-text);
