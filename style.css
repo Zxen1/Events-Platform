@@ -1634,6 +1634,11 @@ button[aria-expanded="true"] .results-arrow{
   max-height:300px;
   height:auto;
   margin:0;
+  /* Reserve space to prevent layout shift */
+  min-height:200px;
+  aspect-ratio: 2 / 1;
+  object-fit:contain;
+  background:rgba(0,0,0,0.1);
 }
 #welcomeBody .welcome-illustration{
   max-width:280px;
@@ -1641,6 +1646,11 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin:0;
   border-radius:8px;
+  /* Reserve space to prevent layout shift */
+  min-height:200px;
+  aspect-ratio: 1 / 1;
+  object-fit:contain;
+  background:rgba(0,0,0,0.1);
 }
 #welcome-modal{background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);}
 #welcome-modal .modal-content{

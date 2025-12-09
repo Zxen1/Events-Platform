@@ -12,6 +12,9 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <!-- Preload welcome modal images to prevent layout shift -->
+  <link rel="preload" as="image" href="assets/funmap-logo-big.png" />
+  <link rel="preload" as="image" href="assets/monkeys/Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png" />
   <link rel="stylesheet" href="style.css?v=20251201l" />
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" /></noscript>
@@ -565,14 +568,14 @@
     <!-- Welcome modal content (not a panel) -->
     <div class="modal-content">
       <div class="panel-body" id="welcomeBody">
-        <img class="welcome-logo" src="assets/funmap-logo-big.png" alt="FunMap logo" />
+        <img class="welcome-logo" src="assets/funmap-logo-big.png" alt="FunMap logo" loading="eager" width="600" height="300" />
         <div class="map-control-row map-controls-welcome">
           <div id="geocoder-welcome" class="geocoder"></div>
           <div id="geolocate-welcome" class="geolocate-btn"></div>
           <div id="compass-welcome" class="compass-btn"></div>
         </div>
         <div id="welcomeMessageBox"></div>
-        <img class="welcome-illustration" src="assets/monkeys/Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png" alt="Friendly monkey mascot welcoming visitors" />
+        <img class="welcome-illustration" src="assets/monkeys/Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png" alt="Friendly monkey mascot welcoming visitors" loading="eager" width="280" height="280" />
       </div>
     </div>
   </div>
