@@ -37,8 +37,9 @@
  *   5: mapmarker-overlay, various elements
  *   3: various elements
  *   2: big-map-card-container (stacks above small-map-card-container)
+ *   2: map canvas (clusters render on canvas), big-map-card-container (stacks above small-map-card-container)
  *   1: small-map-card-container, form labels, form field headers, item pricing labels, header-buttons
- *   0: base layer, map shadow (.post-mode-background), map canvas (clusters render on canvas), various elements
+ *   0: base layer, map shadow (.post-mode-background), various elements
  *   -1: some background elements
  *   auto: some elements
  * 
@@ -369,9 +370,9 @@
 
 
 /* Extracted from <styleid="mapboxgl-critical-css"> */
-.mapboxgl-map{position:relative;width:100%;height:100%}
-    .mapboxgl-canvas{position:absolute;left:0;top:0}
-    .mapboxgl-canvas-container{position:absolute;inset:0}
+.mapboxgl-map{position:relative;width:100%;height:100%;z-index:2}
+    .mapboxgl-canvas{position:absolute;left:0;top:0;z-index:2}
+    .mapboxgl-canvas-container{position:absolute;inset:0;z-index:2}
     .mapboxgl-ctrl{box-sizing:border-box}
 
 
@@ -952,24 +953,15 @@ input[type="checkbox"]{
   transition: border-color 0.15s;
 }
 
-/* Hover state - same as other header buttons */
-#memberBtn:hover .member-avatar{
-  border-color:rgba(255,255,255,0.5);
-}
-
 /* Active state - blue border like other header buttons */
 #memberBtn.active .member-avatar,
-#memberBtn[aria-pressed="true"] .member-avatar,
-#memberBtn.has-avatar.active .member-avatar,
-#memberBtn.has-avatar[aria-pressed="true"] .member-avatar{
+#memberBtn[aria-pressed="true"] .member-avatar{
   border-color:#3b82f6;
 }
 
 /* Active + hover - lighter blue like other header buttons */
 #memberBtn.active:hover .member-avatar,
-#memberBtn[aria-pressed="true"]:hover .member-avatar,
-#memberBtn.has-avatar.active:hover .member-avatar,
-#memberBtn.has-avatar[aria-pressed="true"]:hover .member-avatar{
+#memberBtn[aria-pressed="true"]:hover .member-avatar{
   border-color:#60a5fa;
 }
 
@@ -6266,6 +6258,7 @@ body.filters-active #filterBtn{
   position: absolute;
   inset: 0;
   opacity: 0;
+  z-index:2;
 }
 
 .map-overlay{
