@@ -609,8 +609,8 @@
         cursor: pointer;
         z-index: 1;
       }
-      .map-card-container:hover { z-index: 10; }
-      .map-card-container.is-active { z-index: 100; }
+      .map-card-container:hover { z-index: 5; }
+      .map-card-container.is-active { z-index: 6; }
       
       /* Icon - center at lat/lng (0,0) */
       .map-card-icon {
