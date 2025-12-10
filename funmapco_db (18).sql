@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 10, 2025 at 12:15 PM
+-- Generation Time: Dec 10, 2025 at 01:01 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -202,7 +202,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-12-08 12:54:48'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Title shown in the welcome modal', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
 (9, 'welcome_message', '\"<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class=\\\"icon-search\\\" width=\\\"30\\\" height=\\\"30\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" role=\\\"img\\\" aria-label=\\\"Filters\\\"><circle cx=\\\"11\\\" cy=\\\"11\\\" r=\\\"8\\\"></circle><line x1=\\\"21\\\" y1=\\\"21\\\" x2=\\\"16.65\\\" y2=\\\"16.65\\\"></line></svg> button to refine your search.</p>\"', 'json', 'Main content of the welcome modal (supports HTML and SVG)', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
-(10, 'map_shadow', '0.7', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-12-10 00:19:54'),
+(10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-12-10 01:23:06'),
 (11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-02 03:25:58'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (13, 'system_images_folder', 'assets/system-images', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-12-09 18:43:08'),
@@ -210,7 +210,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-27 21:47:01'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 15:20:41'),
 (17, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-27 21:47:29'),
-(18, 'spin_speed', '0.2', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-12-09 15:53:33'),
+(18, 'spin_speed', '0.4', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-12-10 01:57:32'),
 (19, 'paypal_enabled', 'false', 'boolean', 'Enable PayPal payments', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (20, 'paypal_mode', 'sandbox', 'string', 'PayPal mode: sandbox or live', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (21, 'paypal_client_id', NULL, 'string', 'PayPal Client ID', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
@@ -317,10 +317,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-10 06:06:11'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-10 06:06:11'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-10 06:06:11'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-10 06:06:11');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-10 12:57:33'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-10 12:57:33'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-10 12:57:33'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-10 12:57:33');
 
 -- --------------------------------------------------------
 
@@ -1140,7 +1140,7 @@ CREATE TABLE `subcategories` (
   `hidden` tinyint(1) NOT NULL DEFAULT 0,
   `icon_path` varchar(255) DEFAULT NULL,
   `color_hex` varchar(7) DEFAULT NULL,
-  `subcategory_type` enum('Events','Standard') DEFAULT 'Events',
+  `subcategory_type` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -1155,27 +1155,27 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Event Session Details', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-08 07:51:52'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Event Session Details', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-08 07:51:52'),
 (5, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,12,15', 'Title, Description, Images, Event Session Details', '1,1,1,1', NULL, '5', 0, 'assets/icons-30/whats-on-category-icon-orange-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-08 07:51:52'),
-(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
+(6, 1, 'What\'s On', 'Venues', 'venues', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '7', 0, 'assets/icons-30/whats-on-category-icon-violet-30.webp', '#E74C3C', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(7, 1, 'What\'s On', 'Other Events', 'other-events', '1,2,12,15', 'Title, Description, Images, Event Session Details', '1,1,1,1', NULL, '6', 0, 'assets/icons-30/whats-on-category-icon-red-30.webp', '#E74C3C', 'Events', '2025-10-29 12:32:47', '2025-12-10 01:30:08'),
 (8, 2, 'Opportunities', 'Stage Auditions', 'stage-auditions', '1,2,12,15', 'Title, Description, Images, Event Session Details', '1,1,1,1', NULL, '6', 0, 'assets/icons-30/opportunities-category-icon-blue-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-08 07:51:52'),
 (9, 2, 'Opportunities', 'Screen Auditions', 'screen-auditions', '1,2,12,15', 'Title, Description, Images, Event Session Details', '1,1,1,1', NULL, '5', 0, 'assets/icons-30/opportunities-category-icon-dark-yellow-30.webp', '#F1C40F', 'Events', '2025-10-29 12:32:47', '2025-12-08 07:51:52'),
-(10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(11, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(12, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '7', 0, 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(13, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(14, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(15, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(16, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-07 12:08:29'),
-(21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Standard', '2025-10-29 12:32:47', '2025-12-03 06:27:25'),
-(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Event Session Details, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Standard', '2025-11-16 17:46:29', '2025-12-08 07:51:52'),
-(28, 47, 'Test', 'Test 2 Subcategory', 'test-2-subcategory', '1,2,7,8,9,10,11,12,13,14,15,4,5,3,6', 'Title, Description, Email, Phone, Location, Website (URL), Tickets (URL), Images, Coupon, Item Pricing, Event Session Details, Text Area (editable), Dropdown (editable), Text Box (editable), Radio Toggle (editable)', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', NULL, 'Standard', '2025-12-07 08:14:46', '2025-12-08 07:51:52');
+(10, 2, 'Opportunities', 'Clubs', 'clubs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/opportunities-category-icon-green-30.webp', '#F1C40F', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(11, 2, 'Opportunities', 'Jobs', 'jobs', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/opportunities-category-icon-indigo-30.webp', '#F1C40F', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(12, 2, 'Opportunities', 'Volunteers', 'volunteers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '7', 0, 'assets/icons-30/opportunities-category-icon-orange-30.webp', '#F1C40F', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(13, 2, 'Opportunities', 'Competitions', 'competitions', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/opportunities-category-icon-red-30.webp', '#F1C40F', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(14, 2, 'Opportunities', 'Other Opportunities', 'other-opportunities', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/opportunities-category-icon-violet-30.webp', '#F1C40F', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(15, 3, 'Learning', 'Tutors', 'tutors', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '4', 0, 'assets/icons-30/learning-category-icon-blue-30.webp', '#3498DB', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(16, 3, 'Learning', 'Education Centres', 'education-centres', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/learning-category-icon-dark-yellow-30.webp', '#3498DB', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(17, 3, 'Learning', 'Courses', 'courses', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/learning-category-icon-green-30.webp', '#3498DB', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(18, 3, 'Learning', 'Other Learning', 'other-learning', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/learning-category-icon-red-30.webp', '#3498DB', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(19, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-orange-30.webp', '#2ECC71', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(20, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,14,12,9', 'Title, Description, Item Pricing, Images, Location', '1,1,1,1,1', NULL, '3', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', '#2ECC71', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(21, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-violet-30.webp', '#2ECC71', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(22, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '2', 0, 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(23, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '3', 0, 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(24, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9', 'Title, Description, Images, Location', '1,1,1,1', NULL, '1', 0, 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', 'Non-Events', '2025-10-29 12:32:47', '2025-12-10 01:27:03'),
+(27, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,3,4,5,6,7,8,9,10,11,13,14,15,12', 'Title, Description, Text Box (editable), Text Area (editable), Dropdown (editable), Radio Toggle (editable), Email, Phone, Location, Website (URL), Tickets (URL), Coupon, Item Pricing, Event Session Details, Images', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '1', 0, 'assets/icons-30/Buy-and-sell-category-icon-blue-30.webp', NULL, 'Non-Events', '2025-11-16 17:46:29', '2025-12-10 01:27:03'),
+(28, 47, 'Test', 'Test 2 Subcategory', 'test-2-subcategory', '1,2,7,8,9,10,11,12,13,14,15,4,5,3,6', 'Title, Description, Email, Phone, Location, Website (URL), Tickets (URL), Images, Coupon, Item Pricing, Event Session Details, Text Area (editable), Dropdown (editable), Text Box (editable), Radio Toggle (editable)', '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', NULL, '2', 0, 'assets/icons-30/Buy-and-sell-category-icon-red-30.webp', NULL, 'Non-Events', '2025-12-07 08:14:46', '2025-12-10 01:27:03');
 
 -- --------------------------------------------------------
 
@@ -1200,15 +1200,15 @@ CREATE TABLE `subcategory_edits` (
 --
 
 INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
-(916, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(917, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(918, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(919, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(920, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(921, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(922, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(923, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
-(924, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-09 19:06:12', '2025-12-09 19:06:12');
+(943, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(944, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(945, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(946, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(947, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(948, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(949, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(950, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-10 01:57:33', '2025-12-10 01:57:33'),
+(951, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-10 01:57:33', '2025-12-10 01:57:33');
 
 -- --------------------------------------------------------
 
@@ -1462,7 +1462,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6230;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6259;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1588,7 +1588,7 @@ ALTER TABLE `subcategories`
 -- AUTO_INCREMENT for table `subcategory_edits`
 --
 ALTER TABLE `subcategory_edits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=925;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=952;
 
 --
 -- AUTO_INCREMENT for table `transactions`
