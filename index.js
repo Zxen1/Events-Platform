@@ -428,7 +428,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
             </div>
           </div>
         </div>
-        <button type="button" class="checkout-option-delete">Delete</button>
+        <button type="button" class="checkout-option-delete delete-button">Delete</button>
       </div>
     `;
     
@@ -8681,7 +8681,7 @@ function makePosts(){
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
-      deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete';
+      deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete delete-button';
       deleteBtn.dataset.role = 'confirm';
       deleteBtn.dataset.messageKey = 'msg_button_delete';
       const deleteText = await getMessage('msg_button_delete', {}, true) || 'Delete';
@@ -11957,7 +11957,7 @@ function makePosts(){
 
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
-          deleteSubBtn.className = 'delete-subcategory-btn';
+          deleteSubBtn.className = 'delete-subcategory-btn delete-button';
           deleteSubBtn.dataset.messageKey = 'msg_button_delete_subcategory';
           // Text will be loaded from DB
           deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
@@ -15063,7 +15063,7 @@ function makePosts(){
             
             const fieldsetMenuBtn = document.createElement('button');
             fieldsetMenuBtn.type = 'button';
-            fieldsetMenuBtn.className = 'field-type-select';
+            fieldsetMenuBtn.className = 'field-type-select menu-button menu-button--fieldset-list';
             fieldsetMenuBtn.setAttribute('aria-haspopup', 'true');
             fieldsetMenuBtn.setAttribute('aria-expanded', 'false');
             const menuId = `field-type-menu-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -15098,7 +15098,7 @@ function makePosts(){
             FORM_FIELDSETS.forEach(optionDef => {
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
-              optionBtn.className = 'menu-option';
+              optionBtn.className = 'menu-option menu-options menu-options--fieldset-list';
               const optionLabel = resolveFieldsetDisplayName(optionDef) || optionDef.label || optionDef.value || '';
               optionBtn.textContent = optionLabel || optionDef.value;
               optionBtn.dataset.value = optionDef.value || '';

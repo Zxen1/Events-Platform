@@ -122,13 +122,13 @@
         </div>
         <div class="field sort-field">
           <div class="options-dropdown">
-            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
+            <button id="optionsBtn" class="menu-button menu-button--sort-order" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
             <div id="optionsMenu" class="options-menu" hidden>
-              <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+              <button id="favToggle" class="menu-options menu-options--sort-order" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
               <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                <button class="sort-option" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
-                <button class="sort-option" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
-                <button class="sort-option" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
+                <button class="sort-option menu-options menu-options--sort-order" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
+                <button class="sort-option menu-options menu-options--sort-order" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
+                <button class="sort-option menu-options menu-options--sort-order" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
               </div>
             </div>
           </div>
@@ -184,9 +184,9 @@
           </div>
         </div>
         <div class="tab-bar" role="tablist" aria-label="Member sections">
-          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile" data-message-key="msg_member_tab_profile">Profile</button>
-          <button type="button" class="tab-btn" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create" data-message-key="msg_member_tab_create">Create Post</button>
-          <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts" data-message-key="msg_member_tab_myposts">My Posts</button>
+          <button type="button" class="tab-btn tab-button" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile" data-message-key="msg_member_tab_profile">Profile</button>
+          <button type="button" class="tab-btn tab-button" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create" data-message-key="msg_member_tab_create">Create Post</button>
+          <button type="button" class="tab-btn tab-button" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts" data-message-key="msg_member_tab_myposts">My Posts</button>
         </div>
       </div>
       <div class="panel-body">
@@ -201,7 +201,7 @@
               <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="username" />
               <label for="memberLoginPassword" data-message-key="msg_member_label_password">Password</label>
               <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
-              <button type="submit" class="primary-action member-auth-submit" data-action="login" data-message-key="msg_member_btn_log_in">Log In</button>
+              <button type="submit" class="primary-action member-auth-submit auth-button" data-action="login" data-message-key="msg_member_btn_log_in">Log In</button>
             </section>
             <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
               <label for="memberRegisterName" data-message-key="msg_member_label_display_name">Display Name</label>
@@ -212,7 +212,7 @@
               <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
               <label for="memberRegisterAvatar" data-message-key="msg_member_label_avatar_url">Avatar URL</label>
               <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
-              <button type="submit" class="primary-action member-auth-submit" data-action="register" data-message-key="msg_member_btn_create_account">Create Account</button>
+              <button type="submit" class="primary-action member-auth-submit auth-button" data-action="register" data-message-key="msg_member_btn_create_account">Create Account</button>
             </section>
             <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
               <div class="member-profile">
@@ -268,10 +268,10 @@
           </div>
         </div>
         <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="settings" aria-selected="true">Settings</button>
-          <button type="button" class="tab-btn" data-tab="forms" aria-selected="false">Forms</button>
-          <button type="button" class="tab-btn" data-tab="map" aria-selected="false">Map</button>
-          <button type="button" class="tab-btn" data-tab="messages" aria-selected="false">Messages</button>
+          <button type="button" class="tab-btn tab-button" data-tab="settings" aria-selected="true">Settings</button>
+          <button type="button" class="tab-btn tab-button" data-tab="forms" aria-selected="false">Forms</button>
+          <button type="button" class="tab-btn tab-button" data-tab="map" aria-selected="false">Map</button>
+          <button type="button" class="tab-btn tab-button" data-tab="messages" aria-selected="false">Messages</button>
         </div>
       </div>
       <div class="panel-body">

@@ -687,6 +687,228 @@ button:not([class*="mapboxgl-"]).disabled:hover,
 }
 ========== END MORE GLOBAL BUTTON STYLES DISABLED FOR TESTING ========== */
 
+/* ========================================
+   BUTTON CLASSES (replacing global button styles)
+   ======================================== */
+
+/* Menu Button - base class for menu trigger buttons */
+.menu-button{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+.menu-button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.menu-button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+.menu-button:focus-visible{
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+.menu-button[aria-pressed="true"],
+.menu-button[aria-expanded="true"],
+.menu-button.selected,
+.menu-button.on{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+.menu-button[aria-pressed="true"]:hover,
+.menu-button[aria-expanded="true"]:hover,
+.menu-button.selected:hover,
+.menu-button.on:hover{
+  background: var(--button-selected-hover, var(--btn-selected-hover));
+  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+.menu-button:disabled,
+.menu-button.disabled{
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Menu Options - base class for dropdown menu items */
+.menu-options{
+  background: var(--btn);
+  border: none;
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  width: 100%;
+}
+.menu-options:hover{
+  background: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.menu-options:active{
+  background: var(--btn-active);
+  color: var(--button-active-text);
+}
+.menu-options[aria-pressed="true"],
+.menu-options[aria-selected="true"],
+.menu-options.selected,
+.menu-options.on{
+  background: var(--button-selected-bg, var(--btn-selected));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* Tab Button - for panel tab buttons */
+.tab-button{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+.tab-button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.tab-button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+.tab-button[aria-selected="true"],
+.tab-button.active{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* Auth Button - for login/register/create account buttons */
+.auth-button{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+.auth-button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.auth-button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+.auth-button:focus-visible{
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+.auth-button:disabled,
+.auth-button.disabled{
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Delete Button - for delete action buttons */
+.delete-button{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+.delete-button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.delete-button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+.delete-button:disabled,
+.delete-button.disabled{
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Menu Modifiers - specific menu types (extend base if needed) */
+.menu-button--sort-order{}
+.menu-options--sort-order{}
+.menu-button--formpicker{}
+.menu-options--formpicker{}
+.menu-button--member-currency{}
+.menu-options--member-currency{}
+.menu-button--member-prefix{}
+.menu-options--member-prefix{}
+.menu-button--fieldset-list{}
+.menu-options--fieldset-list{}
+
+/* ======================================== */
+
 input::placeholder,
 textarea::placeholder{
   color: var(--placeholder-text);
