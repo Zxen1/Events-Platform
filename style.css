@@ -564,82 +564,9 @@ select,
   user-select: text;
 }
 
-button:not([class*="mapboxgl-"]),
-[role="button"]:not([class*="mapboxgl-"]){
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  color: var(--button-text);
-  font-size: 13px;
-  padding: 0 10px;
-  height: var(--control-h);
-  min-width: 35px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  cursor: pointer;
-  transition: background .2s,border-color .2s,color .2s,transform .05s;
-}
-
-button:not([class*="mapboxgl-"]):hover,
-[role="button"]:not([class*="mapboxgl-"]):hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
-button:not([class*="mapboxgl-"]):active,
-[role="button"]:not([class*="mapboxgl-"]):active{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
-  color: var(--button-active-text);
-}
-
-button:not([class*="mapboxgl-"])[aria-pressed="true"],
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"],
-button:not([class*="mapboxgl-"])[aria-current="page"],
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"],
-button:not([class*="mapboxgl-"])[aria-selected="true"],
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"],
-button:not([class*="mapboxgl-"]).selected,
-[role="button"]:not([class*="mapboxgl-"]).selected,
-button:not([class*="mapboxgl-"]).on,
-[role="button"]:not([class*="mapboxgl-"]).on{
-  background: var(--button-selected-bg, var(--btn-selected));
-  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected))) !important;
-  color: var(--button-selected-text, var(--button-active-text)) !important;
-}
-
-button:not([class*="mapboxgl-"])[aria-pressed="true"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"]:hover,
-button:not([class*="mapboxgl-"])[aria-current="page"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"]:hover,
-button:not([class*="mapboxgl-"])[aria-selected="true"]:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]:hover,
-button:not([class*="mapboxgl-"]).selected:hover,
-[role="button"]:not([class*="mapboxgl-"]).selected:hover,
-button:not([class*="mapboxgl-"]).on:hover,
-[role="button"]:not([class*="mapboxgl-"]).on:hover{
-  background: var(--button-selected-hover, var(--btn-selected-hover));
-  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover))) !important;
-  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text))) !important;
-}
-
-button:not([class*="mapboxgl-"])[aria-pressed="true"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-pressed="true"]:active,
-button:not([class*="mapboxgl-"])[aria-current="page"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-current="page"]:active,
-button:not([class*="mapboxgl-"])[aria-selected="true"]:active,
-[role="button"]:not([class*="mapboxgl-"])[aria-selected="true"]:active,
-button:not([class*="mapboxgl-"]).selected:active,
-[role="button"]:not([class*="mapboxgl-"]).selected:active,
-button:not([class*="mapboxgl-"]).on:active,
-[role="button"]:not([class*="mapboxgl-"]).on:active{
-  background: var(--button-selected-active, var(--btn-selected-active));
-  border-color: var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active))) !important;
-  color: var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text))) !important;
-}
+/* GLOBAL BUTTON STYLES REMOVED - Now using class-based approach:
+   .menu-button, .menu-options, .tab-button, .auth-button, .delete-button
+   See BUTTON CLASSES section below */
 
 a{
   color: var(--primary);
@@ -651,36 +578,6 @@ a:hover{
 
 a:active{
   color: var(--active);
-}
-
-button:not([class*="mapboxgl-"]):active,
-[role="button"]:not([class*="mapboxgl-"]):active{
-  transform: scale(0.97);
-}
-button:not([class*="mapboxgl-"]):focus-visible,
-[role="button"]:not([class*="mapboxgl-"]):focus-visible{
-  outline:2px solid #ffffff;
-  outline-offset:2px;
-}
-
-button:not([class*="mapboxgl-"]):disabled,
-[role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"],
-button:not([class*="mapboxgl-"]).disabled,
-[role="button"]:not([class*="mapboxgl-"]).disabled{
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-button:not([class*="mapboxgl-"]):disabled:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"]:hover,
-button:not([class*="mapboxgl-"]).disabled:hover,
-[role="button"]:not([class*="mapboxgl-"]).disabled:hover{
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
 }
 
 /* ========================================
