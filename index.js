@@ -10790,7 +10790,7 @@ function makePosts(){
         if(allCheckoutOptions.length > 0){
           // Get subcategory data
           let surcharge = 0;
-          let subcategoryType = 'Standard';
+          let subcategoryType = 'Non-Events';
           if(window.categories && Array.isArray(window.categories)){
             const category = window.categories.find(c => c && c.name === categoryName);
             if(category && category.subFees && category.subFees[subcategoryName]){
@@ -16598,7 +16598,7 @@ function makePosts(){
           }
           // Set defaults only for missing values
           if(c.subFees[sub].checkout_surcharge === undefined) c.subFees[sub].checkout_surcharge = null;
-          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
+          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Non-Events';
           
           // Initialize subCheckoutOptions if not exists
           if(!c.subCheckoutOptions) c.subCheckoutOptions = {};
@@ -16799,16 +16799,16 @@ function makePosts(){
           const subTypeStandardInput = document.createElement('input');
           subTypeStandardInput.type = 'radio';
           subTypeStandardInput.name = `subType-${sub}`;
-          subTypeStandardInput.value = 'Standard';
-          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'Standard';
+          subTypeStandardInput.value = 'Non-Events';
+          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'Non-Events';
           subTypeStandardInput.addEventListener('change', ()=>{
             if(subTypeStandardInput.checked){
-              c.subFees[sub].subcategory_type = 'Standard';
+              c.subFees[sub].subcategory_type = 'Non-Events';
               notifyFormbuilderChange();
             }
           });
           const subTypeStandardText = document.createElement('span');
-          subTypeStandardText.textContent = 'Standard';
+          subTypeStandardText.textContent = 'Non-Events';
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
           
           subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);
