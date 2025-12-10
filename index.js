@@ -56,6 +56,31 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
 // Expose globally for other scripts
 window.apiRequest = apiRequest;
 
+// === Loading Timer ===
+(function(){
+  const startTime = performance.now();
+  const timerEl = document.getElementById('loadingTimer');
+  let timerInterval = null;
+  
+  function updateTimer(){
+    if(!timerEl) return;
+    const elapsed = (performance.now() - startTime) / 1000;
+    timerEl.textContent = elapsed.toFixed(2) + 's';
+  }
+  
+  if(timerEl){
+    timerInterval = setInterval(updateTimer, 50);
+    updateTimer();
+  }
+  
+  window.stopLoadingTimer = function(){
+    if(timerInterval){
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  };
+})();
+
 // === Currency Helpers ===
 // Parse option_value format "countryCode currencyCode" (e.g., "us USD")
 function parseCurrencyValue(optionValue) {
@@ -2437,7 +2462,7 @@ let __notifyMapOnInteraction = null;
               };
               
               // Apply welcome_enabled setting (no localStorage caching)
-              // Welcome modal will open AFTER map is fully loaded (in fadeInMap)
+              // Welcome modal will open early behind the loading curtain
               if(data.settings.welcome_enabled !== undefined){
                 window._welcomeEnabled = data.settings.welcome_enabled;
               }
@@ -20553,13 +20578,9 @@ function makePosts(){
         // Mark map initialization start
         const mapInitStart = performance.now();
         
-        // Hide map initially until tiles are loaded
+        // Map loads behind the loading curtain - no need to hide it
         const mapContainer = document.getElementById('map');
-        let mapFadedIn = false;
-        if(mapContainer){
-          mapContainer.style.opacity = '0';
-          mapContainer.style.transition = 'opacity 0.8s ease-in';
-        }
+        let curtainDropped = false;
         
         map = new mapboxgl.Map({
           container:'map',
@@ -20582,19 +20603,20 @@ function makePosts(){
         // Markers are visible at zoom >= 8, so if starting zoom >= 8, wait for markers
         const needsMarkers = startZoom !== null && Number.isFinite(startZoom) && startZoom >= 8;
         
-        // Fade in map only when required elements are loaded
-        const fadeInMap = () => {
-          if(mapContainer && !mapFadedIn && mapContainer.style.opacity === '0'){
-            mapFadedIn = true;
-            requestAnimationFrame(() => {
-              mapContainer.style.opacity = '1';
-              const loadingMessage = document.getElementById('loadingMessage');
-              if(loadingMessage) loadingMessage.classList.add('hidden');
-              // Now that map is ready, open welcome modal if enabled
-              if(window._welcomeEnabled && typeof window.openWelcome === 'function'){
-                setTimeout(() => window.openWelcome(), 100);
-              }
-            });
+        // Open welcome modal early (hidden behind curtain)
+        if(window._welcomeEnabled && typeof window.openWelcome === 'function'){
+          window.openWelcome();
+        }
+        
+        // Drop the loading curtain when everything is ready
+        const dropCurtain = () => {
+          if(curtainDropped) return;
+          curtainDropped = true;
+          if(typeof window.stopLoadingTimer === 'function') window.stopLoadingTimer();
+          const loadingMessage = document.getElementById('loadingMessage');
+          if(loadingMessage){
+            loadingMessage.style.pointerEvents = 'none';
+            loadingMessage.classList.add('hidden');
           }
         };
         
@@ -20612,11 +20634,11 @@ function makePosts(){
           return markersLoaded || window.__markersLoaded || false;
         };
         
-        // Check if everything is ready and fade in map
-        const checkReadyAndFadeIn = () => {
-          if(mapFadedIn) return true;
+        // Check if everything is ready and drop the curtain
+        const checkReadyAndDropCurtain = () => {
+          if(curtainDropped) return true;
           if(areTilesLoaded() && areMarkersReady()){
-            fadeInMap();
+            dropCurtain();
             return true;
           }
           return false;
@@ -20627,29 +20649,29 @@ function makePosts(){
           mapLoading.onTilesLoaded(() => {
             // Tiles are loaded, check if markers are also ready (if needed)
             if(!needsMarkers || areMarkersReady()){
-              fadeInMap();
+              dropCurtain();
             }
           });
         }
         
         // Also check on 'idle' event (fires when map is idle and tiles are loaded)
         map.once('idle', () => {
-          checkReadyAndFadeIn();
+          checkReadyAndDropCurtain();
         });
         
         // Also check on 'load' event (fires when style + initial tiles are ready)
         map.once('load', () => {
           // Start checking periodically for tiles and markers (if needed)
-          if(!checkReadyAndFadeIn()){
+          if(!checkReadyAndDropCurtain()){
             const checkInterval = setInterval(() => {
-              if(checkReadyAndFadeIn() || mapFadedIn){
+              if(checkReadyAndDropCurtain() || curtainDropped){
                 clearInterval(checkInterval);
               }
             }, 100);
             // Stop checking after 5 seconds
             setTimeout(() => {
               clearInterval(checkInterval);
-              if(!mapFadedIn) fadeInMap(); // Safety fallback - show map even if markers aren't ready
+              if(!curtainDropped) dropCurtain(); // Safety fallback - show map even if markers aren't ready
             }, 5000);
           }
         });
@@ -20658,8 +20680,8 @@ function makePosts(){
         if(needsMarkers){
           // Monitor for markers loading
           const checkMarkersInterval = setInterval(() => {
-            if(areMarkersReady() && areTilesLoaded() && !mapFadedIn){
-              fadeInMap();
+            if(areMarkersReady() && areTilesLoaded() && !curtainDropped){
+              dropCurtain();
               clearInterval(checkMarkersInterval);
             }
           }, 100);
@@ -20669,9 +20691,9 @@ function makePosts(){
           }, 5000);
         }
         
-        // Safety timeout: show map after 5 seconds max (prevents waiting forever)
+        // Safety timeout: drop curtain after 5 seconds max (prevents waiting forever)
         setTimeout(() => {
-          fadeInMap();
+          dropCurtain();
         }, 5000);
         
         // Mark map initialization complete when map loads
