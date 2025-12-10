@@ -2082,6 +2082,14 @@ let __notifyMapOnInteraction = null;
                         if(headerLogo){
                           headerLogo.src = value;
                         }
+                      } else if(picker.settingKey === 'favicon'){
+                        // Update favicon immediately
+                        if(!window.adminSettings) window.adminSettings = {};
+                        window.adminSettings.favicon = value;
+                        const faviconLinks = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+                        faviconLinks.forEach(link => {
+                          link.href = value;
+                        });
                       }
                     } catch(err) {
                       console.error(`Failed to save/update ${picker.label}:`, err);
@@ -2230,6 +2238,14 @@ let __notifyMapOnInteraction = null;
                       if(headerLogo){
                         headerLogo.src = value;
                       }
+                    } else if(picker.settingKey === 'favicon'){
+                      // Update favicon immediately
+                      if(!window.adminSettings) window.adminSettings = {};
+                      window.adminSettings.favicon = value;
+                      const faviconLinks = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+                      faviconLinks.forEach(link => {
+                        link.href = value;
+                      });
                     }
                   } catch(err) {
                     console.error(`Failed to save/update ${picker.label}:`, err);
@@ -2467,6 +2483,14 @@ let __notifyMapOnInteraction = null;
                 if(headerLogo){
                   headerLogo.src = data.settings.small_logo.trim();
                 }
+              }
+              if(data.settings.favicon && typeof data.settings.favicon === 'string' && data.settings.favicon.trim()){
+                const faviconPath = data.settings.favicon.trim();
+                // Update all favicon link elements
+                const faviconLinks = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+                faviconLinks.forEach(link => {
+                  link.href = faviconPath;
+                });
               }
               
               // Calculate if spin should be enabled
