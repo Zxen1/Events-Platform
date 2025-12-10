@@ -564,7 +564,6 @@ select,
   user-select: text;
 }
 
-/* ========== GLOBAL BUTTON STYLES DISABLED FOR TESTING ==========
 button:not([class*="mapboxgl-"]),
 [role="button"]:not([class*="mapboxgl-"]){
   background: var(--btn);
@@ -641,7 +640,6 @@ button:not([class*="mapboxgl-"]).on:active,
   border-color: var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active))) !important;
   color: var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text))) !important;
 }
-========== END GLOBAL BUTTON STYLES DISABLED FOR TESTING ========== */
 
 a{
   color: var(--primary);
@@ -655,7 +653,6 @@ a:active{
   color: var(--active);
 }
 
-/* ========== MORE GLOBAL BUTTON STYLES DISABLED FOR TESTING ==========
 button:not([class*="mapboxgl-"]):active,
 [role="button"]:not([class*="mapboxgl-"]):active{
   transform: scale(0.97);
@@ -685,7 +682,6 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   border-color: var(--btn-disabled);
   color: var(--button-disabled-text);
 }
-========== END MORE GLOBAL BUTTON STYLES DISABLED FOR TESTING ========== */
 
 /* ========================================
    BUTTON CLASSES (replacing global button styles)
