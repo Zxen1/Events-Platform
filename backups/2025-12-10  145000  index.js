@@ -2959,168 +2959,15 @@ let __notifyMapOnInteraction = null;
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
 
-      // --- Section 5: Marker Clustering (Mapbox Native) ---
-      // Using Mapbox GL JS native clustering for GPU-accelerated, worker-thread clustering
-      const CLUSTER_LAYER_ID = 'post-clusters';
-      const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID]; // Single layer includes both icon and count text
-      const CLUSTER_ICON_ID = 'cluster-icon';
-      let CLUSTER_ICON_URL = null; // Loaded from admin_settings
-      const CLUSTER_MIN_ZOOM = 0;
-      const CLUSTER_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
-      let clusterLayersVisible = true;
-      
-      // Mapbox native clustering config - added to posts source
-      const MAPBOX_CLUSTER_CONFIG = {
-        cluster: true,
-        clusterMaxZoom: CLUSTER_MAX_ZOOM - 0.5, // Stop clustering just below marker threshold
-        clusterRadius: 50, // Cluster radius in pixels
-        clusterMinPoints: 2 // Minimum points to form a cluster
-      };
-      
-      // Load cluster icon for native clustering
-      async function ensureClusterIconImage(mapInstance){
-        if(window._markerClusterIcon){
-          CLUSTER_ICON_URL = window._markerClusterIcon;
-        }
-        return new Promise(resolve => {
-          if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
-            resolve();
-            return;
-          }
-          if(mapInstance.hasImage(CLUSTER_ICON_ID)){
-            resolve();
-            return;
-          }
-          if(!CLUSTER_ICON_URL || typeof CLUSTER_ICON_URL !== 'string' || !CLUSTER_ICON_URL.trim()){
-            resolve();
-            return;
-          }
-          try{
-            if(typeof mapInstance.loadImage === 'function'){
-              mapInstance.loadImage(CLUSTER_ICON_URL, (err, image)=>{
-                if(err){ console.error(err); resolve(); return; }
-                if(image && image.width > 0 && image.height > 0 && !mapInstance.hasImage(CLUSTER_ICON_ID)){
-                  const pixelRatio = image.width >= 256 ? 2 : 1;
-                  mapInstance.addImage(CLUSTER_ICON_ID, image, { pixelRatio });
-                }
-                resolve();
-              });
-              return;
-            }
-          }catch(err){ console.error(err); }
-          resolve();
-        });
-      }
-      
-      function formatClusterCount(count){
-        if(!Number.isFinite(count) || count <= 0) return '0';
-        if(count >= 1000000){
-          const value = count / 1000000;
-          return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10}m`;
-        }
-        if(count >= 1000){
-          const value = count / 1000;
-          return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10}k`;
-        }
-        return String(count);
-      }
-      
-      // No-op for compatibility - native clustering doesn't need manual updates
-      function updateClusterSourceForZoom(zoom){}
-      function resetClusterSourceState(){}
-      
-      // Setup native Mapbox cluster layers
-      function setupSeedLayers(mapInstance){
-        if(!mapInstance) return;
-        
-        ensureClusterIconImage(mapInstance).then(()=>{
-          // Remove old cluster layers if they exist
-          try{
-            if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
-          }catch(err){}
-          
-          // Check if posts source exists and has clustering enabled
-          const postsSource = mapInstance.getSource('posts');
-          if(!postsSource){
-            // Posts source not ready yet, will be created with clustering in loadPostMarkers
-            return;
-          }
-          
-          // Add cluster circle/icon layer
-          try{
-            mapInstance.addLayer({
-              id: CLUSTER_LAYER_ID,
-              type: 'symbol',
-              source: 'posts',
-              filter: ['has', 'point_count'],
-              minzoom: CLUSTER_MIN_ZOOM,
-              maxzoom: CLUSTER_MAX_ZOOM,
-              layout: {
-                'icon-image': CLUSTER_ICON_ID,
-                'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-anchor': 'bottom',
-                'text-field': ['to-string', ['get', 'point_count_abbreviated']],
-                'text-size': 12,
-                'text-offset': [0, -1.35],
-                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                'text-allow-overlap': true,
-                'text-ignore-placement': true,
-                'symbol-z-order': 'viewport-y'
-              },
-              paint: {
-                'text-color': '#ffffff',
-                'text-halo-color': 'rgba(0,0,0,0.45)',
-                'text-halo-width': 1.2,
-                'icon-opacity': 0.95
-              },
-              metadata: { cursor: 'pointer' }
-            });
-          }catch(err){ console.error('[Cluster Layer]', err); }
-          
-          // Cluster click handler - zoom to expand
-          if(!mapInstance.__nativeClusterEventsBound){
-            mapInstance.on('click', CLUSTER_LAYER_ID, (e)=>{
-              const features = mapInstance.queryRenderedFeatures(e.point, { layers: [CLUSTER_LAYER_ID] });
-              if(!features.length) return;
-              const clusterId = features[0].properties.cluster_id;
-              const source = mapInstance.getSource('posts');
-              if(!source || typeof source.getClusterExpansionZoom !== 'function') return;
-              
-              source.getClusterExpansionZoom(clusterId, (err, zoom)=>{
-                if(err) return;
-                const coords = features[0].geometry.coordinates;
-                mapInstance.easeTo({
-                  center: coords,
-                  zoom: Math.min(zoom, CLUSTER_MAX_ZOOM),
-                  duration: 500
-                });
-              });
-            });
-            
-            mapInstance.on('mouseenter', CLUSTER_LAYER_ID, ()=>{
-              mapInstance.getCanvas().style.cursor = 'pointer';
-            });
-            mapInstance.on('mouseleave', CLUSTER_LAYER_ID, ()=>{
-              mapInstance.getCanvas().style.cursor = 'grab';
-            });
-            
-            mapInstance.__nativeClusterEventsBound = true;
-          }
-          
-          // Update visibility based on current zoom
-          const currentZoom = mapInstance.getZoom ? mapInstance.getZoom() : 0;
-          const shouldShow = currentZoom < CLUSTER_MAX_ZOOM;
-          try{
-            mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
-          }catch(err){}
-          clusterLayersVisible = shouldShow;
-        });
-      }
-      
-      /* ========== OLD CUSTOM CLUSTER SYSTEM - COMMENTED OUT ==========
+      // --- Section 5: Marker Clustering ---
+      // Cluster icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
       const CLUSTER_SOURCE_ID = 'post-cluster-source';
+        const CLUSTER_LAYER_ID = 'post-clusters';
+        const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID];
+        const CLUSTER_ICON_ID = 'cluster-icon';
+        let CLUSTER_ICON_URL = null; // Loaded from admin_settings
+        const CLUSTER_MIN_ZOOM = 0;
+        const CLUSTER_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let clusterLayersVisible = true;
 
         async function ensureClusterIconImage(mapInstance){
@@ -3492,8 +3339,6 @@ let __notifyMapOnInteraction = null;
             updateLayerVisibility(lastKnownZoom);
           }
         }
-      ========== END OLD CUSTOM CLUSTER SYSTEM ========== */
-      
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
       function updateLogoClickState(){
@@ -21736,17 +21581,9 @@ function makePosts(){
       
       const existing = map.getSource('posts');
       if(!existing){
-        // Add native Mapbox clustering to posts source
-        map.addSource('posts', { 
-          type: 'geojson', 
-          data: postsData, 
-          promoteId: 'featureId',
-          ...MAPBOX_CLUSTER_CONFIG // cluster: true, clusterMaxZoom, clusterRadius, clusterMinPoints
-        });
+        map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
         const source = map.getSource('posts');
         if(source){ source.__markerSignature = signature; }
-        // Setup cluster layers now that source exists
-        if(typeof setupSeedLayers === 'function') setupSeedLayers(map);
       } else {
         existing.setData(postsData);
         existing.__markerSignature = signature;
