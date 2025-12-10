@@ -6435,6 +6435,15 @@ body.filters-active #filterBtn{
   display:flex;
   justify-content:center;
 }
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions{
+  zoom:var(--inverse-zoom, 1);
+  font-size:14px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions li,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions li a{
+  font-size:14px;
+  font-weight:400;
+}
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geolocate button,
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-compass button{
   width:var(--welcome-control-h);

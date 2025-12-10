@@ -3344,6 +3344,14 @@ let __notifyMapOnInteraction = null;
           if(controlsWidth > 0 && targetWidth > 0){
             const scale = targetWidth / controlsWidth;
             controls.style.zoom = scale;
+            
+            // Apply inverse zoom to suggestions dropdown so text stays normal size
+            const suggestions = controls.querySelector('.mapboxgl-ctrl-geocoder .suggestions');
+            if(suggestions){
+              suggestions.style.zoom = 1 / scale;
+            }
+            // Also set CSS variable for dynamic inverse zoom
+            controls.style.setProperty('--inverse-zoom', 1 / scale);
           }
         });
       }
