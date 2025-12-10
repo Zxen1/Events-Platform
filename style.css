@@ -838,6 +838,12 @@ input[type="checkbox"]{
   width: var(--logo-size);
   height: var(--logo-size);
   display: block;
+  opacity: 0;
+  color: transparent;
+  transition: opacity 0.3s ease;
+}
+.logo img.loaded{
+  opacity: 1;
 }
 
   .view-toggle{

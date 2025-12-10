@@ -2491,7 +2491,9 @@ let __notifyMapOnInteraction = null;
               if(data.settings.small_logo && typeof data.settings.small_logo === 'string' && data.settings.small_logo.trim()){
                 const headerLogo = document.querySelector('.logo img');
                 if(headerLogo){
+                  headerLogo.onload = () => headerLogo.classList.add('loaded');
                   headerLogo.src = data.settings.small_logo.trim();
+                  if(headerLogo.complete) headerLogo.classList.add('loaded');
                 }
               }
               if(data.settings.favicon && typeof data.settings.favicon === 'string' && data.settings.favicon.trim()){
