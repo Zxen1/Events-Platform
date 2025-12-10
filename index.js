@@ -10921,49 +10921,52 @@ function makePosts(){
               }
               priceSection.appendChild(priceText);
             } else {
-              // Standard: Two duration buttons inside card
+              // Non-Events: Two duration radio options inside card
               const durationBtns = document.createElement('div');
               durationBtns.className = 'form-checkout-duration-buttons';
               
               const price30 = basicDayRate !== null ? flagfallPrice + (basicDayRate * 30) : flagfallPrice;
               const price365 = discountDayRate !== null ? flagfallPrice + (discountDayRate * 365) : (basicDayRate !== null ? flagfallPrice + (basicDayRate * 365) : flagfallPrice);
               
-              const btn30 = document.createElement('button');
-              btn30.type = 'button';
-              btn30.className = 'form-checkout-duration-btn';
-              btn30.dataset.days = '30';
-              btn30.dataset.price = price30.toFixed(2);
-              btn30.textContent = `30 days — ${price30 > 0 ? `${currency} ${price30.toFixed(2)}` : 'Free'}`;
-              if(optionIndex === 0) btn30.classList.add('selected');
+              // Create radio option for 30 days
+              const label30 = document.createElement('label');
+              label30.className = 'form-checkout-duration-option';
+              const radio30 = document.createElement('input');
+              radio30.type = 'radio';
+              radio30.name = groupName;
+              radio30.value = `${option.id || ''}-30`;
+              radio30.dataset.optionId = String(option.id || '');
+              radio30.dataset.days = '30';
+              radio30.dataset.price = price30.toFixed(2);
+              radio30.required = true;
+              if(optionIndex === 0) radio30.checked = true;
+              const text30 = document.createElement('span');
+              text30.textContent = `30 days — ${price30 > 0 ? `${currency} ${price30.toFixed(2)}` : 'Free'}`;
+              label30.appendChild(radio30);
+              label30.appendChild(text30);
               
-              const btn365 = document.createElement('button');
-              btn365.type = 'button';
-              btn365.className = 'form-checkout-duration-btn';
-              btn365.dataset.days = '365';
-              btn365.dataset.price = price365.toFixed(2);
-              btn365.textContent = `365 days — ${price365 > 0 ? `${currency} ${price365.toFixed(2)}` : 'Free'}`;
+              // Create radio option for 365 days
+              const label365 = document.createElement('label');
+              label365.className = 'form-checkout-duration-option';
+              const radio365 = document.createElement('input');
+              radio365.type = 'radio';
+              radio365.name = groupName;
+              radio365.value = `${option.id || ''}-365`;
+              radio365.dataset.optionId = String(option.id || '');
+              radio365.dataset.days = '365';
+              radio365.dataset.price = price365.toFixed(2);
+              radio365.required = true;
+              const text365 = document.createElement('span');
+              text365.textContent = `365 days — ${price365 > 0 ? `${currency} ${price365.toFixed(2)}` : 'Free'}`;
+              label365.appendChild(radio365);
+              label365.appendChild(text365);
               
-              // Duration button click handlers
-              [btn30, btn365].forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // Select this option's radio
-                  radio.checked = true;
-                  // Toggle duration selection within this card
-                  durationBtns.querySelectorAll('.form-checkout-duration-btn').forEach(b => b.classList.remove('selected'));
-                  btn.classList.add('selected');
-                  // Store selected duration on radio for form submission
-                  radio.dataset.selectedDays = btn.dataset.days;
-                });
-              });
-              
-              // Set default duration
-              radio.dataset.selectedDays = '30';
-              
-              durationBtns.appendChild(btn30);
-              durationBtns.appendChild(btn365);
+              durationBtns.appendChild(label30);
+              durationBtns.appendChild(label365);
               priceSection.appendChild(durationBtns);
+              
+              // For Non-Events, don't add the card-level radio (durations have their own radios)
+              radio.remove();
             }
             
             optionContent.appendChild(priceSection);
