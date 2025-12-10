@@ -6429,8 +6429,11 @@ body.filters-active #filterBtn{
   --welcome-control-h:28px;
   position:absolute;
   top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
+  left:0;
+  right:0;
+  margin-top:-14px;
+  display:flex;
+  justify-content:center;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geolocate button,
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-compass button{
