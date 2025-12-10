@@ -1941,6 +1941,7 @@ let __notifyMapOnInteraction = null;
           spinSpeed = 0.3,
           spinEnabled = false,
           mapCardDisplay = 'hover_only',
+          waitForMapTiles = true,
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       
       // Title will be set when settings load from backend
@@ -2370,6 +2371,7 @@ let __notifyMapOnInteraction = null;
               spinZoomMax = data.settings.spin_zoom_max || 4;
               spinSpeed = data.settings.spin_speed || 0.3;
               mapCardDisplay = data.settings.map_card_display || 'hover_only';
+              waitForMapTiles = data.settings.wait_for_map_tiles !== undefined ? data.settings.wait_for_map_tiles : true;
               
               // Store icon folder path globally
               window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
@@ -2555,6 +2557,12 @@ let __notifyMapOnInteraction = null;
                 mapCardDisplayRadios.forEach(radio => {
                   radio.checked = (radio.value === mapCardDisplay);
                 });
+              }
+              
+              // Initialize wait for map tiles checkbox
+              const waitForMapTilesCheckbox = document.getElementById('waitForMapTiles');
+              if(waitForMapTilesCheckbox){
+                waitForMapTilesCheckbox.checked = waitForMapTiles;
               }
               
               // Apply map card display setting
@@ -20597,12 +20605,18 @@ function makePosts(){
         // Mark map initialization start
         const mapInitStart = performance.now();
         
-        // Hide map initially until tiles are loaded
+        // Hide map initially until tiles are loaded (if waitForMapTiles is enabled)
         const mapContainer = document.getElementById('map');
         let mapFadedIn = false;
         if(mapContainer){
-          mapContainer.style.opacity = '0';
-          mapContainer.style.transition = 'opacity 0.8s ease-in';
+          if(waitForMapTiles){
+            mapContainer.style.opacity = '0';
+            mapContainer.style.transition = 'opacity 0.8s ease-in';
+          } else {
+            // Show map immediately - no waiting for tiles
+            mapContainer.style.opacity = '1';
+            mapFadedIn = true;
+          }
         }
         
         map = new mapboxgl.Map({
@@ -21292,6 +21306,8 @@ function makePosts(){
       set spinZoomMax(v){ spinZoomMax = v; },
       get spinSpeed(){ return spinSpeed; },
       set spinSpeed(v){ spinSpeed = v; },
+      get waitForMapTiles(){ return waitForMapTiles; },
+      set waitForMapTiles(v){ waitForMapTiles = v; },
       startSpin,
       stopSpin,
       updateSpinState,
@@ -24729,6 +24745,7 @@ function openPanel(m){
     const spinZoomMaxDisplay = document.getElementById('spinZoomMaxDisplay');
     const spinSpeedSlider = document.getElementById('spinSpeed');
     const spinSpeedDisplay = document.getElementById('spinSpeedDisplay');
+    const waitForMapTilesCheckbox = document.getElementById('waitForMapTiles');
     
     if(window.spinGlobals){
       if(spinLoadStartCheckbox){
@@ -24752,6 +24769,9 @@ function openPanel(m){
         spinSpeedSlider.value = speedValue;
         spinSpeedDisplay.textContent = speedValue.toFixed(1);
       }
+      if(waitForMapTilesCheckbox){
+        waitForMapTilesCheckbox.checked = window.spinGlobals.waitForMapTiles !== undefined ? window.spinGlobals.waitForMapTiles : true;
+      }
     }
     
     // Auto-save function for map settings
@@ -24759,6 +24779,7 @@ function openPanel(m){
       const settings = {};
       if(spinLoadStartCheckbox) settings.spin_on_load = spinLoadStartCheckbox.checked;
       if(spinLogoClickCheckbox) settings.spin_on_logo = spinLogoClickCheckbox.checked;
+      if(waitForMapTilesCheckbox) settings.wait_for_map_tiles = waitForMapTilesCheckbox.checked;
       const checkedRadio = Array.from(spinTypeRadios).find(r => r.checked);
       if(checkedRadio) settings.spin_load_type = checkedRadio.value;
       if(spinZoomMaxSlider){
@@ -24896,6 +24917,13 @@ function openPanel(m){
       spinLogoClickCheckbox.dataset.autoSaveAdded = 'true';
       spinLogoClickCheckbox.addEventListener('change', ()=>{
         // Don't update window.spinGlobals - that triggers the spin animation
+        // Settings will be applied on next page load
+        autoSaveMapSettings();
+      });
+    }
+    if(waitForMapTilesCheckbox && !waitForMapTilesCheckbox.dataset.autoSaveAdded){
+      waitForMapTilesCheckbox.dataset.autoSaveAdded = 'true';
+      waitForMapTilesCheckbox.addEventListener('change', ()=>{
         // Settings will be applied on next page load
         autoSaveMapSettings();
       });
