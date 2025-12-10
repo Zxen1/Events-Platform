@@ -949,16 +949,19 @@ input[type="checkbox"]{
   object-fit:cover;
   border:2px solid rgba(255,255,255,0.3);
   box-sizing:border-box;
-  transition: box-shadow 0.2s ease;
+  transition: border-color 0.15s;
 }
-/* Glow effect on hover */
-#memberBtn:hover .member-avatar{
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+
+/* Active state - blue border like other header buttons */
+#memberBtn.active .member-avatar,
+#memberBtn[aria-pressed="true"] .member-avatar{
+  border-color:#3b82f6;
 }
-/* Glow effect when active/pressed */
-#memberBtn[aria-pressed="true"] .member-avatar,
-#memberBtn.active .member-avatar{
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+
+/* Active + hover - lighter blue like other header buttons */
+#memberBtn.active:hover .member-avatar,
+#memberBtn[aria-pressed="true"]:hover .member-avatar{
+  border-color:#60a5fa;
 }
 
 #memberBtn.has-avatar .header-btn-icon{
