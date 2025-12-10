@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 10, 2025 at 05:27 AM
+-- Generation Time: Dec 10, 2025 at 12:15 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -202,11 +202,11 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-12-08 12:54:48'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Title shown in the welcome modal', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
 (9, 'welcome_message', '\"<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class=\\\"icon-search\\\" width=\\\"30\\\" height=\\\"30\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" role=\\\"img\\\" aria-label=\\\"Filters\\\"><circle cx=\\\"11\\\" cy=\\\"11\\\" r=\\\"8\\\"></circle><line x1=\\\"21\\\" y1=\\\"21\\\" x2=\\\"16.65\\\" y2=\\\"16.65\\\"></line></svg> button to refine your search.</p>\"', 'json', 'Main content of the welcome modal (supports HTML and SVG)', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
-(10, 'map_shadow', '0.4', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-12-09 13:18:27'),
+(10, 'map_shadow', '0.7', 'decimal', 'Map Shadow', '2025-11-13 16:17:10', '2025-12-10 00:19:54'),
 (11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-02 03:25:58'),
 (12, 'icon_folder', 'assets/icons-30', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(13, 'system_images_folder', 'assets/admin-icons', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-12-09 18:23:02'),
-(14, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-09 06:14:46'),
+(13, 'system_images_folder', 'assets/system-images', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-12-09 18:43:08'),
+(14, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-09 19:06:10'),
 (15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-11-27 21:47:01'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 15:20:41'),
 (17, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-11-27 21:47:29'),
@@ -218,7 +218,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (23, 'admin_tab_order', '[\"settings\",\"forms\",\"map\",\"messages\"]', 'json', 'Order of admin panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-12-09 13:20:32'),
-(26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-12-09 13:20:31'),
+(26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-12-10 00:19:55'),
 (27, 'small_map_card_pill', 'assets/system-images/150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-29 08:35:15'),
 (28, 'big_map_card_pill', 'assets/system-images/225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-29 09:22:12'),
 (29, 'multi_post_icon', 'assets/system-images/multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-11-29 08:35:50'),
@@ -229,12 +229,13 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (34, 'msg_category_email_icon', 'assets/system-images/email-messages.svg', 'string', 'Path to email messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
 (35, 'marker_cluster_icon', 'assets/system-images/red-balloon-40.png', 'string', 'Path to marker cluster/balloon icon', '2025-11-27 21:40:22', '2025-11-29 06:55:06'),
 (36, 'msg_category_fieldset-tooltips_icon', '/assets/system-images/fieldset-tooltips.svg', 'string', 'Path to fieldset tooltips messages category icon', '2025-12-06 17:40:32', '2025-12-09 18:23:54'),
-(37, 'starting_address', 'Mexico City Avenue Airport, Kansas City, Missouri 64153, United States', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2025-12-09 18:23:59'),
+(37, 'starting_address', 'The New Road, Newfoundland and Labrador A8A 3N9, Canada', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2025-12-09 19:32:23'),
 (38, 'starting_zoom', '3', 'integer', 'Default map zoom level for new visitors (1-18)', '2025-12-08 07:49:50', '2025-12-09 18:24:03'),
-(39, 'starting_lat', '39.252528', 'decimal', 'Starting location latitude coordinate', '2025-12-08 11:43:09', '2025-12-09 18:24:08'),
-(40, 'starting_lng', '-94.666642', 'decimal', 'Starting location longitude coordinate', '2025-12-08 11:43:09', '2025-12-09 18:24:12'),
-(41, 'big_logo', 'assets/system-images/funmap-logo-big-1338x210.webp', 'string', 'Path to big logo', '2025-12-09 16:18:19', '2025-12-09 18:25:27'),
-(42, 'small_logo', 'assets/system-images/funmap logo square 2025-12-09b.webp', 'string', 'Path to small logo', '2025-12-09 16:25:58', '2025-12-09 18:25:36');
+(39, 'starting_lat', '49.352561', 'decimal', 'Starting location latitude coordinate', '2025-12-08 11:43:09', '2025-12-09 19:32:23'),
+(40, 'starting_lng', '-57.560602', 'decimal', 'Starting location longitude coordinate', '2025-12-08 11:43:09', '2025-12-09 19:32:23'),
+(41, 'big_logo', 'assets/system-images/funmap welcome message 2025-12-10f.webp', 'string', 'Path to big logo', '2025-12-09 16:18:19', '2025-12-10 00:00:53'),
+(42, 'small_logo', 'assets/system-images/earth toy.png', 'string', 'Path to small logo', '2025-12-09 16:25:58', '2025-12-10 00:09:29'),
+(43, 'favicon', 'assets/system-images/favicon.ico', 'string', 'Path to favicon', '2025-12-10 00:10:23', '2025-12-10 00:52:30');
 
 -- --------------------------------------------------------
 
@@ -316,10 +317,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-10 04:15:01'),
-(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-10 04:15:01'),
-(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-10 04:15:01'),
-(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-10 04:15:01');
+(1, 'free-post', 'Free Post', 'Free post with standard visibility.', 'USD', 0.00, NULL, NULL, 0, 0, 1, 0, '2025-11-30 05:45:21', '2025-12-10 06:06:11'),
+(2, 'standard-post', 'Standard Post', 'Standard visibility with basic map markers and standard post cards.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 1, '2025-11-30 05:45:21', '2025-12-10 06:06:11'),
+(3, 'featured-post', 'Featured Post', 'Featured visibility with featured map cards and featured post cards.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 1, '2025-11-30 05:45:21', '2025-12-10 06:06:11'),
+(4, 'featured-post-sidebar-ad', 'Featured Post + Sidebar Ad', 'Featured visibility with featured map cards and featured post cards. Includes a dominating 20 second sidebar ad that displays on regular width monitors and cycles randomly with other sidebar ads.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 1, '2025-11-30 05:45:21', '2025-12-10 06:06:11');
 
 -- --------------------------------------------------------
 
@@ -1199,15 +1200,15 @@ CREATE TABLE `subcategory_edits` (
 --
 
 INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
-(880, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(881, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(882, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(883, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(884, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(885, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(886, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(887, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-09 17:15:02', '2025-12-09 17:15:02'),
-(888, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-09 17:15:02', '2025-12-09 17:15:02');
+(916, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(917, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(918, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(919, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(920, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(921, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(922, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(923, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-09 19:06:12', '2025-12-09 19:06:12'),
+(924, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-09 19:06:12', '2025-12-09 19:06:12');
 
 -- --------------------------------------------------------
 
@@ -1461,7 +1462,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6105;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6230;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1587,7 +1588,7 @@ ALTER TABLE `subcategories`
 -- AUTO_INCREMENT for table `subcategory_edits`
 --
 ALTER TABLE `subcategory_edits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=889;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=925;
 
 --
 -- AUTO_INCREMENT for table `transactions`
