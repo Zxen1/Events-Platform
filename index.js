@@ -2962,7 +2962,8 @@ let __notifyMapOnInteraction = null;
       // --- Section 5: Marker Clustering (Mapbox Native) ---
       // Using Mapbox GL JS native clustering for GPU-accelerated, worker-thread clustering
       const CLUSTER_LAYER_ID = 'post-clusters';
-      const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID]; // Single layer includes both icon and count text
+      const CLUSTER_CIRCLE_LAYER_ID = 'post-cluster-circles';
+      const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID, CLUSTER_CIRCLE_LAYER_ID]; // Circle + text layers
       const CLUSTER_ICON_ID = 'cluster-icon';
       let CLUSTER_ICON_URL = null; // Loaded from admin_settings
       const CLUSTER_MIN_ZOOM = 0;
@@ -3060,8 +3061,40 @@ let __notifyMapOnInteraction = null;
             }
           }
           
-          // Add cluster circle/icon layer
+          // Add cluster layers - circle background + count text
+          // Use circle layer (works without custom icon)
+          const CLUSTER_CIRCLE_ID = 'post-cluster-circles';
           try{
+            if(mapInstance.getLayer(CLUSTER_CIRCLE_ID)) mapInstance.removeLayer(CLUSTER_CIRCLE_ID);
+          }catch(err){}
+          
+          try{
+            // Circle background for clusters
+            mapInstance.addLayer({
+              id: CLUSTER_CIRCLE_ID,
+              type: 'circle',
+              source: 'posts',
+              filter: ['has', 'point_count'],
+              minzoom: CLUSTER_MIN_ZOOM,
+              maxzoom: CLUSTER_MAX_ZOOM,
+              paint: {
+                'circle-color': '#ff6b35', // Orange cluster color
+                'circle-radius': [
+                  'step',
+                  ['get', 'point_count'],
+                  20,   // radius for count < 100
+                  100, 25,  // radius for count >= 100
+                  750, 30   // radius for count >= 750
+                ],
+                'circle-stroke-width': 3,
+                'circle-stroke-color': '#ffffff'
+              }
+            });
+            console.log('[Clusters] Added circle layer');
+          }catch(err){ console.error('[Cluster Circle Layer]', err); }
+          
+          try{
+            // Text count on top of circles
             mapInstance.addLayer({
               id: CLUSTER_LAYER_ID,
               type: 'symbol',
@@ -3070,33 +3103,24 @@ let __notifyMapOnInteraction = null;
               minzoom: CLUSTER_MIN_ZOOM,
               maxzoom: CLUSTER_MAX_ZOOM,
               layout: {
-                'icon-image': CLUSTER_ICON_ID,
-                'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-anchor': 'bottom',
                 'text-field': ['to-string', ['get', 'point_count_abbreviated']],
-                'text-size': 12,
-                'text-offset': [0, -1.35],
+                'text-size': 14,
                 'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
                 'text-allow-overlap': true,
-                'text-ignore-placement': true,
-                'symbol-z-order': 'viewport-y'
+                'text-ignore-placement': true
               },
               paint: {
-                'text-color': '#ffffff',
-                'text-halo-color': 'rgba(0,0,0,0.45)',
-                'text-halo-width': 1.2,
-                'icon-opacity': 0.95
+                'text-color': '#ffffff'
               },
               metadata: { cursor: 'pointer' }
             });
-          }catch(err){ console.error('[Cluster Layer]', err); }
+            console.log('[Clusters] Added text layer');
+          }catch(err){ console.error('[Cluster Text Layer]', err); }
           
-          // Cluster click handler - zoom to expand
+          // Cluster click handler - zoom to expand (works on both circle and text layers)
           if(!mapInstance.__nativeClusterEventsBound){
-            mapInstance.on('click', CLUSTER_LAYER_ID, (e)=>{
-              const features = mapInstance.queryRenderedFeatures(e.point, { layers: [CLUSTER_LAYER_ID] });
+            const handleClusterClick = (e)=>{
+              const features = mapInstance.queryRenderedFeatures(e.point, { layers: [CLUSTER_CIRCLE_LAYER_ID, CLUSTER_LAYER_ID] });
               if(!features.length) return;
               const clusterId = features[0].properties.cluster_id;
               const source = mapInstance.getSource('posts');
@@ -3111,12 +3135,17 @@ let __notifyMapOnInteraction = null;
                   duration: 500
                 });
               });
-            });
+            };
             
-            mapInstance.on('mouseenter', CLUSTER_LAYER_ID, ()=>{
+            // Bind click to both layers
+            mapInstance.on('click', CLUSTER_CIRCLE_LAYER_ID, handleClusterClick);
+            mapInstance.on('click', CLUSTER_LAYER_ID, handleClusterClick);
+            
+            // Cursor changes
+            mapInstance.on('mouseenter', CLUSTER_CIRCLE_LAYER_ID, ()=>{
               mapInstance.getCanvas().style.cursor = 'pointer';
             });
-            mapInstance.on('mouseleave', CLUSTER_LAYER_ID, ()=>{
+            mapInstance.on('mouseleave', CLUSTER_CIRCLE_LAYER_ID, ()=>{
               mapInstance.getCanvas().style.cursor = 'grab';
             });
             
