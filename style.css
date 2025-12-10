@@ -1641,6 +1641,12 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin:0;
   object-fit:contain;
+  opacity:0;
+  color:transparent;
+  transition:opacity 0.3s ease;
+}
+#welcomeBody .welcome-logo.loaded{
+  opacity:1;
 }
 #welcomeBody .welcome-illustration{
   max-width:280px;

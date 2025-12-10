@@ -2477,12 +2477,14 @@ let __notifyMapOnInteraction = null;
                 if(welcomeLogo){
                   const welcomeControls = document.querySelector('#welcomeBody .map-controls-welcome');
                   welcomeLogo.onload = () => {
+                    welcomeLogo.classList.add('loaded');
                     if(welcomeControls) welcomeControls.classList.add('visible');
                   };
                   welcomeLogo.src = data.settings.big_logo.trim();
                   // If already cached, onload may not fire
-                  if(welcomeLogo.complete && welcomeControls){
-                    welcomeControls.classList.add('visible');
+                  if(welcomeLogo.complete){
+                    welcomeLogo.classList.add('loaded');
+                    if(welcomeControls) welcomeControls.classList.add('visible');
                   }
                 }
               }
