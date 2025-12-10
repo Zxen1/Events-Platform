@@ -194,6 +194,36 @@ The user had to:
 
 ---
 
+## PROJECT INFORMATION
+
+### Website
+- **URL:** funmap.com
+- **Purpose:** Sample website for a multi-purpose CMS platform
+- **Reusability:** Will be used for many different websites, so there cannot be any hard coding
+- **Modularity:** Addon plugins that form part of the core will be sold separately when the software is properly split at the end
+- **Testing:** All testing is done directly on the live site funmap.com, not locally
+
+### Deployment Workflow
+1. **Commit:** User presses "Commit" which saves changes to a Git folder on their PC
+2. **Sync:** User presses "Sync" which pushes changes to GitHub
+3. **Auto-Deploy:** Within less than a second, a webhook automatically syncs changes from GitHub to cPanel where funmap.com is hosted
+4. **Live:** Changes are immediately live on funmap.com
+
+### Critical Development Rules
+- **No Hard Coding:** Everything must be configurable/dynamic - this platform will power multiple websites
+- **Modularity First:** Keep features modular and separable for future plugin architecture
+- **Test on Live:** All testing happens on funmap.com, not local development servers
+
+### Cursor Browser Limitations
+- **Cannot clear local storage** from Cursor's built-in browser
+- **Cannot clear cache** from Cursor's built-in browser  
+- **Cannot hard refresh** from Cursor's built-in browser
+- **Tests in Cursor browser may be flawed** due to cached content
+- When testing changes, rely on cache-busting version strings (e.g., `?v=20251210a`) to force new code to load
+- User's real browser tests are more reliable than Cursor browser tests
+
+---
+
 ## PROJECT SCOPE: EVENTS PLATFORM CMS
 
 ### Core System
