@@ -696,9 +696,11 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
+  font-family: inherit;
   font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
+  min-height: var(--control-h);
   min-width: 35px;
   border-radius: 8px;
   display: inline-flex;
@@ -753,9 +755,11 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   background: var(--btn);
   border: none;
   color: var(--button-text);
+  font-family: inherit;
   font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
+  min-height: var(--control-h);
   min-width: 35px;
   border-radius: 0;
   display: flex;
@@ -765,6 +769,7 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   cursor: pointer;
   transition: background .2s, color .2s;
   width: 100%;
+  box-sizing: border-box;
 }
 .menu-options:hover{
   background: var(--btn-hover);
@@ -787,9 +792,11 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
+  font-family: inherit;
   font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
+  min-height: var(--control-h);
   min-width: 35px;
   border-radius: 8px;
   display: inline-flex;
@@ -822,9 +829,11 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
+  font-family: inherit;
   font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
+  min-height: var(--control-h);
   min-width: 35px;
   border-radius: 8px;
   display: inline-flex;
@@ -863,9 +872,11 @@ button:not([class*="mapboxgl-"]).disabled:hover,
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
+  font-family: inherit;
   font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
+  min-height: var(--control-h);
   min-width: 35px;
   border-radius: 8px;
   display: inline-flex;
