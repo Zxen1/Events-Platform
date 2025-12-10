@@ -20601,6 +20601,8 @@ function makePosts(){
             mapFadedIn = true;
             requestAnimationFrame(() => {
               mapContainer.style.opacity = '1';
+              const mapArea = document.querySelector('.map-area');
+              if(mapArea) mapArea.classList.add('map-loaded');
             });
           }
         };
