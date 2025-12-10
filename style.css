@@ -581,8 +581,6 @@ select{
   user-select: text;
 }
 
-/* --- Global Button Styles REMOVED FOR TESTING --- */
-
 a{
   color: var(--primary);
 }
