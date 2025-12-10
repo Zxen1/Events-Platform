@@ -679,7 +679,7 @@ a:active{
 }
 
 /* Tab Button - for panel tab buttons */
-.tab-button{
+.button--tab{
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
@@ -697,26 +697,26 @@ a:active{
   cursor: pointer;
   transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
-.tab-button:hover{
+.button--tab:hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
-.tab-button:active{
+.button--tab:active{
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
   transform: scale(0.97);
 }
-.tab-button[aria-selected="true"],
-.tab-button.active{
+.button--tab[aria-selected="true"],
+.button--tab.active{
   background: var(--button-selected-bg, var(--btn-selected));
   border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
   color: var(--button-selected-text, var(--button-active-text));
 }
 
 /* Auth Button - for login/register/create account buttons */
-.auth-button{
+.button--auth{
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
@@ -734,23 +734,23 @@ a:active{
   cursor: pointer;
   transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
-.auth-button:hover{
+.button--auth:hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
-.auth-button:active{
+.button--auth:active{
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
   transform: scale(0.97);
 }
-.auth-button:focus-visible{
+.button--auth:focus-visible{
   outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
-.auth-button:disabled,
-.auth-button.disabled{
+.button--auth:disabled,
+.button--auth.disabled{
   background: var(--btn-disabled);
   border-color: var(--btn-disabled);
   color: var(--button-disabled-text);
@@ -759,7 +759,7 @@ a:active{
 }
 
 /* Delete Button - for delete action buttons */
-.delete-button{
+.button--delete{
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
@@ -777,19 +777,19 @@ a:active{
   cursor: pointer;
   transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
-.delete-button:hover{
+.button--delete:hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
-.delete-button:active{
+.button--delete:active{
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
   transform: scale(0.97);
 }
-.delete-button:disabled,
-.delete-button.disabled{
+.button--delete:disabled,
+.button--delete.disabled{
   background: var(--btn-disabled);
   border-color: var(--btn-disabled);
   color: var(--button-disabled-text);

@@ -428,7 +428,7 @@ function renderCheckoutOptions(checkoutOptions, siteCurrency){
             </div>
           </div>
         </div>
-        <button type="button" class="checkout-option-delete delete-button">Delete</button>
+        <button type="button" class="checkout-option-delete button--delete">Delete</button>
       </div>
     `;
     
@@ -8681,7 +8681,7 @@ function makePosts(){
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
-      deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete delete-button';
+      deleteBtn.className = 'formbuilder-confirm-button formbuilder-confirm-delete button--delete';
       deleteBtn.dataset.role = 'confirm';
       deleteBtn.dataset.messageKey = 'msg_button_delete';
       const deleteText = await getMessage('msg_button_delete', {}, true) || 'Delete';
@@ -11957,7 +11957,7 @@ function makePosts(){
 
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
-          deleteSubBtn.className = 'delete-subcategory-btn delete-button';
+          deleteSubBtn.className = 'delete-subcategory-btn button--delete';
           deleteSubBtn.dataset.messageKey = 'msg_button_delete_subcategory';
           // Text will be loaded from DB
           deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
