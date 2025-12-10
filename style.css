@@ -23,7 +23,7 @@
  *   --layer-base: 0           (map/base)
  * 
  * Direct z-index values:
- *   101: body::before - loading beam (EXCEPTION: only during map load, then hidden)
+ *   101: #loadingBeam - loading beam (EXCEPTION: only during map load, then hidden)
  *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
@@ -6237,7 +6237,7 @@ body.filters-active #filterBtn{
   opacity: 0;
 }
 
-/* Loading animation - shows while map has opacity:0 */
+/* Loading animation - shows while map loads */
 @keyframes map-loading-rotate{
   from{ --loading-angle: 0deg; }
   to{ --loading-angle: 360deg; }
@@ -6247,8 +6247,7 @@ body.filters-active #filterBtn{
   initial-value: 0deg;
   inherits: false;
 }
-body::before{
-  content: '';
+#loadingBeam{
   position: fixed;
   inset: 0;
   padding: 3px;
@@ -6262,7 +6261,7 @@ body::before{
   z-index: 101;
   transition: opacity 0.3s ease;
 }
-body.map-loaded::before{
+#loadingBeam.hidden{
   opacity: 0;
   pointer-events: none;
 }
