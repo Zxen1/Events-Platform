@@ -833,6 +833,13 @@ input[type="checkbox"]{
   width: var(--logo-size);
   height: var(--logo-size);
   display: block;
+  /* Hide until image loads to prevent alt text flash */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.logo img.loaded,
+.logo img[src]:not([src=""]){
+  opacity: 1;
 }
 
   .view-toggle{
@@ -1636,6 +1643,13 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin:0;
   object-fit:contain;
+  /* Hide until image loads to prevent alt text flash */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#welcomeBody .welcome-logo.loaded,
+#welcomeBody .welcome-logo[src]:not([src=""]){
+  opacity: 1;
 }
 #welcomeBody .welcome-illustration{
   max-width:280px;

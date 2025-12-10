@@ -2477,19 +2477,23 @@ let __notifyMapOnInteraction = null;
                 if(welcomeLogo){
                   const welcomeControls = document.querySelector('#welcomeBody .map-controls-welcome');
                   welcomeLogo.onload = () => {
+                    welcomeLogo.classList.add('loaded');
                     if(welcomeControls) welcomeControls.classList.add('visible');
                   };
                   welcomeLogo.src = data.settings.big_logo.trim();
                   // If already cached, onload may not fire
-                  if(welcomeLogo.complete && welcomeControls){
-                    welcomeControls.classList.add('visible');
+                  if(welcomeLogo.complete){
+                    welcomeLogo.classList.add('loaded');
+                    if(welcomeControls) welcomeControls.classList.add('visible');
                   }
                 }
               }
               if(data.settings.small_logo && typeof data.settings.small_logo === 'string' && data.settings.small_logo.trim()){
                 const headerLogo = document.querySelector('.logo img');
                 if(headerLogo){
+                  headerLogo.onload = () => headerLogo.classList.add('loaded');
                   headerLogo.src = data.settings.small_logo.trim();
+                  if(headerLogo.complete) headerLogo.classList.add('loaded');
                 }
               }
               if(data.settings.favicon && typeof data.settings.favicon === 'string' && data.settings.favicon.trim()){
@@ -7330,10 +7334,25 @@ function makePosts(){
       if(!allowInitialize){
         return null;
       }
+      // Track if posts were built with empty categories (for race condition detection)
+      const hadCategories = Array.isArray(window.categories) && window.categories.length > 0;
       ALL_POSTS_CACHE = makePosts();
+      if(!hadCategories && ALL_POSTS_CACHE.length === 0){
+        window.__postsBuiltWithEmptyCategories = true;
+      }
       rebuildAllPostsIndex(ALL_POSTS_CACHE);
       return ALL_POSTS_CACHE;
     }
+    // Clear posts cache to force regeneration when categories change
+    function invalidateAllPostsCache(){
+      ALL_POSTS_CACHE = null;
+      ALL_POSTS_BY_ID = null;
+      // Also clear loaded posts state so posts are actually reloaded
+      if(typeof clearLoadedPosts === 'function'){
+        clearLoadedPosts();
+      }
+    }
+    window.invalidateAllPostsCache = invalidateAllPostsCache;
     function getPostByIdAnywhere(id){
       if(id === undefined || id === null) return null;
       const normalizedId = String(id);
@@ -7744,6 +7763,7 @@ function makePosts(){
         checkLoadPosts(evt);
       });
     }
+    window.scheduleCheckLoadPosts = scheduleCheckLoadPosts;
 
     function checkLoadPosts(event){
       if(!map) return;
@@ -17368,6 +17388,17 @@ function makePosts(){
             this.save();
           }
           this._loaded = true;
+          // Only regenerate posts if they were created with empty categories (race condition fix)
+          // Check if categories now have data but posts cache was built with empty categories
+          if(Array.isArray(window.categories) && window.categories.length > 0){
+            if(typeof window.invalidateAllPostsCache === 'function' && window.__postsBuiltWithEmptyCategories){
+              window.invalidateAllPostsCache();
+              window.__postsBuiltWithEmptyCategories = false;
+              if(typeof window.scheduleCheckLoadPosts === 'function'){
+                window.scheduleCheckLoadPosts();
+              }
+            }
+          }
         } catch(err) {
           console.error('Failed to load formbuilder snapshot:', err);
         }

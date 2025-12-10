@@ -561,6 +561,42 @@ The loading speed issue was fixed by splitting formbuilder initialization into t
 
 ---
 
+## FAILED EXPERIMENTS
+
+### 1. Mapbox Native Clustering (Dec 10, 2025)
+
+**What Was Attempted:**
+- Replace custom JavaScript clustering system with Mapbox GL JS native clustering
+- Goal was to move clustering calculations from main thread to web workers for better performance
+
+**What Happened:**
+- Added `cluster: true` config to posts source
+- Created circle + text layers for cluster display
+- Modified `loadPostMarkers()` to run at all zoom levels (not just zoom >= 7.8)
+- Clusters never appeared on the map
+- Spin animation faltered MORE than before (worse performance)
+- Load time was the same (~10 seconds)
+
+**Why It Failed:**
+- Unknown - layers were created according to console logs but nothing displayed
+- Possibly related to how/when data populates the source
+- May have been a timing issue between source creation and data loading
+
+**Important Context:**
+- Posts were GENERATED test data, not real posts from database
+- Real posts from database may behave differently
+- The custom JS clustering system works with generated posts
+
+**Lesson:**
+- Don't attempt major clustering system rewrites without thorough testing
+- The existing custom cluster system works - don't break it without clear benefit
+- Native clustering may work better with real DB posts (untested)
+
+**Rollback:**
+- Restored from backup: `backups\2025-12-10  145000  index.js`
+
+---
+
 **END OF DOCUMENT**
 
 **READ THIS FIRST BEFORE MAKING ANY CHANGES**
