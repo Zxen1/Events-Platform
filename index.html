@@ -102,7 +102,7 @@
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;">
       <div class="panel-header">
-        <div id="filterSummary" class="filter-summary"></div>
+        <div id="filterSummary" class="msg--summary"></div>
       </div>
       <div class="panel-body">
         <div class="map-control-row map-controls-filter">
@@ -122,13 +122,13 @@
         </div>
         <div class="field sort-field">
           <div class="options-dropdown">
-            <button id="optionsBtn" class="menu-button menu-button--sort-order" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
+            <button id="optionsBtn" class="menu-button--sort-order" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
             <div id="optionsMenu" class="options-menu" hidden>
-              <button id="favToggle" class="menu-options menu-options--sort-order" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+              <button id="favToggle" class="menu-options--sort-order" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
               <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                <button class="sort-option menu-options menu-options--sort-order" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
-                <button class="sort-option menu-options menu-options--sort-order" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
-                <button class="sort-option menu-options menu-options--sort-order" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
+                <button class="sort-option menu-options--sort-order" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
+                <button class="sort-option menu-options--sort-order" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
+                <button class="sort-option menu-options--sort-order" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
               </div>
             </div>
           </div>
@@ -136,20 +136,20 @@
         <section aria-label="Filters">
           <div class="filter-basics-container">
             <div class="field keyword-row">
-              <div class="input"><input id="keyword-textbox" type="text" placeholder="Keywords" aria-label="Keywords" />
+              <div class="input"><input id="keyword-textbox" class="input-text--filterpanel" type="text" placeholder="Keywords" aria-label="Keywords" />
                 <div class="keyword-clear-button" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
             <div class="field price-range-row">
               <div class="input">
-                <input id="min-price-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Min price" aria-label="Minimum price" />
+                <input id="min-price-input" class="input-text--filterpanel" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Min price" aria-label="Minimum price" />
                 <span class="price-separator" aria-hidden="true">-</span>
-                <input id="max-price-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Max price" aria-label="Maximum price" />
+                <input id="max-price-input" class="input-text--filterpanel" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Max price" aria-label="Maximum price" />
                 <div class="price-clear-button" role="button" aria-label="Clear price range">X</div>
               </div>
             </div>
             <div class="field daterange-row">
-              <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerContainer" />
+              <div class="input"><input id="daterange-textbox" class="input-text--filterpanel" type="text" aria-label="Date range" placeholder="Date Range" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerContainer" />
                 <div class="daterange-clear-button" role="button" aria-label="Clear date">X</div>
               </div>
             </div>

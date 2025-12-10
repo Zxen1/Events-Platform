@@ -15063,7 +15063,7 @@ function makePosts(){
             
             const fieldsetMenuBtn = document.createElement('button');
             fieldsetMenuBtn.type = 'button';
-            fieldsetMenuBtn.className = 'field-type-select menu-button menu-button--fieldset-list';
+            fieldsetMenuBtn.className = 'field-type-select menu-button--fieldset-list';
             fieldsetMenuBtn.setAttribute('aria-haspopup', 'true');
             fieldsetMenuBtn.setAttribute('aria-expanded', 'false');
             const menuId = `field-type-menu-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -15098,7 +15098,7 @@ function makePosts(){
             FORM_FIELDSETS.forEach(optionDef => {
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
-              optionBtn.className = 'menu-option menu-options menu-options--fieldset-list';
+              optionBtn.className = 'menu-option menu-options--fieldset-list';
               const optionLabel = resolveFieldsetDisplayName(optionDef) || optionDef.label || optionDef.value || '';
               optionBtn.textContent = optionLabel || optionDef.value;
               optionBtn.dataset.value = optionDef.value || '';
@@ -22111,7 +22111,7 @@ function makePosts(){
             const summaryEl = $('#filterSummary');
             const summaryText = summaryEl ? summaryEl.textContent.trim() : '';
             const summaryCopy = document.createElement('div');
-            summaryCopy.className = 'filter-summary post-board-empty-summary';
+            summaryCopy.className = 'msg--summary post-board-empty-summary';
             summaryCopy.textContent = summaryText || 'No results match your filters.';
             existingEmptyWrap.appendChild(summaryCopy);
             const emptyImg = document.createElement('img');
@@ -22167,7 +22167,7 @@ function makePosts(){
         const summaryEl = $('#filterSummary');
         const summaryText = summaryEl ? summaryEl.textContent.trim() : '';
         const summaryCopy = document.createElement('div');
-        summaryCopy.className = 'filter-summary post-board-empty-summary';
+        summaryCopy.className = 'msg--summary post-board-empty-summary';
         summaryCopy.textContent = summaryText || 'No results match your filters.';
         emptyWrap.appendChild(summaryCopy);
         const emptyImg = document.createElement('img');
@@ -24332,7 +24332,7 @@ function openPostModal(id){
             const summaryEl = $('#filterSummary');
             const summaryText = summaryEl ? summaryEl.textContent.trim() : '';
             const summaryCopy = document.createElement('div');
-            summaryCopy.className = 'filter-summary post-board-empty-summary';
+            summaryCopy.className = 'msg--summary post-board-empty-summary';
             summaryCopy.textContent = summaryText || 'No results match your filters.';
             existingEmptyWrap.appendChild(summaryCopy);
             const emptyImg = document.createElement('img');
@@ -27721,12 +27721,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Extracted from <script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('input[type="color"]').forEach(el => {
-    if(!el.value) el.value = '#000000';
-  });
-});
 
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {

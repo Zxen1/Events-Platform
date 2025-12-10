@@ -582,16 +582,7 @@ a:active{
    SECTION: BUTTONS
    ============================================================================ */
 
-/* Button - base class for all buttons */
-.button{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background .2s, border-color .2s, color .2s, transform .05s;
-}
-
-/* Button Modifiers */
+/* Header Access Button - for admin/member/fullscreen buttons */
 .button--header-access{
   height: 40px;
   display: flex;
@@ -602,8 +593,26 @@ a:active{
   border-radius: 8px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
 
+/* Header Mode Button - for Recents/Posts/Map buttons */
+.button--header-mode{
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+
+/* Header Filter Button - for filter toggle button */
 .button--header-filter{
   height: 40px;
   width: auto;
@@ -615,30 +624,11 @@ a:active{
   border-radius: 20px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
 
-.button--filter{
-  background: rgba(0,0,0,0.2);
-  border: none;
-}
-
-.button--admin{
-  background: rgba(0,0,0,0.2);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.1);
-  height: 35px;
-  line-height: 35px;
-}
-
-.button--member{
-  background: rgba(0,0,0,0.2);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Header Mode Button - for header mode switch (Recents/Posts/Map) */
 /* Tab Button - for panel tab buttons */
-.button--header-mode,
 .button--tab{
   background: var(--btn);
   border: 1px solid var(--btn);
@@ -657,21 +647,17 @@ a:active{
   cursor: pointer;
   transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
-.button--header-mode:hover,
 .button--tab:hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
-.button--header-mode:active,
 .button--tab:active{
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
   transform: scale(0.97);
 }
-.button--header-mode[aria-selected="true"],
-.button--header-mode.active,
 .button--tab[aria-selected="true"],
 .button--tab.active{
   background: var(--button-selected-bg, var(--btn-selected));
@@ -761,20 +747,9 @@ a:active{
   opacity: 0.6;
 }
 
-/* Menu Modifiers - specific menu types (extend base if needed) */
-.menu-button--sort-order{}
-.menu-options--sort-order{}
-.menu-button--formpicker{}
-.menu-options--formpicker{}
-.menu-button--member-currency{}
-.menu-options--member-currency{}
-.menu-button--member-prefix{}
-.menu-options--member-prefix{}
-.menu-button--fieldset-list{}
-.menu-options--fieldset-list{}
 
 /* ============================================================================
-   SECTION: INPUT CLASSES
+   SECTION: INPUTS
    ============================================================================ */
 
 /* Input Text - base class for text-like inputs */
@@ -841,8 +816,25 @@ a:active{
   border-radius: 50%;
 }
 
-/* Input Modifiers - specific input types (extend base if needed) */
-.input-text--filter{}
+/* Input Modifiers */
+.input-text--filterpanel{
+  font: inherit;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.input-text--filterpanel::placeholder{
+  color: var(--placeholder-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Future input modifiers */
 .input-text--auth{}
 .input-dropdown--venue{}
 
@@ -1459,10 +1451,6 @@ button[aria-expanded="true"] .results-arrow{
 .refresh-map-cards-btn span{
   font-size:16px;
 }
-#adminPanel input[type="color"]{
-  width:35px;
-  height:35px;
-}
 #adminPanel #adminPaypalClientId,
 #adminPanel #adminPaypalClientSecret{
   background:rgba(0,0,0,0.2);
@@ -1473,12 +1461,6 @@ button[aria-expanded="true"] .results-arrow{
   background:rgba(0,0,0,0.2);
   color:#fff;
   border:none;
-}
-#filterPanel input[type="text"],
-#filterPanel input[type="date"]{
-  background:rgba(0,0,0,0.2);
-  color:#fff;
-  border:1px solid rgba(255,255,255,0.1);
 }
 #filterPanel .calendar-container{
   background:#222222;
@@ -1603,12 +1585,6 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .day.range-start{border-radius:8px 0 0 8px;}
 .calendar .day.range-end{border-radius:0 8px 8px 0;}
 .calendar .day.range-start.range-end{border-radius:8px;}
-#memberPanel input[type=color]{
-  border-radius:8px;
-  padding:0;
-  height:40px;
-  display:block;
-}
 
 .member-auth{
   display:flex;
@@ -3638,18 +3614,8 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
   font-size:14px;
 }
-.filter-summary{
-  font-size:14px;
-  width:100%;
-  max-width:420px;
-  margin:0 auto;
-  text-align:center;
-}
 #filterPanel .panel-header{
   align-items:center;
-}
-#filterPanel .panel-header #filterSummary{
-  margin:0;
 }
 #filterPanel .panel-body > .filter-panel-actions{
   display:flex;
@@ -6255,6 +6221,175 @@ body.filters-active #filterBtn{
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .options-menu .menu-option,
 .options-menu button.menu-option{ text-align:left; justify-content:flex-start; display:flex; align-items:center; }
+
+/* Menu Button - Sort Order (self-contained) */
+.menu-button--sort-order{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+.menu-button--sort-order:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.menu-button--sort-order:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+.menu-button--sort-order:focus-visible{
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+.menu-button--sort-order[aria-expanded="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* Menu Button - Fieldset List (self-contained) */
+.menu-button--fieldset-list{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+.menu-button--fieldset-list:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.menu-button--fieldset-list:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+.menu-button--fieldset-list:focus-visible{
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Menu Options - Sort Order (self-contained) */
+.menu-options--sort-order{
+  background: var(--btn);
+  border: none;
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.menu-options--sort-order:hover{
+  background: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.menu-options--sort-order:active{
+  background: var(--btn-active);
+  color: var(--button-active-text);
+}
+.menu-options--sort-order[aria-pressed="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* Menu Options - Fieldset List (self-contained) */
+.menu-options--fieldset-list{
+  background: var(--btn);
+  border: none;
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.menu-options--fieldset-list:hover{
+  background: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.menu-options--fieldset-list:active{
+  background: var(--btn-active);
+  color: var(--button-active-text);
+}
+
+/* Future menu modifiers */
+.menu-button--formpicker{}
+.menu-options--formpicker{}
+.menu-button--member-currency{}
+.menu-options--member-currency{}
+.menu-button--member-prefix{}
+.menu-options--member-prefix{}
+
+/* ============================================================================
+   SECTION: MESSAGES
+   ============================================================================ */
+
+/* SUGGESTIONS (to be refined):
+   .msg--success
+   .msg--error
+   .msg--warning
+   .msg--toast
+   .msg--confirm
+   .msg--summary
+*/
+
+.msg--summary{
+  font-size:14px;
+  width:100%;
+  max-width:420px;
+  margin:0;
+  text-align:center;
+}
+
 
 /* ============================================================================
    SECTION: CARDS & BOARDS
