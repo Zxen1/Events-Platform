@@ -568,63 +568,18 @@ html,body{
     font-weight: bold;
   }
 
-/* ============================================================================
-   SECTION: FORM ELEMENTS (Global)
-   ============================================================================ */
-
-input,
-textarea,
-select{
-  font: inherit;
-  caret-color: auto;
-  -webkit-user-select: text;
-  user-select: text;
-}
-
 a{
   color: var(--primary);
 }
-
 a:hover{
   color: var(--accent);
 }
-
 a:active{
   color: var(--active);
 }
 
-button:not([class*="mapboxgl-"]):active,
-[role="button"]:not([class*="mapboxgl-"]):active{
-  transform: scale(0.97);
-}
-button:not([class*="mapboxgl-"]):focus-visible,
-[role="button"]:not([class*="mapboxgl-"]):focus-visible{
-  outline:2px solid #ffffff;
-  outline-offset:2px;
-}
-
-button:not([class*="mapboxgl-"]):disabled,
-[role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"],
-button:not([class*="mapboxgl-"]).disabled,
-[role="button"]:not([class*="mapboxgl-"]).disabled{
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-button:not([class*="mapboxgl-"]):disabled:hover,
-[role="button"]:not([class*="mapboxgl-"])[aria-disabled="true"]:hover,
-button:not([class*="mapboxgl-"]).disabled:hover,
-[role="button"]:not([class*="mapboxgl-"]).disabled:hover{
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-}
-
 /* ========================================
-   BUTTON CLASSES (replacing global button styles)
+   BUTTON CLASSES
    ======================================== */
 
 /* Menu Button - base class for menu trigger buttons */
@@ -854,14 +809,81 @@ button:not([class*="mapboxgl-"]).disabled:hover,
 .menu-button--fieldset-list{}
 .menu-options--fieldset-list{}
 
-/* ======================================== */
+/* ========================================
+   INPUT CLASSES (replacing global input styles)
+   ======================================== */
 
-input::placeholder,
-textarea::placeholder{
+/* Input Text - base class for text-like inputs */
+.input-text{
+  font: inherit;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+}
+.input-text::placeholder{
   color: var(--placeholder-text);
   font-family: inherit;
   font-size: inherit;
 }
+
+/* Input Textarea - base class for textareas */
+.input-textarea{
+  font: inherit;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  border-radius: 8px;
+}
+.input-textarea::placeholder{
+  color: var(--placeholder-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Input Dropdown - base class for select elements */
+.input-dropdown{
+  font: inherit;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  border-radius: var(--dropdown-radius);
+  height: var(--control-h);
+}
+.input-dropdown option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+.input-dropdown option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+.input-dropdown option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+
+/* Input Checkbox - base class for checkboxes */
+.input-checkbox{
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: 8px;
+}
+
+/* Input Radio - base class for radio buttons */
+.input-radio{
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: 50%;
+}
+
+/* Input Modifiers - specific input types (extend base if needed) */
+.input-text--filter{}
+.input-text--auth{}
+.input-dropdown--venue{}
+
+/* ======================================== */
+
 #filterPanel #keyword-textbox::placeholder{
   color: var(--filter-placeholder-text);
   font-family: inherit;
@@ -899,11 +921,6 @@ textarea::placeholder{
   font-size: var(--panel-title-size);
 }
 
-select:not(.form-select){
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-  border-radius: var(--dropdown-radius);
-}
 .venue-select{
   color: var(--dropdown-venue-text);
   padding-right:32px;
@@ -940,35 +957,6 @@ select.venue-select,
 *:has(.venue-select:focus)::after{
   transform:translate(0, -50%) rotate(-135deg);
   margin-top:1px;
-}
-select option{
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-}
-select option:checked{
-  background: var(--dropdown-selected-bg);
-  color: var(--dropdown-selected-text);
-}
-select option:hover{
-  background: var(--dropdown-hover-bg);
-  color: var(--dropdown-hover-text);
-}
-
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="search"],
-input[type="tel"],
-input[type="url"],
-textarea,
-select:not(.form-select){
-  height: var(--control-h);
-  border-radius: 8px;
-}
-input[type="checkbox"]{
-  width: var(--control-h);
-  height: var(--control-h);
-  border-radius: 8px;
 }
 
 /* ============================================================================
