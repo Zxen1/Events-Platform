@@ -949,6 +949,16 @@ input[type="checkbox"]{
   object-fit:cover;
   border:2px solid rgba(255,255,255,0.3);
   box-sizing:border-box;
+  transition: box-shadow 0.2s ease;
+}
+/* Glow effect on hover */
+#memberBtn:hover .member-avatar{
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+/* Glow effect when active/pressed */
+#memberBtn[aria-pressed="true"] .member-avatar,
+#memberBtn.active .member-avatar{
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
 }
 
 #memberBtn.has-avatar .header-btn-icon{

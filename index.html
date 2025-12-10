@@ -340,7 +340,7 @@
                 <input type="range" id="spinSpeed" min="0.1" max="2.0" step="0.1" value="0.3" class="spin-slider" />
               </div>
             </div>
-            <div id="map_shadow_container" class="panel-field" style="padding-top: 12px;">
+            <div class="panel-field">
               <label for="postModeBgOpacity">Map Shadow</label>
               <div class="spin-control-row">
                 <span id="postModeBgOpacityVal" class="slider-value">0.00</span>
@@ -383,11 +383,8 @@
                 </div>
               </div>
             </div>
-            <div class="panel-field" style="padding-top: 12px;">
-              <label style="font-weight: 600; margin-bottom: 16px; display: block;">System Images</label>
-              <div class="system-image-picker-container">
-                <div class="panel-field system-image-picker-field">
-                  <label>Small Map Card Pill</label>
+            <div class="panel-field system-image-picker-field">
+              <label>Small Map Card Pill</label>
                   <div class="iconpicker-container" id="systemImageSmallMapCardPillContainer">
                     <div class="iconpicker-preview" id="systemImageSmallMapCardPillPreview">
                       <span></span>
@@ -436,8 +433,6 @@
                     <button type="button" class="iconpicker-button" id="systemImageMarkerClusterButton" data-setting-key="marker_cluster_icon">Choose Icon</button>
                   </div>
                 </div>
-              </div>
-            </div>
           </div>
         </div>
         <div id="tab-settings" class="tab-panel active">
@@ -450,11 +445,8 @@
             <label for="adminWebsiteTagline">Website Tagline</label>
             <input type="text" id="adminWebsiteTagline" autocomplete="off" placeholder="Enter website tagline" />
           </div>
-          <div class="panel-field" style="padding-top: 12px;">
-            <label style="font-weight: 600; margin-bottom: 16px; display: block;">Website Branding</label>
-            <div class="system-image-picker-container">
-              <div class="panel-field system-image-picker-field">
-                <label>Big Logo</label>
+          <div class="panel-field system-image-picker-field">
+            <label>Big Logo</label>
                 <div class="menu menu--system-images" id="systemImageBigLogoContainer">
                   <button type="button" class="menu-button" id="systemImageBigLogoButton" data-setting-key="big_logo" aria-haspopup="true" aria-expanded="false">
                     <img class="menu-button-img" alt="" />
@@ -483,8 +475,6 @@
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
           <div class="panel-field">
             <label for="adminWebsiteCurrency">Website Currency</label>
             <div class="field-type-select-wrapper options-dropdown">
