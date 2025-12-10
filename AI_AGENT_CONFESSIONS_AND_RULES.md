@@ -183,6 +183,9 @@ The user had to:
 - Made assumptions instead of checking
 - Changed too many things at once
 - Didn't test understanding before making changes
+- **CRITICAL:** Never checked for CSS overrides (global `!important` rules) until user explicitly mentioned it after hours of failure
+- **CRITICAL:** Never compared with other header buttons to copy their pattern until user explicitly mentioned it after hours of failure
+- **CRITICAL:** Would have continued failing indefinitely - these basic research steps would never have occurred to me without user intervention
 
 **Impact:**
 - Hours wasted on a 2-minute task
