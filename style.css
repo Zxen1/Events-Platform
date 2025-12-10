@@ -3,12 +3,11 @@
  * ======================
  * 
  * PERMANENT RULE: All z-index values on this site must NOT exceed 100.
- * Exception: Loading beam (101) - must overlay everything during map load.
  * All z-index values (including CSS variables and direct values) must be
  * documented in this reference list. When adding new z-index values, update
  * this list immediately.
  * 
- * Maximum z-index: 100 (--layer-devtools), except loading beam at 101
+ * Maximum z-index: 100 (--layer-devtools)
  * 
  * CSS Variables (defined in :root):
  *   --layer-devtools: 100    (developer tools, always on top)
@@ -22,8 +21,7 @@
  *   --layer-content: 20        (primary content)
  *   --layer-base: 0           (map/base)
  * 
- * Direct z-index values:
- *   101: #loadingMessage - loading message (EXCEPTION: only during map load, then hidden)
+ * Direct z-index values found in style.css:
  *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
@@ -35,9 +33,8 @@
  *   40: (--layer-header) - headers
  *   30: (--layer-card) - cards
  *   20: (--layer-content) - content
- *   10: .map-controls-map (map controls on map), panel resizers, various overlays
- *   6: .map-card-container.is-active (active/clicked map cards) - in map.js
- *   5: .map-card-container:hover (hovered map cards) - in map.js, mapmarker-overlay
+ *   10: panel resizers, various overlays
+ *   5: mapmarker-overlay, various elements
  *   3: various elements
  *   2: big-map-card-container (stacks above small-map-card-container)
  *   1: small-map-card-container, form labels, form field headers, item pricing labels, header-buttons
@@ -48,8 +45,6 @@
  * Map Card Container System:
  *   - small-map-card-container: z-index 1 (renders below big cards)
  *   - big-map-card-container: z-index 2 (renders above small cards)
- *   - .map-card-container:hover: z-index 5 (in map.js)
- *   - .map-card-container.is-active: z-index 6 (in map.js)
  *   - Containers use isolation: isolate to create stacking contexts
  *   - This prevents elements from one card from penetrating cards above
  */
@@ -838,12 +833,6 @@ input[type="checkbox"]{
   width: var(--logo-size);
   height: var(--logo-size);
   display: block;
-  opacity: 0;
-  color: transparent;
-  transition: opacity 0.3s ease;
-}
-.logo img.loaded{
-  opacity: 1;
 }
 
   .view-toggle{
@@ -1647,12 +1636,6 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin:0;
   object-fit:contain;
-  opacity:0;
-  color:transparent;
-  transition:opacity 0.3s ease;
-}
-#welcomeBody .welcome-logo.loaded{
-  opacity:1;
 }
 #welcomeBody .welcome-illustration{
   max-width:280px;
@@ -1665,10 +1648,7 @@ button[aria-expanded="true"] .results-arrow{
   aspect-ratio: 1 / 1;
   object-fit:contain;
 }
-#welcome-modal{
-  background:rgba(0,0,0,0.65);
-  backdrop-filter:blur(4px);
-}
+#welcome-modal{background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);}
 #welcome-modal .modal-content{
   position:absolute;
   width:min(600px, 90vw);
@@ -6249,55 +6229,6 @@ body.filters-active #filterBtn{
 #map{
   position: absolute;
   inset: 0;
-}
-
-/* Loading screen - shows while map loads */
-@keyframes loading-spin{
-  from{ transform: rotate(0deg); }
-  to{ transform: rotate(360deg); }
-}
-#loadingMessage{
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #000000;
-  color: #3b82f6;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  z-index: 101;
-  pointer-events: auto;
-  overflow: hidden;
-  transition: opacity 0.8s ease;
-}
-#loadingMessage::before{
-  content: '';
-  position: absolute;
-  inset: -50%;
-  background: conic-gradient(transparent 0deg, transparent 300deg, #3b82f6 330deg, #60a5fa 345deg, #3b82f6 360deg);
-  animation: loading-spin 1.5s linear infinite;
-  will-change: transform;
-}
-#loadingMessage::after{
-  content: '';
-  position: absolute;
-  inset: 3px;
-  background: #000000;
-}
-#loadingMessage span{
-  position: relative;
-  z-index: 1;
-}
-#loadingMessage #loadingTimer{
-  display: block;
-  margin-top: 8px;
-  font-size: 14px;
-  opacity: 0.7;
-}
-#loadingMessage.hidden{
   opacity: 0;
 }
 

@@ -56,33 +56,6 @@ async function apiRequest(url, options = {}, cacheTime = 0) {
 // Expose globally for other scripts
 window.apiRequest = apiRequest;
 
-// === Loading Timer ===
-(function(){
-  const startTime = performance.now();
-  const timerEl = document.getElementById('loadingTimer');
-  let running = true;
-  let lastUpdate = 0;
-  
-  function updateTimer(now){
-    if(!running || !timerEl) return;
-    // Only update display every 100ms to reduce DOM writes
-    if(now - lastUpdate >= 100){
-      const elapsed = (now - startTime) / 1000;
-      timerEl.textContent = elapsed.toFixed(2) + 's';
-      lastUpdate = now;
-    }
-    requestAnimationFrame(updateTimer);
-  }
-  
-  if(timerEl){
-    requestAnimationFrame(updateTimer);
-  }
-  
-  window.stopLoadingTimer = function(){
-    running = false;
-  };
-})();
-
 // === Currency Helpers ===
 // Parse option_value format "countryCode currencyCode" (e.g., "us USD")
 function parseCurrencyValue(optionValue) {
@@ -2464,9 +2437,26 @@ let __notifyMapOnInteraction = null;
               };
               
               // Apply welcome_enabled setting (no localStorage caching)
-              // Welcome modal will open early behind the loading curtain
               if(data.settings.welcome_enabled !== undefined){
                 window._welcomeEnabled = data.settings.welcome_enabled;
+                
+                // If welcome is enabled, show it immediately on page load
+                // Messages are already cached above - no additional API call needed
+                // Note: welcome can always be shown via logo click regardless of localStorage
+                if(data.settings.welcome_enabled){
+                  const welcomeModalStart = performance.now();
+                  const welcomeModal = document.getElementById('welcome-modal');
+                  if(welcomeModal && typeof window.openWelcome === 'function'){
+                    window.openWelcome();
+                    const welcomeModalEnd = performance.now();
+                    window.__startupTimings.components.welcomeModal = {
+                      start: welcomeModalStart,
+                      end: welcomeModalEnd,
+                      duration: welcomeModalEnd - welcomeModalStart
+                    };
+                    // Don't set welcome-seen here - it will be set when user closes the modal
+                  }
+                }
               }
               
               // Message category names and icons are loaded fresh from settings each time
@@ -2487,23 +2477,19 @@ let __notifyMapOnInteraction = null;
                 if(welcomeLogo){
                   const welcomeControls = document.querySelector('#welcomeBody .map-controls-welcome');
                   welcomeLogo.onload = () => {
-                    welcomeLogo.classList.add('loaded');
                     if(welcomeControls) welcomeControls.classList.add('visible');
                   };
                   welcomeLogo.src = data.settings.big_logo.trim();
                   // If already cached, onload may not fire
-                  if(welcomeLogo.complete){
-                    welcomeLogo.classList.add('loaded');
-                    if(welcomeControls) welcomeControls.classList.add('visible');
+                  if(welcomeLogo.complete && welcomeControls){
+                    welcomeControls.classList.add('visible');
                   }
                 }
               }
               if(data.settings.small_logo && typeof data.settings.small_logo === 'string' && data.settings.small_logo.trim()){
                 const headerLogo = document.querySelector('.logo img');
                 if(headerLogo){
-                  headerLogo.onload = () => headerLogo.classList.add('loaded');
                   headerLogo.src = data.settings.small_logo.trim();
-                  if(headerLogo.complete) headerLogo.classList.add('loaded');
                 }
               }
               if(data.settings.favicon && typeof data.settings.favicon === 'string' && data.settings.favicon.trim()){
@@ -2959,211 +2945,15 @@ let __notifyMapOnInteraction = null;
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
 
-      // --- Section 5: Marker Clustering (Mapbox Native) ---
-      // Using Mapbox GL JS native clustering for GPU-accelerated, worker-thread clustering
-      const CLUSTER_LAYER_ID = 'post-clusters';
-      const CLUSTER_CIRCLE_LAYER_ID = 'post-cluster-circles';
-      const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID, CLUSTER_CIRCLE_LAYER_ID]; // Circle + text layers
-      const CLUSTER_ICON_ID = 'cluster-icon';
-      let CLUSTER_ICON_URL = null; // Loaded from admin_settings
-      const CLUSTER_MIN_ZOOM = 0;
-      const CLUSTER_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
-      let clusterLayersVisible = true;
-      
-      // Mapbox native clustering config - added to posts source
-      const MAPBOX_CLUSTER_CONFIG = {
-        cluster: true,
-        clusterMaxZoom: CLUSTER_MAX_ZOOM - 0.5, // Stop clustering just below marker threshold
-        clusterRadius: 50, // Cluster radius in pixels
-        clusterMinPoints: 2 // Minimum points to form a cluster
-      };
-      
-      // Load cluster icon for native clustering
-      async function ensureClusterIconImage(mapInstance){
-        if(window._markerClusterIcon){
-          CLUSTER_ICON_URL = window._markerClusterIcon;
-        }
-        return new Promise(resolve => {
-          if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
-            resolve();
-            return;
-          }
-          if(mapInstance.hasImage(CLUSTER_ICON_ID)){
-            resolve();
-            return;
-          }
-          if(!CLUSTER_ICON_URL || typeof CLUSTER_ICON_URL !== 'string' || !CLUSTER_ICON_URL.trim()){
-            resolve();
-            return;
-          }
-          try{
-            if(typeof mapInstance.loadImage === 'function'){
-              mapInstance.loadImage(CLUSTER_ICON_URL, (err, image)=>{
-                if(err){ console.error(err); resolve(); return; }
-                if(image && image.width > 0 && image.height > 0 && !mapInstance.hasImage(CLUSTER_ICON_ID)){
-                  const pixelRatio = image.width >= 256 ? 2 : 1;
-                  mapInstance.addImage(CLUSTER_ICON_ID, image, { pixelRatio });
-                }
-                resolve();
-              });
-              return;
-            }
-          }catch(err){ console.error(err); }
-          resolve();
-        });
-      }
-      
-      function formatClusterCount(count){
-        if(!Number.isFinite(count) || count <= 0) return '0';
-        if(count >= 1000000){
-          const value = count / 1000000;
-          return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10}m`;
-        }
-        if(count >= 1000){
-          const value = count / 1000;
-          return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10}k`;
-        }
-        return String(count);
-      }
-      
-      // No-op for compatibility - native clustering doesn't need manual updates
-      function updateClusterSourceForZoom(zoom){}
-      function resetClusterSourceState(){}
-      
-      // Setup native Mapbox cluster layers
-      function setupSeedLayers(mapInstance){
-        if(!mapInstance) return;
-        
-        ensureClusterIconImage(mapInstance).then(()=>{
-          // Remove old cluster layers if they exist
-          try{
-            if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
-          }catch(err){}
-          
-          // Ensure posts source exists with clustering - create empty if needed
-          let postsSource = mapInstance.getSource('posts');
-          if(!postsSource){
-            // Create posts source with clustering enabled (empty initially)
-            // This allows clusters to show at low zoom before loadPostMarkers is called
-            const emptyData = { type: 'FeatureCollection', features: [] };
-            try{
-              mapInstance.addSource('posts', {
-                type: 'geojson',
-                data: emptyData,
-                promoteId: 'featureId',
-                ...MAPBOX_CLUSTER_CONFIG
-              });
-              postsSource = mapInstance.getSource('posts');
-              console.log('[Clusters] Created posts source with native clustering');
-            }catch(err){
-              console.error('[Clusters] Failed to create posts source:', err);
-              return;
-            }
-          }
-          
-          // Add cluster layers - circle background + count text
-          // Use circle layer (works without custom icon)
-          const CLUSTER_CIRCLE_ID = 'post-cluster-circles';
-          try{
-            if(mapInstance.getLayer(CLUSTER_CIRCLE_ID)) mapInstance.removeLayer(CLUSTER_CIRCLE_ID);
-          }catch(err){}
-          
-          try{
-            // Circle background for clusters
-            mapInstance.addLayer({
-              id: CLUSTER_CIRCLE_ID,
-              type: 'circle',
-              source: 'posts',
-              filter: ['has', 'point_count'],
-              minzoom: CLUSTER_MIN_ZOOM,
-              maxzoom: CLUSTER_MAX_ZOOM,
-              paint: {
-                'circle-color': '#ff6b35', // Orange cluster color
-                'circle-radius': [
-                  'step',
-                  ['get', 'point_count'],
-                  20,   // radius for count < 100
-                  100, 25,  // radius for count >= 100
-                  750, 30   // radius for count >= 750
-                ],
-                'circle-stroke-width': 3,
-                'circle-stroke-color': '#ffffff'
-              }
-            });
-            console.log('[Clusters] Added circle layer');
-          }catch(err){ console.error('[Cluster Circle Layer]', err); }
-          
-          try{
-            // Text count on top of circles
-            mapInstance.addLayer({
-              id: CLUSTER_LAYER_ID,
-              type: 'symbol',
-              source: 'posts',
-              filter: ['has', 'point_count'],
-              minzoom: CLUSTER_MIN_ZOOM,
-              maxzoom: CLUSTER_MAX_ZOOM,
-              layout: {
-                'text-field': ['to-string', ['get', 'point_count_abbreviated']],
-                'text-size': 14,
-                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                'text-allow-overlap': true,
-                'text-ignore-placement': true
-              },
-              paint: {
-                'text-color': '#ffffff'
-              },
-              metadata: { cursor: 'pointer' }
-            });
-            console.log('[Clusters] Added text layer');
-          }catch(err){ console.error('[Cluster Text Layer]', err); }
-          
-          // Cluster click handler - zoom to expand (works on both circle and text layers)
-          if(!mapInstance.__nativeClusterEventsBound){
-            const handleClusterClick = (e)=>{
-              const features = mapInstance.queryRenderedFeatures(e.point, { layers: [CLUSTER_CIRCLE_LAYER_ID, CLUSTER_LAYER_ID] });
-              if(!features.length) return;
-              const clusterId = features[0].properties.cluster_id;
-              const source = mapInstance.getSource('posts');
-              if(!source || typeof source.getClusterExpansionZoom !== 'function') return;
-              
-              source.getClusterExpansionZoom(clusterId, (err, zoom)=>{
-                if(err) return;
-                const coords = features[0].geometry.coordinates;
-                mapInstance.easeTo({
-                  center: coords,
-                  zoom: Math.min(zoom, CLUSTER_MAX_ZOOM),
-                  duration: 500
-                });
-              });
-            };
-            
-            // Bind click to both layers
-            mapInstance.on('click', CLUSTER_CIRCLE_LAYER_ID, handleClusterClick);
-            mapInstance.on('click', CLUSTER_LAYER_ID, handleClusterClick);
-            
-            // Cursor changes
-            mapInstance.on('mouseenter', CLUSTER_CIRCLE_LAYER_ID, ()=>{
-              mapInstance.getCanvas().style.cursor = 'pointer';
-            });
-            mapInstance.on('mouseleave', CLUSTER_CIRCLE_LAYER_ID, ()=>{
-              mapInstance.getCanvas().style.cursor = 'grab';
-            });
-            
-            mapInstance.__nativeClusterEventsBound = true;
-          }
-          
-          // Update visibility based on current zoom
-          const currentZoom = mapInstance.getZoom ? mapInstance.getZoom() : 0;
-          const shouldShow = currentZoom < CLUSTER_MAX_ZOOM;
-          try{
-            mapInstance.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
-          }catch(err){}
-          clusterLayersVisible = shouldShow;
-        });
-      }
-      
-      /* ========== OLD CUSTOM CLUSTER SYSTEM - COMMENTED OUT ==========
+      // --- Section 5: Marker Clustering ---
+      // Cluster icons group nearby posts at low zoom levels. They are replaced by individual markers at higher zoom.
       const CLUSTER_SOURCE_ID = 'post-cluster-source';
+        const CLUSTER_LAYER_ID = 'post-clusters';
+        const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID];
+        const CLUSTER_ICON_ID = 'cluster-icon';
+        let CLUSTER_ICON_URL = null; // Loaded from admin_settings
+        const CLUSTER_MIN_ZOOM = 0;
+        const CLUSTER_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let clusterLayersVisible = true;
 
         async function ensureClusterIconImage(mapInstance){
@@ -3535,8 +3325,6 @@ let __notifyMapOnInteraction = null;
             updateLayerVisibility(lastKnownZoom);
           }
         }
-      ========== END OLD CUSTOM CLUSTER SYSTEM ========== */
-      
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
       function updateLogoClickState(){
@@ -20778,9 +20566,13 @@ function makePosts(){
         // Mark map initialization start
         const mapInitStart = performance.now();
         
-        // Map loads behind the loading curtain - no need to hide it
+        // Hide map initially until tiles are loaded
         const mapContainer = document.getElementById('map');
-        let curtainDropped = false;
+        let mapFadedIn = false;
+        if(mapContainer){
+          mapContainer.style.opacity = '0';
+          mapContainer.style.transition = 'opacity 0.8s ease-in';
+        }
         
         map = new mapboxgl.Map({
           container:'map',
@@ -20803,20 +20595,13 @@ function makePosts(){
         // Markers are visible at zoom >= 8, so if starting zoom >= 8, wait for markers
         const needsMarkers = startZoom !== null && Number.isFinite(startZoom) && startZoom >= 8;
         
-        // Open welcome modal early (hidden behind curtain)
-        if(window._welcomeEnabled && typeof window.openWelcome === 'function'){
-          window.openWelcome();
-        }
-        
-        // Drop the loading curtain when everything is ready
-        const dropCurtain = () => {
-          if(curtainDropped) return;
-          curtainDropped = true;
-          if(typeof window.stopLoadingTimer === 'function') window.stopLoadingTimer();
-          const loadingMessage = document.getElementById('loadingMessage');
-          if(loadingMessage){
-            loadingMessage.style.pointerEvents = 'none';
-            loadingMessage.classList.add('hidden');
+        // Fade in map only when required elements are loaded
+        const fadeInMap = () => {
+          if(mapContainer && !mapFadedIn && mapContainer.style.opacity === '0'){
+            mapFadedIn = true;
+            requestAnimationFrame(() => {
+              mapContainer.style.opacity = '1';
+            });
           }
         };
         
@@ -20834,11 +20619,11 @@ function makePosts(){
           return markersLoaded || window.__markersLoaded || false;
         };
         
-        // Check if everything is ready and drop the curtain
-        const checkReadyAndDropCurtain = () => {
-          if(curtainDropped) return true;
+        // Check if everything is ready and fade in map
+        const checkReadyAndFadeIn = () => {
+          if(mapFadedIn) return true;
           if(areTilesLoaded() && areMarkersReady()){
-            dropCurtain();
+            fadeInMap();
             return true;
           }
           return false;
@@ -20849,29 +20634,29 @@ function makePosts(){
           mapLoading.onTilesLoaded(() => {
             // Tiles are loaded, check if markers are also ready (if needed)
             if(!needsMarkers || areMarkersReady()){
-              dropCurtain();
+              fadeInMap();
             }
           });
         }
         
         // Also check on 'idle' event (fires when map is idle and tiles are loaded)
         map.once('idle', () => {
-          checkReadyAndDropCurtain();
+          checkReadyAndFadeIn();
         });
         
         // Also check on 'load' event (fires when style + initial tiles are ready)
         map.once('load', () => {
           // Start checking periodically for tiles and markers (if needed)
-          if(!checkReadyAndDropCurtain()){
+          if(!checkReadyAndFadeIn()){
             const checkInterval = setInterval(() => {
-              if(checkReadyAndDropCurtain() || curtainDropped){
+              if(checkReadyAndFadeIn() || mapFadedIn){
                 clearInterval(checkInterval);
               }
             }, 100);
             // Stop checking after 5 seconds
             setTimeout(() => {
               clearInterval(checkInterval);
-              if(!curtainDropped) dropCurtain(); // Safety fallback - show map even if markers aren't ready
+              if(!mapFadedIn) fadeInMap(); // Safety fallback - show map even if markers aren't ready
             }, 5000);
           }
         });
@@ -20880,8 +20665,8 @@ function makePosts(){
         if(needsMarkers){
           // Monitor for markers loading
           const checkMarkersInterval = setInterval(() => {
-            if(areMarkersReady() && areTilesLoaded() && !curtainDropped){
-              dropCurtain();
+            if(areMarkersReady() && areTilesLoaded() && !mapFadedIn){
+              fadeInMap();
               clearInterval(checkMarkersInterval);
             }
           }, 100);
@@ -20891,9 +20676,9 @@ function makePosts(){
           }, 5000);
         }
         
-        // Safety timeout: drop curtain after 5 seconds max (prevents waiting forever)
+        // Safety timeout: show map after 5 seconds max (prevents waiting forever)
         setTimeout(() => {
-          dropCurtain();
+          fadeInMap();
         }, 5000);
         
         // Mark map initialization complete when map loads
@@ -21279,7 +21064,11 @@ function makePosts(){
         
         if(markersLoaded) return;
         if(!map || typeof map.getZoom !== 'function') return;
-        // Always load post data for native clustering (DOM markers only created at high zoom)
+        let currentZoom = NaN;
+        try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
+        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
+          return;
+        }
         try{ loadPostMarkers(); }catch(err){ console.error(err); }
         markersLoaded = true;
         window.__markersLoaded = true;
@@ -21309,8 +21098,7 @@ function makePosts(){
         if(!markersLoaded){
           const markersLoadStart = performance.now();
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-          // Always load post data for native clustering (DOM markers only created at high zoom)
-          {
+          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
             try{ 
               loadPostMarkers();
               const markersLoadEnd = performance.now();
@@ -21776,17 +21564,9 @@ function makePosts(){
       
       const existing = map.getSource('posts');
       if(!existing){
-        // Add native Mapbox clustering to posts source
-        map.addSource('posts', { 
-          type: 'geojson', 
-          data: postsData, 
-          promoteId: 'featureId',
-          ...MAPBOX_CLUSTER_CONFIG // cluster: true, clusterMaxZoom, clusterRadius, clusterMinPoints
-        });
+        map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
         const source = map.getSource('posts');
         if(source){ source.__markerSignature = signature; }
-        // Setup cluster layers now that source exists
-        if(typeof setupSeedLayers === 'function') setupSeedLayers(map);
       } else {
         existing.setData(postsData);
         existing.__markerSignature = signature;

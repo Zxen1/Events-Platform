@@ -12,6 +12,9 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <!-- Preload welcome modal images to prevent layout shift -->
+  <link rel="preload" as="image" href="assets/funmap-logo-big.png" />
+  <link rel="preload" as="image" href="assets/monkeys/Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png" />
   <link rel="stylesheet" href="style.css?v=20251201l" />
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" /></noscript>
@@ -19,7 +22,6 @@
   <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" /></noscript>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
-  <div id="loadingMessage"><span>Loading Worldwide Results...</span><span id="loadingTimer">0.00s</span></div>
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
       <img src="" alt="FunMap.com logo" />
@@ -632,9 +634,9 @@
       document.head.appendChild(script);
     }
   </script>
-  <script src="map.js?v=20251210b" defer></script>
-  <script src="index.js?v=20251210b" defer></script>
-  <script src="forms.js?v=20251210b" defer></script>
+  <script src="map.js?v=20251201h" defer></script>
+  <script src="index.js?v=20251201h" defer></script>
+  <script src="forms.js?v=20251201h" defer></script>
 
   <!-- LocalStorage Clear Button -->
   <button id="clearLocalStorageBtn" class="clear-localstorage-btn" aria-label="Clear LocalStorage" title="Clear LocalStorage">
