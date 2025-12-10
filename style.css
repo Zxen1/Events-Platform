@@ -582,6 +582,60 @@ a:active{
    BUTTON CLASSES
    ======================================== */
 
+/* Button - base class for all buttons */
+.button{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+
+/* Button Modifiers */
+.button--header-access{
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.button--header-filter{
+  height: 40px;
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 16px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.button--filter{
+  background: rgba(0,0,0,0.2);
+  border: none;
+}
+
+.button--admin{
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  height: 35px;
+  line-height: 35px;
+}
+
+.button--member{
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
 /* Menu Button - base class for menu trigger buttons */
 .menu-button{
   background: var(--btn);
@@ -678,7 +732,9 @@ a:active{
   color: var(--button-selected-text, var(--button-active-text));
 }
 
+/* Header Mode Button - for header mode switch (Recents/Posts/Map) */
 /* Tab Button - for panel tab buttons */
+.button--header-mode,
 .button--tab{
   background: var(--btn);
   border: 1px solid var(--btn);
@@ -697,17 +753,21 @@ a:active{
   cursor: pointer;
   transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
+.button--header-mode:hover,
 .button--tab:hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
+.button--header-mode:active,
 .button--tab:active{
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
   transform: scale(0.97);
 }
+.button--header-mode[aria-selected="true"],
+.button--header-mode.active,
 .button--tab[aria-selected="true"],
 .button--tab.active{
   background: var(--button-selected-bg, var(--btn-selected));
@@ -1143,23 +1203,6 @@ select.venue-select,
   display:block;
 }
 
-.header button,
-.options-menu button:not([class*="mapboxgl-ctrl"]){
-  height:40px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  line-height:1;
-}
-.header button{
-  border-radius:8px;
-  background:rgba(0,0,0,0.2);
-  border:1px solid rgba(255,255,255,0.1);
-}
-.options-menu button:not([class*="mapboxgl-ctrl"]){
-  border-radius:0;
-}
 .header .gear,
 .header a{
   border-radius:8px;
@@ -1481,21 +1524,10 @@ button[aria-expanded="true"] .results-arrow{
   background:#222222;
 }
 
-#filterPanel button:not([class*="mapboxgl-"]),
 #filterPanel .sq,
 #filterPanel .tiny{
   background:rgba(0,0,0,0.2);
   border: none;
-}
-#adminPanel button,
-#memberPanel button{
-  background:rgba(0,0,0,0.2);
-  color:#fff;
-  border:1px solid rgba(255,255,255,0.1);
-}
-#adminPanel button{
-  height:35px;
-  line-height:35px;
 }
 .refresh-map-cards-btn{
   width:100%;
