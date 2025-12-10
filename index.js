@@ -2475,7 +2475,15 @@ let __notifyMapOnInteraction = null;
               if(data.settings.big_logo && typeof data.settings.big_logo === 'string' && data.settings.big_logo.trim()){
                 const welcomeLogo = document.querySelector('.welcome-logo');
                 if(welcomeLogo){
+                  const welcomeControls = document.querySelector('#welcomeBody .map-controls-welcome');
+                  welcomeLogo.onload = () => {
+                    if(welcomeControls) welcomeControls.classList.add('visible');
+                  };
                   welcomeLogo.src = data.settings.big_logo.trim();
+                  // If already cached, onload may not fire
+                  if(welcomeLogo.complete && welcomeControls){
+                    welcomeControls.classList.add('visible');
+                  }
                 }
               }
               if(data.settings.small_logo && typeof data.settings.small_logo === 'string' && data.settings.small_logo.trim()){

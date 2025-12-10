@@ -6464,6 +6464,11 @@ body.filters-active #filterBtn{
   margin-top:-14px;
   display:flex;
   justify-content:center;
+  opacity:0;
+  transition:opacity 0.3s ease;
+}
+#welcomeBody .map-controls-welcome.visible{
+  opacity:1;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions{
   zoom:var(--inverse-zoom, 1);
