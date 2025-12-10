@@ -5620,9 +5620,11 @@ textarea.input-invalid{
   opacity:0;
   pointer-events:none;
 }
-/* Show radio only for Events (no duration buttons) */
+/* Show radio for Events and Non-Events */
 #tab-forms .form-container .form-checkout-group[data-subcategory-type="Events"] .form-checkout-option input[type="radio"],
-#memberPanel .member-create-fields .form-checkout-group[data-subcategory-type="Events"] .form-checkout-option input[type="radio"]{
+#memberPanel .member-create-fields .form-checkout-group[data-subcategory-type="Events"] .form-checkout-option input[type="radio"],
+#tab-forms .form-container .form-checkout-group[data-subcategory-type="Non-Events"] .form-checkout-option input[type="radio"],
+#memberPanel .member-create-fields .form-checkout-group[data-subcategory-type="Non-Events"] .form-checkout-option input[type="radio"]{
   position:static;
   opacity:1;
   pointer-events:auto;
