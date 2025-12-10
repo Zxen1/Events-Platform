@@ -49,7 +49,10 @@
  *   - This prevents elements from one card from penetrating cards above
  */
 
-/* Extracted from <styleid="hotfixes"> */
+/* ============================================================================
+   SECTION: HOTFIXES & QUICK PATCHES
+   ============================================================================ */
+
 /* Hand cursor for DOM-based Mapbox markers */
     .mapboxgl-marker,
     .marker,
@@ -375,7 +378,10 @@
     .mapboxgl-ctrl{box-sizing:border-box}
 
 
-/* Extracted from <style> */
+/* ============================================================================
+   SECTION: CSS VARIABLES
+   ============================================================================ */
+
 :root{
   --header-h: 56px;
   --subheader-h: 0;
@@ -464,6 +470,10 @@
       --safe-top: env(safe-area-inset-top, 0px);
 }
 
+/* ============================================================================
+   SECTION: RESET & BASE STYLES
+   ============================================================================ */
+
 *:not([class*="mapboxgl-"]){
   box-sizing: border-box;
   border-color: var(--border) !important;
@@ -549,21 +559,29 @@ html,body{
     overscroll-behavior: contain;
   }
 
+/* ============================================================================
+   SECTION: TYPOGRAPHY
+   ============================================================================ */
+
   h1, h2, h3, h4, h5, h6{
     font-size: 16px;
     font-weight: bold;
   }
 
+/* ============================================================================
+   SECTION: FORM ELEMENTS (Global)
+   ============================================================================ */
+
 input,
 textarea,
-select,
-.wysiwyg{
+select{
   font: inherit;
   caret-color: auto;
   -webkit-user-select: text;
   user-select: text;
 }
 
+/* --- Global Button Styles (load-bearing - do not delete without migration) --- */
 button:not([class*="mapboxgl-"]),
 [role="button"]:not([class*="mapboxgl-"]){
   background: var(--btn);
@@ -1031,6 +1049,10 @@ input[type="checkbox"]{
   border-radius: 8px;
 }
 
+/* ============================================================================
+   SECTION: HEADER & NAVIGATION
+   ============================================================================ */
+
   .header{
     height: calc(var(--header-h) + var(--safe-top));
     min-height: calc(var(--header-h) + var(--safe-top));
@@ -1350,6 +1372,10 @@ button[aria-expanded="true"] .results-arrow{
   opacity: .9;
 }
 
+/* ============================================================================
+   SECTION: PANELS (Base)
+   ============================================================================ */
+
 .panel{
   position:fixed;
   top:0;
@@ -1490,6 +1516,11 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
 }
+
+/* ============================================================================
+   SECTION: PANELS (Specific - Admin, Member, Filter)
+   ============================================================================ */
+
   #adminPanel .panel-content,
   #memberPanel .panel-content{
     width:min(440px, 100%);
@@ -2993,26 +3024,6 @@ button[aria-expanded="true"] .results-arrow{
   align-items:stretch;
   position:relative;
 }
-#autoTheme-row{
-  flex-direction:row;
-  align-items:center;
-  gap:8px;
-  margin-left:0;
-  width:440px;
-  max-width:440px;
-}
-#autoTheme-row button{
-  flex:0 0 auto;
-  height:35px;
-  padding:0 8px;
-  min-width:0;
-}
-#autoTheme-row input[type=color]{
-  flex:0 0 35px;
-  width:35px;
-  height:35px;
-  padding:0;
-}
 #adminPanel .shadow-group{
   flex:0 0 200px;
   width:100%;
@@ -3331,22 +3342,6 @@ button[aria-expanded="true"] .results-arrow{
 .option-label > *,
 .option-group > *{
   min-width:0;
-}
-.wysiwyg{
-  border:1px solid #ccc;
-  min-height:80px;
-  padding:8px;
-}
-.wysiwyg:empty:before{
-  content:attr(data-placeholder);
-  color:#999;
-}
-.wysiwyg-toolbar{
-  display:flex;
-  gap:4px;
-}
-.wysiwyg-toolbar button{
-  padding:4px 6px;
 }
 .panel-field input,
 .panel-field textarea{
@@ -4155,6 +4150,10 @@ button[aria-expanded="true"] .results-arrow{
 #tab-forms .filter-category-menu .filter-category-trigger{
   border:none;
 }
+
+/* ============================================================================
+   SECTION: DIALOGS & CONFIRMATIONS
+   ============================================================================ */
 
 .formbuilder-confirm-overlay{
   position:fixed;
@@ -6302,6 +6301,10 @@ body.filters-active #filterBtn{
   border-color: var(--filter-active-color);
   }
 
+/* ============================================================================
+   SECTION: MENUS & DROPDOWNS
+   ============================================================================ */
+
 .options-dropdown{ position:relative; }
 .options-dropdown > button,
 .options-dropdown .form-select,
@@ -6312,6 +6315,10 @@ body.filters-active #filterBtn{
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .options-menu .menu-option,
 .options-menu button.menu-option{ text-align:left; justify-content:flex-start; display:flex; align-items:center; }
+
+/* ============================================================================
+   SECTION: CARDS & BOARDS
+   ============================================================================ */
 
 .card,
 .recents-card,
@@ -8788,11 +8795,13 @@ img.thumb{
         position:static;
         top:auto;
         align-self:stretch;
-      }
     }
+  }
 
+/* ============================================================================
+   SECTION: UTILITIES & FIXES
+   ============================================================================ */
 
-/* Extracted from <styleid="cursor-fixes"> */
 html, body { cursor: auto !important; }
     a, button, [role="button"], .clickable { cursor: pointer !important; }
     .mapboxgl-canvas { cursor: grab; }
@@ -11600,9 +11609,11 @@ html, body { cursor: auto !important; }
               visibility:hidden;
               display:none;
             }
- 
- 
-/* DevTools Toggle Button - Must be above all other elements */
+
+/* ============================================================================
+   SECTION: DEVTOOLS
+   ============================================================================ */
+
 #devtoolsBtn,
 .devtools-btn{
   position: fixed;
