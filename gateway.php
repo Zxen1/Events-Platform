@@ -42,7 +42,7 @@ if ($action === 'list-icons') {
   $fullPath = $baseDir . '/' . ltrim($folder, '/');
   
   $icons = [];
-  $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
+  $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico'];
   
   if (is_dir($fullPath)) {
     $files = scandir($fullPath);

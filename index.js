@@ -2087,6 +2087,26 @@ let __notifyMapOnInteraction = null;
                       console.error(`Failed to save/update ${picker.label}:`, err);
                       alert(`Failed to save ${picker.label}: ${err.message}`);
                     }
+                  } else {
+                    // Handle "No Icon" selection - clear the icon
+                    if(previewImg) previewImg.src = '';
+                    preview.classList.remove('has-image');
+                    if(previewLabel) previewLabel.textContent = 'No Icon';
+                    button.textContent = 'Choose Icon';
+                    settings[picker.settingKey] = '';
+                    
+                    // Save empty value to database
+                    const settingsToSave = {};
+                    settingsToSave[picker.settingKey] = '';
+                    try {
+                      await fetch('/gateway.php?action=save-admin-settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify(settingsToSave)
+                      });
+                    } catch(err) {
+                      console.error(`Failed to clear ${picker.label}:`, err);
+                    }
                   }
                 },
                 label: `Choose icon for ${picker.label}`,
@@ -2214,6 +2234,25 @@ let __notifyMapOnInteraction = null;
                   } catch(err) {
                     console.error(`Failed to save/update ${picker.label}:`, err);
                     alert(`Failed to save ${picker.label}: ${err.message}`);
+                  }
+                } else {
+                  // Handle "No Icon" selection - clear the icon
+                  buttonImg.src = '';
+                  button.classList.remove('has-image');
+                  buttonLabel.textContent = 'Choose Image';
+                  settings[picker.settingKey] = '';
+                  
+                  // Save empty value to database
+                  const settingsToSave = {};
+                  settingsToSave[picker.settingKey] = '';
+                  try {
+                    await fetch('/gateway.php?action=save-admin-settings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                      body: JSON.stringify(settingsToSave)
+                    });
+                  } catch(err) {
+                    console.error(`Failed to clear ${picker.label}:`, err);
                   }
                 }
               },
