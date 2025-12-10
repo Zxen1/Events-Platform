@@ -6250,35 +6250,33 @@ body.filters-active #filterBtn{
 }
 
 /* Loading animation - shows while map loads */
-@keyframes loading-spin{
-  from{ transform: rotate(0deg); }
-  to{ transform: rotate(360deg); }
+@keyframes loading-dash{
+  to{ stroke-dashoffset: 0; }
 }
 #loadingBeam{
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 101;
-  overflow: hidden;
   transition: opacity 0.3s ease;
 }
-#loadingBeam::before{
-  content: '';
+#loadingBeam svg{
   position: absolute;
-  inset: -50%;
-  background: conic-gradient(transparent 0deg, transparent 300deg, #3b82f6 330deg, #60a5fa 345deg, #3b82f6 360deg);
-  animation: loading-spin 1.5s linear infinite;
-  will-change: transform;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-#loadingBeam::after{
-  content: '';
-  position: absolute;
-  inset: 3px;
-  background: var(--background, #292929);
+#loadingBeam rect{
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 150 800;
+  stroke-dashoffset: 950;
+  animation: loading-dash 1.5s linear infinite;
 }
 #loadingBeam.hidden{
   opacity: 0;
-  pointer-events: none;
 }
 
 .map-overlay{
