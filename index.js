@@ -3039,11 +3039,25 @@ let __notifyMapOnInteraction = null;
             if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
           }catch(err){}
           
-          // Check if posts source exists and has clustering enabled
-          const postsSource = mapInstance.getSource('posts');
+          // Ensure posts source exists with clustering - create empty if needed
+          let postsSource = mapInstance.getSource('posts');
           if(!postsSource){
-            // Posts source not ready yet, will be created with clustering in loadPostMarkers
-            return;
+            // Create posts source with clustering enabled (empty initially)
+            // This allows clusters to show at low zoom before loadPostMarkers is called
+            const emptyData = { type: 'FeatureCollection', features: [] };
+            try{
+              mapInstance.addSource('posts', {
+                type: 'geojson',
+                data: emptyData,
+                promoteId: 'featureId',
+                ...MAPBOX_CLUSTER_CONFIG
+              });
+              postsSource = mapInstance.getSource('posts');
+              console.log('[Clusters] Created posts source with native clustering');
+            }catch(err){
+              console.error('[Clusters] Failed to create posts source:', err);
+              return;
+            }
           }
           
           // Add cluster circle/icon layer
@@ -21236,11 +21250,7 @@ function makePosts(){
         
         if(markersLoaded) return;
         if(!map || typeof map.getZoom !== 'function') return;
-        let currentZoom = NaN;
-        try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
-        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
-          return;
-        }
+        // Always load post data for native clustering (DOM markers only created at high zoom)
         try{ loadPostMarkers(); }catch(err){ console.error(err); }
         markersLoaded = true;
         window.__markersLoaded = true;
@@ -21270,7 +21280,8 @@ function makePosts(){
         if(!markersLoaded){
           const markersLoadStart = performance.now();
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
+          // Always load post data for native clustering (DOM markers only created at high zoom)
+          {
             try{ 
               loadPostMarkers();
               const markersLoadEnd = performance.now();
