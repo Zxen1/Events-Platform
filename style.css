@@ -23,7 +23,7 @@
  *   --layer-base: 0           (map/base)
  * 
  * Direct z-index values:
- *   101: #loadingBeam - loading beam (EXCEPTION: only during map load, then hidden)
+ *   101: #loadingMessage - loading message (EXCEPTION: only during map load, then hidden)
  *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
@@ -6249,33 +6249,46 @@ body.filters-active #filterBtn{
   opacity: 0;
 }
 
-/* Loading animation - shows while map loads */
-@keyframes loading-dash{
-  to{ stroke-dashoffset: 0; }
+/* Loading screen - shows while map loads */
+@keyframes loading-spin{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
 }
-#loadingBeam{
+#loadingMessage{
   position: fixed;
   inset: 0;
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background, #292929);
+  color: #3b82f6;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
   z-index: 101;
-  transition: opacity 0.3s ease;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity 0.5s ease;
 }
-#loadingBeam svg{
+#loadingMessage::before{
+  content: '';
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -50%;
+  background: conic-gradient(transparent 0deg, transparent 300deg, #3b82f6 330deg, #60a5fa 345deg, #3b82f6 360deg);
+  animation: loading-spin 1.5s linear infinite;
+  will-change: transform;
 }
-#loadingBeam rect{
-  fill: none;
-  stroke: #3b82f6;
-  stroke-width: 3px;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 150 800;
-  stroke-dashoffset: 950;
-  animation: loading-dash 1.5s linear infinite;
+#loadingMessage::after{
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: var(--background, #292929);
 }
-#loadingBeam.hidden{
+#loadingMessage span{
+  position: relative;
+  z-index: 1;
+}
+#loadingMessage.hidden{
   opacity: 0;
 }
 

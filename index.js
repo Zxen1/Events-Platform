@@ -2437,26 +2437,9 @@ let __notifyMapOnInteraction = null;
               };
               
               // Apply welcome_enabled setting (no localStorage caching)
+              // Welcome modal will open AFTER map is fully loaded (in fadeInMap)
               if(data.settings.welcome_enabled !== undefined){
                 window._welcomeEnabled = data.settings.welcome_enabled;
-                
-                // If welcome is enabled, show it immediately on page load
-                // Messages are already cached above - no additional API call needed
-                // Note: welcome can always be shown via logo click regardless of localStorage
-                if(data.settings.welcome_enabled){
-                  const welcomeModalStart = performance.now();
-                  const welcomeModal = document.getElementById('welcome-modal');
-                  if(welcomeModal && typeof window.openWelcome === 'function'){
-                    window.openWelcome();
-                    const welcomeModalEnd = performance.now();
-                    window.__startupTimings.components.welcomeModal = {
-                      start: welcomeModalStart,
-                      end: welcomeModalEnd,
-                      duration: welcomeModalEnd - welcomeModalStart
-                    };
-                    // Don't set welcome-seen here - it will be set when user closes the modal
-                  }
-                }
               }
               
               // Message category names and icons are loaded fresh from settings each time
@@ -20605,8 +20588,12 @@ function makePosts(){
             mapFadedIn = true;
             requestAnimationFrame(() => {
               mapContainer.style.opacity = '1';
-              const loadingBeam = document.getElementById('loadingBeam');
-              if(loadingBeam) loadingBeam.classList.add('hidden');
+              const loadingMessage = document.getElementById('loadingMessage');
+              if(loadingMessage) loadingMessage.classList.add('hidden');
+              // Now that map is ready, open welcome modal if enabled
+              if(window._welcomeEnabled && typeof window.openWelcome === 'function'){
+                setTimeout(() => window.openWelcome(), 100);
+              }
             });
           }
         };
