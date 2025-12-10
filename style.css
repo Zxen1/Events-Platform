@@ -2161,7 +2161,7 @@ button[aria-expanded="true"] .results-arrow{
   font-weight:500;
 }
 
-.menu-button--unknown{
+.menu-button--system-image-picker{
   position:relative;
   display:inline-flex;
   align-items:center;
@@ -2181,23 +2181,23 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:border-box;
 }
 
-.menu-button--unknown:hover{
+.menu-button--system-image-picker:hover{
   border-color:rgba(255,255,255,0.25);
   background:rgba(0,0,0,0.45);
 }
 
-.menu-button--unknown:focus-visible{
+.menu-button--system-image-picker:focus-visible{
   box-shadow:0 0 0 3px rgba(46,58,114,0.45);
   outline:none;
 }
 
-.menu-button--unknown[disabled],
-.menu-button--unknown[aria-disabled='true']{
+.menu-button--system-image-picker[disabled],
+.menu-button--system-image-picker[aria-disabled='true']{
   cursor:not-allowed;
   opacity:0.65;
 }
 
-.menu-options--unknown{
+.menu-options--system-image-picker{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -2218,11 +2218,11 @@ button[aria-expanded="true"] .results-arrow{
   display:none;
 }
 
-.menu-options--unknown[hidden]{
+.menu-options--system-image-picker[hidden]{
   display:none;
 }
 
-.menu.menu-open .menu-options--unknown{
+.menu.menu-open .menu-options--system-image-picker{
   display:block;
 }
 
@@ -2257,7 +2257,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Menu button image and label (for image menus) */
-.menu-button--unknown-img{
+.menu-button--system-image-picker-img{
   width:50px;
   height:50px;
   object-fit:contain;
@@ -2265,25 +2265,25 @@ button[aria-expanded="true"] .results-arrow{
   display:none;
 }
 
-.menu-button--unknown.has-image .menu-button--unknown-img{
+.menu-button--system-image-picker.has-image .menu-button--system-image-picker-img{
   display:block;
 }
 
-.menu-button--unknown-label{
+.menu-button--system-image-picker-label{
   flex:1;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
 
-.menu-button--unknown:not(.has-image) .menu-button--unknown-label{
+.menu-button--system-image-picker:not(.has-image) .menu-button--system-image-picker-label{
   color:rgba(255,255,255,0.5);
 }
 
 /* Menu button arrow - override global dropdown-arrow styles */
-.menu-button--unknown .dropdown-arrow,
-#adminPanel .menu-button--unknown .dropdown-arrow,
-#memberPanel .menu-button--unknown .dropdown-arrow{
+.menu-button--system-image-picker .dropdown-arrow,
+#adminPanel .menu-button--system-image-picker .dropdown-arrow,
+#memberPanel .menu-button--system-image-picker .dropdown-arrow{
   position:absolute;
   right:12px;
   top:50%;
@@ -2303,8 +2303,8 @@ button[aria-expanded="true"] .results-arrow{
   vertical-align:baseline;
 }
 
-.menu-button--unknown .dropdown-arrow::before,
-.menu-button--unknown .dropdown-arrow::after{
+.menu-button--system-image-picker .dropdown-arrow::before,
+.menu-button--system-image-picker .dropdown-arrow::after{
   content:'';
   position:absolute;
   width:2px;
@@ -2315,38 +2315,38 @@ button[aria-expanded="true"] .results-arrow{
   transition:background 0.2s;
 }
 
-.menu-button--unknown .dropdown-arrow::before{
+.menu-button--system-image-picker .dropdown-arrow::before{
   left:4px;
   transform:rotate(45deg);
   transform-origin:bottom left;
 }
 
-.menu-button--unknown .dropdown-arrow::after{
+.menu-button--system-image-picker .dropdown-arrow::after{
   right:4px;
   transform:rotate(-45deg);
   transform-origin:bottom right;
 }
 
-.menu-button--unknown:hover .dropdown-arrow{
+.menu-button--system-image-picker:hover .dropdown-arrow{
   opacity:1;
 }
 
-.menu.menu-open .menu-button--unknown .dropdown-arrow,
-.menu.iconpicker-open .menu-button--unknown .dropdown-arrow{
+.menu.menu-open .menu-button--system-image-picker .dropdown-arrow,
+.menu.menu-open .menu-button--system-image-picker .dropdown-arrow{
   transform:translateY(-50%) rotate(180deg);
   opacity:1;
 }
 
-.menu.menu-open .menu-button--unknown .dropdown-arrow::before,
-.menu.iconpicker-open .menu-button--unknown .dropdown-arrow::before,
-.menu.menu-open .menu-button--unknown .dropdown-arrow::after,
-.menu.iconpicker-open .menu-button--unknown .dropdown-arrow::after{
+.menu.menu-open .menu-button--system-image-picker .dropdown-arrow::before,
+.menu.menu-open .menu-button--system-image-picker .dropdown-arrow::before,
+.menu.menu-open .menu-button--system-image-picker .dropdown-arrow::after,
+.menu.menu-open .menu-button--system-image-picker .dropdown-arrow::after{
   background:rgba(255,255,255,1);
 }
 
 /* Container-scoped to beat #adminPanel button (1,0,1) */
-#adminPanel .menu-button--unknown,
-#memberPanel .menu-button--unknown{
+#adminPanel .menu-button--system-image-picker,
+#memberPanel .menu-button--system-image-picker{
   background:rgba(0,0,0,0.35);
   border:1px solid var(--border);
   color:var(--button-text);
@@ -2354,19 +2354,18 @@ button[aria-expanded="true"] .results-arrow{
   padding:0 30px 0 10px;
 }
 
-#adminPanel .menu.menu-open .menu-button--unknown,
-#memberPanel .menu.menu-open .menu-button--unknown{
+#adminPanel .menu.menu-open .menu-button--system-image-picker,
+#memberPanel .menu.menu-open .menu-button--system-image-picker{
   border-color:rgba(255,255,255,0.3);
   background:rgba(0,0,0,0.5);
 }
 
-/* System Images Menu Modifier - Match forms tab exactly */
-.menu--system-images .menu-button--unknown{
+/* System Images Menu - button styling */
+.menu--system-image-picker .menu-button--system-image-picker{
   width:100%;
 }
 
-/* Make menu button match forms tab iconpicker-button exactly */
-#tab-settings .menu--system-images .menu-button--unknown{
+#tab-settings .menu--system-image-picker .menu-button--system-image-picker{
   width:100%;
   display:flex;
   align-items:center;
@@ -2383,12 +2382,12 @@ button[aria-expanded="true"] .results-arrow{
   transition:border-color 0.15s, background 0.15s;
 }
 
-#tab-settings .menu--system-images .menu-button--unknown:hover{
+#tab-settings .menu--system-image-picker .menu-button--system-image-picker:hover{
   border-color:rgba(255,255,255,0.25);
   background:rgba(0,0,0,0.45);
 }
 
-#tab-settings .menu--system-images .menu-button--unknown-img{
+#tab-settings .menu--system-image-picker .menu-button-img{
   width:50px;
   height:50px;
   object-fit:contain;
@@ -2396,33 +2395,33 @@ button[aria-expanded="true"] .results-arrow{
   display:none;
 }
 
-#tab-settings .menu--system-images .menu-button--unknown.has-image .menu-button--unknown-img{
+#tab-settings .menu--system-image-picker .menu-button--system-image-picker.has-image .menu-button-img{
   display:block;
 }
 
-#tab-settings .menu--system-images .menu-button--unknown-label{
+#tab-settings .menu--system-image-picker .menu-button-label{
   flex:1;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
 
-#tab-settings .menu--system-images .menu-button--unknown:not(.has-image) .menu-button--unknown-label{
+#tab-settings .menu--system-image-picker .menu-button--system-image-picker:not(.has-image) .menu-button-label{
   color:rgba(255,255,255,0.5);
 }
 
-#tab-settings .menu--system-images.iconpicker-open .menu-button--unknown{
+#tab-settings .menu--system-image-picker.menu-open .menu-button--system-image-picker{
   border-color:rgba(255,255,255,0.3);
   background:rgba(0,0,0,0.5);
 }
 
 /* Popup matches button width exactly for settings tab system images */
-#tab-settings .menu--system-images{
+#tab-settings .menu--system-image-picker{
   width:100%;
   position:relative;
 }
 
-#tab-settings .menu--system-images .icon-picker-popup{
+#tab-settings .menu--system-image-picker .icon-picker-popup{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -2442,14 +2441,14 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Grid matches forms tab */
-#tab-settings .menu--system-images .icon-picker-grid{
+#tab-settings .menu--system-image-picker .icon-picker-grid{
   display:flex;
   flex-direction:column;
   gap:8px;
 }
 
 /* Options match forms tab exactly */
-#tab-settings .menu--system-images .icon-picker-option{
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker{
   display:flex;
   flex-direction:row;
   align-items:center;
@@ -2463,13 +2462,13 @@ button[aria-expanded="true"] .results-arrow{
   background:transparent;
 }
 
-#tab-settings .menu--system-images .icon-picker-option:hover,
-#tab-settings .menu--system-images .icon-picker-option:focus-visible{
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker:hover,
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker:focus-visible{
   background:rgba(255,255,255,0.1);
   border:none;
 }
 
-#tab-settings .menu--system-images .icon-picker-option img{
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker img{
   max-width:50px;
   max-height:50px;
   width:auto;
@@ -2478,7 +2477,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-shrink:0;
 }
 
-#tab-settings .menu--system-images .icon-picker-option .icon-filename{
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker .icon-filename{
   font-size:12px;
   color:rgba(255,255,255,0.9);
   text-align:left;
@@ -2487,14 +2486,14 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
 }
 
-#tab-settings .menu--system-images .icon-picker-option--clear{
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker--clear{
   justify-content:center;
   flex-direction:column;
   text-align:center;
 }
 
 /* Settings tab iconpicker styles (matching formbuilder) - DEPRECATED, use .menu instead */
-.system-image-picker-container .iconpicker-container{
+.system-image-picker-container .menu--icon-picker{
   position:relative;
   display:flex;
   flex-direction:row;
@@ -2503,7 +2502,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-wrap:wrap;
 }
 
-.system-image-picker-container .iconpicker-button{
+.system-image-picker-container .menu-button--icon-picker{
   position:relative;
   display:inline-flex;
   align-items:center;
@@ -2519,20 +2518,20 @@ button[aria-expanded="true"] .results-arrow{
   transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
 }
 
-.system-image-picker-container .iconpicker-button:hover,
-.system-image-picker-container .iconpicker-button:focus-visible{
+.system-image-picker-container .menu-button--icon-picker:hover,
+.system-image-picker-container .menu-button--icon-picker:focus-visible{
   background:var(--btn-hover, #2e3a72);
   border-color:var(--btn-hover, #2e3a72);
   color:var(--button-text);
   outline:none;
 }
 
-.system-image-picker-container .iconpicker-button:focus-visible{
+.system-image-picker-container .menu-button--icon-picker:focus-visible{
   box-shadow:0 0 0 3px rgba(46,58,114,0.45);
 }
 
-.system-image-picker-container .iconpicker-button[disabled],
-.system-image-picker-container .iconpicker-button[aria-disabled='true']{
+.system-image-picker-container .menu-button--icon-picker[disabled],
+.system-image-picker-container .menu-button--icon-picker[aria-disabled='true']{
   cursor:not-allowed;
   opacity:0.65;
   background:rgba(255,255,255,0.08);
@@ -2541,12 +2540,12 @@ button[aria-expanded="true"] .results-arrow{
   box-shadow:none;
 }
 
-.system-image-picker-container .iconpicker-container.iconpicker-open .iconpicker-button{
+.system-image-picker-container .menu--icon-picker.menu-open .menu-button--icon-picker{
   background:var(--btn-hover, #2e3a72);
   border-color:var(--btn-hover, #2e3a72);
 }
 
-.system-image-picker-container .iconpicker-preview{
+.system-image-picker-container .menu-preview{
   display:flex;
   align-items:center;
   justify-content:center;
@@ -2563,22 +2562,22 @@ button[aria-expanded="true"] .results-arrow{
   flex-shrink:0;
 }
 
-.system-image-picker-container .iconpicker-preview img{
+.system-image-picker-container .menu-preview img{
   max-width:100%;
   max-height:100%;
   display:none;
   border:none;
 }
 
-.system-image-picker-container .iconpicker-preview.has-image{
+.system-image-picker-container .menu-preview.has-image{
   color:transparent;
 }
 
-.system-image-picker-container .iconpicker-preview.has-image img{
+.system-image-picker-container .menu-preview.has-image img{
   display:block;
 }
 
-.system-image-picker-container .iconpicker-preview img{
+.system-image-picker-container .menu-preview img{
   width:30px;
   height:30px;
 }
@@ -2601,8 +2600,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 /* Map tab and Settings tab iconpicker styles (matching formbuilder edit panel) */
-#tab-map .iconpicker-container,
-#tab-settings .iconpicker-container{
+#tab-map .menu--icon-picker,
+#tab-settings .menu--icon-picker{
   position:relative;
   display:flex;
   flex-direction:row;
@@ -2611,8 +2610,8 @@ button[aria-expanded="true"] .results-arrow{
   flex-wrap:wrap;
 }
 
-#tab-map .iconpicker-button,
-#tab-settings .iconpicker-button{
+#tab-map .menu-button--icon-picker,
+#tab-settings .menu-button--icon-picker{
   position:relative;
   display:inline-flex;
   align-items:center;
@@ -2628,25 +2627,25 @@ button[aria-expanded="true"] .results-arrow{
   transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
 }
 
-#tab-map .iconpicker-button:hover,
-#tab-map .iconpicker-button:focus-visible,
-#tab-settings .iconpicker-button:hover,
-#tab-settings .iconpicker-button:focus-visible{
+#tab-map .menu-button--icon-picker:hover,
+#tab-map .menu-button--icon-picker:focus-visible,
+#tab-settings .menu-button--icon-picker:hover,
+#tab-settings .menu-button--icon-picker:focus-visible{
   background:var(--btn-hover, #2e3a72);
   border-color:var(--btn-hover, #2e3a72);
   color:var(--button-text);
   outline:none;
 }
 
-#tab-map .iconpicker-button:focus-visible,
-#tab-settings .iconpicker-button:focus-visible{
+#tab-map .menu-button--icon-picker:focus-visible,
+#tab-settings .menu-button--icon-picker:focus-visible{
   box-shadow:0 0 0 3px rgba(46,58,114,0.45);
 }
 
-#tab-map .iconpicker-button[disabled],
-#tab-map .iconpicker-button[aria-disabled='true'],
-#tab-settings .iconpicker-button[disabled],
-#tab-settings .iconpicker-button[aria-disabled='true']{
+#tab-map .menu-button--icon-picker[disabled],
+#tab-map .menu-button--icon-picker[aria-disabled='true'],
+#tab-settings .menu-button--icon-picker[disabled],
+#tab-settings .menu-button--icon-picker[aria-disabled='true']{
   cursor:not-allowed;
   opacity:0.65;
   background:rgba(255,255,255,0.08);
@@ -2655,14 +2654,14 @@ button[aria-expanded="true"] .results-arrow{
   box-shadow:none;
 }
 
-#tab-map .iconpicker-container.iconpicker-open .iconpicker-button,
-#tab-settings .iconpicker-container.iconpicker-open .iconpicker-button{
+#tab-map .menu--icon-picker.menu-open .menu-button--icon-picker,
+#tab-settings .menu--icon-picker.menu-open .menu-button--icon-picker{
   background:var(--btn-hover, #2e3a72);
   border-color:var(--btn-hover, #2e3a72);
 }
 
-#tab-map .iconpicker-preview,
-#tab-settings .iconpicker-preview{
+#tab-map .menu-preview,
+#tab-settings .menu-preview{
   display:flex;
   align-items:center;
   justify-content:center;
@@ -2679,26 +2678,26 @@ button[aria-expanded="true"] .results-arrow{
   flex-shrink:0;
 }
 
-#tab-map .iconpicker-preview img,
-#tab-settings .iconpicker-preview img{
+#tab-map .menu-preview img,
+#tab-settings .menu-preview img{
   max-width:100%;
   max-height:100%;
   display:none;
   border:none;
 }
 
-#tab-map .iconpicker-preview.has-image,
-#tab-settings .iconpicker-preview.has-image{
+#tab-map .menu-preview.has-image,
+#tab-settings .menu-preview.has-image{
   color:transparent;
 }
 
-#tab-map .iconpicker-preview.has-image img,
-#tab-settings .iconpicker-preview.has-image img{
+#tab-map .menu-preview.has-image img,
+#tab-settings .menu-preview.has-image img{
   display:block;
 }
 
-#tab-map .iconpicker-preview img,
-#tab-settings .iconpicker-preview img{
+#tab-map .menu-preview img,
+#tab-settings .menu-preview img{
   width:30px;
   height:30px;
 }
@@ -6174,6 +6173,20 @@ body.filters-active #filterBtn{
   opacity: 0.6;
 }
 
+/* Menu Button Image - for image picker buttons */
+.menu-button-img{
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Menu Button Label - for image picker labels */
+.menu-button-label{
+  flex: 1;
+  text-align: left;
+}
+
 /* Menu Options - dropdown items */
 .menu-options{
   background: var(--btn);
@@ -9452,10 +9465,10 @@ html, body { cursor: auto !important; }
             #tab-forms .overflow-menu-toggle .switch{
               flex-shrink:0;
             }
-            #tab-forms .iconpicker-container{
+            #tab-forms .menu--icon-picker{
               width:calc(100% - 44px);
             }
-            #tab-forms .iconpicker-button{
+            #tab-forms .menu-button--icon-picker{
               width:100%;
               display:flex;
               align-items:center;
@@ -9471,34 +9484,34 @@ html, body { cursor: auto !important; }
               text-align:left;
               transition:border-color 0.15s, background 0.15s;
             }
-            #tab-forms .iconpicker-button:hover{
+            #tab-forms .menu-button--icon-picker:hover{
               border-color:rgba(255,255,255,0.25);
               background:rgba(0,0,0,0.45);
             }
-            #tab-forms .iconpicker-btn-img{
+            #tab-forms .menu-button-img{
               width:30px;
               height:30px;
               object-fit:contain;
               flex-shrink:0;
               display:none;
             }
-            #tab-forms .iconpicker-button.has-icon .iconpicker-btn-img{
+            #tab-forms .menu-button--icon-picker.has-icon .menu-button-img{
               display:block;
             }
-            #tab-forms .iconpicker-btn-label{
+            #tab-forms .menu-button-label{
               flex:1;
               overflow:hidden;
               text-overflow:ellipsis;
               white-space:nowrap;
             }
-            #tab-forms .iconpicker-button:not(.has-icon) .iconpicker-btn-label{
+            #tab-forms .menu-button--icon-picker:not(.has-icon) .menu-button-label{
               color:rgba(255,255,255,0.5);
             }
-            #tab-forms .iconpicker-button:focus-visible{
+            #tab-forms .menu-button--icon-picker:focus-visible{
               box-shadow:0 0 0 3px rgba(46,58,114,0.45);
               outline:none;
             }
-            #tab-forms .iconpicker-container.iconpicker-open .iconpicker-button{
+            #tab-forms .menu--icon-picker.menu-open .menu-button--icon-picker{
               border-color:rgba(255,255,255,0.3);
               background:rgba(0,0,0,0.5);
             }
@@ -9569,10 +9582,10 @@ html, body { cursor: auto !important; }
               gap:8px;
             }
             
-            #tab-map .icon-picker-option,
-            #tab-messages .icon-picker-option,
-            #tab-forms .icon-picker-option,
-            #tab-settings .icon-picker-option{
+            #tab-map .menu-options--icon-picker,
+            #tab-messages .menu-options--icon-picker,
+            #tab-forms .menu-options--icon-picker,
+            #tab-settings .menu-options--icon-picker{
               display:flex;
               flex-direction:row;
               align-items:center;
@@ -9586,22 +9599,22 @@ html, body { cursor: auto !important; }
               background:transparent;
             }
             
-            #tab-map .icon-picker-option:hover,
-            #tab-messages .icon-picker-option:hover,
-            #tab-forms .icon-picker-option:hover,
-            #tab-settings .icon-picker-option:hover,
-            #tab-map .icon-picker-option:focus-visible,
-            #tab-messages .icon-picker-option:focus-visible,
-            #tab-forms .icon-picker-option:focus-visible,
-            #tab-settings .icon-picker-option:focus-visible{
+            #tab-map .menu-options--icon-picker:hover,
+            #tab-messages .menu-options--icon-picker:hover,
+            #tab-forms .menu-options--icon-picker:hover,
+            #tab-settings .menu-options--icon-picker:hover,
+            #tab-map .menu-options--icon-picker:focus-visible,
+            #tab-messages .menu-options--icon-picker:focus-visible,
+            #tab-forms .menu-options--icon-picker:focus-visible,
+            #tab-settings .menu-options--icon-picker:focus-visible{
               background:rgba(255,255,255,0.1);
               border:none;
             }
             
-            #tab-map .icon-picker-option img,
-            #tab-messages .icon-picker-option img,
-            #tab-forms .icon-picker-option img,
-            #tab-settings .icon-picker-option img{
+            #tab-map .menu-options--icon-picker img,
+            #tab-messages .menu-options--icon-picker img,
+            #tab-forms .menu-options--icon-picker img,
+            #tab-settings .menu-options--icon-picker img{
               max-width:50px;
               max-height:50px;
               width:auto;
@@ -9610,10 +9623,10 @@ html, body { cursor: auto !important; }
               flex-shrink:0;
             }
             
-            #tab-map .icon-picker-option .icon-filename,
-            #tab-messages .icon-picker-option .icon-filename,
-            #tab-forms .icon-picker-option .icon-filename,
-            #tab-settings .icon-picker-option .icon-filename{
+            #tab-map .menu-options--icon-picker .icon-filename,
+            #tab-messages .menu-options--icon-picker .icon-filename,
+            #tab-forms .menu-options--icon-picker .icon-filename,
+            #tab-settings .menu-options--icon-picker .icon-filename{
               font-size:12px;
               color:rgba(255,255,255,0.9);
               text-align:left;
@@ -9622,10 +9635,10 @@ html, body { cursor: auto !important; }
               flex:1;
             }
             
-            #tab-map .icon-picker-option--clear,
-            #tab-messages .icon-picker-option--clear,
-            #tab-forms .icon-picker-option--clear,
-            #tab-settings .icon-picker-option--clear{
+            #tab-map .menu-options--icon-picker--clear,
+            #tab-messages .menu-options--icon-picker--clear,
+            #tab-forms .menu-options--icon-picker--clear,
+            #tab-settings .menu-options--icon-picker--clear{
               justify-content:center;
               flex-direction:column;
               text-align:center;
@@ -9646,19 +9659,19 @@ html, body { cursor: auto !important; }
               color:#0ea5e9;
               font-size:13px;
             }
-            #tab-forms .icon-picker-option.selected{
+            #tab-forms .menu-options--icon-picker.selected{
               border-color:var(--btn-hover, #2e3a72);
               box-shadow:0 0 0 2px rgba(46,58,114,0.4);
             }
-            #tab-forms .icon-picker-option--clear{
+            #tab-forms .menu-options--icon-picker--clear{
               grid-column:span 2;
               font-size:12px;
               padding:0 6px;
               background:rgba(255,255,255,0.08);
               color:var(--button-text);
             }
-            #tab-forms .icon-picker-option--clear:hover,
-            #tab-forms .icon-picker-option--clear:focus-visible{
+            #tab-forms .menu-options--icon-picker--clear:hover,
+            #tab-forms .menu-options--icon-picker--clear:focus-visible{
               background:rgba(46,58,114,0.35);
             }
             #tab-forms .subcategory-form-menus{
@@ -11529,14 +11542,14 @@ html, body { cursor: auto !important; }
               padding:16px;
             }
             
-            #tab-messages .iconpicker-container{
+            #tab-messages .menu--icon-picker{
               position:relative;
               display:flex;
               flex-direction:row;
               align-items:center;
               gap:12px;
             }
-            #tab-messages .iconpicker-button{
+            #tab-messages .menu-button--icon-picker{
               position:relative;
               display:inline-flex;
               align-items:center;
@@ -11551,18 +11564,18 @@ html, body { cursor: auto !important; }
               cursor:pointer;
               transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
             }
-            #tab-messages .iconpicker-button:hover,
-            #tab-messages .iconpicker-button:focus-visible{
+            #tab-messages .menu-button--icon-picker:hover,
+            #tab-messages .menu-button--icon-picker:focus-visible{
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
               color:var(--button-text);
               outline:none;
             }
-            #tab-messages .iconpicker-button:focus-visible{
+            #tab-messages .menu-button--icon-picker:focus-visible{
               box-shadow:0 0 0 3px rgba(46,58,114,0.45);
             }
-            #tab-messages .iconpicker-button[disabled],
-            #tab-messages .iconpicker-button[aria-disabled='true']{
+            #tab-messages .menu-button--icon-picker[disabled],
+            #tab-messages .menu-button--icon-picker[aria-disabled='true']{
               cursor:not-allowed;
               opacity:0.65;
               background:rgba(255,255,255,0.08);
@@ -11570,11 +11583,11 @@ html, body { cursor: auto !important; }
               color:var(--muted);
               box-shadow:none;
             }
-            #tab-messages .iconpicker-container.iconpicker-open .iconpicker-button{
+            #tab-messages .menu--icon-picker.menu-open .menu-button--icon-picker{
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
             }
-            #tab-messages .iconpicker-preview{
+            #tab-messages .menu-preview{
               display:flex;
               align-items:center;
               justify-content:center;
@@ -11590,22 +11603,22 @@ html, body { cursor: auto !important; }
               min-width:40px;
               flex-shrink:0;
             }
-            #tab-messages .iconpicker-preview img{
+            #tab-messages .menu-preview img{
               max-width:100%;
               max-height:100%;
               display:none;
             }
-            #tab-messages .iconpicker-preview.has-image{
+            #tab-messages .menu-preview.has-image{
               color:transparent;
             }
-            #tab-messages .iconpicker-preview.has-image img{
+            #tab-messages .menu-preview.has-image img{
               display:block;
             }
-            #tab-messages .iconpicker-preview{
+            #tab-messages .menu-preview{
               border:none;
             }
             
-            #tab-messages .iconpicker-preview img{
+            #tab-messages .menu-preview img{
               width:30px;
               height:30px;
               border:none;

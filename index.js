@@ -11223,7 +11223,7 @@ function makePosts(){
             cancelAnimationFrame(alignFrame);
             alignFrame = 0;
           }
-          container.classList.remove('iconpicker-open');
+          container.classList.remove('menu-open');
           trigger.setAttribute('aria-expanded', 'false');
           if(parentMenu) parentMenu.classList.remove('has-floating-overlay');
           if(parentCategoryMenu) parentCategoryMenu.classList.remove('has-floating-overlay');
@@ -11306,10 +11306,10 @@ function makePosts(){
           for(const entry of optionsList){
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'icon-picker-option';
+            btn.className = 'menu-options--system-image-picker';
             const value = entry.value || '';
             if(!value){
-              btn.classList.add('icon-picker-option--clear');
+              btn.classList.add('menu-options--system-image-picker--clear');
               // Use entry.label (which is already loaded from DB) or fallback
               btn.textContent = entry.label || noIconLabel;
             } else {
@@ -11341,7 +11341,7 @@ function makePosts(){
           }
           popup.appendChild(grid);
           container.appendChild(popup);
-          container.classList.add('iconpicker-open');
+          container.classList.add('menu-open');
           if(parentMenu) parentMenu.classList.add('has-floating-overlay');
           if(parentCategoryMenu) parentCategoryMenu.classList.add('has-floating-overlay');
           scheduleAlign();
@@ -11528,19 +11528,19 @@ function makePosts(){
         overflowMenu.hidden = true;
 
         const iconPicker = document.createElement('div');
-        iconPicker.className = 'options-dropdown iconpicker-container';
+        iconPicker.className = 'options-dropdown menu--icon-picker';
 
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
-        iconPickerButton.className = 'iconpicker-button';
+        iconPickerButton.className = 'menu-button--icon-picker';
         iconPickerButton.setAttribute('aria-haspopup', 'true');
         iconPickerButton.setAttribute('aria-expanded', 'false');
 
         const iconPickerImg = document.createElement('img');
-        iconPickerImg.className = 'iconpicker-btn-img';
+        iconPickerImg.className = 'menu-button-img';
         iconPickerImg.alt = '';
         const iconPickerLabel = document.createElement('span');
-        iconPickerLabel.className = 'iconpicker-btn-label';
+        iconPickerLabel.className = 'menu-button-label';
         iconPickerLabel.textContent = 'Choose Icon';
         const iconPickerArrow = document.createElement('span');
         iconPickerArrow.className = 'dropdown-arrow';
@@ -11911,19 +11911,19 @@ function makePosts(){
           subNameInput.value = sub || '';
 
           const subIconPicker = document.createElement('div');
-          subIconPicker.className = 'options-dropdown iconpicker-container';
+          subIconPicker.className = 'options-dropdown menu--icon-picker';
 
           const subIconButton = document.createElement('button');
           subIconButton.type = 'button';
-          subIconButton.className = 'iconpicker-button';
+          subIconButton.className = 'menu-button--icon-picker';
           subIconButton.setAttribute('aria-haspopup', 'true');
           subIconButton.setAttribute('aria-expanded', 'false');
 
           const subIconImg = document.createElement('img');
-          subIconImg.className = 'iconpicker-btn-img';
+          subIconImg.className = 'menu-button-img';
           subIconImg.alt = '';
           const subIconLabel = document.createElement('span');
-          subIconLabel.className = 'iconpicker-btn-label';
+          subIconLabel.className = 'menu-button-label';
           subIconLabel.textContent = 'Choose Icon';
           const subIconArrow = document.createElement('span');
           subIconArrow.className = 'dropdown-arrow';
@@ -17554,15 +17554,15 @@ function makePosts(){
         });
         
         const iconPicker = document.createElement('div');
-        iconPicker.className = 'iconpicker-container';
+        iconPicker.className = 'menu--icon-picker';
         
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
-        iconPickerButton.className = 'iconpicker-button';
+        iconPickerButton.className = 'menu-button--icon-picker';
         iconPickerButton.textContent = 'Change Icon';
         
         const preview = document.createElement('div');
-        preview.className = 'iconpicker-preview has-image';
+        preview.className = 'menu-preview has-image';
         const previewLabel = document.createElement('span');
         previewLabel.textContent = '';
         const previewImg = document.createElement('img');
