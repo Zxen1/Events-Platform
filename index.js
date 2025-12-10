@@ -60,24 +60,26 @@ window.apiRequest = apiRequest;
 (function(){
   const startTime = performance.now();
   const timerEl = document.getElementById('loadingTimer');
-  let timerInterval = null;
+  let running = true;
+  let lastUpdate = 0;
   
-  function updateTimer(){
-    if(!timerEl) return;
-    const elapsed = (performance.now() - startTime) / 1000;
-    timerEl.textContent = elapsed.toFixed(2) + 's';
+  function updateTimer(now){
+    if(!running || !timerEl) return;
+    // Only update display every 100ms to reduce DOM writes
+    if(now - lastUpdate >= 100){
+      const elapsed = (now - startTime) / 1000;
+      timerEl.textContent = elapsed.toFixed(2) + 's';
+      lastUpdate = now;
+    }
+    requestAnimationFrame(updateTimer);
   }
   
   if(timerEl){
-    timerInterval = setInterval(updateTimer, 50);
-    updateTimer();
+    requestAnimationFrame(updateTimer);
   }
   
   window.stopLoadingTimer = function(){
-    if(timerInterval){
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
+    running = false;
   };
 })();
 
