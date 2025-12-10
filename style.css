@@ -37,8 +37,8 @@
  *   5: mapmarker-overlay, various elements
  *   3: various elements
  *   2: big-map-card-container (stacks above small-map-card-container)
- *   1: small-map-card-container, form labels, form field headers, item pricing labels, header-buttons
- *   0: base layer, various elements
+ *   1: small-map-card-container, clusters (mapbox cluster markers), form labels, form field headers, item pricing labels, header-buttons
+ *   0: base layer, map shadow (.post-mode-background), various elements
  *   -1: some background elements
  *   auto: some elements
  * 
@@ -369,9 +369,9 @@
 
 
 /* Extracted from <styleid="mapboxgl-critical-css"> */
-.mapboxgl-map{position:relative;width:100%;height:100%}
-    .mapboxgl-canvas{position:absolute;left:0;top:0}
-    .mapboxgl-canvas-container{position:absolute;inset:0}
+.mapboxgl-map{position:relative;width:100%;height:100%;z-index:1}
+    .mapboxgl-canvas{position:absolute;left:0;top:0;z-index:1}
+    .mapboxgl-canvas-container{position:absolute;inset:0;z-index:1}
     .mapboxgl-ctrl{box-sizing:border-box}
 
 
