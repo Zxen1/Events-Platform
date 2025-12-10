@@ -10964,13 +10964,13 @@ function makePosts(){
               durationBtns.appendChild(label30);
               durationBtns.appendChild(label365);
               priceSection.appendChild(durationBtns);
-              
-              // For Non-Events, don't add the card-level radio (durations have their own radios)
-              radio.remove();
             }
             
             optionContent.appendChild(priceSection);
-            card.appendChild(radio);
+            // Only add card-level radio for Events (Non-Events have radios on each duration)
+            if(isEvent){
+              card.appendChild(radio);
+            }
             card.appendChild(optionContent);
             checkoutGroup.appendChild(card);
           });
