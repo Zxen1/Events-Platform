@@ -1,0 +1,865 @@
+/* ============================================================================
+   FORMS & FORMBUILDER
+   ============================================================================ */
+
+/* ============================================================================
+   GLOBAL STYLES COPIED FOR INDEPENDENCE
+   These are copies of global styles from style.css so forms work
+   independently after globals are removed.
+   ============================================================================ */
+
+/* Box sizing for all form elements */
+#tab-forms,
+#tab-forms *,
+.formbuilder-container,
+.formbuilder-container *,
+.form-field,
+.form-field *,
+.panel-field,
+.panel-field *,
+.form-container,
+.form-container *,
+#memberPanel .member-create-fields,
+#memberPanel .member-create-fields *{
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   END GLOBAL STYLES COPY
+   ============================================================================ */
+
+/* ============================================================================
+   FORMBUILDER TAB CONTAINER
+   ============================================================================ */
+
+#tab-forms,
+#memberPanel .member-create-fields{
+  --forms-layer-stacked: 10;
+  --forms-layer-overlay: 20;
+  --forms-layer-popover: 30;
+}
+
+#tab-forms{
+  padding-top:0;
+  padding-bottom:0;
+}
+
+#tab-forms .formbuilder-container{
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  background:#444444;
+  border-radius:8px;
+  padding:0 10px 10px;
+}
+
+#tab-forms .formbuilder-container{
+  position:relative;
+  background:none;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#tab-forms .formbuilder-container{
+  margin-top:0;
+}
+
+#tab-forms .cats{
+  margin:0;
+}
+
+#tab-forms .formbuilder-container .cats,
+#tab-forms .formbuilder-container .filter-category-menu{
+  width:100%;
+}
+
+#tab-forms .filter-category-menu .filter-category-trigger{
+  border:none;
+}
+
+#tab-forms .panel-field{
+  max-width:none;
+}
+
+/* ============================================================================
+   FORMBUILDER CATEGORY MENU
+   ============================================================================ */
+
+#tab-forms .category-form-menu{
+  position: relative;
+  margin-bottom:12px;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+  transition:border-color .2s,background .2s,opacity .2s;
+}
+
+#tab-forms .category-form-menu.filter-category-menu{
+  margin:0;
+}
+
+#tab-forms .category-form-menu:last-child{
+  margin-bottom:0;
+}
+
+#tab-forms .category-form-menu .formbuilder-category-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 10px;
+  position:relative;
+}
+
+#tab-forms .category-edit-btn,
+#tab-forms .subcategory-edit-btn,
+#tab-forms .field-edit-btn,
+#tab-forms .formbuilder-drag-handle{
+  background:transparent;
+  border:none;
+  color:var(--button-text);
+  cursor:pointer;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:4px;
+  transition:background .2s;
+  flex-shrink:0;
+}
+
+#tab-forms .formbuilder-drag-handle{
+  cursor:grab;
+}
+
+#tab-forms .formbuilder-drag-handle.is-dragging{
+  cursor:grabbing;
+}
+
+#tab-forms .formbuilder-drag-handle svg{
+  pointer-events:none;
+}
+
+#tab-forms .category-edit-btn:hover,
+#tab-forms .subcategory-edit-btn:hover,
+#tab-forms .field-edit-btn:hover,
+#tab-forms .formbuilder-drag-handle:hover,
+#tab-forms .formbuilder-drag-handle:focus-visible{
+  background:rgba(255,255,255,0.1);
+}
+
+#tab-forms .category-edit-panel,
+#tab-forms .subcategory-edit-panel{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#tab-forms .field-edit-panel{
+  border-top:1px solid rgba(255,255,255,0.1);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  z-index:auto;
+}
+
+#tab-forms .subcategory-edit-panel{
+  border-bottom:1px solid var(--border);
+  padding-bottom:10px;
+  margin-bottom:4px;
+}
+
+#tab-forms .category-hide-toggle-row,
+#tab-forms .subcategory-hide-toggle-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+#tab-forms .category-hide-toggle-row{
+  margin-top:12px;
+}
+
+#tab-forms .subcategory-hide-toggle-row{
+  margin:0;
+}
+
+#tab-forms .category-form-menu .filter-category-trigger{
+  min-width:0;
+  background:transparent;
+  border-color:transparent;
+  color:var(--button-text);
+}
+
+#tab-forms .category-form-menu .filter-category-trigger .label{
+  font-weight:600;
+}
+
+#tab-forms .subcategory-label{
+  font-size:14px;
+}
+
+#tab-forms .category-form-menu .filter-category-trigger-wrap{
+  flex:1;
+}
+
+#tab-forms .formbuilder-container button:not([class*="mapboxgl-"]):active,
+#tab-forms .formbuilder-container [role="button"]:not([class*="mapboxgl-"]):active{
+  transform:none;
+}
+
+#tab-forms .category-form-menu.cat-off{
+  opacity:1;
+}
+
+#tab-forms .category-form-menu.cat-off .filter-category-trigger .label,
+#tab-forms .subcategory-form-menu.subcategory-off .subcategory-label{
+  text-decoration:line-through;
+}
+
+/* ============================================================================
+   FORMBUILDER DRAG & DROP
+   ============================================================================ */
+
+#tab-forms .category-form-menu.is-dragging,
+#tab-forms .subcategory-form-menu.is-dragging,
+#tab-forms .subcategory-field-row.is-dragging{
+  opacity:0.65;
+}
+
+#tab-forms .category-form-menu.is-dragging,
+#tab-forms .subcategory-form-menu.is-dragging{
+  will-change:transform;
+}
+
+#tab-forms .category-form-menu.drag-target-before{
+  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .category-form-menu.drag-target-after{
+  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-form-menu.drag-target-before{
+  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-form-menu.drag-target-after{
+  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-field-row.drag-target-before{
+  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-field-row.drag-target-after{
+  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .cats,
+#tab-forms .subcategory-form-menus,
+#tab-forms .subcategory-fields-list{
+  position:relative;
+}
+
+#tab-forms .formbuilder-drop-indicator{
+  position:absolute;
+  left:12px;
+  right:12px;
+  height:0;
+  border-top:2px solid var(--btn-hover, #2e3a72);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .15s ease;
+  z-index:5;
+}
+
+#tab-forms .formbuilder-drop-indicator.visible{
+  opacity:1;
+}
+
+#tab-forms .category-form-content{
+  border-top:none;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  background:transparent;
+}
+
+#tab-forms .category-form-content[hidden]{
+  display:none;
+}
+
+#tab-forms .formbuilder-actions{
+  margin:0;
+}
+
+#tab-forms .category-edit-menu{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#tab-forms .category-edit-trigger-wrap{
+  width:100%;
+}
+
+/* ============================================================================
+   FORMBUILDER CONFIRMATION DIALOGS
+   ============================================================================ */
+
+.formbuilder-confirm-overlay{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0, 0, 0, 0.65);
+  backdrop-filter:blur(4px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
+  z-index:var(--layer-dialog);
+}
+
+.formbuilder-confirm-overlay.visible{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.formbuilder-confirm-dialog{
+  background:#222222;
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;
+  box-shadow:0 20px 45px rgba(0, 0, 0, 0.5);
+  padding:24px;
+  width:min(90vw, 360px);
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.formbuilder-confirm-dialog h2{
+  margin:0;
+  font-size:1.1rem;
+  font-weight:600;
+}
+
+.formbuilder-confirm-dialog p{
+  margin:0;
+  line-height:1.5;
+}
+
+.formbuilder-confirm-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+}
+
+.formbuilder-confirm-actions button{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:999px;
+  padding:10px 18px;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+  transition:background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.formbuilder-confirm-cancel{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.formbuilder-confirm-cancel:focus-visible,
+.formbuilder-confirm-cancel:hover{
+  background:rgba(0,0,0,0.3);
+  outline:none;
+}
+
+.formbuilder-confirm-delete{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.formbuilder-confirm-delete:focus-visible,
+.formbuilder-confirm-delete:hover{
+  background:rgba(0,0,0,0.3);
+  outline:none;
+}
+
+.formbuilder-confirm-primary{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.formbuilder-confirm-primary:focus-visible,
+.formbuilder-confirm-primary:hover{
+  background:rgba(0,0,0,0.3);
+  outline:none;
+}
+
+/* ============================================================================
+   FORM FIELDS - SHARED BY ADMIN AND MEMBER PANELS
+   ============================================================================ */
+
+.panel-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin:8px 0;
+  padding:0;
+  width:100%;
+  max-width:420px;
+}
+
+.panel-field input,
+.panel-field textarea{
+  background:var(--btn);
+  color:var(--ink);
+  border:1px solid var(--btn);
+  border-radius:8px;
+  padding:8px 12px;
+  font:inherit;
+  width:100%;
+  box-sizing:border-box;
+}
+
+.panel-field input:focus,
+.panel-field textarea:focus{
+  outline:none;
+  border-color:var(--border-hover);
+}
+
+/* Session date picker calendar in forms */
+#tab-forms .session-date-picker .calendar .weekday,
+#tab-forms .session-date-picker .calendar .day,
+#memberPanel .member-create-fields .session-date-picker .calendar .weekday,
+#memberPanel .member-create-fields .session-date-picker .calendar .day{
+  border-radius:0;
+}
+
+#tab-forms .session-date-picker .calendar .day.range-start,
+#memberPanel .member-create-fields .session-date-picker .calendar .day.range-start{
+  border-radius:8px 0 0 8px;
+}
+
+#tab-forms .session-date-picker .calendar .day.range-end,
+#memberPanel .member-create-fields .session-date-picker .calendar .day.range-end{
+  border-radius:0 8px 8px 0;
+}
+
+#tab-forms .session-date-picker .calendar .day.range-start.range-end,
+#memberPanel .member-create-fields .session-date-picker .calendar .day.range-start.range-end{
+  border-radius:8px;
+}
+
+/* Checkout duration options */
+#tab-forms .form-container .form-checkout-duration-wrapper,
+#memberPanel .member-create-fields .form-checkout-duration-wrapper{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  width:100%;
+}
+
+#tab-forms .form-container .form-checkout-duration-option,
+#memberPanel .member-create-fields .form-checkout-duration-option{
+  flex:1 1 calc(33.333% - 6px);
+  min-width:80px;
+  padding:8px 12px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:8px;
+  color:var(--button-text);
+  cursor:pointer;
+  text-align:center;
+  transition:background .2s, border-color .2s;
+}
+
+#tab-forms .form-container .form-checkout-duration-option[aria-pressed="true"],
+#memberPanel .member-create-fields .form-checkout-duration-option[aria-pressed="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  color:var(--button-active-text);
+}
+
+/* Subcategory form button/label */
+#tab-forms .form-container .panel-field .subcategory-form-button,
+#tab-forms .form-container .panel-field .subcategory-form-label,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  min-height:40px;
+  padding:8px 12px;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  color:var(--button-text);
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+
+#tab-forms .form-container .panel-field .subcategory-form-button,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:8px;
+}
+
+#tab-forms .form-container .panel-field .subcategory-form-label,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+  cursor:default;
+}
+
+#tab-forms .form-field-header .subcategory-form-button,
+#tab-forms .form-field-header .subcategory-form-label,
+#memberPanel .member-create-fields .form-field-header .subcategory-form-button,
+#memberPanel .member-create-fields .form-field-header .subcategory-form-label{
+  padding:0;
+  min-height:auto;
+  background:transparent;
+  border:none;
+}
+
+#tab-forms .form-container .panel-field .subcategory-form-button:focus-visible,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button:focus-visible{
+  outline:2px solid var(--border-hover);
+  outline-offset:2px;
+}
+
+#tab-forms .form-container .panel-field .subcategory-form-button .required-asterisk,
+#tab-forms .form-container .panel-field .subcategory-form-label .required-asterisk,
+#memberPanel .member-create-fields .panel-field .subcategory-form-button .required-asterisk,
+#memberPanel .member-create-fields .panel-field .subcategory-form-label .required-asterisk{
+  color:#ff6b6b;
+  margin-left:4px;
+}
+
+/* Form field containers */
+#memberPanel .member-create-fields .form-field{
+  margin-bottom:12px;
+}
+
+#memberPanel .member-create-fields .form-field-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+
+/* Form field dropdown */
+#memberPanel .member-create-fields .form-field--dropdown .form-select{
+  width:100%;
+  height:40px;
+  padding:8px 12px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:8px;
+  color:var(--button-text);
+  font:inherit;
+  cursor:pointer;
+}
+
+/* Input validation states */
+#memberPanel .member-create-fields .form-field input.input-invalid,
+#memberPanel .member-create-fields .form-url-input.input-invalid,
+#memberPanel .member-create-fields .form-field textarea.input-invalid,
+#memberPanel .member-create-fields .form-phone-wrapper input.input-invalid{
+  border-color:#ff6b6b;
+}
+
+#memberPanel .member-create-fields .form-field--dropdown .form-select:focus{
+  outline:none;
+  border-color:var(--border-hover);
+}
+
+#memberPanel .member-create-fields .form-field--dropdown{
+  position:relative;
+}
+
+#memberPanel .member-create-fields .form-field--dropdown .options-menu{
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
+  z-index:var(--forms-layer-popover, 30);
+  background:#222222;
+  border:1px solid var(--border);
+  border-radius:8px;
+  max-height:200px;
+  overflow-y:auto;
+  margin-top:4px;
+}
+
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option{
+  padding:8px 12px;
+  cursor:pointer;
+  transition:background .15s;
+}
+
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.1);
+}
+
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option:disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option[aria-disabled="true"]{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* ============================================================================
+   FORMBUILDER BUTTONS AND TRIGGERS
+   ============================================================================ */
+
+#tab-forms .category-edit-trigger{
+  width:100%;
+  height:40px;
+  border-radius:8px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+
+#tab-forms .formbuilder-add-category-btn,
+#tab-forms .add-subcategory-btn{
+  width:100%;
+  height:46px;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,0.2);
+  background:rgba(0,0,0,0.2);
+  color:var(--button-text);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+
+#tab-forms .add-field-btn{
+  width:100%;
+  height:40px;
+  border-radius:8px;
+  border:1px solid rgba(0,0,0,0.2);
+  background:rgba(0,0,0,0.2);
+  color:var(--button-text);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+
+#tab-forms .category-edit-trigger:hover{
+  background:var(--btn-hover, #2e3a72);
+  border-color:var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .formbuilder-add-category-btn:hover,
+#tab-forms .add-subcategory-btn:hover,
+#tab-forms .add-field-btn:hover{
+  background:rgba(0,0,0,0.3);
+  border-color:rgba(0,0,0,0.3);
+}
+
+/* ============================================================================
+   FORMBUILDER SUBCATEGORY OPTIONS
+   ============================================================================ */
+
+#tab-forms .subcategory-hide-toggle-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px 0;
+}
+
+#tab-forms .subcategory-fee-row,
+#tab-forms .subcategory-type-row,
+#tab-forms .subcategory-days-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px 0;
+}
+
+#tab-forms .subcategory-fee-row span:first-child,
+#tab-forms .subcategory-type-row span:first-child,
+#tab-forms .subcategory-days-row span:first-child{
+  min-width:140px;
+  font-size:14px;
+}
+
+#tab-forms .fee-currency{
+  font-weight:600;
+  font-size:14px;
+  min-width:auto;
+}
+
+#tab-forms .fee-input,
+#tab-forms .days-input{
+  width:120px;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+  font-size:14px;
+}
+
+#tab-forms .fee-input::-webkit-inner-spin-button,
+#tab-forms .fee-input::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+
+#tab-forms .fee-input{
+  -moz-appearance:textfield;
+}
+
+#tab-forms .subcategory-type-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+}
+
+#tab-forms .subcategory-type-option input[type="radio"]{
+  cursor:pointer;
+}
+
+#tab-forms .subcategory-type-option span{
+  font-size:14px;
+  cursor:pointer;
+}
+
+/* ============================================================================
+   FORMBUILDER CHECKOUT OPTIONS EDITOR
+   ============================================================================ */
+
+#tab-forms .subcategory-checkout-options-editor{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:8px 0;
+}
+
+#tab-forms .subcategory-checkout-options-label{
+  font-size:14px;
+  font-weight:600;
+  min-width:140px;
+}
+
+#tab-forms .subcategory-checkout-options-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+#tab-forms .subcategory-checkout-option-card{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
+  background:rgba(0,0,0,0.2);
+}
+
+#tab-forms .subcategory-checkout-option-card:hover{
+  border-color:rgba(255,255,255,0.2);
+  background:rgba(0,0,0,0.3);
+}
+
+#tab-forms .subcategory-checkout-option-checkbox{
+  margin-top:4px;
+  width:18px;
+  height:18px;
+  cursor:pointer;
+  accent-color:var(--btn);
+}
+
+#tab-forms .subcategory-checkout-option-content{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#tab-forms .subcategory-checkout-option-title{
+  font-size:14px;
+  font-weight:600;
+  color:#fff;
+}
+
+#tab-forms .subcategory-checkout-option-prices{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+#tab-forms .subcategory-checkout-price-item{
+  display:flex;
+  gap:6px;
+  font-size:13px;
+}
+
+#tab-forms .subcategory-checkout-price-item .price-label{
+  color:#888;
+}
+
+#tab-forms .subcategory-checkout-price-item .price-value{
+  color:#fff;
+  font-weight:600;
+}
+
+#tab-forms .subcategory-checkout-option-calculator{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  font-size:13px;
+}
+
+#tab-forms .subcategory-checkout-calc-label{
+  color:#888;
+}
+
+#tab-forms .subcategory-checkout-calc-days{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:6px;
+  padding:6px 8px;
+  color:#fff;
+  font-size:13px;
+  -moz-appearance:textfield;
+}
+
