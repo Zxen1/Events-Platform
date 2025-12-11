@@ -11302,14 +11302,17 @@ function makePosts(){
           });
           // Check if we're in map, messages, forms, or settings tab for vertical layout with filenames
           const isMapMessagesOrFormsTab = container.closest('#tab-map, #tab-messages, #tab-forms, #tab-settings') !== null;
+          // Check if this is a system image picker or regular icon picker
+          const isSystemImagePicker = container.classList.contains('menu--system-image-picker');
+          const optionClass = isSystemImagePicker ? 'menu-options--system-image-picker' : 'menu-options--icon-picker';
           
           for(const entry of optionsList){
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'menu-options--system-image-picker';
+            btn.className = optionClass;
             const value = entry.value || '';
             if(!value){
-              btn.classList.add('menu-options--system-image-picker--clear');
+              btn.classList.add(optionClass + '--clear');
               // Use entry.label (which is already loaded from DB) or fallback
               btn.textContent = entry.label || noIconLabel;
             } else {
