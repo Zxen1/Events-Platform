@@ -2039,10 +2039,8 @@ button[aria-expanded="true"] .results-arrow{
   text-align:right;
   font-size:14px;
 }
-#adminPanel .tab-bar,
-#memberPanel .tab-bar{display:flex;gap:6px;}
-#adminPanel .tab-bar .tab-btn,
-#memberPanel .tab-bar .tab-btn{
+#adminPanel .tab-bar{display:flex;gap:6px;}
+#adminPanel .tab-bar .tab-btn{
   flex:1;
   padding:6px 10px;
   border-radius:10px;
@@ -2053,54 +2051,25 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
   transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
-#adminPanel .tab-bar .tab-btn:hover,
-#memberPanel .tab-bar .tab-btn:hover{
+#adminPanel .tab-bar .tab-btn:hover{
   background:rgba(255,255,255,0.12);
   border-color:rgba(255,255,255,0.28);
 }
-#adminPanel .tab-bar .tab-btn:active,
-#memberPanel .tab-bar .tab-btn:active{
+#adminPanel .tab-bar .tab-btn:active{
   transform:none;
 }
-#adminPanel .tab-bar .tab-btn[aria-selected="true"],
-#memberPanel .tab-bar .tab-btn[aria-selected="true"]{
+#adminPanel .tab-bar .tab-btn[aria-selected="true"]{
   background:var(--btn-selected);
   border-color:var(--btn-selected);
   box-shadow:none;
   color:var(--button-active-text);
 }
-#adminPanel .tab-bar .tab-btn:focus-visible,
-#memberPanel .tab-bar .tab-btn:focus-visible{
-  outline:2px solid rgba(255,255,255,0.85);
-  outline-offset:2px;
-}
-.member-auth-tab{
-  background:rgba(0,0,0,0.35);
-  border:1px solid rgba(255,255,255,0.18);
-  box-shadow:none;
-  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-.member-auth-tab:hover{
-  background:rgba(255,255,255,0.12);
-  border-color:rgba(255,255,255,0.28);
-}
-.member-auth-tab:active{
-  transform:none;
-}
-.member-auth-tab[aria-selected="true"]{
-  background:var(--btn-selected);
-  border-color:var(--btn-selected);
-  box-shadow:none;
-  color:var(--button-active-text);
-}
-.member-auth-tab:focus-visible{
+#adminPanel .tab-bar .tab-btn:focus-visible{
   outline:2px solid rgba(255,255,255,0.85);
   outline-offset:2px;
 }
 #adminPanel .tab-panel{display:none;}
 #adminPanel .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
-#memberPanel .member-tab-panel{display:none;}
-#memberPanel .member-tab-panel.active{display:flex;flex-direction:column;gap:12px;}
 #adminPanel .marker-grid{display:flex;flex-direction:column;gap:8px;}
 #adminPanel .marker-grid select{min-width:120px;}
 #adminPanel .marker-options{display:flex;gap:8px;align-items:center;}
@@ -2116,60 +2085,6 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   min-width:0;
 }
-#memberPanel .member-create-intro{
-  margin:0;
-  font-size:15px;
-  line-height:1.4;
-}
-#memberPanel .member-create-selects{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-}
-#memberPanel .member-create-field{
-  margin:0;
-}
-#memberPanel .member-create-select{
-  max-width:240px;
-}
-#memberPanel .member-create-placeholder{
-  margin:4px 0 0;
-  font-style:italic;
-  opacity:0.8;
-}
-#memberPanel .member-form{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  margin-bottom:100px;
-}
-#memberPanel .member-create-fields{
-  display:flex;
-  flex-direction:column;
-  gap:0;
-}
-#memberPanel .member-create-checkout{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  margin-top:8px;
-}
-#memberPanel .member-create-price-row{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-#memberPanel .member-create-price-row select,
-#memberPanel .member-create-price-row input{
-  flex:1 1 120px;
-  min-width:120px;
-}
-#memberPanel .member-create-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  align-items:center;
-}
 #tab-forms .form-container .form-checkout-duration-wrapper,
 #memberPanel .member-create-fields .form-checkout-duration-wrapper{
   display:flex;
@@ -2182,28 +2097,6 @@ button[aria-expanded="true"] .results-arrow{
   font-size:13px;
   color:var(--accent-color, #8ab4ff);
   line-height:1.4;
-}
-#memberPanel .admin-skip-payment-btn{
-  background:rgba(100,150,200,0.2);
-  border:1px solid rgba(100,150,200,0.4);
-  color:#8ab4ff;
-  padding:10px 16px;
-  border-radius:8px;
-  font-size:14px;
-  cursor:pointer;
-  transition:background 0.15s, border-color 0.15s;
-}
-#memberPanel .admin-skip-payment-btn:hover:not(:disabled){
-  background:rgba(100,150,200,0.3);
-  border-color:rgba(100,150,200,0.6);
-}
-#memberPanel .admin-skip-payment-btn:disabled{
-  opacity:0.5;
-  cursor:not-allowed;
-}
-#memberPanel .member-create-actions .primary-action[disabled]{
-  opacity:0.6;
-  cursor:not-allowed;
 }
 #adminPanel .panel-field{margin:8px auto;}
 #adminPanel h3{margin:0;}
@@ -2296,7 +2189,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 /* Icon buttons don't need min-width - they use fixed dimensions */
 #adminPanel .panel-actions .primary-action,
-#memberPanel .panel-actions .primary-action,
 #adminUnsavedPrompt .primary-action,
 #memberUnsavedPrompt .primary-action{
   background:var(--button-selected-bg, var(--btn-selected));
@@ -2304,7 +2196,6 @@ button[aria-expanded="true"] .results-arrow{
   color:var(--button-selected-text, var(--button-active-text));
 }
 #adminPanel .panel-actions .primary-action:hover,
-#memberPanel .panel-actions .primary-action:hover,
 #adminUnsavedPrompt .primary-action:hover,
 #memberUnsavedPrompt .primary-action:hover{
   background:var(--button-selected-hover, var(--btn-selected-hover));
@@ -2312,7 +2203,6 @@ button[aria-expanded="true"] .results-arrow{
   color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
 }
 #adminPanel .panel-actions .discard-changes[disabled],
-#memberPanel .panel-actions .discard-changes[disabled],
 #adminUnsavedPrompt .confirm-discard[disabled],
 #memberUnsavedPrompt .confirm-discard[disabled]{
   opacity:0.5;
@@ -2687,8 +2577,7 @@ button[aria-expanded="true"] .results-arrow{
 #tab-settings .settings-paypal-container,
 #tab-settings .settings-icon-folders-container,
 #tab-settings .settings-checkout-options-container,
-#tab-map #map_shadow_container,
-#memberPanel .member-form-container{
+#tab-map #map_shadow_container{
   width:100%;
   max-width:420px;
   margin:0 auto;
