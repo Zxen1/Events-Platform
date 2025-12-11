@@ -17558,39 +17558,49 @@ function makePosts(){
         });
         
         const iconPicker = document.createElement('div');
-        iconPicker.className = 'menu--icon-picker';
+        iconPicker.className = 'menu menu--system-image-picker';
         
         const iconPickerButton = document.createElement('button');
         iconPickerButton.type = 'button';
-        iconPickerButton.className = 'menu-button--icon-picker';
-        iconPickerButton.textContent = 'Change Icon';
+        iconPickerButton.className = 'menu-button--system-image-picker';
+        iconPickerButton.setAttribute('aria-haspopup', 'true');
+        iconPickerButton.setAttribute('aria-expanded', 'false');
         
-        const preview = document.createElement('div');
-        preview.className = 'menu-preview--icon-picker has-image';
-        const previewLabel = document.createElement('span');
-        previewLabel.textContent = '';
-        const previewImg = document.createElement('img');
-        previewImg.src = cat.icon;
-        previewImg.alt = `${cat.name} icon preview`;
-        preview.append(previewLabel, previewImg);
-        iconPicker.append(preview, iconPickerButton);
+        const buttonImg = document.createElement('img');
+        buttonImg.className = 'menu-button-img--system-image-picker';
+        buttonImg.alt = '';
+        const buttonLabel = document.createElement('span');
+        buttonLabel.className = 'menu-button-label--system-image-picker';
+        buttonLabel.textContent = 'Choose Image';
+        const buttonArrow = document.createElement('span');
+        buttonArrow.className = 'dropdown-arrow';
+        buttonArrow.setAttribute('aria-hidden', 'true');
+        
+        if(cat.icon){
+          buttonImg.src = cat.icon;
+          iconPickerButton.classList.add('has-image');
+          const filename = cat.icon.split('/').pop();
+          buttonLabel.textContent = filename;
+        }
+        
+        iconPickerButton.append(buttonImg, buttonLabel, buttonArrow);
+        iconPicker.append(iconPickerButton);
         
         // Attach icon picker functionality
         if(typeof window.attachIconPicker === 'function'){
           window.attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: () => cat.icon,
             onSelect: (value) => {
-              // Update preview immediately
+              // Update button preview immediately
               if(value){
-                previewImg.src = value;
-                preview.classList.add('has-image');
-                previewLabel.textContent = '';
-                iconPickerButton.textContent = 'Change Icon';
+                buttonImg.src = value;
+                iconPickerButton.classList.add('has-image');
+                const filename = value.split('/').pop();
+                buttonLabel.textContent = filename;
               } else {
-                previewImg.src = '';
-                preview.classList.remove('has-image');
-                previewLabel.textContent = 'No Icon';
-                iconPickerButton.textContent = 'Choose Icon';
+                buttonImg.src = '';
+                iconPickerButton.classList.remove('has-image');
+                buttonLabel.textContent = 'Choose Image';
               }
               
               // Update category icon
