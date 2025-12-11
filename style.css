@@ -65,16 +65,6 @@
       user-select: none;
     }
 
-    .logo img.is-loading {
-      animation: logo-rotate 1s linear infinite;
-      transform-origin: 50% 50%;
-    }
-
-    @keyframes logo-rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
     /* Layer scale */
     :root{
       --layer-devtools: 100;    /* developer tools (always on top) */
@@ -578,194 +568,6 @@ a:active{
   color: var(--active);
 }
 
-/* ============================================================================
-   SECTION: HEADER & NAVIGATION
-   ============================================================================ */
-
-  .header{
-    height: calc(var(--header-h) + var(--safe-top));
-    min-height: calc(var(--header-h) + var(--safe-top));
-    max-height: calc(var(--header-h) + var(--safe-top));
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: var(--safe-top) var(--gap) 0 var(--gap);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: var(--layer-header);
-    background: rgba(0,0,0,0.7);
-  }
-
-
-  .logo{
-    position: absolute;
-    left: var(--gap);
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    gap: var(--gap);
-    font-weight: 800;
-    letter-spacing: .4px;
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: pointer;
-  }
-
-.logo img{
-  width: var(--logo-size);
-  height: var(--logo-size);
-  display: block;
-  /* Hide until image loads to prevent alt text flash */
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-.logo img.loaded,
-.logo img[src]:not([src=""]){
-  opacity: 1;
-}
-
-  .view-toggle{
-  position: absolute;
-  left: calc(var(--gap) * 2 + var(--logo-size));
-  right: var(--gap);
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  height: 40px;
-  gap: 10px;
-  }
-
-.view-toggle button{
-  border: 1px solid var(--btn);
-  border-radius: 8px;
-  padding: 0;
-  width: 40px;
-  background: var(--btn);
-  color: var(--button-text);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background .2s,border-color .2s,color .2s;
-}
-
-.view-toggle button[aria-pressed="true"]{
-  background: var(--btn-selected);
-  border-color: var(--btn-selected) !important;
-  color: var(--button-active-text) !important;
-}
-
-.header .gear,
-.header a{
-  border-radius:8px;
-}
-
-.header-buttons{display:flex;gap:10px;position:relative;z-index:1;}
-
-/* Header icon buttons */
-.header-icon-btn{
-  width:40px !important;
-  height:40px !important;
-  min-width:40px !important;
-  padding:0 !important;
-  border:none !important;
-  border-radius:8px !important;
-  background:transparent !important;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:background 0.15s;
-}
-.header-icon-btn[hidden]{
-  display:none !important;
-}
-.header-icon-btn:hover{
-  background:rgba(255,255,255,0.1) !important;
-}
-.header-icon-btn .header-btn-icon{
-  width:35px;
-  height:35px;
-  background-color:#888;
-  -webkit-mask-size:contain;
-  mask-size:contain;
-  -webkit-mask-repeat:no-repeat;
-  mask-repeat:no-repeat;
-  -webkit-mask-position:center;
-  mask-position:center;
-  transition:background-color 0.15s;
-}
-.header-icon-btn .icon-member{
-  -webkit-mask-image:url('assets/system-images/icon-member.svg');
-  mask-image:url('assets/system-images/icon-member.svg');
-}
-.header-icon-btn .icon-admin{
-  -webkit-mask-image:url('assets/system-images/icon-admin.svg');
-  mask-image:url('assets/system-images/icon-admin.svg');
-}
-.header-icon-btn .icon-fullscreen{
-  -webkit-mask-image:url('assets/system-images/icon-fullscreen.svg');
-  mask-image:url('assets/system-images/icon-fullscreen.svg');
-}
-/* Active/selected state - blue */
-.header-icon-btn.active .header-btn-icon,
-.header-icon-btn[aria-pressed="true"] .header-btn-icon{
-  background-color:#3b82f6 !important;
-}
-.header-icon-btn.active:hover .header-btn-icon,
-.header-icon-btn[aria-pressed="true"]:hover .header-btn-icon{
-  background-color:#60a5fa !important;
-}
-/* Fullscreen active state */
-.header-icon-btn.fullscreen-btn.is-fullscreen .header-btn-icon{
-  background-color:#3b82f6 !important;
-  -webkit-mask-image:url('assets/system-images/icon-fullscreen-exit.svg');
-  mask-image:url('assets/system-images/icon-fullscreen-exit.svg');
-}
-.header-icon-btn.fullscreen-btn.is-fullscreen:hover .header-btn-icon{
-  background-color:#60a5fa !important;
-}
-
-#memberBtn{
-  position:relative;
-}
-
-#memberBtn .member-avatar{
-  display:none;
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  object-fit:cover;
-  border:2px solid rgba(255,255,255,0.3);
-  box-sizing:border-box;
-  transition: border-color 0.15s;
-}
-
-/* Active state - blue border like other header buttons (override global !important rules) */
-#memberBtn.active .member-avatar,
-#memberBtn[aria-pressed="true"] .member-avatar{
-  border-color:#3b82f6 !important;
-}
-
-/* Active + hover - lighter blue like other header buttons (override global !important rules) */
-#memberBtn.active:hover .member-avatar,
-#memberBtn[aria-pressed="true"]:hover .member-avatar{
-  border-color:#60a5fa !important;
-}
-
-/* Override global hover rule for avatar when not active */
-#memberBtn:not(.active):not([aria-pressed="true"]):hover .member-avatar{
-  border-color:rgba(255,255,255,0.3) !important;
-}
-
-#memberBtn.has-avatar .header-btn-icon{
-  display:none;
-}
-
-#memberBtn.has-avatar .member-avatar{
-  display:block;
-}
 
 /* ============================================================================
    SECTION: MAP
@@ -1190,22 +992,6 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .range-wrap span{
   width:40px;
   text-align:right;
-}
-.gear{
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.2);
-  display: grid;
-  place-items: center;
-  border:1px solid rgba(255,255,255,0.4);
-  color: #fff;
-}
-
-.gear svg{
-  width: 18px;
-  height: 18px;
-  opacity: .9;
 }
 
 /* ============================================================================
@@ -5432,47 +5218,6 @@ textarea.input-invalid{
    END FORMS STYLES
    ========================================================================== */
 
-.icon-search{
-  display:inline-block;
-  vertical-align:middle;
-  color: currentColor;
-  width:30px; height:30px;
-}
-.mode-toggle{
-  display:grid;
-  grid-template-columns:repeat(3,40px);
-  flex:0 1 auto;
-  min-width:0;
-  height:40px;
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:8px;
-  overflow:hidden;
-}
-.mode-toggle button{
-  width:40px;
-  border:none;
-  background:rgba(0,0,0,0.2);
-  color:#fff;
-  font-weight:normal;
-  cursor:pointer;
-  transition:background .2s,border-color .2s,color .2s;
-  height:100%;
-  border-radius:0;
-  min-width:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:0;
-  padding:0;
-}
-.mode-toggle button[disabled],
-.mode-toggle button.is-disabled{
-  background:rgba(0,0,0,0.2);
-  color:#fff;
-  opacity:0.5;
-  cursor:pointer;
-}
-
 .zoom-toast{
   position:fixed;
   top:calc(var(--safe-top, 0px) + 20px);
@@ -5493,52 +5238,6 @@ textarea.input-invalid{
 .zoom-toast.show{
   opacity:1;
   transform:translate(-50%, 0);
-}
-.mode-toggle .mode-icon{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  line-height:0;
-  width:100%;
-  height:100%;
-}
-.mode-toggle .mode-label{
-  display:none;
-  font-size:14px;
-  line-height:1;
-  white-space:nowrap;
-}
-.mode-toggle button svg{
-  width:20px;
-  height:20px;
-}
-.mode-toggle button + button{
-  border-left:1px solid rgba(255,255,255,0.1);
-}
-.mode-toggle button[aria-pressed="true"]{
-  background:var(--btn-selected);
-  color:var(--button-active-text);
-  font-weight:normal;
-}
-@media (min-width: 601px){
-  .mode-toggle{
-    grid-template-columns:repeat(3, auto);
-  }
-  .mode-toggle button{
-    width:auto;
-    padding:0 16px;
-  }
-  .mode-toggle .mode-icon{
-    display:none;
-  }
-  .mode-toggle .mode-label{
-    display:block;
-  }
-}
-
-body.filters-active #filterBtn{
-  background: var(--filter-active-color);
-  border-color: var(--filter-active-color);
 }
 
 /* ============================================================================
