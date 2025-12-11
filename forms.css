@@ -733,6 +733,566 @@
   cursor:not-allowed;
 }
 
+/* Panel field textarea */
+#tab-forms .form-container .panel-field textarea,
+#memberPanel .member-create-fields .panel-field textarea{
+  resize:vertical;
+  min-height:120px;
+  padding:10px;
+}
+
+/* Panel field select and dropdown styling */
+#tab-forms .form-container .panel-field select,
+#tab-forms .form-container .form-field--dropdown .form-select,
+#memberPanel .member-create-fields .panel-field select,
+#memberPanel .member-create-fields .form-field--dropdown .form-select{
+  height:36px;
+  padding:0 30px 0 10px;
+  width:100%;
+  box-sizing:border-box;
+  max-width:100%;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  position:relative;
+}
+
+/* Input validation */
+#tab-forms .form-container .panel-field input.input-invalid,
+#memberPanel .member-create-fields .panel-field input.input-invalid,
+#tab-forms .form-container .form-field input.input-invalid,
+#memberPanel .member-create-fields .form-field input.input-invalid,
+#tab-forms .form-container .form-url-input.input-invalid,
+#memberPanel .member-create-fields .form-url-input.input-invalid,
+#tab-forms .form-container .panel-field textarea.input-invalid,
+#memberPanel .member-create-fields .panel-field textarea.input-invalid,
+#tab-forms .form-container .form-field textarea.input-invalid,
+#memberPanel .member-create-fields .form-field textarea.input-invalid,
+#tab-forms .form-phone-wrapper input.input-invalid,
+#memberPanel .member-create-fields .form-phone-wrapper input.input-invalid,
+.form-field input.input-invalid,
+.form-field textarea.input-invalid,
+.form-url-input.input-invalid,
+.form-phone-wrapper input.input-invalid,
+input.input-invalid,
+textarea.input-invalid{
+  border:1px solid red !important;
+  outline:none !important;
+}
+
+/* Form input consistency */
+#tab-forms .form-container input[type="text"],
+#tab-forms .form-container input[type="email"],
+#tab-forms .form-container input[type="tel"],
+#tab-forms .form-container input[type="url"],
+#tab-forms .form-container input[type="number"],
+#memberPanel .member-create-fields input[type="text"],
+#memberPanel .member-create-fields input[type="email"],
+#memberPanel .member-create-fields input[type="tel"],
+#memberPanel .member-create-fields input[type="url"],
+#memberPanel .member-create-fields input[type="number"]{
+  padding-left:10px;
+  padding-right:10px;
+  display:flex;
+  align-items:center;
+  box-sizing:border-box;
+}
+
+#tab-forms .form-container .options-dropdown > button,
+#memberPanel .member-create-fields .options-dropdown > button{
+  padding-left:10px;
+  padding-right:30px;
+  display:flex;
+  align-items:center;
+  text-align:left;
+}
+
+#tab-forms .form-container .panel-field select:focus,
+#tab-forms .form-container .form-field--dropdown .form-select:focus,
+#memberPanel .member-create-fields .panel-field select:focus,
+#memberPanel .member-create-fields .form-field--dropdown .form-select:focus{
+  border-color:var(--btn-hover, #2e3a72);
+  outline:none;
+  width:100%;
+  box-sizing:border-box;
+}
+
+#tab-forms .form-container .form-field--dropdown,
+#memberPanel .member-create-fields .form-field--dropdown{
+  position:relative;
+  width:100%;
+  box-sizing:border-box;
+}
+
+#tab-forms .form-container .form-field--dropdown .options-menu,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  text-align:left;
+  justify-content:flex-start;
+}
+
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option:disabled,
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option.field-type-disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option:disabled,
+#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option.field-type-disabled{
+  opacity:0.5;
+  font-style:italic;
+  cursor:not-allowed;
+}
+
+/* Radio toggle fields */
+#tab-forms .form-container .form-field--radio-toggle,
+#memberPanel .member-create-fields .form-field--radio-toggle{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#tab-forms .form-container .form-radio-group,
+#memberPanel .member-create-fields .form-radio-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:flex-start;
+  width:100%;
+}
+
+#tab-forms .form-container .form-radio-option,
+#memberPanel .member-create-fields .form-radio-option{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  font-size:14px;
+  cursor:pointer;
+  width:100%;
+  text-align:left;
+  padding:0;
+  margin:0;
+}
+
+#tab-forms .form-container .form-radio-option input[type="radio"],
+#memberPanel .member-create-fields .form-radio-option input[type="radio"]{
+  flex-shrink:0;
+  margin:0;
+  padding:0;
+  cursor:pointer;
+  width:auto;
+  height:auto;
+}
+
+#tab-forms .form-container .form-radio-option span,
+#memberPanel .member-create-fields .form-radio-option span{
+  flex:0 1 auto;
+  margin:0;
+  padding:0;
+}
+
+/* Checkout field wrapper */
+#tab-forms .form-container .form-field--checkout,
+#memberPanel .member-create-fields .form-field--checkout{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+}
+
+/* Checkout options group */
+#tab-forms .form-container .form-checkout-group,
+#memberPanel .member-create-fields .form-checkout-group{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+#tab-forms .form-container .form-checkout-option,
+#memberPanel .member-create-fields .form-checkout-option{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px;
+  border:1px solid var(--border-color, #444);
+  border-radius:6px;
+  cursor:pointer;
+  transition:border-color .2s ease, background-color .2s ease;
+  box-sizing:border-box;
+  max-width:100%;
+  overflow:hidden;
+}
+
+#tab-forms .form-container .form-checkout-option:hover,
+#memberPanel .member-create-fields .form-checkout-option:hover{
+  border-color:var(--accent-color, #8ab4ff);
+  background:rgba(138, 180, 255, 0.05);
+}
+
+#tab-forms .form-container .form-checkout-option:has(input:checked),
+#memberPanel .member-create-fields .form-checkout-option:has(input:checked){
+  border-color:var(--accent-color, #8ab4ff);
+  background:rgba(138, 180, 255, 0.1);
+}
+
+#tab-forms .form-container .form-checkout-option input[type="radio"],
+#memberPanel .member-create-fields .form-checkout-option input[type="radio"]{
+  position:static;
+  opacity:1;
+  pointer-events:auto;
+  flex-shrink:0;
+  width:auto;
+  height:auto;
+  margin:3px 0 0 0;
+  padding:0;
+  cursor:pointer;
+}
+
+#tab-forms .form-container .form-checkout-option-content,
+#memberPanel .member-create-fields .form-checkout-option-content{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  overflow:hidden;
+}
+
+#tab-forms .form-container .form-checkout-option-title,
+#memberPanel .member-create-fields .form-checkout-option-title{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  font-weight:600;
+  font-size:14px;
+}
+
+#tab-forms .form-container .form-checkout-option-name,
+#memberPanel .member-create-fields .form-checkout-option-name{
+  color:var(--text-color, #fff);
+}
+
+#tab-forms .form-container .form-checkout-option-price,
+#memberPanel .member-create-fields .form-checkout-option-price{
+  color:var(--accent-color, #8ab4ff);
+}
+
+#tab-forms .form-container .form-checkout-option-description,
+#memberPanel .member-create-fields .form-checkout-option-description{
+  font-size:13px;
+  color:var(--text-muted, #999);
+  line-height:1.4;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
+}
+
+#tab-forms .form-container .form-checkout-placeholder,
+#memberPanel .member-create-fields .form-checkout-placeholder{
+  color:var(--text-muted, #999);
+  font-style:italic;
+  padding:12px;
+}
+
+#tab-forms .form-container .form-checkout-message,
+#memberPanel .member-create-fields .form-checkout-message{
+  color:var(--text-muted, #999);
+  font-style:italic;
+  padding:16px;
+  text-align:center;
+  border:1px dashed var(--border-color, #444);
+  border-radius:6px;
+}
+
+#tab-forms .form-container .form-checkout-option.disabled,
+#memberPanel .member-create-fields .form-checkout-option.disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  pointer-events:none;
+  border-style:dashed;
+}
+
+#tab-forms .form-container .form-checkout-option.disabled:hover,
+#memberPanel .member-create-fields .form-checkout-option.disabled:hover{
+  border-color:var(--border-color, #444);
+  background:transparent;
+}
+
+#tab-forms .form-container .form-checkout-option.disabled .form-checkout-price-display,
+#memberPanel .member-create-fields .form-checkout-option.disabled .form-checkout-price-display{
+  color:var(--text-muted, #888);
+  font-style:italic;
+}
+
+#tab-forms .form-container .form-checkout-price-section,
+#memberPanel .member-create-fields .form-checkout-price-section{
+  margin-top:8px;
+}
+
+#tab-forms .form-container .form-checkout-price-display,
+#memberPanel .member-create-fields .form-checkout-price-display{
+  color:var(--accent-color, #8ab4ff);
+  font-weight:500;
+  font-size:14px;
+}
+
+#tab-forms .form-container .form-checkout-duration-buttons,
+#memberPanel .member-create-fields .form-checkout-duration-buttons{
+  display:flex;
+  gap:8px;
+}
+
+#tab-forms .form-container .form-checkout-duration-btn,
+#memberPanel .member-create-fields .form-checkout-duration-btn{
+  flex:1;
+  padding:8px 12px;
+  font-size:13px;
+  font-weight:500;
+  border:1px solid var(--border-color, #444);
+  border-radius:4px;
+  background:transparent;
+  color:var(--text-muted, #999);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+
+#tab-forms .form-container .form-checkout-duration-btn:hover,
+#memberPanel .member-create-fields .form-checkout-duration-btn:hover{
+  border-color:var(--accent-color, #8ab4ff);
+  color:var(--text-color, #fff);
+}
+
+#tab-forms .form-container .form-checkout-duration-btn.selected,
+#memberPanel .member-create-fields .form-checkout-duration-btn.selected{
+  border-color:var(--accent-color, #8ab4ff);
+  background:rgba(138, 180, 255, 0.15);
+  color:var(--accent-color, #8ab4ff);
+}
+
+#tab-forms .form-container .form-checkout-duration-option,
+#memberPanel .member-create-fields .form-checkout-duration-option{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  font-size:13px;
+  font-weight:500;
+  border:1px solid var(--border-color, #444);
+  border-radius:6px;
+  background:transparent;
+  color:var(--text-muted, #999);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+
+#tab-forms .form-container .form-checkout-duration-option:hover,
+#memberPanel .member-create-fields .form-checkout-duration-option:hover{
+  border-color:var(--accent-color, #8ab4ff);
+  color:var(--text-color, #fff);
+}
+
+#tab-forms .form-container .form-checkout-duration-option:has(input:checked),
+#memberPanel .member-create-fields .form-checkout-duration-option:has(input:checked){
+  border-color:var(--accent-color, #8ab4ff);
+  background:rgba(138, 180, 255, 0.15);
+  color:var(--accent-color, #8ab4ff);
+}
+
+#tab-forms .form-container .form-checkout-duration-option input[type="radio"],
+#memberPanel .member-create-fields .form-checkout-duration-option input[type="radio"]{
+  flex-shrink:0;
+  width:auto;
+  height:auto;
+  margin:0;
+  cursor:pointer;
+}
+
+/* URL field */
+#tab-forms .form-field--url .form-url-wrapper,
+#memberPanel .member-create-fields .form-field--url .form-url-wrapper{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+#tab-forms .form-url-input,
+#memberPanel .member-create-fields .form-url-input{
+  width:100%;
+  height:36px;
+  padding:0 10px;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+}
+
+#tab-forms .form-url-link,
+#memberPanel .member-create-fields .form-url-link{
+  align-self:flex-start;
+  color:var(--link-color, #8ab4ff);
+  font-weight:600;
+  text-decoration:underline;
+  transition:opacity .2s ease;
+}
+
+#tab-forms .form-url-link[aria-disabled="true"],
+#memberPanel .member-create-fields .form-url-link[aria-disabled="true"]{
+  opacity:0.4;
+  pointer-events:none;
+  cursor:default;
+}
+
+#tab-forms .form-url-message,
+#memberPanel .member-create-fields .form-url-message{
+  font-size:12px;
+  color:rgba(255,255,255,0.7);
+}
+
+/* Image field */
+#tab-forms .form-field--images .form-images,
+#memberPanel .member-create-fields .form-field--images .form-images{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#tab-forms .form-field--images input[type="file"],
+#memberPanel .member-create-fields .form-field--images input[type="file"]{
+  color:inherit;
+}
+
+#tab-forms .form-image-hint,
+#memberPanel .member-create-fields .form-image-hint{
+  font-size:12px;
+  color:rgba(255,255,255,0.7);
+}
+
+#tab-forms .form-image-message,
+#memberPanel .member-create-fields .form-image-message{
+  font-size:12px;
+  color:#ffb347;
+}
+
+#tab-forms .form-image-previews,
+#memberPanel .member-create-fields .form-image-previews{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
+  gap:8px;
+}
+
+#tab-forms .form-image-thumb,
+#memberPanel .member-create-fields .form-image-thumb{
+  position:relative;
+  padding-top:100%;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.25);
+  cursor:grab;
+}
+
+#tab-forms .form-image-thumb.is-dragging,
+#memberPanel .member-create-fields .form-image-thumb.is-dragging{
+  opacity:0.7;
+  cursor:grabbing;
+}
+
+#tab-forms .form-image-remove,
+.form-image-remove{
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:35px;
+  height:35px;
+  border-radius:10px;
+  border:none;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  font-size:16px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background-color .2s ease;
+  z-index:1;
+}
+
+#tab-forms .form-image-remove:hover,
+.form-image-remove:hover{
+  background:rgba(255,77,77,0.85);
+}
+
+.form-image-remove span{
+  pointer-events:none;
+}
+
+#tab-forms .form-image-thumb img,
+#memberPanel .member-create-fields .form-image-thumb img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* Item pricing field */
+#tab-forms .form-field--item-pricing .form-item-pricing{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#tab-forms .form-item-pricing-item{
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
+  background:rgba(0,0,0,0.25);
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+#tab-forms .form-item-pricing-name{
+  font-weight:600;
+}
+
+#tab-forms .form-item-pricing-price{
+  font-size:14px;
+  color:rgba(255,255,255,0.85);
+}
+
+/* Required asterisk */
+#tab-forms .form-field .required-asterisk,
+.required-asterisk{
+  color:#ff4d4d;
+  font-weight:700;
+}
+
+#tab-forms .form-container .panel-field select:disabled{
+  opacity:1;
+}
+
 /* ============================================================================
    FORMBUILDER BUTTONS AND TRIGGERS
    ============================================================================ */
