@@ -2117,3 +2117,732 @@ textarea.input-invalid{
   gap:10px;
 }
 
+/* ============================================================================
+   PHONE WRAPPER
+   ============================================================================ */
+
+#tab-forms .form-phone-wrapper,
+#memberPanel .member-create-fields .form-phone-wrapper{
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+
+#tab-forms .form-phone-wrapper .options-dropdown,
+#memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
+  flex-shrink:0;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  flex:0 0 100px;
+}
+
+#tab-forms .form-phone-wrapper .item-pricing-currency,
+#memberPanel .member-create-fields .form-phone-wrapper .item-pricing-currency{
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  height:35px;
+  padding:0 30px 0 10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  line-height:1;
+}
+
+#tab-forms .form-phone-wrapper .options-menu,
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  min-width:200px;
+  width:max-content;
+  max-width:min(280px, 90vw);
+  max-height:300px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+
+#tab-forms .form-phone-wrapper .options-menu .menu-option,
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:10px 14px;
+  white-space:nowrap;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  font-size:13px;
+  line-height:1;
+  cursor:pointer;
+  transition:background 0.15s ease;
+}
+
+#tab-forms .form-phone-wrapper .options-menu .menu-option:hover,
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+
+#tab-forms .form-phone-wrapper input[type="tel"],
+#memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
+  flex:1;
+  min-width:0;
+}
+
+/* ============================================================================
+   ICON PICKER
+   ============================================================================ */
+
+#tab-forms .menu--icon-picker{
+  width:calc(100% - 44px);
+}
+
+#tab-forms .menu-button--icon-picker{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:60px;
+  padding:0 30px 0 10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
+}
+
+#tab-forms .menu-button--icon-picker:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+
+#tab-forms .menu-button-img--icon-picker{
+  width:30px;
+  height:30px;
+  object-fit:contain;
+  flex-shrink:0;
+  display:none;
+}
+
+#tab-forms .menu-button--icon-picker.has-icon .menu-button-img--icon-picker{
+  display:block;
+}
+
+#tab-forms .menu-button-label--icon-picker{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#tab-forms .menu-button--icon-picker:not(.has-icon) .menu-button-label--icon-picker{
+  color:rgba(255,255,255,0.5);
+}
+
+#tab-forms .menu-button--icon-picker:focus-visible{
+  box-shadow:0 0 0 3px rgba(46,58,114,0.45);
+  outline:none;
+}
+
+#tab-forms .menu--icon-picker.menu-open .menu-button--icon-picker{
+  border-color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.5);
+}
+
+#tab-forms .menu-options--icon-picker{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(10,10,20,0.95);
+  box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  padding:12px;
+  width:100%;
+  box-sizing:border-box;
+  max-height:300px;
+  overflow:auto;
+  z-index:var(--forms-layer-popover, 80);
+}
+
+#tab-forms .menu-grid--icon-picker{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#tab-forms .menu-option--icon-picker{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  min-height:60px;
+  height:auto;
+  padding:8px 12px;
+  gap:12px;
+  border:none;
+  background:transparent;
+}
+
+#tab-forms .menu-option--icon-picker:hover,
+#tab-forms .menu-option--icon-picker:focus-visible{
+  background:rgba(255,255,255,0.1);
+  border:none;
+}
+
+#tab-forms .menu-option--icon-picker img{
+  max-width:50px;
+  max-height:50px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+#tab-forms .menu-option--icon-picker .menu-filename--icon-picker{
+  font-size:12px;
+  color:rgba(255,255,255,0.9);
+  text-align:left;
+  word-break:break-word;
+  line-height:1.4;
+  flex:1;
+}
+
+#tab-forms .menu-option--icon-picker--clear{
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  grid-column:span 2;
+  font-size:12px;
+  padding:0 6px;
+  background:rgba(255,255,255,0.08);
+  color:var(--button-text);
+}
+
+#tab-forms .menu-option--icon-picker--clear:hover,
+#tab-forms .menu-option--icon-picker--clear:focus-visible{
+  background:rgba(46,58,114,0.35);
+}
+
+#tab-forms .menu-option--icon-picker.selected{
+  border-color:var(--btn-hover, #2e3a72);
+  box-shadow:0 0 0 2px rgba(46,58,114,0.4);
+}
+
+#tab-forms .icon-picker-error{
+  padding:24px;
+  text-align:center;
+  color:#fff;
+  line-height:1.8;
+  font-size:14px;
+}
+
+#tab-forms .icon-picker-error code{
+  display:inline-block;
+  background:rgba(255,255,255,0.1);
+  padding:4px 8px;
+  border-radius:4px;
+  font-family:monospace;
+  color:#0ea5e9;
+  font-size:13px;
+}
+
+/* ============================================================================
+   ITEM PRICING EDITOR
+   ============================================================================ */
+
+#tab-forms .item-pricing-options-editor,
+#memberPanel .member-create-fields .item-pricing-options-editor{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#tab-forms .item-pricing-options-editor[hidden],
+#memberPanel .member-create-fields .item-pricing-options-editor[hidden]{
+  display:none !important;
+}
+
+#tab-forms .item-pricing-options-label,
+#memberPanel .member-create-fields .item-pricing-options-label{
+  font-size:14px;
+  font-weight:600;
+  position:relative;
+  z-index:1;
+}
+
+#tab-forms .item-pricing-options-list,
+#memberPanel .member-create-fields .item-pricing-options-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#tab-forms .item-pricing-option,
+#memberPanel .member-create-fields .item-pricing-option{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:0;
+  border-radius:8px;
+  background:none;
+}
+
+#tab-forms .item-pricing-row,
+#memberPanel .member-create-fields .item-pricing-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  position:relative;
+}
+
+#tab-forms .item-pricing-row--top input,
+#memberPanel .member-create-fields .item-pricing-row--top input{
+  width:100%;
+}
+
+#tab-forms .item-pricing-row--bottom,
+#memberPanel .member-create-fields .item-pricing-row--bottom{
+  display:grid;
+  grid-template-columns:minmax(110px, auto) 1fr auto;
+  gap:8px;
+  align-items:center;
+}
+
+#tab-forms .item-pricing-row--bottom .options-dropdown,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown{
+  position:relative;
+  overflow:visible;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  box-sizing:border-box;
+  flex:0 0 100px;
+}
+
+#tab-forms .item-pricing-currency,
+#memberPanel .member-create-fields .item-pricing-currency{
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  height:35px;
+  position:relative;
+  overflow:hidden;
+  box-sizing:border-box;
+  padding:0 30px 0 10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+  font-size:13px;
+  line-height:1;
+}
+
+#tab-forms .item-pricing-currency .dropdown-arrow,
+#memberPanel .member-create-fields .item-pricing-currency .dropdown-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:currentColor;
+  color:inherit;
+  pointer-events:none;
+  transform-origin:center center;
+}
+
+#tab-forms .item-pricing-currency[aria-expanded="true"] .dropdown-arrow,
+#memberPanel .member-create-fields .item-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  display:flex;
+  align-items:center;
+}
+
+#tab-forms .item-pricing-price,
+#memberPanel .member-create-fields .item-pricing-price{
+  width:100%;
+}
+
+#tab-forms .item-pricing-price.is-awaiting-currency,
+#memberPanel .member-create-fields .item-pricing-price.is-awaiting-currency{
+  opacity:0.45;
+  background:rgba(0,0,0,0.2);
+  cursor:not-allowed;
+}
+
+#tab-forms .item-pricing-option-actions,
+#memberPanel .member-create-fields .item-pricing-option-actions{
+  display:flex;
+  gap:6px;
+  justify-content:flex-end;
+}
+
+/* ============================================================================
+   DELETE BUTTONS
+   ============================================================================ */
+
+#tab-forms .delete-category-btn,
+#tab-forms .delete-subcategory-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 16px;
+  border-radius:8px;
+  border:1px solid #a42828;
+  background:#b83030;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+  width:100%;
+}
+
+#tab-forms .delete-category-btn:hover,
+#tab-forms .delete-subcategory-btn:hover{
+  background:#d13c3c;
+  border-color:#d13c3c;
+}
+
+#tab-forms .delete-field-btn{
+  align-self:flex-start;
+  padding:8px 16px;
+  background:transparent;
+  border:1px solid rgba(200,80,80,0.3);
+  border-radius:6px;
+  color:#c45050;
+  font-size:13px;
+  cursor:pointer;
+  transition:background 0.15s, border-color 0.15s;
+}
+
+#tab-forms .delete-field-btn:hover{
+  background:rgba(200,80,80,0.15);
+  border-color:rgba(200,80,80,0.5);
+}
+
+#tab-forms .subcategory-form-content .delete-subcategory-btn{
+  margin-top:12px;
+}
+
+#tab-forms .category-delete-actions{
+  display:flex;
+}
+
+#tab-forms .category-delete-actions .delete-category-btn{
+  margin-top:0;
+}
+
+/* ============================================================================
+   FORMBUILDER SAVE AND INLINE SAVE
+   ============================================================================ */
+
+#tab-forms .formbuilder-save-row{
+  display:flex;
+  margin-top:30px;
+  margin-bottom:10px;
+}
+
+#tab-forms .formbuilder-delete-row{
+  display:flex;
+}
+
+#tab-forms .formbuilder-inline-save{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 16px;
+  border-radius:8px;
+  background:var(--button-selected-bg, var(--btn-selected));
+  border:1px solid var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+  width:100%;
+}
+
+#tab-forms .formbuilder-inline-save:hover{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+/* ============================================================================
+   CATEGORY FORM MENU
+   ============================================================================ */
+
+#tab-forms .category-form-menu{
+  position:relative;
+  margin-bottom:12px;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+  transition:border-color .2s,background .2s,opacity .2s;
+}
+
+#tab-forms .category-form-menu.filter-category-menu{
+  margin:0;
+}
+
+#tab-forms .category-form-menu:last-child{
+  margin-bottom:0;
+}
+
+#tab-forms .category-form-menu .formbuilder-category-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 10px;
+  position:relative;
+}
+
+#tab-forms .category-form-menu .filter-category-trigger{
+  min-width:0;
+  background:transparent;
+  border-color:transparent;
+  color:var(--button-text);
+}
+
+#tab-forms .category-form-menu .filter-category-trigger .label{
+  font-weight:600;
+}
+
+#tab-forms .category-form-menu .filter-category-trigger-wrap{
+  flex:1;
+}
+
+#tab-forms .category-form-menu.cat-off{
+  opacity:1;
+}
+
+#tab-forms .category-form-menu.cat-off .filter-category-trigger .label,
+#tab-forms .subcategory-form-menu.subcategory-off .subcategory-label{
+  text-decoration:line-through;
+}
+
+#tab-forms .category-form-content{
+  border-top:none;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  background:transparent;
+}
+
+#tab-forms .category-form-content[hidden]{
+  display:none;
+}
+
+/* ============================================================================
+   EDIT PANELS
+   ============================================================================ */
+
+#tab-forms .category-edit-panel,
+#tab-forms .subcategory-edit-panel{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#tab-forms .field-edit-panel{
+  border-top:1px solid rgba(255,255,255,0.1);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  z-index:auto;
+}
+
+#tab-forms .subcategory-edit-panel{
+  border-bottom:1px solid var(--border);
+  padding-bottom:10px;
+  margin-bottom:4px;
+}
+
+#tab-forms .category-edit-panel[hidden],
+#tab-forms .subcategory-edit-panel[hidden]{
+  display:none;
+}
+
+#tab-forms .field-edit-panel[hidden]{
+  display:none;
+}
+
+#tab-forms .category-name-input{
+  width:300px;
+  max-width:100%;
+  height:36px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+  padding:0 12px;
+}
+
+#tab-forms .edit-panel-name-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+}
+
+#tab-forms .edit-panel-name-row .category-name-input,
+#tab-forms .edit-panel-name-row .subcategory-name-input{
+  flex:1;
+}
+
+/* ============================================================================
+   EDIT/DRAG BUTTONS
+   ============================================================================ */
+
+#tab-forms .category-edit-btn,
+#tab-forms .subcategory-edit-btn,
+#tab-forms .field-edit-btn,
+#tab-forms .formbuilder-drag-handle{
+  background:transparent;
+  border:none;
+  color:var(--button-text);
+  cursor:pointer;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:4px;
+  transition:background .2s;
+  flex-shrink:0;
+}
+
+#tab-forms .formbuilder-drag-handle{
+  cursor:grab;
+}
+
+#tab-forms .formbuilder-drag-handle.is-dragging{
+  cursor:grabbing;
+}
+
+#tab-forms .formbuilder-drag-handle svg{
+  pointer-events:none;
+}
+
+#tab-forms .category-edit-btn:hover,
+#tab-forms .subcategory-edit-btn:hover,
+#tab-forms .field-edit-btn:hover,
+#tab-forms .formbuilder-drag-handle:hover,
+#tab-forms .formbuilder-drag-handle:focus-visible{
+  background:rgba(255,255,255,0.1);
+}
+
+/* ============================================================================
+   DRAG AND DROP INDICATORS
+   ============================================================================ */
+
+#tab-forms .category-form-menu.is-dragging,
+#tab-forms .subcategory-form-menu.is-dragging,
+#tab-forms .subcategory-field-row.is-dragging{
+  opacity:0.65;
+}
+
+#tab-forms .category-form-menu.is-dragging,
+#tab-forms .subcategory-form-menu.is-dragging{
+  will-change:transform;
+}
+
+#tab-forms .category-form-menu.drag-target-before{
+  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .category-form-menu.drag-target-after{
+  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-form-menu.drag-target-before{
+  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-form-menu.drag-target-after{
+  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-field-row.drag-target-before{
+  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .subcategory-field-row.drag-target-after{
+  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+}
+
+#tab-forms .cats,
+#tab-forms .subcategory-form-menus,
+#tab-forms .subcategory-fields-list{
+  position:relative;
+}
+
+#tab-forms .formbuilder-drop-indicator{
+  position:absolute;
+  left:12px;
+  right:12px;
+  height:0;
+  border-top:2px solid var(--btn-hover, #2e3a72);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .15s ease;
+  z-index:5;
+}
+
+#tab-forms .formbuilder-drop-indicator.visible{
+  opacity:1;
+}
+
