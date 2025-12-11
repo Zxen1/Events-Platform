@@ -20,14 +20,14 @@
   <noscript><link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" /></noscript>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
-  <header class="header" role="banner">
-    <div class="logo" aria-label="Site logo">
+  <header class="container--header" role="banner">
+    <div class="button--header-logo-small" aria-label="Site logo">
       <img src="" alt="FunMap.com logo" />
     </div>
     <div id="headerTimecode" class="header-timecode" aria-live="polite" style="position:absolute;left:50%;transform:translateX(-50%);top:8px;font-weight:600;"></div>
-    <nav class="view-toggle" aria-label="Primary">
+    <nav aria-label="Primary">
       <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
-      <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
+      <button id="filterBtn" class="button--header-filter" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -35,7 +35,7 @@
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
       <div class="mode-toggle">
-        <button id="recents-button" aria-pressed="false" aria-label="Recents">
+        <button id="recents-button" class="button--header-mode" aria-pressed="false" aria-label="Recents">
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
@@ -44,7 +44,7 @@
           </span>
           <span class="mode-label">Recents</span>
         </button>
-        <button id="posts-button" aria-pressed="false" aria-label="Posts">
+        <button id="posts-button" class="button--header-mode" aria-pressed="false" aria-label="Posts">
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="6" x2="19" y2="6"></line>
@@ -54,7 +54,7 @@
           </span>
           <span class="mode-label">Posts</span>
         </button>
-        <button id="map-button" aria-pressed="true" aria-label="Map">
+        <button id="map-button" class="button--header-mode" aria-pressed="true" aria-label="Map">
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 21s-6-4.5-6-10a6 6 0 1112 0c0 5.5-6 10-6 10z"></path>
@@ -65,15 +65,15 @@
         </button>
       </div>
     </nav>
-    <div class="header-buttons">
-      <button id="memberBtn" type="button" class="header-icon-btn" aria-pressed="false" aria-label="Open members area" title="Members">
-        <span class="header-btn-icon icon-member" aria-hidden="true"></span>
+    <div>
+      <button id="memberBtn" type="button" class="button--header-access" aria-pressed="false" aria-label="Open members area" title="Members">
+        <span aria-hidden="true" style="-webkit-mask-image:url('assets/system-images/icon-member.svg');mask-image:url('assets/system-images/icon-member.svg')"></span>
       </button>
-      <button id="adminBtn" type="button" class="header-icon-btn" aria-pressed="false" aria-label="Open admin area" title="Admin" hidden>
-        <span class="header-btn-icon icon-admin" aria-hidden="true"></span>
+      <button id="adminBtn" type="button" class="button--header-access" aria-pressed="false" aria-label="Open admin area" title="Admin" hidden>
+        <span aria-hidden="true" style="-webkit-mask-image:url('assets/system-images/icon-admin.svg');mask-image:url('assets/system-images/icon-admin.svg')"></span>
       </button>
-      <button id="fullscreenBtn" type="button" class="header-icon-btn fullscreen-btn" aria-label="Toggle fullscreen" title="Fullscreen">
-        <span class="header-btn-icon icon-fullscreen" aria-hidden="true"></span>
+      <button id="fullscreenBtn" type="button" class="button--header-access" aria-label="Toggle fullscreen" title="Fullscreen">
+        <span aria-hidden="true" style="-webkit-mask-image:url('assets/system-images/icon-fullscreen.svg');mask-image:url('assets/system-images/icon-fullscreen.svg')"></span>
       </button>
     </div>
   </header>

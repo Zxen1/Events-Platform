@@ -887,7 +887,7 @@ function handlePromptKeydown(event, context){
 
       function ensureLogo(){
         if(!logoImg){
-          logoImg = document.querySelector('.logo img');
+          logoImg = document.querySelector('.button--header-logo-small img');
           if(logoImg && !logoImg.__logoAnimationBound){
             try{
               logoImg.addEventListener('animationiteration', handleAnimationLoop);
@@ -2079,7 +2079,7 @@ let __notifyMapOnInteraction = null;
                         // Update header logo immediately
                         if(!window.adminSettings) window.adminSettings = {};
                         window.adminSettings.small_logo = value;
-                        const headerLogo = document.querySelector('.logo img');
+                        const headerLogo = document.querySelector('.button--header-logo-small img');
                         if(headerLogo){
                           headerLogo.src = value;
                         }
@@ -2235,7 +2235,7 @@ let __notifyMapOnInteraction = null;
                       // Update header logo immediately
                       if(!window.adminSettings) window.adminSettings = {};
                       window.adminSettings.small_logo = value;
-                      const headerLogo = document.querySelector('.logo img');
+                      const headerLogo = document.querySelector('.button--header-logo-small img');
                       if(headerLogo){
                         headerLogo.src = value;
                       }
@@ -2491,7 +2491,7 @@ let __notifyMapOnInteraction = null;
                 }
               }
               if(data.settings.small_logo && typeof data.settings.small_logo === 'string' && data.settings.small_logo.trim()){
-                const headerLogo = document.querySelector('.logo img');
+                const headerLogo = document.querySelector('.button--header-logo-small img');
                 if(headerLogo){
                   headerLogo.onload = () => headerLogo.classList.add('loaded');
                   headerLogo.src = data.settings.small_logo.trim();
@@ -3337,7 +3337,7 @@ let __notifyMapOnInteraction = null;
             updateLayerVisibility(lastKnownZoom);
           }
         }
-        logoEls = [document.querySelector('.logo')].filter(Boolean);
+        logoEls = [document.querySelector('.button--header-logo-small')].filter(Boolean);
         let ensureMapIcon = null;
       function updateLogoClickState(){
         logoEls.forEach(el=>{
@@ -3661,7 +3661,7 @@ let __notifyMapOnInteraction = null;
 
     function updateLayoutVars(){
       const root = document.documentElement;
-      const header = document.querySelector('.header');
+      const header = document.querySelector('.container--header');
       if(header){
         const headerStyles = getComputedStyle(header);
         const safeTop = parseFloat(headerStyles.paddingTop) || 0;
@@ -24620,14 +24620,14 @@ const panelButtons = {
       }
     }
     if(!header || !header.isConnected){
-      header = document.querySelector('.header');
+      header = document.querySelector('.container--header');
     }
     if(header){
       if(!headerButtons || !header.contains(headerButtons)){
-        headerButtons = header.querySelector('.header-buttons');
+        headerButtons = header.querySelector('div:last-child');
       }
       if(!viewToggle || !header.contains(viewToggle)){
-        viewToggle = header.querySelector('.view-toggle');
+        viewToggle = header.querySelector('nav');
       }
     } else {
       headerButtons = null;
@@ -27028,7 +27028,7 @@ function movePanelToEdge(panel, side){
   if(!panel) return;
   const content = panel.querySelector('.panel-content') || panel.querySelector('.modal-content');
   if(!content) return;
-  const header = document.querySelector('.header');
+  const header = document.querySelector('.container--header');
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
   content.style.top = `${topPos}px`;
   if(side === 'left'){
@@ -27305,7 +27305,7 @@ document.addEventListener('pointerdown', (e) => {
   // The member form initialization is now handled in that separate file
 
   const colorAreas = [
-    {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
+    {key:'header', label:'Header', selectors:{bg:['.container--header'], text:['.container--header']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
@@ -27356,7 +27356,7 @@ document.addEventListener('pointerdown', (e) => {
 
   storeTitleDefaults();
 
-  const headerEl = document.querySelector('.header');
+  const headerEl = document.querySelector('.container--header');
   if(headerEl && 'ResizeObserver' in window){
     const headerObserver = new ResizeObserver(()=>{
       updateLayoutVars();
@@ -27652,6 +27652,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isFull = getFull();
         fsBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
         fsBtn.classList.toggle('is-fullscreen', !!isFull);
+        const icon = fsBtn.querySelector('span');
+        if(icon){
+          const url = isFull ? 'assets/system-images/icon-fullscreen-exit.svg' : 'assets/system-images/icon-fullscreen.svg';
+          icon.style.webkitMaskImage = `url('${url}')`;
+          icon.style.maskImage = `url('${url}')`;
+        }
       };
       updateFsState();
       ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt => {
@@ -28898,10 +28904,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function ensureMemberAvatarImage(){
     const memberBtn = document.getElementById('memberBtn');
     if(!memberBtn) return null;
-    let img = memberBtn.querySelector('.member-avatar');
+    let img = memberBtn.querySelector('img');
     if(!img){
       img = document.createElement('img');
-      img.className = 'member-avatar';
       img.alt = '';
       img.setAttribute('aria-hidden','true');
       memberBtn.appendChild(img);
