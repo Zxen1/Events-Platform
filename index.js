@@ -1966,8 +1966,8 @@ let __notifyMapOnInteraction = null;
           if(!button || !container) return;
           
           // For new menu structure (settings tab logo menus), build button structure
-          let buttonImg = button.querySelector('.menu-button-img');
-          let buttonLabel = button.querySelector('.menu-button-label');
+          let buttonImg = button.querySelector('.menu-button-img--system-image-picker, .menu-button-img--icon-picker');
+          let buttonLabel = button.querySelector('.menu-button-label--system-image-picker, .menu-button-label--icon-picker');
           
           // If button structure doesn't exist yet, it's the old structure - skip for now
           // (map tab still uses old structure, we'll convert later)
@@ -11270,19 +11270,22 @@ function makePosts(){
             }
           }
           
+          // Check if this is a system image picker or regular icon picker
+          const isSystemImagePicker = container.classList.contains('menu--system-image-picker');
+          
           popup = document.createElement('div');
-          popup.className = 'icon-picker-popup';
+          popup.className = isSystemImagePicker ? 'menu-popup--system-image-picker' : 'menu-popup--icon-picker';
           popup.setAttribute('role', 'dialog');
           popup.setAttribute('aria-label', label);
           popup.tabIndex = -1;
           popup.style.position = 'absolute';
           const grid = document.createElement('div');
-          grid.className = 'icon-picker-grid';
+          grid.className = isSystemImagePicker ? 'menu-grid--system-image-picker' : 'menu-grid--icon-picker';
           
           if(!iconsToShow.length){
             console.warn('No icons available to display in picker');
             const errorMsg = document.createElement('div');
-            errorMsg.className = 'icon-picker-error';
+            errorMsg.className = isSystemImagePicker ? 'menu-error--system-image-picker' : 'menu-error--icon-picker';
             errorMsg.innerHTML = 'No icons found.<br><br>Please select the icon folder in the Admin Settings Tab.<br><br>Example: <code>assets/icons</code>';
             grid.appendChild(errorMsg);
             // Load error message from DB
@@ -11302,9 +11305,7 @@ function makePosts(){
           });
           // Check if we're in map, messages, forms, or settings tab for vertical layout with filenames
           const isMapMessagesOrFormsTab = container.closest('#tab-map, #tab-messages, #tab-forms, #tab-settings') !== null;
-          // Check if this is a system image picker or regular icon picker
-          const isSystemImagePicker = container.classList.contains('menu--system-image-picker');
-          const optionClass = isSystemImagePicker ? 'menu-options--system-image-picker' : 'menu-options--icon-picker';
+          const optionClass = isSystemImagePicker ? 'menu-option--system-image-picker' : 'menu-option--icon-picker';
           
           for(const entry of optionsList){
             const btn = document.createElement('button');
@@ -11324,7 +11325,7 @@ function makePosts(){
               // Add filename for map, messages, and forms tabs
               if(isMapMessagesOrFormsTab){
                 const filename = document.createElement('div');
-                filename.className = 'icon-filename';
+                filename.className = isSystemImagePicker ? 'menu-filename--system-image-picker' : 'menu-filename--icon-picker';
                 // Extract filename from path
                 const pathParts = value.split('/');
                 const fullFilename = pathParts[pathParts.length - 1] || value;
@@ -11540,10 +11541,10 @@ function makePosts(){
         iconPickerButton.setAttribute('aria-expanded', 'false');
 
         const iconPickerImg = document.createElement('img');
-        iconPickerImg.className = 'menu-button-img';
+        iconPickerImg.className = 'menu-button-img--icon-picker';
         iconPickerImg.alt = '';
         const iconPickerLabel = document.createElement('span');
-        iconPickerLabel.className = 'menu-button-label';
+        iconPickerLabel.className = 'menu-button-label--icon-picker';
         iconPickerLabel.textContent = 'Choose Icon';
         const iconPickerArrow = document.createElement('span');
         iconPickerArrow.className = 'dropdown-arrow';
@@ -11923,10 +11924,10 @@ function makePosts(){
           subIconButton.setAttribute('aria-expanded', 'false');
 
           const subIconImg = document.createElement('img');
-          subIconImg.className = 'menu-button-img';
+          subIconImg.className = 'menu-button-img--icon-picker';
           subIconImg.alt = '';
           const subIconLabel = document.createElement('span');
-          subIconLabel.className = 'menu-button-label';
+          subIconLabel.className = 'menu-button-label--icon-picker';
           subIconLabel.textContent = 'Choose Icon';
           const subIconArrow = document.createElement('span');
           subIconArrow.className = 'dropdown-arrow';
@@ -15101,7 +15102,7 @@ function makePosts(){
             FORM_FIELDSETS.forEach(optionDef => {
               const optionBtn = document.createElement('button');
               optionBtn.type = 'button';
-              optionBtn.className = 'menu-option menu-options--fieldset-list';
+              optionBtn.className = 'menu-option menu-option--fieldset-list';
               const optionLabel = resolveFieldsetDisplayName(optionDef) || optionDef.label || optionDef.value || '';
               optionBtn.textContent = optionLabel || optionDef.value;
               optionBtn.dataset.value = optionDef.value || '';
@@ -17565,7 +17566,7 @@ function makePosts(){
         iconPickerButton.textContent = 'Change Icon';
         
         const preview = document.createElement('div');
-        preview.className = 'menu-preview has-image';
+        preview.className = 'menu-preview--icon-picker has-image';
         const previewLabel = document.createElement('span');
         previewLabel.textContent = '';
         const previewImg = document.createElement('img');

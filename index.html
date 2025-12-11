@@ -124,11 +124,11 @@
           <div class="options-dropdown">
             <button id="optionsBtn" class="menu-button--sort-order" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
             <div id="optionsMenu" class="options-menu" hidden>
-              <button id="favToggle" class="menu-options--sort-order" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+              <button id="favToggle" class="menu-option--sort-order" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
               <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                <button class="sort-option menu-options--sort-order" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
-                <button class="sort-option menu-options--sort-order" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
-                <button class="sort-option menu-options--sort-order" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
+                <button class="sort-option menu-option--sort-order" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
+                <button class="sort-option menu-option--sort-order" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
+                <button class="sort-option menu-option--sort-order" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
               </div>
             </div>
           </div>
@@ -385,7 +385,7 @@
             <div class="panel-field system-image-picker-field">
               <label>Small Map Card Pill</label>
                   <div class="menu--icon-picker" id="systemImageSmallMapCardPillContainer">
-                    <div class="menu-preview" id="systemImageSmallMapCardPillPreview">
+                    <div class="menu-preview--icon-picker" id="systemImageSmallMapCardPillPreview">
                       <span></span>
                       <img alt="Small map card pill preview" />
                     </div>
@@ -395,7 +395,7 @@
                 <div class="panel-field system-image-picker-field">
                   <label>Big Map Card Pill</label>
                   <div class="menu--icon-picker" id="systemImageBigMapCardPillContainer">
-                    <div class="menu-preview" id="systemImageBigMapCardPillPreview">
+                    <div class="menu-preview--icon-picker" id="systemImageBigMapCardPillPreview">
                       <span></span>
                       <img alt="Big map card pill preview" />
                     </div>
@@ -405,7 +405,7 @@
                 <div class="panel-field system-image-picker-field">
                   <label>Hover Map Card Pill</label>
                   <div class="menu--icon-picker" id="systemImageHoverMapCardPillContainer">
-                    <div class="menu-preview" id="systemImageHoverMapCardPillPreview">
+                    <div class="menu-preview--icon-picker" id="systemImageHoverMapCardPillPreview">
                       <span></span>
                       <img alt="Hover map card pill preview" />
                     </div>
@@ -415,7 +415,7 @@
                 <div class="panel-field system-image-picker-field">
                   <label>Multi Post Icon</label>
                   <div class="menu--icon-picker" id="systemImageMultiPostIconContainer">
-                    <div class="menu-preview" id="systemImageMultiPostIconPreview">
+                    <div class="menu-preview--icon-picker" id="systemImageMultiPostIconPreview">
                       <span></span>
                       <img alt="Multi post icon preview" />
                     </div>
@@ -425,7 +425,7 @@
                 <div class="panel-field system-image-picker-field">
                   <label>Marker Cluster Icon</label>
                   <div class="menu--icon-picker" id="systemImageMarkerClusterContainer">
-                    <div class="menu-preview" id="systemImageMarkerClusterPreview">
+                    <div class="menu-preview--icon-picker" id="systemImageMarkerClusterPreview">
                       <span></span>
                       <img alt="Marker cluster icon preview" />
                     </div>
@@ -448,8 +448,8 @@
             <label>Big Logo</label>
                 <div class="menu menu--system-image-picker" id="systemImageBigLogoContainer">
                   <button type="button" class="menu-button--system-image-picker" id="systemImageBigLogoButton" data-setting-key="big_logo" aria-haspopup="true" aria-expanded="false">
-                    <img class="menu-button-img" alt="" />
-                    <span class="menu-button-label">Choose Image</span>
+                    <img class="menu-button-img--system-image-picker" alt="" />
+                    <span class="menu-button-label--system-image-picker">Choose Image</span>
                     <span class="dropdown-arrow" aria-hidden="true"></span>
                   </button>
                 </div>
@@ -458,8 +458,8 @@
                 <label>Small Logo</label>
                 <div class="menu menu--system-image-picker" id="systemImageSmallLogoContainer">
                   <button type="button" class="menu-button--system-image-picker" id="systemImageSmallLogoButton" data-setting-key="small_logo" aria-haspopup="true" aria-expanded="false">
-                    <img class="menu-button-img" alt="" />
-                    <span class="menu-button-label">Choose Image</span>
+                    <img class="menu-button-img--system-image-picker" alt="" />
+                    <span class="menu-button-label--system-image-picker">Choose Image</span>
                     <span class="dropdown-arrow" aria-hidden="true"></span>
                   </button>
                 </div>
@@ -468,8 +468,8 @@
                 <label>Favicon</label>
                 <div class="menu menu--system-image-picker" id="systemImageFaviconContainer">
                   <button type="button" class="menu-button--system-image-picker" id="systemImageFaviconButton" data-setting-key="favicon" aria-haspopup="true" aria-expanded="false">
-                    <img class="menu-button-img" alt="" />
-                    <span class="menu-button-label">Choose Image</span>
+                    <img class="menu-button-img--system-image-picker" alt="" />
+                    <span class="menu-button-label--system-image-picker">Choose Image</span>
                     <span class="dropdown-arrow" aria-hidden="true"></span>
                   </button>
                 </div>
