@@ -1,0 +1,438 @@
+/* ============================================================================
+   MEMBER PANEL
+   ============================================================================ */
+
+/* ============================================================================
+   GLOBAL STYLES COPIED FOR INDEPENDENCE
+   ============================================================================ */
+
+#memberPanel,
+#memberPanel *{
+  box-sizing: border-box;
+}
+
+#memberPanel .panel-content{
+  width:min(440px, 100%);
+  max-width:100%;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  overflow-y:overlay;
+  left:auto;
+  right:0;
+  background:#222222;
+  color:#fff;
+  font-family:system-ui, sans-serif;
+}
+
+/* ============================================================================
+   PANEL CONTENT RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  #memberPanel .panel-content{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+}
+
+@media (max-width: 440px) {
+  #memberPanel .panel-content{
+    width:100%;
+    max-width:100%;
+    max-height:none;
+    border-radius:0;
+  }
+}
+
+/* ============================================================================
+   TAB BAR
+   ============================================================================ */
+
+#memberPanel .tab-bar{
+  display:flex;
+  gap:6px;
+}
+
+#memberPanel .tab-bar .tab-btn{
+  flex:1;
+  padding:6px 10px;
+  border-radius:10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
+  color:var(--button-text);
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+#memberPanel .tab-bar .tab-btn:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+
+#memberPanel .tab-bar .tab-btn:active{
+  transform:none;
+}
+
+#memberPanel .tab-bar .tab-btn[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
+  color:var(--button-active-text);
+}
+
+#memberPanel .tab-bar .tab-btn:focus-visible{
+  outline:2px solid rgba(255,255,255,0.85);
+  outline-offset:2px;
+}
+
+/* ============================================================================
+   MEMBER AUTH TABS
+   ============================================================================ */
+
+.member-auth-tab{
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.member-auth-tab:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+
+.member-auth-tab:active{
+  transform:none;
+}
+
+.member-auth-tab[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
+  color:var(--button-active-text);
+}
+
+.member-auth-tab:focus-visible{
+  outline:2px solid rgba(255,255,255,0.85);
+  outline-offset:2px;
+}
+
+/* ============================================================================
+   TAB PANELS
+   ============================================================================ */
+
+#memberPanel .member-tab-panel{
+  display:none;
+}
+
+#memberPanel .member-tab-panel.active{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* ============================================================================
+   MEMBER FORM CONTAINER
+   ============================================================================ */
+
+#memberPanel .member-form-container{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
+  padding:0 10px 10px;
+}
+
+#memberPanel .member-form{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  margin-bottom:100px;
+}
+
+/* ============================================================================
+   MEMBER CREATE STYLES
+   ============================================================================ */
+
+#memberPanel .member-create-intro{
+  margin:0;
+  font-size:15px;
+  line-height:1.4;
+}
+
+#memberPanel .member-create-selects{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+#memberPanel .member-create-field{
+  margin:0;
+}
+
+#memberPanel .member-create-select{
+  max-width:240px;
+}
+
+#memberPanel .member-create-placeholder{
+  margin:4px 0 0;
+  font-style:italic;
+  opacity:0.8;
+}
+
+#memberPanel .member-create-fields{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+
+#memberPanel .member-create-checkout{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-top:8px;
+}
+
+#memberPanel .member-create-price-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+#memberPanel .member-create-price-row select,
+#memberPanel .member-create-price-row input{
+  flex:1 1 120px;
+  min-width:120px;
+}
+
+#memberPanel .member-create-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+
+#memberPanel .member-create-actions .primary-action[disabled]{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+/* ============================================================================
+   ADMIN SKIP PAYMENT BUTTON
+   ============================================================================ */
+
+#memberPanel .admin-skip-payment-btn{
+  background:rgba(100,150,200,0.2);
+  border:1px solid rgba(100,150,200,0.4);
+  color:#8ab4ff;
+  padding:10px 16px;
+  border-radius:8px;
+  font-size:14px;
+  cursor:pointer;
+  transition:background 0.15s, border-color 0.15s;
+}
+
+#memberPanel .admin-skip-payment-btn:hover:not(:disabled){
+  background:rgba(100,150,200,0.3);
+  border-color:rgba(100,150,200,0.6);
+}
+
+#memberPanel .admin-skip-payment-btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* ============================================================================
+   PANEL ACTIONS
+   ============================================================================ */
+
+#memberPanel .panel-actions .primary-action{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+
+#memberPanel .panel-actions .primary-action:hover{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+#memberPanel .panel-actions .discard-changes[disabled]{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* ============================================================================
+   MEMBER AUTH CONTAINER
+   ============================================================================ */
+
+.member-auth{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.member-auth-tabs{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.member-auth-tab{
+  flex:1 1 auto;
+  min-width:0;
+  height:38px;
+  border-radius:20px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  font-weight:600;
+  cursor:pointer;
+  transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.member-auth-tab[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  color:var(--button-active-text);
+}
+
+.member-auth-panel{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.member-auth-panel[hidden]{
+  display:none;
+}
+
+.member-auth-panel label{
+  font-size:14px;
+  font-weight:600;
+}
+
+.member-auth-panel input{
+  height:40px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:#1c1c1c;
+  color:#fff;
+  padding:0 12px;
+  box-sizing:border-box;
+  caret-color:#fff;
+  cursor:text;
+}
+
+.member-auth-panel input:-webkit-autofill,
+.member-auth-panel input:-webkit-autofill:hover,
+.member-auth-panel input:-webkit-autofill:focus,
+.member-auth-panel input:-webkit-autofill:active{
+  -webkit-box-shadow:0 0 0 30px #1c1c1c inset !important;
+  -webkit-text-fill-color:#fff !important;
+  background:#1c1c1c !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
+}
+
+.member-auth-panel input:focus{
+  outline:2px solid var(--btn-selected);
+  outline-offset:2px;
+  background:#1c1c1c;
+}
+
+.member-auth-panel .member-auth-submit{
+  align-self:flex-start;
+}
+
+.member-auth-profile{
+  gap:18px;
+}
+
+.member-auth[data-state="logged-in"] .member-auth-tabs{
+  display:none;
+}
+
+.member-auth[data-state="logged-in"] .member-auth-panel{
+  gap:16px;
+}
+
+/* ============================================================================
+   MEMBER PROFILE
+   ============================================================================ */
+
+.member-profile{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.member-profile-avatar{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid rgba(255,255,255,0.25);
+  box-sizing:border-box;
+  background:#111111;
+}
+
+.member-profile-details{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.member-profile-name{
+  margin:0;
+  font-size:20px;
+  font-weight:700;
+}
+
+.member-profile-email{
+  margin:0;
+  font-size:14px;
+  color:rgba(255,255,255,0.7);
+}
+
+.member-profile-actions{
+  display:flex;
+  gap:10px;
+}
+
+.member-profile-actions .tiny{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:0;
+  padding:0 16px;
+  white-space:nowrap;
+}
+
+/* ============================================================================
+   MAP CONTROLS
+   ============================================================================ */
+
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff;
+  box-shadow:none;
+}
+
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none;
+}
