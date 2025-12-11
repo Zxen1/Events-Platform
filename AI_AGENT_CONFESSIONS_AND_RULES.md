@@ -671,7 +671,7 @@ All classes follow BEM-inspired naming with double-dash separators:
 | `input` | Form input elements | `.input-text`, `.input-textarea`, `.input-dropdown`, `.input-checkbox`, `.input-radio` |
 | `menu` | Dropdown/picker menus | `.menu--system-image-picker`, `.menu--icon-picker` |
 | `menu-button` | Menu trigger buttons | `.menu-button--system-image-picker` |
-| `menu-popup` | Menu dropdown containers | `.menu-popup--system-image-picker` |
+| `menu-options` | Menu dropdown containers | `.menu-options--system-image-picker` |
 | `menu-option` | Selectable menu items | `.menu-option--system-image-picker` |
 | `menu-grid` | Menu layout grid | `.menu-grid--system-image-picker` |
 | `message` | Notifications/alerts/toasts | `.message--error`, `.message--success`, `.message--info` |
@@ -692,7 +692,7 @@ Example (System Image Picker):
 .menu-button--system-image-picker       (trigger button)
 .menu-button-img--system-image-picker   (image inside button)
 .menu-button-label--system-image-picker (label inside button)
-.menu-popup--system-image-picker        (dropdown popup)
+.menu-options--system-image-picker      (dropdown container)
 .menu-grid--system-image-picker         (options grid)
 .menu-option--system-image-picker       (single option)
 .menu-filename--system-image-picker     (filename text)

@@ -11274,7 +11274,7 @@ function makePosts(){
           const isSystemImagePicker = container.classList.contains('menu--system-image-picker');
           
           popup = document.createElement('div');
-          popup.className = isSystemImagePicker ? 'menu-popup--system-image-picker' : 'menu-popup--icon-picker';
+          popup.className = isSystemImagePicker ? 'menu-options--system-image-picker' : 'menu-options--icon-picker';
           popup.setAttribute('role', 'dialog');
           popup.setAttribute('aria-label', label);
           popup.tabIndex = -1;

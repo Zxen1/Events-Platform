@@ -5771,7 +5771,7 @@ body.filters-active #filterBtn{
 }
 
 /* Menu Popup - System Image Picker (self-contained) */
-.menu-popup--system-image-picker{
+.menu-options--system-image-picker{
   position: absolute;
   background: rgba(10,10,20,0.95);
   border: 1px solid var(--border);
@@ -5784,7 +5784,7 @@ body.filters-active #filterBtn{
 }
 
 /* Menu Popup - Icon Picker (self-contained) */
-.menu-popup--icon-picker{
+.menu-options--icon-picker{
   position: absolute;
   background: rgba(10,10,20,0.95);
   border: 1px solid var(--border);
@@ -6180,7 +6180,7 @@ body.filters-active #filterBtn{
   position:relative;
 }
 
-#tab-settings .menu--system-image-picker .menu-popup--system-image-picker{
+#tab-settings .menu--system-image-picker .menu-options--system-image-picker{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -6341,7 +6341,7 @@ body.filters-active #filterBtn{
   height:30px;
 }
 
-.system-image-picker-container .menu-popup--icon-picker{
+.system-image-picker-container .menu-options--icon-picker{
   position:absolute;
   top:100%;
   left:0;
@@ -9602,7 +9602,7 @@ html, body { cursor: auto !important; }
               border-color:rgba(255,255,255,0.3);
               background:rgba(0,0,0,0.5);
             }
-            #tab-forms .menu-popup--icon-picker{
+            #tab-forms .menu-options--icon-picker{
               position:absolute;
               top:calc(100% + 4px);
               left:0;
@@ -9620,7 +9620,7 @@ html, body { cursor: auto !important; }
             }
             
             /* Map and Messages tab iconpicker popup - same z-index as formbuilder */
-            #tab-map .menu-popup--icon-picker{
+            #tab-map .menu-options--icon-picker{
               position:absolute;
               top:calc(100% + 10px);
               left:0;
@@ -9640,7 +9640,7 @@ html, body { cursor: auto !important; }
             }
             
             
-            #tab-messages .menu-popup--icon-picker{
+            #tab-messages .menu-options--icon-picker{
               position:absolute;
               top:100%;
               left:0;
