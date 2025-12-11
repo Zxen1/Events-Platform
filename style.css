@@ -579,6 +579,42 @@ a:active{
 }
 
 /* ============================================================================
+   SECTION: CONTAINERS
+   ============================================================================ */
+
+/* Header Container */
+.container--header{
+}
+
+/* Filter Panel Container */
+.container--filterpanel{
+}
+
+/* Member Panel Container */
+.container--memberpanel{
+}
+
+/* Admin Panel Container */
+.container--adminpanel{
+}
+
+/* Post Board Container */
+.container--postboard{
+}
+
+/* Recents Board Container */
+.container--recentboard{
+}
+
+/* Ad Board Container */
+.container--adboard{
+}
+
+/* Map Container */
+.container--map{
+}
+
+/* ============================================================================
    SECTION: BUTTONS
    ============================================================================ */
 
@@ -5770,7 +5806,7 @@ body.filters-active #filterBtn{
   font-family: monospace;
 }
 
-/* Menu Popup - System Image Picker (self-contained) */
+/* Menu Options - System Image Picker (self-contained) */
 .menu-options--system-image-picker{
   position: absolute;
   background: rgba(10,10,20,0.95);
@@ -5783,7 +5819,7 @@ body.filters-active #filterBtn{
   z-index: var(--forms-layer-popover, 80);
 }
 
-/* Menu Popup - Icon Picker (self-contained) */
+/* Menu Options - Icon Picker (self-contained) */
 .menu-options--icon-picker{
   position: absolute;
   background: rgba(10,10,20,0.95);
