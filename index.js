@@ -24605,8 +24605,7 @@ const panelButtons = {
   let originalParent = null;
   let originalNext = null;
   let header = null;
-  let headerButtons = null;
-  let viewToggle = null;
+  let firstAccessButton = null;
   let welcomeModal = null;
   let placedInHeader = false;
   let rafId = null;
@@ -24623,15 +24622,11 @@ const panelButtons = {
       header = document.querySelector('.container--header');
     }
     if(header){
-      if(!headerButtons || !header.contains(headerButtons)){
-        headerButtons = header.querySelector('.header-buttons');
-      }
-      if(!viewToggle || !header.contains(viewToggle)){
-        viewToggle = header.querySelector('.view-toggle');
+      if(!firstAccessButton || !header.contains(firstAccessButton)){
+        firstAccessButton = header.querySelector('.button--header-access');
       }
     } else {
-      headerButtons = null;
-      viewToggle = null;
+      firstAccessButton = null;
     }
     if(!welcomeModal || !welcomeModal.isConnected){
       welcomeModal = document.getElementById('welcome-modal');
@@ -24641,7 +24636,7 @@ const panelButtons = {
 
   function moveToHeader(){
     if(!cacheElements() || placedInHeader) return;
-    const insertBeforeNode = (headerButtons && headerButtons.parentNode === header) ? headerButtons : null;
+    const insertBeforeNode = (firstAccessButton && firstAccessButton.parentNode === header) ? firstAccessButton : null;
     if(insertBeforeNode){
       header.insertBefore(mapControls, insertBeforeNode);
     } else {
@@ -24673,15 +24668,16 @@ const panelButtons = {
       moveToOriginal();
       return;
     }
-    if(!headerButtons || !viewToggle){
+    const modeSwitchContainer = header.querySelector('.container--header-mode-switch');
+    if(!firstAccessButton || !modeSwitchContainer){
       moveToOriginal();
       return;
     }
     const headerRect = header.getBoundingClientRect();
-    const viewRect = viewToggle.getBoundingClientRect();
-    const buttonsRect = headerButtons.getBoundingClientRect();
-    const leftBoundary = Math.max(viewRect.right, headerRect.left) + SIDE_MARGIN;
-    const rightBoundary = Math.min(buttonsRect.left, headerRect.right) - SIDE_MARGIN;
+    const modeSwitchRect = modeSwitchContainer.getBoundingClientRect();
+    const accessRect = firstAccessButton.getBoundingClientRect();
+    const leftBoundary = Math.max(modeSwitchRect.right, headerRect.left) + SIDE_MARGIN;
+    const rightBoundary = Math.min(accessRect.left, headerRect.right) - SIDE_MARGIN;
     const available = rightBoundary - leftBoundary;
     if(available < MIN_HEADER_WIDTH){
       moveToOriginal();

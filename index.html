@@ -25,57 +25,53 @@
       <img src="" alt="FunMap.com logo" />
     </div>
     <div id="headerTimecode" class="header-timecode" aria-live="polite" style="position:absolute;left:50%;transform:translateX(-50%);top:8px;font-weight:600;"></div>
-    <nav class="view-toggle" aria-label="Primary">
-      <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
-      <button id="filterBtn" class="button--header-filter" aria-pressed="false" aria-label="Open filters panel">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <span id="resultCount" aria-live="polite" style="display:none"></span>
+    <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
+    <button id="filterBtn" class="button--header-filter" aria-pressed="false" aria-label="Open filters panel">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <span id="resultCount" aria-live="polite" style="display:none"></span>
+    </button>
+    <div class="container--header-mode-switch">
+      <button id="recents-button" class="button--header-mode" aria-pressed="false" aria-label="Recents">
+        <span class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </span>
+        <span class="mode-label">Recents</span>
       </button>
-      <div class="container--header-mode-switch">
-        <button id="recents-button" class="button--header-mode" aria-pressed="false" aria-label="Recents">
-          <span class="mode-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </span>
-          <span class="mode-label">Recents</span>
-        </button>
-        <button id="posts-button" class="button--header-mode" aria-pressed="false" aria-label="Posts">
-          <span class="mode-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="6" x2="19" y2="6"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <line x1="5" y1="18" x2="13" y2="18"></line>
-            </svg>
-          </span>
-          <span class="mode-label">Posts</span>
-        </button>
-        <button id="map-button" class="button--header-mode" aria-pressed="true" aria-label="Map">
-          <span class="mode-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 21s-6-4.5-6-10a6 6 0 1112 0c0 5.5-6 10-6 10z"></path>
-              <circle cx="12" cy="11" r="2.5"></circle>
-            </svg>
-          </span>
-          <span class="mode-label">Map</span>
-        </button>
-      </div>
-    </nav>
-    <div class="header-buttons">
-      <button id="memberBtn" type="button" class="button--header-access" aria-pressed="false" aria-label="Open members area" title="Members">
-        <span class="header-btn-icon icon-member" aria-hidden="true"></span>
+      <button id="posts-button" class="button--header-mode" aria-pressed="false" aria-label="Posts">
+        <span class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="6" x2="19" y2="6"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <line x1="5" y1="18" x2="13" y2="18"></line>
+          </svg>
+        </span>
+        <span class="mode-label">Posts</span>
       </button>
-      <button id="adminBtn" type="button" class="button--header-access" aria-pressed="false" aria-label="Open admin area" title="Admin" hidden>
-        <span class="header-btn-icon icon-admin" aria-hidden="true"></span>
-      </button>
-      <button id="fullscreenBtn" type="button" class="button--header-access fullscreen-btn" aria-label="Toggle fullscreen" title="Fullscreen">
-        <span class="header-btn-icon icon-fullscreen" aria-hidden="true"></span>
+      <button id="map-button" class="button--header-mode" aria-pressed="true" aria-label="Map">
+        <span class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s-6-4.5-6-10a6 6 0 1112 0c0 5.5-6 10-6 10z"></path>
+            <circle cx="12" cy="11" r="2.5"></circle>
+          </svg>
+        </span>
+        <span class="mode-label">Map</span>
       </button>
     </div>
+    <button id="memberBtn" type="button" class="button--header-access" aria-pressed="false" aria-label="Open members area" title="Members">
+      <span class="header-btn-icon icon-member" aria-hidden="true"></span>
+    </button>
+    <button id="adminBtn" type="button" class="button--header-access" aria-pressed="false" aria-label="Open admin area" title="Admin" hidden>
+      <span class="header-btn-icon icon-admin" aria-hidden="true"></span>
+    </button>
+    <button id="fullscreenBtn" type="button" class="button--header-access fullscreen-btn" aria-label="Toggle fullscreen" title="Fullscreen">
+      <span class="header-btn-icon icon-fullscreen" aria-hidden="true"></span>
+    </button>
   </header>
   
   <section class="map-area" aria-label="Map">
