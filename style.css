@@ -7458,8 +7458,7 @@ html, body { cursor: auto !important; }
               touch-action:pan-x pan-y;
               position:relative;
             }
-            #tab-forms .session-date-picker .calendar,
-            #memberPanel .member-create-fields .session-date-picker .calendar{
+            #tab-forms .session-date-picker .calendar{
               display:flex;
               width:max-content;
               transform:scale(var(--calendar-scale));
@@ -7467,8 +7466,7 @@ html, body { cursor: auto !important; }
               background:#222222;
               color:#ffffff;
             }
-            #tab-forms .session-date-picker .today-marker,
-            #memberPanel .member-create-fields .session-date-picker .today-marker{
+            #tab-forms .session-date-picker .today-marker{
               position:absolute;
               bottom:0;
               width:8px;
@@ -7477,16 +7475,14 @@ html, body { cursor: auto !important; }
               background:var(--today);
               cursor:pointer;
             }
-            #tab-forms .session-date-picker .calendar-actions,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions{
+            #tab-forms .session-date-picker .calendar-actions{
               display:flex;
               justify-content:flex-end;
               gap:8px;
               padding:10px;
               border-top:1px solid var(--border);
             }
-            #tab-forms .session-date-picker .calendar-actions button,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions button{
+            #tab-forms .session-date-picker .calendar-actions button{
               border-radius:8px;
               border:1px solid var(--btn);
               background:var(--btn);
@@ -7496,37 +7492,30 @@ html, body { cursor: auto !important; }
               transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
             }
             #tab-forms .session-date-picker .calendar-actions button:hover,
-            #tab-forms .session-date-picker .calendar-actions button:focus,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions button:hover,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions button:focus{
+            #tab-forms .session-date-picker .calendar-actions button:focus{
               background:var(--btn-hover);
               border-color:var(--btn-hover);
               color:var(--button-hover-text);
             }
-            #tab-forms .session-date-picker .calendar-actions button:active,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions button:active{
+            #tab-forms .session-date-picker .calendar-actions button:active{
               background:var(--btn-active);
               border-color:var(--btn-active);
               color:var(--button-active-text);
             }
-            #tab-forms .session-date-picker .calendar-actions .primary,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary{
+            #tab-forms .session-date-picker .calendar-actions .primary{
               background:var(--button-selected-bg, var(--btn-selected));
               border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
               color:var(--button-selected-text, var(--button-active-text));
               box-shadow:0 0 0 2px rgba(255,255,255,0.6);
             }
             #tab-forms .session-date-picker .calendar-actions .primary:hover,
-            #tab-forms .session-date-picker .calendar-actions .primary:focus,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:hover,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:focus{
+            #tab-forms .session-date-picker .calendar-actions .primary:focus{
               background:var(--button-selected-hover, var(--btn-selected-hover));
               border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
               color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
               box-shadow:0 0 0 2px rgba(255,255,255,0.8);
             }
-            #tab-forms .session-date-picker .calendar-actions .primary:active,
-            #memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:active{
+            #tab-forms .session-date-picker .calendar-actions .primary:active{
               background:var(--button-selected-active, var(--btn-selected-active));
               border-color:var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active)));
               color:var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
@@ -7837,31 +7826,26 @@ html, body { cursor: auto !important; }
               color:var(--text-color, #fff);
               font-size:13px;
             }
-            #tab-forms .item-pricing-options-editor,
-            #memberPanel .member-create-fields .item-pricing-options-editor{
+            #tab-forms .item-pricing-options-editor{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .item-pricing-options-editor[hidden],
-            #memberPanel .member-create-fields .item-pricing-options-editor[hidden]{
+            #tab-forms .item-pricing-options-editor[hidden]{
               display:none !important;
             }
-            #tab-forms .item-pricing-options-label,
-            #memberPanel .member-create-fields .item-pricing-options-label{
+            #tab-forms .item-pricing-options-label{
               font-size:14px;
               font-weight:600;
               position:relative;
               z-index:1;
             }
-            #tab-forms .item-pricing-options-list,
-            #memberPanel .member-create-fields .item-pricing-options-list{
+            #tab-forms .item-pricing-options-list{
               display:flex;
               flex-direction:column;
               gap:10px;
             }
-            #tab-forms .item-pricing-option,
-            #memberPanel .member-create-fields .item-pricing-option{
+            #tab-forms .item-pricing-option{
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -7869,26 +7853,22 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               background:none;
             }
-            #tab-forms .item-pricing-row,
-            #memberPanel .member-create-fields .item-pricing-row{
+            #tab-forms .item-pricing-row{
               display:flex;
               gap:8px;
               align-items:center;
               position:relative;
             }
-            #tab-forms .item-pricing-row--top input,
-            #memberPanel .member-create-fields .item-pricing-row--top input{
+            #tab-forms .item-pricing-row--top input{
               width:100%;
             }
-            #tab-forms .item-pricing-row--bottom,
-            #memberPanel .member-create-fields .item-pricing-row--bottom{
+            #tab-forms .item-pricing-row--bottom{
               display:grid;
               grid-template-columns:minmax(110px, auto) 1fr auto;
               gap:8px;
               align-items:center;
             }
-            #tab-forms .item-pricing-row--bottom .options-dropdown,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown{
+            #tab-forms .item-pricing-row--bottom .options-dropdown{
               position:relative;
               overflow:visible;
               width:100px;
@@ -7897,8 +7877,7 @@ html, body { cursor: auto !important; }
               box-sizing:border-box;
               flex:0 0 100px;
             }
-            #tab-forms .item-pricing-currency,
-            #memberPanel .member-create-fields .item-pricing-currency{
+            #tab-forms .item-pricing-currency{
               width:100px;
               min-width:100px;
               max-width:100px;
@@ -7914,8 +7893,7 @@ html, body { cursor: auto !important; }
               font-size:13px;
               line-height:1;
             }
-            #tab-forms .item-pricing-currency .dropdown-arrow,
-            #memberPanel .member-create-fields .item-pricing-currency .dropdown-arrow{
+            #tab-forms .item-pricing-currency .dropdown-arrow{
               position:absolute;
               top:50%;
               right:10px;
@@ -7931,13 +7909,11 @@ html, body { cursor: auto !important; }
               pointer-events:none;
               transform-origin:center center;
             }
-            #tab-forms .item-pricing-currency[aria-expanded="true"] .dropdown-arrow,
-            #memberPanel .member-create-fields .item-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+            #tab-forms .item-pricing-currency[aria-expanded="true"] .dropdown-arrow{
               transform:translate(0, -50%) rotate(-135deg);
               margin-top:1px;
             }
-            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu{
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu{
               position:absolute;
               top:calc(100% + 4px);
               bottom:auto;
@@ -7954,8 +7930,7 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               padding:10px;
             }
-            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option{
+            #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option{
               background:rgba(0,0,0,0.2);
               border:none;
               border-radius:0;
@@ -7963,8 +7938,7 @@ html, body { cursor: auto !important; }
               align-items:center;
             }
             /* Venue-ticketing currency dropdown - match item-pricing style */
-            #tab-forms .tier-price-row .options-dropdown,
-            #memberPanel .member-create-fields .tier-price-row .options-dropdown{
+            #tab-forms .tier-price-row .options-dropdown{
               position:relative;
               overflow:visible;
               width:100px;
@@ -7972,8 +7946,7 @@ html, body { cursor: auto !important; }
               max-width:100px;
               flex:0 0 100px;
             }
-            #tab-forms .tier-price-row .item-pricing-currency,
-            #memberPanel .member-create-fields .tier-price-row .item-pricing-currency{
+            #tab-forms .tier-price-row .item-pricing-currency{
               position:relative;
               padding:0 30px 0 10px;
               width:100px;
@@ -7988,8 +7961,7 @@ html, body { cursor: auto !important; }
               font-size:13px;
               line-height:1;
             }
-            #tab-forms .tier-price-row .options-menu,
-            #memberPanel .member-create-fields .tier-price-row .options-menu{
+            #tab-forms .tier-price-row .options-menu{
               position:absolute;
               top:calc(100% + 4px);
               bottom:auto;
@@ -8006,8 +7978,7 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               padding:10px;
             }
-            #tab-forms .tier-price-row .options-menu .menu-option,
-            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
+            #tab-forms .tier-price-row .options-menu .menu-option{
               background:rgba(0,0,0,0.2);
               border:none;
               border-radius:0;
@@ -8020,22 +7991,19 @@ html, body { cursor: auto !important; }
                - Fixed width for prefix button (not 100%)
                - Same styling as currency dropdown menu
             ======================================== */
-            #tab-forms .form-phone-wrapper,
-            #memberPanel .member-create-fields .form-phone-wrapper{
+            #tab-forms .form-phone-wrapper{
               display:flex;
               gap:8px;
               align-items:stretch;
             }
-            #tab-forms .form-phone-wrapper .options-dropdown,
-            #memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
+            #tab-forms .form-phone-wrapper .options-dropdown{
               flex-shrink:0;
               width:100px;
               min-width:100px;
               max-width:100px;
               flex:0 0 100px;
             }
-            #tab-forms .form-phone-wrapper .item-pricing-currency,
-            #memberPanel .member-create-fields .form-phone-wrapper .item-pricing-currency{
+            #tab-forms .form-phone-wrapper .item-pricing-currency{
               width:100px;
               min-width:100px;
               max-width:100px;
@@ -8047,8 +8015,7 @@ html, body { cursor: auto !important; }
               font-size:13px;
               line-height:1;
             }
-            #tab-forms .form-phone-wrapper .options-menu,
-            #memberPanel .member-create-fields .form-phone-wrapper .options-menu{
+            #tab-forms .form-phone-wrapper .options-menu{
               position:absolute;
               top:calc(100% + 4px);
               bottom:auto;
@@ -8066,8 +8033,7 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               padding:10px;
             }
-            #tab-forms .form-phone-wrapper .options-menu .menu-option,
-            #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option{
+            #tab-forms .form-phone-wrapper .options-menu .menu-option{
               min-height:44px;
               display:flex;
               align-items:center;
@@ -8082,16 +8048,13 @@ html, body { cursor: auto !important; }
               cursor:pointer;
               transition:background 0.15s ease;
             }
-            #tab-forms .form-phone-wrapper .options-menu .menu-option:hover,
-            #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:hover{
+            #tab-forms .form-phone-wrapper .options-menu .menu-option:hover{
               background:rgba(255,255,255,0.15);
             }
-            #tab-forms .form-phone-wrapper .options-menu .menu-option:active,
-            #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:active{
+            #tab-forms .form-phone-wrapper .options-menu .menu-option:active{
               background:rgba(255,255,255,0.25);
             }
-            #tab-forms .form-phone-wrapper input[type="tel"],
-            #memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
+            #tab-forms .form-phone-wrapper input[type="tel"]{
               flex:1;
               min-width:0;
             }
@@ -8103,9 +8066,7 @@ html, body { cursor: auto !important; }
                - Scrollable with max-height
             ======================================== */
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu,
-            #tab-forms .tier-price-row .options-menu,
-            #memberPanel .member-create-fields .tier-price-row .options-menu{
+            #tab-forms .tier-price-row .options-menu{
               min-width:200px;
               width:max-content;
               max-width:min(300px, 90vw);
@@ -8116,9 +8077,7 @@ html, body { cursor: auto !important; }
               -webkit-overflow-scrolling:touch;
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option,
-            #tab-forms .tier-price-row .options-menu .menu-option,
-            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
+            #tab-forms .tier-price-row .options-menu .menu-option{
               min-height:44px;
               padding:10px 14px;
               font-size:13px;
@@ -8133,21 +8092,15 @@ html, body { cursor: auto !important; }
               transition:background 0.15s ease;
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:hover,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:hover,
-            #tab-forms .tier-price-row .options-menu .menu-option:hover,
-            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:hover{
+            #tab-forms .tier-price-row .options-menu .menu-option:hover{
               background:rgba(255,255,255,0.15);
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:active,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:active,
-            #tab-forms .tier-price-row .options-menu .menu-option:active,
-            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:active{
+            #tab-forms .tier-price-row .options-menu .menu-option:active{
               background:rgba(255,255,255,0.25);
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:focus,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:focus,
-            #tab-forms .tier-price-row .options-menu .menu-option:focus,
-            #memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:focus{
+            #tab-forms .tier-price-row .options-menu .menu-option:focus{
               background:rgba(255,255,255,0.2);
               outline:2px solid rgba(255,255,255,0.5);
               outline-offset:-2px;
@@ -8155,50 +8108,38 @@ html, body { cursor: auto !important; }
             /* Flag spacing handled via gap in flex containers */
             /* Scrollbar styling for currency dropdown */
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,
-            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar,
-            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar{
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar{
               width:8px;
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-track,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-track,
-            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-track,
-            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-track{
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-track{
               background:rgba(0,0,0,0.2);
               border-radius:4px;
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb,
-            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb,
-            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-thumb{
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb{
               background:rgba(255,255,255,0.3);
               border-radius:4px;
             }
             #tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb:hover,
-            #memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb:hover,
-            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover,
-            #memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover{
+            #tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover{
               background:rgba(255,255,255,0.5);
             }
             
-            #tab-forms .item-pricing-price,
-            #memberPanel .member-create-fields .item-pricing-price{
+            #tab-forms .item-pricing-price{
               width:100%;
             }
-            #tab-forms .item-pricing-price.is-awaiting-currency,
-            #memberPanel .member-create-fields .item-pricing-price.is-awaiting-currency{
+            #tab-forms .item-pricing-price.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .session-price-input.is-awaiting-currency,
-            #memberPanel .member-create-fields .session-price-input.is-awaiting-currency{
+            #tab-forms .session-price-input.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .item-pricing-option-actions,
-            #memberPanel .member-create-fields .item-pricing-option-actions{
+            #tab-forms .item-pricing-option-actions{
               display:flex;
               gap:6px;
               justify-content:flex-end;

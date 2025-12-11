@@ -3521,4 +3521,328 @@ textarea.input-invalid{
   flex:1 1 auto;
   overflow-x:auto;
   overflow-y:hidden;
+  padding-bottom:var(--scrollbar-h);
+  box-sizing:content-box;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+  position:relative;
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar{
+  display:flex;
+  width:max-content;
+  transform:scale(var(--calendar-scale));
+  transform-origin:top left;
+  background:#222222;
+  color:#ffffff;
+}
+
+#memberPanel .member-create-fields .session-date-picker .today-marker{
+  position:absolute;
+  bottom:0;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--today);
+  cursor:pointer;
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  padding:10px;
+  border-top:1px solid var(--border);
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions button{
+  border-radius:8px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  padding:6px 12px;
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions button:hover,
+#memberPanel .member-create-fields .session-date-picker .calendar-actions button:focus{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions button:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions .primary{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+  box-shadow:0 0 0 2px rgba(255,255,255,0.6);
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:hover,
+#memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:focus{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+  box-shadow:0 0 0 2px rgba(255,255,255,0.8);
+}
+
+#memberPanel .member-create-fields .session-date-picker .calendar-actions .primary:active{
+  background:var(--button-selected-active, var(--btn-selected-active));
+  border-color:var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active)));
+  color:var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+/* ============================================================================
+   MEMBER PANEL ITEM PRICING STYLES
+   ============================================================================ */
+
+#memberPanel .member-create-fields .item-pricing-options-editor{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#memberPanel .member-create-fields .item-pricing-options-editor[hidden]{
+  display:none;
+}
+
+#memberPanel .member-create-fields .item-pricing-options-label{
+  font-size:14px;
+  font-weight:600;
+  position:relative;
+  z-index:1;
+}
+
+#memberPanel .member-create-fields .item-pricing-options-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#memberPanel .member-create-fields .item-pricing-option{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:0;
+  border-radius:8px;
+  background:none;
+}
+
+#memberPanel .member-create-fields .item-pricing-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  position:relative;
+}
+
+#memberPanel .member-create-fields .item-pricing-row--top input{
+  width:100%;
+}
+
+#memberPanel .member-create-fields .item-pricing-row--bottom{
+  display:grid;
+  grid-template-columns:minmax(110px, auto) 1fr auto;
+  gap:8px;
+  align-items:center;
+}
+
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown{
+  position:relative;
+  overflow:visible;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  box-sizing:border-box;
+  flex:0 0 100px;
+}
+
+#memberPanel .member-create-fields .item-pricing-currency{
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  height:35px;
+  position:relative;
+  overflow:hidden;
+  box-sizing:border-box;
+  padding:0 30px 0 10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+  font-size:13px;
+  line-height:1;
+}
+
+#memberPanel .member-create-fields .item-pricing-currency .dropdown-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:currentColor;
+  color:inherit;
+  pointer-events:none;
+  transform-origin:center center;
+}
+
+#memberPanel .member-create-fields .item-pricing-currency[aria-expanded="true"] .dropdown-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  display:flex;
+  align-items:center;
+}
+
+#memberPanel .member-create-fields .tier-price-row .options-dropdown{
+  position:relative;
+  overflow:visible;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  flex:0 0 100px;
+}
+
+#memberPanel .member-create-fields .tier-price-row .item-pricing-currency{
+  position:relative;
+  padding:0 30px 0 10px;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  height:35px;
+  overflow:hidden;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  line-height:1;
+}
+
+#memberPanel .member-create-fields .tier-price-row .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+}
+
+#memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  display:flex;
+  align-items:center;
+}
+
+/* ============================================================================
+   MEMBER PANEL PHONE WRAPPER STYLES
+   ============================================================================ */
+
+#memberPanel .member-create-fields .form-phone-wrapper{
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper .options-dropdown{
+  flex-shrink:0;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  flex:0 0 100px;
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper .item-pricing-currency{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  height:100%;
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:auto;
+  width:auto;
+  min-width:180px;
+  max-width:280px;
+  max-height:200px;
+  overflow-y:auto;
+  z-index:var(--layer-menu);
+  background:#222222;
+  border:1px solid rgba(255,255,255,0.3);
+  border-radius:8px;
+  padding:8px;
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:6px;
+  background:transparent;
+  border:none;
+  color:#fff;
+  cursor:pointer;
+  transition:background 0.15s ease;
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.1);
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:active{
+  background:rgba(255,255,255,0.15);
+}
+
+#memberPanel .member-create-fields .form-phone-wrapper input[type="tel"]{
+  flex:1;
+  min-width:0;
 }
