@@ -646,6 +646,104 @@ The loading speed issue was fixed by splitting formbuilder initialization into t
 
 ---
 
+## CSS CLASS NAMING CONVENTIONS
+
+### CRITICAL: All Styling Must Use Classes
+
+**NO GLOBAL ELEMENT SELECTORS.** Every styled element must have a class. This makes components plug-and-play without conflicts.
+
+### Naming Pattern: `.{type}--{modifier}`
+
+All classes follow BEM-inspired naming with double-dash separators:
+
+```
+.{type}--{modifier}
+```
+
+- **type**: The component category (button, input, menu, message, link, heading, etc.)
+- **modifier**: The specific variant or context (header-access, system-image-picker, auth, etc.)
+
+### Component Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `button` | Clickable action elements | `.button--header-access`, `.button--auth`, `.button--delete` |
+| `input` | Form input elements | `.input-text`, `.input-textarea`, `.input-dropdown`, `.input-checkbox`, `.input-radio` |
+| `menu` | Dropdown/picker menus | `.menu--system-image-picker`, `.menu--icon-picker` |
+| `menu-button` | Menu trigger buttons | `.menu-button--system-image-picker` |
+| `menu-popup` | Menu dropdown containers | `.menu-popup--system-image-picker` |
+| `menu-option` | Selectable menu items | `.menu-option--system-image-picker` |
+| `menu-grid` | Menu layout grid | `.menu-grid--system-image-picker` |
+| `message` | Notifications/alerts/toasts | `.message--error`, `.message--success`, `.message--info` |
+| `link` | Anchor/link elements | `.link--primary`, `.link--nav` |
+| `heading` | Heading elements | `.heading--page`, `.heading--section`, `.heading--card` |
+
+### Sub-Component Pattern
+
+For elements inside a component, use hyphenated prefixes:
+
+```
+.{type}-{subpart}--{modifier}
+```
+
+Example (System Image Picker):
+```
+.menu--system-image-picker              (container)
+.menu-button--system-image-picker       (trigger button)
+.menu-button-img--system-image-picker   (image inside button)
+.menu-button-label--system-image-picker (label inside button)
+.menu-popup--system-image-picker        (dropdown popup)
+.menu-grid--system-image-picker         (options grid)
+.menu-option--system-image-picker       (single option)
+.menu-filename--system-image-picker     (filename text)
+.menu-error--system-image-picker        (error state)
+```
+
+### State Classes
+
+State classes are applied alongside the main class:
+
+| State | Description |
+|-------|-------------|
+| `.menu-open` | Menu popup is visible |
+| `.has-image` | Image is selected/present |
+| `.active` | Currently active/selected |
+| `.disabled` | Element is disabled |
+| `.loading` | Element is in loading state |
+
+### Variant Modifiers
+
+For sub-variants of an option, use additional double-dash:
+
+```
+.menu-option--system-image-picker--clear
+```
+
+This means: menu-option of type system-image-picker with variant clear.
+
+### Rules
+
+1. **NEVER style bare element tags** (`button`, `input`, `a`, `h1`, etc.)
+2. **ALWAYS use the type--modifier pattern**
+3. **Keep modifiers descriptive** - describe WHAT it is, not WHERE it is
+4. **Subparts use hyphens** before the double-dash (`menu-button--`, `menu-option--`)
+5. **States are separate classes** (`.active`, `.disabled`, not part of the main class name)
+
+### Migration Priority
+
+Components being converted from global styles to classes:
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Buttons | ~35% | 6 types done, need more variants |
+| Inputs | ~60% | 5 types done, need context variants |
+| Menus | ~30% | system-image-picker done, 155 `.options-*` need migration |
+| Messages | 0% | Not started |
+| Links | 0% | Currently uses global `a` tag styling |
+| Headings | 0% | Currently uses global `h1-h6` styling |
+
+---
+
 **END OF DOCUMENT**
 
 **READ THIS FIRST BEFORE MAKING ANY CHANGES**
