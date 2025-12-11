@@ -5117,6 +5117,228 @@ textarea.input-invalid{
   text-align:center;
 }
 
+/* Map tab system image picker - matches settings tab */
+#tab-map .menu--system-image-picker .menu-button--system-image-picker{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:60px;
+  padding:0 30px 0 10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
+}
+#tab-map .menu--system-image-picker .menu-button--system-image-picker:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+#tab-map .menu--system-image-picker .menu-button-img--system-image-picker{
+  width:50px;
+  height:50px;
+  object-fit:contain;
+  flex-shrink:0;
+  display:none;
+}
+#tab-map .menu--system-image-picker .menu-button--system-image-picker.has-image .menu-button-img--system-image-picker{
+  display:block;
+}
+#tab-map .menu--system-image-picker .menu-button-label--system-image-picker{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#tab-map .menu--system-image-picker .menu-button--system-image-picker:not(.has-image) .menu-button-label--system-image-picker{
+  color:rgba(255,255,255,0.5);
+}
+#tab-map .menu--system-image-picker.menu-open .menu-button--system-image-picker{
+  border-color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.5);
+}
+#tab-map .menu--system-image-picker{
+  width:100%;
+  position:relative;
+}
+#tab-map .menu--system-image-picker .menu-options--system-image-picker{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:auto;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(10,10,20,0.95);
+  box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  padding:12px;
+  max-height:300px;
+  overflow:auto;
+  z-index:var(--forms-layer-popover, 80);
+}
+#tab-map .menu--system-image-picker .menu-grid--system-image-picker{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#tab-map .menu--system-image-picker .menu-option--system-image-picker{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  min-height:60px;
+  height:auto;
+  padding:8px 12px;
+  gap:12px;
+  border:none;
+  background:transparent;
+}
+#tab-map .menu--system-image-picker .menu-option--system-image-picker:hover,
+#tab-map .menu--system-image-picker .menu-option--system-image-picker:focus-visible{
+  background:rgba(255,255,255,0.1);
+  border:none;
+}
+#tab-map .menu--system-image-picker .menu-option--system-image-picker img{
+  max-width:50px;
+  max-height:50px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  flex-shrink:0;
+}
+#tab-map .menu--system-image-picker .menu-option--system-image-picker .menu-filename--system-image-picker{
+  font-size:12px;
+  color:rgba(255,255,255,0.9);
+  text-align:left;
+  word-break:break-word;
+  line-height:1.4;
+  flex:1;
+}
+#tab-map .menu--system-image-picker .menu-option--system-image-picker--clear{
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+}
+
+/* Messages tab system image picker - matches settings tab */
+#tab-messages .menu--system-image-picker .menu-button--system-image-picker{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:60px;
+  padding:0 30px 0 10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
+}
+#tab-messages .menu--system-image-picker .menu-button--system-image-picker:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+#tab-messages .menu--system-image-picker .menu-button-img--system-image-picker{
+  width:50px;
+  height:50px;
+  object-fit:contain;
+  flex-shrink:0;
+  display:none;
+}
+#tab-messages .menu--system-image-picker .menu-button--system-image-picker.has-image .menu-button-img--system-image-picker{
+  display:block;
+}
+#tab-messages .menu--system-image-picker .menu-button-label--system-image-picker{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#tab-messages .menu--system-image-picker .menu-button--system-image-picker:not(.has-image) .menu-button-label--system-image-picker{
+  color:rgba(255,255,255,0.5);
+}
+#tab-messages .menu--system-image-picker.menu-open .menu-button--system-image-picker{
+  border-color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.5);
+}
+#tab-messages .menu--system-image-picker{
+  width:100%;
+  position:relative;
+}
+#tab-messages .menu--system-image-picker .menu-options--system-image-picker{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:auto;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(10,10,20,0.95);
+  box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  padding:12px;
+  max-height:300px;
+  overflow:auto;
+  z-index:var(--forms-layer-popover, 80);
+}
+#tab-messages .menu--system-image-picker .menu-grid--system-image-picker{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#tab-messages .menu--system-image-picker .menu-option--system-image-picker{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  min-height:60px;
+  height:auto;
+  padding:8px 12px;
+  gap:12px;
+  border:none;
+  background:transparent;
+}
+#tab-messages .menu--system-image-picker .menu-option--system-image-picker:hover,
+#tab-messages .menu--system-image-picker .menu-option--system-image-picker:focus-visible{
+  background:rgba(255,255,255,0.1);
+  border:none;
+}
+#tab-messages .menu--system-image-picker .menu-option--system-image-picker img{
+  max-width:50px;
+  max-height:50px;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  flex-shrink:0;
+}
+#tab-messages .menu--system-image-picker .menu-option--system-image-picker .menu-filename--system-image-picker{
+  font-size:12px;
+  color:rgba(255,255,255,0.9);
+  text-align:left;
+  word-break:break-word;
+  line-height:1.4;
+  flex:1;
+}
+#tab-messages .menu--system-image-picker .menu-option--system-image-picker--clear{
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+}
+
 /* Future menu modifiers */
 .menu-button--formpicker{}
 .menu-option--formpicker{}
