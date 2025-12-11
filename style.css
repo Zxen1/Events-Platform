@@ -4910,8 +4910,7 @@ textarea.input-invalid{
 
 /* Menu button arrow - override global dropdown-arrow styles */
 .menu-button--system-image-picker .dropdown-arrow,
-#adminPanel .menu-button--system-image-picker .dropdown-arrow,
-#memberPanel .menu-button--system-image-picker .dropdown-arrow{
+#adminPanel .menu-button--system-image-picker .dropdown-arrow{
   position:absolute;
   right:12px;
   top:50%;
@@ -4973,8 +4972,7 @@ textarea.input-invalid{
 }
 
 /* Container-scoped to beat #adminPanel button (1,0,1) */
-#adminPanel .menu-button--system-image-picker,
-#memberPanel .menu-button--system-image-picker{
+#adminPanel .menu-button--system-image-picker{
   background:rgba(0,0,0,0.35);
   border:1px solid var(--border);
   color:var(--button-text);
@@ -4982,8 +4980,7 @@ textarea.input-invalid{
   padding:0 30px 0 10px;
 }
 
-#adminPanel .menu.menu-open .menu-button--system-image-picker,
-#memberPanel .menu.menu-open .menu-button--system-image-picker{
+#adminPanel .menu.menu-open .menu-button--system-image-picker{
   border-color:rgba(255,255,255,0.3);
   background:rgba(0,0,0,0.5);
 }
@@ -5389,15 +5386,6 @@ textarea.input-invalid{
   width:100%;
   max-width:100%;
   display:flex;
-}
-#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
-#memberPanel .map-control-row .mapboxgl-ctrl-compass button{
-  background-color:#ffffff;
-  box-shadow:none;
-}
-#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
-#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
-  filter:none !important;
 }
 .map-control-row .mapboxgl-ctrl-geolocate button,
 .map-control-row .mapboxgl-ctrl-compass button{

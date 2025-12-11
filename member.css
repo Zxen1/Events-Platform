@@ -421,3 +421,18 @@
   padding:0 16px;
   white-space:nowrap;
 }
+
+/* ============================================================================
+   MAP CONTROLS
+   ============================================================================ */
+
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff;
+  box-shadow:none;
+}
+
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none;
+}
