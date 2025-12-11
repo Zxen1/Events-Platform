@@ -24,6 +24,33 @@
   box-sizing: border-box;
 }
 
+/* Cursor for text inputs */
+#tab-forms input[type="text"],
+#tab-forms input[type="email"],
+#tab-forms input[type="tel"],
+#tab-forms input[type="url"],
+#tab-forms input[type="number"],
+#tab-forms input[type="search"],
+#tab-forms input:not([type]),
+#tab-forms textarea,
+#memberPanel .member-create-fields input[type="text"],
+#memberPanel .member-create-fields input[type="email"],
+#memberPanel .member-create-fields input[type="tel"],
+#memberPanel .member-create-fields input[type="url"],
+#memberPanel .member-create-fields input[type="number"],
+#memberPanel .member-create-fields input[type="search"],
+#memberPanel .member-create-fields input:not([type]),
+#memberPanel .member-create-fields textarea,
+.panel-field input[type="text"],
+.panel-field input[type="email"],
+.panel-field input[type="tel"],
+.panel-field input[type="url"],
+.panel-field input[type="number"],
+.panel-field input:not([type]),
+.panel-field textarea{
+  cursor: text;
+}
+
 /* ============================================================================
    END GLOBAL STYLES COPY
    ============================================================================ */
