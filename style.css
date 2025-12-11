@@ -1438,8 +1438,7 @@ button[aria-expanded="true"] .results-arrow{
 }
   @media (max-width:440px){
   #adminPanel .panel-content,
-  #memberPanel .panel-content,
-  #filterPanel .panel-content{
+  #memberPanel .panel-content{
     width:100%;
     max-width:100%;
     max-height:none;
