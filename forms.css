@@ -54,6 +54,158 @@
   user-select: text;
 }
 
+/* Dropdown arrow */
+#tab-forms .dropdown-arrow,
+#memberPanel .member-create-fields .dropdown-arrow{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:currentColor;
+  color:inherit;
+  transition:transform .3s;
+  transform-origin:center center;
+}
+
+/* Options dropdown */
+#tab-forms .options-dropdown,
+#memberPanel .member-create-fields .options-dropdown{
+  position:relative;
+}
+
+#tab-forms .options-dropdown > button,
+#memberPanel .member-create-fields .options-dropdown > button{
+  position:relative;
+  padding-right:30px;
+}
+
+#tab-forms .options-dropdown .dropdown-arrow,
+#memberPanel .member-create-fields .options-dropdown .dropdown-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  pointer-events:none;
+}
+
+#tab-forms button[aria-expanded="true"] .dropdown-arrow,
+#memberPanel .member-create-fields button[aria-expanded="true"] .dropdown-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* Options menu */
+#tab-forms .options-menu,
+#memberPanel .member-create-fields .options-menu{
+  position:absolute;
+  bottom:calc(100% + 4px);
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:var(--layer-menu);
+}
+
+#tab-forms .options-menu[hidden],
+#memberPanel .member-create-fields .options-menu[hidden]{
+  display:none;
+}
+
+/* Menu option base */
+#tab-forms .menu-option,
+#memberPanel .member-create-fields .menu-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:background 0.15s;
+  box-sizing:border-box;
+}
+
+#tab-forms .menu-option:hover,
+#memberPanel .member-create-fields .menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+
+#tab-forms .menu-option:focus-visible,
+#memberPanel .member-create-fields .menu-option:focus-visible{
+  outline:2px solid rgba(46,58,114,0.45);
+  outline-offset:-2px;
+}
+
+/* Switch toggle */
+#tab-forms .switch,
+#memberPanel .member-create-fields .switch{
+  position:relative;
+  display:inline-block;
+  width:48px;
+  height:24px;
+  flex:0 0 48px;
+}
+
+#tab-forms .switch input,
+#memberPanel .member-create-fields .switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+
+#tab-forms .switch .slider,
+#memberPanel .member-create-fields .switch .slider{
+  position:absolute;
+  cursor:pointer;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:var(--btn);
+  border-radius:24px;
+  transition:.2s;
+}
+
+#tab-forms .switch .slider:before,
+#memberPanel .member-create-fields .switch .slider:before{
+  position:absolute;
+  content:'';
+  height:20px;
+  width:20px;
+  left:2px;
+  top:2px;
+  background:var(--button-text);
+  border-radius:50%;
+  transition:.2s;
+}
+
+#tab-forms .switch input:checked + .slider,
+#memberPanel .member-create-fields .switch input:checked + .slider{
+  background:var(--session-selected);
+}
+
+#tab-forms .switch input:checked + .slider:before,
+#memberPanel .member-create-fields .switch input:checked + .slider:before{
+  transform:translateX(24px);
+}
+
 /* ============================================================================
    END GLOBAL STYLES COPY
    ============================================================================ */
@@ -2644,235 +2796,3 @@ textarea.input-invalid{
   border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
   color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
 }
-
-/* ============================================================================
-   CATEGORY FORM MENU
-   ============================================================================ */
-
-#tab-forms .category-form-menu{
-  position:relative;
-  margin-bottom:12px;
-  border:none;
-  border-radius:0;
-  background:transparent;
-  overflow:visible;
-  transition:border-color .2s,background .2s,opacity .2s;
-}
-
-#tab-forms .category-form-menu.filter-category-menu{
-  margin:0;
-}
-
-#tab-forms .category-form-menu:last-child{
-  margin-bottom:0;
-}
-
-#tab-forms .category-form-menu .formbuilder-category-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:0 10px;
-  position:relative;
-}
-
-#tab-forms .category-form-menu .filter-category-trigger{
-  min-width:0;
-  background:transparent;
-  border-color:transparent;
-  color:var(--button-text);
-}
-
-#tab-forms .category-form-menu .filter-category-trigger .label{
-  font-weight:600;
-}
-
-#tab-forms .category-form-menu .filter-category-trigger-wrap{
-  flex:1;
-}
-
-#tab-forms .category-form-menu.cat-off{
-  opacity:1;
-}
-
-#tab-forms .category-form-menu.cat-off .filter-category-trigger .label,
-#tab-forms .subcategory-form-menu.subcategory-off .subcategory-label{
-  text-decoration:line-through;
-}
-
-#tab-forms .category-form-content{
-  border-top:none;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  background:transparent;
-}
-
-#tab-forms .category-form-content[hidden]{
-  display:none;
-}
-
-/* ============================================================================
-   EDIT PANELS
-   ============================================================================ */
-
-#tab-forms .category-edit-panel,
-#tab-forms .subcategory-edit-panel{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-#tab-forms .field-edit-panel{
-  border-top:1px solid rgba(255,255,255,0.1);
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  background:transparent;
-  border:none;
-  border-radius:0;
-  box-shadow:none;
-  z-index:auto;
-}
-
-#tab-forms .subcategory-edit-panel{
-  border-bottom:1px solid var(--border);
-  padding-bottom:10px;
-  margin-bottom:4px;
-}
-
-#tab-forms .category-edit-panel[hidden],
-#tab-forms .subcategory-edit-panel[hidden]{
-  display:none;
-}
-
-#tab-forms .field-edit-panel[hidden]{
-  display:none;
-}
-
-#tab-forms .category-name-input{
-  width:300px;
-  max-width:100%;
-  height:36px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,0.35);
-  color:var(--button-text);
-  padding:0 12px;
-}
-
-#tab-forms .edit-panel-name-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  position:relative;
-}
-
-#tab-forms .edit-panel-name-row .category-name-input,
-#tab-forms .edit-panel-name-row .subcategory-name-input{
-  flex:1;
-}
-
-/* ============================================================================
-   EDIT/DRAG BUTTONS
-   ============================================================================ */
-
-#tab-forms .category-edit-btn,
-#tab-forms .subcategory-edit-btn,
-#tab-forms .field-edit-btn,
-#tab-forms .formbuilder-drag-handle{
-  background:transparent;
-  border:none;
-  color:var(--button-text);
-  cursor:pointer;
-  padding:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:4px;
-  transition:background .2s;
-  flex-shrink:0;
-}
-
-#tab-forms .formbuilder-drag-handle{
-  cursor:grab;
-}
-
-#tab-forms .formbuilder-drag-handle.is-dragging{
-  cursor:grabbing;
-}
-
-#tab-forms .formbuilder-drag-handle svg{
-  pointer-events:none;
-}
-
-#tab-forms .category-edit-btn:hover,
-#tab-forms .subcategory-edit-btn:hover,
-#tab-forms .field-edit-btn:hover,
-#tab-forms .formbuilder-drag-handle:hover,
-#tab-forms .formbuilder-drag-handle:focus-visible{
-  background:rgba(255,255,255,0.1);
-}
-
-/* ============================================================================
-   DRAG AND DROP INDICATORS
-   ============================================================================ */
-
-#tab-forms .category-form-menu.is-dragging,
-#tab-forms .subcategory-form-menu.is-dragging,
-#tab-forms .subcategory-field-row.is-dragging{
-  opacity:0.65;
-}
-
-#tab-forms .category-form-menu.is-dragging,
-#tab-forms .subcategory-form-menu.is-dragging{
-  will-change:transform;
-}
-
-#tab-forms .category-form-menu.drag-target-before{
-  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
-}
-
-#tab-forms .category-form-menu.drag-target-after{
-  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
-}
-
-#tab-forms .subcategory-form-menu.drag-target-before{
-  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
-}
-
-#tab-forms .subcategory-form-menu.drag-target-after{
-  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
-}
-
-#tab-forms .subcategory-field-row.drag-target-before{
-  box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
-}
-
-#tab-forms .subcategory-field-row.drag-target-after{
-  box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
-}
-
-#tab-forms .cats,
-#tab-forms .subcategory-form-menus,
-#tab-forms .subcategory-fields-list{
-  position:relative;
-}
-
-#tab-forms .formbuilder-drop-indicator{
-  position:absolute;
-  left:12px;
-  right:12px;
-  height:0;
-  border-top:2px solid var(--btn-hover, #2e3a72);
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .15s ease;
-  z-index:5;
-}
-
-#tab-forms .formbuilder-drop-indicator.visible{
-  opacity:1;
-}
-
