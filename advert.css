@@ -18,6 +18,26 @@
    
    ========================================================================== */
 
+/* ============================================================================
+   GLOBAL STYLES COPIED FOR INDEPENDENCE
+   These are copies of global styles from style.css so advert works
+   independently after globals are removed.
+   ============================================================================ */
+
+/* Box sizing for all advert elements */
+.ad-board,
+.ad-board *,
+.ad-panel,
+.ad-panel *,
+.ad-slide,
+.ad-slide *{
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   END GLOBAL STYLES COPY
+   ============================================================================ */
+
 /* Ad Board Container - Zero padding, full height from header to viewport bottom */
 .ad-board{
   position:fixed;

@@ -2,6 +2,43 @@
    HEADER
    ============================================================================ */
 
+/* ============================================================================
+   GLOBAL STYLES COPIED FOR INDEPENDENCE
+   These are copies of global styles from style.css so header works
+   independently after globals are removed.
+   ============================================================================ */
+
+/* Box sizing for all header elements */
+.container--header,
+.container--header *,
+.container--header-mode-switch,
+.container--header-mode-switch *,
+.button--header-logo-small,
+.button--header-logo-small *,
+.button--header-filter,
+.button--header-filter *,
+.button--header-mode,
+.button--header-mode *,
+.button--header-access,
+.button--header-access *{
+  box-sizing: border-box;
+}
+
+/* Link styles (if any links exist in header) */
+.container--header a{
+  color: var(--primary);
+}
+.container--header a:hover{
+  color: var(--accent);
+}
+.container--header a:active{
+  color: var(--active);
+}
+
+/* ============================================================================
+   END GLOBAL STYLES COPY
+   ============================================================================ */
+
 /* Container - header background */
 .container--header{
   height: calc(var(--header-h) + var(--safe-top));
