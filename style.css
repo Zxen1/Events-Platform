@@ -1105,8 +1105,7 @@ button[aria-expanded="true"] .results-arrow{
    SECTION: PANELS (Specific - Admin, Member, Filter)
    ============================================================================ */
 
-  #adminPanel .panel-content,
-  #memberPanel .panel-content{
+  #adminPanel .panel-content{
     width:min(440px, 100%);
     max-width:100%;
     height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -1118,15 +1117,6 @@ button[aria-expanded="true"] .results-arrow{
     overflow-y:overlay;
     left:auto;
     right:0;
-  }
-
-  #adminPanel .panel-content{
-    background:#222222;
-    color:#fff;
-    font-family:system-ui, sans-serif;
-  }
-
-  #memberPanel .panel-content{
     background:#222222;
     color:#fff;
     font-family:system-ui, sans-serif;
@@ -1202,23 +1192,18 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 #tab-forms .session-date-picker .calendar .weekday,
-#tab-forms .session-date-picker .calendar .day,
-#memberPanel .member-create-fields .session-date-picker .calendar .weekday,
-#memberPanel .member-create-fields .session-date-picker .calendar .day{
+#tab-forms .session-date-picker .calendar .day{
   border-radius:0;
 }
-#tab-forms .session-date-picker .calendar .day.range-start,
-#memberPanel .member-create-fields .session-date-picker .calendar .day.range-start{
+#tab-forms .session-date-picker .calendar .day.range-start{
   border-top-left-radius:8px;
   border-bottom-left-radius:8px;
 }
-#tab-forms .session-date-picker .calendar .day.range-end,
-#memberPanel .member-create-fields .session-date-picker .calendar .day.range-end{
+#tab-forms .session-date-picker .calendar .day.range-end{
   border-top-right-radius:8px;
   border-bottom-right-radius:8px;
 }
-#tab-forms .session-date-picker .calendar .day.range-start.range-end,
-#memberPanel .member-create-fields .session-date-picker .calendar .day.range-start.range-end{
+#tab-forms .session-date-picker .calendar .day.range-start.range-end{
   border-radius:8px;
 }
 .calendar .weekday{font-weight:bold;}
@@ -1428,8 +1413,7 @@ button[aria-expanded="true"] .results-arrow{
   pointer-events:auto;
 }
   @media (max-width:440px){
-  #adminPanel .panel-content,
-  #memberPanel .panel-content{
+  #adminPanel .panel-content{
     width:100%;
     max-width:100%;
     max-height:none;
@@ -2085,15 +2069,13 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   min-width:0;
 }
-#tab-forms .form-container .form-checkout-duration-wrapper,
-#memberPanel .member-create-fields .form-checkout-duration-wrapper{
+#tab-forms .form-container .form-checkout-duration-wrapper{
   display:flex;
   flex-direction:column;
   gap:4px;
   margin-left:8px;
 }
-#tab-forms .form-container .form-checkout-duration-option,
-#memberPanel .member-create-fields .form-checkout-duration-option{
+#tab-forms .form-container .form-checkout-duration-option{
   font-size:13px;
   color:var(--accent-color, #8ab4ff);
   line-height:1.4;
@@ -3896,8 +3878,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
    
    ========================================================================== */
 
-#tab-forms .form-container,
-#memberPanel .member-create-fields{
+#tab-forms .form-container{
   border:none;
   border-radius:0;
   background:none;
@@ -3919,34 +3900,27 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   font-size:14px;
   color:var(--muted);
 }
-#tab-forms .form-container .panel-field,
-#memberPanel .member-create-fields .panel-field{
+#tab-forms .form-container .panel-field{
   background:none;
   padding:0;
   border-radius:0;
   border:none;
   max-width:none;
 }
-#tab-forms .form-container .form-field,
-#memberPanel .member-create-fields .form-field{
+#tab-forms .form-container .form-field{
   padding-top:0;
   padding-bottom:0;
   margin:0;
 }
 #tab-forms .form-container .panel-field label,
 #tab-forms .form-container .panel-field .subcategory-form-button,
-#tab-forms .form-container .panel-field .subcategory-form-label,
-#memberPanel .member-create-fields .panel-field label,
-#memberPanel .member-create-fields .panel-field .subcategory-form-button,
-#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+#tab-forms .form-container .panel-field .subcategory-form-label{
   font-weight:600;
   position:relative;
   z-index:1;
 }
 #tab-forms .form-container .panel-field .subcategory-form-button,
-#tab-forms .form-container .panel-field .subcategory-form-label,
-#memberPanel .member-create-fields .panel-field .subcategory-form-button,
-#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+#tab-forms .form-container .panel-field .subcategory-form-label{
   border:none;
   background:none;
   color:inherit;
@@ -3960,16 +3934,13 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:100%;
   justify-content:flex-start;
 }
-#tab-forms .form-container .panel-field .subcategory-form-button,
-#memberPanel .member-create-fields .panel-field .subcategory-form-button{
+#tab-forms .form-container .panel-field .subcategory-form-button{
   cursor:pointer;
 }
-#tab-forms .form-container .panel-field .subcategory-form-label,
-#memberPanel .member-create-fields .panel-field .subcategory-form-label{
+#tab-forms .form-container .panel-field .subcategory-form-label{
   cursor:default;
 }
-#tab-forms .form-field-header,
-#memberPanel .member-create-fields .form-field-header{
+#tab-forms .form-field-header{
   display:flex;
   align-items:center;
   gap:8px;
@@ -3979,9 +3950,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   z-index:1;
 }
 #tab-forms .form-field-header .subcategory-form-button,
-#tab-forms .form-field-header .subcategory-form-label,
-#memberPanel .member-create-fields .form-field-header .subcategory-form-button,
-#memberPanel .member-create-fields .form-field-header .subcategory-form-label{
+#tab-forms .form-field-header .subcategory-form-label{
   flex:1 1 auto;
   min-width:0;
 }
@@ -3991,19 +3960,15 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 #tab-forms .form-field-header .delete-field-btn{
   flex:0 0 auto;
 }
-#tab-forms .form-container .panel-field .subcategory-form-button:focus-visible,
-#memberPanel .member-create-fields .panel-field .subcategory-form-button:focus-visible{
+#tab-forms .form-container .panel-field .subcategory-form-button:focus-visible{
   outline:2px solid var(--btn-hover, #2e3a72);
   outline-offset:2px;
 }
 #tab-forms .form-container .panel-field .subcategory-form-button .required-asterisk,
-#tab-forms .form-container .panel-field .subcategory-form-label .required-asterisk,
-#memberPanel .member-create-fields .panel-field .subcategory-form-button .required-asterisk,
-#memberPanel .member-create-fields .panel-field .subcategory-form-label .required-asterisk{
+#tab-forms .form-container .panel-field .subcategory-form-label .required-asterisk{
   font-size:inherit;
 }
-#tab-forms .form-container .panel-field input,
-#memberPanel .member-create-fields .panel-field input{
+#tab-forms .form-container .panel-field input{
   border:1px solid var(--border);
   border-radius:8px;
   background:rgba(0,0,0,0.35);
@@ -4014,14 +3979,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   align-items:center;
   box-sizing:border-box;
 }
-#tab-forms .form-container .panel-field input[readonly],
-#memberPanel .member-create-fields .panel-field input[readonly]{
+#tab-forms .form-container .panel-field input[readonly]{
   cursor:default;
 }
 #tab-forms .form-container .panel-field select,
-#tab-forms .form-container .panel-field textarea,
-#memberPanel .member-create-fields .panel-field select,
-#memberPanel .member-create-fields .panel-field textarea{
+#tab-forms .form-container .panel-field textarea{
   border:1px solid var(--border);
   border-radius:8px;
   background:rgba(0,0,0,0.35);
@@ -4029,16 +3991,13 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   box-sizing:border-box;
   width:100%;
 }
-#tab-forms .form-container .panel-field textarea,
-#memberPanel .member-create-fields .panel-field textarea{
+#tab-forms .form-container .panel-field textarea{
   resize:vertical;
   min-height:120px;
   padding:10px;
 }
 #tab-forms .form-container .panel-field select,
-#tab-forms .form-container .form-field--dropdown .form-select,
-#memberPanel .member-create-fields .panel-field select,
-#memberPanel .member-create-fields .form-field--dropdown .form-select{
+#tab-forms .form-container .form-field--dropdown .form-select{
   height:36px;
   padding:0 30px 0 10px;
   width:100%;
@@ -4051,17 +4010,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   position:relative;
 }
 #tab-forms .form-container .panel-field input.input-invalid,
-#memberPanel .member-create-fields .panel-field input.input-invalid,
 #tab-forms .form-container .form-field input.input-invalid,
-#memberPanel .member-create-fields .form-field input.input-invalid,
 #tab-forms .form-container .form-url-input.input-invalid,
-#memberPanel .member-create-fields .form-url-input.input-invalid,
 #tab-forms .form-container .panel-field textarea.input-invalid,
-#memberPanel .member-create-fields .panel-field textarea.input-invalid,
 #tab-forms .form-container .form-field textarea.input-invalid,
-#memberPanel .member-create-fields .form-field textarea.input-invalid,
 #tab-forms .form-phone-wrapper input.input-invalid,
-#memberPanel .member-create-fields .form-phone-wrapper input.input-invalid,
 .form-field input.input-invalid,
 .form-field textarea.input-invalid,
 .form-url-input.input-invalid,
@@ -4081,20 +4034,14 @@ textarea.input-invalid{
 #tab-forms .form-container input[type="email"],
 #tab-forms .form-container input[type="tel"],
 #tab-forms .form-container input[type="url"],
-#tab-forms .form-container input[type="number"],
-#memberPanel .member-create-fields input[type="text"],
-#memberPanel .member-create-fields input[type="email"],
-#memberPanel .member-create-fields input[type="tel"],
-#memberPanel .member-create-fields input[type="url"],
-#memberPanel .member-create-fields input[type="number"]{
+#tab-forms .form-container input[type="number"]{
   padding-left:10px;
   padding-right:10px;
   display:flex;
   align-items:center;
   box-sizing:border-box;
 }
-#tab-forms .form-container .options-dropdown > button,
-#memberPanel .member-create-fields .options-dropdown > button{
+#tab-forms .form-container .options-dropdown > button{
   padding-left:10px;
   padding-right:30px;
   display:flex;
@@ -4103,22 +4050,18 @@ textarea.input-invalid{
 }
 
 #tab-forms .form-container .panel-field select:focus,
-#tab-forms .form-container .form-field--dropdown .form-select:focus,
-#memberPanel .member-create-fields .panel-field select:focus,
-#memberPanel .member-create-fields .form-field--dropdown .form-select:focus{
+#tab-forms .form-container .form-field--dropdown .form-select:focus{
   border-color:var(--btn-hover, #2e3a72);
   outline:none;
   width:100%;
   box-sizing:border-box;
 }
-#tab-forms .form-container .form-field--dropdown,
-#memberPanel .member-create-fields .form-field--dropdown{
+#tab-forms .form-container .form-field--dropdown{
   position:relative;
   width:100%;
   box-sizing:border-box;
 }
-#tab-forms .form-container .form-field--dropdown .options-menu,
-#memberPanel .member-create-fields .form-field--dropdown .options-menu{
+#tab-forms .form-container .form-field--dropdown .options-menu{
   position:absolute;
   top:calc(100% + 4px);
   bottom:auto;
@@ -4135,8 +4078,7 @@ textarea.input-invalid{
   border-radius:8px;
   padding:10px;
 }
-#tab-forms .form-container .form-field--dropdown .options-menu .menu-option,
-#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option{
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option{
   background:rgba(0,0,0,0.2);
   border:none;
   border-radius:0;
@@ -4144,29 +4086,24 @@ textarea.input-invalid{
   justify-content:flex-start;
 }
 #tab-forms .form-container .form-field--dropdown .options-menu .menu-option:disabled,
-#tab-forms .form-container .form-field--dropdown .options-menu .menu-option.field-type-disabled,
-#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option:disabled,
-#memberPanel .member-create-fields .form-field--dropdown .options-menu .menu-option.field-type-disabled{
+#tab-forms .form-container .form-field--dropdown .options-menu .menu-option.field-type-disabled{
   opacity:0.5;
   font-style:italic;
   cursor:not-allowed;
 }
-#tab-forms .form-container .form-field--radio-toggle,
-#memberPanel .member-create-fields .form-field--radio-toggle{
+#tab-forms .form-container .form-field--radio-toggle{
   display:flex;
   flex-direction:column;
   gap:8px;
 }
-#tab-forms .form-container .form-radio-group,
-#memberPanel .member-create-fields .form-radio-group{
+#tab-forms .form-container .form-radio-group{
   display:flex;
   flex-direction:column;
   gap:6px;
   align-items:flex-start;
   width:100%;
 }
-#tab-forms .form-container .form-radio-option,
-#memberPanel .member-create-fields .form-radio-option{
+#tab-forms .form-container .form-radio-option{
   display:flex;
   align-items:center;
   justify-content:flex-start;
@@ -4178,8 +4115,7 @@ textarea.input-invalid{
   padding:0;
   margin:0;
 }
-#tab-forms .form-container .form-radio-option input[type="radio"],
-#memberPanel .member-create-fields .form-radio-option input[type="radio"]{
+#tab-forms .form-container .form-radio-option input[type="radio"]{
   flex-shrink:0;
   margin:0;
   padding:0;
@@ -4187,22 +4123,19 @@ textarea.input-invalid{
   width:auto;
   height:auto;
 }
-#tab-forms .form-container .form-radio-option span,
-#memberPanel .member-create-fields .form-radio-option span{
+#tab-forms .form-container .form-radio-option span{
   flex:0 1 auto;
   margin:0;
   padding:0;
 }
 /* Checkout field wrapper */
-#tab-forms .form-container .form-field--checkout,
-#memberPanel .member-create-fields .form-field--checkout{
+#tab-forms .form-container .form-field--checkout{
   display:flex;
   flex-direction:column;
   width:100%;
 }
 /* Checkout options - similar to radio but with more info */
-#tab-forms .form-container .form-checkout-group,
-#memberPanel .member-create-fields .form-checkout-group{
+#tab-forms .form-container .form-checkout-group{
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -4210,8 +4143,7 @@ textarea.input-invalid{
   max-width:100%;
   box-sizing:border-box;
 }
-#tab-forms .form-container .form-checkout-option,
-#memberPanel .member-create-fields .form-checkout-option{
+#tab-forms .form-container .form-checkout-option{
   display:flex;
   align-items:flex-start;
   gap:12px;
@@ -4224,19 +4156,16 @@ textarea.input-invalid{
   max-width:100%;
   overflow:hidden;
 }
-#tab-forms .form-container .form-checkout-option:hover,
-#memberPanel .member-create-fields .form-checkout-option:hover{
+#tab-forms .form-container .form-checkout-option:hover{
   border-color:var(--accent-color, #8ab4ff);
   background:rgba(138, 180, 255, 0.05);
 }
-#tab-forms .form-container .form-checkout-option:has(input:checked),
-#memberPanel .member-create-fields .form-checkout-option:has(input:checked){
+#tab-forms .form-container .form-checkout-option:has(input:checked){
   border-color:var(--accent-color, #8ab4ff);
   background:rgba(138, 180, 255, 0.1);
 }
 /* Show radio buttons for all checkout options */
-#tab-forms .form-container .form-checkout-option input[type="radio"],
-#memberPanel .member-create-fields .form-checkout-option input[type="radio"]{
+#tab-forms .form-container .form-checkout-option input[type="radio"]{
   position:static;
   opacity:1;
   pointer-events:auto;
@@ -4247,8 +4176,7 @@ textarea.input-invalid{
   padding:0;
   cursor:pointer;
 }
-#tab-forms .form-container .form-checkout-option-content,
-#memberPanel .member-create-fields .form-checkout-option-content{
+#tab-forms .form-container .form-checkout-option-content{
   flex:1;
   min-width:0;
   display:flex;
@@ -4256,39 +4184,33 @@ textarea.input-invalid{
   gap:4px;
   overflow:hidden;
 }
-#tab-forms .form-container .form-checkout-option-title,
-#memberPanel .member-create-fields .form-checkout-option-title{
+#tab-forms .form-container .form-checkout-option-title{
   display:flex;
   flex-wrap:wrap;
   gap:4px;
   font-weight:600;
   font-size:14px;
 }
-#tab-forms .form-container .form-checkout-option-name,
-#memberPanel .member-create-fields .form-checkout-option-name{
+#tab-forms .form-container .form-checkout-option-name{
   color:var(--text-color, #fff);
 }
-#tab-forms .form-container .form-checkout-option-price,
-#memberPanel .member-create-fields .form-checkout-option-price{
+#tab-forms .form-container .form-checkout-option-price{
   color:var(--accent-color, #8ab4ff);
 }
-#tab-forms .form-container .form-checkout-option-description,
-#memberPanel .member-create-fields .form-checkout-option-description{
+#tab-forms .form-container .form-checkout-option-description{
   font-size:13px;
   color:var(--text-muted, #999);
   line-height:1.4;
   word-wrap:break-word;
   overflow-wrap:break-word;
 }
-#tab-forms .form-container .form-checkout-placeholder,
-#memberPanel .member-create-fields .form-checkout-placeholder{
+#tab-forms .form-container .form-checkout-placeholder{
   color:var(--text-muted, #999);
   font-style:italic;
   padding:12px;
 }
 /* Checkout message for events without sessions */
-#tab-forms .form-container .form-checkout-message,
-#memberPanel .member-create-fields .form-checkout-message{
+#tab-forms .form-container .form-checkout-message{
   color:var(--text-muted, #999);
   font-style:italic;
   padding:16px;
@@ -4297,44 +4219,37 @@ textarea.input-invalid{
   border-radius:6px;
 }
 /* Checkout option disabled state (waiting for session dates) */
-#tab-forms .form-container .form-checkout-option.disabled,
-#memberPanel .member-create-fields .form-checkout-option.disabled{
+#tab-forms .form-container .form-checkout-option.disabled{
   opacity:0.6;
   cursor:not-allowed;
   pointer-events:none;
   border-style:dashed;
 }
-#tab-forms .form-container .form-checkout-option.disabled:hover,
-#memberPanel .member-create-fields .form-checkout-option.disabled:hover{
+#tab-forms .form-container .form-checkout-option.disabled:hover{
   border-color:var(--border-color, #444);
   background:transparent;
 }
-#tab-forms .form-container .form-checkout-option.disabled .form-checkout-price-display,
-#memberPanel .member-create-fields .form-checkout-option.disabled .form-checkout-price-display{
+#tab-forms .form-container .form-checkout-option.disabled .form-checkout-price-display{
   color:var(--text-muted, #888);
   font-style:italic;
 }
 /* Checkout price section */
-#tab-forms .form-container .form-checkout-price-section,
-#memberPanel .member-create-fields .form-checkout-price-section{
+#tab-forms .form-container .form-checkout-price-section{
   margin-top:8px;
 }
 /* Event price display */
-#tab-forms .form-container .form-checkout-price-display,
-#memberPanel .member-create-fields .form-checkout-price-display{
+#tab-forms .form-container .form-checkout-price-display{
   color:var(--accent-color, #8ab4ff);
   font-weight:500;
   font-size:14px;
 }
 /* Duration buttons container */
-#tab-forms .form-container .form-checkout-duration-buttons,
-#memberPanel .member-create-fields .form-checkout-duration-buttons{
+#tab-forms .form-container .form-checkout-duration-buttons{
   display:flex;
   gap:8px;
 }
 /* Duration buttons */
-#tab-forms .form-container .form-checkout-duration-btn,
-#memberPanel .member-create-fields .form-checkout-duration-btn{
+#tab-forms .form-container .form-checkout-duration-btn{
   flex:1;
   padding:8px 12px;
   font-size:13px;
@@ -4346,20 +4261,17 @@ textarea.input-invalid{
   cursor:pointer;
   transition:all .2s ease;
 }
-#tab-forms .form-container .form-checkout-duration-btn:hover,
-#memberPanel .member-create-fields .form-checkout-duration-btn:hover{
+#tab-forms .form-container .form-checkout-duration-btn:hover{
   border-color:var(--accent-color, #8ab4ff);
   color:var(--text-color, #fff);
 }
-#tab-forms .form-container .form-checkout-duration-btn.selected,
-#memberPanel .member-create-fields .form-checkout-duration-btn.selected{
+#tab-forms .form-container .form-checkout-duration-btn.selected{
   border-color:var(--accent-color, #8ab4ff);
   background:rgba(138, 180, 255, 0.15);
   color:var(--accent-color, #8ab4ff);
 }
 /* Duration radio options for Non-Events */
-#tab-forms .form-container .form-checkout-duration-option,
-#memberPanel .member-create-fields .form-checkout-duration-option{
+#tab-forms .form-container .form-checkout-duration-option{
   flex:1;
   display:flex;
   align-items:center;
@@ -4374,33 +4286,28 @@ textarea.input-invalid{
   cursor:pointer;
   transition:all .2s ease;
 }
-#tab-forms .form-container .form-checkout-duration-option:hover,
-#memberPanel .member-create-fields .form-checkout-duration-option:hover{
+#tab-forms .form-container .form-checkout-duration-option:hover{
   border-color:var(--accent-color, #8ab4ff);
   color:var(--text-color, #fff);
 }
-#tab-forms .form-container .form-checkout-duration-option:has(input:checked),
-#memberPanel .member-create-fields .form-checkout-duration-option:has(input:checked){
+#tab-forms .form-container .form-checkout-duration-option:has(input:checked){
   border-color:var(--accent-color, #8ab4ff);
   background:rgba(138, 180, 255, 0.15);
   color:var(--accent-color, #8ab4ff);
 }
-#tab-forms .form-container .form-checkout-duration-option input[type="radio"],
-#memberPanel .member-create-fields .form-checkout-duration-option input[type="radio"]{
+#tab-forms .form-container .form-checkout-duration-option input[type="radio"]{
   flex-shrink:0;
   width:auto;
   height:auto;
   margin:0;
   cursor:pointer;
 }
-#tab-forms .form-field--url .form-url-wrapper,
-#memberPanel .member-create-fields .form-field--url .form-url-wrapper{
+#tab-forms .form-field--url .form-url-wrapper{
   display:flex;
   flex-direction:column;
   gap:6px;
 }
-#tab-forms .form-url-input,
-#memberPanel .member-create-fields .form-url-input{
+#tab-forms .form-url-input{
   width:100%;
   height:36px;
   padding:0 10px;
@@ -4408,53 +4315,44 @@ textarea.input-invalid{
   display:flex;
   align-items:center;
 }
-#tab-forms .form-url-link,
-#memberPanel .member-create-fields .form-url-link{
+#tab-forms .form-url-link{
   align-self:flex-start;
   color:var(--link-color, #8ab4ff);
   font-weight:600;
   text-decoration:underline;
   transition:opacity .2s ease;
 }
-#tab-forms .form-url-link[aria-disabled="true"],
-#memberPanel .member-create-fields .form-url-link[aria-disabled="true"]{
+#tab-forms .form-url-link[aria-disabled="true"]{
   opacity:0.4;
   pointer-events:none;
   cursor:default;
 }
-#tab-forms .form-url-message,
-#memberPanel .member-create-fields .form-url-message{
+#tab-forms .form-url-message{
   font-size:12px;
   color:rgba(255,255,255,0.7);
 }
-#tab-forms .form-field--images .form-images,
-#memberPanel .member-create-fields .form-field--images .form-images{
+#tab-forms .form-field--images .form-images{
   display:flex;
   flex-direction:column;
   gap:8px;
 }
-#tab-forms .form-field--images input[type="file"],
-#memberPanel .member-create-fields .form-field--images input[type="file"]{
+#tab-forms .form-field--images input[type="file"]{
   color:inherit;
 }
-#tab-forms .form-image-hint,
-#memberPanel .member-create-fields .form-image-hint{
+#tab-forms .form-image-hint{
   font-size:12px;
   color:rgba(255,255,255,0.7);
 }
-#tab-forms .form-image-message,
-#memberPanel .member-create-fields .form-image-message{
+#tab-forms .form-image-message{
   font-size:12px;
   color:#ffb347;
 }
-#tab-forms .form-image-previews,
-#memberPanel .member-create-fields .form-image-previews{
+#tab-forms .form-image-previews{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
   gap:8px;
 }
-#tab-forms .form-image-thumb,
-#memberPanel .member-create-fields .form-image-thumb{
+#tab-forms .form-image-thumb{
   position:relative;
   padding-top:100%;
   border-radius:8px;
@@ -4463,8 +4361,7 @@ textarea.input-invalid{
   background:rgba(0,0,0,0.25);
   cursor:grab;
 }
-#tab-forms .form-image-thumb.is-dragging,
-#memberPanel .member-create-fields .form-image-thumb.is-dragging{
+#tab-forms .form-image-thumb.is-dragging{
   opacity:0.7;
   cursor:grabbing;
 }
@@ -4495,8 +4392,7 @@ textarea.input-invalid{
 .form-image-remove span{
   pointer-events:none;
 }
-#tab-forms .form-image-thumb img,
-#memberPanel .member-create-fields .form-image-thumb img{
+#tab-forms .form-image-thumb img{
   position:absolute;
   inset:0;
   width:100%;

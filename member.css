@@ -11,6 +11,23 @@
   box-sizing: border-box;
 }
 
+#memberPanel .panel-content{
+  width:min(440px, 100%);
+  max-width:100%;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  overflow-y:overlay;
+  left:auto;
+  right:0;
+  background:#222222;
+  color:#fff;
+  font-family:system-ui, sans-serif;
+}
+
 /* ============================================================================
    PANEL CONTENT RESPONSIVE
    ============================================================================ */
@@ -25,6 +42,9 @@
 
 @media (max-width: 440px) {
   #memberPanel .panel-content{
+    width:100%;
+    max-width:100%;
+    max-height:none;
     border-radius:0;
   }
 }
