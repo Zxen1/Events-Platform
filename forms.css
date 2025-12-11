@@ -2987,7 +2987,10 @@ textarea.input-invalid{
   padding-right:30px;
   display:flex;
   align-items:center;
+  justify-content:flex-start;
   gap:8px;
+  z-index:65;
+  min-height:40px;
 }
 
 .formpicker-dropdowns .options-menu{
@@ -3022,8 +3025,9 @@ textarea.input-invalid{
   height:20px;
   flex-shrink:0;
   object-fit:contain;
-  padding:10px;
+  padding:0;
   box-sizing:content-box;
+  display:block;
 }
 
 .formpicker-dropdowns .options-menu .menu-option:hover{
