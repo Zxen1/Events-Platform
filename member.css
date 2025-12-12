@@ -11,6 +11,30 @@
   box-sizing: border-box;
 }
 
+/* Tiny button styles (logout button) */
+#memberPanel .tiny{
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--btn);
+  cursor: pointer;
+  border: 1px solid var(--btn);
+}
+#memberPanel .tiny:disabled,
+#memberPanel .tiny[aria-disabled="true"]{
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+#memberPanel .tiny svg{
+  width: 18px;
+  height: 18px;
+}
+
 /* Panel Base */
 #memberPanel.panel{
   position:fixed;

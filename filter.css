@@ -289,19 +289,19 @@
 }
 
 /* Switch toggle */
-.switch{
+#filterPanel .switch{
   position:relative;
   display:inline-block;
   width:48px;
   height:24px;
   flex:0 0 48px;
 }
-.switch input{
+#filterPanel .switch input{
   opacity:0;
   width:0;
   height:0;
 }
-.switch .slider{
+#filterPanel .switch .slider{
   position:absolute;
   cursor:pointer;
   top:0;
@@ -312,7 +312,7 @@
   border-radius:24px;
   transition:.2s;
 }
-.switch .slider:before{
+#filterPanel .switch .slider:before{
   position:absolute;
   content:'';
   height:20px;
@@ -323,18 +323,18 @@
   border-radius:50%;
   transition:.2s;
 }
-.switch input:checked + .slider{
+#filterPanel .switch input:checked + .slider{
   background:var(--session-selected);
 }
-#expiredToggle:checked + .slider{
+#filterPanel #expiredToggle:checked + .slider{
   background:#cc6600;
 }
-.switch input:checked + .slider:before{
+#filterPanel .switch input:checked + .slider:before{
   transform:translateX(24px);
 }
 
 /* Sq and Tiny buttons */
-.sq{
+#filterPanel .sq{
   width: 30px;
   height: 30px;
   border-radius: 8px;
@@ -343,12 +343,12 @@
   place-items: center;
   border: 1px solid var(--btn);
 }
-.sq svg{
+#filterPanel .sq svg{
   width: 14px;
   height: 14px;
   opacity: .9;
 }
-.tiny{
+#filterPanel .tiny{
   display: grid;
   place-items: center;
   width: 38px;
@@ -358,26 +358,26 @@
   cursor: pointer;
   border: 1px solid var(--btn);
 }
-.tiny:disabled,
-.tiny[aria-disabled="true"]{
+#filterPanel .tiny:disabled,
+#filterPanel .tiny[aria-disabled="true"]{
   background: var(--btn-disabled);
   border-color: var(--btn-disabled);
   color: var(--button-disabled-text);
   cursor: not-allowed;
   opacity: 0.6;
 }
-.tiny.danger{
+#filterPanel .tiny.danger{
   background:#b83030;
   border-color:#b83030;
   color:#fff;
 }
-.tiny.danger:disabled,
-.tiny.danger[aria-disabled="true"]{
+#filterPanel .tiny.danger:disabled,
+#filterPanel .tiny.danger[aria-disabled="true"]{
   background:rgba(184,48,48,0.4);
   border-color:rgba(184,48,48,0.4);
   color:rgba(255,255,255,0.6);
 }
-.tiny svg{
+#filterPanel .tiny svg{
   width: 18px;
   height: 18px;
 }
