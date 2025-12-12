@@ -10,18 +10,148 @@
 
 /* Box sizing for all form elements */
 #tab-forms,
-#tab-forms *,
-.formbuilder-container,
-.formbuilder-container *,
-.form-field,
-.form-field *,
-.panel-field,
-.panel-field *,
-.form-container,
-.form-container *,
-#memberPanel .member-create-fields,
-#memberPanel .member-create-fields *{
+#tab-forms *{
   box-sizing: border-box;
+}
+
+/* Panel Field Base */
+#tab-forms .panel-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#tab-forms .panel-field label{
+  display:block;
+  text-align:left;
+  margin-bottom:4px;
+  font-size:13px;
+  color:rgba(255,255,255,0.85);
+  font-weight:500;
+}
+#tab-forms .panel-field input,
+#tab-forms .panel-field textarea{
+  width:100%;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 12px;
+  color:var(--input-text, #fff);
+  font-family:inherit;
+  font-size:14px;
+}
+
+/* Input Base Styles */
+#tab-forms .input-text{
+  font:inherit;
+  caret-color:auto;
+  -webkit-user-select:text;
+  user-select:text;
+  height:var(--control-h);
+  border-radius:8px;
+}
+#tab-forms .input-text::placeholder{
+  color:var(--placeholder-text);
+  font-family:inherit;
+  font-size:inherit;
+}
+#tab-forms .input-textarea{
+  font:inherit;
+  caret-color:auto;
+  -webkit-user-select:text;
+  user-select:text;
+  border-radius:8px;
+}
+#tab-forms .input-textarea::placeholder{
+  color:var(--placeholder-text);
+  font-family:inherit;
+  font-size:inherit;
+}
+#tab-forms .input-dropdown{
+  font:inherit;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border-radius:var(--dropdown-radius);
+  height:var(--control-h);
+}
+#tab-forms .input-dropdown option{
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+}
+#tab-forms .input-checkbox{
+  width:var(--control-h);
+  height:var(--control-h);
+  border-radius:8px;
+}
+#tab-forms .input-radio{
+  width:var(--control-h);
+  height:var(--control-h);
+  border-radius:50%;
+}
+
+/* Button Base Styles */
+#tab-forms .button--tab{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#tab-forms .button--tab:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#tab-forms .button--tab:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
+}
+#tab-forms .button--tab[aria-selected="true"],
+#tab-forms .button--tab.active{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+#tab-forms .button--delete{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#tab-forms .button--delete:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#tab-forms .button--delete:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
 }
 
 /* Cursor for text inputs */
