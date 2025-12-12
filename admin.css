@@ -135,21 +135,24 @@
 
 /* Panel Header Base */
 #adminPanel .panel-header{
+  position:sticky;
+  top:0;
+  padding:10px;
+  border-top-left-radius:0;
+  border-top-right-radius:0;
+  z-index:1;
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 10px;
-  min-height:50px;
-  background:#222222;
+  flex-direction:column;
   gap:10px;
   flex-shrink:0;
+  background:#222222;
 }
 #adminPanel .panel-header .header-top{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:10px;
-  flex:1;
-  min-width:0;
+  width:100%;
 }
 #adminPanel .panel-header .panel-actions{
   margin-top:0;
@@ -376,12 +379,15 @@
 
 /* Dropdown Arrow Base */
 #adminPanel .dropdown-arrow{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:12px;
-  height:12px;
-  transition:transform 0.2s;
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:currentColor;
+  color:inherit;
+  transition:transform .3s;
+  transform-origin:center center;
 }
 #adminPanel .options-menu{
   position:absolute;
@@ -401,6 +407,22 @@
   flex-direction:column;
   gap:6px;
   z-index:var(--layer-menu);
+}
+#adminPanel .options-menu[hidden]{
+  display:none;
+}
+#adminPanel .options-menu label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+#adminPanel .options-menu .menu-option,
+#adminPanel .options-menu button.menu-option{
+  text-align:left;
+  justify-content:flex-start;
+  display:flex;
+  align-items:center;
 }
 
 /* ============================================================================
@@ -1963,9 +1985,8 @@
   color:#fff;
 }
 
-/* Map Theme & Spin Containers */
-#adminPanel .map-theme-container,
-#adminPanel .map-spin-container{
+/* Map Theme Container - only for map theme, not spin */
+#adminPanel .map-theme-container{
   background:#444444;
   width:100%;
   max-width:420px;
@@ -1975,8 +1996,7 @@
   flex-direction:column;
   gap:8px;
 }
-#adminPanel .map-theme-container .panel-field,
-#adminPanel .map-spin-container .panel-field{
+#adminPanel .map-theme-container .panel-field{
   width:100%;
 }
 

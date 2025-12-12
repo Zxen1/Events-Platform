@@ -248,12 +248,15 @@
 
 /* Dropdown Arrow Base */
 #tab-forms .dropdown-arrow{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:12px;
-  height:12px;
-  transition:transform 0.2s;
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:currentColor;
+  color:inherit;
+  transition:transform .3s;
+  transform-origin:center center;
 }
 #tab-forms .options-menu{
   position:absolute;
@@ -273,6 +276,19 @@
   flex-direction:column;
   gap:6px;
   z-index:var(--layer-menu);
+}
+#tab-forms .options-menu label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+#tab-forms .options-menu .menu-option,
+#tab-forms .options-menu button.menu-option{
+  text-align:left;
+  justify-content:flex-start;
+  display:flex;
+  align-items:center;
 }
 
 /* Cursor for text inputs */

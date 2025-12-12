@@ -136,21 +136,24 @@
 
 /* Panel Header Base */
 #memberPanel .panel-header{
+  position:sticky;
+  top:0;
+  padding:10px;
+  border-top-left-radius:0;
+  border-top-right-radius:0;
+  z-index:1;
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 10px;
-  min-height:50px;
-  background:#222222;
+  flex-direction:column;
   gap:10px;
   flex-shrink:0;
+  background:#222222;
 }
 #memberPanel .panel-header .header-top{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:10px;
-  flex:1;
-  min-width:0;
+  width:100%;
 }
 #memberPanel .panel-header h2{
   font-size:16px;
