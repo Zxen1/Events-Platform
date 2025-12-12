@@ -1074,7 +1074,99 @@
   border-color:var(--border-hover);
 }
 
-/* Session date picker calendar in forms */
+/* Session date picker calendar in forms - base styles */
+#tab-forms .calendar .month,
+#memberPanel .member-create-fields .calendar .month{
+  flex:0 0 auto;
+  width:var(--calendar-width);
+  height:var(--calendar-height);
+}
+#tab-forms .calendar .month:not(:first-child),
+#memberPanel .member-create-fields .calendar .month:not(:first-child){
+  border-left:1px solid var(--calendar-past-bg);
+}
+#tab-forms .calendar .grid,
+#memberPanel .member-create-fields .calendar .grid{
+  width:100%;
+  height:calc(var(--calendar-height) - var(--calendar-header-h));
+  display:grid;
+  grid-template-columns:repeat(7,var(--calendar-cell-w));
+  grid-template-rows:repeat(7,var(--calendar-cell-h));
+}
+#tab-forms .calendar .calendar-header,
+#memberPanel .member-create-fields .calendar .calendar-header{
+  height:var(--calendar-header-h);
+  line-height:var(--calendar-header-h);
+  text-align:center;
+  font-size:inherit;
+  color:#fff;
+  background:#2e3a72;
+}
+#tab-forms .calendar .weekday,
+#tab-forms .calendar .day,
+#memberPanel .member-create-fields .calendar .weekday,
+#memberPanel .member-create-fields .calendar .day{
+  width:var(--calendar-cell-w);
+  height:var(--calendar-cell-h);
+  line-height:var(--calendar-cell-h);
+  text-align:center;
+  font-size:inherit;
+  border-radius:8px;
+}
+#tab-forms .calendar .weekday,
+#memberPanel .member-create-fields .calendar .weekday{
+  font-weight:bold;
+}
+#tab-forms .calendar .day,
+#memberPanel .member-create-fields .calendar .day{
+  cursor:pointer;
+}
+#tab-forms .calendar .day.empty,
+#memberPanel .member-create-fields .calendar .day.empty{
+  cursor:default;
+  background:var(--calendar-future-bg);
+}
+#tab-forms .calendar .day.past,
+#memberPanel .member-create-fields .calendar .day.past{
+  background:var(--calendar-past-bg);
+  color:#808080;
+}
+#tab-forms .calendar .day.future,
+#memberPanel .member-create-fields .calendar .day.future{
+  background:var(--calendar-future-bg);
+}
+#tab-forms .calendar .day.today,
+#memberPanel .member-create-fields .calendar .day.today{
+  color:var(--today) !important;
+  font-weight:bold;
+}
+#tab-forms .calendar .day.in-range,
+#memberPanel .member-create-fields .calendar .day.in-range{
+  background:var(--session-selected);
+}
+#tab-forms .calendar .day.selected,
+#memberPanel .member-create-fields .calendar .day.selected{
+  background:var(--session-selected);
+  color:#fff;
+}
+#tab-forms .calendar .day.selected.today,
+#memberPanel .member-create-fields .calendar .day.selected.today{
+  color:var(--today) !important;
+}
+#tab-forms .calendar .day.range-start,
+#memberPanel .member-create-fields .calendar .day.range-start{
+  border-radius:8px 0 0 8px;
+}
+#tab-forms .calendar .day.range-end,
+#memberPanel .member-create-fields .calendar .day.range-end{
+  border-radius:0 8px 8px 0;
+}
+#tab-forms .calendar .day.range-start.range-end,
+#memberPanel .member-create-fields .calendar .day.range-start.range-end{
+  border-radius:8px;
+}
+
+/* Session date picker calendar overrides */
 #tab-forms .session-date-picker .calendar .weekday,
 #tab-forms .session-date-picker .calendar .day,
 #memberPanel .member-create-fields .session-date-picker .calendar .weekday,

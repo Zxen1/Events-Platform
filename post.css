@@ -382,14 +382,16 @@ img.thumb{
   text-overflow: ellipsis;
 }
 
-.post-board .info{
+.post-board .info,
+.quick-list-board .info{
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
   font-size: 13px;
 }
 
-.post-board .info > div{
+.post-board .info > div,
+.quick-list-board .info > div{
   display: flex;
   align-items: center;
   gap: 0;
@@ -406,6 +408,70 @@ img.thumb{
   width: auto;
   height: auto;
   line-height: 1;
+}
+
+.info > div > :not(.badge) + *{
+  margin-left: 5px;
+}
+
+/* Base fav/share button styles */
+.fav{
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+}
+
+.fav svg{
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.fav[aria-pressed="true"] svg{
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+
+.share{
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  margin-left: auto;
+}
+
+.share svg{
+  width: 18px;
+  height: 18px;
+  fill: var(--button-text);
+  pointer-events: none;
+}
+
+#favToggle{
+  white-space:nowrap;
+}
+#favToggle svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:var(--gold);
+  stroke-width:1.5;
+  vertical-align:middle;
+  margin-left:6px;
+}
+#favToggle[aria-pressed="true"] svg{
+  fill:var(--gold);
+  stroke:var(--gold);
 }
 
 .card .fav,
@@ -1125,6 +1191,98 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 /* ============================================================================
    POST CALENDAR STYLES
    ============================================================================ */
+
+/* Base calendar styles for post session menu */
+.open-post .calendar .month,
+.post-body .calendar .month{
+  flex:0 0 auto;
+  width:var(--calendar-width);
+  height:var(--calendar-height);
+}
+.open-post .calendar .month:not(:first-child),
+.post-body .calendar .month:not(:first-child){
+  border-left:1px solid var(--calendar-past-bg);
+}
+.open-post .calendar .grid,
+.post-body .calendar .grid{
+  width:100%;
+  height:calc(var(--calendar-height) - var(--calendar-header-h));
+  display:grid;
+  grid-template-columns:repeat(7,var(--calendar-cell-w));
+  grid-template-rows:repeat(7,var(--calendar-cell-h));
+}
+.open-post .calendar .calendar-header,
+.post-body .calendar .calendar-header{
+  height:var(--calendar-header-h);
+  line-height:var(--calendar-header-h);
+  text-align:center;
+  font-size:inherit;
+  color:#fff;
+  background:#2e3a72;
+}
+.open-post .calendar .weekday,
+.open-post .calendar .day,
+.post-body .calendar .weekday,
+.post-body .calendar .day{
+  width:var(--calendar-cell-w);
+  height:var(--calendar-cell-h);
+  line-height:var(--calendar-cell-h);
+  text-align:center;
+  font-size:inherit;
+  border-radius:8px;
+}
+.open-post .calendar .weekday,
+.post-body .calendar .weekday{
+  font-weight:bold;
+}
+.open-post .calendar .day,
+.post-body .calendar .day{
+  cursor:pointer;
+}
+.open-post .calendar .day.empty,
+.post-body .calendar .day.empty{
+  cursor:default;
+  background:var(--calendar-future-bg);
+}
+.open-post .calendar .day.past,
+.post-body .calendar .day.past{
+  background:var(--calendar-past-bg);
+  color:#808080;
+}
+.open-post .calendar .day.future,
+.post-body .calendar .day.future{
+  background:var(--calendar-future-bg);
+}
+.open-post .calendar .day.today,
+.post-body .calendar .day.today{
+  color:var(--today) !important;
+  font-weight:bold;
+}
+.open-post .calendar .day.in-range,
+.post-body .calendar .day.in-range{
+  background:var(--session-selected);
+}
+.open-post .calendar .day.selected,
+.post-body .calendar .day.selected{
+  background:var(--session-selected);
+  color:#fff;
+}
+.open-post .calendar .day.selected.today,
+.post-body .calendar .day.selected.today{
+  color:var(--today) !important;
+}
+.open-post .calendar .day.range-start,
+.post-body .calendar .day.range-start{
+  border-radius:8px 0 0 8px;
+}
+.open-post .calendar .day.range-end,
+.post-body .calendar .day.range-end{
+  border-radius:0 8px 8px 0;
+}
+.open-post .calendar .day.range-start.range-end,
+.post-body .calendar .day.range-start.range-end{
+  border-radius:8px;
+}
 
 .open-post .post-calendar,
 .post-body .post-calendar{
