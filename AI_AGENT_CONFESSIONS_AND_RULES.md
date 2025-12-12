@@ -911,95 +911,110 @@ The loading speed issue was fixed by splitting formbuilder initialization into t
 
 **NO GLOBAL ELEMENT SELECTORS.** Every styled element must have a class. This makes components plug-and-play without conflicts.
 
-### Naming Pattern: `.{type}--{modifier}`
+### Naming Pattern: `.{section}-{name}-{type}-{part}-{subpart}--{state}`
 
-All classes follow BEM-inspired naming with double-dash separators:
-
-```
-.{type}--{modifier}
-```
-
-- **type**: The component category (button, input, menu, message, link, heading, etc.)
-- **modifier**: The specific variant or context (header-access, system-image-picker, auth, etc.)
-
-### Component Types
-
-| Type | Description | Example |
-|------|-------------|---------|
-| `button` | Clickable action elements | `.button--header-access`, `.button--auth`, `.button--delete` |
-| `input` | Form input elements | `.input-text`, `.input-textarea`, `.input-dropdown`, `.input-checkbox`, `.input-radio` |
-| `menu` | Dropdown/picker menus | `.menu--system-image-picker`, `.menu--icon-picker` |
-| `menu-button` | Menu trigger buttons | `.menu-button--system-image-picker` |
-| `menu-options` | Menu dropdown containers | `.menu-options--system-image-picker` |
-| `menu-option` | Selectable menu items | `.menu-option--system-image-picker` |
-| `menu-grid` | Menu layout grid | `.menu-grid--system-image-picker` |
-| `message` | Notifications/alerts/toasts | `.message--error`, `.message--success`, `.message--info` |
-| `link` | Anchor/link elements | `.link--primary`, `.link--nav` |
-| `heading` | Heading elements | `.heading--page`, `.heading--section`, `.heading--card` |
-
-### Sub-Component Pattern
-
-For elements inside a component, use hyphenated prefixes:
+Section-first naming for plugin-ready, fully independent components:
 
 ```
-.{type}-{subpart}--{modifier}
+.{section}-{name}-{type}-{part}-{subpart}-{subsubpart}--{state}
 ```
 
-Example (System Image Picker):
-```
-.menu--system-image-picker              (container)
-.menu-button--system-image-picker       (trigger button)
-.menu-button-img--system-image-picker   (image inside button)
-.menu-button-label--system-image-picker (label inside button)
-.menu-options--system-image-picker      (dropdown container)
-.menu-grid--system-image-picker         (options grid)
-.menu-option--system-image-picker       (single option)
-.menu-filename--system-image-picker     (filename text)
-.menu-error--system-image-picker        (error state)
-```
+| Position | Purpose | Examples | Can have subs? |
+|----------|---------|----------|----------------|
+| **section** | Which CSS file / plugin | admin, forms, filter, header, post, map, member, advert | No |
+| **name** | What component (single word) | systemimagepicker, iconpicker, sessionpicker, access, filter | No |
+| **type** | Structural type | menu, button, calendar, panel, input, field | No |
+| **part** | Sub-element (DOM nesting) | option, label, image, icon, day, title, grid | **Yes** |
+| **state** | Application state (after `--`) | selected, active, disabled, open, loading | No (stack instead) |
 
-### State Classes
+### Why Only Parts Have Subs
 
-State classes are applied alongside the main class:
+- Section, name, type are **conceptual** (which file, which component, what structure)
+- Parts are **physical** (actual DOM elements that nest inside each other)
+- States don't nest - apply multiple state classes to stack them
 
-| State | Description |
-|-------|-------------|
-| `.menu-open` | Menu popup is visible |
-| `.has-image` | Image is selected/present |
-| `.active` | Currently active/selected |
-| `.disabled` | Element is disabled |
-| `.loading` | Element is in loading state |
-
-### Variant Modifiers
-
-For sub-variants of an option, use additional double-dash:
+### Reading the Pattern
 
 ```
-.menu-option--system-image-picker--clear
+.admin-systemimagepicker-menu-option-label-icon--disabled
+   │          │           │     │      │     │       │
+   │          │           │     │      │     │       └── state
+   │          │           │     │      │     └── subsubpart
+   │          │           │     │      └── subpart
+   │          │           │     └── part
+   │          │           └── type
+   │          └── name
+   └── section
 ```
 
-This means: menu-option of type system-image-picker with variant clear.
+Reads as: "In admin, the systemimagepicker's menu option's label's icon, disabled state"
+
+### Examples
+
+**Header buttons:**
+```
+.header-access-button
+.header-access-button--loggedin
+.header-filter-button
+.header-filter-button--active
+.header-mode-button
+.header-mode-button--disabled
+```
+
+**Admin system image picker:**
+```
+.admin-systemimagepicker-menu
+.admin-systemimagepicker-menu-button
+.admin-systemimagepicker-menu-button-image
+.admin-systemimagepicker-menu-button-image-spinner      (subpart)
+.admin-systemimagepicker-menu-button-image-spinner--loading
+.admin-systemimagepicker-menu-button-label
+.admin-systemimagepicker-menu-options
+.admin-systemimagepicker-menu-option
+.admin-systemimagepicker-menu-option--selected
+.admin-systemimagepicker-menu-option-image
+.admin-systemimagepicker-menu-option-label
+.admin-systemimagepicker-menu-option-label-icon         (subpart)
+.admin-systemimagepicker-menu-option-label-icon--active
+.admin-systemimagepicker-menu-grid
+```
+
+**Forms session picker calendar:**
+```
+.forms-sessionpicker-calendar
+.forms-sessionpicker-calendar-day
+.forms-sessionpicker-calendar-day--past
+.forms-sessionpicker-calendar-day--future
+.forms-sessionpicker-calendar-day--selected
+.forms-sessionpicker-calendar-day--today
+```
+
+**Filter panel:**
+```
+.filter-category-menu
+.filter-category-menu-option
+.filter-category-menu-option--selected
+.filter-daterange-calendar
+.filter-daterange-calendar-day
+```
 
 ### Rules
 
-1. **NEVER style bare element tags** (`button`, `input`, `a`, `h1`, etc.)
-2. **ALWAYS use the type--modifier pattern**
-3. **Keep modifiers descriptive** - describe WHAT it is, not WHERE it is
-4. **Subparts use hyphens** before the double-dash (`menu-button--`, `menu-option--`)
-5. **States are separate classes** (`.active`, `.disabled`, not part of the main class name)
+1. **Hyphens separate hierarchy levels** - each hyphen = new level
+2. **Component names are single words** - systemimagepicker, not system-image-picker
+3. **Double-dash only for states** - comes at the end, after `--`
+4. **Only parts can have subs** - section, name, type are fixed; parts nest with DOM
+5. **States stack, don't nest** - use multiple classes, not `--state1--state2`
+6. **No base classes** - each component is 100% independent, no shared/inherited styles
+7. **NEVER style bare element tags** - every element gets its own class
+8. **Section matches CSS filename** - admin- classes go in admin.css
 
-### Migration Priority
+### Why This System
 
-Components being converted from global styles to classes:
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Buttons | ~35% | 6 types done, need more variants |
-| Inputs | ~60% | 5 types done, need context variants |
-| Menus | ~30% | system-image-picker done, 155 `.options-*` need migration |
-| Messages | 0% | Not started |
-| Links | 0% | Currently uses global `a` tag styling |
-| Headings | 0% | Currently uses global `h1-h6` styling |
+- **Plugin extraction:** `grep "^\.filter-"` = all filter plugin CSS
+- **No conflicts:** Changing admin styles never affects forms
+- **Clear hierarchy:** Split on hyphen, read left to right
+- **Full independence:** Duplication over abstraction
 
 ---
 
