@@ -20889,7 +20889,9 @@ function makePosts(){
           if(evt && evt.originalEvent){
             // Don't close if triggered from welcome modal compass
             const welcomeControls = document.querySelector('#welcomeBody .map-controls-welcome');
-            if(welcomeControls && welcomeControls.contains(evt.originalEvent.target)) return;
+            const target = evt.originalEvent.target;
+            // Check target is a valid Node before calling contains()
+            if(welcomeControls && target instanceof Node && welcomeControls.contains(target)) return;
             closeWelcomeModalIfOpen();
             return;
           }
