@@ -154,6 +154,127 @@
   transform:scale(0.97);
 }
 
+/* Menu Base Styles */
+#tab-forms .menu{
+  position:relative;
+}
+#tab-forms .menu-button{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#tab-forms .menu-button:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#tab-forms .menu-button:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
+}
+#tab-forms .menu-button[aria-pressed="true"],
+#tab-forms .menu-button[aria-expanded="true"],
+#tab-forms .menu-button.selected,
+#tab-forms .menu-button.on{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+#tab-forms .menu-button:disabled,
+#tab-forms .menu-button.disabled{
+  background:var(--btn-disabled);
+  border-color:var(--btn-disabled);
+  color:var(--button-disabled-text);
+  cursor:not-allowed;
+  opacity:0.6;
+}
+#tab-forms .menu-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:background 0.15s;
+  box-sizing:border-box;
+}
+#tab-forms .menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+#tab-forms .menu-button--system-image-picker{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  width:100%;
+  padding:0 30px 0 10px;
+  height:60px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
+  box-sizing:border-box;
+}
+#tab-forms .menu-button--system-image-picker:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+
+/* Dropdown Arrow Base */
+#tab-forms .dropdown-arrow{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:12px;
+  height:12px;
+  transition:transform 0.2s;
+}
+#tab-forms .options-menu{
+  position:absolute;
+  bottom:calc(100% + 4px);
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:var(--layer-menu);
+}
+
 /* Cursor for text inputs */
 #tab-forms input[type="text"],
 #tab-forms input[type="email"],

@@ -226,6 +226,49 @@
   color:var(--button-selected-text, var(--button-active-text));
 }
 
+/* Auth Button - for login/register/create account buttons */
+#memberPanel .button--auth{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#memberPanel .button--auth:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#memberPanel .button--auth:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
+}
+#memberPanel .button--auth:focus-visible{
+  outline:2px solid #ffffff;
+  outline-offset:2px;
+}
+#memberPanel .button--auth:disabled,
+#memberPanel .button--auth.disabled{
+  background:var(--btn-disabled);
+  border-color:var(--btn-disabled);
+  color:var(--button-disabled-text);
+  cursor:not-allowed;
+  opacity:0.6;
+}
+
 /* Input Base Styles */
 #memberPanel .input-text{
   font:inherit;

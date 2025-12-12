@@ -282,6 +282,127 @@
   color:var(--dropdown-text);
 }
 
+/* Menu Base Styles */
+#adminPanel .menu{
+  position:relative;
+}
+#adminPanel .menu-button{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#adminPanel .menu-button:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#adminPanel .menu-button:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
+}
+#adminPanel .menu-button[aria-pressed="true"],
+#adminPanel .menu-button[aria-expanded="true"],
+#adminPanel .menu-button.selected,
+#adminPanel .menu-button.on{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+#adminPanel .menu-button:disabled,
+#adminPanel .menu-button.disabled{
+  background:var(--btn-disabled);
+  border-color:var(--btn-disabled);
+  color:var(--button-disabled-text);
+  cursor:not-allowed;
+  opacity:0.6;
+}
+#adminPanel .menu-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:0;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:background 0.15s;
+  box-sizing:border-box;
+}
+#adminPanel .menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+#adminPanel .menu-button--system-image-picker{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  width:100%;
+  padding:0 30px 0 10px;
+  height:60px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--button-text);
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color 0.15s, background 0.15s;
+  box-sizing:border-box;
+}
+#adminPanel .menu-button--system-image-picker:hover{
+  border-color:rgba(255,255,255,0.25);
+  background:rgba(0,0,0,0.45);
+}
+
+/* Dropdown Arrow Base */
+#adminPanel .dropdown-arrow{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:12px;
+  height:12px;
+  transition:transform 0.2s;
+}
+#adminPanel .options-menu{
+  position:absolute;
+  bottom:calc(100% + 4px);
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:var(--layer-menu);
+}
+
 /* ============================================================================
    PANEL CONTENT OVERRIDES
    ============================================================================ */
@@ -1815,4 +1936,375 @@
   justify-content:center;
   flex-direction:column;
   text-align:center;
+}
+
+/* ============================================================================
+   SETTINGS TAB - Checkout Options & General Settings
+   ============================================================================ */
+
+/* Settings Containers */
+#adminPanel .settings-general-container,
+#adminPanel .settings-paypal-container,
+#adminPanel .settings-icon-folders-container,
+#adminPanel .settings-checkout-options-container{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  width:100%;
+  max-width:420px;
+  margin:12px auto;
+  padding:10px;
+  border-radius:8px;
+}
+#adminPanel .settings-general-container input,
+#adminPanel .settings-paypal-container input,
+#adminPanel .settings-icon-folders-container input{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  color:#fff;
+}
+
+/* Map Theme & Spin Containers */
+#adminPanel .map-theme-container,
+#adminPanel .map-spin-container{
+  background:#444444;
+  width:100%;
+  max-width:420px;
+  padding:10px;
+  border-radius:8px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#adminPanel .map-theme-container .panel-field,
+#adminPanel .map-spin-container .panel-field{
+  width:100%;
+}
+
+/* Refresh Map Cards Button */
+#adminPanel .refresh-map-cards-btn{
+  width:100%;
+  padding:8px 12px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:14px;
+}
+#adminPanel .refresh-map-cards-btn:hover:not(:disabled){
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+#adminPanel .refresh-map-cards-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+#adminPanel .refresh-map-cards-btn span{
+  font-size:16px;
+}
+
+/* Checkout Options Header */
+#adminPanel .checkout-options-header-label{
+  margin:0 0 12px 0;
+  padding:10px 0;
+  font-size:15px;
+  font-weight:500;
+  color:#fff;
+}
+#adminPanel .settings-checkout-options-container .checkout-options-tiers{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:12px;
+}
+#adminPanel .settings-checkout-options-container .add-checkout-option{
+  width:100%;
+  padding:10px;
+  background:var(--btn);
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
+  transition:background 0.15s;
+}
+#adminPanel .settings-checkout-options-container .add-checkout-option:hover{
+  background:var(--btn-hover);
+}
+
+/* Checkout Option Cards */
+#adminPanel .checkout-option-card{
+  position:relative;
+  background:rgba(0,0,0,0.15);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;
+  padding:14px;
+}
+#adminPanel .checkout-option-card.inactive{
+  opacity:0.5;
+}
+#adminPanel .checkout-option-card.edit-open{
+  border-color:rgba(255,255,255,0.2);
+}
+#adminPanel .checkout-option-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#adminPanel .checkout-option-title-display{
+  flex:1;
+  min-width:0;
+  color:#fff;
+  font-size:13px;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#adminPanel .checkout-option-title{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  padding:8px 12px;
+  color:#fff;
+  font-size:13px;
+  font-weight:500;
+}
+#adminPanel .checkout-option-title:focus{
+  outline:none;
+  background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
+}
+#adminPanel .checkout-option-tier-badge{
+  flex-shrink:0;
+  font-size:10px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  padding:4px 8px;
+  border-radius:4px;
+  background:rgba(100,100,140,0.3);
+  color:#9090b0;
+}
+#adminPanel .checkout-option-tier-badge.featured{
+  background:rgba(255,180,50,0.15);
+  color:#e8b020;
+}
+#adminPanel .checkout-option-active{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  color:#888;
+  cursor:pointer;
+  user-select:none;
+}
+#adminPanel .checkout-option-active input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  accent-color:var(--btn);
+  cursor:pointer;
+  filter:brightness(0.6);
+}
+#adminPanel .checkout-option-active input[type="checkbox"]:checked{
+  filter:none;
+}
+
+/* Checkout Edit Button */
+#adminPanel .checkout-options-edit-btn{
+  flex-shrink:0;
+  width:28px;
+  height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  color:#888;
+  cursor:pointer;
+  transition:color 0.15s, background 0.15s, border-color 0.15s;
+}
+#adminPanel .checkout-options-edit-btn:hover{
+  color:#fff;
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(255,255,255,0.2);
+}
+#adminPanel .checkout-options-edit-btn[aria-expanded="true"]{
+  color:#fff;
+  background:var(--btn);
+  border-color:var(--btn);
+}
+
+/* Checkout Edit Panel */
+#adminPanel .checkout-options-edit-panel{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+#adminPanel .checkout-options-edit-panel[hidden]{
+  display:none;
+}
+#adminPanel .checkout-option-description{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  padding:10px 12px;
+  color:#ccc;
+  font-size:13px;
+  font-family:inherit;
+  resize:vertical;
+  min-height:60px;
+  line-height:1.4;
+}
+#adminPanel .checkout-option-description:focus{
+  outline:none;
+  background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
+}
+#adminPanel .checkout-option-description::placeholder{
+  color:#555;
+  font-family:inherit;
+}
+
+/* Checkout Option Fields */
+#adminPanel .checkout-options-edit-panel .checkout-option-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#adminPanel .checkout-option-field label{
+  font-size:12px;
+  color:#888;
+  font-weight:400;
+}
+#adminPanel .checkout-option-field input[type="number"]{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  padding:8px 12px;
+  color:#fff;
+  font-size:14px;
+  -moz-appearance:textfield;
+}
+#adminPanel .checkout-option-field input[type="number"]::-webkit-outer-spin-button,
+#adminPanel .checkout-option-field input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+#adminPanel .checkout-option-field input[type="number"]:focus{
+  outline:none;
+  background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
+}
+#adminPanel .checkout-option-field select{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  padding:8px 32px 8px 12px;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:12px;
+}
+#adminPanel .checkout-option-field select:focus{
+  outline:none;
+  background-color:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.25);
+}
+#adminPanel .checkout-option-field select option{
+  background:#2a2a2a;
+  color:#fff;
+}
+
+/* Sidebar Ad Checkbox */
+#adminPanel .checkout-option-field.sidebar-field{
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+}
+#adminPanel .checkout-option-field.sidebar-field label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  user-select:none;
+  color:#aaa;
+}
+#adminPanel .checkout-option-field.sidebar-field input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  accent-color:var(--btn);
+  cursor:pointer;
+}
+
+/* Checkout Calculator */
+#adminPanel .checkout-option-calculator{
+  margin-top:8px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.1);
+}
+#adminPanel .checkout-option-calculator .checkout-option-field input[type="number"]{
+  width:auto;
+  flex:0 0 100px;
+  -moz-appearance:textfield;
+}
+#adminPanel .checkout-option-calculator .checkout-option-field input[type="number"]::-webkit-outer-spin-button,
+#adminPanel .checkout-option-calculator .checkout-option-field input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+#adminPanel .checkout-option-calc-total{
+  display:inline-block;
+  padding:4px 8px;
+  background:rgba(47,59,115,0.2);
+  border-radius:4px;
+  font-size:14px;
+  color:#777777;
+  font-weight:700;
+}
+#adminPanel .checkout-option-empty{
+  color:#555;
+  text-align:center;
+  padding:24px 16px;
+  font-size:14px;
+}
+
+/* System Image Picker Container */
+#adminPanel .system-image-picker-container{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  max-width:400px;
+  width:100%;
+  background:#222222;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  padding:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  box-sizing:border-box;
+}
+#adminPanel .system-image-picker-field{
+  margin-bottom:0;
+}
+#adminPanel .system-image-picker-field label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:500;
 }
