@@ -1152,6 +1152,18 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:none;
 }
 
+/* Venue options container - for venue button list in dropdown */
+.open-post .post-venue-menu .venue-options,
+.post-body .post-venue-menu .venue-options{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+  width:100%;
+  flex:1 1 auto;
+  max-height:250px;
+  overflow-y:auto;
+}
+
 .open-post .post-venue-menu .venue-options button,
 .post-body .post-venue-menu .venue-options button{
   height:50px;
@@ -1210,6 +1222,22 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .session-menu button .session-time{
   margin-left:auto;
   padding-right:20px;
+}
+
+/* Session options container - for session button list in dropdown */
+.open-post .session-menu .session-options,
+.post-body .session-menu .session-options{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+  width:100%;
+  flex:1 1 auto;
+  max-height:250px;
+  overflow-y:auto;
+}
+.open-post .session-menu .session-options button,
+.post-body .session-menu .session-options button{
+  width:100%;
 }
 
 .open-post .session-dropdown > button .session-time,
