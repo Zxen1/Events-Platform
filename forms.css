@@ -88,6 +88,17 @@
   border-radius:50%;
 }
 
+/* Field label and panel title styles */
+#tab-forms .field label{
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+#tab-forms .panel-content .title,
+#tab-forms .panel-content .t{
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
+
 /* Button Base Styles */
 #tab-forms .button--tab{
   background:var(--btn);
@@ -672,6 +683,28 @@
   gap:12px;
   padding:0 10px;
   position:relative;
+}
+
+/* Sub-icon and cat-line styles for formbuilder */
+#tab-forms .sub-icon svg{
+  width:18px;
+  height:18px;
+  vertical-align:middle;
+}
+#tab-forms .cat-line{
+  display:flex;
+  align-items:center;
+}
+#tab-forms .cat-line .sub-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  padding-right:5px;
+}
+#tab-forms .cat-line .sub-icon:empty{
+  display:none;
+  padding-right:0;
 }
 
 #tab-forms .category-edit-btn,

@@ -292,32 +292,6 @@ a:active{
 }
 
 
-/* ============================================================================
-   SECTION: COMPONENT FILES (content moved to dedicated CSS files)
-   - map.css: Map display styles (cards, markers, clusters)
-   - post.css: Post/Recent board styles
-   - advert.css: Ad board styles
-   - filter.css: Filter panel styles
-   - member.css: Member panel styles
-   - admin.css: Admin panel styles (#adminPanel, #tab-map, #tab-settings, #tab-messages)
-   - forms.css: Forms tab styles (#tab-forms)
-   ============================================================================ */
-
-
-
-/* ============================================================================
-   SECTION: SHARED PANEL COMPONENTS
-   Button styles (.button--tab, .button--auth, .button--delete) moved to:
-   - admin.css, member.css, filter.css, forms.css
-   ============================================================================ */
-
-
-/* ============================================================================
-   SECTION: INPUTS
-   Input styles (.input-text, .input-dropdown, etc.) moved to:
-   - admin.css, member.css, filter.css, forms.css
-   ============================================================================ */
-
 /* Ensure all Mapbox geocoder inputs inherit font */
 .mapboxgl-ctrl-geocoder input,
 .mapboxgl-ctrl-geocoder--input,
@@ -332,139 +306,6 @@ a:active{
   font-size: 14px !important;
   font-weight: 400 !important;
 }
-
-.field label{
-  color: var(--panel-label-color);
-  font-size: var(--panel-label-size);
-}
-
-.panel-content .title,
-.panel-content .t{
-  color: var(--panel-title-color);
-  font-size: var(--panel-title-size);
-}
-
-.venue-select{
-  color: var(--dropdown-venue-text);
-  padding-right:32px;
-  appearance:none;
-  -webkit-appearance:none;
-}
-select.venue-select,
-.venue-select-wrapper select.venue-select,
-*:has(.venue-select) select.venue-select{
-  padding-right:32px;
-  appearance:none;
-  -webkit-appearance:none;
-}
-*:has(.venue-select){
-  position:relative;
-}
-*:has(.venue-select)::after{
-  content:'';
-  position:absolute;
-  top:50%;
-  right:10px;
-  width:8px;
-  height:8px;
-  border-style:solid;
-  border-width:0 2px 2px 0;
-  border-color:var(--button-text, #ffffff);
-  transform:translate(0, -50%) rotate(45deg);
-  margin-top:-1px;
-  transition:transform .3s ease;
-  pointer-events:none;
-  z-index:2;
-  transform-origin:center center;
-}
-*:has(.venue-select:focus)::after{
-  transform:translate(0, -50%) rotate(-135deg);
-  margin-top:1px;
-}
-
-
-.results-arrow,
-/* .dropdown-arrow moved to admin.css, forms.css */
-
-.options-dropdown > button{
-  position:relative;
-  padding-right:30px;
-}
-.results-arrow{
-  transform:rotate(45deg);
-  transition:transform .3s;
-  vertical-align:middle;
-}
-
-.options-dropdown{
-  position:relative;
-}
-.options-dropdown .dropdown-arrow,
-.options-dropdown .results-arrow{
-  position:absolute;
-  top:50%;
-  right:10px;
-  transform:translate(0, -50%) rotate(45deg);
-  margin-top:-1px;
-  pointer-events:none;
-}
-
-button[aria-expanded="true"] .dropdown-arrow,
-button[aria-expanded="true"] .results-arrow{
-  transform:translate(0, -50%) rotate(-135deg);
-  margin-top:1px;
-}
-
-/* ========================================
-   Dropdown Flag & Text Alignment
-   - Ensures flags, text, and arrows are vertically centered
-   - Works in both buttons and menu options
-======================================== */
-.dropdown-flag{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex-shrink:0;
-  width:20px;
-  height:15px;
-  line-height:0;
-}
-.dropdown-flag img{
-  display:block;
-  width:20px;
-  height:15px;
-  object-fit:cover;
-  border-radius:2px;
-}
-.dropdown-text{
-  display:inline-flex;
-  align-items:center;
-  white-space:nowrap;
-  line-height:1;
-}
-/* Ensure buttons and menu options use flexbox alignment */
-.item-pricing-currency,
-.options-menu .menu-option{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.item-pricing-currency .dropdown-flag,
-.item-pricing-currency .dropdown-text,
-.options-menu .menu-option .dropdown-flag,
-.options-menu .menu-option .dropdown-text{
-  flex-shrink:0;
-}
-.options-menu .menu-option .dropdown-text{
-  flex-shrink:1;
-  min-width:0;
-}
-
-/* ============================================================================
-   SECTION: PANELS (Base)
-   Panel styles (.panel, .panel-content, .panel-body) moved to:
-   - admin.css, member.css, filter.css
-   ============================================================================ */
 
 /* Modal base - kept here for welcome modal */
 .modal{
@@ -536,57 +377,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 .control-row > *:last-child{margin-left:auto;width:200px;}
 
-/* Settings/checkout styles moved to admin.css */
-
-.sub-icon svg{
-  width:18px;
-  height:18px;
-  vertical-align:middle;
-}
-.cat-line{
-  display:flex;
-  align-items:center;
-}
-.cat-line .sub-icon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 auto;
-  padding-right:5px;
-}
-.cat-line .sub-icon:empty{
-  display:none;
-  padding-right:0;
-}
-/* .panel-field moved to admin.css, member.css, filter.css, forms.css */
-/* .admin-section, .option-label, .option-group, .spin-type-toggles moved to admin.css */
-/* .primary-action styles moved to admin.css, member.css */
-/* .autosave-toggle moved to admin.css */
-/* .autosave-toggle .autosave-label moved to admin.css */
-/* .panel-header h2 moved to component files */
-/* .palette, .field-item, .field-instance, .builder-zone moved to forms.css */
-/* .left-tools moved to filter.css */
-/* .spin-control-row, .spin-slider moved to admin.css */
-/* .spin-slider (moz) and .slider-value moved to admin.css */
-/* .save-changes, .discard-changes moved to admin.css, member.css */
-
-/* Dialog/confirmation styles (.formbuilder-confirm-*) moved to forms.css */
-/* .switch moved to filter.css, admin.css */
-/* .tiny moved to filter.css, member.css */
-
-/* .cats, .filter-category-menu moved to filter.css */
-/* .formpicker-container, .formpicker-dropdowns moved to member.css */
-
-/* .reset-box moved to filter.css */
-/* .post-mode-background, .post-mode-boards moved to post.css */
-
-/* .post-mode-boards, .quick-list-board, .top-gap-spacer, .collapse-gap-button moved to post.css */
-/* .main-post-column, .post-images moved to post.css */
-
-/* .post-images, .post-body moved to post.css */
-
-/* .post-venue-selection-container, .post-session-selection-container moved to post.css */
-/* .post-details-* moved to post.css */
+/* Panel/component styles moved to: admin.css, member.css, filter.css, forms.css, post.css */
 
 /* TODO: cleanup remaining comment */
 /* AD PANEL STYLES MOVED TO advert.css - subcategory icon
@@ -607,66 +398,9 @@ button[aria-expanded="true"] .results-arrow{
    
    ========================================================================== */
 
-.form-field input.input-invalid,
-.form-field textarea.input-invalid,
-.form-url-input.input-invalid,
-.form-phone-wrapper input.input-invalid,
-input.input-invalid,
-textarea.input-invalid{
-  border:1px solid red !important;
-  outline:none !important;
-}
-.form-image-remove{
-  position:absolute;
-  top:4px;
-  right:4px;
-  width:35px;
-  height:35px;
-  border-radius:10px;
-  border:none;
-  background:rgba(0,0,0,0.75);
-  color:#fff;
-  font-size:16px;
-  line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:background-color .2s ease;
-  z-index:1;
-}
-.form-image-remove:hover{
-  background:rgba(255,77,77,0.85);
-}
-.form-image-remove span{
-  pointer-events:none;
-}
-.required-asterisk{
-  color:#ff4d4d;
-  font-weight:700;
-}
+/* Form validation styles (.input-invalid, .form-image-remove, .required-asterisk) moved to forms.css */
 
-.zoom-toast{
-  position:fixed;
-  top:calc(var(--safe-top, 0px) + 20px);
-  left:50%;
-  transform:translate(-50%, -10px);
-  background:rgba(0,0,0,0.85);
-  color:#fff;
-  padding:8px 18px;
-  border-radius:999px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.4);
-  font-size:14px;
-  font-weight:normal;
-  z-index:var(--layer-dialog);
-  pointer-events:none;
-  opacity:0;
-  transition:opacity 0.2s ease, transform 0.2s ease;
-}
-.zoom-toast.show{
-  opacity:1;
-  transform:translate(-50%, 0);
-}
+/* .zoom-toast moved to map.css */
 
 /* ============================================================================
    SECTION: MENUS & DROPDOWNS
@@ -694,36 +428,13 @@ textarea.input-invalid{
 /* System image picker styles moved to admin.css */
 /* .menu-options moved to admin.css, forms.css */
 
-.options-dropdown{ position:relative; }
-.options-dropdown > button,
-.options-dropdown .form-select,
-.options-dropdown .item-pricing-currency,
-.options-dropdown .field-type-select{ text-align:left; }
-
-/* .menu-button--sort-order, .menu-option--sort-order moved to filter.css */
-/* .menu-button--fieldset-list, .menu-option--fieldset-list moved to forms.css */
-/* .menu-button--system-image-picker moved to admin.css */
+/* .options-dropdown base styles moved to component files */
 
 /* ============================================================================
    SECTION: MESSAGES
    ============================================================================ */
 
-/* SUGGESTIONS (to be refined):
-   .msg--success
-   .msg--error
-   .msg--warning
-   .msg--toast
-   .msg--confirm
-   .msg--summary
-*/
-
-.msg--summary{
-  font-size:14px;
-  width:100%;
-  max-width:420px;
-  margin:0;
-  text-align:center;
-}
+/* Message styles moved to component files */
 
 
 /* Card styles moved to post.css */

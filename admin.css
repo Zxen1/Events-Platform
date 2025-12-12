@@ -163,6 +163,15 @@
   color:rgba(255,255,255,0.85);
   font-weight:500;
 }
+#adminPanel .field label{
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+#adminPanel .panel-content .title,
+#adminPanel .panel-content .t{
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
 #adminPanel .panel-field input,
 #adminPanel .panel-field textarea{
   width:100%;
@@ -494,6 +503,75 @@
 }
 #adminPanel .options-menu[hidden]{
   display:none;
+}
+
+/* Options dropdown base styles */
+#adminPanel .options-dropdown{
+  position:relative;
+}
+#adminPanel .options-dropdown > button,
+#adminPanel .options-dropdown .form-select,
+#adminPanel .options-dropdown .item-pricing-currency,
+#adminPanel .options-dropdown .field-type-select{
+  text-align:left;
+}
+#adminPanel .options-dropdown > button{
+  position:relative;
+  padding-right:30px;
+}
+#adminPanel .options-dropdown .dropdown-arrow,
+#adminPanel .options-dropdown .results-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  pointer-events:none;
+}
+#adminPanel button[aria-expanded="true"] .dropdown-arrow,
+#adminPanel button[aria-expanded="true"] .results-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* Dropdown flag and text alignment */
+#adminPanel .dropdown-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:20px;
+  height:15px;
+  line-height:0;
+}
+#adminPanel .dropdown-flag img{
+  display:block;
+  width:20px;
+  height:15px;
+  object-fit:cover;
+  border-radius:2px;
+}
+#adminPanel .dropdown-text{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  line-height:1;
+}
+#adminPanel .item-pricing-currency,
+#adminPanel .options-menu .menu-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+#adminPanel .item-pricing-currency .dropdown-flag,
+#adminPanel .item-pricing-currency .dropdown-text,
+#adminPanel .options-menu .menu-option .dropdown-flag,
+#adminPanel .options-menu .menu-option .dropdown-text{
+  flex-shrink:0;
+}
+#adminPanel .options-menu .menu-option .dropdown-text{
+  flex-shrink:1;
+  min-width:0;
 }
 #adminPanel .options-menu label{
   display:flex;

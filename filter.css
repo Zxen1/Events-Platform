@@ -121,6 +121,15 @@
   gap:10px;
   width:100%;
 }
+
+/* Filter summary message */
+#filterPanel .msg--summary{
+  font-size:14px;
+  width:100%;
+  max-width:420px;
+  margin:0;
+  text-align:center;
+}
 #filterPanel .panel-header .panel-actions{
   margin-top:0;
   margin-left:auto;
@@ -253,6 +262,54 @@
 .field .options-dropdown > button{
   width:100%;
 }
+
+/* Options dropdown base styles */
+#filterPanel .options-dropdown{
+  position:relative;
+}
+#filterPanel .options-dropdown > button{
+  position:relative;
+  padding-right:30px;
+}
+#filterPanel .options-dropdown .dropdown-arrow,
+#filterPanel .options-dropdown .results-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  pointer-events:none;
+}
+#filterPanel button[aria-expanded="true"] .dropdown-arrow,
+#filterPanel button[aria-expanded="true"] .results-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* Dropdown flag and text alignment */
+#filterPanel .dropdown-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:20px;
+  height:15px;
+  line-height:0;
+}
+#filterPanel .dropdown-flag img{
+  display:block;
+  width:20px;
+  height:15px;
+  object-fit:cover;
+  border-radius:2px;
+}
+#filterPanel .dropdown-text{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  line-height:1;
+}
+
 .input input,
 .input select{
   flex: 1;
@@ -571,6 +628,15 @@
   opacity:1;
 }
 
+#filterPanel .field label{
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+#filterPanel .panel-content .title,
+#filterPanel .panel-content .t{
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
 #filterPanel .field label.t{
   grid-column: 1 / -1;
   display: flex;

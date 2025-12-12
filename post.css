@@ -444,12 +444,34 @@ img.thumb{
   gap: 6px;
 }
 
-.post-card .sub-icon img,
 .post-card .sub-icon svg,
-.recents-card .sub-icon img,
 .recents-card .sub-icon svg{
   width:18px;
   height:18px;
+  vertical-align:middle;
+}
+.post-card .sub-icon img,
+.recents-card .sub-icon img{
+  width:18px;
+  height:18px;
+}
+.post-card .cat-line,
+.recents-card .cat-line{
+  display:flex;
+  align-items:center;
+}
+.post-card .cat-line .sub-icon,
+.recents-card .cat-line .sub-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  padding-right:5px;
+}
+.post-card .cat-line .sub-icon:empty,
+.recents-card .cat-line .sub-icon:empty{
+  display:none;
+  padding-right:0;
 }
 
 .title{
@@ -728,6 +750,56 @@ img.thumb{
 
 .open-post:not(.desc-expanded) .desc{
   margin-top:0;
+}
+
+/* Venue select dropdown styles */
+.open-post .venue-select{
+  color: var(--dropdown-venue-text);
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.open-post select.venue-select,
+.open-post .venue-select-wrapper select.venue-select,
+.open-post *:has(.venue-select) select.venue-select{
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.open-post *:has(.venue-select){
+  position:relative;
+}
+.open-post *:has(.venue-select)::after{
+  content:'';
+  position:absolute;
+  top:50%;
+  right:10px;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:var(--button-text, #ffffff);
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  transition:transform .3s ease;
+  pointer-events:none;
+  z-index:2;
+  transform-origin:center center;
+}
+.open-post *:has(.venue-select:focus)::after{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* Results arrow base styles */
+.open-post .results-arrow{
+  transform:rotate(45deg);
+  transition:transform .3s;
+  vertical-align:middle;
+}
+.open-post button[aria-expanded="true"] .results-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
 }
 
 .open-post .post-details .info{

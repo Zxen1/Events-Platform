@@ -146,6 +146,15 @@
   color:rgba(255,255,255,0.85);
   font-weight:500;
 }
+#memberPanel .field label{
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+#memberPanel .panel-content .title,
+#memberPanel .panel-content .t{
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
 #memberPanel .panel-field input,
 #memberPanel .panel-field textarea{
   width:100%;
@@ -1183,4 +1192,51 @@
 
 #memberPanel .formpicker-dropdowns .options-menu .menu-option:hover{
   background:rgba(255,255,255,0.1);
+}
+
+/* Options dropdown base styles */
+#memberPanel .options-dropdown{
+  position:relative;
+}
+#memberPanel .options-dropdown > button{
+  position:relative;
+  padding-right:30px;
+}
+#memberPanel .options-dropdown .dropdown-arrow,
+#memberPanel .options-dropdown .results-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  pointer-events:none;
+}
+#memberPanel button[aria-expanded="true"] .dropdown-arrow,
+#memberPanel button[aria-expanded="true"] .results-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* Dropdown flag and text alignment */
+#memberPanel .dropdown-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:20px;
+  height:15px;
+  line-height:0;
+}
+#memberPanel .dropdown-flag img{
+  display:block;
+  width:20px;
+  height:15px;
+  object-fit:cover;
+  border-radius:2px;
+}
+#memberPanel .dropdown-text{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  line-height:1;
 }

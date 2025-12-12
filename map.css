@@ -464,3 +464,26 @@
 .hide-map-calendar .calendar-container{
   display:none;
 }
+
+/* Zoom toast notification */
+.zoom-toast{
+  position:fixed;
+  top:calc(var(--safe-top, 0px) + 20px);
+  left:50%;
+  transform:translate(-50%, -10px);
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  padding:8px 18px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  font-size:14px;
+  font-weight:normal;
+  z-index:var(--layer-dialog);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+}
+.zoom-toast.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
