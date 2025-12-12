@@ -1,0 +1,108 @@
+/* ============================================================================
+   DEVTOOLS
+   Floating buttons for development/debugging purposes
+   ============================================================================ */
+
+#devtoolsBtn,
+.devtools-btn{
+  position: fixed;
+  bottom: 60px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #ff9800;
+  background-color: #ff9800;
+  color: #000;
+  border: 1px solid #ff9800;
+  border-color: #ff9800;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.devtools-btn:hover{
+  background: #f57c00;
+  background-color: #f57c00;
+  border-color: #f57c00;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+  color: #000;
+}
+
+.devtools-btn:active{
+  background: #e65100;
+  background-color: #e65100;
+  transform: scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  color: #000;
+}
+
+.devtools-btn:focus{
+  outline: 2px solid #000;
+  outline-offset: 2px;
+  background: #ff9800;
+  background-color: #ff9800;
+  color: #000;
+}
+
+/* LocalStorage Clear Button - Must be above all other elements */
+#clearLocalStorageBtn,
+.clear-localstorage-btn{
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #ffc107;
+  background-color: #ffc107;
+  color: #000;
+  border: 1px solid #ffc107;
+  border-color: #ffc107;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.clear-localstorage-btn:hover{
+  background: #ffb300;
+  background-color: #ffb300;
+  border-color: #ffb300;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+  color: #000;
+}
+
+.clear-localstorage-btn:active{
+  background: #ffa000;
+  background-color: #ffa000;
+  transform: scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  color: #000;
+}
+
+.clear-localstorage-btn:focus{
+  outline: 2px solid #000;
+  outline-offset: 2px;
+  background: #ffc107;
+  background-color: #ffc107;
+  color: #000;
+}
+

@@ -5199,3 +5199,54 @@ textarea.input-invalid{
   flex:1;
   min-width:0;
 }
+
+/* Venue and session options lists */
+#tab-forms .venue-options,
+#tab-forms .session-options,
+#memberPanel .member-create-fields .venue-options,
+#memberPanel .member-create-fields .session-options{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+  width:100%;
+  flex:1 1 auto;
+  max-height:250px;
+  overflow-y:auto;
+}
+
+/* Subcategory field overlay (floating field editor) */
+#tab-forms .subcategory-field-overlay,
+#memberPanel .subcategory-field-overlay{
+  position:absolute;
+  top:0;
+  left:0;
+  display:none;
+  background:transparent;
+  z-index: var(--layer-menu);
+  pointer-events:none;
+}
+#tab-forms .subcategory-field-overlay.visible,
+#memberPanel .subcategory-field-overlay.visible{
+  display:block;
+}
+#tab-forms .subcategory-field-overlay-content,
+#memberPanel .subcategory-field-overlay-content{
+  position:absolute;
+  outline:none;
+  max-height:none;
+  overflow:visible;
+  pointer-events:auto;
+  background:#000;
+  border-radius:8px;
+  padding:10px;
+  box-sizing:border-box;
+}
+#tab-forms .subcategory-field-overlay-content > .subcategory-field-row,
+#memberPanel .subcategory-field-overlay-content > .subcategory-field-row{
+  margin:0;
+  width:100%;
+}
+#tab-forms .subcategory-field-placeholder,
+#memberPanel .subcategory-field-placeholder{
+  display:none;
+}

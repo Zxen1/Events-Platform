@@ -28,6 +28,99 @@
    END GLOBAL STYLES COPY
    ============================================================================ */
 
+/* Post mode background overlay */
+.post-mode-background{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  background: rgba(var(--post-mode-bg-color), var(--post-mode-bg-opacity));
+  z-index:0;
+  pointer-events:none;
+  display:none;
+}
+
+.mode-posts .post-mode-background{
+  display:block;
+  pointer-events:none;
+}
+
+/* Post mode boards container */
+.post-mode-boards{
+  position:fixed;
+  top:calc(var(--header-h) + var(--safe-top));
+  bottom:auto;
+  left:0;
+  right:0;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  padding-left:var(--filter-panel-offset);
+  padding-right:0;
+  display:flex;
+  justify-content:center;
+  align-items:stretch;
+  gap:var(--gap);
+  z-index:2;
+  pointer-events:none;
+}
+
+/* Description and see-more base styles */
+.desc-wrap{
+  cursor:pointer;
+}
+
+.see-more-toggle{
+  color:#888888;
+}
+
+.desc{
+  margin-top:8px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+/* Dates display */
+.dates{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.date{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+/* Pill button */
+.pill{
+  border: 1px solid var(--btn);
+  background: var(--btn);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Close button */
+.close{
+  border: 0;
+  background: #16283f;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Post map styling */
+.post-map{
+  border-radius:8px;
+}
+
 /* ============================================================================
    BOARD CONTAINERS
    ============================================================================ */

@@ -399,6 +399,173 @@ Mapbox layers in rendering order (bottom to top):
 
 ---
 
+## SITE MAP (CSS Architecture Reference)
+
+**Last Updated:** December 13, 2025
+**Note:** This site is under active development. Features and layouts will continue to change.
+
+**Navigation Order:** Map, Header, Filter, Member (Profile/Create Post/My Posts), Admin (Settings/Forms/Map/Messages), Recents, Posts, Advert
+
+### 1. HEADER (left to right)
+- Logo (triggers spin + opens welcome modal when active)
+- Filter button (opens filter panel)
+- Mode switch: Recents (recents board), Posts (posts board), Map (map only)
+- Member button (opens member panel)
+- Admin button (opens admin panel - visible when admin logged in)
+- Fullscreen button (toggles fullscreen)
+
+### 2. MAP
+- Map display area (acts as primary filter for search results)
+- Map controls: geocoder, geolocate button, compass button (position varies by screen width)
+- Markers with map cards (cards shown under nearly all circumstances; hover-only mode is exception)
+- Multi post venue markers (multiple posts at one specific location - NOT the same as clusters)
+- Marker clusters (visible when zoom < 8, groups nearby posts - NOT the same as multi post venues)
+- Small map cards
+- Big map cards
+- Hover map cards
+- Zoom indicator
+- Map shadow overlay
+
+### 3. FILTER (top to bottom)
+- Panel header (shrunk - only used for secret left/right drag)
+- Geocoder, geolocate button, compass button
+- Reset All Filters button (interacts with filter objects + header filter button - NOT categories)
+- Reset All Categories button (interacts with category filters only)
+- Sort by dropdown (includes Favourites on top switch)
+- Keywords input with clear X
+- Price range inputs (min, max) with clear X
+- Date range input with clear X (looks like text input, summons date range picker calendar)
+- Calendar (date range picker - displays selected date range)
+- Show Expired Events switch (shows events that have already ended, allows date range up to 12 months before today)
+- Category filters (accordions with toggles, interact with Reset All Categories button)
+- Subcategory buttons inside expanded categories
+
+### 4. MEMBER
+
+**Tab buttons (always visible):** Profile, Create Post, My Posts
+
+**Profile tab - Logged out:**
+- Subtab buttons: Login (default), Register
+
+*Login subtab:*
+- Email input
+- Password input
+- Login button
+
+*Register subtab:*
+- Display name input
+- Email input
+- Password input
+- Confirm password input
+- Avatar input (will become image uploader)
+- Create Account button
+
+**Profile tab - Logged in:**
+- Avatar display
+- Name display
+- Email display
+- Log Out button
+
+**Create Post tab (logged in or out):**
+- Formpicker (category/subcategory selection)
+- Subcategory form (dynamic fields based on selection)
+- Checkout options
+- Terms and conditions agreement
+- Submit button
+- Admin submit free button (admin only)
+
+**My Posts tab:**
+- Only shows content if logged in
+- Not coded yet
+
+### 5. ADMIN
+
+**Panel header:**
+- Title
+- Autosave toggle
+- Save/Discard buttons
+- Close button
+
+**Settings tab:**
+- Website name input
+- Website tagline input
+- System image pickers (Big Logo, Small Logo, Favicon)
+- Currency dropdown with flag
+- Contact email, Support email inputs
+- Toggles (Maintenance Mode, Welcome Message on Load, Devtools Console Filter)
+- Icon folder, System images folder inputs
+- PayPal inputs
+- Checkout options with checkboxes and pricing
+
+**Forms tab:**
+- Category list with expand arrows, reorder buttons, edit buttons
+- Subcategory list (nested) with expand arrows, reorder buttons, edit buttons
+- Add Subcategory buttons
+- Formbuilder (when editing a subcategory)
+
+**Map tab:**
+- Starting Location geocoder
+- Starting Zoom slider
+- Spin on Load toggle + Everyone/New Users radios
+- Spin on Logo toggle
+- Spin Max Zoom slider
+- Spin Speed slider
+- Map Shadow slider + Post Mode Only/Always radios
+- Wait for Map Tiles toggle
+- Map Card Display radios (Hover Only/Always)
+- System image pickers (Small/Big/Hover Map Card Pill, Multi Post Icon)
+
+**Messages tab:**
+- User Messages accordion
+- Member Messages accordion
+- Admin Messages accordion
+- Email Messages accordion
+- Fieldset Tooltips accordion
+- Each has expand, reorder, edit buttons
+- System image pickers
+
+### 6. RECENTS
+- Message above each card (shows how long ago + datetime of when user viewed)
+- Post cards (thumbnail, title, category badge, location, dates, favourite star)
+- Post cards open same as regular posts but ignore all filters and sort orders
+- Always ordered by most recent (history)
+- Mascot illustration with membership encouragement message (at bottom when few/no recents)
+
+### 7. POSTS
+- Post cards (thumbnail, title, category badge, location, dates, favourite star)
+- When post is open, post card becomes sticky header
+- Share button only appears on sticky header when post is open
+
+**Open post - Collapsed mode:**
+- Sticky header
+- First two lines of description
+- Images interface
+
+**Open post - Expanded mode:**
+- Sticky header
+- Venue menu button (complex dropdown menu)
+- Session menu button (complex dropdown menu)
+- Post details info (location, price, dates - modified by venue/session menu option choices)
+- Description with see more/less toggle
+- Posted by section (avatar, name, date)
+- Images gallery
+
+### 8. ADVERT
+- Appears on right side (1920px+ wide screens with current settings)
+- Slow zooming animation of hero image
+- Shows featured+ posts only (most expensive checkout option)
+- Post card data at bottom (same as regular post cards but without thumbnail or buttons)
+- Clicking ad opens the post in post board
+- Cycles every 20 seconds to next ad
+- Only shows posts not filtered out by map or other filters
+
+### MODALS
+- Welcome modal (contains geocoder, geolocate, compass, instructions)
+- Terms & Conditions modal
+- Image lightbox modal
+
+---
+
 ## RULES: MANDATORY COMPLIANCE
 
 ### Rule 1: USER IS IN CHARGE OF ALL NAMING

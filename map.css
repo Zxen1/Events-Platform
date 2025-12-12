@@ -458,3 +458,9 @@
   bottom: 0;
   z-index: 0;
 }
+
+/* Hide map/calendar toggle utility */
+.hide-map-calendar .map-container,
+.hide-map-calendar .calendar-container{
+  display:none;
+}

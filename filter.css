@@ -1063,6 +1063,149 @@
   transform:translateX(16px);
 }
 
+#filterPanel .filter-category-menu[aria-expanded="true"] .filter-category-trigger{
+  border-color: var(--border-active);
+}
+
+#filterPanel .filter-category-menu.cat-off{
+  opacity:0.6;
+}
+
+#filterPanel .filter-category-menu.cat-off .filter-category-trigger{
+  cursor:default;
+}
+
+/* Reset box (Reset All Filters button) */
+#filterPanel .reset-box{
+  margin:0;
+}
+
+#filterPanel .reset-box .btn{
+  width:100%;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: #666;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+#filterPanel .reset-box .btn.active{
+  background:#cc6600;
+  border-color:#cc6600;
+  color:#fff;
+  opacity: 1;
+  cursor: pointer;
+}
+
+#filterPanel .reset-box .btn svg{
+  width: 16px;
+  height: 16px;
+}
+
+#filterPanel .reset-box .arr{
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+}
+
+/* Sort order menu button */
+#filterPanel .menu-button--sort-order{
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+#filterPanel .menu-button--sort-order:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+#filterPanel .menu-button--sort-order:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+#filterPanel .menu-button--sort-order:focus-visible{
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+#filterPanel .menu-button--sort-order[aria-expanded="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* Sort order menu options */
+#filterPanel .menu-option--sort-order{
+  background: var(--btn);
+  border: none;
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+#filterPanel .menu-option--sort-order:hover{
+  background: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+#filterPanel .menu-option--sort-order:active{
+  background: var(--btn-active);
+  color: var(--button-active-text);
+}
+#filterPanel .menu-option--sort-order[aria-pressed="true"]{
+  background: var(--button-selected-bg, var(--btn-selected));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+/* Sort options container */
+#filterPanel .sort-options{
+  --button-selected-bg: #2e3a72;
+  --button-selected-border: #2e3a72;
+  --button-selected-text: var(--button-active-text);
+  --button-selected-hover: #2e3a72;
+  --button-selected-hover-border: #2e3a72;
+  --button-selected-hover-text: var(--button-active-text);
+  --button-selected-active: #2e3a72;
+  --button-selected-active-border: #2e3a72;
+  --button-selected-active-text: var(--button-active-text);
+}
+
 /* Additional 440px breakpoint rule */
 @media (max-width:440px){
   #filterPanel .panel-content{
