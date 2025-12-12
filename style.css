@@ -1845,13 +1845,12 @@ button[aria-expanded="true"] .results-arrow{
   color:#fff;
   border-color:#cc6600;
 }
-#tab-map .map-spin-container,
+/* #tab-map styles moved to admin.css */
 #tab-settings .settings-general-container,
 #tab-settings .settings-welcome-container,
 #tab-settings .settings-paypal-container,
 #tab-settings .settings-icon-folders-container,
-#tab-settings .settings-checkout-options-container,
-#tab-map #map_shadow_container{
+#tab-settings .settings-checkout-options-container{
   width:100%;
   max-width:420px;
   margin:0 auto;
@@ -1859,110 +1858,6 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid rgba(255,255,255,0.1);
   border-radius:8px;
   padding:0 10px 10px;
-}
-#tab-map .panel-field{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-#tab-map .panel-field label{
-  text-align:left;
-  margin:0;
-}
-
-/* Admin Starting Location Geocoder */
-#tab-map .map-defaults-container{
-  width:100%;
-  max-width:420px;
-  margin:0 auto;
-  background:rgba(0,0,0,0.2);
-  border-radius:8px;
-  padding:16px;
-}
-#tab-map .map-controls-admin-starting{
-  width:100%;
-}
-#tab-map .map-controls-admin-starting .geocoder{
-  flex:1 1 100%;
-  max-width:100%;
-  background:transparent;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder{
-  width:100% !important;
-  max-width:100% !important;
-  min-width:0;
-  box-shadow:none;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,0.35);
-  min-height:36px;
-  height:auto;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder input,
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
-  height:36px;
-  min-height:36px;
-  line-height:36px;
-  padding:0 12px !important;
-  color:#fff !important;
-  background:transparent !important;
-  border:none !important;
-  border-radius:8px;
-  font-family:inherit;
-  font-size:14px;
-  width:100%;
-  box-sizing:border-box;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder input::placeholder{
-  color:rgba(255,255,255,0.5);
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions{
-  font-family:inherit !important;
-  font-size:14px !important;
-  background:#1a1a2e;
-  border:1px solid var(--border);
-  border-radius:8px;
-  margin-top:4px;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li,
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li a{
-  font-family:inherit !important;
-  font-size:14px !important;
-  font-weight:400 !important;
-  color:#fff;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions li a:hover,
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .suggestions .active a{
-  background:rgba(46,58,114,0.5);
-  color:#fff;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--icon,
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--icon-loading,
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--icon-search{
-  display:none;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder--button{
-  background:transparent;
-}
-#tab-map .map-controls-admin-starting .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
-  display:none;
-}
-#tab-map .map-controls-admin-starting .address-display{
-  width:100%;
-  min-height:36px;
-  padding:8px 12px;
-  background:rgba(0,0,0,0.35);
-  border:1px solid var(--border);
-  border-radius:8px;
-  color:#fff;
-  font-size:14px;
-  line-height:1.4;
-  cursor:pointer;
-  word-break:break-word;
-}
-#tab-map .map-controls-admin-starting .address-display:hover{
-  background:rgba(0,0,0,0.5);
-  border-color:rgba(255,255,255,0.3);
 }
 
 .spin-control-row{
@@ -3858,116 +3753,7 @@ textarea.input-invalid{
   text-align:center;
 }
 
-/* Map tab system image picker - matches settings tab */
-#tab-map .menu--system-image-picker .menu-button--system-image-picker{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  height:60px;
-  padding:0 30px 0 10px;
-  background:rgba(0,0,0,0.35);
-  border:1px solid var(--border);
-  border-radius:8px;
-  color:var(--button-text);
-  font-size:13px;
-  cursor:pointer;
-  text-align:left;
-  transition:border-color 0.15s, background 0.15s;
-}
-#tab-map .menu--system-image-picker .menu-button--system-image-picker:hover{
-  border-color:rgba(255,255,255,0.25);
-  background:rgba(0,0,0,0.45);
-}
-#tab-map .menu--system-image-picker .menu-button-img--system-image-picker{
-  width:50px;
-  height:50px;
-  object-fit:contain;
-  flex-shrink:0;
-  display:none;
-}
-#tab-map .menu--system-image-picker .menu-button--system-image-picker.has-image .menu-button-img--system-image-picker{
-  display:block;
-}
-#tab-map .menu--system-image-picker .menu-button-label--system-image-picker{
-  flex:1;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-#tab-map .menu--system-image-picker .menu-button--system-image-picker:not(.has-image) .menu-button-label--system-image-picker{
-  color:rgba(255,255,255,0.5);
-}
-#tab-map .menu--system-image-picker.menu-open .menu-button--system-image-picker{
-  border-color:rgba(255,255,255,0.3);
-  background:rgba(0,0,0,0.5);
-}
-#tab-map .menu--system-image-picker{
-  width:100%;
-  position:relative;
-}
-#tab-map .menu--system-image-picker .menu-options--system-image-picker{
-  position:absolute;
-  top:calc(100% + 4px);
-  left:0;
-  right:auto;
-  width:100%;
-  min-width:100%;
-  max-width:100%;
-  box-sizing:border-box;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(10,10,20,0.95);
-  box-shadow:0 18px 40px rgba(0,0,0,0.45);
-  padding:12px;
-  max-height:300px;
-  overflow:auto;
-  z-index:var(--forms-layer-popover, 80);
-}
-#tab-map .menu--system-image-picker .menu-grid--system-image-picker{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-#tab-map .menu--system-image-picker .menu-option--system-image-picker{
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start;
-  width:100%;
-  min-height:60px;
-  height:auto;
-  padding:8px 12px;
-  gap:12px;
-  border:none;
-  background:transparent;
-}
-#tab-map .menu--system-image-picker .menu-option--system-image-picker:hover,
-#tab-map .menu--system-image-picker .menu-option--system-image-picker:focus-visible{
-  background:rgba(255,255,255,0.1);
-  border:none;
-}
-#tab-map .menu--system-image-picker .menu-option--system-image-picker img{
-  max-width:50px;
-  max-height:50px;
-  width:auto;
-  height:auto;
-  object-fit:contain;
-  flex-shrink:0;
-}
-#tab-map .menu--system-image-picker .menu-option--system-image-picker .menu-filename--system-image-picker{
-  font-size:12px;
-  color:rgba(255,255,255,0.9);
-  text-align:left;
-  word-break:break-word;
-  line-height:1.4;
-  flex:1;
-}
-#tab-map .menu--system-image-picker .menu-option--system-image-picker--clear{
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-}
+/* #tab-map system-image-picker styles moved to admin.css */
 
 /* Messages tab system image picker - matches settings tab */
 #tab-messages .menu--system-image-picker .menu-button--system-image-picker{
@@ -4423,57 +4209,9 @@ textarea.input-invalid{
   width:100%;
 }
 
-.map-controls-map{
-  position:absolute;
-  left:50%;
-  top:calc(var(--header-h) + 10px);
-  transform:translateX(-50%);
-  width:auto;
-  max-width:calc(100% - 20px);
-  min-width:0;
-  z-index:10;
-  flex-wrap:nowrap;
-  justify-content:center;
-}
-
-.map-controls-map.in-header{
-  top:calc(var(--safe-top) + var(--header-h) / 2);
-  transform:translate(-50%, -50%);
-  width:auto;
-  max-width:none;
-}
-
-.map-controls-map .geocoder{
-  flex:1 1 300px;
-  min-width:0;
-  width:100%;
-  max-width:300px;
-}
-
-.map-controls-map .mapboxgl-ctrl-geocoder{
-  width:100% !important;
-  max-width:300px !important;
-  min-width:0 !important;
-}
-
-/* .map-control-row .geocoder{margin:0;} moved to filter.css */
+/* .map-controls-map styles moved to map.css */
 
 @media (max-width:600px){
-  .map-controls-map{
-    flex-wrap:nowrap;
-    justify-content:center;
-    gap:8px;
-  }
-  .map-controls-map:not(.in-header){
-    width:calc(100% - 20px);
-    max-width:calc(100% - 20px);
-  }
-  .map-controls-map .geocoder,
-  .map-controls-map .mapboxgl-ctrl-geocoder{
-    flex:1 1 100%;
-    width:100% !important;
-    max-width:min(100%, 300px) !important;
-  }
   #welcomeBody .map-control-row > .geocoder,
   #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
     width:100% !important;
@@ -4977,27 +4715,7 @@ html, body { cursor: auto !important; }
     .mapboxgl-canvas:active { cursor: grabbing; }
     * { -webkit-tap-highlight-color: transparent; }
 
-            /* Map and Messages tab iconpicker popup */
-            #tab-map .menu-options--icon-picker{
-              position:absolute;
-              top:calc(100% + 10px);
-              left:0;
-              margin-top:0;
-              border-radius:10px;
-              border:1px solid var(--border);
-              background:rgba(10,10,20,0.95);
-              box-shadow:0 18px 40px rgba(0,0,0,0.45);
-              padding:12px;
-              z-index:var(--forms-layer-popover, 80);
-              width:400px;
-              max-width:400px;
-              min-width:400px;
-              max-height:400px;
-              overflow-y:auto;
-              overflow-x:hidden;
-            }
-            
-            
+            /* Messages tab iconpicker popup (#tab-map moved to admin.css) */
             #tab-messages .menu-options--icon-picker{
               position:absolute;
               top:100%;
@@ -5017,8 +4735,7 @@ html, body { cursor: auto !important; }
               overflow-x:hidden;
             }
             
-            /* Vertical layout with filenames for map, messages, and settings tabs */
-            #tab-map .menu-grid--icon-picker,
+            /* Vertical layout with filenames for messages and settings tabs (#tab-map moved to admin.css) */
             #tab-messages .menu-grid--icon-picker,
             #tab-settings .menu-grid--icon-picker{
               display:flex;
@@ -5026,7 +4743,6 @@ html, body { cursor: auto !important; }
               gap:8px;
             }
             
-            #tab-map .menu-option--icon-picker,
             #tab-messages .menu-option--icon-picker,
             #tab-settings .menu-option--icon-picker{
               display:flex;
@@ -5042,17 +4758,14 @@ html, body { cursor: auto !important; }
               background:transparent;
             }
             
-            #tab-map .menu-option--icon-picker:hover,
             #tab-messages .menu-option--icon-picker:hover,
             #tab-settings .menu-option--icon-picker:hover,
-            #tab-map .menu-option--icon-picker:focus-visible,
             #tab-messages .menu-option--icon-picker:focus-visible,
             #tab-settings .menu-option--icon-picker:focus-visible{
               background:rgba(255,255,255,0.1);
               border:none;
             }
             
-            #tab-map .menu-option--icon-picker img,
             #tab-messages .menu-option--icon-picker img,
             #tab-settings .menu-option--icon-picker img{
               max-width:50px;
@@ -5063,7 +4776,6 @@ html, body { cursor: auto !important; }
               flex-shrink:0;
             }
             
-            #tab-map .menu-option--icon-picker .menu-filename--icon-picker,
             #tab-messages .menu-option--icon-picker .menu-filename--icon-picker,
             #tab-settings .menu-option--icon-picker .menu-filename--icon-picker{
               font-size:12px;
@@ -5074,7 +4786,6 @@ html, body { cursor: auto !important; }
               flex:1;
             }
             
-            #tab-map .menu-option--icon-picker--clear,
             #tab-messages .menu-option--icon-picker--clear,
             #tab-settings .menu-option--icon-picker--clear{
               justify-content:center;
@@ -5138,8 +4849,7 @@ html, body { cursor: auto !important; }
               display:none !important;
               visibility:hidden !important;
             }
-            /* Map tab starting location geocoder - same pattern */
-            #tab-map .map-controls-admin-starting .geocoder[hidden],
+            /* #geocoder-admin-starting hidden state (#tab-map styles moved to admin.css) */
             #geocoder-admin-starting[hidden]{
               display:none !important;
               visibility:hidden !important;

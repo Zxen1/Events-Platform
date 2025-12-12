@@ -287,3 +287,58 @@
 .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading){
   background-color:#ffffff;
 }
+
+/* ============================================================================
+   MAP CONTROLS CONTAINER - Floating controls on the map
+   ============================================================================ */
+
+.map-controls-map{
+  position:absolute;
+  left:50%;
+  top:calc(var(--header-h) + 10px);
+  transform:translateX(-50%);
+  width:auto;
+  max-width:calc(100% - 20px);
+  min-width:0;
+  z-index:10;
+  flex-wrap:nowrap;
+  justify-content:center;
+}
+
+.map-controls-map.in-header{
+  top:calc(var(--safe-top) + var(--header-h) / 2);
+  transform:translate(-50%, -50%);
+  width:auto;
+  max-width:none;
+}
+
+.map-controls-map .geocoder{
+  flex:1 1 300px;
+  min-width:0;
+  width:100%;
+  max-width:300px;
+}
+
+.map-controls-map .mapboxgl-ctrl-geocoder{
+  width:100% !important;
+  max-width:300px !important;
+  min-width:0 !important;
+}
+
+@media (max-width:600px){
+  .map-controls-map{
+    flex-wrap:nowrap;
+    justify-content:center;
+    gap:8px;
+  }
+  .map-controls-map:not(.in-header){
+    width:calc(100% - 20px);
+    max-width:calc(100% - 20px);
+  }
+  .map-controls-map .geocoder,
+  .map-controls-map .mapboxgl-ctrl-geocoder{
+    flex:1 1 100%;
+    width:100% !important;
+    max-width:min(100%, 300px) !important;
+  }
+}
