@@ -277,16 +277,6 @@ fieldset{
   pointer-events:auto;
 }
 .control-row > *:last-child{margin-left:auto;width:200px;}
-/* AD PANEL STYLES MOVED TO advert.css - subcategory icon
-      - Location line (.loc-line) with ðŸ“ badge
-      - Date line (.date-line) with ðŸ“… badge
-   
-   These specifications ensure the ad panel displays edge-to-edge with
-   complete event information matching the post card structure.
-   
-   ========================================================================== */
-
-
 #welcomeBody .map-control-row{
   justify-content:center;
   width:fit-content;
