@@ -3076,6 +3076,11 @@ textarea.input-invalid{
   opacity:1;
 }
 
+#tab-forms .category-form-menu.has-floating-overlay,
+#tab-forms .subcategory-form-menu.has-floating-overlay{
+  z-index:var(--forms-layer-popover);
+}
+
 #tab-forms .formbuilder-subcategory-header{
   display:flex;
   align-items:center;
@@ -3141,6 +3146,10 @@ textarea.input-invalid{
   flex-direction:column;
   gap:10px;
   border-radius:0 0 10px 10px;
+}
+
+#tab-forms .subcategory-form-content[hidden]{
+  display:none;
 }
 
 #tab-forms .subcategory-fields-section{
