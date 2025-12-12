@@ -924,7 +924,7 @@ Section-first naming for plugin-ready, fully independent components:
 | **section** | Which CSS file / plugin | admin, forms, filter, header, post, map, member, advert | No |
 | **name** | What component (single word) | systemimagepicker, iconpicker, sessionpicker, access, filter | No |
 | **type** | Structural type | menu, button, calendar, panel, input, field | No |
-| **part** | Sub-element (DOM nesting) | option, label, image, icon, day, title, grid | **Yes** |
+| **part** | Sub-element (DOM nesting) | option, image, text, day, grid, header, body | **Yes** |
 | **state** | Application state (after `--`) | selected, active, disabled, open, loading | No (stack instead) |
 
 ### Why Only Parts Have Subs
@@ -936,7 +936,7 @@ Section-first naming for plugin-ready, fully independent components:
 ### Reading the Pattern
 
 ```
-.admin-systemimagepicker-menu-option-label-icon--disabled
+.admin-systemimagepicker-menu-option-text-image--disabled
    │          │           │     │      │     │       │
    │          │           │     │      │     │       └── state
    │          │           │     │      │     └── subsubpart
@@ -947,18 +947,22 @@ Section-first naming for plugin-ready, fully independent components:
    └── section
 ```
 
-Reads as: "In admin, the systemimagepicker's menu option's label's icon, disabled state"
+Reads as: "In admin, the systemimagepicker's menu option's text's image, disabled state"
 
 ### Examples
 
 **Header buttons:**
 ```
 .header-access-button
-.header-access-button--loggedin
+.header-access-button--active
+.header-access-button-image
 .header-filter-button
 .header-filter-button--active
-.header-mode-button
-.header-mode-button--disabled
+.header-filter-button-image
+.header-modeswitch-button
+.header-modeswitch-button--active
+.header-modeswitch-button-image
+.header-modeswitch-button-text
 ```
 
 **Admin system image picker:**
@@ -968,14 +972,12 @@ Reads as: "In admin, the systemimagepicker's menu option's label's icon, disable
 .admin-systemimagepicker-menu-button-image
 .admin-systemimagepicker-menu-button-image-spinner      (subpart)
 .admin-systemimagepicker-menu-button-image-spinner--loading
-.admin-systemimagepicker-menu-button-label
+.admin-systemimagepicker-menu-button-text
 .admin-systemimagepicker-menu-options
 .admin-systemimagepicker-menu-option
 .admin-systemimagepicker-menu-option--selected
 .admin-systemimagepicker-menu-option-image
-.admin-systemimagepicker-menu-option-label
-.admin-systemimagepicker-menu-option-label-icon         (subpart)
-.admin-systemimagepicker-menu-option-label-icon--active
+.admin-systemimagepicker-menu-option-text
 .admin-systemimagepicker-menu-grid
 ```
 
@@ -991,9 +993,9 @@ Reads as: "In admin, the systemimagepicker's menu option's label's icon, disable
 
 **Filter panel:**
 ```
-.filter-category-menu
-.filter-category-menu-option
-.filter-category-menu-option--selected
+.filter-categoryfilter-menu
+.filter-categoryfilter-menu-option
+.filter-categoryfilter-menu-option--selected
 .filter-daterange-calendar
 .filter-daterange-calendar-day
 ```
@@ -1015,6 +1017,92 @@ Reads as: "In admin, the systemimagepicker's menu option's label's icon, disable
 - **No conflicts:** Changing admin styles never affects forms
 - **Clear hierarchy:** Split on hyphen, read left to right
 - **Full independence:** Duplication over abstraction
+
+---
+
+## CRITICAL: Classes Define STYLING, Not CONTENT
+
+### The Confusion That Keeps Happening
+
+AI agents repeatedly make this mistake:
+- See 3 buttons with different icons → Create 3 different classes
+- See a button that can show icon OR avatar → Create 2 different classes
+- See labels with different text → Create separate classes for each
+
+**THIS IS WRONG.**
+
+### The Rule
+
+**Classes define HOW something looks and behaves. Content is what's inside.**
+
+| Class Defines (STYLING) | Content Provides (WHAT'S INSIDE) |
+|-------------------------|----------------------------------|
+| Size, shape, color | Which image file |
+| Hover effects | What text says |
+| Active state behavior | Icon vs avatar vs thumbnail |
+| Spacing, positioning | SVG vs PNG vs JPG |
+
+### Example: Header Access Buttons
+
+There are 3 buttons (member, admin, fullscreen) with different icons. They all:
+- Same size (40×40)
+- Same hover effect
+- Same active state (blue)
+
+**WRONG approach (what AI keeps doing):**
+```
+.header-access-button--member
+.header-access-button--admin
+.header-access-button--fullscreen
+.header-access-button-icon--member
+.header-access-button-icon--admin
+.header-access-button-icon--fullscreen
+```
+
+**CORRECT approach:**
+```
+.header-access-button        (all 3 buttons share this)
+.header-access-button--active (when panel is open)
+.header-access-button-image   (the icon inside - same styling regardless of which icon)
+```
+
+The actual icon image is just content - set via `src=""` or `style="mask-image: url(...)"` in HTML.
+
+### Universal Part Names: `image` and `text`
+
+To avoid ever thinking about this again, use only TWO words for content parts:
+
+| Part Name | Covers |
+|-----------|--------|
+| `image` | icon, avatar, thumbnail, logo, preview, photo, illustration, badge, spinner |
+| `text` | label, title, name, description, filename, value, message, placeholder |
+
+**Examples:**
+```
+.header-access-button-image      (not "icon" or "avatar")
+.header-access-button-text       (not "label")
+.post-card-image                 (not "thumbnail")
+.post-card-text                  (not "title")
+.admin-systemimagepicker-menu-option-image
+.admin-systemimagepicker-menu-option-text
+```
+
+### When DO You Need Different Classes?
+
+Only when the **styling differs**, not the content:
+
+- `.header-access-button--active` → Different background color when active
+- `.post-card--highlighted` → Different border when hovered from map
+- `.filter-category-menu--collapsed` → Hidden subcategories
+
+### Test Yourself
+
+Before creating a new class, ask: "Does this element need DIFFERENT STYLING, or just different CONTENT?"
+
+- Different icon but same size/color/hover? → Same class, different content
+- Different text but same font/color? → Same class, different content
+- Different background color? → Different class (state modifier)
+- Different size? → Different class
 
 ---
 

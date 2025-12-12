@@ -1,11 +1,11 @@
 /* ============================================================================
-   HEADER
+   HEADER - TRANSITION FILE
+   OLD classes (currently active) at top
+   NEW classes (ready to swap) at bottom
    ============================================================================ */
 
 /* ============================================================================
-   GLOBAL STYLES COPIED FOR INDEPENDENCE
-   These are copies of global styles from style.css so header works
-   independently after globals are removed.
+   OLD CLASSES - ACTIVE (delete after HTML is updated)
    ============================================================================ */
 
 /* Box sizing and border theming for all header elements */
@@ -45,7 +45,7 @@
   cursor: pointer;
 }
 
-/* Link styles (if any links exist in header) */
+/* Link styles */
 .container--header a{
   color: var(--primary);
 }
@@ -55,10 +55,6 @@
 .container--header a:active{
   color: var(--active);
 }
-
-/* ============================================================================
-   END GLOBAL STYLES COPY
-   ============================================================================ */
 
 /* Container - header background */
 .container--header{
@@ -312,3 +308,265 @@ body.filters-active .button--header-filter{
 .button--header-access.has-avatar .member-avatar{
   display:block;
 }
+
+/* ============================================================================
+   NEW CLASSES - COMMENTED OUT (activate after JS rewrite)
+   ============================================================================ */
+
+/*
+.header-bar {
+  height: calc(var(--header-h) + var(--safe-top));
+  min-height: calc(var(--header-h) + var(--safe-top));
+  max-height: calc(var(--header-h) + var(--safe-top));
+  display: flex;
+  align-items: center;
+  padding: var(--safe-top) var(--gap) 0 var(--gap);
+  padding-left: calc(var(--gap) * 2 + var(--logo-size));
+  gap: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--layer-header);
+  background: rgba(0,0,0,0.7);
+  box-sizing: border-box;
+}
+
+Logo button
+.header-logo-button {
+  position: absolute;
+  left: var(--gap);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.header-logo-button-image {
+  width: var(--logo-size);
+  height: var(--logo-size);
+  display: block;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.header-logo-button-image.loaded,
+.header-logo-button-image[src]:not([src=""]) {
+  opacity: 1;
+}
+
+.header-logo-button-image.is-loading {
+  animation: header-logo-rotate 1s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes header-logo-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+Filter button
+.header-filter-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--btn);
+  border-radius: 8px;
+  background: var(--btn);
+  color: var(--button-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.header-filter-button:hover {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+}
+
+.header-filter-button[aria-pressed="true"] {
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
+  color: var(--button-active-text);
+}
+
+.header-filter-button.filters-active {
+  background: var(--filter-active-color);
+  border-color: var(--filter-active-color);
+}
+
+.header-filter-button-image {
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  vertical-align: middle;
+  color: currentColor;
+}
+
+Mode switch container
+.header-modeswitch {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 601px) {
+  .header-modeswitch {
+    grid-template-columns: repeat(3, auto);
+  }
+}
+
+Mode buttons
+.header-modeswitch-button {
+  width: 40px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  font-weight: normal;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+.header-modeswitch-button + .header-modeswitch-button {
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+.header-modeswitch-button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.header-modeswitch-button[disabled],
+.header-modeswitch-button.is-disabled {
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.header-modeswitch-button[aria-pressed="true"] {
+  background: var(--btn-selected);
+  color: var(--button-active-text);
+}
+
+.header-modeswitch-button-image {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.header-modeswitch-button-text {
+  display: none;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (min-width: 601px) {
+  .header-modeswitch-button {
+    width: auto;
+    padding: 0 16px;
+  }
+  
+  .header-modeswitch-button-image {
+    display: none;
+  }
+  
+  .header-modeswitch-button-text {
+    display: block;
+  }
+}
+
+Access buttons (member, admin, fullscreen)
+.header-access-button {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.header-access-button[hidden] {
+  display: none;
+}
+
+.header-access-button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.header-access-button-image {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background-color: #888;
+  object-fit: cover;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: background-color 0.15s, border-color 0.15s;
+  box-sizing: border-box;
+}
+
+Active state - panel is open
+.header-access-button[aria-pressed="true"] .header-access-button-image {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.header-access-button[aria-pressed="true"]:hover .header-access-button-image {
+  background-color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+Fullscreen active state
+.header-access-button.is-fullscreen .header-access-button-image {
+  background-color: #3b82f6;
+}
+
+.header-access-button.is-fullscreen:hover .header-access-button-image {
+  background-color: #60a5fa;
+}
+*/
