@@ -53,19 +53,7 @@
    SECTION: HOTFIXES & QUICK PATCHES
    ============================================================================ */
 
-/* Hand cursor for DOM-based Mapbox markers */
-    .mapboxgl-marker,
-    .marker,
-    .is-clickable {
-      cursor: pointer;
-    }
-
-    .mapboxgl-popup-track-pointer * {
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    /* Layer scale */
+/* Layer scale */
     :root{
       --layer-devtools: 100;    /* developer tools (always on top) */
       --layer-modal: 90;        /* welcome modal, full-screen modals */
@@ -78,18 +66,6 @@
       --layer-content: 20;      /* primary content */
       --layer-base: 0;          /* map/base */
     }
-
-    /* Menus stay clickable above overlays */
-    .options-menu { z-index: var(--layer-menu); }
-
-/* Map card and marker styles moved to map.css */
-
-/* Extracted from <styleid="mapboxgl-critical-css"> */
-.mapboxgl-map{position:relative;width:100%;height:100%}
-    .mapboxgl-canvas{position:absolute;left:0;top:0}
-    .mapboxgl-canvas-container{position:absolute;inset:0}
-    .mapboxgl-ctrl{box-sizing:border-box}
-
 
 /* ============================================================================
    SECTION: CSS VARIABLES
@@ -187,66 +163,14 @@
    SECTION: RESET & BASE STYLES
    ============================================================================ */
 
-*:not([class*="mapboxgl-"]){
-  box-sizing: border-box;
-  border-color: var(--border) !important;
-}
-
-@supports (scrollbar-width: thin){
-  *:not([class*="mapboxgl-"]){
-    scrollbar-width: thin;
-  }
-}
-
-@supports (scrollbar-color: #000 #fff){
-  *:not([class*="mapboxgl-"]){
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  }
+html,body{
+  height: 100%;
 }
 
 fieldset{
   margin:0;
   padding:6px 0 0;
-  border:0 !important;
-}
-
-*:not([class*="mapboxgl-"]):hover{
-  border-color: var(--border-hover) !important;
-}
-
-*:not([class*="mapboxgl-"]):active{
-  border-color: var(--border-active) !important;
-}
-
-*[aria-pressed="true"]:not([class*="mapboxgl-"]),
-*[aria-current="page"]:not([class*="mapboxgl-"]),
-.selected:not([class*="mapboxgl-"]),
-.on:not([class*="mapboxgl-"]){
-  border-color: var(--border-active) !important;
-  color: var(--active);
-}
-
-*[aria-selected="true"]:not([class*="mapboxgl-"]){
-  border-color: var(--border-active) !important;
-}
-
-html,body{
-  height: 100%;
-}
-
-*:not([class*="mapboxgl-"])::-webkit-scrollbar{
-  width:var(--scrollbar-h);
-  height:var(--scrollbar-h);
-}
-*:not([class*="mapboxgl-"])::-webkit-scrollbar-track{
-  background:var(--scrollbar-track);
-}
-*:not([class*="mapboxgl-"])::-webkit-scrollbar-thumb{
-  background:var(--scrollbar-thumb);
-  border-radius:0;
-}
-*:not([class*="mapboxgl-"])::-webkit-scrollbar-thumb:hover{
-  background:var(--scrollbar-thumb-hover);
+  border:0;
 }
 
   body{
@@ -268,43 +192,20 @@ html,body{
   body, .post-body{
     overscroll-behavior: contain;
   }
-  .panel-content, .options-menu, .calendar-scroll{
-    overscroll-behavior: contain;
-  }
 
-/* ============================================================================
-   SECTION: TYPOGRAPHY
-   ============================================================================ */
-
-  h1, h2, h3, h4, h5, h6{
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-a{
-  color: var(--primary);
+/* Welcome modal geocoder font */
+#welcomeBody .mapboxgl-ctrl-geocoder input,
+#welcomeBody .mapboxgl-ctrl-geocoder--input,
+#welcomeBody .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
 }
-a:hover{
-  color: var(--accent);
-}
-a:active{
-  color: var(--active);
-}
-
-
-/* Ensure all Mapbox geocoder inputs inherit font */
-.mapboxgl-ctrl-geocoder input,
-.mapboxgl-ctrl-geocoder--input,
-.mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
-  font-family: inherit !important;
-  font-size: 14px !important;
-  font-weight: 400 !important;
-}
-.mapboxgl-ctrl-geocoder input::placeholder,
-.mapboxgl-ctrl-geocoder--input::placeholder{
-  font-family: inherit !important;
-  font-size: 14px !important;
-  font-weight: 400 !important;
+#welcomeBody .mapboxgl-ctrl-geocoder input::placeholder,
+#welcomeBody .mapboxgl-ctrl-geocoder--input::placeholder{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 /* Modal base - kept here for welcome modal */
@@ -376,10 +277,6 @@ a:active{
   pointer-events:auto;
 }
 .control-row > *:last-child{margin-left:auto;width:200px;}
-
-/* Panel/component styles moved to: admin.css, member.css, filter.css, forms.css, post.css */
-
-/* TODO: cleanup remaining comment */
 /* AD PANEL STYLES MOVED TO advert.css - subcategory icon
       - Location line (.loc-line) with ðŸ“ badge
       - Date line (.date-line) with ðŸ“… badge
@@ -389,56 +286,6 @@ a:active{
    
    ========================================================================== */
 
-
-/* ============================================================================
-   FORMS STYLES - DEDICATED BLOCK
-   ============================================================================
-   
-   Form preview styles for form containers, fields, and related components.
-   
-   ========================================================================== */
-
-/* Form validation styles (.input-invalid, .form-image-remove, .required-asterisk) moved to forms.css */
-
-/* .zoom-toast moved to map.css */
-
-/* ============================================================================
-   SECTION: MENUS & DROPDOWNS
-   ============================================================================ */
-
-/* Menu base styles (.menu, .menu-button, .menu-option) moved to admin.css, forms.css */
-
-/* Menu Button Image - base styles moved to modifier classes
-.menu-button-img{
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-*/
-
-/* Menu Button Label - base styles moved to modifier classes
-.menu-button-label{
-  flex: 1;
-  text-align: left;
-}
-*/
-
-/* Icon picker styles moved to admin.css, forms.css */
-/* System image picker styles moved to admin.css */
-/* .menu-options moved to admin.css, forms.css */
-
-/* .options-dropdown base styles moved to component files */
-
-/* ============================================================================
-   SECTION: MESSAGES
-   ============================================================================ */
-
-/* Message styles moved to component files */
-
-
-/* Card styles moved to post.css */
-/* Map container styles (#map, .map-overlay, .map-zoom-indicator, .map-scale-bar) moved to map.css */
 
 #welcomeBody .map-control-row{
   justify-content:center;
@@ -525,9 +372,6 @@ a:active{
   width:100%;
 }
 
-/* .map-controls-map styles moved to map.css */
-/* .map-area moved to map.css */
-
 @media (max-width:600px){
   #welcomeBody .map-control-row > .geocoder,
   #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
@@ -535,13 +379,6 @@ a:active{
     max-width:min(100%, 300px) !important;
   }
 }
-
-/* .desc-wrap, .see-more-toggle, .desc, .dates, .date, .pill, .close moved to post.css */
-/* .venue-options, .session-options moved to forms.css */
-
-/* .post-map moved to post.css */
-/* .sort-options moved to filter.css */
-/* .hide-map-calendar moved to map.css */
 
 @media (max-width:440px){
   html{
@@ -552,12 +389,9 @@ a:active{
   }
 }
 
-/* Post-related media queries moved to post.css */
-/* .copy-msg, .image-modal-container, #post-modal-container moved to post.css */
-
-    @media (max-width:440px){
-      #post-modal-container .post-modal{width:100%;min-width:0;}
-    }
+/* ============================================================================
+   SECTION: TERMS MODAL
+   ============================================================================ */
 
   #termsModalContainer{
     position:fixed;
@@ -696,27 +530,6 @@ a:active{
     color:var(--link-hover-color, #0052a3);
   }
 
-/* .chip-small, .card .thumb/.meta/.fav moved to post.css */
-
-.mapboxgl-popup,
-.mapboxgl-popup-content{
-  border-radius:8px !important;
-}
-
-.mapboxgl-popup-content{
-  background: var(--popup-bg) !important;
-  color: var(--popup-text) !important;
-  overflow:hidden;
-}
-
-.mapboxgl-popup-close-button{
-  color: var(--popup-text) !important;
-}
-
-/* .hero img.lqip/.ready moved to post.css */
-/* .mode-posts #postsWide moved to post.css */
-
-
 @media (max-width:440px){
   :root{
     --footer-h:0;
@@ -730,14 +543,7 @@ a:active{
    SECTION: UTILITIES & FIXES
    ============================================================================ */
 
-html, body { cursor: auto !important; }
-    a, button, [role="button"], .clickable { cursor: pointer !important; }
-    .mapboxgl-canvas { cursor: grab; }
-    .mapboxgl-canvas:active { cursor: grabbing; }
-    * { -webkit-tap-highlight-color: transparent; }
-
-/* .address_line styles moved to forms.css */
-/* .subcategory-field-overlay styles moved to forms.css */
+* { -webkit-tap-highlight-color: transparent; }
 
 /* ============================================================================
    DEVTOOLS

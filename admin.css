@@ -9,6 +9,72 @@
 #adminPanel,
 #adminPanel *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+#adminPanel *:hover{
+  border-color: var(--border-hover);
+}
+#adminPanel *:active{
+  border-color: var(--border-active);
+}
+#adminPanel *[aria-pressed="true"],
+#adminPanel *[aria-selected="true"],
+#adminPanel .selected,
+#adminPanel .on{
+  border-color: var(--border-active);
+}
+#adminPanel *::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+#adminPanel *::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+#adminPanel *::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+#adminPanel *::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+
+/* Typography */
+#adminPanel h1,
+#adminPanel h2,
+#adminPanel h3,
+#adminPanel h4,
+#adminPanel h5,
+#adminPanel h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+#adminPanel a{
+  color: var(--primary);
+}
+#adminPanel a:hover{
+  color: var(--accent);
+}
+#adminPanel a:active{
+  color: var(--active);
+}
+
+/* Overscroll containment */
+#adminPanel .panel-content,
+#adminPanel .options-menu{
+  overscroll-behavior: contain;
+}
+
+/* Cursor defaults */
+#adminPanel a,
+#adminPanel button,
+#adminPanel [role="button"],
+#adminPanel .clickable{
+  cursor: pointer;
+}
+
+/* Options menu z-index */
+#adminPanel .options-menu{
+  z-index: var(--layer-menu);
 }
 
 /* Switch toggle styles */

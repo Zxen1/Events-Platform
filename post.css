@@ -8,7 +8,7 @@
    independently after globals are removed.
    ============================================================================ */
 
-/* Box sizing for all post/recent elements */
+/* Box sizing and border theming for all post/recent elements */
 .post-board,
 .post-board *,
 .recents-board,
@@ -22,6 +22,82 @@
 .card,
 .card *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+.post-board *:hover,
+.recents-board *:hover,
+.post-card *:hover,
+.recents-card *:hover,
+.open-post *:hover,
+.card *:hover{
+  border-color: var(--border-hover);
+}
+.post-board *:active,
+.recents-board *:active,
+.post-card *:active,
+.recents-card *:active,
+.open-post *:active,
+.card *:active{
+  border-color: var(--border-active);
+}
+.post-board *[aria-pressed="true"],
+.post-board *[aria-selected="true"],
+.post-board .selected,
+.post-board .on,
+.recents-board *[aria-pressed="true"],
+.recents-board *[aria-selected="true"],
+.recents-board .selected,
+.recents-board .on{
+  border-color: var(--border-active);
+}
+.post-board *::-webkit-scrollbar,
+.recents-board *::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+.post-board *::-webkit-scrollbar-track,
+.recents-board *::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+.post-board *::-webkit-scrollbar-thumb,
+.recents-board *::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+.post-board *::-webkit-scrollbar-thumb:hover,
+.recents-board *::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+
+/* Typography */
+.post-board h1, .post-board h2, .post-board h3, .post-board h4, .post-board h5, .post-board h6,
+.recents-board h1, .recents-board h2, .recents-board h3, .recents-board h4, .recents-board h5, .recents-board h6,
+.open-post h1, .open-post h2, .open-post h3, .open-post h4, .open-post h5, .open-post h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+.post-board a, .recents-board a, .open-post a{
+  color: var(--primary);
+}
+.post-board a:hover, .recents-board a:hover, .open-post a:hover{
+  color: var(--accent);
+}
+.post-board a:active, .recents-board a:active, .open-post a:active{
+  color: var(--active);
+}
+
+/* Cursor defaults */
+.post-board a, .post-board button, .post-board [role="button"], .post-board .clickable,
+.recents-board a, .recents-board button, .recents-board [role="button"], .recents-board .clickable,
+.open-post a, .open-post button, .open-post [role="button"], .open-post .clickable{
+  cursor: pointer;
+}
+
+/* Options menu z-index */
+.post-board .options-menu,
+.recents-board .options-menu,
+.open-post .options-menu{
+  z-index: var(--layer-menu);
 }
 
 /* ============================================================================

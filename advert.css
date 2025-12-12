@@ -24,7 +24,7 @@
    independently after globals are removed.
    ============================================================================ */
 
-/* Box sizing for all advert elements */
+/* Box sizing and border theming for all advert elements */
 .ad-board,
 .ad-board *,
 .ad-panel,
@@ -32,6 +32,44 @@
 .ad-slide,
 .ad-slide *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+.ad-board *:hover,
+.ad-panel *:hover{
+  border-color: var(--border-hover);
+}
+.ad-board *:active,
+.ad-panel *:active{
+  border-color: var(--border-active);
+}
+.ad-board *[aria-pressed="true"],
+.ad-board *[aria-selected="true"],
+.ad-board .selected,
+.ad-board .on{
+  border-color: var(--border-active);
+}
+
+/* Typography */
+.ad-board h1, .ad-board h2, .ad-board h3, .ad-board h4, .ad-board h5, .ad-board h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+.ad-board a{
+  color: var(--primary);
+}
+.ad-board a:hover{
+  color: var(--accent);
+}
+.ad-board a:active{
+  color: var(--active);
+}
+
+/* Cursor defaults */
+.ad-board a,
+.ad-board button,
+.ad-board [role="button"],
+.ad-board .clickable{
+  cursor: pointer;
 }
 
 /* ============================================================================

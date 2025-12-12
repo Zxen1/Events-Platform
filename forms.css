@@ -8,10 +8,92 @@
    independently after globals are removed.
    ============================================================================ */
 
-/* Box sizing for all form elements */
+/* Box sizing and border theming for all form elements */
 #tab-forms,
 #tab-forms *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+#tab-forms *:hover{
+  border-color: var(--border-hover);
+}
+#tab-forms *:active{
+  border-color: var(--border-active);
+}
+#tab-forms *[aria-pressed="true"],
+#tab-forms *[aria-selected="true"],
+#tab-forms .selected,
+#tab-forms .on{
+  border-color: var(--border-active);
+}
+#tab-forms *::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+#tab-forms *::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+#tab-forms *::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+#tab-forms *::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+
+/* Typography */
+#tab-forms h1,
+#tab-forms h2,
+#tab-forms h3,
+#tab-forms h4,
+#tab-forms h5,
+#tab-forms h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+#tab-forms a{
+  color: var(--primary);
+}
+#tab-forms a:hover{
+  color: var(--accent);
+}
+#tab-forms a:active{
+  color: var(--active);
+}
+
+/* Overscroll containment */
+#tab-forms .panel-content,
+#tab-forms .options-menu,
+#tab-forms .calendar-scroll{
+  overscroll-behavior: contain;
+}
+
+/* Cursor defaults */
+#tab-forms a,
+#tab-forms button,
+#tab-forms [role="button"],
+#tab-forms .clickable{
+  cursor: pointer;
+}
+
+/* Options menu z-index */
+#tab-forms .options-menu{
+  z-index: var(--layer-menu);
+}
+
+/* Geocoder font */
+#tab-forms .mapboxgl-ctrl-geocoder input,
+#tab-forms .mapboxgl-ctrl-geocoder--input,
+#tab-forms .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+#tab-forms .mapboxgl-ctrl-geocoder input::placeholder,
+#tab-forms .mapboxgl-ctrl-geocoder--input::placeholder{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 /* Panel Field Base */

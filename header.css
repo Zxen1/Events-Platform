@@ -8,7 +8,7 @@
    independently after globals are removed.
    ============================================================================ */
 
-/* Box sizing for all header elements */
+/* Box sizing and border theming for all header elements */
 .container--header,
 .container--header *,
 .container--header-mode-switch,
@@ -22,6 +22,27 @@
 .button--header-access,
 .button--header-access *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+.container--header *:hover{
+  border-color: var(--border-hover);
+}
+.container--header *:active{
+  border-color: var(--border-active);
+}
+.container--header *[aria-pressed="true"],
+.container--header *[aria-selected="true"],
+.container--header .selected,
+.container--header .on{
+  border-color: var(--border-active);
+}
+
+/* Cursor defaults */
+.container--header a,
+.container--header button,
+.container--header [role="button"],
+.container--header .clickable{
+  cursor: pointer;
 }
 
 /* Link styles (if any links exist in header) */

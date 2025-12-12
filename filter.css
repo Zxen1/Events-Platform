@@ -8,10 +8,92 @@
    independently after globals are removed.
    ============================================================================ */
 
-/* Box sizing for all filter elements */
+/* Box sizing and border theming for all filter elements */
 #filterPanel,
 #filterPanel *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+#filterPanel *:hover{
+  border-color: var(--border-hover);
+}
+#filterPanel *:active{
+  border-color: var(--border-active);
+}
+#filterPanel *[aria-pressed="true"],
+#filterPanel *[aria-selected="true"],
+#filterPanel .selected,
+#filterPanel .on{
+  border-color: var(--border-active);
+}
+#filterPanel *::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+#filterPanel *::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+#filterPanel *::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+#filterPanel *::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+
+/* Typography */
+#filterPanel h1,
+#filterPanel h2,
+#filterPanel h3,
+#filterPanel h4,
+#filterPanel h5,
+#filterPanel h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+#filterPanel a{
+  color: var(--primary);
+}
+#filterPanel a:hover{
+  color: var(--accent);
+}
+#filterPanel a:active{
+  color: var(--active);
+}
+
+/* Overscroll containment */
+#filterPanel .panel-content,
+#filterPanel .options-menu,
+#filterPanel .calendar-scroll{
+  overscroll-behavior: contain;
+}
+
+/* Cursor defaults */
+#filterPanel a,
+#filterPanel button,
+#filterPanel [role="button"],
+#filterPanel .clickable{
+  cursor: pointer;
+}
+
+/* Options menu z-index */
+#filterPanel .options-menu{
+  z-index: var(--layer-menu);
+}
+
+/* Geocoder font */
+#filterPanel .mapboxgl-ctrl-geocoder input,
+#filterPanel .mapboxgl-ctrl-geocoder--input,
+#filterPanel .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+#filterPanel .mapboxgl-ctrl-geocoder input::placeholder,
+#filterPanel .mapboxgl-ctrl-geocoder--input::placeholder{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 /* Panel base */

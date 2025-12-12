@@ -9,6 +9,72 @@
 #memberPanel,
 #memberPanel *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+#memberPanel *:hover{
+  border-color: var(--border-hover);
+}
+#memberPanel *:active{
+  border-color: var(--border-active);
+}
+#memberPanel *[aria-pressed="true"],
+#memberPanel *[aria-selected="true"],
+#memberPanel .selected,
+#memberPanel .on{
+  border-color: var(--border-active);
+}
+#memberPanel *::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+#memberPanel *::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+#memberPanel *::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+#memberPanel *::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+
+/* Typography */
+#memberPanel h1,
+#memberPanel h2,
+#memberPanel h3,
+#memberPanel h4,
+#memberPanel h5,
+#memberPanel h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+#memberPanel a{
+  color: var(--primary);
+}
+#memberPanel a:hover{
+  color: var(--accent);
+}
+#memberPanel a:active{
+  color: var(--active);
+}
+
+/* Overscroll containment */
+#memberPanel .panel-content,
+#memberPanel .options-menu{
+  overscroll-behavior: contain;
+}
+
+/* Cursor defaults */
+#memberPanel a,
+#memberPanel button,
+#memberPanel [role="button"],
+#memberPanel .clickable{
+  cursor: pointer;
+}
+
+/* Options menu z-index */
+#memberPanel .options-menu{
+  z-index: var(--layer-menu);
 }
 
 /* Tiny button styles (logout button) */

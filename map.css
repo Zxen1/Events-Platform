@@ -4,7 +4,70 @@
    ============================================================================ */
 
 /* ============================================================================
-   GLOBAL STYLES COPIED FOR INDEPENDENCE
+   MAPBOX CRITICAL CSS
+   Required for map to render correctly
+   ============================================================================ */
+
+.mapboxgl-map{
+  position:relative;
+  width:100%;
+  height:100%;
+}
+.mapboxgl-canvas{
+  position:absolute;
+  left:0;
+  top:0;
+}
+.mapboxgl-canvas-container{
+  position:absolute;
+  inset:0;
+}
+.mapboxgl-ctrl{
+  box-sizing:border-box;
+}
+
+/* Mapbox marker cursors */
+.mapboxgl-marker,
+.marker,
+.is-clickable{
+  cursor: pointer;
+}
+.mapboxgl-popup-track-pointer *{
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mapbox popup styling */
+.mapboxgl-popup,
+.mapboxgl-popup-content{
+  border-radius:8px;
+}
+.mapboxgl-popup-content{
+  background: var(--popup-bg);
+  color: var(--popup-text);
+  overflow:hidden;
+}
+.mapboxgl-popup-close-button{
+  color: var(--popup-text);
+}
+
+/* Mapbox geocoder font (for map controls) */
+.map-controls-map .mapboxgl-ctrl-geocoder input,
+.map-controls-map .mapboxgl-ctrl-geocoder--input,
+.map-controls-map .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+.map-controls-map .mapboxgl-ctrl-geocoder input::placeholder,
+.map-controls-map .mapboxgl-ctrl-geocoder--input::placeholder{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* ============================================================================
+   SCOPED STYLES FOR INDEPENDENCE
    ============================================================================ */
 
 .mapmarker,
@@ -16,6 +79,56 @@
 .map-controls-map,
 .map-controls-map *{
   box-sizing: border-box;
+  border-color: var(--border);
+}
+.map-controls-map *:hover{
+  border-color: var(--border-hover);
+}
+.map-controls-map *:active{
+  border-color: var(--border-active);
+}
+
+/* Typography */
+.mapmarker h1, .mapmarker h2, .mapmarker h3, .mapmarker h4, .mapmarker h5, .mapmarker h6,
+.small-map-card h1, .small-map-card h2, .small-map-card h3, .small-map-card h4, .small-map-card h5, .small-map-card h6,
+.big-map-card h1, .big-map-card h2, .big-map-card h3, .big-map-card h4, .big-map-card h5, .big-map-card h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+.mapmarker a, .small-map-card a, .big-map-card a{
+  color: var(--primary);
+}
+.mapmarker a:hover, .small-map-card a:hover, .big-map-card a:hover{
+  color: var(--accent);
+}
+.mapmarker a:active, .small-map-card a:active, .big-map-card a:active{
+  color: var(--active);
+}
+
+/* Cursor defaults */
+.map-controls-map a,
+.map-controls-map button,
+.map-controls-map [role="button"],
+.map-controls-map .clickable,
+.mapmarker a,
+.mapmarker button,
+.mapmarker [role="button"],
+.mapmarker .clickable,
+.small-map-card a,
+.small-map-card button,
+.small-map-card [role="button"],
+.small-map-card .clickable,
+.big-map-card a,
+.big-map-card button,
+.big-map-card [role="button"],
+.big-map-card .clickable{
+  cursor: pointer;
+}
+.mapboxgl-canvas{
+  cursor: grab;
+}
+.mapboxgl-canvas:active{
+  cursor: grabbing;
 }
 
 /* ============================================================================
