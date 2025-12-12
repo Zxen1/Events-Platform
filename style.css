@@ -293,40 +293,21 @@ a:active{
 
 
 /* ============================================================================
-   SECTION: MAP
+   SECTION: COMPONENT FILES (content moved to dedicated CSS files)
+   - map.css: Map display styles (cards, markers, clusters)
+   - post.css: Post/Recent board styles
+   - advert.css: Ad board styles
+   - filter.css: Filter panel styles
+   - member.css: Member panel styles
+   - admin.css: Admin panel styles (#adminPanel, #tab-map, #tab-settings, #tab-messages)
+   - forms.css: Forms tab styles (#tab-forms)
    ============================================================================ */
 
 
 
 /* ============================================================================
-   SECTION: POST/RECENT BOARD
+   SECTION: SHARED PANEL COMPONENTS
    ============================================================================ */
-
-
-
-/* ============================================================================
-   SECTION: AD BOARD
-   ============================================================================ */
-
-
-
-/* ============================================================================
-   SECTION: FILTER PANEL
-   ============================================================================ */
-
-
-
-/* ============================================================================
-   SECTION: MEMBER PANEL
-   ============================================================================ */
-
-
-
-/* ============================================================================
-   SECTION: ADMIN PANEL
-   ============================================================================ */
-
-
 
 /* Tab Button - for panel tab buttons */
 .button--tab{
@@ -3432,8 +3413,7 @@ textarea.input-invalid{
 }
 
 /* Menu button arrow - override global dropdown-arrow styles */
-.menu-button--system-image-picker .dropdown-arrow,
-#adminPanel .menu-button--system-image-picker .dropdown-arrow{
+.menu-button--system-image-picker .dropdown-arrow{
   position:absolute;
   right:12px;
   top:50%;
