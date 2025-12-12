@@ -436,3 +436,43 @@
 #memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
   filter:none;
 }
+
+/* ============================================================================
+   MEMBER UNSAVED PROMPT
+   ============================================================================ */
+
+#memberUnsavedPrompt{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);
+  z-index:var(--layer-dialog);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
+}
+#memberUnsavedPrompt.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#memberUnsavedPrompt .member-unsaved-dialog{
+  background:var(--dropdown-bg, rgba(17,17,17,0.96));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:360px;
+  width:calc(100% - 40px);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);
+  color:#000;
+}
+#memberUnsavedPrompt .member-unsaved-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
