@@ -2173,6 +2173,51 @@ textarea.input-invalid{
    FORMBUILDER CHECKOUT OPTIONS EDITOR
    ============================================================================ */
 
+/* Checkout options editor in formbuilder */
+#tab-forms .checkout-options-editor,
+#memberPanel .member-create-fields .checkout-options-editor{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+#tab-forms .checkout-options-editor[hidden],
+#memberPanel .member-create-fields .checkout-options-editor[hidden]{
+  display:none !important;
+}
+#tab-forms .checkout-options-label,
+#memberPanel .member-create-fields .checkout-options-label{
+  font-size:14px;
+  font-weight:600;
+}
+#tab-forms .checkout-options-list,
+#memberPanel .member-create-fields .checkout-options-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+#tab-forms .checkout-option-row,
+#memberPanel .member-create-fields .checkout-option-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#tab-forms .checkout-option-label,
+#memberPanel .member-create-fields .checkout-option-label{
+  font-size:13px;
+  min-width:70px;
+}
+#tab-forms .checkout-option-select,
+#memberPanel .member-create-fields .checkout-option-select{
+  flex:1;
+  height:36px;
+  padding:0 10px;
+  border-radius:6px;
+  border:1px solid var(--border-color, #444);
+  background:var(--input-bg, #1a1a2e);
+  color:var(--text-color, #fff);
+  font-size:13px;
+}
+
 #tab-forms .subcategory-checkout-options-editor{
   display:flex;
   flex-direction:column;
@@ -3125,6 +3170,10 @@ textarea.input-invalid{
 #tab-forms .form-phone-wrapper .options-menu .menu-option:hover,
 #memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:hover{
   background:rgba(255,255,255,0.15);
+}
+#tab-forms .form-phone-wrapper .options-menu .menu-option:active,
+#memberPanel .member-create-fields .form-phone-wrapper .options-menu .menu-option:active{
+  background:rgba(255,255,255,0.25);
 }
 
 #tab-forms .form-phone-wrapper input[type="tel"],
