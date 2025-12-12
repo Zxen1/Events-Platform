@@ -457,6 +457,86 @@
   margin-bottom:4px;
 }
 
+#tab-forms .category-edit-panel[hidden],
+#tab-forms .subcategory-edit-panel[hidden]{
+  display:none;
+}
+#tab-forms .field-edit-panel[hidden]{
+  display:none;
+}
+
+#tab-forms .category-name-input{
+  width:300px;
+  max-width:100%;
+  height:36px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+  padding:0 12px;
+}
+
+/* Edit panel name row with overflow menu */
+#tab-forms .edit-panel-name-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+}
+#tab-forms .edit-panel-name-row .category-name-input,
+#tab-forms .edit-panel-name-row .subcategory-name-input{
+  flex:1;
+}
+#tab-forms .edit-panel-overflow-btn{
+  flex-shrink:0;
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:6px;
+  color:rgba(255,255,255,0.5);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+#tab-forms .edit-panel-overflow-btn:hover{
+  background:rgba(255,255,255,0.08);
+  color:rgba(255,255,255,0.8);
+}
+#tab-forms .edit-panel-overflow-menu{
+  position:absolute;
+  top:100%;
+  right:0;
+  margin-top:4px;
+  background:#1a1a1a;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  padding:4px;
+  min-width:180px;
+  z-index:100;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+}
+#tab-forms .edit-panel-overflow-menu[hidden]{
+  display:none;
+}
+#tab-forms .overflow-menu-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  padding:10px 12px;
+  background:transparent;
+  border:none;
+  border-radius:6px;
+  color:#ccc;
+  font-size:13px;
+  cursor:pointer;
+  text-align:left;
+  transition:background 0.15s;
+}
+
 #tab-forms .category-hide-toggle-row,
 #tab-forms .subcategory-hide-toggle-row{
   display:flex;
@@ -748,6 +828,121 @@
 #tab-forms .session-date-picker .calendar .day.range-start.range-end,
 #memberPanel .member-create-fields .session-date-picker .calendar .day.range-start.range-end{
   border-radius:8px;
+}
+
+/* Session date picker - main structure */
+#tab-forms .session-date-picker{
+  background:#222222;
+  position:absolute;
+  top:auto;
+  bottom:100%;
+  left:0;
+  margin-top:0;
+  margin-bottom:6px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  font-size:var(--panel-label-size);
+  width:340px;
+  min-height:var(--calendar-height);
+  max-width:100%;
+  border:1px solid var(--border);
+  border-radius:8px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.4);
+  box-sizing:content-box;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-4px);
+  transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index:var(--layer-menu);
+}
+#tab-forms .session-date-picker.is-visible{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+#tab-forms .session-date-picker-instructions{
+  margin:12px 16px 8px;
+  color:#ffffff;
+}
+#tab-forms .session-date-picker .calendar-scroll{
+  flex:1 1 auto;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:0;
+  margin:0;
+  padding-bottom:var(--scrollbar-h);
+  box-sizing:content-box;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+  position:relative;
+}
+#tab-forms .session-date-picker .calendar{
+  display:flex;
+  width:max-content;
+  transform:scale(var(--calendar-scale));
+  transform-origin:top left;
+  background:#222222;
+  color:#ffffff;
+}
+#tab-forms .session-date-picker .today-marker{
+  position:absolute;
+  bottom:0;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--today);
+  cursor:pointer;
+}
+#tab-forms .session-date-picker .calendar-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  padding:10px;
+  border-top:1px solid var(--border);
+}
+#tab-forms .session-date-picker .calendar-actions button{
+  border-radius:8px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  padding:6px 12px;
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+#tab-forms .session-date-picker .calendar-actions button:hover,
+#tab-forms .session-date-picker .calendar-actions button:focus{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#tab-forms .session-date-picker .calendar-actions button:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+}
+#tab-forms .session-date-picker .calendar-actions .primary{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+  box-shadow:0 0 0 2px rgba(255,255,255,0.6);
+}
+#tab-forms .session-date-picker .calendar-actions .primary:hover,
+#tab-forms .session-date-picker .calendar-actions .primary:focus{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+  box-shadow:0 0 0 2px rgba(255,255,255,0.8);
+}
+#tab-forms .session-date-picker .calendar-actions .primary:active{
+  background:var(--button-selected-active, var(--btn-selected-active));
+  border-color:var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active)));
+  color:var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
 }
 
 /* Checkout duration options */
@@ -1951,6 +2146,151 @@ textarea.input-invalid{
   gap:8px;
 }
 
+#tab-forms .tier-price-row > *,
+#memberPanel .member-create-fields .tier-price-row > *{
+  min-width:0;
+  width:100%;
+}
+
+/* Venue-ticketing currency dropdown - match item-pricing style */
+#tab-forms .tier-price-row .options-dropdown,
+#memberPanel .member-create-fields .tier-price-row .options-dropdown{
+  position:relative;
+  overflow:visible;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  flex:0 0 100px;
+}
+#tab-forms .tier-price-row .item-pricing-currency,
+#memberPanel .member-create-fields .tier-price-row .item-pricing-currency{
+  position:relative;
+  padding:0 30px 0 10px;
+  width:100px;
+  min-width:100px;
+  max-width:100px;
+  height:35px;
+  overflow:hidden;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  line-height:1;
+}
+#tab-forms .tier-price-row .options-menu,
+#memberPanel .member-create-fields .tier-price-row .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  min-width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  z-index:var(--layer-menu);
+  margin:0;
+  background:#222222;
+  border:1px solid rgba(255,255,255,1);
+  border-radius:8px;
+  padding:10px;
+  min-width:200px;
+  width:max-content;
+  max-width:min(300px, 90vw);
+  max-height:300px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#tab-forms .tier-price-row .options-menu .menu-option,
+#memberPanel .member-create-fields .tier-price-row .options-menu .menu-option{
+  background:rgba(0,0,0,0.2);
+  border:none;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  min-height:44px;
+  padding:10px 14px;
+  font-size:13px;
+  line-height:1;
+  justify-content:flex-start;
+  gap:6px;
+  text-align:left;
+  cursor:pointer;
+  transition:background 0.15s ease;
+}
+#tab-forms .tier-price-row .options-menu .menu-option:hover,
+#memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+#tab-forms .tier-price-row .options-menu .menu-option:active,
+#memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:active{
+  background:rgba(255,255,255,0.25);
+}
+#tab-forms .tier-price-row .options-menu .menu-option:focus,
+#memberPanel .member-create-fields .tier-price-row .options-menu .menu-option:focus{
+  background:rgba(255,255,255,0.2);
+  outline:2px solid rgba(255,255,255,0.5);
+  outline-offset:-2px;
+}
+/* Scrollbar styling for tier price row dropdown */
+#tab-forms .tier-price-row .options-menu::-webkit-scrollbar,
+#memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar{
+  width:8px;
+}
+#tab-forms .tier-price-row .options-menu::-webkit-scrollbar-track,
+#memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-track{
+  background:rgba(0,0,0,0.2);
+  border-radius:4px;
+}
+#tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb,
+#memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.3);
+  border-radius:4px;
+}
+#tab-forms .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover,
+#memberPanel .member-create-fields .tier-price-row .options-menu::-webkit-scrollbar-thumb:hover{
+  background:rgba(255,255,255,0.5);
+}
+
+/* Session containers */
+#tab-forms .session-times,
+#memberPanel .member-create-fields .session-times{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+#tab-forms .session-time-row,
+#memberPanel .member-create-fields .session-time-row{
+  border:none;
+  border-radius:8px;
+  background:none;
+  padding:0;
+}
+#tab-forms .seating_area-list,
+#memberPanel .member-create-fields .seating_area-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+}
+#tab-forms .session-pricing-card,
+#memberPanel .member-create-fields .session-pricing-card{
+  border:none;
+  border-radius:8px;
+  background:none;
+  padding:0;
+}
+#tab-forms .pricing_tier-list,
+#memberPanel .member-create-fields .pricing_tier-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+}
+
 #tab-forms .session-time-row .seating_area-list,
 #tab-forms .session-pricing-card .pricing_tier-list,
 #tab-forms .tier-row .tier-price-row,
@@ -1958,6 +2298,54 @@ textarea.input-invalid{
 #memberPanel .member-create-fields .session-pricing-card .pricing_tier-list,
 #memberPanel .member-create-fields .tier-row .tier-price-row{
   grid-column:1 / -1;
+}
+
+/* Same pricing row styles */
+#tab-forms .same-pricing-row,
+#memberPanel .member-create-fields .same-pricing-row{
+  grid-column:1 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+  padding:0 12px 12px;
+  box-sizing:border-box;
+}
+#tab-forms .same-pricing-label,
+#memberPanel .member-create-fields .same-pricing-label{
+  font-weight:600;
+}
+#tab-forms .same-pricing-options,
+#memberPanel .member-create-fields .same-pricing-options{
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+#tab-forms .same-pricing-options label,
+#memberPanel .member-create-fields .same-pricing-options label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+}
+#tab-forms .session-time-row.has-same-pricing,
+#memberPanel .member-create-fields .session-time-row.has-same-pricing{
+  padding-bottom:0;
+}
+
+/* First child min-width reset */
+#tab-forms .venue-line > *:first-child,
+#tab-forms .session-date-row > *:first-child,
+#tab-forms .session-time-row > *:first-child,
+#tab-forms .session-pricing-card > *:first-child,
+#tab-forms .tier-row > *:first-child,
+#memberPanel .member-create-fields .venue-line > *:first-child,
+#memberPanel .member-create-fields .session-date-row > *:first-child,
+#memberPanel .member-create-fields .session-time-row > *:first-child,
+#memberPanel .member-create-fields .session-pricing-card > *:first-child,
+#memberPanel .member-create-fields .tier-row > *:first-child{
+  min-width:0;
+  width:100%;
 }
 
 #tab-forms .session-details,
@@ -2742,6 +3130,50 @@ textarea.input-invalid{
   border-radius:0;
   display:flex;
   align-items:center;
+  min-height:44px;
+  padding:10px 14px;
+  font-size:13px;
+  line-height:1;
+  justify-content:flex-start;
+  gap:6px;
+  text-align:left;
+  cursor:pointer;
+  border-radius:6px;
+  transition:background 0.15s ease;
+}
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:hover,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.15);
+}
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:active,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:active{
+  background:rgba(255,255,255,0.25);
+}
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:focus,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu .menu-option:focus{
+  background:rgba(255,255,255,0.2);
+  outline:2px solid rgba(255,255,255,0.5);
+  outline-offset:-2px;
+}
+
+/* Scrollbar styling for currency dropdown */
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar{
+  width:8px;
+}
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-track,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-track{
+  background:rgba(0,0,0,0.2);
+  border-radius:4px;
+}
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.3);
+  border-radius:4px;
+}
+#tab-forms .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb:hover,
+#memberPanel .member-create-fields .item-pricing-row--bottom .options-dropdown .options-menu::-webkit-scrollbar-thumb:hover{
+  background:rgba(255,255,255,0.5);
 }
 
 #tab-forms .item-pricing-price,
