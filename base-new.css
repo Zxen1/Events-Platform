@@ -1,0 +1,28 @@
+/* ============================================================================
+   BASE.CSS - BACKBONE STYLES
+   ============================================================================
+   
+   This is the foundation CSS file containing shared variables, resets,
+   and global utilities used by all other CSS files.
+   
+   CONTAINS:
+   - CSS custom properties (variables)
+     - Colors (--primary, --accent, --btn, etc.)
+     - Spacing (--gap, --header-h, --logo-size, etc.)
+     - Z-index layers (--layer-header, --layer-modal, etc.)
+     - Safe areas (--safe-top, --safe-bottom)
+   - Box-sizing reset
+   - Font defaults
+   - Scrollbar styling
+   - Focus states
+   - Screen reader utilities
+   
+   DOES NOT CONTAIN:
+   - Any section-specific styles
+   - Any component styles
+   - Any layout styles for specific sections
+   
+   ============================================================================ */
+
+/* Placeholder - to be built */
+

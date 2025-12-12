@@ -1,0 +1,25 @@
+/* ============================================================================
+   MAP.CSS - MAP SECTION STYLES
+   ============================================================================
+   
+   All styles for the map and its components.
+   Note: Many map elements are rendered by Mapbox GL JS, not CSS.
+   
+   CONTAINERS:
+   - area (map display area)
+   - controls (geocoder, geolocate, compass row)
+   - shadow (shadow overlay)
+   - zoomindicator (zoom level display)
+   - smallcard (small map cards 150x40)
+   - bigcard (big map cards 225x60)
+   - hovercard (hover map cards)
+   - cluster (marker clusters)
+   - multipost (multi-post venue markers)
+   
+   CLASSES:
+   - (TBD - need to finalize after reviewing Mapbox integration)
+   
+   ============================================================================ */
+
+/* Placeholder - to be built */
+

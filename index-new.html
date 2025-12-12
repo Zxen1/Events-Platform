@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FunMap - Do Stuff</title>
+  
+  <!-- CSS Files (9 total) -->
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="header.css">
+  <link rel="stylesheet" href="filter.css">
+  <link rel="stylesheet" href="map.css">
+  <link rel="stylesheet" href="post.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="member.css">
+  <link rel="stylesheet" href="forms.css">
+  <link rel="stylesheet" href="advert.css">
+  
+  <!-- Mapbox GL JS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+</head>
+<body>
+
+  <!-- ========================================================================
+       SECTION 1: HEADER
+       File: header.js, header.css
+       ======================================================================== -->
+  <header class="header-bar">
+    <!-- Logo button -->
+    <!-- Filter button -->
+    <!-- Mode switch (Recents / Posts / Map) -->
+    <!-- Access buttons (Member / Admin / Fullscreen) -->
+  </header>
+
+  <!-- ========================================================================
+       SECTION 2: FILTER PANEL
+       File: filter.js, filter.css
+       ======================================================================== -->
+  <aside id="filter-panel">
+    <!-- Geocoder, geolocate, compass -->
+    <!-- Reset buttons -->
+    <!-- Sort dropdown -->
+    <!-- Keywords, price, date inputs -->
+    <!-- Calendar -->
+    <!-- Category filters -->
+  </aside>
+
+  <!-- ========================================================================
+       SECTION 3: MAP
+       File: map.js, map.css
+       ======================================================================== -->
+  <main id="map-area">
+    <!-- Mapbox map renders here -->
+    <!-- Map controls -->
+    <!-- Map shadow -->
+    <!-- Zoom indicator -->
+  </main>
+
+  <!-- ========================================================================
+       SECTION 4: POST PANEL (includes Recents)
+       File: post.js, post.css
+       ======================================================================== -->
+  <section id="post-panel">
+    <!-- Post cards -->
+    <!-- Open post view -->
+    <!-- Recents view with mascot -->
+  </section>
+
+  <!-- ========================================================================
+       SECTION 5: ADMIN PANEL
+       File: admin.js, admin.css
+       ======================================================================== -->
+  <aside id="admin-panel">
+    <!-- Panel header -->
+    <!-- Settings tab -->
+    <!-- Forms tab -->
+    <!-- Map tab -->
+    <!-- Messages tab -->
+  </aside>
+
+  <!-- ========================================================================
+       SECTION 6: MEMBER PANEL
+       File: member.js, member.css
+       ======================================================================== -->
+  <aside id="member-panel">
+    <!-- Profile tab -->
+    <!-- Create Post tab -->
+    <!-- My Posts tab -->
+  </aside>
+
+  <!-- ========================================================================
+       SECTION 7: ADVERT PANEL
+       File: advert.js, advert.css
+       ======================================================================== -->
+  <aside id="advert-panel">
+    <!-- Hero image -->
+    <!-- Featured post card -->
+  </aside>
+
+  <!-- ========================================================================
+       MODALS (not counted as sections)
+       ======================================================================== -->
+  <div id="welcome-modal">
+    <!-- Welcome message, geocoder, instructions -->
+  </div>
+
+  <div id="terms-modal">
+    <!-- Terms and conditions -->
+  </div>
+
+  <div id="lightbox-modal">
+    <!-- Image lightbox -->
+  </div>
+
+  <!-- ========================================================================
+       JAVASCRIPT FILES (9 total)
+       Load order matters: backbone first, then sections
+       ======================================================================== -->
+  <script src="index.js"></script>
+  <script src="forms.js"></script>
+  <script src="header.js"></script>
+  <script src="filter.js"></script>
+  <script src="map.js"></script>
+  <script src="post.js"></script>
+  <script src="admin.js"></script>
+  <script src="member.js"></script>
+  <script src="advert.js"></script>
+
+</body>
+</html>
+

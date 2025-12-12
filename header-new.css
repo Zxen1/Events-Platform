@@ -1,0 +1,30 @@
+/* ============================================================================
+   HEADER.CSS - HEADER SECTION STYLES
+   ============================================================================
+   
+   All styles for the header bar and its components.
+   
+   CONTAINERS:
+   - bar (the header bar itself)
+   - logo (logo button area)
+   - filter (filter button)
+   - modeswitch (mode switch container)
+   - access (access buttons group name)
+   
+   CLASSES (11 total):
+   - .header-bar
+   - .header-logo-button
+   - .header-logo-button-image
+   - .header-filter-button
+   - .header-filter-button-image
+   - .header-modeswitch
+   - .header-modeswitch-button
+   - .header-modeswitch-button-image
+   - .header-modeswitch-button-text
+   - .header-access-button
+   - .header-access-button-image
+   
+   ============================================================================ */
+
+/* Placeholder - to be built */
+
