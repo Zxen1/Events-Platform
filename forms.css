@@ -2702,6 +2702,66 @@ textarea.input-invalid{
   width:100%;
 }
 
+/* Seating area and pricing tier labels */
+#tab-forms .panel-field .seating_area-label,
+#tab-forms .panel-field .pricing_tier-label,
+#memberPanel .member-create-fields .panel-field .seating_area-label,
+#memberPanel .member-create-fields .panel-field .pricing_tier-label{
+  display:block;
+  margin-bottom:0;
+  font-size:13px;
+  font-weight:400;
+}
+
+/* Session pricing card and tier row gap */
+#tab-forms .session-pricing-card,
+#tab-forms .tier-row,
+#memberPanel .member-create-fields .session-pricing-card,
+#memberPanel .member-create-fields .tier-row{
+  row-gap:8px;
+}
+
+/* Seating area and pricing tier label grid */
+#tab-forms .session-pricing-card .seating_area-label,
+#tab-forms .tier-row .pricing_tier-label,
+#memberPanel .member-create-fields .session-pricing-card .seating_area-label,
+#memberPanel .member-create-fields .tier-row .pricing_tier-label{
+  grid-column:1 / -1;
+}
+
+/* Seating area input and actions grid */
+#tab-forms .session-pricing-card .seating_area-input,
+#memberPanel .member-create-fields .session-pricing-card .seating_area-input{
+  grid-column:1 / 2;
+  grid-row:2;
+}
+#tab-forms .session-pricing-card .seating-area-actions,
+#memberPanel .member-create-fields .session-pricing-card .seating-area-actions{
+  grid-column:2 / 3;
+  grid-row:2;
+}
+
+/* Pricing tier input and actions grid */
+#tab-forms .tier-row .pricing_tier-input,
+#memberPanel .member-create-fields .tier-row .pricing_tier-input{
+  grid-column:1 / 2;
+  grid-row:2;
+}
+#tab-forms .tier-row .tier-actions,
+#memberPanel .member-create-fields .tier-row .tier-actions{
+  grid-column:2 / 3;
+  grid-row:2;
+}
+
+/* Seating area and tier actions alignment */
+#tab-forms .session-pricing-card .seating-area-actions,
+#tab-forms .tier-row .tier-actions,
+#memberPanel .member-create-fields .session-pricing-card .seating-area-actions,
+#memberPanel .member-create-fields .tier-row .tier-actions{
+  align-self:start;
+  justify-self:end;
+}
+
 #tab-forms .session-details,
 #memberPanel .member-create-fields .session-details{
   display:flex;
