@@ -1801,6 +1801,15 @@
   color:var(--button-text);
   height:auto;
   padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  cursor:pointer;
+  width:100%;
+  text-align:left;
+  font:inherit;
+  font-size:16px;
 }
 #tab-messages .category-form-menu .filter-category-trigger-wrap{
   flex:1;

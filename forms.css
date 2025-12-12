@@ -624,7 +624,19 @@
 }
 
 #tab-forms .filter-category-menu .filter-category-trigger{
+  height:36px;
+  border-radius:8px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
   border:none;
+  cursor:pointer;
+  width:100%;
+  text-align:left;
+  font:inherit;
+  font-size:16px;
 }
 
 #tab-forms .panel-field{
