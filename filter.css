@@ -634,6 +634,108 @@
   width:100%;
 }
 
+/* ============================================================================
+   MAP CONTROLS - Filter Panel
+   ============================================================================ */
+
+/* Base map control row */
+.map-control-row{
+  display:flex;
+  align-items:center;
+  gap:var(--gap);
+  flex-wrap:nowrap;
+}
+.map-control-row .geocoder{
+  background-color:#ffffff;
+  border-radius:8px;
+  flex:1 1 240px;
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  display:flex;
+}
+.map-control-row .mapboxgl-ctrl-geolocate button,
+.map-control-row .mapboxgl-ctrl-compass button{
+  width:35px;
+  height:35px;
+  border-radius:8px;
+  border:1px solid rgba(0,0,0,0.15);
+  box-shadow:none;
+}
+.map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
+.map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff;
+}
+.map-control-row .mapboxgl-ctrl-geolocate button:hover,
+.map-control-row .mapboxgl-ctrl-compass button:hover{
+  background-color:#f2f2f2;
+}
+.map-control-row .mapboxgl-ctrl-geolocate button svg,
+.map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none;
+}
+.map-control-row .mapboxgl-ctrl-geocoder{
+  background:#ffffff;
+  border-radius:8px;
+  color:#000000;
+  display:flex;
+  align-items:center;
+  gap:0;
+  height:var(--geocoder-h);
+  min-height:var(--geocoder-h);
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  background:#ffffff;
+  color:#000000;
+  flex:1 1 auto;
+  width:100%;
+  height:100%;
+  padding-top:0;
+  padding-bottom:0;
+  padding-left:12px;
+  padding-right:12px;
+  line-height:var(--geocoder-h);
+  font:inherit;
+}
+.map-control-row .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  height:100%;
+}
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+  display:none;
+}
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button,
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon,
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-loading,
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search{
+  display:none;
+}
+
+/* Panel body map control row (filter panel) */
+.panel-body .map-control-row:not(.map-controls-welcome){
+  width:100%;
+  max-width:100%;
+  margin:0;
+  justify-content:flex-start;
+  background:none;
+  border-radius:0;
+  padding:0;
+  box-sizing:border-box;
+}
+.panel-body .map-control-row:not(.map-controls-welcome) > *{
+  flex:0 0 auto;
+  width:auto;
+  max-width:none;
+  background:transparent;
+  border-radius:8px;
+  min-width:0;
+}
+.panel-body .map-control-row:not(.map-controls-welcome) > .geocoder{
+  flex:1 1 auto;
+}
+
 /* Geocoder in filter panel */
 #filterPanel .map-control-row .geocoder,
 #filterPanel .map-control-row .mapboxgl-ctrl-geocoder,
