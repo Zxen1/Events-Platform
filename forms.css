@@ -2314,6 +2314,48 @@ textarea.input-invalid{
   font-size:13px;
   -moz-appearance:textfield;
 }
+#tab-forms .subcategory-checkout-calc-days::-webkit-outer-spin-button,
+#tab-forms .subcategory-checkout-calc-days::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+#tab-forms .subcategory-checkout-calc-total{
+  color:#777777;
+  font-weight:700;
+  padding:4px 8px;
+  background:rgba(47,59,115,0.2);
+  border-radius:4px;
+}
+#tab-forms .subcategory-checkout-option-actions{
+  display:flex;
+  gap:6px;
+}
+#tab-forms .subcategory-checkout-option-actions button{
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  font-weight:700;
+  font-size:18px;
+  line-height:1;
+  padding:0;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+#tab-forms .subcategory-checkout-option-actions button:hover{
+  background:var(--btn-hover, #2e3a72);
+  border-color:var(--btn-hover, #2e3a72);
+}
+#tab-forms .subcategory-checkout-option-actions .subcategory-checkout-option-remove{
+  border-color:#a42828;
+  background:#b83030;
+}
+#tab-forms .subcategory-checkout-option-actions .subcategory-checkout-option-remove:hover{
+  background:#d13c3c;
+  border-color:#d13c3c;
+}
 
 /* ============================================================================
    VENUE SESSION EDITOR
@@ -3119,17 +3161,35 @@ textarea.input-invalid{
   gap:8px;
 }
 
+#tab-forms .category-logo,
+#tab-forms .subcategory-logo{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-transform:uppercase;
+  font-weight:700;
+  font-size:12px;
+  line-height:1;
+  padding:0;
+  background:none;
+  border:none;
+}
+#tab-forms .category-logo img,
+#tab-forms .category-logo svg,
+#tab-forms .subcategory-logo img,
+#tab-forms .subcategory-logo svg{
+  width:auto;
+  height:auto;
+  max-width:none;
+  max-height:none;
+}
 #tab-forms .subcategory-logo{
   width:20px;
   height:20px;
   min-width:20px;
   min-height:20px;
   flex:0 0 20px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
 }
-
 #tab-forms .subcategory-logo img,
 #tab-forms .subcategory-logo svg{
   width:100%;
@@ -3137,6 +3197,54 @@ textarea.input-invalid{
   max-width:100%;
   max-height:100%;
   object-fit:contain;
+}
+
+#tab-forms .subcategory-form-toggle{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  width:38px;
+  height:36px;
+  flex:0 0 38px;
+  cursor:pointer;
+  align-self:flex-start;
+}
+#tab-forms .subcategory-form-toggle input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+#tab-forms .subcategory-form-toggle .slider{
+  position:absolute;
+  top:8px;
+  left:0;
+  right:0;
+  margin:0 auto;
+  width:38px;
+  height:20px;
+  border-radius:16px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  transition:.2s;
+}
+#tab-forms .subcategory-form-toggle .slider:before{
+  content:'';
+  position:absolute;
+  width:16px;
+  height:16px;
+  left:1px;
+  top:1px;
+  border-radius:50%;
+  background:var(--button-text);
+  transition:.2s;
+}
+#tab-forms .subcategory-form-toggle input:checked + .slider{
+  background:var(--category-switch-active);
+  border-color:var(--category-switch-active);
+}
+#tab-forms .subcategory-form-toggle input:checked + .slider:before{
+  transform:translateX(18px);
 }
 
 #tab-forms .subcategory-form-content{
@@ -3149,6 +3257,27 @@ textarea.input-invalid{
 }
 
 #tab-forms .subcategory-form-content[hidden]{
+  display:none;
+}
+
+#tab-forms .subcategory-name-input{
+  width:260px;
+  max-width:100%;
+  height:36px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+  padding:0 12px;
+}
+
+#tab-forms .subcategory-drop-anchor{
+  width:100%;
+  height:0;
+  margin:0;
+  padding:0;
+  pointer-events:none;
+  visibility:hidden;
   display:none;
 }
 
