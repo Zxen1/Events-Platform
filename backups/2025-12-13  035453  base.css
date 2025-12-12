@@ -1,0 +1,1034 @@
+/*
+ * Z-INDEX REFERENCE LIST
+ * ======================
+ * 
+ * PERMANENT RULE: All z-index values on this site must NOT exceed 100.
+ * All z-index values (including CSS variables and direct values) must be
+ * documented in this reference list. When adding new z-index values, update
+ * this list immediately.
+ * 
+ * Maximum z-index: 100 (--layer-devtools)
+ * 
+ * CSS Variables (defined in :root):
+ *   --layer-devtools: 100    (developer tools, always on top)
+ *   --layer-modal: 90         (welcome modal, full-screen modals)
+ *   --layer-image-modal: 88  (lightbox/image modal)
+ *   --layer-dialog: 86        (confirmations/dialogs/toasts, unsaved changes dialogs)
+ *   --layer-menu: 85          (menus, dropdowns, tooltips, pickers, currency menus)
+ *   --layer-panel: 60         (member/admin/filter panels)
+ *   --layer-header: 40        (headers/nav)
+ *   --layer-card: 30          (floating cards above content)
+ *   --layer-content: 20        (primary content)
+ *   --layer-base: 0           (map/base)
+ * 
+ * Direct z-index values found in style.css:
+ *   100: (--layer-devtools) - developer tools buttons (.devtools-btn, .clear-localstorage-btn)
+ *   90: (--layer-modal) - modals
+ *   88: (--layer-image-modal) - image modals
+ *   86: (--layer-dialog) - dialogs, unsaved changes prompts (#adminUnsavedPrompt, #memberUnsavedPrompt)
+ *   85: (--layer-menu) - standard menus, dropdowns, currency menus, field-type-select menus
+ *   66: formpicker dropdown menus
+ *   65: formpicker dropdown buttons
+ *   60: (--layer-panel) - panels
+ *   40: (--layer-header) - headers
+ *   30: (--layer-card) - cards
+ *   20: (--layer-content) - content
+ *   10: panel resizers, various overlays
+ *   5: mapmarker-overlay, various elements
+ *   3: various elements
+ *   2: big-map-card-container (stacks above small-map-card-container)
+ *   1: small-map-card-container, form labels, form field headers, item pricing labels, header-buttons
+ *   0: base layer, various elements
+ *   -1: some background elements
+ *   auto: some elements
+ * 
+ * Map Card Container System:
+ *   - small-map-card-container: z-index 1 (renders below big cards)
+ *   - big-map-card-container: z-index 2 (renders above small cards)
+ *   - Containers use isolation: isolate to create stacking contexts
+ *   - This prevents elements from one card from penetrating cards above
+ */
+
+/* ============================================================================
+   SECTION: HOTFIXES & QUICK PATCHES
+   ============================================================================ */
+
+/* Hand cursor for DOM-based Mapbox markers */
+    .mapboxgl-marker,
+    .marker,
+    .is-clickable {
+      cursor: pointer;
+    }
+
+    .mapboxgl-popup-track-pointer * {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Layer scale */
+    :root{
+      --layer-devtools: 100;    /* developer tools (always on top) */
+      --layer-modal: 90;        /* welcome modal, full-screen modals */
+      --layer-image-modal: 88;  /* lightbox/image modal */
+      --layer-dialog: 86;       /* confirmations/dialogs/toasts */
+      --layer-menu: 85;         /* menus, dropdowns, tooltips, pickers, currency menus */
+      --layer-panel: 60;        /* member/admin/filter panels */
+      --layer-header: 40;       /* headers/nav */
+      --layer-card: 30;         /* floating cards above content */
+      --layer-content: 20;      /* primary content */
+      --layer-base: 0;          /* map/base */
+    }
+
+    /* Menus stay clickable above overlays */
+    .options-menu { z-index: var(--layer-menu); }
+
+/* Map card and marker styles moved to map.css */
+
+/* Extracted from <styleid="mapboxgl-critical-css"> */
+.mapboxgl-map{position:relative;width:100%;height:100%}
+    .mapboxgl-canvas{position:absolute;left:0;top:0}
+    .mapboxgl-canvas-container{position:absolute;inset:0}
+    .mapboxgl-ctrl{box-sizing:border-box}
+
+
+/* ============================================================================
+   SECTION: CSS VARIABLES
+   ============================================================================ */
+
+:root{
+  --header-h: 56px;
+  --subheader-h: 0;
+  --panel-w: 440px;
+  --results-w: 530px;
+  --post-board-max-w: min(100vw, 530px);
+  --gap: 10px;
+  --logo-size: 40px;
+    --filter-panel-offset: 0px;
+    --panel-transition-duration: 0.3s;
+    --panel-area-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
+    --media-h: 200px;
+    --calendar-scale: 1;
+    --ink: #ffffff;
+    --ink-d: #ececec;
+    --gold: #ffc107; 
+    --muted: #777;
+      --primary: #3E5393;
+      --secondary: #000000;
+      --accent: #5C6FB1;
+      --active: #2E3A72;
+      --background: rgba(0,0,0,1);
+      --text: #ffffff;
+      --button-text: #ffffff;
+      --button-hover-text: #ffffff;
+      --button-active-text: #ffffff;
+      --button-disabled-text: #666666;
+      --btn: #333333;
+      --btn-hover: #4d4d4d;
+      --btn-active: #1a1a1a;
+      --btn-selected: #3b82f6;
+      --btn-selected-hover: #60a5fa;
+      --btn-selected-active: #2563eb;
+      --btn-disabled: #bbbbbb;
+      --panel-bg: rgba(0,0,0,1);
+      --panel-text: #000000;
+      --footer-h: 0px;
+      --list-background: rgba(0,0,0,0.37);
+      --closed-card-bg: rgba(0,0,0,0.37);
+      --scrollbar-track: rgba(0,0,0,0);
+      --scrollbar-thumb: rgba(255,255,255,0.4);
+      --scrollbar-thumb-hover: rgba(255,255,255,0.6);
+      --scrollbar-h: 8px;
+      --border: rgba(173,173,173,0.31);
+      --border-hover: #3b82f6;
+      --border-active: rgba(255,200,0,0.45);
+      --placeholder-text: gray;
+      --filter-placeholder-text: var(--placeholder-text);
+      --popup-bg: rgba(0,0,0,1);
+      --popup-text: #ffffff;
+      --dropdown-title: #000000;
+      --dropdown-selected-bg: #7c4dff;
+      --dropdown-selected-text: #ffffff;
+      --dropdown-text: #000000;
+      --dropdown-bg: rgba(255,255,255,1);
+      --dropdown-hover-bg: rgba(224,224,224,1);
+      --dropdown-hover-text: #000000;
+        --dropdown-venue-text: #000000;
+        --dropdown-radius: 8px;
+        --calendar-width: 250px;
+        --calendar-height: 200px;
+        --calendar-cell-w: calc(var(--calendar-width) / 7);
+        --calendar-header-h: 20px;
+        --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h)) / 7);
+        --calendar-past-bg: #222222;
+        --calendar-future-bg: #222222;
+        --session-available: #888888;
+        --session-selected: #2e3a72;
+        --today: #ff0000;
+        --image-panel-bg: rgba(0,0,0,0.7);
+      --filter-active-color: #cc6600;
+      --category-switch-active: #3b82f6;
+      --keyword-bg: #FFFFFF;
+      --date-range-bg: rgba(74,74,74,0.9);
+      --date-range-text: rgba(255,255,255,1);
+      --control-h: 35px;
+      --geocoder-h: var(--control-h);
+      --panel-label-font: system-ui, sans-serif;
+      --panel-label-size: 14px;
+      --panel-label-color: #ffffff;
+      --panel-title-font: system-ui, sans-serif;
+      --panel-title-size: 16px;
+      --panel-title-color: #ffffff;
+      --post-mode-bg-color: 0,0,0;
+      --post-mode-bg-opacity: 0;
+      --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* ============================================================================
+   SECTION: RESET & BASE STYLES
+   ============================================================================ */
+
+*:not([class*="mapboxgl-"]){
+  box-sizing: border-box;
+  border-color: var(--border) !important;
+}
+
+@supports (scrollbar-width: thin){
+  *:not([class*="mapboxgl-"]){
+    scrollbar-width: thin;
+  }
+}
+
+@supports (scrollbar-color: #000 #fff){
+  *:not([class*="mapboxgl-"]){
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+}
+
+fieldset{
+  margin:0;
+  padding:6px 0 0;
+  border:0 !important;
+}
+
+*:not([class*="mapboxgl-"]):hover{
+  border-color: var(--border-hover) !important;
+}
+
+*:not([class*="mapboxgl-"]):active{
+  border-color: var(--border-active) !important;
+}
+
+*[aria-pressed="true"]:not([class*="mapboxgl-"]),
+*[aria-current="page"]:not([class*="mapboxgl-"]),
+.selected:not([class*="mapboxgl-"]),
+.on:not([class*="mapboxgl-"]){
+  border-color: var(--border-active) !important;
+  color: var(--active);
+}
+
+*[aria-selected="true"]:not([class*="mapboxgl-"]){
+  border-color: var(--border-active) !important;
+}
+
+html,body{
+  height: 100%;
+}
+
+*:not([class*="mapboxgl-"])::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+*:not([class*="mapboxgl-"])::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+*:not([class*="mapboxgl-"])::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+*:not([class*="mapboxgl-"])::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+
+  body{
+    margin: 0;
+    font: 13px system-ui, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    overflow: hidden;
+    cursor: auto;
+    caret-color: transparent;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(var(--vh, 1vh) * 100);
+    -webkit-user-select: text;
+    user-select: text;
+    touch-action: manipulation;
+  }
+
+  body, .post-body{
+    overscroll-behavior: contain;
+  }
+  .panel-content, .options-menu, .calendar-scroll{
+    overscroll-behavior: contain;
+  }
+
+/* ============================================================================
+   SECTION: TYPOGRAPHY
+   ============================================================================ */
+
+  h1, h2, h3, h4, h5, h6{
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+a{
+  color: var(--primary);
+}
+a:hover{
+  color: var(--accent);
+}
+a:active{
+  color: var(--active);
+}
+
+
+/* ============================================================================
+   SECTION: COMPONENT FILES (content moved to dedicated CSS files)
+   - map.css: Map display styles (cards, markers, clusters)
+   - post.css: Post/Recent board styles
+   - advert.css: Ad board styles
+   - filter.css: Filter panel styles
+   - member.css: Member panel styles
+   - admin.css: Admin panel styles (#adminPanel, #tab-map, #tab-settings, #tab-messages)
+   - forms.css: Forms tab styles (#tab-forms)
+   ============================================================================ */
+
+
+
+/* ============================================================================
+   SECTION: SHARED PANEL COMPONENTS
+   Button styles (.button--tab, .button--auth, .button--delete) moved to:
+   - admin.css, member.css, filter.css, forms.css
+   ============================================================================ */
+
+
+/* ============================================================================
+   SECTION: INPUTS
+   Input styles (.input-text, .input-dropdown, etc.) moved to:
+   - admin.css, member.css, filter.css, forms.css
+   ============================================================================ */
+
+/* Ensure all Mapbox geocoder inputs inherit font */
+.mapboxgl-ctrl-geocoder input,
+.mapboxgl-ctrl-geocoder--input,
+.mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input{
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+.mapboxgl-ctrl-geocoder input::placeholder,
+.mapboxgl-ctrl-geocoder--input::placeholder{
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
+.field label{
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+
+.panel-content .title,
+.panel-content .t{
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
+
+.venue-select{
+  color: var(--dropdown-venue-text);
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+select.venue-select,
+.venue-select-wrapper select.venue-select,
+*:has(.venue-select) select.venue-select{
+  padding-right:32px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+*:has(.venue-select){
+  position:relative;
+}
+*:has(.venue-select)::after{
+  content:'';
+  position:absolute;
+  top:50%;
+  right:10px;
+  width:8px;
+  height:8px;
+  border-style:solid;
+  border-width:0 2px 2px 0;
+  border-color:var(--button-text, #ffffff);
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  transition:transform .3s ease;
+  pointer-events:none;
+  z-index:2;
+  transform-origin:center center;
+}
+*:has(.venue-select:focus)::after{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+
+.results-arrow,
+/* .dropdown-arrow moved to admin.css, forms.css */
+
+.options-dropdown > button{
+  position:relative;
+  padding-right:30px;
+}
+.results-arrow{
+  transform:rotate(45deg);
+  transition:transform .3s;
+  vertical-align:middle;
+}
+
+.options-dropdown{
+  position:relative;
+}
+.options-dropdown .dropdown-arrow,
+.options-dropdown .results-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  pointer-events:none;
+}
+
+button[aria-expanded="true"] .dropdown-arrow,
+button[aria-expanded="true"] .results-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* ========================================
+   Dropdown Flag & Text Alignment
+   - Ensures flags, text, and arrows are vertically centered
+   - Works in both buttons and menu options
+======================================== */
+.dropdown-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:20px;
+  height:15px;
+  line-height:0;
+}
+.dropdown-flag img{
+  display:block;
+  width:20px;
+  height:15px;
+  object-fit:cover;
+  border-radius:2px;
+}
+.dropdown-text{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  line-height:1;
+}
+/* Ensure buttons and menu options use flexbox alignment */
+.item-pricing-currency,
+.options-menu .menu-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.item-pricing-currency .dropdown-flag,
+.item-pricing-currency .dropdown-text,
+.options-menu .menu-option .dropdown-flag,
+.options-menu .menu-option .dropdown-text{
+  flex-shrink:0;
+}
+.options-menu .menu-option .dropdown-text{
+  flex-shrink:1;
+  min-width:0;
+}
+
+/* ============================================================================
+   SECTION: PANELS (Base)
+   Panel styles (.panel, .panel-content, .panel-body) moved to:
+   - admin.css, member.css, filter.css
+   ============================================================================ */
+
+/* Modal base - kept here for welcome modal */
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  width:100%;
+  height:calc(var(--vh, 1vh) * 100);
+  background:transparent;
+  display:none;
+  z-index: var(--layer-modal);
+  pointer-events:none;
+}
+.modal.show{
+  display:block;
+}
+/* Calendar styles moved to filter.css, forms.css, post.css - each file has full control */
+
+#welcomeBody{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  padding:0;
+  gap:0;
+  overflow:visible;
+  position:relative;
+}
+#welcomeBody > :not(.map-control-row){
+  pointer-events:none;
+}
+#welcomeBody .welcome-logo{
+  max-width:100%;
+  width:min(100%, 600px);
+  height:auto;
+  margin:0;
+  object-fit:contain;
+  /* Hide until image loads to prevent alt text flash */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#welcomeBody .welcome-logo.loaded,
+#welcomeBody .welcome-logo[src]:not([src=""]){
+  opacity: 1;
+}
+#welcomeBody .welcome-illustration{
+  max-width:280px;
+  width:100%;
+  height:auto;
+  margin:0;
+  border-radius:8px;
+  /* Reserve space to prevent layout shift */
+  min-height:200px;
+  aspect-ratio: 1 / 1;
+  object-fit:contain;
+}
+#welcome-modal{background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);}
+#welcome-modal .modal-content{
+  position:absolute;
+  width:min(600px, 90vw);
+  max-width:90vw;
+  background:none;
+  border-radius:0;
+  display:flex;
+  flex-direction:column;
+  overflow:visible;
+  pointer-events:auto;
+}
+.control-row > *:last-child{margin-left:auto;width:200px;}
+
+/* Settings/checkout styles moved to admin.css */
+
+.sub-icon svg{
+  width:18px;
+  height:18px;
+  vertical-align:middle;
+}
+.cat-line{
+  display:flex;
+  align-items:center;
+}
+.cat-line .sub-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  padding-right:5px;
+}
+.cat-line .sub-icon:empty{
+  display:none;
+  padding-right:0;
+}
+/* .panel-field moved to admin.css, member.css, filter.css, forms.css */
+/* .admin-section, .option-label, .option-group, .spin-type-toggles moved to admin.css */
+/* .primary-action styles moved to admin.css, member.css */
+/* .autosave-toggle moved to admin.css */
+/* .autosave-toggle .autosave-label moved to admin.css */
+/* .panel-header h2 moved to component files */
+/* .palette, .field-item, .field-instance, .builder-zone moved to forms.css */
+/* .left-tools moved to filter.css */
+/* .spin-control-row, .spin-slider moved to admin.css */
+/* .spin-slider (moz) and .slider-value moved to admin.css */
+/* .save-changes, .discard-changes moved to admin.css, member.css */
+
+/* Dialog/confirmation styles (.formbuilder-confirm-*) moved to forms.css */
+/* .switch moved to filter.css, admin.css */
+/* .tiny moved to filter.css, member.css */
+
+/* .cats, .filter-category-menu moved to filter.css */
+/* .formpicker-container, .formpicker-dropdowns moved to member.css */
+
+/* .reset-box moved to filter.css */
+/* .post-mode-background, .post-mode-boards moved to post.css */
+
+/* .post-mode-boards, .quick-list-board, .top-gap-spacer, .collapse-gap-button moved to post.css */
+/* .main-post-column, .post-images moved to post.css */
+
+/* .post-images, .post-body moved to post.css */
+
+/* .post-venue-selection-container, .post-session-selection-container moved to post.css */
+/* .post-details-* moved to post.css */
+
+/* TODO: cleanup remaining comment */
+/* AD PANEL STYLES MOVED TO advert.css - subcategory icon
+      - Location line (.loc-line) with ðŸ“ badge
+      - Date line (.date-line) with ðŸ“… badge
+   
+   These specifications ensure the ad panel displays edge-to-edge with
+   complete event information matching the post card structure.
+   
+   ========================================================================== */
+
+
+/* ============================================================================
+   FORMS STYLES - DEDICATED BLOCK
+   ============================================================================
+   
+   Form preview styles for form containers, fields, and related components.
+   
+   ========================================================================== */
+
+.form-field input.input-invalid,
+.form-field textarea.input-invalid,
+.form-url-input.input-invalid,
+.form-phone-wrapper input.input-invalid,
+input.input-invalid,
+textarea.input-invalid{
+  border:1px solid red !important;
+  outline:none !important;
+}
+.form-image-remove{
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:35px;
+  height:35px;
+  border-radius:10px;
+  border:none;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  font-size:16px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background-color .2s ease;
+  z-index:1;
+}
+.form-image-remove:hover{
+  background:rgba(255,77,77,0.85);
+}
+.form-image-remove span{
+  pointer-events:none;
+}
+.required-asterisk{
+  color:#ff4d4d;
+  font-weight:700;
+}
+
+.zoom-toast{
+  position:fixed;
+  top:calc(var(--safe-top, 0px) + 20px);
+  left:50%;
+  transform:translate(-50%, -10px);
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  padding:8px 18px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  font-size:14px;
+  font-weight:normal;
+  z-index:var(--layer-dialog);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+}
+.zoom-toast.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
+
+/* ============================================================================
+   SECTION: MENUS & DROPDOWNS
+   ============================================================================ */
+
+/* Menu base styles (.menu, .menu-button, .menu-option) moved to admin.css, forms.css */
+
+/* Menu Button Image - base styles moved to modifier classes
+.menu-button-img{
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+*/
+
+/* Menu Button Label - base styles moved to modifier classes
+.menu-button-label{
+  flex: 1;
+  text-align: left;
+}
+*/
+
+/* Icon picker styles moved to admin.css, forms.css */
+/* System image picker styles moved to admin.css */
+/* .menu-options moved to admin.css, forms.css */
+
+.options-dropdown{ position:relative; }
+.options-dropdown > button,
+.options-dropdown .form-select,
+.options-dropdown .item-pricing-currency,
+.options-dropdown .field-type-select{ text-align:left; }
+
+/* .menu-button--sort-order, .menu-option--sort-order moved to filter.css */
+/* .menu-button--fieldset-list, .menu-option--fieldset-list moved to forms.css */
+/* .menu-button--system-image-picker moved to admin.css */
+
+/* ============================================================================
+   SECTION: MESSAGES
+   ============================================================================ */
+
+/* SUGGESTIONS (to be refined):
+   .msg--success
+   .msg--error
+   .msg--warning
+   .msg--toast
+   .msg--confirm
+   .msg--summary
+*/
+
+.msg--summary{
+  font-size:14px;
+  width:100%;
+  max-width:420px;
+  margin:0;
+  text-align:center;
+}
+
+
+/* Card styles moved to post.css */
+/* Map container styles (#map, .map-overlay, .map-zoom-indicator, .map-scale-bar) moved to map.css */
+
+#welcomeBody .map-control-row{
+  justify-content:center;
+  width:fit-content;
+  max-width:600px;
+  margin:0 auto;
+  gap:10px;
+  flex-wrap:nowrap;
+}
+#welcomeBody .map-controls-welcome{
+  pointer-events:auto;
+  --welcome-control-h:28px;
+  position:absolute;
+  top:50%;
+  left:0;
+  right:0;
+  margin-top:-14px;
+  display:flex;
+  justify-content:center;
+  opacity:0;
+  transition:opacity 0.3s ease;
+}
+#welcomeBody .map-controls-welcome.visible{
+  opacity:1;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions{
+  zoom:var(--inverse-zoom, 1);
+  font-size:14px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions li,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .suggestions li a{
+  font-size:14px;
+  font-weight:400;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geolocate button,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-compass button{
+  width:var(--welcome-control-h);
+  height:var(--welcome-control-h);
+}
+#welcomeBody .map-control-row > *{
+  flex:0 0 auto;
+}
+#welcomeBody .map-control-row > .geocoder{
+  flex:1 1 420px;
+  min-width:0;
+  width:100%;
+  max-width:420px;
+}
+#welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
+  width:100% !important;
+  max-width:420px !important;
+  min-width:0 !important;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
+  display:flex;
+  align-items:center;
+  gap:0;
+  height:var(--welcome-control-h);
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  flex:1 1 auto;
+  height:100%;
+  padding-top:0;
+  padding-bottom:0;
+  padding-left:12px;
+  padding-right:12px;
+  line-height:var(--welcome-control-h);
+  font:inherit;
+  font-size:13px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder *,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geolocate,
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geolocate *{
+  text-align:left;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{
+  display:none;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
+  display:none;
+}
+#welcomeBody .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  width:100%;
+}
+
+/* .map-controls-map styles moved to map.css */
+/* .map-area moved to map.css */
+
+@media (max-width:600px){
+  #welcomeBody .map-control-row > .geocoder,
+  #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
+    width:100% !important;
+    max-width:min(100%, 300px) !important;
+  }
+}
+
+/* .desc-wrap, .see-more-toggle, .desc, .dates, .date, .pill, .close moved to post.css */
+/* .venue-options, .session-options moved to forms.css */
+
+/* .post-map moved to post.css */
+/* .sort-options moved to filter.css */
+/* .hide-map-calendar moved to map.css */
+
+@media (max-width:440px){
+  html{
+    touch-action:pan-x pan-y;
+  }
+  .map-container{
+    touch-action:auto;
+  }
+}
+
+/* Post-related media queries moved to post.css */
+/* .copy-msg, .image-modal-container, #post-modal-container moved to post.css */
+
+    @media (max-width:440px){
+      #post-modal-container .post-modal{width:100%;min-width:0;}
+    }
+
+  #termsModalContainer{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.9);
+    backdrop-filter:blur(4px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index: var(--layer-modal);
+  }
+  #termsModalContainer.hidden{display:none;}
+  #termsModalContainer .terms-modal{
+    width:600px;
+    max-width:90%;
+    max-height:90%;
+    overflow:auto;
+    overflow:overlay;
+    background:var(--list-background);
+    border-radius:8px;
+    display:flex;
+    flex-direction:column;
+  }
+  #termsModalContainer .terms-modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px;
+    border-bottom:1px solid var(--border-color, rgba(255,255,255,0.1));
+  }
+  #termsModalContainer .terms-modal-header h2{
+    margin:0;
+    font-size:20px;
+    font-weight:600;
+    color:#3b82f6;
+  }
+  #termsModalContainer .terms-modal-close{
+    background:none;
+    border:none;
+    font-size:24px;
+    cursor:pointer;
+    padding:0;
+    width:30px;
+    height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#ffffff;
+    border-radius:4px;
+  }
+  #termsModalContainer .terms-modal-close:hover{
+    background:rgba(255,255,255,0.1);
+  }
+  #termsModalContainer .terms-modal-content{
+    padding:20px;
+    flex:1;
+    overflow-y:auto;
+    color:#ffffff;
+  }
+  #termsModalContainer .terms-text{
+    margin-bottom:20px;
+    line-height:1.6;
+    color:#ffffff;
+  }
+  #termsModalContainer .terms-text h3,
+  #termsModalContainer .terms-text h4{
+    color:#3b82f6;
+    margin-top:20px;
+    margin-bottom:10px;
+  }
+  #termsModalContainer .terms-text h3:first-child{
+    margin-top:0;
+  }
+  #termsModalContainer .terms-text p{
+    color:#ffffff;
+    margin-bottom:15px;
+  }
+  #termsModalContainer .terms-text ul{
+    color:#ffffff;
+    margin-bottom:15px;
+  }
+  #termsModalContainer .terms-text li{
+    color:#ffffff;
+    margin-bottom:8px;
+  }
+  #termsModalContainer .terms-text strong{
+    color:#ffffff;
+  }
+  #termsModalContainer .terms-checkbox-wrapper{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:15px;
+    background:rgba(255,255,255,0.1);
+    border-radius:8px;
+    margin-top:20px;
+  }
+  #termsModalContainer .terms-checkbox-wrapper input[type="checkbox"]{
+    width:20px;
+    height:20px;
+    cursor:pointer;
+  }
+  #termsModalContainer .terms-checkbox-wrapper label{
+    cursor:pointer;
+    font-size:16px;
+    user-select:none;
+    color:#ffffff;
+  }
+  #termsModalContainer .terms-modal-footer{
+    padding:20px;
+    border-top:1px solid var(--border-color, rgba(255,255,255,0.1));
+    display:flex;
+    justify-content:flex-end;
+  }
+  @media (max-width:440px){
+    #termsModalContainer .terms-modal{
+      width:100%;
+      max-width:100%;
+      max-height:100%;
+      border-radius:0;
+    }
+  }
+
+  .terms-conditions-link{
+    display:inline-block;
+    margin-bottom:15px;
+    color:var(--link-color, #0066cc);
+    text-decoration:underline;
+    cursor:pointer;
+    font-size:14px;
+  }
+  .terms-conditions-link:hover{
+    color:var(--link-hover-color, #0052a3);
+  }
+
+/* .chip-small, .card .thumb/.meta/.fav moved to post.css */
+
+.mapboxgl-popup,
+.mapboxgl-popup-content{
+  border-radius:8px !important;
+}
+
+.mapboxgl-popup-content{
+  background: var(--popup-bg) !important;
+  color: var(--popup-text) !important;
+  overflow:hidden;
+}
+
+.mapboxgl-popup-close-button{
+  color: var(--popup-text) !important;
+}
+
+/* .hero img.lqip/.ready moved to post.css */
+/* .mode-posts #postsWide moved to post.css */
+
+
+@media (max-width:440px){
+  :root{
+    --footer-h:0;
+  }
+  body.mode-map{
+    --footer-h:0;
+    }
+  }
+
+/* ============================================================================
+   SECTION: UTILITIES & FIXES
+   ============================================================================ */
+
+html, body { cursor: auto !important; }
+    a, button, [role="button"], .clickable { cursor: pointer !important; }
+    .mapboxgl-canvas { cursor: grab; }
+    .mapboxgl-canvas:active { cursor: grabbing; }
+    * { -webkit-tap-highlight-color: transparent; }
+
+/* .address_line styles moved to forms.css */
+/* .subcategory-field-overlay styles moved to forms.css */
+/* DEVTOOLS moved to devtools.css */
+
+
+
+
