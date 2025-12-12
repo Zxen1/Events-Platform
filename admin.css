@@ -2412,3 +2412,262 @@
   margin-bottom:8px;
   font-weight:500;
 }
+
+/* ============================================================================
+   MISSING STYLES RESTORED
+   ============================================================================ */
+
+/* Admin section layout */
+#adminPanel .admin-section{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+}
+
+/* Option label and group layout */
+#adminPanel .option-label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:wrap;
+}
+#adminPanel .option-group{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#adminPanel .option-label > *,
+#adminPanel .option-group > *{
+  min-width:0;
+}
+
+/* Spin type toggles (radio button groups in Map tab) */
+#adminPanel .spin-type-toggles{
+  display:flex;
+  gap:20px;
+  margin-left:20px;
+}
+#adminPanel #map_shadow_container .spin-type-toggles{
+  margin-left:0;
+}
+#adminPanel .spin-type-option{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+}
+#adminPanel .spin-type-option input[type="radio"]{
+  cursor:pointer;
+}
+#adminPanel .spin-type-option span{
+  font-size:14px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+/* Spin control row and sliders */
+#adminPanel .spin-control-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#adminPanel .spin-slider{
+  flex:1;
+  height:4px;
+  -webkit-appearance:none;
+  appearance:none;
+  background:rgba(0,0,0,0.3);
+  outline:none;
+  border-radius:4px;
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+}
+#adminPanel .spin-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:#2e3a72;
+  cursor:grab;
+  border:1px solid #fff;
+}
+#adminPanel .spin-slider:active::-webkit-slider-thumb{
+  cursor:grabbing;
+}
+#adminPanel .spin-slider::-moz-range-thumb{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:#2e3a72;
+  cursor:grab;
+  border:1px solid #fff;
+}
+#adminPanel .spin-slider:active::-moz-range-thumb{
+  cursor:grabbing;
+}
+#adminPanel .spin-slider:hover::-webkit-slider-thumb{
+  background:#3a4a8a;
+}
+#adminPanel .spin-slider:hover::-moz-range-thumb{
+  background:#3a4a8a;
+}
+#adminPanel .slider-value{
+  min-width:40px;
+  text-align:center;
+  font-size:16px;
+  font-weight:bold;
+  color:#fff;
+  flex-shrink:0;
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#adminPanel .slider-value-input::-webkit-inner-spin-button,
+#adminPanel .slider-value-input::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+#adminPanel .slider-value-input{
+  -moz-appearance:textfield;
+}
+
+/* Autosave toggle */
+#adminPanel .autosave-toggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  font-size:12px;
+  color:var(--text-muted, #888);
+  padding:4px 8px;
+  border-radius:4px;
+  transition:background 0.15s;
+}
+#adminPanel .autosave-toggle:hover{
+  background:rgba(255,255,255,0.1);
+}
+#adminPanel .autosave-toggle input[type="checkbox"]{
+  width:14px;
+  height:14px;
+  cursor:pointer;
+  accent-color:var(--button-selected-bg, var(--btn-selected));
+}
+#adminPanel .autosave-toggle .autosave-label{
+  user-select:none;
+}
+#adminPanel .autosave-toggle input[type="checkbox"]:checked + .autosave-label{
+  color:var(--text-primary, #fff);
+}
+
+/* Save/Discard buttons */
+#adminPanel .save-changes:not(.icon-btn):disabled,
+#adminPanel .discard-changes:not(.icon-btn){
+  background:rgba(0,0,0,0.3);
+  color:rgba(255,255,255,0.5);
+  cursor:not-allowed;
+}
+#adminPanel .save-changes:not(.icon-btn):not(:disabled){
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;
+}
+
+/* Primary action buttons */
+#adminPanel .panel-actions .primary-action{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+#adminPanel .panel-actions .primary-action:hover{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+#adminPanel .panel-actions .discard-changes[disabled]{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* Admin Unsaved Prompt Dialog */
+#adminUnsavedPrompt{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);
+  z-index:var(--layer-dialog);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
+}
+#adminUnsavedPrompt.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#adminUnsavedPrompt .admin-unsaved-dialog{
+  background:var(--dropdown-bg, rgba(17,17,17,0.96));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:360px;
+  width:calc(100% - 40px);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);
+  color:#fff;
+}
+#adminUnsavedPrompt .admin-unsaved-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+#adminUnsavedPrompt .primary-action{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+#adminUnsavedPrompt .primary-action:hover{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+#adminUnsavedPrompt .confirm-discard[disabled]{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* Admin Status Message */
+#adminStatusMessage{
+  position:fixed;
+  top:calc(var(--safe-top, 0px) + 20px);
+  left:50%;
+  transform:translate(-50%, -10px);
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  padding:8px 18px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  z-index:var(--layer-dialog);
+  font-size:14px;
+}
+#adminStatusMessage.error{
+  background:#c62828;
+  color:#fff;
+}
+#adminStatusMessage.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
