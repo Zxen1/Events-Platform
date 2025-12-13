@@ -71,7 +71,7 @@
         .formbuilder-accordion-editpanel {
             display: none;
             padding: 10px;
-            background: #1a1a1a;
+            background: #222;
         }
         .formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
             display: block;
@@ -154,9 +154,8 @@
         .formbuilder-accordion-option-editpanel {
             display: none;
             padding: 10px;
-            background: #1a1a1a;
-            margin-top: 2px;
-            border-radius: 4px;
+            margin-top: 0;
+            border-radius: 0 0 4px 4px;
         }
         .formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
             display: block;
@@ -360,7 +359,9 @@
                     // Extract dominant color
                     optImg.onload = function() {
                         extractDominantColor(optImg, function(r, g, b) {
-                            optHeader.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                            var color = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                            optHeader.style.background = color;
+                            subEditPanel.style.background = color;
                         });
                     };
                     
@@ -403,7 +404,9 @@
                         tempImg.crossOrigin = 'anonymous';
                         tempImg.onload = function() {
                             extractDominantColor(tempImg, function(r, g, b) {
-                                optHeader.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                                var color = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                                optHeader.style.background = color;
+                                subEditPanel.style.background = color;
                             });
                         };
                         tempImg.src = newIcon;
