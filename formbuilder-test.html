@@ -37,6 +37,8 @@
             flex: 1;
             padding-left: 10px;
             font-weight: bold;
+            cursor: text;
+            outline: none;
         }
         .formbuilder-accordion-header-arrow {
             width: 20px;
@@ -76,18 +78,6 @@
         .formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
             display: block;
         }
-        .formbuilder-accordion-editpanel-input {
-            width: 100%;
-            height: 36px;
-            padding: 0 10px;
-            margin-bottom: 10px;
-            background: rgba(0,0,0,0.2);
-            border: none;
-            border-radius: 5px;
-            color: #fff;
-            font-size: 13px;
-            box-sizing: border-box;
-        }
         
         .formbuilder-accordion-body {
             display: none;
@@ -120,6 +110,8 @@
         .formbuilder-accordion-option-text {
             flex: 1;
             padding-left: 10px;
+            cursor: text;
+            outline: none;
         }
         .formbuilder-accordion-option-arrow {
             width: 20px;
@@ -299,6 +291,8 @@
                 var headerText = document.createElement('span');
                 headerText.className = 'formbuilder-accordion-header-text';
                 headerText.textContent = cat.name;
+                headerText.contentEditable = true;
+                headerText.addEventListener('click', function(e) { e.stopPropagation(); });
                 
                 var headerArrow = document.createElement('span');
                 headerArrow.className = 'formbuilder-accordion-header-arrow';
@@ -320,19 +314,10 @@
                 var editPanel = document.createElement('div');
                 editPanel.className = 'formbuilder-accordion-editpanel';
                 
-                var nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.className = 'formbuilder-accordion-editpanel-input';
-                nameInput.value = cat.name;
-                nameInput.oninput = function() {
-                    headerText.textContent = nameInput.value || cat.name;
-                };
-                
                 var iconPicker = buildIconPicker(catIconSrc, function(newIcon) {
                     headerImg.src = newIcon;
                 });
                 
-                editPanel.appendChild(nameInput);
                 editPanel.appendChild(iconPicker);
                 
                 // Body
@@ -366,6 +351,8 @@
                     var optText = document.createElement('span');
                     optText.className = 'formbuilder-accordion-option-text';
                     optText.textContent = subName;
+                    optText.contentEditable = true;
+                    optText.addEventListener('click', function(e) { e.stopPropagation(); });
                     
                     var optArrow = document.createElement('span');
                     optArrow.className = 'formbuilder-accordion-option-arrow';
@@ -387,14 +374,6 @@
                     var subEditPanel = document.createElement('div');
                     subEditPanel.className = 'formbuilder-accordion-option-editpanel';
                     
-                    var subNameInput = document.createElement('input');
-                    subNameInput.type = 'text';
-                    subNameInput.className = 'formbuilder-accordion-editpanel-input';
-                    subNameInput.value = subName;
-                    subNameInput.oninput = function() {
-                        optText.textContent = subNameInput.value || subName;
-                    };
-                    
                     var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
                         optImg.src = newIcon;
                         // Update background color
@@ -410,7 +389,6 @@
                         tempImg.src = newIcon;
                     });
                     
-                    subEditPanel.appendChild(subNameInput);
                     subEditPanel.appendChild(subIconPicker);
                     
                     option.appendChild(optHeader);
