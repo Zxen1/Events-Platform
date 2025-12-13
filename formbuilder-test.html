@@ -330,7 +330,7 @@
             
             categories.forEach(function(cat) {
                 var accordion = document.createElement('div');
-                accordion.className = 'formbuilder-accordion';
+                accordion.className = 'formbuilder-accordion formbuilder-accordion--open';
                 
                 var catIconSrc = categoryIconPaths[cat.name] || '';
                 
@@ -491,6 +491,7 @@
                     // Sub header click (except edit area) - placeholder for now
                     optHeader.addEventListener('click', function(e) {
                         if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
+                        closeAllEditPanels();
                         option.classList.toggle('formbuilder-accordion-option--open');
                     });
                     
@@ -514,6 +515,7 @@
                 // Header click (except edit area) expands/collapses
                 header.addEventListener('click', function(e) {
                     if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
+                    closeAllEditPanels();
                     accordion.classList.toggle('formbuilder-accordion--open');
                 });
                 
