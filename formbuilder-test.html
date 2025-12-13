@@ -302,7 +302,9 @@
         if (!e.target.closest('.formbuilder-accordion-editpanel') && 
             !e.target.closest('.formbuilder-accordion-option-editpanel') &&
             !e.target.closest('.formbuilder-accordion-header-editarea') &&
-            !e.target.closest('.formbuilder-accordion-option-editarea')) {
+            !e.target.closest('.formbuilder-accordion-option-editarea') &&
+            !e.target.closest('.formbuilder-accordion-header') &&
+            !e.target.closest('.formbuilder-accordion-option-header')) {
             closeAllEditPanels();
         }
     });
@@ -469,7 +471,6 @@
                     // Sub header click (except edit area) - placeholder for now
                     optHeader.addEventListener('click', function(e) {
                         if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
-                        if (option.classList.contains('formbuilder-accordion-option--editing')) return;
                         option.classList.toggle('formbuilder-accordion-option--open');
                     });
                     
@@ -493,7 +494,6 @@
                 // Header click (except edit area) expands/collapses
                 header.addEventListener('click', function(e) {
                     if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
-                    if (accordion.classList.contains('formbuilder-accordion--editing')) return;
                     accordion.classList.toggle('formbuilder-accordion--open');
                 });
                 
