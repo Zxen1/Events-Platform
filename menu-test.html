@@ -6,18 +6,14 @@
     <title>Dropdown Menu Test</title>
     <style>
         body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
-        
         .menu { width: 400px; height: 36px; margin-bottom: 20px; position: relative; }
-        
         .menu-button { width: 400px; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; background: #333; border-radius: 5px; cursor: pointer; }
         .menu-button-image { width: 30px; height: 30px; object-fit: contain; }
         .menu-button-text { flex: 1; text-align: left; padding-left: 10px; }
         .menu-button-arrow { width: 16px; height: 16px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; }
         .menu.open .menu-button-arrow { transform: rotate(180deg); }
-        
         .menu-options { display: none; position: absolute; top: 36px; left: 0; width: 400px; background: #333; border-radius: 5px; max-height: 200px; overflow-y: auto; z-index: 10; }
         .menu.open .menu-options { display: block; }
-        
         .menu-option { width: 400px; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; cursor: pointer; }
         .menu-option:hover { background: #444; }
         .menu-option-image { width: 30px; height: 30px; object-fit: contain; }
@@ -26,91 +22,73 @@
 </head>
 <body>
 
-    <div class="menu" id="menu-currency"></div>
-    <div class="menu" id="menu-phone"></div>
-    <div class="menu" id="menu-system"></div>
-    <div class="menu" id="menu-icons"></div>
+<!-- CURRENCY MENU -->
+<div class="menu" image-folder="assets/flags/" text-source="currency" text-format="{value} - {label}"></div>
+<script>
+(function(){
+    var c=document.currentScript.previousElementSibling,f=c.getAttribute('image-folder'),s=c.getAttribute('text-source'),t=c.getAttribute('text-format');
+    c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
+    var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
+    fetch('/gateway.php?action=get-admin-settings').then(function(r){return r.json();}).then(function(res){
+        var d=res.general_options[s]||[];
+        if(d.length>0){bi.src=f+d[0].value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',d[0].value.substring(3)).replace('{label}',d[0].label);}
+        d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item.value.substring(0,2)+'.svg" alt=""><span class="menu-option-text">'+t.replace('{value}',item.value.substring(3)).replace('{label}',item.label)+'</span>';op.onclick=function(){bi.src=f+item.value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',item.value.substring(3)).replace('{label}',item.label);c.classList.remove('open');};o.appendChild(op);});
+    });
+    b.onclick=function(){c.classList.toggle('open');};
+    document.addEventListener('click',function(e){if(!c.contains(e.target))c.classList.remove('open');});
+})();
+</script>
 
-    <script>
-        function createMenu(container, imageFolder, textSource) {
-            container.innerHTML = `
-                <div class="menu-button">
-                    <img class="menu-button-image" src="" alt="">
-                    <span class="menu-button-text">Select...</span>
-                    <span class="menu-button-arrow">▼</span>
-                </div>
-                <div class="menu-options"></div>
-            `;
+<!-- PHONE PREFIX MENU -->
+<div class="menu" image-folder="assets/flags/" text-source="phone-prefix" text-format="{value} - {label}"></div>
+<script>
+(function(){
+    var c=document.currentScript.previousElementSibling,f=c.getAttribute('image-folder'),s=c.getAttribute('text-source'),t=c.getAttribute('text-format');
+    c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
+    var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
+    fetch('/gateway.php?action=get-admin-settings').then(function(r){return r.json();}).then(function(res){
+        var d=res.general_options[s]||[];
+        if(d.length>0){bi.src=f+d[0].value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',d[0].value.substring(3)).replace('{label}',d[0].label);}
+        d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item.value.substring(0,2)+'.svg" alt=""><span class="menu-option-text">'+t.replace('{value}',item.value.substring(3)).replace('{label}',item.label)+'</span>';op.onclick=function(){bi.src=f+item.value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',item.value.substring(3)).replace('{label}',item.label);c.classList.remove('open');};o.appendChild(op);});
+    });
+    b.onclick=function(){c.classList.toggle('open');};
+    document.addEventListener('click',function(e){if(!c.contains(e.target))c.classList.remove('open');});
+})();
+</script>
 
-            const button = container.querySelector('.menu-button');
-            const optionsContainer = container.querySelector('.menu-options');
-            const buttonImage = container.querySelector('.menu-button-image');
-            const buttonText = container.querySelector('.menu-button-text');
+<!-- SYSTEM IMAGES MENU -->
+<div class="menu" image-folder="assets/system-images/" text-source="folder" text-format="{filename}"></div>
+<script>
+(function(){
+    var c=document.currentScript.previousElementSibling,f=c.getAttribute('image-folder'),t=c.getAttribute('text-format');
+    c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
+    var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
+    fetch('/gateway.php?action=list-icons&folder='+encodeURIComponent(f)).then(function(r){return r.json();}).then(function(res){
+        var d=res.icons||[];
+        if(d.length>0){bi.src=f+d[0];bt.textContent=t.replace('{filename}',d[0]);}
+        d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item+'" alt=""><span class="menu-option-text">'+t.replace('{filename}',item)+'</span>';op.onclick=function(){bi.src=f+item;bt.textContent=t.replace('{filename}',item);c.classList.remove('open');};o.appendChild(op);});
+    });
+    b.onclick=function(){c.classList.toggle('open');};
+    document.addEventListener('click',function(e){if(!c.contains(e.target))c.classList.remove('open');});
+})();
+</script>
 
-            // Set initial selection to first item
-            if (textSource.length > 0) {
-                buttonImage.src = imageFolder + textSource[0].image;
-                buttonText.textContent = textSource[0].text;
-            }
-
-            textSource.forEach(item => {
-                const option = document.createElement('div');
-                option.className = 'menu-option';
-                option.innerHTML = `
-                    <img class="menu-option-image" src="${imageFolder}${item.image}" alt="">
-                    <span class="menu-option-text">${item.text}</span>
-                `;
-                option.addEventListener('click', function() {
-                    buttonImage.src = imageFolder + item.image;
-                    buttonText.textContent = item.text;
-                    container.classList.remove('open');
-                });
-                optionsContainer.appendChild(option);
-            });
-
-            button.addEventListener('click', function() {
-                container.classList.toggle('open');
-            });
-        }
-
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.menu')) {
-                document.querySelectorAll('.menu').forEach(m => m.classList.remove('open'));
-            }
-        });
-
-        // CURRENCY MENU
-        const currencyFolder = 'assets/flags/';
-        const currencyData = [
-            { image: 'af.svg', text: 'AFN - Afghan Afghani' },
-            { image: 'al.svg', text: 'ALL - Albanian Lek' }
-        ];
-        createMenu(document.getElementById('menu-currency'), currencyFolder, currencyData);
-
-        // PHONE PREFIX MENU
-        const phoneFolder = 'assets/flags/';
-        const phoneData = [
-            { image: 'af.svg', text: '+93 - Afghanistan' },
-            { image: 'al.svg', text: '+355 - Albania' }
-        ];
-        createMenu(document.getElementById('menu-phone'), phoneFolder, phoneData);
-
-        // SYSTEM IMAGES MENU
-        const systemFolder = 'assets/system-images/';
-        const systemData = [
-            { image: '150x40-pill-70.webp', text: '150x40-pill-70.webp' },
-            { image: '225x60-pill-2f3b73.webp', text: '225x60-pill-2f3b73.webp' }
-        ];
-        createMenu(document.getElementById('menu-system'), systemFolder, systemData);
-
-        // SUBCATEGORY ICONS MENU
-        const iconsFolder = 'assets/icons-30/';
-        const iconsData = [
-            { image: 'whats-on-category-icon-blue-30.webp', text: 'whats-on-category-icon-blue-30.webp' },
-            { image: 'whats-on-category-icon-dark-yellow-30.webp', text: 'whats-on-category-icon-dark-yellow-30.webp' }
-        ];
-        createMenu(document.getElementById('menu-icons'), iconsFolder, iconsData);
-    </script>
+<!-- SUBCATEGORY ICONS MENU -->
+<div class="menu" image-folder="assets/icons-30/" text-source="folder" text-format="{filename}"></div>
+<script>
+(function(){
+    var c=document.currentScript.previousElementSibling,f=c.getAttribute('image-folder'),t=c.getAttribute('text-format');
+    c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
+    var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
+    fetch('/gateway.php?action=list-icons&folder='+encodeURIComponent(f)).then(function(r){return r.json();}).then(function(res){
+        var d=res.icons||[];
+        if(d.length>0){bi.src=f+d[0];bt.textContent=t.replace('{filename}',d[0]);}
+        d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item+'" alt=""><span class="menu-option-text">'+t.replace('{filename}',item)+'</span>';op.onclick=function(){bi.src=f+item;bt.textContent=t.replace('{filename}',item);c.classList.remove('open');};o.appendChild(op);});
+    });
+    b.onclick=function(){c.classList.toggle('open');};
+    document.addEventListener('click',function(e){if(!c.contains(e.target))c.classList.remove('open');});
+})();
+</script>
 
 </body>
 </html>
