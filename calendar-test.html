@@ -9,13 +9,16 @@
         
         .calendar-container {
             width: 400px;
-            overflow-x: auto;
-            overflow-y: hidden;
+            overflow: hidden;
             background: #222222;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 5px;
             position: relative;
-            padding-bottom: 16px;
+        }
+        .calendar-scroll {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
         .calendar {
             display: flex;
@@ -71,13 +74,16 @@
 <body>
 
 <div class="calendar-container" id="calendarContainer">
-    <div class="calendar" id="calendar"></div>
+    <div class="calendar-scroll" id="calendarScroll">
+        <div class="calendar" id="calendar"></div>
+    </div>
     <div class="today-marker" id="todayMarker"></div>
 </div>
 
 <script>
 (function(){
     var container = document.getElementById('calendarContainer');
+    var scroll = document.getElementById('calendarScroll');
     var calendar = document.getElementById('calendar');
     var marker = document.getElementById('todayMarker');
     
@@ -153,7 +159,7 @@
     }
     
     if(todayMonthEl) {
-        container.scrollLeft = todayMonthEl.offsetLeft;
+        scroll.scrollLeft = todayMonthEl.offsetLeft;
     }
     
     var markerPos = (13 / 37) * (container.clientWidth - 12);
@@ -161,7 +167,7 @@
     
     marker.addEventListener('click', function() {
         if(todayMonthEl) {
-            container.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+            scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
         }
     });
     
@@ -172,9 +178,9 @@
         }
     });
     
-    container.addEventListener('wheel', function(e) {
+    scroll.addEventListener('wheel', function(e) {
         e.preventDefault();
-        container.scrollLeft += e.deltaY || e.deltaX;
+        scroll.scrollLeft += e.deltaY || e.deltaX;
     });
 })();
 </script>
