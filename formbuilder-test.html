@@ -184,12 +184,11 @@
             opacity: 0.5;
         }
         .formbuilder-accordion-header-editarea {
+            width: 36px;
             height: 36px;
             display: flex;
             align-items: center;
-            padding-left: 10px;
-            padding-right: 10px;
-            margin-right: -10px;
+            justify-content: center;
             cursor: pointer;
         }
         .formbuilder-accordion-header-edit {
@@ -294,12 +293,11 @@
             opacity: 0.5;
         }
         .formbuilder-accordion-option-editarea {
+            width: 36px;
             height: 36px;
             display: flex;
             align-items: center;
-            padding-left: 10px;
-            padding-right: 10px;
-            margin-right: -10px;
+            justify-content: center;
             cursor: pointer;
         }
         .formbuilder-accordion-option-edit {
@@ -726,7 +724,8 @@
             !e.target.closest('.formbuilder-accordion-header-editarea') &&
             !e.target.closest('.formbuilder-accordion-option-editarea') &&
             !e.target.closest('.formbuilder-accordion-header') &&
-            !e.target.closest('.formbuilder-accordion-option-header')) {
+            !e.target.closest('.formbuilder-accordion-option-header') &&
+            !e.target.closest('.formbuilder-field-wrapper')) {
             closeAllEditPanels();
         }
     });
