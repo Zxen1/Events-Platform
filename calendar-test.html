@@ -188,11 +188,19 @@
     
     // Click days to select (toggle blue)
     calendar.addEventListener('click', function(e) {
-        var day = e.target.closest('.day');
-        if(day && !day.classList.contains('empty')) {
+        var day = e.target;
+        if(day.classList.contains('day') && !day.classList.contains('empty')) {
             day.classList.toggle('selected');
         }
     });
+    
+    // Mouse wheel horizontal scroll
+    container.addEventListener('wheel', function(e) {
+        if(e.deltaY !== 0) {
+            e.preventDefault();
+            container.scrollLeft += e.deltaY;
+        }
+    }, { passive: false });
 })();
 </script>
 
