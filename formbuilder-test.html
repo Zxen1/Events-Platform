@@ -691,13 +691,15 @@
         
         btn.onclick = function(e) {
             e.stopPropagation();
-            // Close other menus
-            container.querySelectorAll('.menu.open').forEach(function(el) {
-                if (el !== menu) el.classList.remove('open');
+            var wasOpen = menu.classList.contains('open');
+            // Close other icon picker menus
+            document.querySelectorAll('.menu.open').forEach(function(el) {
+                el.classList.remove('open');
             });
-            menu.classList.toggle('open');
+            if (!wasOpen) menu.classList.add('open');
         };
         
+        // Close when clicking outside
         document.addEventListener('click', function(e) {
             if (!menu.contains(e.target)) menu.classList.remove('open');
         });
@@ -706,26 +708,7 @@
     }
     
     
-    // Close all open menus and panels
-    function closeAllMenus() {
-        document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
-            el.classList.remove('open');
-        });
-        document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-            el.classList.remove('open');
-        });
-        document.querySelectorAll('.menu.open').forEach(function(el) {
-            el.classList.remove('open');
-        });
-    }
-    
-    function closeAllFieldEditPanels() {
-        document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-            el.classList.remove('formbuilder-field-wrapper--editing');
-        });
-    }
-    
-    // Close edit panels when clicking outside
+    // Close category/subcategory edit panels when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-accordion-editpanel') && 
             !e.target.closest('.formbuilder-accordion-option-editpanel') &&
@@ -735,27 +718,32 @@
             !e.target.closest('.formbuilder-accordion-option-header')) {
             closeAllEditPanels();
         }
-        // Close more menus when clicking outside their button
+    });
+    
+    // Close 3-dot menus when clicking outside
+    document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
             document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
-        // Close fieldset menus when clicking outside their container
+    });
+    
+    // Close fieldset menus when clicking outside
+    document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-fieldset-menu')) {
             document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
-        // Close icon picker menus when clicking outside
-        if (!e.target.closest('.menu')) {
-            document.querySelectorAll('.menu.open').forEach(function(el) {
-                el.classList.remove('open');
+    });
+    
+    // Close field edit panels when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.formbuilder-field-wrapper')) {
+            document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                el.classList.remove('formbuilder-field-wrapper--editing');
             });
-        }
-        // Close field edit panels when clicking outside
-        if (!e.target.closest('.formbuilder-field-wrapper') && !e.target.closest('.formbuilder-field-editpanel')) {
-            closeAllFieldEditPanels();
         }
     });
     
@@ -859,8 +847,10 @@
                 moreBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     var wasOpen = moreBtn.classList.contains('open');
-                    closeAllMenus();
-                    closeAllFieldEditPanels();
+                    // Close other 3-dot menus
+                    document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                        el.classList.remove('open');
+                    });
                     if (!wasOpen) moreBtn.classList.add('open');
                 });
                 
@@ -988,8 +978,10 @@
                     subMoreBtn.addEventListener('click', function(e) {
                         e.stopPropagation();
                         var wasOpen = subMoreBtn.classList.contains('open');
-                        closeAllMenus();
-                        closeAllFieldEditPanels();
+                        // Close other 3-dot menus
+                        document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                            el.classList.remove('open');
+                        });
                         if (!wasOpen) subMoreBtn.classList.add('open');
                     });
                     
@@ -1135,10 +1127,10 @@
                             fieldEdit.addEventListener('click', function(ev) {
                                 ev.stopPropagation();
                                 var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                                // Close ALL field edit panels on the page
-                                closeAllFieldEditPanels();
-                                // Close all menus
-                                closeAllMenus();
+                                // Close other field edit panels
+                                document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                                    el.classList.remove('formbuilder-field-wrapper--editing');
+                                });
                                 if (!isOpen) {
                                     fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
                                 }
@@ -1180,10 +1172,12 @@
                     
                     fieldsetBtn.onclick = function(e) {
                         e.stopPropagation();
-                        // Close all other menus and field panels
-                        closeAllMenus();
-                        closeAllFieldEditPanels();
-                        fieldsetMenu.classList.toggle('open');
+                        var wasOpen = fieldsetMenu.classList.contains('open');
+                        // Close other fieldset menus
+                        document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+                            el.classList.remove('open');
+                        });
+                        if (!wasOpen) fieldsetMenu.classList.add('open');
                     };
                     
                     optBody.appendChild(fieldsetMenu);
