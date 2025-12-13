@@ -30,6 +30,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      width: 200px;
       height: 40px;
       padding: 0 12px;
       border: 1px solid rgba(255,255,255,0.2);
@@ -52,7 +53,10 @@
     }
     
     .menu-button-text {
+      flex: 1;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .menu-button-arrow {
@@ -67,7 +71,7 @@
       left: 0;
       z-index: 100;
       margin-top: 4px;
-      min-width: 100%;
+      width: 200px;
       max-height: 200px;
       overflow-y: auto;
       background: #222;
@@ -102,7 +106,10 @@
     }
     
     .menu-option-text {
+      flex: 1;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
