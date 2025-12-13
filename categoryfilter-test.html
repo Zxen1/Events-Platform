@@ -142,125 +142,101 @@
 (function(){
     var container = document.getElementById('categoryFilters');
     
-    // Fetch categories from database
-    fetch('/gateway.php?action=get-admin-settings')
+    fetch('/gateway.php?action=get-form')
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            // Categories come from formbuilder snapshot, need different endpoint
-            // For now, fetch from get-form or use test data
-            buildTestCategories();
-        })
-        .catch(function() {
-            buildTestCategories();
-        });
-    
-    function buildTestCategories() {
-        // Test data matching database structure
-        var categories = [
-            { name: "What's On", icon: 'whats-on-category-icon-30.webp', subs: [
-                { name: 'Live Gigs', icon: 'whats-on-category-icon-blue-30.webp' },
-                { name: 'Live Theatre', icon: 'whats-on-category-icon-dark-yellow-30.webp' },
-                { name: 'Screenings', icon: 'whats-on-category-icon-green-30.webp' }
-            ]},
-            { name: 'Opportunities', icon: 'opportunities-category-icon-30.webp', subs: [
-                { name: 'Stage Auditions', icon: 'opportunities-category-icon-blue-30.webp' },
-                { name: 'Screen Auditions', icon: 'opportunities-category-icon-dark-yellow-30.webp' },
-                { name: 'Jobs', icon: 'opportunities-category-icon-indigo-30.webp' }
-            ]},
-            { name: 'Learning', icon: 'learning-category-icon-30.webp', subs: [
-                { name: 'Tutors', icon: 'learning-category-icon-blue-30.webp' },
-                { name: 'Courses', icon: 'learning-category-icon-green-30.webp' }
-            ]}
-        ];
-        
-        var iconFolder = 'assets/icons-30/';
-        
-        categories.forEach(function(cat) {
-            var accordion = document.createElement('div');
-            accordion.className = 'filter-categoryfilter-accordion';
+            if (!res.success || !res.snapshot) return;
             
-            // Header
-            var header = document.createElement('div');
-            header.className = 'filter-categoryfilter-accordion-header';
+            var categories = res.snapshot.categories || [];
+            var categoryIconPaths = res.snapshot.categoryIconPaths || {};
+            var subcategoryIconPaths = res.snapshot.subcategoryIconPaths || {};
             
-            var headerImg = document.createElement('img');
-            headerImg.className = 'filter-categoryfilter-accordion-header-image';
-            headerImg.src = iconFolder + cat.icon;
-            
-            var headerText = document.createElement('span');
-            headerText.className = 'filter-categoryfilter-accordion-header-text';
-            headerText.textContent = cat.name;
-            
-            var headerArrow = document.createElement('span');
-            headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
-            headerArrow.textContent = '▼';
-            
-            var headerToggle = document.createElement('div');
-            headerToggle.className = 'filter-categoryfilter-accordion-header-toggle on';
-            
-            header.appendChild(headerImg);
-            header.appendChild(headerText);
-            header.appendChild(headerArrow);
-            header.appendChild(headerToggle);
-            
-            // Body
-            var body = document.createElement('div');
-            body.className = 'filter-categoryfilter-accordion-body';
-            
-            cat.subs.forEach(function(sub) {
-                var option = document.createElement('div');
-                option.className = 'filter-categoryfilter-accordion-option';
+            categories.forEach(function(cat) {
+                var accordion = document.createElement('div');
+                accordion.className = 'filter-categoryfilter-accordion';
                 
-                var optImg = document.createElement('img');
-                optImg.className = 'filter-categoryfilter-accordion-option-image';
-                optImg.src = iconFolder + sub.icon;
+                // Header
+                var header = document.createElement('div');
+                header.className = 'filter-categoryfilter-accordion-header';
                 
-                var optText = document.createElement('span');
-                optText.className = 'filter-categoryfilter-accordion-option-text';
-                optText.textContent = sub.name;
+                var headerImg = document.createElement('img');
+                headerImg.className = 'filter-categoryfilter-accordion-header-image';
+                headerImg.src = categoryIconPaths[cat.name] || '';
                 
-                var optToggle = document.createElement('div');
-                optToggle.className = 'filter-categoryfilter-accordion-option-toggle on';
+                var headerText = document.createElement('span');
+                headerText.className = 'filter-categoryfilter-accordion-header-text';
+                headerText.textContent = cat.name;
                 
-                option.appendChild(optImg);
-                option.appendChild(optText);
-                option.appendChild(optToggle);
+                var headerArrow = document.createElement('span');
+                headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
+                headerArrow.textContent = '▼';
                 
-                // Subcategory toggle click
-                optToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    optToggle.classList.toggle('on');
+                var headerToggle = document.createElement('div');
+                headerToggle.className = 'filter-categoryfilter-accordion-header-toggle on';
+                
+                header.appendChild(headerImg);
+                header.appendChild(headerText);
+                header.appendChild(headerArrow);
+                header.appendChild(headerToggle);
+                
+                // Body
+                var body = document.createElement('div');
+                body.className = 'filter-categoryfilter-accordion-body';
+                
+                var subs = cat.subs || [];
+                subs.forEach(function(subName) {
+                    var option = document.createElement('div');
+                    option.className = 'filter-categoryfilter-accordion-option';
+                    
+                    var optImg = document.createElement('img');
+                    optImg.className = 'filter-categoryfilter-accordion-option-image';
+                    optImg.src = subcategoryIconPaths[subName] || '';
+                    
+                    var optText = document.createElement('span');
+                    optText.className = 'filter-categoryfilter-accordion-option-text';
+                    optText.textContent = subName;
+                    
+                    var optToggle = document.createElement('div');
+                    optToggle.className = 'filter-categoryfilter-accordion-option-toggle on';
+                    
+                    option.appendChild(optImg);
+                    option.appendChild(optText);
+                    option.appendChild(optToggle);
+                    
+                    // Subcategory toggle click
+                    optToggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        optToggle.classList.toggle('on');
+                    });
+                    
+                    body.appendChild(option);
                 });
                 
-                body.appendChild(option);
+                accordion.appendChild(header);
+                accordion.appendChild(body);
+                
+                // Arrow click - expand/collapse
+                headerArrow.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    accordion.classList.toggle('filter-categoryfilter-accordion--open');
+                });
+                
+                // Category toggle click - enable/disable
+                headerToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    headerToggle.classList.toggle('on');
+                    if(headerToggle.classList.contains('on')) {
+                        accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+                    } else {
+                        accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                    }
+                });
+                
+                container.appendChild(accordion);
             });
-            
-            accordion.appendChild(header);
-            accordion.appendChild(body);
-            
-            // Arrow click - expand/collapse
-            headerArrow.addEventListener('click', function(e) {
-                e.stopPropagation();
-                accordion.classList.toggle('filter-categoryfilter-accordion--open');
-            });
-            
-            // Category toggle click - enable/disable
-            headerToggle.addEventListener('click', function(e) {
-                e.stopPropagation();
-                headerToggle.classList.toggle('on');
-                if(headerToggle.classList.contains('on')) {
-                    accordion.classList.remove('filter-categoryfilter-accordion--disabled');
-                } else {
-                    accordion.classList.add('filter-categoryfilter-accordion--disabled');
-                }
-            });
-            
-            container.appendChild(accordion);
         });
-    }
 })();
 </script>
 
 </body>
 </html>
-
