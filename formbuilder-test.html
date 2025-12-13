@@ -480,17 +480,54 @@
             display: flex;
             align-items: center;
             padding: 0 10px;
-            margin-bottom: 10px;
+            margin-bottom: 3px;
             background: #222;
             border: 1px solid #222222;
             border-radius: 4px;
             color: #fff;
             font-size: 13px;
-            cursor: pointer;
             box-sizing: border-box;
         }
         .formbuilder-field:hover {
             border-color: #3b82f5;
+        }
+        .formbuilder-field-text {
+            flex: 1;
+        }
+        .formbuilder-field-drag {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            color: #888;
+        }
+        .formbuilder-field-drag:hover {
+            color: #fff;
+        }
+        .formbuilder-field-drag svg {
+            width: 16px;
+            height: 16px;
+        }
+        .formbuilder-field-edit {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #fff;
+        }
+        .formbuilder-field-edit:hover {
+            color: #3b82f5;
+        }
+        .formbuilder-field-edit svg {
+            width: 16px;
+            height: 16px;
+        }
+        .formbuilder-field.dragging {
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -909,8 +946,49 @@
                             // Add field button
                             var field = document.createElement('div');
                             field.className = 'formbuilder-field';
-                            field.textContent = fs.name || fs.key || 'Unnamed';
                             field.setAttribute('data-fieldset-id', fsId);
+                            
+                            var fieldText = document.createElement('span');
+                            fieldText.className = 'formbuilder-field-text';
+                            fieldText.textContent = fs.name || fs.key || 'Unnamed';
+                            
+                            var fieldDrag = document.createElement('div');
+                            fieldDrag.className = 'formbuilder-field-drag';
+                            fieldDrag.innerHTML = dragHandleSvg;
+                            
+                            var fieldEdit = document.createElement('div');
+                            fieldEdit.className = 'formbuilder-field-edit';
+                            fieldEdit.innerHTML = slidersSvg;
+                            
+                            field.appendChild(fieldText);
+                            field.appendChild(fieldDrag);
+                            field.appendChild(fieldEdit);
+                            
+                            // Field drag and drop
+                            field.draggable = true;
+                            field.addEventListener('dragstart', function(ev) {
+                                ev.stopPropagation();
+                                ev.dataTransfer.effectAllowed = 'move';
+                                field.classList.add('dragging');
+                            });
+                            field.addEventListener('dragend', function() {
+                                field.classList.remove('dragging');
+                            });
+                            field.addEventListener('dragover', function(ev) {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                var dragging = fieldsContainer.querySelector('.formbuilder-field.dragging');
+                                if (dragging && dragging !== field) {
+                                    var rect = field.getBoundingClientRect();
+                                    var midY = rect.top + rect.height / 2;
+                                    if (ev.clientY < midY) {
+                                        field.parentNode.insertBefore(dragging, field);
+                                    } else {
+                                        field.parentNode.insertBefore(dragging, field.nextSibling);
+                                    }
+                                }
+                            });
+                            
                             fieldsContainer.appendChild(field);
                             // Mark as added and disable option
                             addedFieldsets[fsId] = true;
