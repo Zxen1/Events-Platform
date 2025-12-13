@@ -46,13 +46,20 @@
         .filter-categoryfilter-accordion--open .filter-categoryfilter-accordion-header-arrow {
             transform: rotate(180deg);
         }
+        .filter-categoryfilter-accordion-header-togglearea {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            padding-right: 0;
+            cursor: pointer;
+        }
         .filter-categoryfilter-accordion-header-toggle {
             width: 36px;
             height: 20px;
             background: #444;
             border-radius: 10px;
             position: relative;
-            margin-left: 10px;
             cursor: pointer;
         }
         .filter-categoryfilter-accordion-header-toggle::after {
@@ -177,13 +184,16 @@
                 headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
                 headerArrow.textContent = '▼';
                 
+                var headerToggleArea = document.createElement('div');
+                headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
                 var headerToggle = document.createElement('div');
                 headerToggle.className = 'filter-categoryfilter-accordion-header-toggle on';
+                headerToggleArea.appendChild(headerToggle);
                 
                 header.appendChild(headerImg);
                 header.appendChild(headerText);
                 header.appendChild(headerArrow);
-                header.appendChild(headerToggle);
+                header.appendChild(headerToggleArea);
                 
                 // Body
                 var body = document.createElement('div');
@@ -220,8 +230,8 @@
                 accordion.appendChild(header);
                 accordion.appendChild(body);
                 
-                // Category toggle click - disable and force close
-                headerToggle.addEventListener('click', function(e) {
+                // Category toggle area click - disable and force close
+                headerToggleArea.addEventListener('click', function(e) {
                     e.stopPropagation();
                     headerToggle.classList.toggle('on');
                     if(headerToggle.classList.contains('on')) {
@@ -232,9 +242,9 @@
                     }
                 });
                 
-                // Click anywhere except toggle expands/collapses
+                // Click anywhere except toggle area expands/collapses
                 header.addEventListener('click', function(e) {
-                    if(e.target === headerToggle || headerToggle.contains(e.target)) return;
+                    if(e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
                     accordion.classList.toggle('filter-categoryfilter-accordion--open');
                 });
                 
