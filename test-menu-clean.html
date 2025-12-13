@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Menu Component</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 40px;
+    }
+    
+    h1 { color: #3b82f6; }
+
+    /* =============================================
+       MENU COMPONENT - 9 CLASSES ONLY
+       ============================================= */
+    
+    .menu {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .menu-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    
+    .menu-button-image {
+      width: 20px;
+      height: 15px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    
+    .menu-button-text {
+      white-space: nowrap;
+    }
+    
+    .menu-button-arrow {
+      margin-left: 8px;
+      font-size: 10px;
+      opacity: 0.6;
+    }
+    
+    .menu-options {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      min-width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #222;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+    }
+    
+    .menu-options[hidden] { display: none; }
+    
+    .menu-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      background: none;
+      color: #fff;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    
+    .menu-option:hover { background: rgba(255,255,255,0.1); }
+    
+    .menu-option-image {
+      width: 20px;
+      height: 15px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    
+    .menu-option-text {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Clean Menu Component</h1>
+  
+  <!-- HTML: 9 classes, clear structure -->
+  <div class="menu" id="menu">
+    <button type="button" class="menu-button" id="menuButton">
+      <img class="menu-button-image" id="menuButtonImage" src="" alt="" hidden>
+      <span class="menu-button-text" id="menuButtonText">Select currency</span>
+      <span class="menu-button-arrow">▼</span>
+    </button>
+    <div class="menu-options" id="menuOptions" hidden>
+      <!-- Options added by JS -->
+    </div>
+  </div>
+
+  <script>
+    // Data
+    const currencies = [
+      { code: 'USD', country: 'us', name: 'US Dollar' },
+      { code: 'GBP', country: 'gb', name: 'British Pound' },
+      { code: 'EUR', country: 'eu', name: 'Euro' },
+      { code: 'AUD', country: 'au', name: 'Australian Dollar' },
+      { code: 'JPY', country: 'jp', name: 'Japanese Yen' },
+    ];
+    
+    // Elements
+    const button = document.getElementById('menuButton');
+    const buttonImage = document.getElementById('menuButtonImage');
+    const buttonText = document.getElementById('menuButtonText');
+    const options = document.getElementById('menuOptions');
+    
+    // Build options
+    currencies.forEach(c => {
+      const opt = document.createElement('button');
+      opt.type = 'button';
+      opt.className = 'menu-option';
+      opt.innerHTML = `
+        <img class="menu-option-image" src="assets/flags/${c.country}.svg" alt="">
+        <span class="menu-option-text">${c.code} - ${c.name}</span>
+      `;
+      opt.onclick = () => {
+        buttonImage.src = `assets/flags/${c.country}.svg`;
+        buttonImage.hidden = false;
+        buttonText.textContent = c.code;
+        options.hidden = true;
+      };
+      options.appendChild(opt);
+    });
+    
+    // Toggle
+    button.onclick = () => { options.hidden = !options.hidden; };
+    
+    // Close on outside click
+    document.onclick = (e) => {
+      if (!document.getElementById('menu').contains(e.target)) {
+        options.hidden = true;
+      }
+    };
+  </script>
+</body>
+</html>
+

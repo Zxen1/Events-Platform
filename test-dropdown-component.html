@@ -286,7 +286,7 @@
       let isOpen = false;
       
       // Populate options
-      config.options.forEach(opt => {
+      options.forEach(opt => {
         const optBtn = document.createElement('button');
         optBtn.type = 'button';
         optBtn.className = gridMode ? 'menu-option icon-option' : 'menu-option';
@@ -434,16 +434,19 @@
           }));
         }
       } catch (e) {
-        console.warn('Could not load icons, using placeholders');
+        console.warn('Could not load icons:', e);
       }
       
-      if (icons.length) {
-        createMenu(document.getElementById('iconMenu'), {
-          placeholder: 'Choose icon...',
-          options: icons,
-          gridMode: true,
-          onSelect: (opt) => console.log('Icon selected:', opt)
-        });
+      // Always initialize, even with empty options
+      createMenu(document.getElementById('iconMenu'), {
+        placeholder: icons.length ? 'Choose icon...' : 'No icons found',
+        options: icons,
+        gridMode: true,
+        onSelect: (opt) => console.log('Icon selected:', opt)
+      });
+      
+      if (!icons.length) {
+        console.warn('Icon picker: No icons loaded from', iconFolder);
       }
     })();
     
