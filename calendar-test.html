@@ -7,7 +7,7 @@
     <style>
         :root {
             --calendar-width: 250px;
-            --calendar-height: 200px;
+            --calendar-height: 220px;
             --calendar-cell-w: calc(var(--calendar-width) / 7);
             --calendar-header-h: 20px;
             --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h)) / 7);
@@ -74,13 +74,14 @@
         
         .today-marker {
             position: absolute;
-            bottom: 0;
-            width: 10px;
-            height: 10px;
+            bottom: 5px;
+            width: 12px;
+            height: 12px;
             background: var(--today);
             border-radius: 50%;
             cursor: pointer;
-            z-index: 10;
+            z-index: 100;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -176,7 +177,7 @@
     }
     
     // Position today marker - fixed at 13/37 along the bottom (never moves)
-    var markerPos = (13 / 37) * (container.clientWidth - 10);
+    var markerPos = (13 / 37) * (container.clientWidth - 12);
     marker.style.left = markerPos + 'px';
     
     // Click marker to scroll to today
@@ -196,11 +197,9 @@
     
     // Mouse wheel horizontal scroll
     container.addEventListener('wheel', function(e) {
-        if(e.deltaY !== 0) {
-            e.preventDefault();
-            container.scrollLeft += e.deltaY;
-        }
-    }, { passive: false });
+        e.preventDefault();
+        container.scrollLeft += e.deltaY || e.deltaX;
+    });
 })();
 </script>
 
