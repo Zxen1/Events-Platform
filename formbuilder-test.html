@@ -28,9 +28,13 @@
         .formbuilder-accordion:not(.formbuilder-accordion--open) .formbuilder-accordion-header {
             border-radius: 5px;
         }
-        .formbuilder-accordion-header:hover,
+        .formbuilder-accordion-header:hover {
+            border-color: #3b82f5;
+        }
         .formbuilder-accordion--editing .formbuilder-accordion-header {
             border-color: #3b82f5;
+            border-radius: 5px 5px 0 0;
+            border-bottom: none;
         }
         .formbuilder-accordion-header-image {
             width: 24px;
@@ -94,6 +98,9 @@
             display: none;
             padding: 10px;
             background: #222;
+            border: 1px solid #3b82f5;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
         }
         .formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
             display: block;
@@ -122,9 +129,13 @@
             cursor: pointer;
             border: 1px solid transparent;
         }
-        .formbuilder-accordion-option-header:hover,
+        .formbuilder-accordion-option-header:hover {
+            border-color: #3b82f5;
+        }
         .formbuilder-accordion-option--editing .formbuilder-accordion-option-header {
             border-color: #3b82f5;
+            border-radius: 4px 4px 0 0;
+            border-bottom: none;
         }
         .formbuilder-accordion-option-image {
             width: 20px;
@@ -170,6 +181,8 @@
             display: none;
             padding: 10px;
             margin-top: 0;
+            border: 1px solid #3b82f5;
+            border-top: none;
             border-radius: 0 0 4px 4px;
         }
         .formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
@@ -183,7 +196,7 @@
         .menu.open .menu-button { border-color: #3b82f5; border-radius: 5px 5px 0 0; border-bottom: none; }
         .menu-button-image { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
         .menu-button-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .menu-button-arrow { width: 16px; height: 36px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; flex-shrink: 0; transform-origin: center center; }
+        .menu-button-arrow { width: 16px; height: 16px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; flex-shrink: 0; }
         .menu.open .menu-button-arrow { transform: rotate(180deg); }
         .menu-options { display: none; position: absolute; top: 35px; left: 0; width: 100%; background: rgba(0,0,0,0.7); border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 5px 5px; max-height: 200px; overflow-y: auto; overflow-x: hidden; z-index: 100; scrollbar-width: thin; scrollbar-color: #888 transparent; }
         .menu-options::-webkit-scrollbar { width: 8px; background: transparent; }
