@@ -207,7 +207,35 @@
                     
                     var optImg = document.createElement('img');
                     optImg.className = 'filter-categoryfilter-accordion-option-image';
+                    optImg.crossOrigin = 'anonymous';
                     optImg.src = subcategoryIconPaths[subName] || '';
+                    
+                    // Extract dominant color from icon
+                    optImg.onload = function() {
+                        try {
+                            var canvas = document.createElement('canvas');
+                            var ctx = canvas.getContext('2d');
+                            canvas.width = optImg.naturalWidth;
+                            canvas.height = optImg.naturalHeight;
+                            ctx.drawImage(optImg, 0, 0);
+                            var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                            var r = 0, g = 0, b = 0, count = 0;
+                            for (var i = 0; i < data.length; i += 4) {
+                                if (data[i + 3] > 128) { // Only count non-transparent pixels
+                                    r += data[i];
+                                    g += data[i + 1];
+                                    b += data[i + 2];
+                                    count++;
+                                }
+                            }
+                            if (count > 0) {
+                                r = Math.round(r / count);
+                                g = Math.round(g / count);
+                                b = Math.round(b / count);
+                                option.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                            }
+                        } catch(e) {}
+                    };
                     
                     var optText = document.createElement('span');
                     optText.className = 'filter-categoryfilter-accordion-option-text';
