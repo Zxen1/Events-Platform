@@ -3,206 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clean Menu Component</title>
+  <title>Menu</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    
-    body {
-      font-family: system-ui, sans-serif;
-      background: #1a1a2e;
-      color: #fff;
-      padding: 40px;
-    }
-    
-    h1 { color: #3b82f6; margin-bottom: 10px; }
-    h2 { color: #888; font-size: 14px; margin: 30px 0 15px; }
-
-    /* =============================================
-       MENU COMPONENT - 9 CLASSES
-       ============================================= */
-    
-    .menu {
-      position: relative;
-      display: inline-block;
-    }
-    
-    .menu-button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 200px;
-      height: 40px;
-      padding: 0 12px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      background: rgba(0,0,0,0.35);
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
-    }
-    
-    .menu-button:hover {
-      background: rgba(255,255,255,0.1);
-    }
-    
-    .menu-button-image {
-      width: 20px;
-      height: 15px;
-      object-fit: cover;
-      border-radius: 2px;
-    }
-    
-    .menu-button-text {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .menu-button-arrow {
-      margin-left: 8px;
-      font-size: 10px;
-      opacity: 0.6;
-    }
-    
-    .menu-options {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      z-index: 100;
-      margin-top: 4px;
-      width: 200px;
-      max-height: 200px;
-      overflow-y: auto;
-      background: #222;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-    }
-    
+    body { font-family: system-ui; background: #1a1a2e; color: #fff; padding: 40px; }
+    .menu { position: relative; display: inline-block; }
+    .menu-button { display: flex; align-items: center; gap: 8px; width: 400px; height: 40px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(0,0,0,0.35); color: #fff; font: inherit; cursor: pointer; }
+    .menu-button:hover { background: rgba(255,255,255,0.1); }
+    .menu-button-image { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; }
+    .menu-button-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .menu-button-arrow { font-size: 10px; opacity: 0.6; }
+    .menu-options { position: absolute; top: 100%; left: 0; z-index: 100; margin-top: 4px; width: 400px; max-height: 200px; overflow-y: auto; background: #222; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; }
     .menu-options[hidden] { display: none; }
-    
-    .menu-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 10px 12px;
-      border: none;
-      background: none;
-      color: #fff;
-      font: inherit;
-      text-align: left;
-      cursor: pointer;
-    }
-    
+    .menu-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: none; background: none; color: #fff; font: inherit; text-align: left; cursor: pointer; }
     .menu-option:hover { background: rgba(255,255,255,0.1); }
-    
-    .menu-option-image {
-      width: 20px;
-      height: 15px;
-      object-fit: cover;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-    
-    .menu-option-text {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .menu-option-image { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
+    .menu-option-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   </style>
 </head>
 <body>
-  <h1>Clean Menu Component</h1>
-  
-  <h2>CURRENCY</h2>
-  <div class="menu" id="currencyMenu"></div>
 
-  <h2>ICONS</h2>
-  <div class="menu" id="iconMenu"></div>
+  <div class="menu" id="menu"></div>
 
   <script>
-    // =========================================================
-    // DATA - Same format: { image, text }
-    // =========================================================
-    
-    const currencies = [
-      { image: 'assets/flags/us.svg', text: 'USD' },
-      { image: 'assets/flags/gb.svg', text: 'GBP' },
-      { image: 'assets/flags/eu.svg', text: 'EUR' },
-      { image: 'assets/flags/au.svg', text: 'AUD' },
-      { image: 'assets/flags/jp.svg', text: 'JPY' },
-      { image: 'assets/flags/ca.svg', text: 'CAD' },
-      { image: 'assets/flags/ch.svg', text: 'CHF' },
-      { image: 'assets/flags/cn.svg', text: 'CNY' },
+    // ========================================
+    // CONFIG: Change these two things only
+    // ========================================
+    const imageFolder = 'assets/flags';
+    const items = [
+      { file: 'us.svg', text: 'USD' },
+      { file: 'gb.svg', text: 'GBP' },
+      { file: 'eu.svg', text: 'EUR' },
+      { file: 'au.svg', text: 'AUD' },
+      { file: 'jp.svg', text: 'JPY' },
     ];
-    
-    const icons = [
-      { image: 'assets/system-images/admin-messages.svg', text: 'admin-messages' },
-      { image: 'assets/system-images/email-messages.svg', text: 'email-messages' },
-      { image: 'assets/system-images/fieldset-tooltips.svg', text: 'fieldset-tooltips' },
-      { image: 'assets/system-images/icon-admin.svg', text: 'icon-admin' },
-      { image: 'assets/system-images/icon-close.svg', text: 'icon-close' },
-      { image: 'assets/system-images/icon-discard.svg', text: 'icon-discard' },
-      { image: 'assets/system-images/icon-fullscreen.svg', text: 'icon-fullscreen' },
-      { image: 'assets/system-images/icon-fullscreen-exit.svg', text: 'icon-fullscreen-exit' },
-      { image: 'assets/system-images/icon-member.svg', text: 'icon-member' },
-      { image: 'assets/system-images/icon-save.svg', text: 'icon-save' },
-      { image: 'assets/system-images/member-messages.svg', text: 'member-messages' },
-      { image: 'assets/system-images/user-messages.svg', text: 'user-messages' },
-    ];
-    
-    // =========================================================
-    // ONE FUNCTION - Identical for all menus
-    // =========================================================
-    
-    function initMenu(container, data, placeholder) {
-      container.innerHTML = `
-        <button type="button" class="menu-button">
-          <img class="menu-button-image" src="" alt="" hidden>
-          <span class="menu-button-text">${placeholder}</span>
-          <span class="menu-button-arrow">▼</span>
-        </button>
-        <div class="menu-options" hidden></div>
-      `;
-      
-      const button = container.querySelector('.menu-button');
-      const buttonImage = container.querySelector('.menu-button-image');
-      const buttonText = container.querySelector('.menu-button-text');
-      const options = container.querySelector('.menu-options');
-      
-      data.forEach(item => {
-        const opt = document.createElement('button');
-        opt.type = 'button';
-        opt.className = 'menu-option';
-        opt.title = item.text;
-        opt.innerHTML = `
-          <img class="menu-option-image" src="${item.image}" alt="">
-          <span class="menu-option-text">${item.text}</span>
-        `;
-        opt.onclick = () => {
-          buttonImage.src = item.image;
-          buttonImage.hidden = false;
-          buttonText.textContent = item.text;
-          options.hidden = true;
-        };
-        options.appendChild(opt);
-      });
-      
-      button.onclick = () => { options.hidden = !options.hidden; };
-      
-      document.addEventListener('click', (e) => {
-        if (!container.contains(e.target)) options.hidden = true;
-      });
-    }
-    
-    // =========================================================
-    // INIT - Only data differs
-    // =========================================================
-    
-    initMenu(document.getElementById('currencyMenu'), currencies, 'Select currency');
-    initMenu(document.getElementById('iconMenu'), icons, 'Select icon');
+    // ========================================
+
+    const el = document.getElementById('menu');
+    el.innerHTML = `
+      <button class="menu-button">
+        <img class="menu-button-image" src="" alt="" hidden>
+        <span class="menu-button-text">Select...</span>
+        <span class="menu-button-arrow">▼</span>
+      </button>
+      <div class="menu-options" hidden></div>`;
+
+    const btn = el.querySelector('.menu-button');
+    const img = el.querySelector('.menu-button-image');
+    const txt = el.querySelector('.menu-button-text');
+    const opt = el.querySelector('.menu-options');
+
+    items.forEach(d => {
+      const src = `${imageFolder}/${d.file}`;
+      const o = document.createElement('button');
+      o.className = 'menu-option';
+      o.innerHTML = `<img class="menu-option-image" src="${src}"><span class="menu-option-text">${d.text}</span>`;
+      o.onclick = () => { img.src = src; img.hidden = false; txt.textContent = d.text; opt.hidden = true; };
+      opt.appendChild(o);
+    });
+
+    btn.onclick = () => opt.hidden = !opt.hidden;
+    document.addEventListener('click', e => { if (!el.contains(e.target)) opt.hidden = true; });
   </script>
 </body>
 </html>

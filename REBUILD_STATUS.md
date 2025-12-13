@@ -1,116 +1,85 @@
-# REBUILD STATUS
+# REBUILD STATUS - FULL HANDOVER
 
 **Last Updated:** December 13, 2025
-**Current Phase:** Planning - Naming containers
+**Current Phase:** Building reusable dropdown menu component
 
 ---
 
-## REFERENCE SITE
+## CRITICAL: READ THESE FIRST
 
-✅ **old.funmap.com** - Frozen backup for comparison during rebuild
-- Same database as main site
-- Contains working spaghetti code for reference
-- Do NOT modify - this is the control version
+1. **`AI_AGENT_CONFESSIONS_AND_RULES.md`** - Contains 16 confessions of past AI failures, all project rules, and the CSS class naming system
+2. **This file** - Current status and next steps
+
+---
+
+## WHAT IS THIS PROJECT?
+
+**funmap.com** - A CMS platform for map-based event discovery.
+
+- 7 visible sections: Header, Filter, Map, Post, Admin, Member, Advert
+- Current codebase: 29,636 lines of spaghetti `index.js` + 9 CSS files
+- Goal: Clean rewrite with modular 9 JS files + 9 CSS files
+- Reference site: **old.funmap.com** (frozen backup for comparison)
+
+---
+
+## DO NOT REBUILD LIST
+
+These complex components work perfectly. Extract and preserve them:
+- Calendars (3 different ones, months of work)
+- Currency menu
+- Phone prefix menu  
+- Icon picker
+- System image picker
+- Category filter
+- Checkout options interface
+- Fieldsets (admin, form, user views)
+- Formpicker
+- Messages system
+
+**Exception:** Formbuilder WILL be rebuilt.
+
+---
+
+## CURRENT TASK: Reusable Dropdown Menu
+
+### 9 Classes (same for all dropdown menus, only data differs)
+
+| Class | Purpose |
+|-------|---------|
+| `.menu` | Wrapper |
+| `.menu-button` | Trigger button |
+| `.menu-button-image` | Image inside button |
+| `.menu-button-text` | Text inside button |
+| `.menu-button-arrow` | Dropdown arrow |
+| `.menu-options` | Dropdown container |
+| `.menu-option` | Each selectable item |
+| `.menu-option-image` | Image inside option |
+| `.menu-option-text` | Text inside option |
 
 ---
 
 ## FILE STRUCTURE
 
-### JavaScript Files (9 total)
-| File | Section | Status | Description |
-|------|---------|--------|-------------|
-| index.js | backbone | placeholder | Shared utilities, initialization, globals |
-| header.js | header | placeholder | Header bar, logo, filter button, mode switch, access buttons |
-| filter.js | filter | placeholder | Filter panel, all filter controls |
-| map.js | map | placeholder | Mapbox integration, markers, cards, clusters |
-| post.js | post | placeholder | Posts panel, recents panel, open post view |
-| admin.js | admin | placeholder | Admin panel (settings, forms, map, messages tabs) |
-| member.js | member | placeholder | Member panel (profile, create post, my posts) |
-| forms.js | forms | placeholder | Formbuilder, form fields, shared between admin+member |
-| advert.js | advert | placeholder | Sidebar advert, featured post cycling |
+### Current Files (spaghetti - to be replaced)
+- `index.js` - 29,636 lines, contains everything
+- 9 CSS files - already separated but with messy global styles
 
-### CSS Files (9 total)
-| File | Section | Status | Description |
-|------|---------|--------|-------------|
-| base.css | backbone | placeholder | CSS variables, resets, shared styles |
-| header.css | header | placeholder | Header styling |
-| filter.css | filter | placeholder | Filter panel styling |
-| map.css | map | placeholder | Map, markers, cards styling |
-| post.css | post | placeholder | Posts and recents styling |
-| admin.css | admin | placeholder | Admin panel styling |
-| member.css | member | placeholder | Member panel styling |
-| forms.css | forms | placeholder | Form fields, formbuilder styling |
-| advert.css | advert | placeholder | Advert sidebar styling |
+### New Files (placeholders created)
+- `*-new.js` and `*-new.css` for all 9 sections
+- `index-new.html` - new skeleton
+
+### Backup
+- `Events-Platform-main (20) STABLE LAST BACKUP BEFORE REBUILD/` - Complete working backup
 
 ---
 
-## 7 VISIBLE SECTIONS
+## REFERENCE SITE
 
-1. **Header** - Logo, filter button, mode switch (Recents/Posts/Map), access buttons (member/admin/fullscreen)
-2. **Filter** - Search, filters, categories, calendar
-3. **Map** - Mapbox map, markers, clusters, cards, shadow
-4. **Post** - Post cards, recents, open post view with sticky header
-5. **Admin** - Settings, Forms, Map, Messages tabs
-6. **Member** - Profile, Create Post, My Posts tabs
-7. **Advert** - Sidebar with featured posts (1920px+ screens)
-
----
-
-## 2 INVISIBLE/SHARED
-
-- **index.js** (backbone) - Core utilities used by all sections
-- **forms.js** - Shared between admin and member
-
----
-
-## BUILD ORDER
-
-0. [x] Reference site (old.funmap.com) for comparison
-1. [ ] Finalize container names for all sections
-2. [ ] index.html (skeleton)
-3. [ ] base.css + index.js (shared foundation)
-4. [ ] header.css + header.js
-5. [ ] map.css + map.js (Mapbox integration)
-6. [ ] filter.css + filter.js
-7. [ ] post.css + post.js
-8. [ ] admin.css + admin.js
-9. [ ] member.css + member.js
-10. [ ] forms.css + forms.js
-11. [ ] advert.css + advert.js
-
----
-
-## CONTAINER NAMES
-
-### Header ✅
-- bar, logo, filter, modeswitch, access
-
-### Filter ✅
-- panel, mapcontrol, resetfilters, resetcategories, sortby, keywords, pricerange, daterange, expiredevents, categoryfilter
-
-### Map (in progress)
-- area, mapcontrol, shadow, zoomindicator, smallcard, bigcard, hovercard, cluster, multipost
-
-### Post
-- (TBD)
-
-### Admin
-- (TBD)
-
-### Member
-- (TBD)
-
-### Forms
-- (TBD)
-
-### Advert
-- (TBD)
-
-### Naming Rules
-- Singular/plural based on FUNCTION, not item count
-- `resetfilters` = plural (resets multiple filters)
-- `mapcontrol` = singular (each child does one thing)
-- `categoryfilter` = singular (each filters one category)
+✅ **old.funmap.com** - Frozen backup for comparison
+- Same database as main site
+- Contains working spaghetti code
+- Do NOT modify
 
 ---
 
@@ -120,21 +89,69 @@
 .{section}-{container}-{type}-{part}-{subpart}--{state}
 ```
 
+**Key rules:**
+- Section matches CSS filename (admin-, filter-, header-, etc.)
+- Container names are single words (systemimagepicker, categoryfilter)
+- Only parts can have subparts
+- States use double-dash prefix (--active, --disabled)
+- `image` and `text` are universal part names (not icon/avatar/label/title)
+
 See `AI_AGENT_CONFESSIONS_AND_RULES.md` for full documentation.
 
 ---
 
-## CURRENT TASK
+## CONTAINER NAMES (Finalized)
 
-Creating placeholder file structure.
+### Header ✅
+bar, logo, filter, modeswitch, access
+
+### Filter ✅
+panel, mapcontrol, resetfilters, resetcategories, sortby, keywords, pricerange, daterange, expiredevents, categoryfilter
+
+### Map ✅
+area, mapcontrol, shadow, zoomindicator, smallcard, bigcard, hovercard, cluster, multipost
+
+### Post, Admin, Member, Forms, Advert
+- TBD
 
 ---
 
-## NOTES FOR NEW AGENTS
+## BUILD ORDER
 
-1. Read this file first
-2. Read `AI_AGENT_CONFESSIONS_AND_RULES.md` second
-3. Check which files are "placeholder" vs "complete" in the tables above
-4. Continue from the current task
-5. Update this file after completing work
+0. [x] Reference site (old.funmap.com)
+1. [x] Container names (Header, Filter, Map done)
+2. [ ] **CURRENT: Reusable dropdown menu component**
+3. [ ] Extract remaining "do not rebuild" components
+4. [ ] index.html skeleton
+5. [ ] base.css + index.js (shared foundation)
+6. [ ] Build each section
+
+---
+
+## ASSET FOLDERS
+
+- `assets/flags/` - 271 SVG country flags
+- `assets/system-images/` - 35 files (icons, logos, pills)
+- `assets/icons-30/` - 46 category icons (webp)
+
+---
+
+## DATABASE ACCESS
+
+- Endpoint: `/gateway.php?action=get-admin-settings`
+- Returns: categories, currencies, phone prefixes, checkout options, etc.
+- User-created forms/posts via separate endpoints
+
+---
+
+## RULES FOR NEW AGENTS
+
+1. **Read `AI_AGENT_CONFESSIONS_AND_RULES.md` FIRST** - Contains 16 documented failures
+2. **User is NOT a programmer** - Use plain English, no jargon
+3. **NEVER guess** - Ask if unclear
+4. **NEVER create files without permission**
+5. **NEVER use !important without permission**
+6. **Copy existing patterns exactly** - Don't reinvent
+7. **Data from DB, not hardcoded**
+8. **400px panel width** - Standard for all panels
 
