@@ -336,6 +336,15 @@
             display: block;
         }
         
+        /* When both editing and open - one continuous border */
+        .formbuilder-accordion-option--editing.formbuilder-accordion-option--open > .formbuilder-accordion-option-editpanel {
+            border-radius: 0;
+            border-bottom: none;
+        }
+        .formbuilder-accordion-option--editing.formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
+            border-top: none;
+        }
+        
         /* Subcategory edit panel overrides */
         .formbuilder-accordion-option-editpanel .formbuilder-accordion-editpanel-input {
             background: #111111;
@@ -471,6 +480,11 @@
         }
         .formbuilder-fieldset-menu-option.disabled:hover {
             background: transparent;
+        }
+        
+        /* Fields container */
+        .formbuilder-fields-container {
+            width: 100%;
         }
         
         /* Field buttons */
