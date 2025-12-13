@@ -729,6 +729,12 @@
                 el.classList.remove('open');
             });
         }
+        // Close field edit panels when clicking outside
+        if (!e.target.closest('.formbuilder-field-wrapper')) {
+            document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                el.classList.remove('formbuilder-field-wrapper--editing');
+            });
+        }
     });
     
     // Fetch icons then categories
@@ -1073,6 +1079,8 @@
                             var requiredCheckbox = document.createElement('input');
                             requiredCheckbox.type = 'checkbox';
                             requiredCheckbox.className = 'formbuilder-field-required-checkbox';
+                            requiredCheckbox.checked = true;
+                            fieldWrapper.classList.add('formbuilder-field-wrapper--required');
                             requiredCheckbox.onchange = function() {
                                 if (requiredCheckbox.checked) {
                                     fieldWrapper.classList.add('formbuilder-field-wrapper--required');
