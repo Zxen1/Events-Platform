@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test: Phone Prefix Menu Component</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 40px;
+      margin: 0;
+    }
+    h1 { color: #3b82f6; margin-bottom: 30px; }
+    .test-container {
+      background: rgba(0,0,0,0.3);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+    }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+
+    /* Phone wrapper */
+    .form-phone-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    /* Prefix dropdown button */
+    .prefix-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100px;
+      height: 36px;
+      padding: 0 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .prefix-button:hover {
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    /* Phone input */
+    .phone-input {
+      flex: 1;
+      min-width: 0;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font: inherit;
+    }
+    .phone-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    /* Flag */
+    .dropdown-flag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 20px;
+      height: 15px;
+      line-height: 0;
+    }
+    .dropdown-flag img {
+      display: block;
+      width: 20px;
+      height: 15px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+
+    /* Text */
+    .dropdown-text {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      line-height: 1;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Arrow */
+    .dropdown-arrow {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.6;
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+    .prefix-button[aria-expanded="true"] .dropdown-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* Dropdown menu */
+    .prefix-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .options-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 280px;
+      max-height: 250px;
+      overflow-y: auto;
+      background: #222;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      margin-top: 4px;
+      z-index: 100;
+    }
+    .options-menu[hidden] {
+      display: none;
+    }
+
+    /* Menu options */
+    .menu-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .menu-option:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: -2px;
+    }
+
+    /* Status */
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .status strong { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>Phone Prefix Menu Component Test</h1>
+  
+  <div class="test-container">
+    <label>Phone Number</label>
+    <div class="form-phone-wrapper">
+      <div class="prefix-wrapper" id="prefixWrapper">
+        <button type="button" class="prefix-button" id="prefixBtn" aria-haspopup="true" aria-expanded="false" aria-controls="prefixMenu">
+          <span class="dropdown-text">+1</span>
+          <span class="dropdown-arrow">▼</span>
+        </button>
+        <div class="options-menu" id="prefixMenu" hidden></div>
+      </div>
+      <input type="tel" class="phone-input" id="phoneInput" placeholder="Phone number" autocomplete="tel" inputmode="tel">
+    </div>
+    
+    <div class="status">
+      <strong>Selected Prefix:</strong> <span id="selectedValue">+1 (United States)</span>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // EXTRACTED FROM INDEX.JS - Phone Prefix Functions
+    // =========================================================================
+
+    // Mock phone prefix data (normally from database)
+    window.phonePrefixData = [
+      { value: 'us +1', label: 'United States' },
+      { value: 'gb +44', label: 'United Kingdom' },
+      { value: 'au +61', label: 'Australia' },
+      { value: 'ca +1', label: 'Canada' },
+      { value: 'de +49', label: 'Germany' },
+      { value: 'fr +33', label: 'France' },
+      { value: 'jp +81', label: 'Japan' },
+      { value: 'cn +86', label: 'China' },
+      { value: 'in +91', label: 'India' },
+      { value: 'br +55', label: 'Brazil' },
+      { value: 'mx +52', label: 'Mexico' },
+      { value: 'it +39', label: 'Italy' },
+      { value: 'es +34', label: 'Spain' },
+      { value: 'kr +82', label: 'South Korea' },
+      { value: 'nl +31', label: 'Netherlands' },
+      { value: 'se +46', label: 'Sweden' },
+      { value: 'ch +41', label: 'Switzerland' },
+      { value: 'nz +64', label: 'New Zealand' },
+      { value: 'sg +65', label: 'Singapore' },
+      { value: 'hk +852', label: 'Hong Kong' },
+      { value: 'ae +971', label: 'United Arab Emirates' },
+      { value: 'za +27', label: 'South Africa' },
+      { value: 'ru +7', label: 'Russia' },
+      { value: 'pl +48', label: 'Poland' },
+      { value: 'ie +353', label: 'Ireland' },
+    ];
+
+    // Get flag HTML
+    function getFlagHTML(countryCode) {
+      if (!countryCode) return '';
+      return `<span class="dropdown-flag"><img src="assets/flags/${countryCode}.svg" alt="" /></span>`;
+    }
+
+    // Parse phone prefix value "us +1" into { countryCode: "us", prefix: "+1" }
+    function parsePhonePrefixValue(optionValue) {
+      if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, prefix: optionValue || '' };
+      const parts = optionValue.trim().split(' ');
+      if (parts.length >= 2) {
+        return { countryCode: parts[0].toLowerCase(), prefix: parts.slice(1).join(' ') };
+      }
+      return { countryCode: null, prefix: optionValue };
+    }
+
+    // Get display HTML for option (flag + prefix + country name)
+    function getPhonePrefixDisplayText(opt) {
+      if (!opt) return '';
+      const { countryCode, prefix } = parsePhonePrefixValue(opt.value);
+      const label = opt.label || '';
+      const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+      return `${flagHTML}<span class="dropdown-text">${prefix} - ${label}</span>`;
+    }
+
+    // Get button HTML (flag + prefix only)
+    function getPhonePrefixButtonHTML(countryCode, prefix) {
+      const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+      return `${flagHTML}<span class="dropdown-text">${prefix}</span>`;
+    }
+
+    // Get phone prefix options
+    function getPhonePrefixOptions() {
+      if (Array.isArray(window.phonePrefixData) && window.phonePrefixData.length > 0) {
+        return window.phonePrefixData;
+      }
+      return [];
+    }
+
+    // Keyboard navigation
+    function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
+      let searchString = '';
+      let searchTimeout = null;
+      
+      const keydownHandler = (e) => {
+        if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.isComposing) {
+          e.preventDefault();
+          if (searchTimeout) clearTimeout(searchTimeout);
+          searchString += e.key.toUpperCase();
+          
+          const options = menuElement.querySelectorAll('.menu-option[data-label]');
+          for (const opt of options) {
+            const label = (opt.dataset.label || '').toUpperCase();
+            if (label && label.startsWith(searchString)) {
+              opt.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              opt.focus();
+              break;
+            }
+          }
+          
+          searchTimeout = setTimeout(() => { searchString = ''; }, 800);
+        }
+        else if (e.key === 'Escape') {
+          e.preventDefault();
+          if (typeof closeMenuCallback === 'function') closeMenuCallback();
+          cleanup();
+        }
+        else if (e.key === 'Enter') {
+          const focused = menuElement.querySelector('.menu-option:focus');
+          if (focused) {
+            e.preventDefault();
+            focused.click();
+          }
+        }
+      };
+      
+      const cleanup = () => {
+        menuElement.removeEventListener('keydown', keydownHandler);
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchString = '';
+      };
+      
+      menuElement.addEventListener('keydown', keydownHandler);
+      return cleanup;
+    }
+
+    // =========================================================================
+    // Initialize prefix menu
+    // =========================================================================
+    
+    const prefixWrapper = document.getElementById('prefixWrapper');
+    const prefixBtn = document.getElementById('prefixBtn');
+    const prefixMenu = document.getElementById('prefixMenu');
+    const phoneInput = document.getElementById('phoneInput');
+    const selectedValue = document.getElementById('selectedValue');
+    
+    // Set default (USA)
+    const options = getPhonePrefixOptions();
+    const usaOpt = options.find(opt => opt.value && opt.value.startsWith('us ')) || options[0];
+    const { countryCode: defaultCountry, prefix: defaultPrefix } = parsePhonePrefixValue(usaOpt.value);
+    
+    const arrow = prefixBtn.querySelector('.dropdown-arrow');
+    prefixBtn.innerHTML = getPhonePrefixButtonHTML(defaultCountry, defaultPrefix);
+    prefixBtn.appendChild(arrow);
+    prefixBtn.dataset.value = defaultPrefix;
+    prefixBtn.dataset.countryCode = defaultCountry;
+    
+    // Populate options
+    options.forEach(opt => {
+      const { countryCode, prefix } = parsePhonePrefixValue(opt.value);
+      const optionBtn = document.createElement('button');
+      optionBtn.type = 'button';
+      optionBtn.className = 'menu-option';
+      optionBtn.innerHTML = getPhonePrefixDisplayText(opt);
+      optionBtn.dataset.value = prefix;
+      optionBtn.dataset.countryCode = countryCode || '';
+      optionBtn.dataset.label = opt.label || '';
+      
+      optionBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const arrow = prefixBtn.querySelector('.dropdown-arrow');
+        prefixBtn.innerHTML = getPhonePrefixButtonHTML(countryCode, prefix);
+        if (arrow) prefixBtn.appendChild(arrow);
+        prefixBtn.dataset.value = prefix;
+        prefixBtn.dataset.countryCode = countryCode || '';
+        prefixMenu.hidden = true;
+        prefixBtn.setAttribute('aria-expanded', 'false');
+        selectedValue.textContent = `${prefix} (${opt.label})`;
+      });
+      
+      prefixMenu.appendChild(optionBtn);
+    });
+    
+    // Toggle menu
+    let cleanupKeyboardNav = null;
+    prefixBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !prefixMenu.hasAttribute('hidden');
+      if (open) {
+        prefixMenu.hidden = true;
+        prefixBtn.setAttribute('aria-expanded', 'false');
+        if (cleanupKeyboardNav) cleanupKeyboardNav();
+      } else {
+        prefixMenu.hidden = false;
+        prefixBtn.setAttribute('aria-expanded', 'true');
+        cleanupKeyboardNav = setupDropdownKeyboardNav(prefixMenu, () => {
+          prefixMenu.hidden = true;
+          prefixBtn.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!prefixWrapper.contains(e.target)) {
+        prefixMenu.hidden = true;
+        prefixBtn.setAttribute('aria-expanded', 'false');
+        if (cleanupKeyboardNav) cleanupKeyboardNav();
+      }
+    });
+    
+    // Restrict phone input to digits and formatting chars
+    phoneInput.addEventListener('beforeinput', function(e) {
+      if (e.data && !/^[0-9 +()-]+$/.test(e.data)) {
+        e.preventDefault();
+      }
+    });
+    
+    console.log('✅ Phone prefix menu component loaded');
+  </script>
+</body>
+</html>
+

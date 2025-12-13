@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blueprint: Menu Component</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 40px;
+      margin: 0;
+    }
+    h1 { color: #3b82f6; margin-bottom: 10px; }
+    h2 { color: #888; font-size: 16px; font-weight: normal; margin-bottom: 40px; }
+    h3 { color: #3b82f6; margin: 40px 0 20px; font-size: 18px; }
+    
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+    .example {
+      background: rgba(0,0,0,0.3);
+      padding: 25px;
+      border-radius: 12px;
+      min-width: 280px;
+    }
+    .example label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* =======================================================================
+       DROPDOWN COMPONENT - THE BLUEPRINT
+       This is the ONE component that powers all menus.
+       ======================================================================= */
+    
+    .menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* The trigger button */
+    .menu-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 120px;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s;
+    }
+    .menu-button:hover {
+      border-color: rgba(255,255,255,0.4);
+    }
+    .menu-button[aria-expanded="true"] {
+      border-color: #3b82f6;
+    }
+
+    /* Image preview in button (flag, icon, thumbnail) */
+    .menu-button-image {
+      width: 24px;
+      height: 18px;
+      object-fit: contain;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    /* Square variant for icons */
+    .menu-button-image.square {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+    }
+
+    /* Text in button */
+    .menu-button-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Arrow */
+    .menu-button-arrow {
+      font-size: 10px;
+      opacity: 0.6;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .menu-button[aria-expanded="true"] .menu-button-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* The popup menu */
+    .menu-options {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      min-width: 100%;
+      max-height: 250px;
+      overflow-y: auto;
+      background: #222;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      z-index: 100;
+      padding: 4px;
+    }
+    .menu-options[hidden] {
+      display: none;
+    }
+
+    /* Grid layout (for icon pickers) */
+    .menu-options.grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      gap: 4px;
+      padding: 8px;
+      width: 280px;
+    }
+
+    /* Option button */
+    .menu-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .menu-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .menu-option:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: -2px;
+    }
+    .menu-option.selected {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    /* Grid option (for icons) */
+    .menu-option.icon-option {
+      width: 50px;
+      height: 50px;
+      padding: 8px;
+      justify-content: center;
+      border: 2px solid transparent;
+    }
+    .menu-option.icon-option:hover {
+      border-color: rgba(255,255,255,0.3);
+    }
+    .menu-option.icon-option.selected {
+      border-color: #3b82f6;
+    }
+
+    /* Option image */
+    .menu-option-image {
+      width: 24px;
+      height: 18px;
+      object-fit: contain;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .menu-option-image.square {
+      width: 24px;
+      height: 24px;
+    }
+    .menu-option.icon-option .menu-option-image {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Option text */
+    .menu-option-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Status display */
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .status strong { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>Menu Component Blueprint</h1>
+  <h2>One component, infinite uses: image left, text right</h2>
+
+  <div class="examples">
+    
+    <!-- EXAMPLE 1: Currency -->
+    <div class="example">
+      <label>Currency Menu</label>
+      <div class="menu" id="currencyMenu">
+        <button type="button" class="menu-button" aria-haspopup="true" aria-expanded="false">
+          <img class="menu-button-image" src="" alt="">
+          <span class="menu-button-text">Select...</span>
+          <span class="menu-button-arrow">▼</span>
+        </button>
+        <div class="menu-options" hidden></div>
+      </div>
+      <div class="status"><strong>Selected:</strong> <span class="status-value">None</span></div>
+    </div>
+
+    <!-- EXAMPLE 2: Phone Prefix -->
+    <div class="example">
+      <label>Phone Prefix Menu</label>
+      <div class="menu" id="prefixMenu">
+        <button type="button" class="menu-button" aria-haspopup="true" aria-expanded="false">
+          <img class="menu-button-image" src="" alt="">
+          <span class="menu-button-text">+1</span>
+          <span class="menu-button-arrow">▼</span>
+        </button>
+        <div class="menu-options" hidden></div>
+      </div>
+      <div class="status"><strong>Selected:</strong> <span class="status-value">+1</span></div>
+    </div>
+
+    <!-- EXAMPLE 3: Icon Picker -->
+    <div class="example">
+      <label>Icon Picker (Grid)</label>
+      <div class="menu" id="iconMenu">
+        <button type="button" class="menu-button" aria-haspopup="true" aria-expanded="false">
+          <img class="menu-button-image square" src="" alt="">
+          <span class="menu-button-text">Choose icon...</span>
+          <span class="menu-button-arrow">▼</span>
+        </button>
+        <div class="menu-options grid" hidden></div>
+      </div>
+      <div class="status"><strong>Selected:</strong> <span class="status-value">None</span></div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // DROPDOWN COMPONENT - THE ONE AND ONLY
+    // =========================================================================
+    
+    function createMenu(container, config) {
+      const {
+        options = [],           // Array of { value, label, image }
+        defaultValue = null,    // Initial selected value
+        onSelect = () => {},    // Callback when selection changes
+        gridMode = false,       // Use grid layout (for icons)
+        placeholder = 'Select...'
+      } = config;
+      
+      const button = container.querySelector('.menu-button');
+      const buttonImage = button.querySelector('.menu-button-image');
+      const buttonText = button.querySelector('.menu-button-text');
+      const optionsEl = container.querySelector('.menu-options');
+      const statusValue = container.parentElement.querySelector('.status-value');
+      
+      let selectedValue = defaultValue;
+      let isOpen = false;
+      
+      // Populate options
+      config.options.forEach(opt => {
+        const optBtn = document.createElement('button');
+        optBtn.type = 'button';
+        optBtn.className = gridMode ? 'menu-option icon-option' : 'menu-option';
+        optBtn.dataset.value = opt.value;
+        optBtn.dataset.label = opt.label || '';
+        
+        if (opt.image) {
+          const img = document.createElement('img');
+          img.className = gridMode ? 'menu-option-image' : 'menu-option-image';
+          if (!gridMode && buttonImage.classList.contains('square')) {
+            img.classList.add('square');
+          }
+          img.src = opt.image;
+          img.alt = '';
+          img.loading = 'lazy';
+          optBtn.appendChild(img);
+        }
+        
+        if (!gridMode) {
+          const text = document.createElement('span');
+          text.className = 'menu-option-text';
+          text.textContent = opt.label || opt.value;
+          optBtn.appendChild(text);
+        }
+        
+        optBtn.addEventListener('click', () => selectOption(opt));
+        optionsEl.appendChild(optBtn);
+      });
+      
+      function selectOption(opt) {
+        // Update selection
+        selectedValue = opt.value;
+        
+        // Update button
+        if (opt.image) {
+          buttonImage.src = opt.image;
+          buttonImage.style.display = '';
+        }
+        buttonText.textContent = opt.label || opt.value;
+        
+        // Update options selection state
+        optionsEl.querySelectorAll('.menu-option').forEach(o => {
+          o.classList.toggle('selected', o.dataset.value === opt.value);
+        });
+        
+        // Update status
+        if (statusValue) {
+          statusValue.textContent = opt.label || opt.value;
+        }
+        
+        // Close and callback
+        close();
+        onSelect(opt);
+      }
+      
+      function open() {
+        if (isOpen) return;
+        isOpen = true;
+        optionsEl.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+      }
+      
+      function close() {
+        if (!isOpen) return;
+        isOpen = false;
+        optionsEl.hidden = true;
+        button.setAttribute('aria-expanded', 'false');
+      }
+      
+      function toggle() {
+        isOpen ? close() : open();
+      }
+      
+      // Event listeners
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggle();
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) close();
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+      });
+      
+      // Set default if provided
+      if (defaultValue) {
+        const defaultOpt = options.find(o => o.value === defaultValue);
+        if (defaultOpt) selectOption(defaultOpt);
+      } else {
+        buttonImage.style.display = 'none';
+        buttonText.textContent = placeholder;
+      }
+      
+      return { open, close, toggle, getValue: () => selectedValue };
+    }
+
+    // =========================================================================
+    // INITIALIZE EXAMPLES
+    // =========================================================================
+    
+    // Currency menu
+    createMenu(document.getElementById('currencyMenu'), {
+      placeholder: 'Select currency...',
+      options: [
+        { value: 'USD', label: 'USD - US Dollar', image: 'assets/flags/us.svg' },
+        { value: 'GBP', label: 'GBP - British Pound', image: 'assets/flags/gb.svg' },
+        { value: 'EUR', label: 'EUR - Euro', image: 'assets/flags/eu.svg' },
+        { value: 'AUD', label: 'AUD - Australian Dollar', image: 'assets/flags/au.svg' },
+        { value: 'CAD', label: 'CAD - Canadian Dollar', image: 'assets/flags/ca.svg' },
+        { value: 'JPY', label: 'JPY - Japanese Yen', image: 'assets/flags/jp.svg' },
+      ],
+      onSelect: (opt) => console.log('Currency selected:', opt)
+    });
+    
+    // Phone prefix menu
+    createMenu(document.getElementById('prefixMenu'), {
+      defaultValue: '+1',
+      options: [
+        { value: '+1', label: '+1 - United States', image: 'assets/flags/us.svg' },
+        { value: '+44', label: '+44 - United Kingdom', image: 'assets/flags/gb.svg' },
+        { value: '+61', label: '+61 - Australia', image: 'assets/flags/au.svg' },
+        { value: '+81', label: '+81 - Japan', image: 'assets/flags/jp.svg' },
+        { value: '+86', label: '+86 - China', image: 'assets/flags/cn.svg' },
+        { value: '+91', label: '+91 - India', image: 'assets/flags/in.svg' },
+      ],
+      onSelect: (opt) => console.log('Prefix selected:', opt)
+    });
+    
+    // Icon picker (grid mode) - loads from API
+    (async function() {
+      const iconFolder = 'assets/icons-30';
+      let icons = [];
+      
+      try {
+        const res = await fetch(`/gateway.php?action=list-icons&folder=${encodeURIComponent(iconFolder)}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.icons)) {
+          icons = data.icons.slice(0, 20).map(filename => ({
+            value: filename,
+            label: filename,
+            image: `${iconFolder}/${filename}`
+          }));
+        }
+      } catch (e) {
+        console.warn('Could not load icons, using placeholders');
+      }
+      
+      if (icons.length) {
+        createMenu(document.getElementById('iconMenu'), {
+          placeholder: 'Choose icon...',
+          options: icons,
+          gridMode: true,
+          onSelect: (opt) => console.log('Icon selected:', opt)
+        });
+      }
+    })();
+    
+    console.log('✅ Menu blueprint loaded');
+  </script>
+</body>
+</html>
+
