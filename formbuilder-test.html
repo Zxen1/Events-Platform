@@ -1145,6 +1145,17 @@
                             fieldWrapper.appendChild(field);
                             fieldWrapper.appendChild(fieldEditPanel);
                             
+                            // Field bar click - close other field edit panels
+                            field.addEventListener('click', function(ev) {
+                                ev.stopPropagation();
+                                // Close other field edit panels (not this one)
+                                document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                                    if (el !== fieldWrapper) {
+                                        el.classList.remove('formbuilder-field-wrapper--editing');
+                                    }
+                                });
+                            });
+                            
                             // Field edit button click
                             fieldEdit.addEventListener('click', function(ev) {
                                 ev.stopPropagation();
