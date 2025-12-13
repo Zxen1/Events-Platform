@@ -203,9 +203,8 @@
                     option.appendChild(optText);
                     option.appendChild(optToggle);
                     
-                    // Subcategory toggle click
-                    optToggle.addEventListener('click', function(e) {
-                        e.stopPropagation();
+                    // Click anywhere on option toggles the switch
+                    option.addEventListener('click', function(e) {
                         optToggle.classList.toggle('on');
                     });
                     
@@ -215,13 +214,7 @@
                 accordion.appendChild(header);
                 accordion.appendChild(body);
                 
-                // Arrow click - expand/collapse
-                headerArrow.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    accordion.classList.toggle('filter-categoryfilter-accordion--open');
-                });
-                
-                // Category toggle click - enable/disable
+                // Category toggle click - disable and force close
                 headerToggle.addEventListener('click', function(e) {
                     e.stopPropagation();
                     headerToggle.classList.toggle('on');
@@ -229,7 +222,14 @@
                         accordion.classList.remove('filter-categoryfilter-accordion--disabled');
                     } else {
                         accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                        accordion.classList.remove('filter-categoryfilter-accordion--open');
                     }
+                });
+                
+                // Click anywhere except toggle expands/collapses
+                header.addEventListener('click', function(e) {
+                    if(e.target === headerToggle || headerToggle.contains(e.target)) return;
+                    accordion.classList.toggle('filter-categoryfilter-accordion--open');
                 });
                 
                 container.appendChild(accordion);
