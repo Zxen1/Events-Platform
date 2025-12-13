@@ -47,15 +47,11 @@
             padding-left: 10px;
             font-weight: bold;
         }
-        .formbuilder-accordion-editpanel-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
         .formbuilder-accordion-editpanel-input {
-            flex: 1;
+            width: 100%;
             height: 36px;
             padding: 0 10px;
+            margin-bottom: 10px;
             background: #062038;
             border: 1px solid #222222;
             border-radius: 5px;
@@ -67,26 +63,6 @@
         .formbuilder-accordion-editpanel-input:focus {
             outline: none;
             border-color: #3b82f5;
-        }
-        .formbuilder-accordion-editpanel-more {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #062038;
-            border: 1px solid #222222;
-            border-radius: 5px;
-            cursor: pointer;
-            color: #fff;
-        }
-        .formbuilder-accordion-editpanel-more:hover {
-            border-color: #3b82f5;
-            color: #3b82f5;
-        }
-        .formbuilder-accordion-editpanel-more svg {
-            width: 16px;
-            height: 16px;
         }
         .formbuilder-accordion-header-arrow {
             width: 20px;
@@ -235,30 +211,6 @@
         .menu-option:hover { background: #0c4070; }
         .menu-option-image { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
         .menu-option-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
-        /* Add buttons */
-        .formbuilder-add-button {
-            width: 100%;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #222;
-            border: 1px solid #222222;
-            border-radius: 4px;
-            color: #888;
-            font-size: 13px;
-            cursor: pointer;
-            margin-top: 3px;
-        }
-        .formbuilder-add-button:hover {
-            border-color: #3b82f5;
-            color: #fff;
-        }
-        .formbuilder-add-category {
-            width: 400px;
-            margin-top: 3px;
-        }
     </style>
 </head>
 <body>
@@ -271,7 +223,6 @@
     var allIcons = [];
     
     var slidersSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"/></svg>';
-    var moreDotsVvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>';
     
     function closeAllEditPanels() {
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
@@ -415,9 +366,6 @@
                 var editPanel = document.createElement('div');
                 editPanel.className = 'formbuilder-accordion-editpanel';
                 
-                var nameRow = document.createElement('div');
-                nameRow.className = 'formbuilder-accordion-editpanel-row';
-                
                 var nameInput = document.createElement('input');
                 nameInput.type = 'text';
                 nameInput.className = 'formbuilder-accordion-editpanel-input';
@@ -426,18 +374,11 @@
                     headerText.textContent = nameInput.value || cat.name;
                 };
                 
-                var moreBtn = document.createElement('div');
-                moreBtn.className = 'formbuilder-accordion-editpanel-more';
-                moreBtn.innerHTML = moreDotsVvg;
-                
-                nameRow.appendChild(nameInput);
-                nameRow.appendChild(moreBtn);
-                
                 var iconPicker = buildIconPicker(catIconSrc, function(newIcon) {
                     headerImg.src = newIcon;
                 });
                 
-                editPanel.appendChild(nameRow);
+                editPanel.appendChild(nameInput);
                 editPanel.appendChild(iconPicker);
                 
                 // Body
@@ -500,9 +441,6 @@
                     var subEditPanel = document.createElement('div');
                     subEditPanel.className = 'formbuilder-accordion-option-editpanel';
                     
-                    var subNameRow = document.createElement('div');
-                    subNameRow.className = 'formbuilder-accordion-editpanel-row';
-                    
                     var subNameInput = document.createElement('input');
                     subNameInput.type = 'text';
                     subNameInput.className = 'formbuilder-accordion-editpanel-input';
@@ -510,13 +448,6 @@
                     subNameInput.oninput = function() {
                         optText.textContent = subNameInput.value || subName;
                     };
-                    
-                    var subMoreBtn = document.createElement('div');
-                    subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
-                    subMoreBtn.innerHTML = moreDotsVvg;
-                    
-                    subNameRow.appendChild(subNameInput);
-                    subNameRow.appendChild(subMoreBtn);
                     
                     var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
                         optImg.src = newIcon;
@@ -541,7 +472,7 @@
                         tempImg.src = newIcon;
                     });
                     
-                    subEditPanel.appendChild(subNameRow);
+                    subEditPanel.appendChild(subNameInput);
                     subEditPanel.appendChild(subIconPicker);
                     
                     option.appendChild(optHeader);
@@ -569,12 +500,6 @@
                     body.appendChild(option);
                 });
                 
-                // Add Subcategory button
-                var addSubBtn = document.createElement('div');
-                addSubBtn.className = 'formbuilder-add-button';
-                addSubBtn.textContent = '+ Add Subcategory';
-                body.appendChild(addSubBtn);
-                
                 accordion.appendChild(header);
                 accordion.appendChild(editPanel);
                 accordion.appendChild(body);
@@ -600,12 +525,6 @@
                 
                 container.appendChild(accordion);
             });
-            
-            // Add Category button
-            var addCatBtn = document.createElement('div');
-            addCatBtn.className = 'formbuilder-add-button formbuilder-add-category';
-            addCatBtn.textContent = '+ Add Category';
-            container.appendChild(addCatBtn);
         });
 })();
 </script>
