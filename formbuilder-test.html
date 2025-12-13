@@ -256,6 +256,10 @@
             menu.classList.toggle('open');
         };
         
+        document.addEventListener('click', function(e) {
+            if (!menu.contains(e.target)) menu.classList.remove('open');
+        });
+        
         return menu;
     }
     
