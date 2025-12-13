@@ -128,6 +128,7 @@
             border-radius: 4px;
             cursor: pointer;
             border: 1px solid transparent;
+            background: #000;
         }
         .formbuilder-accordion-option-header:hover {
             border-color: #3b82f5;
@@ -184,6 +185,7 @@
             border: 1px solid #3b82f5;
             border-top: none;
             border-radius: 0 0 4px 4px;
+            background: #000;
         }
         .formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
             display: block;
@@ -396,22 +398,19 @@
                     optImg.crossOrigin = 'anonymous';
                     optImg.src = subIconSrc;
                     
-                    // Extract dominant color
+                    // Extract dominant color for inputs/menus only
                     optImg.onload = function() {
                         extractDominantColor(optImg, function(r, g, b) {
                             // Blended color: rgba(r,g,b,0.2) on #222 (34,34,34)
                             var blendedR = Math.round(0.2 * r + 0.8 * 34);
                             var blendedG = Math.round(0.2 * g + 0.8 * 34);
                             var blendedB = Math.round(0.2 * b + 0.8 * 34);
-                            var panelColor = 'rgb(' + blendedR + ',' + blendedG + ',' + blendedB + ')';
-                            // One shade darker (20% darker)
+                            // One shade darker (25% darker)
                             var darkerR = Math.round(blendedR * 0.75);
                             var darkerG = Math.round(blendedG * 0.75);
                             var darkerB = Math.round(blendedB * 0.75);
                             var darkerColor = 'rgb(' + darkerR + ',' + darkerG + ',' + darkerB + ')';
                             
-                            optHeader.style.background = panelColor;
-                            subEditPanel.style.background = panelColor;
                             subEditPanel.style.setProperty('--darker-bg', darkerColor);
                         });
                     };
@@ -450,7 +449,7 @@
                     
                     var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
                         optImg.src = newIcon;
-                        // Update background color
+                        // Update input/menu colors
                         var tempImg = new Image();
                         tempImg.crossOrigin = 'anonymous';
                         tempImg.onload = function() {
@@ -459,15 +458,12 @@
                                 var blendedR = Math.round(0.2 * r + 0.8 * 34);
                                 var blendedG = Math.round(0.2 * g + 0.8 * 34);
                                 var blendedB = Math.round(0.2 * b + 0.8 * 34);
-                                var panelColor = 'rgb(' + blendedR + ',' + blendedG + ',' + blendedB + ')';
-                                // One shade darker (20% darker)
+                                // One shade darker (25% darker)
                                 var darkerR = Math.round(blendedR * 0.75);
                                 var darkerG = Math.round(blendedG * 0.75);
                                 var darkerB = Math.round(blendedB * 0.75);
                                 var darkerColor = 'rgb(' + darkerR + ',' + darkerG + ',' + darkerB + ')';
                                 
-                                optHeader.style.background = panelColor;
-                                subEditPanel.style.background = panelColor;
                                 subEditPanel.style.setProperty('--darker-bg', darkerColor);
                             });
                         };
