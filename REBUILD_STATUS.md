@@ -27,10 +27,10 @@
 
 These complex components work perfectly. Extract and preserve them:
 - Calendars (3 different ones, months of work)
-- Currency menu
-- Phone prefix menu  
-- Icon picker
-- System image picker
+- Currency menu **(MADE IT SUPERIOR)**
+- Phone prefix menu **(MADE IT SUPERIOR)**
+- Icon picker **(MADE IT SUPERIOR)**
+- System image picker **(MADE IT SUPERIOR)**
 - Category filter
 - Checkout options interface
 - Fieldsets (admin, form, user views)
@@ -38,6 +38,14 @@ These complex components work perfectly. Extract and preserve them:
 - Messages system
 
 **Exception:** Formbuilder WILL be rebuilt.
+
+### MADE IT SUPERIOR: Dropdown Menus (Dec 13, 2025)
+
+Old code: 400+ lines spread across multiple functions, 20+ class names, global state, special boolean checks everywhere ("is this system image picker or icon picker?"), same problem solved 5 different ways.
+
+New code: 94 lines total. Two templates (database dropdown, folder dropdown). 9 class names. No global state. Copy-paste ready - change 3 attributes, done.
+
+File: `menu-test.html`
 
 ---
 
