@@ -491,7 +491,9 @@
                     // Sub header click (except edit area) - placeholder for now
                     optHeader.addEventListener('click', function(e) {
                         if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
-                        closeAllEditPanels();
+                        if (!option.classList.contains('formbuilder-accordion-option--editing')) {
+                            closeAllEditPanels();
+                        }
                         option.classList.toggle('formbuilder-accordion-option--open');
                     });
                     
@@ -515,7 +517,9 @@
                 // Header click (except edit area) expands/collapses
                 header.addEventListener('click', function(e) {
                     if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
-                    closeAllEditPanels();
+                    if (!accordion.classList.contains('formbuilder-accordion--editing')) {
+                        closeAllEditPanels();
+                    }
                     accordion.classList.toggle('formbuilder-accordion--open');
                 });
                 
