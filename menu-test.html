@@ -12,10 +12,11 @@
         .menu-button { width: 400px; height: 35px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; background: #333; border-radius: 5px; cursor: pointer; }
         .menu-button-image { width: 30px; height: 30px; object-fit: contain; }
         .menu-button-text { flex: 1; text-align: left; padding-left: 10px; }
-        .menu-button-arrow { padding-left: 10px; }
+        .menu-button-arrow { padding-left: 10px; transition: transform 0.2s; }
+        .menu.open .menu-button-arrow { transform: rotate(180deg); }
         
         .menu-options { display: none; position: absolute; top: 35px; left: 0; width: 400px; background: #333; border-radius: 5px; max-height: 200px; overflow-y: auto; z-index: 10; }
-        .menu-options.open { display: block; }
+        .menu.open .menu-options { display: block; }
         
         .menu-option { width: 400px; height: 35px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; cursor: pointer; }
         .menu-option:hover { background: #444; }
@@ -46,6 +47,12 @@
             const buttonImage = container.querySelector('.menu-button-image');
             const buttonText = container.querySelector('.menu-button-text');
 
+            // Set initial selection to first item
+            if (textSource.length > 0) {
+                buttonImage.src = imageFolder + textSource[0].image;
+                buttonText.textContent = textSource[0].text;
+            }
+
             textSource.forEach(item => {
                 const option = document.createElement('div');
                 option.className = 'menu-option';
@@ -56,19 +63,19 @@
                 option.addEventListener('click', function() {
                     buttonImage.src = imageFolder + item.image;
                     buttonText.textContent = item.text;
-                    optionsContainer.classList.remove('open');
+                    container.classList.remove('open');
                 });
                 optionsContainer.appendChild(option);
             });
 
             button.addEventListener('click', function() {
-                optionsContainer.classList.toggle('open');
+                container.classList.toggle('open');
             });
         }
 
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.menu')) {
-                document.querySelectorAll('.menu-options').forEach(opt => opt.classList.remove('open'));
+                document.querySelectorAll('.menu').forEach(m => m.classList.remove('open'));
             }
         });
 
