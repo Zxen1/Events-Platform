@@ -185,9 +185,13 @@
     function closeAllEditPanels() {
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion--editing');
+            var text = el.querySelector('.formbuilder-accordion-header-text');
+            if (text) text.contentEditable = false;
         });
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion-option--editing');
+            var text = el.querySelector('.formbuilder-accordion-option-text');
+            if (text) text.contentEditable = false;
         });
         container.querySelectorAll('.menu.open').forEach(function(el) {
             el.classList.remove('open');
@@ -291,8 +295,11 @@
                 var headerText = document.createElement('span');
                 headerText.className = 'formbuilder-accordion-header-text';
                 headerText.textContent = cat.name;
-                headerText.contentEditable = true;
-                headerText.addEventListener('click', function(e) { e.stopPropagation(); });
+                headerText.addEventListener('click', function(e) { 
+                    if (accordion.classList.contains('formbuilder-accordion--editing')) {
+                        e.stopPropagation(); 
+                    }
+                });
                 
                 var headerArrow = document.createElement('span');
                 headerArrow.className = 'formbuilder-accordion-header-arrow';
@@ -351,8 +358,11 @@
                     var optText = document.createElement('span');
                     optText.className = 'formbuilder-accordion-option-text';
                     optText.textContent = subName;
-                    optText.contentEditable = true;
-                    optText.addEventListener('click', function(e) { e.stopPropagation(); });
+                    optText.addEventListener('click', function(e) { 
+                        if (option.classList.contains('formbuilder-accordion-option--editing')) {
+                            e.stopPropagation(); 
+                        }
+                    });
                     
                     var optArrow = document.createElement('span');
                     optArrow.className = 'formbuilder-accordion-option-arrow';
@@ -401,6 +411,7 @@
                         closeAllEditPanels();
                         if (!isOpen) {
                             option.classList.add('formbuilder-accordion-option--editing');
+                            optText.contentEditable = true;
                         }
                     });
                     
@@ -424,6 +435,7 @@
                     closeAllEditPanels();
                     if (!isOpen) {
                         accordion.classList.add('formbuilder-accordion--editing');
+                        headerText.contentEditable = true;
                     }
                 });
                 
