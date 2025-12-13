@@ -515,7 +515,6 @@
         .formbuilder-field-required {
             color: #f87171;
             font-weight: bold;
-            margin-left: 5px;
             display: none;
         }
         .formbuilder-field-wrapper--required .formbuilder-field-required {
@@ -707,6 +706,25 @@
     }
     
     
+    // Close all open menus and panels
+    function closeAllMenus() {
+        document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        document.querySelectorAll('.menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+    }
+    
+    function closeAllFieldEditPanels() {
+        document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+            el.classList.remove('formbuilder-field-wrapper--editing');
+        });
+    }
+    
     // Close edit panels when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-accordion-editpanel') && 
@@ -717,23 +735,27 @@
             !e.target.closest('.formbuilder-accordion-option-header')) {
             closeAllEditPanels();
         }
-        // Close more menus when clicking outside
+        // Close more menus when clicking outside their button
         if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
             document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
-        // Close fieldset menus when clicking outside
+        // Close fieldset menus when clicking outside their container
         if (!e.target.closest('.formbuilder-fieldset-menu')) {
             document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
-        // Close field edit panels when clicking outside
-        if (!e.target.closest('.formbuilder-field-wrapper')) {
-            document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                el.classList.remove('formbuilder-field-wrapper--editing');
+        // Close icon picker menus when clicking outside
+        if (!e.target.closest('.menu')) {
+            document.querySelectorAll('.menu.open').forEach(function(el) {
+                el.classList.remove('open');
             });
+        }
+        // Close field edit panels when clicking outside
+        if (!e.target.closest('.formbuilder-field-wrapper') && !e.target.closest('.formbuilder-field-editpanel')) {
+            closeAllFieldEditPanels();
         }
     });
     
@@ -836,10 +858,10 @@
                 
                 moreBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
-                        if (el !== moreBtn) el.classList.remove('open');
-                    });
-                    moreBtn.classList.toggle('open');
+                    var wasOpen = moreBtn.classList.contains('open');
+                    closeAllMenus();
+                    closeAllFieldEditPanels();
+                    if (!wasOpen) moreBtn.classList.add('open');
                 });
                 
                 var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
@@ -965,10 +987,10 @@
                     
                     subMoreBtn.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
-                            if (el !== subMoreBtn) el.classList.remove('open');
-                        });
-                        subMoreBtn.classList.toggle('open');
+                        var wasOpen = subMoreBtn.classList.contains('open');
+                        closeAllMenus();
+                        closeAllFieldEditPanels();
+                        if (!wasOpen) subMoreBtn.classList.add('open');
                     });
                     
                     var subHideSwitch = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
@@ -1113,10 +1135,10 @@
                             fieldEdit.addEventListener('click', function(ev) {
                                 ev.stopPropagation();
                                 var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                                // Close other field edit panels
-                                fieldsContainer.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                                    el.classList.remove('formbuilder-field-wrapper--editing');
-                                });
+                                // Close ALL field edit panels on the page
+                                closeAllFieldEditPanels();
+                                // Close all menus
+                                closeAllMenus();
                                 if (!isOpen) {
                                     fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
                                 }
@@ -1158,9 +1180,9 @@
                     
                     fieldsetBtn.onclick = function(e) {
                         e.stopPropagation();
-                        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-                            if (el !== fieldsetMenu) el.classList.remove('open');
-                        });
+                        // Close all other menus and field panels
+                        closeAllMenus();
+                        closeAllFieldEditPanels();
                         fieldsetMenu.classList.toggle('open');
                     };
                     
