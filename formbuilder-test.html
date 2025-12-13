@@ -512,6 +512,15 @@
         .formbuilder-field-text {
             flex: 1;
         }
+        .formbuilder-field-required {
+            color: #f87171;
+            font-weight: bold;
+            margin-left: 5px;
+            display: none;
+        }
+        .formbuilder-field-wrapper--required .formbuilder-field-required {
+            display: inline;
+        }
         .formbuilder-field-drag {
             width: 36px;
             height: 36px;
@@ -1034,6 +1043,10 @@
                             fieldText.className = 'formbuilder-field-text';
                             fieldText.textContent = fs.name || fs.key || 'Unnamed';
                             
+                            var fieldRequired = document.createElement('span');
+                            fieldRequired.className = 'formbuilder-field-required';
+                            fieldRequired.textContent = '*';
+                            
                             var fieldDrag = document.createElement('div');
                             fieldDrag.className = 'formbuilder-field-drag';
                             fieldDrag.innerHTML = dragHandleSvg;
@@ -1043,6 +1056,7 @@
                             fieldEdit.innerHTML = editPenSvg;
                             
                             field.appendChild(fieldText);
+                            field.appendChild(fieldRequired);
                             field.appendChild(fieldDrag);
                             field.appendChild(fieldEdit);
                             
@@ -1059,6 +1073,13 @@
                             var requiredCheckbox = document.createElement('input');
                             requiredCheckbox.type = 'checkbox';
                             requiredCheckbox.className = 'formbuilder-field-required-checkbox';
+                            requiredCheckbox.onchange = function() {
+                                if (requiredCheckbox.checked) {
+                                    fieldWrapper.classList.add('formbuilder-field-wrapper--required');
+                                } else {
+                                    fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
+                                }
+                            };
                             
                             requiredLabel.appendChild(requiredCheckbox);
                             requiredLabel.appendChild(document.createTextNode('Required'));
