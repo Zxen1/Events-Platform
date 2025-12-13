@@ -69,6 +69,8 @@
         .day.past { background: var(--calendar-past-bg); color: #808080; }
         .day.future { background: var(--calendar-future-bg); }
         .day.today { color: var(--today); font-weight: bold; }
+        .day.selected { background: #2e3a72; color: #fff; }
+        .day.selected.today { color: var(--today); }
         
         .today-marker {
             position: absolute;
@@ -173,23 +175,22 @@
         container.scrollLeft = todayMonthEl.offsetLeft;
     }
     
-    // Position today marker
-    function updateMarker() {
-        if(!todayMonthEl) return;
-        var maxScroll = container.scrollWidth - container.clientWidth;
-        var track = container.clientWidth - 20;
-        var basePos = maxScroll > 0 ? (todayMonthEl.offsetLeft / maxScroll) * track + 10 : 10;
-        marker.style.left = (basePos + container.scrollLeft) + 'px';
-        marker.dataset.basePos = basePos;
-    }
-    
-    updateMarker();
-    container.addEventListener('scroll', updateMarker);
+    // Position today marker - fixed at 13/37 along the bottom (never moves)
+    var markerPos = (13 / 37) * (container.clientWidth - 10);
+    marker.style.left = markerPos + 'px';
     
     // Click marker to scroll to today
     marker.addEventListener('click', function() {
         if(todayMonthEl) {
             container.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+        }
+    });
+    
+    // Click days to select (toggle blue)
+    calendar.addEventListener('click', function(e) {
+        var day = e.target.closest('.day');
+        if(day && !day.classList.contains('empty')) {
+            day.classList.toggle('selected');
         }
     });
 })();
