@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropdown Menu Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .menu { width: 400px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="menu" id="menu-currency"></div>
+    <div class="menu" id="menu-phone"></div>
+    <div class="menu" id="menu-system"></div>
+    <div class="menu" id="menu-icons"></div>
+
+    <script>
+        function createMenu(container, imageFolder, textSource) {
+            container.innerHTML = `
+                <div class="menu-button">
+                    <img class="menu-button-image" src="" alt="">
+                    <span class="menu-button-text">Select...</span>
+                    <span class="menu-button-arrow">▼</span>
+                </div>
+                <div class="menu-options"></div>
+            `;
+
+            const optionsContainer = container.querySelector('.menu-options');
+
+            textSource.forEach(item => {
+                const option = document.createElement('div');
+                option.className = 'menu-option';
+                option.innerHTML = `
+                    <img class="menu-option-image" src="${imageFolder}${item.image}" alt="">
+                    <span class="menu-option-text">${item.text}</span>
+                `;
+                optionsContainer.appendChild(option);
+            });
+        }
+
+        // CURRENCY MENU
+        const currencyFolder = 'assets/flags/';
+        const currencyData = [
+            { image: 'af.svg', text: 'AFN - Afghan Afghani' },
+            { image: 'al.svg', text: 'ALL - Albanian Lek' }
+        ];
+        createMenu(document.getElementById('menu-currency'), currencyFolder, currencyData);
+
+        // PHONE PREFIX MENU
+        const phoneFolder = 'assets/flags/';
+        const phoneData = [
+            { image: 'af.svg', text: '+93 - Afghanistan' },
+            { image: 'al.svg', text: '+355 - Albania' }
+        ];
+        createMenu(document.getElementById('menu-phone'), phoneFolder, phoneData);
+
+        // SYSTEM IMAGES MENU
+        const systemFolder = 'assets/system-images/';
+        const systemData = [
+            { image: '150x40-pill-70.webp', text: '150x40-pill-70.webp' },
+            { image: '225x60-pill-2f3b73.webp', text: '225x60-pill-2f3b73.webp' }
+        ];
+        createMenu(document.getElementById('menu-system'), systemFolder, systemData);
+
+        // SUBCATEGORY ICONS MENU
+        const iconsFolder = 'assets/icons-30/';
+        const iconsData = [
+            { image: 'whats-on-category-icon-blue-30.webp', text: 'whats-on-category-icon-blue-30.webp' },
+            { image: 'whats-on-category-icon-dark-yellow-30.webp', text: 'whats-on-category-icon-dark-yellow-30.webp' }
+        ];
+        createMenu(document.getElementById('menu-icons'), iconsFolder, iconsData);
+    </script>
+
+</body>
+</html>
+

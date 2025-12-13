@@ -1177,6 +1177,32 @@ Before creating a new class, ask: "Does this element need DIFFERENT STYLING, or 
 
 ---
 
+## DROPDOWN MENU TEXT PRESENTATION
+
+How text displays in the four reusable dropdown menus:
+
+**Currency:**
+- Image: `assets/flags/{country_code}.svg` (first 2 chars of option_key)
+- Text: `{currency_code} - {label}`
+- Example: AFN - Afghan Afghani
+
+**Phone Prefix:**
+- Image: `assets/flags/{country_code}.svg` (first 2 chars of option_key)
+- Text: `{dial_code} - {label}`
+- Example: +93 - Afghanistan
+
+**System Images:**
+- Image: `assets/system-images/{filename}`
+- Text: `{filename}`
+- Example: 150x40-pill-70.webp
+
+**Subcategory Icons:**
+- Image: `assets/icons-30/{filename}`
+- Text: `{filename}`
+- Example: whats-on-category-icon-blue-30.webp
+
+---
+
 **END OF DOCUMENT**
 
 **READ THIS FIRST BEFORE MAKING ANY CHANGES**
