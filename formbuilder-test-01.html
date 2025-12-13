@@ -21,11 +21,20 @@
             align-items: center;
             padding: 0 10px;
             cursor: pointer;
-            background: #2e3a72;
+            background: #111;
             border-radius: 5px 5px 0 0;
+            border: 1px solid transparent;
         }
         .formbuilder-accordion:not(.formbuilder-accordion--open) .formbuilder-accordion-header {
             border-radius: 5px;
+        }
+        .formbuilder-accordion-header:hover {
+            border-color: #3b82f5;
+        }
+        .formbuilder-accordion--editing .formbuilder-accordion-header {
+            border-color: #3b82f5;
+            border-radius: 5px 5px 0 0;
+            border-bottom: none;
         }
         .formbuilder-accordion-header-image {
             width: 24px;
@@ -37,6 +46,23 @@
             flex: 1;
             padding-left: 10px;
             font-weight: bold;
+        }
+        .formbuilder-accordion-editpanel-input {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            margin-bottom: 10px;
+            background: var(--darker-bg, #1a1a1a);
+            border: 1px solid transparent;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+        .formbuilder-accordion-editpanel-input:hover,
+        .formbuilder-accordion-editpanel-input:focus {
+            outline: none;
+            border-color: #3b82f5;
         }
         .formbuilder-accordion-header-arrow {
             width: 20px;
@@ -71,27 +97,18 @@
         .formbuilder-accordion-editpanel {
             display: none;
             padding: 10px;
-            background: #1a1a1a;
+            background: #111;
+            border: 1px solid #3b82f5;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
         }
         .formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
             display: block;
         }
-        .formbuilder-accordion-editpanel-input {
-            width: 100%;
-            height: 36px;
-            padding: 0 10px;
-            margin-bottom: 10px;
-            background: #333;
-            border: none;
-            border-radius: 5px;
-            color: #fff;
-            font-size: 13px;
-            box-sizing: border-box;
-        }
         
         .formbuilder-accordion-body {
             display: none;
-            padding: 5px;
+            padding: 3px 0 0 0;
         }
         .formbuilder-accordion--open > .formbuilder-accordion-body {
             display: block;
@@ -99,7 +116,7 @@
         
         /* Subcategory */
         .formbuilder-accordion-option {
-            margin-bottom: 2px;
+            margin-bottom: 3px;
             border-radius: 4px;
             overflow: visible;
         }
@@ -110,6 +127,16 @@
             padding: 0 10px;
             border-radius: 4px;
             cursor: pointer;
+            border: 1px solid transparent;
+            background: #000;
+        }
+        .formbuilder-accordion-option-header:hover {
+            border-color: #3b82f5;
+        }
+        .formbuilder-accordion-option--editing .formbuilder-accordion-option-header {
+            border-color: #3b82f5;
+            border-radius: 4px 4px 0 0;
+            border-bottom: none;
         }
         .formbuilder-accordion-option-image {
             width: 20px;
@@ -154,9 +181,11 @@
         .formbuilder-accordion-option-editpanel {
             display: none;
             padding: 10px;
-            background: #1a1a1a;
-            margin-top: 2px;
-            border-radius: 4px;
+            margin-top: 0;
+            border: 1px solid #3b82f5;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            background: #000;
         }
         .formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
             display: block;
@@ -164,16 +193,21 @@
         
         /* Icon picker dropdown - from iconpicker-test.html */
         .menu { width: 100%; height: 36px; position: relative; }
-        .menu-button { width: 100%; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; background: #333; border-radius: 5px; cursor: pointer; }
-        .menu-button-image { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+        .menu-button { width: 100%; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; background: var(--darker-bg, #1a1a1a); border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
+        .menu-button:hover { border-color: #3b82f5; }
+        .menu.open .menu-button { border-color: #3b82f5; border-radius: 5px 5px 0 0; border-bottom: none; }
+        .menu-button-image { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
         .menu-button-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .menu-button-arrow { width: 16px; height: 36px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; flex-shrink: 0; }
+        .menu-button-arrow { width: 20px; height: 20px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; }
         .menu.open .menu-button-arrow { transform: rotate(180deg); }
-        .menu-options { display: none; position: absolute; top: 36px; left: 0; width: 100%; background: #333; border-radius: 5px; max-height: 200px; overflow-y: auto; overflow-x: hidden; z-index: 100; }
+        .menu-options { display: none; position: absolute; top: 35px; left: 0; width: 100%; background: var(--darker-bg, #1a1a1a); border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 5px 5px; max-height: 200px; overflow-y: auto; overflow-x: hidden; z-index: 100; scrollbar-width: thin; scrollbar-color: #888 transparent; }
+        .menu-options::-webkit-scrollbar { width: 8px; background: transparent; }
+        .menu-options::-webkit-scrollbar-track { background: transparent; }
+        .menu-options::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         .menu.open .menu-options { display: block; }
         .menu-option { width: 100%; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; cursor: pointer; }
-        .menu-option:hover { background: #444; }
-        .menu-option-image { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+        .menu-option:hover { background: #3b82f5; }
+        .menu-option-image { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
         .menu-option-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
@@ -257,15 +291,22 @@
             menu.classList.toggle('open');
         };
         
+        document.addEventListener('click', function(e) {
+            if (!menu.contains(e.target)) menu.classList.remove('open');
+        });
+        
         return menu;
     }
+    
     
     // Close edit panels when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-accordion-editpanel') && 
             !e.target.closest('.formbuilder-accordion-option-editpanel') &&
             !e.target.closest('.formbuilder-accordion-header-editarea') &&
-            !e.target.closest('.formbuilder-accordion-option-editarea')) {
+            !e.target.closest('.formbuilder-accordion-option-editarea') &&
+            !e.target.closest('.formbuilder-accordion-header') &&
+            !e.target.closest('.formbuilder-accordion-option-header')) {
             closeAllEditPanels();
         }
     });
@@ -357,10 +398,20 @@
                     optImg.crossOrigin = 'anonymous';
                     optImg.src = subIconSrc;
                     
-                    // Extract dominant color
+                    // Extract dominant color for inputs/menus only
                     optImg.onload = function() {
                         extractDominantColor(optImg, function(r, g, b) {
-                            optHeader.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                            // Blended color: rgba(r,g,b,0.2) on #222 (34,34,34)
+                            var blendedR = Math.round(0.2 * r + 0.8 * 34);
+                            var blendedG = Math.round(0.2 * g + 0.8 * 34);
+                            var blendedB = Math.round(0.2 * b + 0.8 * 34);
+                            // One shade darker (25% darker)
+                            var darkerR = Math.round(blendedR * 0.75);
+                            var darkerG = Math.round(blendedG * 0.75);
+                            var darkerB = Math.round(blendedB * 0.75);
+                            var darkerColor = 'rgb(' + darkerR + ',' + darkerG + ',' + darkerB + ')';
+                            
+                            subEditPanel.style.setProperty('--darker-bg', darkerColor);
                         });
                     };
                     
@@ -398,12 +449,22 @@
                     
                     var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
                         optImg.src = newIcon;
-                        // Update background color
+                        // Update input/menu colors
                         var tempImg = new Image();
                         tempImg.crossOrigin = 'anonymous';
                         tempImg.onload = function() {
                             extractDominantColor(tempImg, function(r, g, b) {
-                                optHeader.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.2)';
+                                // Blended color: rgba(r,g,b,0.2) on #222 (34,34,34)
+                                var blendedR = Math.round(0.2 * r + 0.8 * 34);
+                                var blendedG = Math.round(0.2 * g + 0.8 * 34);
+                                var blendedB = Math.round(0.2 * b + 0.8 * 34);
+                                // One shade darker (25% darker)
+                                var darkerR = Math.round(blendedR * 0.75);
+                                var darkerG = Math.round(blendedG * 0.75);
+                                var darkerB = Math.round(blendedB * 0.75);
+                                var darkerColor = 'rgb(' + darkerR + ',' + darkerG + ',' + darkerB + ')';
+                                
+                                subEditPanel.style.setProperty('--darker-bg', darkerColor);
                             });
                         };
                         tempImg.src = newIcon;
