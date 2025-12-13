@@ -639,6 +639,9 @@
         container.querySelectorAll('.menu.open').forEach(function(el) {
             el.classList.remove('open');
         });
+    }
+    
+    function closeAllFieldEditPanels() {
         container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
             el.classList.remove('formbuilder-field-wrapper--editing');
         });
@@ -724,8 +727,7 @@
             !e.target.closest('.formbuilder-accordion-header-editarea') &&
             !e.target.closest('.formbuilder-accordion-option-editarea') &&
             !e.target.closest('.formbuilder-accordion-header') &&
-            !e.target.closest('.formbuilder-accordion-option-header') &&
-            !e.target.closest('.formbuilder-field-wrapper')) {
+            !e.target.closest('.formbuilder-accordion-option-header')) {
             closeAllEditPanels();
         }
     });
@@ -750,10 +752,8 @@
     
     // Close field edit panels when clicking outside
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.formbuilder-field-wrapper')) {
-            document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                el.classList.remove('formbuilder-field-wrapper--editing');
-            });
+        if (!e.target.closest('.formbuilder-field-wrapper') && !e.target.closest('.formbuilder-field-editpanel')) {
+            closeAllFieldEditPanels();
         }
     });
     
