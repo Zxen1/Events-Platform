@@ -26,7 +26,7 @@
 ## DO NOT REBUILD LIST
 
 These complex components work perfectly. Extract and preserve them:
-- Calendars (3 different ones, months of work)
+- Calendars (3 different ones, months of work) **(MADE IT SUPERIOR)**
 - Currency menu **(MADE IT SUPERIOR)**
 - Phone prefix menu **(MADE IT SUPERIOR)**
 - Icon picker **(MADE IT SUPERIOR)**
@@ -46,6 +46,14 @@ Old code: 400+ lines spread across multiple functions, 20+ class names, global s
 New code: 94 lines total. Two templates (database dropdown, folder dropdown). 9 class names. No global state. Copy-paste ready - change 3 attributes, done.
 
 File: `menu-test.html`
+
+### MADE IT SUPERIOR: Calendar (Dec 13, 2025)
+
+Old code: 400+ lines scattered across multiple functions, CSS variable calculations that stretched rows, complex height calculations, 3 separate calendar implementations for filter/session menu/session creator.
+
+New code: 189 lines total. Fixed 34px row heights. Simple structure (container → scroll → calendar). Red dot in scrollbar. Mouse wheel scrolls horizontally. Click to select days. Self-contained.
+
+File: `calendar-test.html`
 
 ---
 
