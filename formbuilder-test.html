@@ -79,6 +79,7 @@
             border-radius: 5px;
             cursor: pointer;
             color: #fff;
+            position: relative;
         }
         .formbuilder-accordion-editpanel-more:hover {
             border-color: #3b82f5;
@@ -87,6 +88,67 @@
         .formbuilder-accordion-editpanel-more svg {
             width: 16px;
             height: 16px;
+        }
+        .formbuilder-accordion-editpanel-more-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 180px;
+            background: #111;
+            border: 1px solid #3b82f5;
+            border-radius: 5px;
+            padding: 5px 0;
+            z-index: 200;
+            display: none;
+        }
+        .formbuilder-accordion-editpanel-more.open .formbuilder-accordion-editpanel-more-menu {
+            display: block;
+        }
+        .formbuilder-accordion-editpanel-more-item {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            cursor: pointer;
+            color: #fff;
+            font-size: 13px;
+        }
+        .formbuilder-accordion-editpanel-more-item:hover {
+            background: #222;
+        }
+        .formbuilder-accordion-editpanel-more-item-text {
+            flex: 1;
+        }
+        .formbuilder-accordion-editpanel-more-switch {
+            width: 36px;
+            height: 20px;
+            background: #444;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        .formbuilder-accordion-editpanel-more-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+        .formbuilder-accordion-editpanel-more-switch.on {
+            background: #3b82f5;
+        }
+        .formbuilder-accordion-editpanel-more-switch.on::after {
+            left: 18px;
+        }
+        .formbuilder-accordion-editpanel-more-delete {
+            color: #f87171;
+        }
+        .formbuilder-accordion-editpanel-more-delete:hover {
+            background: #7f1d1d;
         }
         .formbuilder-accordion-header-arrow {
             width: 20px;
@@ -219,7 +281,7 @@
         
         .formbuilder-accordion-option-body {
             display: none;
-            padding: 3px 0 0 10px;
+            padding: 10px;
         }
         .formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
             display: block;
@@ -368,6 +430,12 @@
             !e.target.closest('.formbuilder-accordion-option-header')) {
             closeAllEditPanels();
         }
+        // Close more menus when clicking outside
+        if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
+            document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                el.classList.remove('open');
+            });
+        }
     });
     
     // Fetch icons then categories
@@ -436,7 +504,21 @@
                 
                 var moreBtn = document.createElement('div');
                 moreBtn.className = 'formbuilder-accordion-editpanel-more';
-                moreBtn.innerHTML = moreDotsVvg;
+                moreBtn.innerHTML = moreDotsVvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
+                
+                moreBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                        if (el !== moreBtn) el.classList.remove('open');
+                    });
+                    moreBtn.classList.toggle('open');
+                });
+                
+                var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
+                hideSwitch.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    hideSwitch.classList.toggle('on');
+                });
                 
                 nameRow.appendChild(nameInput);
                 nameRow.appendChild(moreBtn);
@@ -521,7 +603,21 @@
                     
                     var subMoreBtn = document.createElement('div');
                     subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
-                    subMoreBtn.innerHTML = moreDotsVvg;
+                    subMoreBtn.innerHTML = moreDotsVvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
+                    
+                    subMoreBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                            if (el !== subMoreBtn) el.classList.remove('open');
+                        });
+                        subMoreBtn.classList.toggle('open');
+                    });
+                    
+                    var subHideSwitch = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
+                    subHideSwitch.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        subHideSwitch.classList.toggle('on');
+                    });
                     
                     subNameRow.appendChild(subNameInput);
                     subNameRow.appendChild(subMoreBtn);
