@@ -18,7 +18,7 @@
     h2 { color: #888; font-size: 14px; margin: 30px 0 15px; }
 
     /* =============================================
-       MENU COMPONENT - 9 CLASSES + 1 MODIFIER
+       MENU COMPONENT - 9 CLASSES
        ============================================= */
     
     .menu {
@@ -104,45 +104,15 @@
     .menu-option-text {
       white-space: nowrap;
     }
-
-    /* MODIFIER: Grid layout */
-    .menu-options--grid {
-      display: grid;
-      grid-template-columns: repeat(5, 40px);
-      gap: 4px;
-      padding: 8px;
-      width: auto;
-      min-width: auto;
-    }
-    
-    .menu-options--grid .menu-option {
-      width: 40px;
-      height: 40px;
-      padding: 8px;
-      justify-content: center;
-      border-radius: 4px;
-    }
-    
-    .menu-options--grid .menu-option-image {
-      width: 24px;
-      height: 24px;
-      border-radius: 0;
-    }
-    
-    .menu-options--grid .menu-option-text {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <h1>Clean Menu Component</h1>
   
-  <!-- LIST MODE -->
-  <h2>LIST MODE (Currency)</h2>
+  <h2>CURRENCY</h2>
   <div class="menu" id="currencyMenu"></div>
 
-  <!-- GRID MODE -->
-  <h2>GRID MODE (Icons)</h2>
+  <h2>ICONS</h2>
   <div class="menu" id="iconMenu"></div>
 
   <script>
@@ -172,26 +142,20 @@
       { image: 'assets/system/settings.svg', text: 'settings' },
       { image: 'assets/system/user.svg', text: 'user' },
       { image: 'assets/system/home.svg', text: 'home' },
-      { image: 'assets/system/map.svg', text: 'map' },
-      { image: 'assets/system/calendar.svg', text: 'calendar' },
-      { image: 'assets/system/clock.svg', text: 'clock' },
-      { image: 'assets/system/bell.svg', text: 'bell' },
-      { image: 'assets/system/mail.svg', text: 'mail' },
     ];
     
     // =========================================================
     // ONE FUNCTION - Identical for all menus
     // =========================================================
     
-    function initMenu(container, data, gridMode, placeholder) {
-      // Build HTML
+    function initMenu(container, data, placeholder) {
       container.innerHTML = `
         <button type="button" class="menu-button">
           <img class="menu-button-image" src="" alt="" hidden>
           <span class="menu-button-text">${placeholder}</span>
           <span class="menu-button-arrow">▼</span>
         </button>
-        <div class="menu-options${gridMode ? ' menu-options--grid' : ''}" hidden></div>
+        <div class="menu-options" hidden></div>
       `;
       
       const button = container.querySelector('.menu-button');
@@ -199,7 +163,6 @@
       const buttonText = container.querySelector('.menu-button-text');
       const options = container.querySelector('.menu-options');
       
-      // Build options - IDENTICAL for all menus
       data.forEach(item => {
         const opt = document.createElement('button');
         opt.type = 'button';
@@ -218,10 +181,8 @@
         options.appendChild(opt);
       });
       
-      // Toggle
       button.onclick = () => { options.hidden = !options.hidden; };
       
-      // Close on outside click
       document.addEventListener('click', (e) => {
         if (!container.contains(e.target)) options.hidden = true;
       });
@@ -231,8 +192,8 @@
     // INIT - Only data differs
     // =========================================================
     
-    initMenu(document.getElementById('currencyMenu'), currencies, false, 'Select currency');
-    initMenu(document.getElementById('iconMenu'), icons, true, 'Select icon');
+    initMenu(document.getElementById('currencyMenu'), currencies, 'Select currency');
+    initMenu(document.getElementById('iconMenu'), icons, 'Select icon');
   </script>
 </body>
 </html>
