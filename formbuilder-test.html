@@ -547,6 +547,65 @@
         .formbuilder-field.dragging {
             opacity: 0.5;
         }
+        .formbuilder-field-wrapper.dragging {
+            opacity: 0.5;
+        }
+        .formbuilder-field-wrapper {
+            margin-bottom: 3px;
+        }
+        .formbuilder-field-wrapper--editing > .formbuilder-field {
+            border-color: #3b82f5;
+            border-radius: 4px 4px 0 0;
+            border-bottom: none;
+        }
+        .formbuilder-field-wrapper--editing .formbuilder-field-edit {
+            color: #3b82f5;
+        }
+        .formbuilder-field-editpanel {
+            display: none;
+            padding: 10px;
+            background: #111;
+            border: 1px solid #3b82f5;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        .formbuilder-field-wrapper--editing > .formbuilder-field-editpanel {
+            display: block;
+        }
+        .formbuilder-field-editpanel-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .formbuilder-field-required-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .formbuilder-field-required-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #3b82f5;
+            cursor: pointer;
+        }
+        .formbuilder-field-delete {
+            height: 36px;
+            padding: 0 15px;
+            background: #7f1d1d;
+            border: 1px solid #7f1d1d;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .formbuilder-field-delete:hover {
+            background: #991b1b;
+            border-color: #991b1b;
+        }
     </style>
 </head>
 <body>
@@ -558,7 +617,7 @@
     var container = document.getElementById('formbuilder');
     var allIcons = [];
     
-    var slidersSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"/></svg>';
+    var editPenSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5L13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175l-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>';
     var moreDotsVvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>';
     var dragHandleSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L4 6h8L8 2zM8 14l4-4H4l4 4z"/></svg>';
     
@@ -705,7 +764,7 @@
                 headerEditArea.className = 'formbuilder-accordion-header-editarea';
                 var headerEdit = document.createElement('div');
                 headerEdit.className = 'formbuilder-accordion-header-edit';
-                headerEdit.innerHTML = slidersSvg;
+                headerEdit.innerHTML = editPenSvg;
                 headerEditArea.appendChild(headerEdit);
                 
                 var headerDrag = document.createElement('div');
@@ -832,7 +891,7 @@
                     optEditArea.className = 'formbuilder-accordion-option-editarea';
                     var optEdit = document.createElement('div');
                     optEdit.className = 'formbuilder-accordion-option-edit';
-                    optEdit.innerHTML = slidersSvg;
+                    optEdit.innerHTML = editPenSvg;
                     optEditArea.appendChild(optEdit);
                     
                     var optDrag = document.createElement('div');
@@ -961,10 +1020,15 @@
                         opt.onclick = function(e) {
                             e.stopPropagation();
                             if (opt.classList.contains('disabled')) return;
-                            // Add field button
+                            
+                            // Create field wrapper
+                            var fieldWrapper = document.createElement('div');
+                            fieldWrapper.className = 'formbuilder-field-wrapper';
+                            fieldWrapper.setAttribute('data-fieldset-id', fsId);
+                            
+                            // Field header
                             var field = document.createElement('div');
                             field.className = 'formbuilder-field';
-                            field.setAttribute('data-fieldset-id', fsId);
                             
                             var fieldText = document.createElement('span');
                             fieldText.className = 'formbuilder-field-text';
@@ -976,38 +1040,85 @@
                             
                             var fieldEdit = document.createElement('div');
                             fieldEdit.className = 'formbuilder-field-edit';
-                            fieldEdit.innerHTML = slidersSvg;
+                            fieldEdit.innerHTML = editPenSvg;
                             
                             field.appendChild(fieldText);
                             field.appendChild(fieldDrag);
                             field.appendChild(fieldEdit);
                             
-                            // Field drag and drop
-                            field.draggable = true;
-                            field.addEventListener('dragstart', function(ev) {
+                            // Field edit panel
+                            var fieldEditPanel = document.createElement('div');
+                            fieldEditPanel.className = 'formbuilder-field-editpanel';
+                            
+                            var editRow = document.createElement('div');
+                            editRow.className = 'formbuilder-field-editpanel-row';
+                            
+                            var requiredLabel = document.createElement('label');
+                            requiredLabel.className = 'formbuilder-field-required-label';
+                            
+                            var requiredCheckbox = document.createElement('input');
+                            requiredCheckbox.type = 'checkbox';
+                            requiredCheckbox.className = 'formbuilder-field-required-checkbox';
+                            
+                            requiredLabel.appendChild(requiredCheckbox);
+                            requiredLabel.appendChild(document.createTextNode('Required'));
+                            
+                            var deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'formbuilder-field-delete';
+                            deleteBtn.textContent = 'Delete';
+                            deleteBtn.onclick = function(ev) {
+                                ev.stopPropagation();
+                                fieldWrapper.remove();
+                                addedFieldsets[fsId] = false;
+                                opt.classList.remove('disabled');
+                            };
+                            
+                            editRow.appendChild(requiredLabel);
+                            editRow.appendChild(deleteBtn);
+                            fieldEditPanel.appendChild(editRow);
+                            
+                            fieldWrapper.appendChild(field);
+                            fieldWrapper.appendChild(fieldEditPanel);
+                            
+                            // Field edit button click
+                            fieldEdit.addEventListener('click', function(ev) {
+                                ev.stopPropagation();
+                                var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
+                                // Close other field edit panels
+                                fieldsContainer.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                                    el.classList.remove('formbuilder-field-wrapper--editing');
+                                });
+                                if (!isOpen) {
+                                    fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
+                                }
+                            });
+                            
+                            // Field wrapper drag and drop
+                            fieldWrapper.draggable = true;
+                            fieldWrapper.addEventListener('dragstart', function(ev) {
                                 ev.stopPropagation();
                                 ev.dataTransfer.effectAllowed = 'move';
-                                field.classList.add('dragging');
+                                fieldWrapper.classList.add('dragging');
                             });
-                            field.addEventListener('dragend', function() {
-                                field.classList.remove('dragging');
+                            fieldWrapper.addEventListener('dragend', function() {
+                                fieldWrapper.classList.remove('dragging');
                             });
-                            field.addEventListener('dragover', function(ev) {
+                            fieldWrapper.addEventListener('dragover', function(ev) {
                                 ev.preventDefault();
                                 ev.stopPropagation();
-                                var dragging = fieldsContainer.querySelector('.formbuilder-field.dragging');
-                                if (dragging && dragging !== field) {
-                                    var rect = field.getBoundingClientRect();
+                                var dragging = fieldsContainer.querySelector('.formbuilder-field-wrapper.dragging');
+                                if (dragging && dragging !== fieldWrapper) {
+                                    var rect = fieldWrapper.getBoundingClientRect();
                                     var midY = rect.top + rect.height / 2;
                                     if (ev.clientY < midY) {
-                                        field.parentNode.insertBefore(dragging, field);
+                                        fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper);
                                     } else {
-                                        field.parentNode.insertBefore(dragging, field.nextSibling);
+                                        fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper.nextSibling);
                                     }
                                 }
                             });
                             
-                            fieldsContainer.appendChild(field);
+                            fieldsContainer.appendChild(fieldWrapper);
                             // Mark as added and disable option
                             addedFieldsets[fsId] = true;
                             opt.classList.add('disabled');
