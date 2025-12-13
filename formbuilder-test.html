@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formbuilder Test</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
         body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; font-size: 13px; overflow-x: hidden; }
         
         .formbuilder-accordion {
@@ -16,7 +17,7 @@
         }
         
         .formbuilder-accordion-header {
-            height: 40px;
+            height: 36px;
             display: flex;
             align-items: center;
             padding: 0 10px;
@@ -183,7 +184,7 @@
             opacity: 0.5;
         }
         .formbuilder-accordion-header-editarea {
-            height: 40px;
+            height: 36px;
             display: flex;
             align-items: center;
             padding-left: 10px;
@@ -515,6 +516,7 @@
         .formbuilder-field-required {
             color: #f87171;
             font-weight: bold;
+            margin-left: 3px;
             display: none;
         }
         .formbuilder-field-wrapper--required .formbuilder-field-required {
@@ -639,6 +641,9 @@
         container.querySelectorAll('.menu.open').forEach(function(el) {
             el.classList.remove('open');
         });
+        container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+            el.classList.remove('formbuilder-field-wrapper--editing');
+        });
     }
     
     function extractDominantColor(img, callback) {
@@ -692,8 +697,14 @@
         btn.onclick = function(e) {
             e.stopPropagation();
             var wasOpen = menu.classList.contains('open');
-            // Close other icon picker menus
+            // Close all menus
             document.querySelectorAll('.menu.open').forEach(function(el) {
+                el.classList.remove('open');
+            });
+            document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                el.classList.remove('open');
+            });
+            document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                 el.classList.remove('open');
             });
             if (!wasOpen) menu.classList.add('open');
@@ -847,8 +858,14 @@
                 moreBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     var wasOpen = moreBtn.classList.contains('open');
-                    // Close other 3-dot menus
+                    // Close all menus
+                    document.querySelectorAll('.menu.open').forEach(function(el) {
+                        el.classList.remove('open');
+                    });
                     document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                        el.classList.remove('open');
+                    });
+                    document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                         el.classList.remove('open');
                     });
                     if (!wasOpen) moreBtn.classList.add('open');
@@ -978,8 +995,14 @@
                     subMoreBtn.addEventListener('click', function(e) {
                         e.stopPropagation();
                         var wasOpen = subMoreBtn.classList.contains('open');
-                        // Close other 3-dot menus
+                        // Close all menus
+                        document.querySelectorAll('.menu.open').forEach(function(el) {
+                            el.classList.remove('open');
+                        });
                         document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                            el.classList.remove('open');
+                        });
+                        document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                             el.classList.remove('open');
                         });
                         if (!wasOpen) subMoreBtn.classList.add('open');
@@ -1173,7 +1196,13 @@
                     fieldsetBtn.onclick = function(e) {
                         e.stopPropagation();
                         var wasOpen = fieldsetMenu.classList.contains('open');
-                        // Close other fieldset menus
+                        // Close all menus
+                        document.querySelectorAll('.menu.open').forEach(function(el) {
+                            el.classList.remove('open');
+                        });
+                        document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                            el.classList.remove('open');
+                        });
                         document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                             el.classList.remove('open');
                         });
