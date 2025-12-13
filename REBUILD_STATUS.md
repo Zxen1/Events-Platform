@@ -1,7 +1,16 @@
 # REBUILD STATUS
 
 **Last Updated:** December 13, 2025
-**Current Phase:** Setup - Creating placeholder structure
+**Current Phase:** Planning - Naming containers
+
+---
+
+## REFERENCE SITE
+
+✅ **old.funmap.com** - Frozen backup for comparison during rebuild
+- Same database as main site
+- Contains working spaghetti code for reference
+- Do NOT modify - this is the control version
 
 ---
 
@@ -56,29 +65,31 @@
 
 ## BUILD ORDER
 
-1. [ ] index.html (skeleton)
-2. [ ] base.css + index.js (shared foundation)
-3. [ ] header.css + header.js
-4. [ ] map.css + map.js (Mapbox integration)
-5. [ ] filter.css + filter.js
-6. [ ] post.css + post.js
-7. [ ] admin.css + admin.js
-8. [ ] member.css + member.js
-9. [ ] forms.css + forms.js
-10. [ ] advert.css + advert.js
+0. [x] Reference site (old.funmap.com) for comparison
+1. [ ] Finalize container names for all sections
+2. [ ] index.html (skeleton)
+3. [ ] base.css + index.js (shared foundation)
+4. [ ] header.css + header.js
+5. [ ] map.css + map.js (Mapbox integration)
+6. [ ] filter.css + filter.js
+7. [ ] post.css + post.js
+8. [ ] admin.css + admin.js
+9. [ ] member.css + member.js
+10. [ ] forms.css + forms.js
+11. [ ] advert.css + advert.js
 
 ---
 
-## CONTAINER NAMES (to be finalized)
+## CONTAINER NAMES
 
-### Header
+### Header ✅
 - bar, logo, filter, modeswitch, access
 
-### Filter
-- (TBD)
+### Filter ✅
+- panel, mapcontrol, resetfilters, resetcategories, sortby, keywords, pricerange, daterange, expiredevents, categoryfilter
 
-### Map
-- (TBD)
+### Map (in progress)
+- area, mapcontrol, shadow, zoomindicator, smallcard, bigcard, hovercard, cluster, multipost
 
 ### Post
 - (TBD)
@@ -94,6 +105,12 @@
 
 ### Advert
 - (TBD)
+
+### Naming Rules
+- Singular/plural based on FUNCTION, not item count
+- `resetfilters` = plural (resets multiple filters)
+- `mapcontrol` = singular (each child does one thing)
+- `categoryfilter` = singular (each filters one category)
 
 ---
 

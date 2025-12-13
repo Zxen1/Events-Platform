@@ -391,6 +391,36 @@ When I received the screenshot, I should have immediately said:
 3. **Auto-Deploy:** Within less than a second, a webhook automatically syncs changes from GitHub to cPanel where funmap.com is hosted
 4. **Live:** Changes are immediately live on funmap.com
 
+### Reference/Control Site
+**URL:** old.funmap.com
+**Purpose:** Frozen backup of the working site for comparison during development
+
+This allows side-by-side comparison: if something breaks on funmap.com, check old.funmap.com to see what it should look like.
+
+**How the subdomain was set up (Dec 13, 2025):**
+
+1. **cPanel:**
+   - Created folder `/home/funmapco/old.funmap.com` at same level as `public_html`
+   - Created subdomain `old.funmap.com` pointing to that folder
+   - Copied all website files (CSS, JS, HTML, assets, gateway.php) EXCEPT:
+     - `deploy.php` (auto-publish webhook - do NOT copy)
+     - `home/` folder (connectors - already exist at server level)
+     - `.git`, `.github` folders
+     - `*-new.*` placeholder files
+     - `error_log`, `deploy.log`
+
+2. **Cloudflare:**
+   - Added A record: `old` → `110.232.143.160` (same IP as funmap.com), Proxied
+   - Wildcard SSL cert `*.funmap.com` covers the subdomain automatically
+
+3. **DNS Cache Issue:**
+   - If subdomain doesn't resolve, local router may be caching old "doesn't exist" response
+   - Test with: `nslookup old.funmap.com 1.1.1.1` (uses Cloudflare DNS directly)
+   - If that works but browser doesn't, restart router to clear its DNS cache
+   - Or change PC DNS settings to use `1.1.1.1` instead of router
+
+**Both sites use the same database** - old.funmap.com is read-only reference, not a separate environment.
+
 ### Critical Development Rules
 - **No Hard Coding:** Everything must be configurable/dynamic - this platform will power multiple websites
 - **Modularity First:** Keep features modular and separable for future plugin architecture
