@@ -434,6 +434,19 @@
             max-height: 200px;
             overflow-y: auto;
             z-index: 100;
+            scrollbar-width: thin;
+            scrollbar-color: #888 transparent;
+        }
+        .formbuilder-fieldset-menu-options::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+        }
+        .formbuilder-fieldset-menu-options::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .formbuilder-fieldset-menu-options::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
         }
         .formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-options {
             display: block;
@@ -451,6 +464,13 @@
         }
         .formbuilder-fieldset-menu-option:hover {
             background: #3b82f5;
+        }
+        .formbuilder-fieldset-menu-option.disabled {
+            color: #555;
+            cursor: not-allowed;
+        }
+        .formbuilder-fieldset-menu-option.disabled:hover {
+            background: transparent;
         }
         
         /* Field buttons */
@@ -873,18 +893,28 @@
                     var fieldsetBtn = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-button');
                     var fieldsetOpts = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-options');
                     
+                    // Track added fieldsets for this subcategory
+                    var addedFieldsets = {};
+                    
                     // Populate fieldset options
                     fieldsets.forEach(function(fs) {
+                        var fsId = fs.id || fs.key || fs.name;
                         var opt = document.createElement('div');
                         opt.className = 'formbuilder-fieldset-menu-option';
                         opt.textContent = fs.name || fs.key || 'Unnamed';
+                        opt.setAttribute('data-fieldset-id', fsId);
                         opt.onclick = function(e) {
                             e.stopPropagation();
+                            if (opt.classList.contains('disabled')) return;
                             // Add field button
                             var field = document.createElement('div');
                             field.className = 'formbuilder-field';
                             field.textContent = fs.name || fs.key || 'Unnamed';
+                            field.setAttribute('data-fieldset-id', fsId);
                             fieldsContainer.appendChild(field);
+                            // Mark as added and disable option
+                            addedFieldsets[fsId] = true;
+                            opt.classList.add('disabled');
                             fieldsetMenu.classList.remove('open');
                         };
                         fieldsetOpts.appendChild(opt);
