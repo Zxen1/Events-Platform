@@ -263,15 +263,6 @@
         return menu;
     }
     
-    // Close edit panels when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.formbuilder-accordion-editpanel') && 
-            !e.target.closest('.formbuilder-accordion-option-editpanel') &&
-            !e.target.closest('.formbuilder-accordion-header-editarea') &&
-            !e.target.closest('.formbuilder-accordion-option-editarea')) {
-            closeAllEditPanels();
-        }
-    });
     
     // Fetch icons then categories
     fetch('/gateway.php?action=list-icons&folder=assets/icons-30/')
