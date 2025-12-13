@@ -162,6 +162,27 @@
         .formbuilder-accordion--open > .formbuilder-accordion-header .formbuilder-accordion-header-arrow {
             transform: rotate(180deg);
         }
+        .formbuilder-accordion-header-drag {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            color: #888;
+            margin-left: 5px;
+        }
+        .formbuilder-accordion-header-drag:hover {
+            color: #fff;
+        }
+        .formbuilder-accordion-header-drag svg {
+            width: 14px;
+            height: 14px;
+        }
+        .formbuilder-accordion.dragging {
+            opacity: 0.5;
+        }
         .formbuilder-accordion-header-editarea {
             height: 40px;
             display: flex;
@@ -247,6 +268,32 @@
         .formbuilder-accordion-option--open > .formbuilder-accordion-option-header .formbuilder-accordion-option-arrow {
             transform: rotate(180deg);
         }
+        .formbuilder-accordion-option--open > .formbuilder-accordion-option-header {
+            border-color: #3b82f5;
+            border-radius: 4px 4px 0 0;
+            border-bottom: none;
+        }
+        .formbuilder-accordion-option-drag {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            color: #888;
+            margin-left: 5px;
+        }
+        .formbuilder-accordion-option-drag:hover {
+            color: #fff;
+        }
+        .formbuilder-accordion-option-drag svg {
+            width: 12px;
+            height: 12px;
+        }
+        .formbuilder-accordion-option.dragging {
+            opacity: 0.5;
+        }
         .formbuilder-accordion-option-editarea {
             height: 36px;
             display: flex;
@@ -282,6 +329,10 @@
         .formbuilder-accordion-option-body {
             display: none;
             padding: 10px;
+            border: 1px solid #3b82f5;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            background: #000;
         }
         .formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
             display: block;
@@ -356,6 +407,7 @@
     
     var slidersSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"/></svg>';
     var moreDotsVvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>';
+    var dragHandleSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L4 6h8L8 2zM8 14l4-4H4l4 4z"/></svg>';
     
     function closeAllEditPanels() {
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
@@ -496,10 +548,38 @@
                 headerEdit.innerHTML = slidersSvg;
                 headerEditArea.appendChild(headerEdit);
                 
+                var headerDrag = document.createElement('div');
+                headerDrag.className = 'formbuilder-accordion-header-drag';
+                headerDrag.innerHTML = dragHandleSvg;
+                
                 header.appendChild(headerImg);
                 header.appendChild(headerText);
                 header.appendChild(headerArrow);
+                header.appendChild(headerDrag);
                 header.appendChild(headerEditArea);
+                
+                // Category drag and drop
+                accordion.draggable = true;
+                accordion.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.effectAllowed = 'move';
+                    accordion.classList.add('dragging');
+                });
+                accordion.addEventListener('dragend', function() {
+                    accordion.classList.remove('dragging');
+                });
+                accordion.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    var dragging = container.querySelector('.formbuilder-accordion.dragging');
+                    if (dragging && dragging !== accordion) {
+                        var rect = accordion.getBoundingClientRect();
+                        var midY = rect.top + rect.height / 2;
+                        if (e.clientY < midY) {
+                            accordion.parentNode.insertBefore(dragging, accordion);
+                        } else {
+                            accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
+                        }
+                    }
+                });
                 
                 // Edit panel
                 var editPanel = document.createElement('div');
@@ -595,10 +675,40 @@
                     optEdit.innerHTML = slidersSvg;
                     optEditArea.appendChild(optEdit);
                     
+                    var optDrag = document.createElement('div');
+                    optDrag.className = 'formbuilder-accordion-option-drag';
+                    optDrag.innerHTML = dragHandleSvg;
+                    
                     optHeader.appendChild(optImg);
                     optHeader.appendChild(optText);
                     optHeader.appendChild(optArrow);
+                    optHeader.appendChild(optDrag);
                     optHeader.appendChild(optEditArea);
+                    
+                    // Subcategory drag and drop
+                    option.draggable = true;
+                    option.addEventListener('dragstart', function(e) {
+                        e.stopPropagation();
+                        e.dataTransfer.effectAllowed = 'move';
+                        option.classList.add('dragging');
+                    });
+                    option.addEventListener('dragend', function() {
+                        option.classList.remove('dragging');
+                    });
+                    option.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var dragging = body.querySelector('.formbuilder-accordion-option.dragging');
+                        if (dragging && dragging !== option) {
+                            var rect = option.getBoundingClientRect();
+                            var midY = rect.top + rect.height / 2;
+                            if (e.clientY < midY) {
+                                option.parentNode.insertBefore(dragging, option);
+                            } else {
+                                option.parentNode.insertBefore(dragging, option.nextSibling);
+                            }
+                        }
+                    });
                     
                     // Sub edit panel
                     var subEditPanel = document.createElement('div');
@@ -670,6 +780,12 @@
                     addFieldBtn.className = 'formbuilder-add-button';
                     addFieldBtn.textContent = '+ Add Field';
                     optBody.appendChild(addFieldBtn);
+                    
+                    var formPreviewBtn = document.createElement('div');
+                    formPreviewBtn.className = 'formbuilder-add-button';
+                    formPreviewBtn.textContent = 'Form Preview';
+                    formPreviewBtn.style.marginTop = '3px';
+                    optBody.appendChild(formPreviewBtn);
                     
                     option.appendChild(optHeader);
                     option.appendChild(subEditPanel);
