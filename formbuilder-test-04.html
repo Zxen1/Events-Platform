@@ -392,86 +392,6 @@
             width: 400px;
             margin-top: 3px;
         }
-        
-        /* Fieldset menu */
-        .formbuilder-fieldset-menu {
-            width: 100%;
-            position: relative;
-        }
-        .formbuilder-fieldset-menu-button {
-            width: 100%;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #222;
-            border: 1px solid #222222;
-            border-radius: 4px;
-            color: #888;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        .formbuilder-fieldset-menu-button:hover {
-            border-color: #3b82f5;
-            color: #fff;
-        }
-        .formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-button {
-            border-color: #3b82f5;
-            border-radius: 4px 4px 0 0;
-            border-bottom: none;
-            color: #fff;
-        }
-        .formbuilder-fieldset-menu-options {
-            display: none;
-            position: absolute;
-            top: 35px;
-            left: 0;
-            width: 100%;
-            background: #111;
-            border: 1px solid #3b82f5;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 100;
-        }
-        .formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-options {
-            display: block;
-        }
-        .formbuilder-fieldset-menu-option {
-            width: 100%;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            box-sizing: border-box;
-            cursor: pointer;
-            color: #fff;
-            font-size: 13px;
-        }
-        .formbuilder-fieldset-menu-option:hover {
-            background: #3b82f5;
-        }
-        
-        /* Field buttons */
-        .formbuilder-field {
-            width: 100%;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            margin-bottom: 10px;
-            background: #222;
-            border: 1px solid #222222;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 13px;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-        .formbuilder-field:hover {
-            border-color: #3b82f5;
-        }
     </style>
 </head>
 <body>
@@ -580,12 +500,6 @@
                 el.classList.remove('open');
             });
         }
-        // Close fieldset menus when clicking outside
-        if (!e.target.closest('.formbuilder-fieldset-menu')) {
-            document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-                el.classList.remove('open');
-            });
-        }
     });
     
     // Fetch icons then categories
@@ -602,7 +516,6 @@
             var categories = res.snapshot.categories || [];
             var categoryIconPaths = res.snapshot.categoryIconPaths || {};
             var subcategoryIconPaths = res.snapshot.subcategoryIconPaths || {};
-            var fieldsets = res.snapshot.fieldsets || [];
             
             categories.forEach(function(cat) {
                 var accordion = document.createElement('div');
@@ -857,48 +770,14 @@
                     subEditPanel.appendChild(subNameRow);
                     subEditPanel.appendChild(subIconPicker);
                     
-                    // Subcategory body with fieldset menu and form preview
+                    // Subcategory body with Add Field button
                     var optBody = document.createElement('div');
                     optBody.className = 'formbuilder-accordion-option-body';
                     
-                    // Container for added fields
-                    var fieldsContainer = document.createElement('div');
-                    fieldsContainer.className = 'formbuilder-fields-container';
-                    optBody.appendChild(fieldsContainer);
-                    
-                    // Fieldset menu
-                    var fieldsetMenu = document.createElement('div');
-                    fieldsetMenu.className = 'formbuilder-fieldset-menu';
-                    fieldsetMenu.innerHTML = '<div class="formbuilder-fieldset-menu-button">+ Add Field</div><div class="formbuilder-fieldset-menu-options"></div>';
-                    var fieldsetBtn = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-button');
-                    var fieldsetOpts = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-options');
-                    
-                    // Populate fieldset options
-                    fieldsets.forEach(function(fs) {
-                        var opt = document.createElement('div');
-                        opt.className = 'formbuilder-fieldset-menu-option';
-                        opt.textContent = fs.name || fs.key || 'Unnamed';
-                        opt.onclick = function(e) {
-                            e.stopPropagation();
-                            // Add field button
-                            var field = document.createElement('div');
-                            field.className = 'formbuilder-field';
-                            field.textContent = fs.name || fs.key || 'Unnamed';
-                            fieldsContainer.appendChild(field);
-                            fieldsetMenu.classList.remove('open');
-                        };
-                        fieldsetOpts.appendChild(opt);
-                    });
-                    
-                    fieldsetBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-                            if (el !== fieldsetMenu) el.classList.remove('open');
-                        });
-                        fieldsetMenu.classList.toggle('open');
-                    };
-                    
-                    optBody.appendChild(fieldsetMenu);
+                    var addFieldBtn = document.createElement('div');
+                    addFieldBtn.className = 'formbuilder-add-button';
+                    addFieldBtn.textContent = '+ Add Field';
+                    optBody.appendChild(addFieldBtn);
                     
                     var formPreviewBtn = document.createElement('div');
                     formPreviewBtn.className = 'formbuilder-add-button';
