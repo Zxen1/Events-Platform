@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Test</title>
+    <style>
+        :root {
+            --calendar-width: 250px;
+            --calendar-height: 200px;
+            --calendar-cell-w: calc(var(--calendar-width) / 7);
+            --calendar-header-h: 20px;
+            --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h)) / 7);
+            --today: #ff0000;
+            --calendar-past-bg: #1a1a1a;
+            --calendar-future-bg: #222222;
+        }
+        body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; font-size: 13px; }
+        
+        .calendar-container {
+            width: 400px;
+            height: var(--calendar-height);
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: #222222;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 5px;
+            position: relative;
+        }
+        .calendar {
+            display: flex;
+            width: max-content;
+            height: 100%;
+        }
+        .month {
+            flex: 0 0 auto;
+            width: var(--calendar-width);
+            height: var(--calendar-height);
+        }
+        .month:not(:first-child) {
+            border-left: 1px solid var(--calendar-past-bg);
+        }
+        .calendar-header {
+            height: var(--calendar-header-h);
+            line-height: var(--calendar-header-h);
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            background: #2e3a72;
+        }
+        .grid {
+            width: 100%;
+            height: calc(var(--calendar-height) - var(--calendar-header-h));
+            display: grid;
+            grid-template-columns: repeat(7, var(--calendar-cell-w));
+            grid-template-rows: repeat(7, var(--calendar-cell-h));
+        }
+        .weekday, .day {
+            width: var(--calendar-cell-w);
+            height: var(--calendar-cell-h);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        .weekday { font-weight: bold; }
+        .day { cursor: pointer; }
+        .day.empty { cursor: default; background: var(--calendar-future-bg); }
+        .day.past { background: var(--calendar-past-bg); color: #808080; }
+        .day.future { background: var(--calendar-future-bg); }
+        .day.today { color: var(--today); font-weight: bold; }
+        
+        .today-marker {
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            background: var(--today);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calendar-container" id="calendarContainer">
+    <div class="calendar" id="calendar"></div>
+    <div class="today-marker" id="todayMarker"></div>
+</div>
+
+<script>
+(function(){
+    var container = document.getElementById('calendarContainer');
+    var calendar = document.getElementById('calendar');
+    var marker = document.getElementById('todayMarker');
+    
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var todayIso = toISODate(today);
+    
+    // 12 months past, current, 24 months future
+    var minDate = new Date(today.getFullYear(), today.getMonth() - 12, 1);
+    var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
+    
+    var todayMonthEl = null;
+    var weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    
+    function toISODate(d) {
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    
+    // Build calendar
+    var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    while(current <= maxDate) {
+        var monthEl = document.createElement('div');
+        monthEl.className = 'month';
+        
+        var header = document.createElement('div');
+        header.className = 'calendar-header';
+        header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+        monthEl.appendChild(header);
+        
+        var grid = document.createElement('div');
+        grid.className = 'grid';
+        
+        weekdays.forEach(function(wd) {
+            var w = document.createElement('div');
+            w.className = 'weekday';
+            w.textContent = wd;
+            grid.appendChild(w);
+        });
+        
+        var firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
+        var startDow = firstDay.getDay();
+        var daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+        
+        for(var i = 0; i < 42; i++) {
+            var cell = document.createElement('div');
+            cell.className = 'day';
+            var dayNum = i - startDow + 1;
+            
+            if(i < startDow || dayNum > daysInMonth) {
+                cell.classList.add('empty');
+            } else {
+                cell.textContent = dayNum;
+                var dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
+                dateObj.setHours(0,0,0,0);
+                var iso = toISODate(dateObj);
+                cell.dataset.iso = iso;
+                
+                if(dateObj < today) {
+                    cell.classList.add('past');
+                } else {
+                    cell.classList.add('future');
+                }
+                
+                if(iso === todayIso) {
+                    cell.classList.add('today');
+                    todayMonthEl = monthEl;
+                }
+            }
+            grid.appendChild(cell);
+        }
+        
+        monthEl.appendChild(grid);
+        calendar.appendChild(monthEl);
+        current.setMonth(current.getMonth() + 1);
+    }
+    
+    // Scroll to today's month
+    if(todayMonthEl) {
+        container.scrollLeft = todayMonthEl.offsetLeft;
+    }
+    
+    // Position today marker
+    function updateMarker() {
+        if(!todayMonthEl) return;
+        var maxScroll = container.scrollWidth - container.clientWidth;
+        var track = container.clientWidth - 20;
+        var basePos = maxScroll > 0 ? (todayMonthEl.offsetLeft / maxScroll) * track + 10 : 10;
+        marker.style.left = (basePos + container.scrollLeft) + 'px';
+        marker.dataset.basePos = basePos;
+    }
+    
+    updateMarker();
+    container.addEventListener('scroll', updateMarker);
+    
+    // Click marker to scroll to today
+    marker.addEventListener('click', function() {
+        if(todayMonthEl) {
+            container.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
+
