@@ -248,6 +248,59 @@
         }
         .fieldset-location-status.success { color: #22c55e; }
         .fieldset-location-status.error { color: #ef4444; }
+        
+        /* Amenities checklist grid */
+        .fieldset-amenities {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .fieldset-amenity-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+        .fieldset-amenity-row:hover {
+            border-color: #555;
+        }
+        .fieldset-amenity-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .fieldset-amenity-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+        .fieldset-amenity-name {
+            flex: 1;
+            font-size: 13px;
+            color: #fff;
+        }
+        .fieldset-amenity-options {
+            display: flex;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .fieldset-amenity-option {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #888;
+        }
+        .fieldset-amenity-option input {
+            cursor: pointer;
+        }
+        .fieldset-amenity-option.yes { color: #22c55e; }
+        .fieldset-amenity-option.no { color: #ef4444; }
     </style>
 </head>
 <body>
@@ -682,6 +735,58 @@
                         upload.className = 'fieldset-images';
                         upload.innerHTML = '<div class="fieldset-images-icon">📷</div><div class="fieldset-images-text">Click to upload images</div>';
                         fieldset.appendChild(upload);
+                        break;
+                    
+                    case 'amenities':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var amenitiesGrid = document.createElement('div');
+                        amenitiesGrid.className = 'fieldset-amenities';
+                        
+                        // Get amenities from generalOptions (extra_options table)
+                        var amenities = generalOptions['amenity'] || [];
+                        
+                        amenities.forEach(function(item, i) {
+                            // Parse value: "parking Parking" -> icon: parking, name: Parking
+                            var parts = item.value.split(' ');
+                            var iconKey = parts[0];
+                            var amenityName = parts.slice(1).join(' ');
+                            var description = item.label;
+                            
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-amenity-row';
+                            row.title = description; // Tooltip on hover
+                            
+                            // Icon
+                            var iconEl = document.createElement('div');
+                            iconEl.className = 'fieldset-amenity-icon';
+                            iconEl.innerHTML = '<img src="assets/system-images/' + iconKey + '.svg" alt="' + amenityName + '">';
+                            row.appendChild(iconEl);
+                            
+                            // Name
+                            var nameEl = document.createElement('div');
+                            nameEl.className = 'fieldset-amenity-name';
+                            nameEl.textContent = amenityName;
+                            row.appendChild(nameEl);
+                            
+                            // Yes/No options
+                            var optionsEl = document.createElement('div');
+                            optionsEl.className = 'fieldset-amenity-options';
+                            
+                            var yesLabel = document.createElement('label');
+                            yesLabel.className = 'fieldset-amenity-option yes';
+                            yesLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="1"> Yes';
+                            optionsEl.appendChild(yesLabel);
+                            
+                            var noLabel = document.createElement('label');
+                            noLabel.className = 'fieldset-amenity-option no';
+                            noLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="0"> No';
+                            optionsEl.appendChild(noLabel);
+                            
+                            row.appendChild(optionsEl);
+                            amenitiesGrid.appendChild(row);
+                        });
+                        
+                        fieldset.appendChild(amenitiesGrid);
                         break;
                         
                     case 'item-pricing':
