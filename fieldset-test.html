@@ -1212,28 +1212,35 @@
                             calScroll.scrollLeft += e.deltaY || e.deltaX;
                         });
                         
-                        // Autofill logic: propagate time at slot index to subsequent unedited slots
-                        // Priority: same weekday first, then all later dates
+                        // Track which slot indices have had their "god" time set
+                        // GOD = first edit fills ALL dates
+                        // DEMIGOD = subsequent edits fill same weekday only
+                        var godSetForSlot = {};
+                        
                         function autofillTimes(changedDateStr, changedSlotIdx, newTime) {
-                            var changedDow = getDayOfWeek(changedDateStr);
                             var sortedDates = Object.keys(sessionData).sort();
+                            var changedDow = getDayOfWeek(changedDateStr);
                             
-                            // Go through ALL dates (not just after changed date)
-                            // Update any unedited slot at same index
-                            for (var i = 0; i < sortedDates.length; i++) {
-                                var dateStr = sortedDates[i];
-                                if (dateStr === changedDateStr) continue; // Skip the one we just edited
+                            if (!godSetForSlot[changedSlotIdx]) {
+                                // GOD MODE: first edit at this slot - fill ALL unedited slots
+                                godSetForSlot[changedSlotIdx] = true;
                                 
-                                var data = sessionData[dateStr];
-                                
-                                // Only update if slot exists and is NOT edited
-                                if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
-                                    // Same weekday gets priority - always update
-                                    if (getDayOfWeek(dateStr) === changedDow) {
+                                for (var i = 0; i < sortedDates.length; i++) {
+                                    var dateStr = sortedDates[i];
+                                    if (dateStr === changedDateStr) continue;
+                                    var data = sessionData[dateStr];
+                                    if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
                                         data.times[changedSlotIdx] = newTime;
                                     }
-                                    // Different weekday: only update if date is AFTER changed date
-                                    else if (dateStr > changedDateStr) {
+                                }
+                            } else {
+                                // DEMIGOD MODE: fill only same weekday unedited slots
+                                for (var i = 0; i < sortedDates.length; i++) {
+                                    var dateStr = sortedDates[i];
+                                    if (dateStr === changedDateStr) continue;
+                                    if (getDayOfWeek(dateStr) !== changedDow) continue;
+                                    var data = sessionData[dateStr];
+                                    if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
                                         data.times[changedSlotIdx] = newTime;
                                     }
                                 }
