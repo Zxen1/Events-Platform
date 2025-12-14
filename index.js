@@ -20210,8 +20210,7 @@ function makePosts(){
       const sets = [
         {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
         {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
-        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
-        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
+        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'}
       ];
       const cityZoomLevel = 12;
 
@@ -25046,7 +25045,8 @@ function openPanel(m){
         startingGeocoderContainer.hidden = false;
         if(startingAddressDisplay) startingAddressDisplay.hidden = true;
         setTimeout(()=>{
-          const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
+          const input = startingGeocoderContainer.querySelector('.google-places-geocoder input') || 
+                        startingGeocoderContainer.querySelector('input');
           if(input) input.focus();
         }, 50);
       };
@@ -25096,38 +25096,34 @@ function openPanel(m){
         showAddressDisplay();
       };
       
-      const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
-      if(mapboxReady){
-        const geocoderOptions = {
-          accessToken: window.mapboxgl.accessToken,
-          mapboxgl: window.mapboxgl,
-          marker: false,
-          placeholder: 'Search for a location...',
-          types: 'place,address,poi,region,country',
-          limit: 7,
-          language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
-        };
-        const startingGeocoder = new MapboxGeocoder(geocoderOptions);
+      const googleReady = typeof google !== 'undefined' && google.maps && google.maps.places;
+      if(googleReady){
+        // Create Google Places geocoder wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'google-places-geocoder';
+        wrapper.style.cssText = 'background:rgba(0,0,0,0.35);';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Search for a location...';
+        input.style.cssText = 'background:transparent;color:#fff;';
+        input.setAttribute('autocomplete', 'off');
+        wrapper.appendChild(input);
+        startingGeocoderContainer.appendChild(wrapper);
         
-        // Use addTo method for proper initialization
-        startingGeocoder.addTo(startingGeocoderContainer);
-        
-        // Handle result selection - extract coordinates
-        startingGeocoder.on('result', (e)=>{
-          if(e.result){
-            const placeName = e.result.place_name || '';
-            const coords = e.result.center; // [lng, lat]
-            if(coords && coords.length === 2){
-              saveStartingLocation(placeName, coords[1], coords[0]);
-            } else {
-              saveStartingLocation(placeName, null, null);
-            }
-          }
+        // Initialize Google Places Autocomplete
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+          fields: ['formatted_address', 'geometry', 'name', 'place_id']
         });
         
-        // Handle clear
-        startingGeocoder.on('clear', ()=>{
-          saveStartingLocation('', null, null);
+        // Handle result selection - extract coordinates
+        autocomplete.addListener('place_changed', ()=>{
+          const place = autocomplete.getPlace();
+          if(place && place.geometry && place.geometry.location){
+            const placeName = place.formatted_address || place.name || '';
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            saveStartingLocation(placeName, lat, lng);
+          }
         });
         
         // Set initial value and show display if exists - wait for settings to load first
@@ -25136,33 +25132,30 @@ function openPanel(m){
             await window._adminSettingsReady;
           }
           
-          const input = startingGeocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
-          if(input){
-            if(window._startingAddress){
-              input.value = window._startingAddress;
-            }
-            
-            // Save on blur if user types custom text
-            if(!input.dataset.blurAdded){
-              input.dataset.blurAdded = 'true';
-              input.addEventListener('blur', ()=>{
-                const value = input.value.trim();
-                if(value !== (window._startingAddress || '')){
-                  // Custom text entered - no coordinates
-                  saveStartingLocation(value, null, null);
-                } else if(window._startingAddress){
-                  // Value unchanged, just show display
-                  showAddressDisplay();
-                }
-              });
-            }
+          if(window._startingAddress){
+            input.value = window._startingAddress;
+          }
+          
+          // Save on blur if user types custom text
+          if(!input.dataset.blurAdded){
+            input.dataset.blurAdded = 'true';
+            input.addEventListener('blur', ()=>{
+              const value = input.value.trim();
+              if(value !== (window._startingAddress || '')){
+                // Custom text entered - no coordinates
+                saveStartingLocation(value, null, null);
+              } else if(window._startingAddress){
+                // Value unchanged, just show display
+                showAddressDisplay();
+              }
+            });
           }
           
           // Show display if we have an address
           showAddressDisplay();
         })();
       } else {
-        // Fallback: create simple input if Mapbox not ready
+        // Fallback: create simple input if Google Places not ready
         (async ()=>{
           if(!window._adminSettingsLoaded){
             await window._adminSettingsReady;
@@ -25171,7 +25164,7 @@ function openPanel(m){
           const fallback = document.createElement('input');
           fallback.type = 'text';
           fallback.placeholder = 'Search for a location...';
-          fallback.className = 'mapboxgl-ctrl-geocoder--input';
+          fallback.className = 'google-places-geocoder-fallback';
           fallback.style.cssText = 'width:100%;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.35);color:#fff;font:inherit;';
           if(window._startingAddress){
             fallback.value = window._startingAddress;
