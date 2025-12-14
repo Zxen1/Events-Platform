@@ -292,6 +292,20 @@
         }
         .fieldset-amenity-option input {
             cursor: pointer;
+            accent-color: #3b82f5;
+        }
+        /* Row states based on selection */
+        .fieldset-amenity-row.selected-yes .fieldset-amenity-icon img {
+            filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
+        }
+        .fieldset-amenity-row.selected-yes .fieldset-amenity-name {
+            color: #3b82f5;
+        }
+        .fieldset-amenity-row.selected-no .fieldset-amenity-icon img {
+            filter: brightness(0) invert(0.4);
+        }
+        .fieldset-amenity-row.selected-no .fieldset-amenity-name {
+            color: #666;
         }
     </style>
 </head>
@@ -773,6 +787,20 @@
                             noLabel.className = 'fieldset-amenity-option';
                             noLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="0"> No';
                             optionsEl.appendChild(noLabel);
+                            
+                            // Add change listeners to update row styling
+                            var yesRadio = yesLabel.querySelector('input');
+                            var noRadio = noLabel.querySelector('input');
+                            
+                            yesRadio.addEventListener('change', function() {
+                                row.classList.remove('selected-no');
+                                row.classList.add('selected-yes');
+                            });
+                            
+                            noRadio.addEventListener('change', function() {
+                                row.classList.remove('selected-yes');
+                                row.classList.add('selected-no');
+                            });
                             
                             row.appendChild(optionsEl);
                             amenitiesGrid.appendChild(row);
