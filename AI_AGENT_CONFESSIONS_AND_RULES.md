@@ -850,6 +850,8 @@ When the website fails to load or loads extremely slowly, check these causes in 
 4. **Mapbox API** - Mapbox service issues or API key problems
 5. **Ventra IP shared hosting** - Server issues on the shared hosting provider
 6. **Cloudflare** - CDN/DNS issues, SSL problems, HTTP/3 (QUIC) protocol errors
+7. **User browser error** - Browser cache, extensions, or browser-specific issues
+8. **User router error** - Local network/router issues, DNS cache
 
 **IMPORTANT:** Before blaming infrastructure (Cloudflare, hosting, etc.), CHECK THE CODE FIRST. 100% of the time it has been code changes that caused issues, not infrastructure.
 
