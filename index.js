@@ -10826,7 +10826,7 @@ function makePosts(){
         if(allCheckoutOptions.length > 0){
           // Get subcategory data
           let surcharge = 0;
-          let subcategoryType = 'Non-Events';
+          let subcategoryType = 'Standard';
           if(window.categories && Array.isArray(window.categories)){
             const category = window.categories.find(c => c && c.name === categoryName);
             if(category && category.subFees && category.subFees[subcategoryName]){
@@ -10957,7 +10957,7 @@ function makePosts(){
               }
               priceSection.appendChild(priceText);
             } else {
-              // Non-Events: Two duration radio options inside card
+              // Standard: Two duration radio options inside card
               const durationBtns = document.createElement('div');
               durationBtns.className = 'form-checkout-duration-buttons';
               
@@ -11003,7 +11003,7 @@ function makePosts(){
             }
             
             optionContent.appendChild(priceSection);
-            // Only add card-level radio for Events (Non-Events have radios on each duration)
+            // Only add card-level radio for Events (Standard has radios on each duration)
             if(isEvent){
               card.appendChild(radio);
             }
@@ -16641,7 +16641,7 @@ function makePosts(){
           }
           // Set defaults only for missing values
           if(c.subFees[sub].checkout_surcharge === undefined) c.subFees[sub].checkout_surcharge = null;
-          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Non-Events';
+          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
           
           // Initialize subCheckoutOptions if not exists
           if(!c.subCheckoutOptions) c.subCheckoutOptions = {};
@@ -16842,16 +16842,16 @@ function makePosts(){
           const subTypeStandardInput = document.createElement('input');
           subTypeStandardInput.type = 'radio';
           subTypeStandardInput.name = `subType-${sub}`;
-          subTypeStandardInput.value = 'Non-Events';
-          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'Non-Events';
+          subTypeStandardInput.value = 'Standard';
+          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'Standard';
           subTypeStandardInput.addEventListener('change', ()=>{
             if(subTypeStandardInput.checked){
-              c.subFees[sub].subcategory_type = 'Non-Events';
+              c.subFees[sub].subcategory_type = 'Standard';
               notifyFormbuilderChange();
             }
           });
           const subTypeStandardText = document.createElement('span');
-          subTypeStandardText.textContent = 'Non-Events';
+          subTypeStandardText.textContent = 'Standard';
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
           
           subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);
