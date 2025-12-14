@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fieldset Test</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; font-size: 13px; }
+        
+        .fieldset-container {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        /* Base fieldset wrapper */
+        .fieldset {
+            width: 100%;
+        }
+        
+        /* Label row */
+        .fieldset-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .fieldset-label-text {
+            font-size: 13px;
+            color: #fff;
+        }
+        .fieldset-label-required {
+            color: #f87171;
+            font-weight: bold;
+            margin-left: 3px;
+        }
+        .fieldset-label-tooltip {
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #333;
+            border-radius: 50%;
+            color: #888;
+            font-size: 10px;
+            cursor: help;
+            position: relative;
+        }
+        .fieldset-label-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            border: 1px solid #3b82f5;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 12px;
+            color: #fff;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 6px;
+        }
+        
+        /* Text input */
+        .fieldset-input {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+        }
+        .fieldset-input:hover {
+            border-color: #555;
+        }
+        .fieldset-input:focus {
+            outline: none;
+            border-color: #3b82f5;
+        }
+        .fieldset-input::placeholder {
+            color: #666;
+        }
+        
+        /* Textarea */
+        .fieldset-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            resize: vertical;
+        }
+        .fieldset-textarea:hover {
+            border-color: #555;
+        }
+        .fieldset-textarea:focus {
+            outline: none;
+            border-color: #3b82f5;
+        }
+        .fieldset-textarea::placeholder {
+            color: #666;
+        }
+        
+        /* Dropdown/Select */
+        .fieldset-select {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        .fieldset-select:hover {
+            border-color: #555;
+        }
+        .fieldset-select:focus {
+            outline: none;
+            border-color: #3b82f5;
+        }
+        .fieldset-select option {
+            background: #222;
+            color: #fff;
+        }
+        
+        /* Radio buttons */
+        .fieldset-radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .fieldset-radio {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .fieldset-radio-input {
+            width: 18px;
+            height: 18px;
+            accent-color: #3b82f5;
+            cursor: pointer;
+        }
+        .fieldset-radio-label {
+            font-size: 13px;
+            color: #fff;
+        }
+        
+        /* Checkboxes */
+        .fieldset-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .fieldset-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .fieldset-checkbox-input {
+            width: 18px;
+            height: 18px;
+            accent-color: #3b82f5;
+            cursor: pointer;
+        }
+        .fieldset-checkbox-label {
+            font-size: 13px;
+            color: #fff;
+        }
+        
+        /* Number input */
+        .fieldset-number {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+        }
+        .fieldset-number:hover {
+            border-color: #555;
+        }
+        .fieldset-number:focus {
+            outline: none;
+            border-color: #3b82f5;
+        }
+        .fieldset-number::placeholder {
+            color: #666;
+        }
+        
+        /* Date input */
+        .fieldset-date {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+        }
+        .fieldset-date:hover {
+            border-color: #555;
+        }
+        .fieldset-date:focus {
+            outline: none;
+            border-color: #3b82f5;
+        }
+        .fieldset-date::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+        
+        /* Error state */
+        .fieldset--error .fieldset-input,
+        .fieldset--error .fieldset-textarea,
+        .fieldset--error .fieldset-select,
+        .fieldset--error .fieldset-number,
+        .fieldset--error .fieldset-date {
+            border-color: #f87171;
+        }
+        .fieldset-error-message {
+            display: none;
+            color: #f87171;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .fieldset--error .fieldset-error-message {
+            display: block;
+        }
+        
+        /* Disabled state */
+        .fieldset--disabled .fieldset-input,
+        .fieldset--disabled .fieldset-textarea,
+        .fieldset--disabled .fieldset-select,
+        .fieldset--disabled .fieldset-number,
+        .fieldset--disabled .fieldset-date,
+        .fieldset--disabled .fieldset-radio-input,
+        .fieldset--disabled .fieldset-checkbox-input {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .fieldset--disabled .fieldset-label-text {
+            color: #666;
+        }
+        
+        /* Section divider */
+        .fieldset-divider {
+            width: 100%;
+            height: 1px;
+            background: #333;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="fieldset-container">
+    
+    <!-- Text Input -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Event Name</span>
+            <span class="fieldset-label-required">*</span>
+            <span class="fieldset-label-tooltip" data-tooltip="Enter the name of your event">?</span>
+        </div>
+        <input type="text" class="fieldset-input" placeholder="Enter event name">
+    </div>
+    
+    <!-- Textarea -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Description</span>
+            <span class="fieldset-label-required">*</span>
+        </div>
+        <textarea class="fieldset-textarea" placeholder="Describe your event"></textarea>
+    </div>
+    
+    <!-- Dropdown -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Category</span>
+            <span class="fieldset-label-required">*</span>
+        </div>
+        <select class="fieldset-select">
+            <option value="">Select a category</option>
+            <option value="music">Music</option>
+            <option value="sports">Sports</option>
+            <option value="food">Food & Drink</option>
+            <option value="arts">Arts & Culture</option>
+        </select>
+    </div>
+    
+    <!-- Radio buttons -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Event Type</span>
+            <span class="fieldset-label-required">*</span>
+        </div>
+        <div class="fieldset-radio-group">
+            <label class="fieldset-radio">
+                <input type="radio" name="event-type" class="fieldset-radio-input" value="public">
+                <span class="fieldset-radio-label">Public</span>
+            </label>
+            <label class="fieldset-radio">
+                <input type="radio" name="event-type" class="fieldset-radio-input" value="private">
+                <span class="fieldset-radio-label">Private</span>
+            </label>
+            <label class="fieldset-radio">
+                <input type="radio" name="event-type" class="fieldset-radio-input" value="invite">
+                <span class="fieldset-radio-label">Invite Only</span>
+            </label>
+        </div>
+    </div>
+    
+    <!-- Checkboxes -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Amenities</span>
+        </div>
+        <div class="fieldset-checkbox-group">
+            <label class="fieldset-checkbox">
+                <input type="checkbox" class="fieldset-checkbox-input">
+                <span class="fieldset-checkbox-label">Parking Available</span>
+            </label>
+            <label class="fieldset-checkbox">
+                <input type="checkbox" class="fieldset-checkbox-input">
+                <span class="fieldset-checkbox-label">Wheelchair Accessible</span>
+            </label>
+            <label class="fieldset-checkbox">
+                <input type="checkbox" class="fieldset-checkbox-input">
+                <span class="fieldset-checkbox-label">Food & Beverages</span>
+            </label>
+        </div>
+    </div>
+    
+    <!-- Number input -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Capacity</span>
+            <span class="fieldset-label-tooltip" data-tooltip="Maximum number of attendees">?</span>
+        </div>
+        <input type="number" class="fieldset-number" placeholder="Enter capacity" min="1">
+    </div>
+    
+    <!-- Date input -->
+    <div class="fieldset">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Event Date</span>
+            <span class="fieldset-label-required">*</span>
+        </div>
+        <input type="date" class="fieldset-date">
+    </div>
+    
+    <div class="fieldset-divider"></div>
+    
+    <!-- Error state example -->
+    <div class="fieldset fieldset--error">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Email Address</span>
+            <span class="fieldset-label-required">*</span>
+        </div>
+        <input type="text" class="fieldset-input" placeholder="Enter email" value="invalid-email">
+        <div class="fieldset-error-message">Please enter a valid email address</div>
+    </div>
+    
+    <!-- Disabled state example -->
+    <div class="fieldset fieldset--disabled">
+        <div class="fieldset-label">
+            <span class="fieldset-label-text">Venue (Auto-detected)</span>
+        </div>
+        <input type="text" class="fieldset-input" value="Sydney Opera House" disabled>
+    </div>
+    
+</div>
+
+</body>
+</html>
+
