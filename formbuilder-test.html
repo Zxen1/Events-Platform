@@ -595,19 +595,59 @@
             accent-color: #3b82f5;
             cursor: pointer;
         }
-        .formbuilder-field-delete {
+        .formbuilder-field-more {
+            width: 36px;
             height: 36px;
-            padding: 0 15px;
-            background: #7f1d1d;
-            border: 1px solid #7f1d1d;
-            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #222;
+            border: 1px solid #222222;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #fff;
+            position: relative;
+        }
+        .formbuilder-field-more:hover {
+            border-color: #3b82f5;
+            color: #3b82f5;
+        }
+        .formbuilder-field-more svg {
+            width: 16px;
+            height: 16px;
+        }
+        .formbuilder-field-more-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 180px;
+            background: #111;
+            border: 1px solid #3b82f5;
+            border-radius: 5px;
+            padding: 5px 0;
+            z-index: 200;
+            display: none;
+        }
+        .formbuilder-field-more.open .formbuilder-field-more-menu {
+            display: block;
+        }
+        .formbuilder-field-more-item {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            cursor: pointer;
             color: #fff;
             font-size: 13px;
-            cursor: pointer;
         }
-        .formbuilder-field-delete:hover {
-            background: #991b1b;
-            border-color: #991b1b;
+        .formbuilder-field-more-item:hover {
+            background: #222;
+        }
+        .formbuilder-field-more-delete {
+            color: #f87171;
+        }
+        .formbuilder-field-more-delete:hover {
+            background: #7f1d1d;
         }
     </style>
 </head>
@@ -650,6 +690,9 @@
             el.classList.remove('open');
         });
         container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
             el.classList.remove('open');
         });
     }
@@ -728,7 +771,7 @@
     // Close 3-dot menus when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
-            document.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+            container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
@@ -737,7 +780,7 @@
     // Close fieldset menus when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.formbuilder-fieldset-menu')) {
-            document.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+            container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
@@ -746,7 +789,16 @@
     // Close icon picker menus when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.menu')) {
-            document.querySelectorAll('.menu.open').forEach(function(el) {
+            container.querySelectorAll('.menu.open').forEach(function(el) {
+                el.classList.remove('open');
+            });
+        }
+    });
+    
+    // Close field 3-dot menus when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.formbuilder-field-more')) {
+            container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
                 el.classList.remove('open');
             });
         }
@@ -1045,6 +1097,141 @@
                     // Track added fieldsets for this subcategory
                     var addedFieldsets = {};
                     
+                    // Helper function to create a field element
+                    function createFieldElement(fieldData, isRequired) {
+                        var fsId = fieldData.id || fieldData.fieldsetKey || fieldData.key || fieldData.name;
+                        var fieldName = fieldData.name || fieldData.key || 'Unnamed';
+                        
+                        var fieldWrapper = document.createElement('div');
+                        fieldWrapper.className = 'formbuilder-field-wrapper';
+                        fieldWrapper.setAttribute('data-fieldset-id', fsId);
+                        
+                        var field = document.createElement('div');
+                        field.className = 'formbuilder-field';
+                        
+                        var fieldText = document.createElement('span');
+                        fieldText.className = 'formbuilder-field-text';
+                        fieldText.textContent = fieldName;
+                        
+                        var fieldRequired = document.createElement('span');
+                        fieldRequired.className = 'formbuilder-field-required';
+                        fieldRequired.textContent = '*';
+                        
+                        var fieldDrag = document.createElement('div');
+                        fieldDrag.className = 'formbuilder-field-drag';
+                        fieldDrag.innerHTML = dragHandleSvg;
+                        
+                        var fieldEdit = document.createElement('div');
+                        fieldEdit.className = 'formbuilder-field-edit';
+                        fieldEdit.innerHTML = editPenSvg;
+                        
+                        fieldText.appendChild(fieldRequired);
+                        field.appendChild(fieldText);
+                        field.appendChild(fieldDrag);
+                        field.appendChild(fieldEdit);
+                        
+                        var fieldEditPanel = document.createElement('div');
+                        fieldEditPanel.className = 'formbuilder-field-editpanel';
+                        
+                        var editRow = document.createElement('div');
+                        editRow.className = 'formbuilder-field-editpanel-row';
+                        
+                        var requiredLabel = document.createElement('label');
+                        requiredLabel.className = 'formbuilder-field-required-label';
+                        
+                        var requiredCheckbox = document.createElement('input');
+                        requiredCheckbox.type = 'checkbox';
+                        requiredCheckbox.className = 'formbuilder-field-required-checkbox';
+                        requiredCheckbox.checked = isRequired;
+                        if (isRequired) {
+                            fieldWrapper.classList.add('formbuilder-field-wrapper--required');
+                        }
+                        requiredCheckbox.onchange = function() {
+                            if (requiredCheckbox.checked) {
+                                fieldWrapper.classList.add('formbuilder-field-wrapper--required');
+                            } else {
+                                fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
+                            }
+                        };
+                        
+                        requiredLabel.appendChild(requiredCheckbox);
+                        requiredLabel.appendChild(document.createTextNode('Required'));
+                        
+                        var fieldMoreBtn = document.createElement('div');
+                        fieldMoreBtn.className = 'formbuilder-field-more';
+                        fieldMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
+                        
+                        fieldMoreBtn.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            var wasOpen = fieldMoreBtn.classList.contains('open');
+                            closeAllMenus();
+                            if (!wasOpen) fieldMoreBtn.classList.add('open');
+                        });
+                        
+                        var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
+                        fieldDeleteItem.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            fieldWrapper.remove();
+                            addedFieldsets[fsId] = false;
+                            // Re-enable the menu option
+                            var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                            if (menuOpt) menuOpt.classList.remove('disabled');
+                        });
+                        
+                        editRow.appendChild(requiredLabel);
+                        editRow.appendChild(fieldMoreBtn);
+                        fieldEditPanel.appendChild(editRow);
+                        
+                        fieldWrapper.appendChild(field);
+                        fieldWrapper.appendChild(fieldEditPanel);
+                        
+                        field.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                                if (el !== fieldWrapper) {
+                                    el.classList.remove('formbuilder-field-wrapper--editing');
+                                }
+                            });
+                        });
+                        
+                        fieldEdit.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
+                            container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                                el.classList.remove('formbuilder-field-wrapper--editing');
+                            });
+                            if (!isOpen) {
+                                fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
+                            }
+                        });
+                        
+                        fieldWrapper.draggable = true;
+                        fieldWrapper.addEventListener('dragstart', function(ev) {
+                            ev.stopPropagation();
+                            ev.dataTransfer.effectAllowed = 'move';
+                            fieldWrapper.classList.add('dragging');
+                        });
+                        fieldWrapper.addEventListener('dragend', function() {
+                            fieldWrapper.classList.remove('dragging');
+                        });
+                        fieldWrapper.addEventListener('dragover', function(ev) {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            var dragging = fieldsContainer.querySelector('.formbuilder-field-wrapper.dragging');
+                            if (dragging && dragging !== fieldWrapper) {
+                                var rect = fieldWrapper.getBoundingClientRect();
+                                var midY = rect.top + rect.height / 2;
+                                if (ev.clientY < midY) {
+                                    fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper);
+                                } else {
+                                    fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper.nextSibling);
+                                }
+                            }
+                        });
+                        
+                        return { wrapper: fieldWrapper, fsId: fsId };
+                    }
+                    
                     // Populate fieldset options
                     fieldsets.forEach(function(fs) {
                         var fsId = fs.id || fs.key || fs.name;
@@ -1056,135 +1243,26 @@
                             e.stopPropagation();
                             if (opt.classList.contains('disabled')) return;
                             
-                            // Create field wrapper
-                            var fieldWrapper = document.createElement('div');
-                            fieldWrapper.className = 'formbuilder-field-wrapper';
-                            fieldWrapper.setAttribute('data-fieldset-id', fsId);
-                            
-                            // Field header
-                            var field = document.createElement('div');
-                            field.className = 'formbuilder-field';
-                            
-                            var fieldText = document.createElement('span');
-                            fieldText.className = 'formbuilder-field-text';
-                            fieldText.textContent = fs.name || fs.key || 'Unnamed';
-                            
-                            var fieldRequired = document.createElement('span');
-                            fieldRequired.className = 'formbuilder-field-required';
-                            fieldRequired.textContent = '*';
-                            
-                            var fieldDrag = document.createElement('div');
-                            fieldDrag.className = 'formbuilder-field-drag';
-                            fieldDrag.innerHTML = dragHandleSvg;
-                            
-                            var fieldEdit = document.createElement('div');
-                            fieldEdit.className = 'formbuilder-field-edit';
-                            fieldEdit.innerHTML = editPenSvg;
-                            
-                            fieldText.appendChild(fieldRequired);
-                            field.appendChild(fieldText);
-                            field.appendChild(fieldDrag);
-                            field.appendChild(fieldEdit);
-                            
-                            // Field edit panel
-                            var fieldEditPanel = document.createElement('div');
-                            fieldEditPanel.className = 'formbuilder-field-editpanel';
-                            
-                            var editRow = document.createElement('div');
-                            editRow.className = 'formbuilder-field-editpanel-row';
-                            
-                            var requiredLabel = document.createElement('label');
-                            requiredLabel.className = 'formbuilder-field-required-label';
-                            
-                            var requiredCheckbox = document.createElement('input');
-                            requiredCheckbox.type = 'checkbox';
-                            requiredCheckbox.className = 'formbuilder-field-required-checkbox';
-                            requiredCheckbox.checked = true;
-                            fieldWrapper.classList.add('formbuilder-field-wrapper--required');
-                            requiredCheckbox.onchange = function() {
-                                if (requiredCheckbox.checked) {
-                                    fieldWrapper.classList.add('formbuilder-field-wrapper--required');
-                                } else {
-                                    fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
-                                }
-                            };
-                            
-                            requiredLabel.appendChild(requiredCheckbox);
-                            requiredLabel.appendChild(document.createTextNode('Required'));
-                            
-                            var deleteBtn = document.createElement('button');
-                            deleteBtn.className = 'formbuilder-field-delete';
-                            deleteBtn.textContent = 'Delete';
-                            deleteBtn.onclick = function(ev) {
-                                ev.stopPropagation();
-                                fieldWrapper.remove();
-                                addedFieldsets[fsId] = false;
-                                opt.classList.remove('disabled');
-                            };
-                            
-                            editRow.appendChild(requiredLabel);
-                            editRow.appendChild(deleteBtn);
-                            fieldEditPanel.appendChild(editRow);
-                            
-                            fieldWrapper.appendChild(field);
-                            fieldWrapper.appendChild(fieldEditPanel);
-                            
-                            // Field bar click - close other field edit panels
-                            field.addEventListener('click', function(ev) {
-                                ev.stopPropagation();
-                                // Close other field edit panels (not this one)
-                                document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                                    if (el !== fieldWrapper) {
-                                        el.classList.remove('formbuilder-field-wrapper--editing');
-                                    }
-                                });
-                            });
-                            
-                            // Field edit button click
-                            fieldEdit.addEventListener('click', function(ev) {
-                                ev.stopPropagation();
-                                var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                                // Close other field edit panels
-                                document.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                                    el.classList.remove('formbuilder-field-wrapper--editing');
-                                });
-                                if (!isOpen) {
-                                    fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
-                                }
-                            });
-                            
-                            // Field wrapper drag and drop
-                            fieldWrapper.draggable = true;
-                            fieldWrapper.addEventListener('dragstart', function(ev) {
-                                ev.stopPropagation();
-                                ev.dataTransfer.effectAllowed = 'move';
-                                fieldWrapper.classList.add('dragging');
-                            });
-                            fieldWrapper.addEventListener('dragend', function() {
-                                fieldWrapper.classList.remove('dragging');
-                            });
-                            fieldWrapper.addEventListener('dragover', function(ev) {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                var dragging = fieldsContainer.querySelector('.formbuilder-field-wrapper.dragging');
-                                if (dragging && dragging !== fieldWrapper) {
-                                    var rect = fieldWrapper.getBoundingClientRect();
-                                    var midY = rect.top + rect.height / 2;
-                                    if (ev.clientY < midY) {
-                                        fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper);
-                                    } else {
-                                        fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper.nextSibling);
-                                    }
-                                }
-                            });
-                            
-                            fieldsContainer.appendChild(fieldWrapper);
-                            // Mark as added and disable option
-                            addedFieldsets[fsId] = true;
+                            var result = createFieldElement(fs, true);
+                            fieldsContainer.appendChild(result.wrapper);
+                            addedFieldsets[result.fsId] = true;
                             opt.classList.add('disabled');
                             fieldsetMenu.classList.remove('open');
                         };
                         fieldsetOpts.appendChild(opt);
+                    });
+                    
+                    // Load existing fields from database
+                    var subFieldsMap = cat.subFields || {};
+                    var existingFields = subFieldsMap[subName] || [];
+                    existingFields.forEach(function(fieldData) {
+                        var isRequired = fieldData.required === true || fieldData.required === 1 || fieldData.required === '1';
+                        var result = createFieldElement(fieldData, isRequired);
+                        fieldsContainer.appendChild(result.wrapper);
+                        addedFieldsets[result.fsId] = true;
+                        // Disable the menu option
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                        if (menuOpt) menuOpt.classList.add('disabled');
                     });
                     
                     fieldsetBtn.onclick = function(e) {
