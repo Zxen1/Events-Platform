@@ -95,8 +95,6 @@
     var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
     
     var todayMonthEl = null;
-    var todayMonthIndex = 0;
-    var totalMonths = 0;
     var weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     
     function toISODate(d) {
@@ -104,7 +102,6 @@
     }
     
     var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-    var monthIndex = 0;
     while(current <= maxDate) {
         var monthEl = document.createElement('div');
         monthEl.className = 'month';
@@ -151,7 +148,6 @@
                 if(iso === todayIso) {
                     cell.classList.add('today');
                     todayMonthEl = monthEl;
-                    todayMonthIndex = monthIndex;
                 }
             }
             grid.appendChild(cell);
@@ -160,17 +156,13 @@
         monthEl.appendChild(grid);
         calendar.appendChild(monthEl);
         current.setMonth(current.getMonth() + 1);
-        monthIndex++;
     }
-    totalMonths = monthIndex;
     
     if(todayMonthEl) {
         scroll.scrollLeft = todayMonthEl.offsetLeft;
     }
     
-    // Position marker: (todayMonthIndex + 0.5) / totalMonths gives center of today's month
-    var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
-    var markerPos = markerFraction * (container.clientWidth - 12);
+    var markerPos = (13 / 37) * (container.clientWidth - 12);
     marker.style.left = markerPos + 'px';
     
     marker.addEventListener('click', function() {

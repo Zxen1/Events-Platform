@@ -1062,10 +1062,10 @@
                         break;
                         
                     case 'session':
-                        // Horizontal scrolling calendar + auto-generated session rows
+                        // Horizontal scrolling calendar + auto-generated session rows with autofill
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
-                        // Track selected dates and their times: { '2025-01-15': ['19:00', '14:00'], ... }
+                        // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
                         var sessionData = {};
                         
                         var today = new Date();
@@ -1076,10 +1076,17 @@
                         var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
                         
                         var todayMonthEl = null;
+                        var todayMonthIndex = 0;
+                        var totalMonths = 0;
                         var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                         
                         function toISODate(d) {
                             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                        }
+                        
+                        function getDayOfWeek(dateStr) {
+                            var d = new Date(dateStr + 'T00:00:00');
+                            return d.getDay();
                         }
                         
                         // Calendar container
@@ -1094,6 +1101,7 @@
                         
                         // Build months
                         var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+                        var monthIdx = 0;
                         while (current <= maxDate) {
                             var monthEl = document.createElement('div');
                             monthEl.className = 'fieldset-calendar-month';
@@ -1140,6 +1148,7 @@
                                     if (iso === todayIso) {
                                         cell.classList.add('today');
                                         todayMonthEl = monthEl;
+                                        todayMonthIndex = monthIdx;
                                     }
                                 }
                                 grid.appendChild(cell);
@@ -1148,7 +1157,9 @@
                             monthEl.appendChild(grid);
                             calendar.appendChild(monthEl);
                             current.setMonth(current.getMonth() + 1);
+                            monthIdx++;
                         }
+                        totalMonths = monthIdx;
                         
                         calScroll.appendChild(calendar);
                         calContainer.appendChild(calScroll);
@@ -1165,12 +1176,13 @@
                         sessionsContainer.className = 'fieldset-sessions';
                         fieldset.appendChild(sessionsContainer);
                         
-                        // Position marker and scroll to today
+                        // Position marker dynamically based on today's month index
                         setTimeout(function() {
                             if (todayMonthEl) {
                                 calScroll.scrollLeft = todayMonthEl.offsetLeft;
                             }
-                            var markerPos = (13 / 37) * (calContainer.clientWidth - 12);
+                            var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                            var markerPos = markerFraction * (calContainer.clientWidth - 12);
                             marker.style.left = markerPos + 'px';
                         }, 0);
                         
@@ -1187,16 +1199,56 @@
                             calScroll.scrollLeft += e.deltaY || e.deltaX;
                         });
                         
-                        // Update selected state on all calendar days
-                        function updateCalendarSelection() {
-                            calendar.querySelectorAll('.fieldset-calendar-day').forEach(function(cell) {
-                                var iso = cell.dataset.iso;
-                                if (iso && sessionData[iso]) {
-                                    cell.classList.add('selected');
-                                } else if (iso) {
-                                    cell.classList.remove('selected');
+                        // Autofill logic: propagate time at slot index to subsequent unedited slots
+                        function autofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                            var changedDow = getDayOfWeek(changedDateStr);
+                            var sortedDates = Object.keys(sessionData).sort();
+                            var startIdx = sortedDates.indexOf(changedDateStr);
+                            
+                            // Autofill same slot index on later dates
+                            for (var i = startIdx + 1; i < sortedDates.length; i++) {
+                                var dateStr = sortedDates[i];
+                                var data = sessionData[dateStr];
+                                if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                    data.times[changedSlotIdx] = newTime;
                                 }
-                            });
+                            }
+                            
+                            // Also autofill same day of week if unedited
+                            for (var i = startIdx + 1; i < sortedDates.length; i++) {
+                                var dateStr = sortedDates[i];
+                                if (getDayOfWeek(dateStr) === changedDow) {
+                                    var data = sessionData[dateStr];
+                                    if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                        data.times[changedSlotIdx] = newTime;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Get autofill value for a new time slot
+                        function getAutofillForSlot(dateStr, slotIdx) {
+                            var dow = getDayOfWeek(dateStr);
+                            var sortedDates = Object.keys(sessionData).sort();
+                            var dateIdx = sortedDates.indexOf(dateStr);
+                            
+                            // First check same day of week before this date
+                            for (var i = dateIdx - 1; i >= 0; i--) {
+                                var d = sortedDates[i];
+                                if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx) {
+                                    return sessionData[d].times[slotIdx];
+                                }
+                            }
+                            
+                            // Then check any previous date with this slot
+                            for (var i = dateIdx - 1; i >= 0; i--) {
+                                var d = sortedDates[i];
+                                if (sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                                    return sessionData[d].times[slotIdx];
+                                }
+                            }
+                            
+                            return '';
                         }
                         
                         // Render session rows
@@ -1206,54 +1258,62 @@
                             var sortedDates = Object.keys(sessionData).sort();
                             
                             sortedDates.forEach(function(dateStr) {
-                                var times = sessionData[dateStr];
+                                var data = sessionData[dateStr];
                                 var group = document.createElement('div');
                                 group.className = 'fieldset-session-group';
                                 
-                                times.forEach(function(timeVal, idx) {
+                                data.times.forEach(function(timeVal, idx) {
                                     var row = document.createElement('div');
                                     row.className = 'fieldset-session-row';
                                     
                                     if (idx === 0) {
-                                        // First row: show date
                                         var dateDisplay = document.createElement('div');
                                         dateDisplay.className = 'fieldset-session-date';
                                         var d = new Date(dateStr + 'T00:00:00');
                                         dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
                                         row.appendChild(dateDisplay);
                                     } else {
-                                        // Additional rows: spacer instead of date
                                         var spacer = document.createElement('div');
                                         spacer.className = 'fieldset-session-date-spacer';
                                         row.appendChild(spacer);
                                     }
                                     
-                                    // Time input
                                     var timeWrapper = document.createElement('div');
                                     timeWrapper.className = 'fieldset-session-time';
                                     var timeInput = document.createElement('input');
                                     timeInput.type = 'time';
                                     timeInput.className = 'fieldset-time';
                                     timeInput.value = timeVal;
-                                    timeInput.addEventListener('change', function() {
-                                        sessionData[dateStr][idx] = this.value;
-                                    });
+                                    
+                                    (function(dateStr, idx) {
+                                        timeInput.addEventListener('change', function() {
+                                            var newTime = this.value;
+                                            sessionData[dateStr].times[idx] = newTime;
+                                            sessionData[dateStr].edited[idx] = true;
+                                            autofillTimes(dateStr, idx, newTime);
+                                            renderSessions();
+                                        });
+                                    })(dateStr, idx);
+                                    
                                     timeWrapper.appendChild(timeInput);
                                     row.appendChild(timeWrapper);
                                     
-                                    // + button (only on last row of group)
-                                    if (idx === times.length - 1) {
+                                    if (idx === data.times.length - 1) {
                                         var addBtn = document.createElement('button');
                                         addBtn.type = 'button';
                                         addBtn.className = 'fieldset-session-add';
                                         addBtn.textContent = '+';
-                                        addBtn.addEventListener('click', function() {
-                                            sessionData[dateStr].push('');
-                                            renderSessions();
-                                        });
+                                        (function(dateStr) {
+                                            addBtn.addEventListener('click', function() {
+                                                var newSlotIdx = sessionData[dateStr].times.length;
+                                                var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
+                                                sessionData[dateStr].times.push(autofillVal);
+                                                sessionData[dateStr].edited.push(false);
+                                                renderSessions();
+                                            });
+                                        })(dateStr);
                                         row.appendChild(addBtn);
                                     } else {
-                                        // Empty spacer for alignment
                                         var btnSpacer = document.createElement('div');
                                         btnSpacer.style.width = '32px';
                                         row.appendChild(btnSpacer);
@@ -1266,18 +1326,18 @@
                             });
                         }
                         
-                        // Calendar day click (past dates allowed - timezone flexibility)
+                        // Calendar day click
                         calendar.addEventListener('click', function(e) {
                             var day = e.target;
                             if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
                                 var iso = day.dataset.iso;
                                 if (sessionData[iso]) {
-                                    // Deselect - remove date
                                     delete sessionData[iso];
                                     day.classList.remove('selected');
                                 } else {
-                                    // Select - add date with one empty time
-                                    sessionData[iso] = [''];
+                                    // New date - autofill first time slot
+                                    var autofillVal = getAutofillForSlot(iso, 0);
+                                    sessionData[iso] = { times: [autofillVal], edited: [false] };
                                     day.classList.add('selected');
                                 }
                                 renderSessions();
