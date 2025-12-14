@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fieldset Test</title>
+    <!-- Google Places API - Replace YOUR_API_KEY with actual key -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&libraries=places"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; font-size: 13px; }
@@ -213,9 +215,59 @@
             color: #666;
             margin-bottom: 4px;
         }
+        
+        /* Google Places Autocomplete styling */
+        .pac-container {
+            background: #222;
+            border: 1px solid #3b82f5;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            font-family: sans-serif;
+            font-size: 13px;
+            z-index: 10000;
+        }
+        .pac-item {
+            padding: 8px 10px;
+            color: #fff;
+            cursor: pointer;
+            border-top: 1px solid #333;
+        }
+        .pac-item:first-child { border-top: none; }
+        .pac-item:hover { background: #3b82f5; }
+        .pac-item-query { color: #fff; font-weight: bold; }
+        .pac-matched { color: #3b82f5; }
+        .pac-item:hover .pac-matched { color: #fff; }
+        .pac-icon { display: none; }
+        .pac-item-selected { background: #3b82f5; }
+        
+        /* Location status indicator */
+        .fieldset-location-status {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+        .fieldset-location-status.success { color: #22c55e; }
+        .fieldset-location-status.error { color: #ef4444; }
     </style>
 </head>
 <body>
+
+<!-- Front-end search test (for user map navigation) -->
+<div class="fieldset-container" style="margin-bottom: 40px;">
+    <div class="fieldset">
+        <div class="fieldset-header">Front-End Search (User Navigation)</div>
+        <div class="fieldset-sublabel">Search for any place - POI, address, city (for map flyTo)</div>
+        <input type="text" id="frontend-search" class="fieldset-input" placeholder="Search any location...">
+        <div id="frontend-status" class="fieldset-location-status"></div>
+        <div id="frontend-result" style="margin-top: 10px; padding: 10px; background: #111; border-radius: 4px; font-size: 12px; color: #888; display: none;">
+            <div><strong>Name:</strong> <span id="result-name">-</span></div>
+            <div><strong>Address:</strong> <span id="result-address">-</span></div>
+            <div><strong>Lat:</strong> <span id="result-lat">-</span></div>
+            <div><strong>Lng:</strong> <span id="result-lng">-</span></div>
+            <div><strong>Place ID:</strong> <span id="result-placeid">-</span></div>
+        </div>
+    </div>
+</div>
 
 <div class="fieldset-container" id="fieldset-container"></div>
 
@@ -232,6 +284,124 @@
             });
         }
     });
+    
+    // Initialize front-end search (all types - for user navigation)
+    function initFrontendSearch() {
+        var input = document.getElementById('frontend-search');
+        var status = document.getElementById('frontend-status');
+        var resultBox = document.getElementById('frontend-result');
+        
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            status.textContent = 'Google Places API not loaded - add your API key';
+            status.className = 'fieldset-location-status error';
+            return;
+        }
+        
+        // No type restriction - search everything
+        var autocomplete = new google.maps.places.Autocomplete(input, {
+            fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types']
+        });
+        
+        autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            
+            if (!place.geometry || !place.geometry.location) {
+                status.textContent = 'No location data for this place';
+                status.className = 'fieldset-location-status error';
+                resultBox.style.display = 'none';
+                return;
+            }
+            
+            var lat = place.geometry.location.lat();
+            var lng = place.geometry.location.lng();
+            
+            status.textContent = '✓ Ready to flyTo: [' + lng.toFixed(6) + ', ' + lat.toFixed(6) + ']';
+            status.className = 'fieldset-location-status success';
+            
+            // Show result details
+            resultBox.style.display = 'block';
+            document.getElementById('result-name').textContent = place.name || '-';
+            document.getElementById('result-address').textContent = place.formatted_address || '-';
+            document.getElementById('result-lat').textContent = lat;
+            document.getElementById('result-lng').textContent = lng;
+            document.getElementById('result-placeid').textContent = place.place_id || '-';
+            
+            console.log('Front-end search result:', place);
+            console.log('Mapbox flyTo command: map.flyTo({ center: [' + lng + ', ' + lat + '], zoom: 15 });');
+        });
+        
+        status.textContent = 'Google Places ready - start typing';
+    }
+    
+    // Initialize on page load
+    if (typeof google !== 'undefined' && google.maps) {
+        initFrontendSearch();
+    } else {
+        window.addEventListener('load', function() {
+            setTimeout(initFrontendSearch, 100);
+        });
+    }
+    
+    // Google Places Autocomplete helper
+    // type: 'address' | 'establishment' | '(cities)'
+    function initGooglePlaces(inputElement, type, latInput, lngInput, statusElement) {
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            console.warn('Google Places API not loaded');
+            if (statusElement) {
+                statusElement.textContent = 'Location search unavailable';
+                statusElement.className = 'fieldset-location-status error';
+            }
+            return null;
+        }
+        
+        var options = {
+            fields: ['formatted_address', 'geometry', 'name', 'place_id']
+        };
+        
+        // Set type restriction
+        if (type === 'address') {
+            options.types = ['address'];
+        } else if (type === 'establishment') {
+            options.types = ['establishment'];
+        } else if (type === '(cities)') {
+            options.types = ['(cities)'];
+        }
+        
+        var autocomplete = new google.maps.places.Autocomplete(inputElement, options);
+        
+        autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            
+            if (!place.geometry || !place.geometry.location) {
+                if (statusElement) {
+                    statusElement.textContent = 'No location data for this place';
+                    statusElement.className = 'fieldset-location-status error';
+                }
+                return;
+            }
+            
+            var lat = place.geometry.location.lat();
+            var lng = place.geometry.location.lng();
+            
+            if (latInput) latInput.value = lat;
+            if (lngInput) lngInput.value = lng;
+            
+            if (statusElement) {
+                statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                statusElement.className = 'fieldset-location-status success';
+            }
+            
+            console.log('Google Places result:', {
+                name: place.name,
+                address: place.formatted_address,
+                lat: lat,
+                lng: lng,
+                place_id: place.place_id
+            });
+        });
+        
+        return autocomplete;
+    }
     
     // Build currency menu
     function buildCurrencyMenu(placeholder) {
@@ -447,22 +617,53 @@
                         fieldset.appendChild(row);
                         break;
                         
-                    case 'location':
+                    case 'address':
+                    case 'location': // legacy support
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'fieldset-input';
-                        input.placeholder = placeholder;
-                        fieldset.appendChild(input);
+                        var addrInputEl = document.createElement('input');
+                        addrInputEl.type = 'text';
+                        addrInputEl.className = 'fieldset-input';
+                        addrInputEl.placeholder = placeholder || 'Search for address...';
+                        fieldset.appendChild(addrInputEl);
                         // Hidden lat/lng fields
-                        var latInput = document.createElement('input');
-                        latInput.type = 'hidden';
-                        latInput.className = 'fieldset-lat';
-                        var lngInput = document.createElement('input');
-                        lngInput.type = 'hidden';
-                        lngInput.className = 'fieldset-lng';
-                        fieldset.appendChild(latInput);
-                        fieldset.appendChild(lngInput);
+                        var addrLatInput = document.createElement('input');
+                        addrLatInput.type = 'hidden';
+                        addrLatInput.className = 'fieldset-lat';
+                        var addrLngInput = document.createElement('input');
+                        addrLngInput.type = 'hidden';
+                        addrLngInput.className = 'fieldset-lng';
+                        fieldset.appendChild(addrLatInput);
+                        fieldset.appendChild(addrLngInput);
+                        // Status indicator
+                        var addrStatus = document.createElement('div');
+                        addrStatus.className = 'fieldset-location-status';
+                        fieldset.appendChild(addrStatus);
+                        // Init Google Places
+                        initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrStatus);
+                        break;
+                        
+                    case 'city':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var cityInputEl = document.createElement('input');
+                        cityInputEl.type = 'text';
+                        cityInputEl.className = 'fieldset-input';
+                        cityInputEl.placeholder = placeholder || 'Search for city or town...';
+                        fieldset.appendChild(cityInputEl);
+                        // Hidden lat/lng fields
+                        var cityLatInput = document.createElement('input');
+                        cityLatInput.type = 'hidden';
+                        cityLatInput.className = 'fieldset-lat';
+                        var cityLngInput = document.createElement('input');
+                        cityLngInput.type = 'hidden';
+                        cityLngInput.className = 'fieldset-lng';
+                        fieldset.appendChild(cityLatInput);
+                        fieldset.appendChild(cityLngInput);
+                        // Status indicator
+                        var cityStatus = document.createElement('div');
+                        cityStatus.className = 'fieldset-location-status';
+                        fieldset.appendChild(cityStatus);
+                        // Init Google Places (cities only)
+                        initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityStatus);
                         break;
                         
                     case 'website-url':
@@ -530,29 +731,57 @@
                     case 'venue-ticketing':
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
-                        // Venue name row
+                        // Hidden lat/lng fields for venue
+                        var venueLatInput = document.createElement('input');
+                        venueLatInput.type = 'hidden';
+                        venueLatInput.className = 'fieldset-lat';
+                        var venueLngInput = document.createElement('input');
+                        venueLngInput.type = 'hidden';
+                        venueLngInput.className = 'fieldset-lng';
+                        
+                        // Venue name row (POI search)
                         var venueSub = document.createElement('div');
                         venueSub.className = 'fieldset-sublabel';
-                        venueSub.textContent = 'Venue Name';
+                        venueSub.textContent = 'Venue Name (search for business/venue)';
                         fieldset.appendChild(venueSub);
                         var venueInput = document.createElement('input');
                         venueInput.type = 'text';
                         venueInput.className = 'fieldset-input';
                         venueInput.placeholder = 'eg. Sydney Opera House';
-                        venueInput.style.marginBottom = '10px';
+                        venueInput.style.marginBottom = '4px';
                         fieldset.appendChild(venueInput);
                         
-                        // Address row
-                        var addrSub = document.createElement('div');
-                        addrSub.className = 'fieldset-sublabel';
-                        addrSub.textContent = 'Address';
-                        fieldset.appendChild(addrSub);
-                        var addrInput = document.createElement('input');
-                        addrInput.type = 'text';
-                        addrInput.className = 'fieldset-input';
-                        addrInput.placeholder = 'Search for address...';
-                        addrInput.style.marginBottom = '10px';
-                        fieldset.appendChild(addrInput);
+                        // Venue status
+                        var venueStatus = document.createElement('div');
+                        venueStatus.className = 'fieldset-location-status';
+                        venueStatus.style.marginBottom = '10px';
+                        fieldset.appendChild(venueStatus);
+                        
+                        // Address row (address search - if venue not found)
+                        var vtAddrSub = document.createElement('div');
+                        vtAddrSub.className = 'fieldset-sublabel';
+                        vtAddrSub.textContent = 'Or search by address';
+                        fieldset.appendChild(vtAddrSub);
+                        var vtAddrInput = document.createElement('input');
+                        vtAddrInput.type = 'text';
+                        vtAddrInput.className = 'fieldset-input';
+                        vtAddrInput.placeholder = 'Search for address...';
+                        vtAddrInput.style.marginBottom = '4px';
+                        fieldset.appendChild(vtAddrInput);
+                        
+                        // Address status
+                        var vtAddrStatus = document.createElement('div');
+                        vtAddrStatus.className = 'fieldset-location-status';
+                        vtAddrStatus.style.marginBottom = '10px';
+                        fieldset.appendChild(vtAddrStatus);
+                        
+                        fieldset.appendChild(venueLatInput);
+                        fieldset.appendChild(venueLngInput);
+                        
+                        // Init Google Places for venue (establishment/POI)
+                        initGooglePlaces(venueInput, 'establishment', venueLatInput, venueLngInput, venueStatus);
+                        // Init Google Places for address fallback
+                        initGooglePlaces(vtAddrInput, 'address', venueLatInput, venueLngInput, vtAddrStatus);
                         
                         // Date/Time row
                         var dtRow = document.createElement('div');
