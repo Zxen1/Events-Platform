@@ -580,6 +580,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 10px;
+        }
+        .formbuilder-field-editpanel-row:last-child {
+            margin-bottom: 0;
         }
         .formbuilder-field-required-label {
             display: flex;
@@ -728,6 +732,7 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
+            width: 100%;
             height: 36px;
             background: #222;
             border: 1px solid #222222;
@@ -735,6 +740,7 @@
             color: #888;
             cursor: pointer;
             font-size: 13px;
+            box-sizing: border-box;
         }
         .formbuilder-field-option-add:hover {
             border-color: #3b82f5;
@@ -1225,7 +1231,57 @@
                         var fieldEditPanel = document.createElement('div');
                         fieldEditPanel.className = 'formbuilder-field-editpanel';
                         
-                        // If editable, add name, placeholder, tooltip, and options inputs
+                        // Required checkbox and 3-dot menu row (always on top)
+                        var editRow = document.createElement('div');
+                        editRow.className = 'formbuilder-field-editpanel-row';
+                        
+                        var requiredLabel = document.createElement('label');
+                        requiredLabel.className = 'formbuilder-field-required-label';
+                        
+                        var requiredCheckbox = document.createElement('input');
+                        requiredCheckbox.type = 'checkbox';
+                        requiredCheckbox.className = 'formbuilder-field-required-checkbox';
+                        requiredCheckbox.checked = isRequired;
+                        if (isRequired) {
+                            fieldWrapper.classList.add('formbuilder-field-wrapper--required');
+                        }
+                        requiredCheckbox.onchange = function() {
+                            if (requiredCheckbox.checked) {
+                                fieldWrapper.classList.add('formbuilder-field-wrapper--required');
+                            } else {
+                                fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
+                            }
+                        };
+                        
+                        requiredLabel.appendChild(requiredCheckbox);
+                        requiredLabel.appendChild(document.createTextNode('Required'));
+                        
+                        var fieldMoreBtn = document.createElement('div');
+                        fieldMoreBtn.className = 'formbuilder-field-more';
+                        fieldMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
+                        
+                        fieldMoreBtn.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            var wasOpen = fieldMoreBtn.classList.contains('open');
+                            closeAllMenus();
+                            if (!wasOpen) fieldMoreBtn.classList.add('open');
+                        });
+                        
+                        var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
+                        fieldDeleteItem.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            fieldWrapper.remove();
+                            addedFieldsets[fsId] = false;
+                            // Re-enable the menu option
+                            var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                            if (menuOpt) menuOpt.classList.remove('disabled');
+                        });
+                        
+                        editRow.appendChild(requiredLabel);
+                        editRow.appendChild(fieldMoreBtn);
+                        fieldEditPanel.appendChild(editRow);
+                        
+                        // If editable, add name, options, placeholder, tooltip inputs (after the required row)
                         if (isEditable) {
                             // Name input
                             var nameLabel = document.createElement('label');
@@ -1242,30 +1298,6 @@
                             };
                             fieldEditPanel.appendChild(nameLabel);
                             fieldEditPanel.appendChild(nameInput);
-                            
-                            // Placeholder input
-                            var placeholderLabel = document.createElement('label');
-                            placeholderLabel.className = 'formbuilder-field-label';
-                            placeholderLabel.textContent = 'Placeholder';
-                            var placeholderInput = document.createElement('input');
-                            placeholderInput.type = 'text';
-                            placeholderInput.className = 'formbuilder-field-input';
-                            placeholderInput.placeholder = 'Placeholder text';
-                            placeholderInput.value = fieldData.placeholder || '';
-                            fieldEditPanel.appendChild(placeholderLabel);
-                            fieldEditPanel.appendChild(placeholderInput);
-                            
-                            // Tooltip input
-                            var tooltipLabel = document.createElement('label');
-                            tooltipLabel.className = 'formbuilder-field-label';
-                            tooltipLabel.textContent = 'Tooltip';
-                            var tooltipInput = document.createElement('input');
-                            tooltipInput.type = 'text';
-                            tooltipInput.className = 'formbuilder-field-input';
-                            tooltipInput.placeholder = 'Tooltip text';
-                            tooltipInput.value = fieldData.tooltip || '';
-                            fieldEditPanel.appendChild(tooltipLabel);
-                            fieldEditPanel.appendChild(tooltipInput);
                             
                             // Options with +/- buttons (only for dropdown and radio fieldsets)
                             var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.key || '';
@@ -1325,56 +1357,31 @@
                                 optionsContainer.appendChild(addBtn);
                                 fieldEditPanel.appendChild(optionsContainer);
                             }
+                            
+                            // Placeholder input
+                            var placeholderLabel = document.createElement('label');
+                            placeholderLabel.className = 'formbuilder-field-label';
+                            placeholderLabel.textContent = 'Placeholder';
+                            var placeholderInput = document.createElement('input');
+                            placeholderInput.type = 'text';
+                            placeholderInput.className = 'formbuilder-field-input';
+                            placeholderInput.placeholder = 'Placeholder text';
+                            placeholderInput.value = fieldData.placeholder || '';
+                            fieldEditPanel.appendChild(placeholderLabel);
+                            fieldEditPanel.appendChild(placeholderInput);
+                            
+                            // Tooltip input
+                            var tooltipLabel = document.createElement('label');
+                            tooltipLabel.className = 'formbuilder-field-label';
+                            tooltipLabel.textContent = 'Tooltip';
+                            var tooltipInput = document.createElement('input');
+                            tooltipInput.type = 'text';
+                            tooltipInput.className = 'formbuilder-field-input';
+                            tooltipInput.placeholder = 'Tooltip text';
+                            tooltipInput.value = fieldData.tooltip || fieldData.fieldset_tooltip || '';
+                            fieldEditPanel.appendChild(tooltipLabel);
+                            fieldEditPanel.appendChild(tooltipInput);
                         }
-                        
-                        var editRow = document.createElement('div');
-                        editRow.className = 'formbuilder-field-editpanel-row';
-                        
-                        var requiredLabel = document.createElement('label');
-                        requiredLabel.className = 'formbuilder-field-required-label';
-                        
-                        var requiredCheckbox = document.createElement('input');
-                        requiredCheckbox.type = 'checkbox';
-                        requiredCheckbox.className = 'formbuilder-field-required-checkbox';
-                        requiredCheckbox.checked = isRequired;
-                        if (isRequired) {
-                            fieldWrapper.classList.add('formbuilder-field-wrapper--required');
-                        }
-                        requiredCheckbox.onchange = function() {
-                            if (requiredCheckbox.checked) {
-                                fieldWrapper.classList.add('formbuilder-field-wrapper--required');
-                            } else {
-                                fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
-                            }
-                        };
-                        
-                        requiredLabel.appendChild(requiredCheckbox);
-                        requiredLabel.appendChild(document.createTextNode('Required'));
-                        
-                        var fieldMoreBtn = document.createElement('div');
-                        fieldMoreBtn.className = 'formbuilder-field-more';
-                        fieldMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
-                        
-                        fieldMoreBtn.addEventListener('click', function(ev) {
-                            ev.stopPropagation();
-                            var wasOpen = fieldMoreBtn.classList.contains('open');
-                            closeAllMenus();
-                            if (!wasOpen) fieldMoreBtn.classList.add('open');
-                        });
-                        
-                        var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
-                        fieldDeleteItem.addEventListener('click', function(ev) {
-                            ev.stopPropagation();
-                            fieldWrapper.remove();
-                            addedFieldsets[fsId] = false;
-                            // Re-enable the menu option
-                            var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                            if (menuOpt) menuOpt.classList.remove('disabled');
-                        });
-                        
-                        editRow.appendChild(requiredLabel);
-                        editRow.appendChild(fieldMoreBtn);
-                        fieldEditPanel.appendChild(editRow);
                         
                         fieldWrapper.appendChild(field);
                         fieldWrapper.appendChild(fieldEditPanel);
