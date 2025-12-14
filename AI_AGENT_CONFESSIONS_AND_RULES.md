@@ -853,6 +853,30 @@ When the website fails to load or loads extremely slowly, check these causes in 
 7. **User browser error** - Browser cache, extensions, or browser-specific issues
 8. **User router error** - Local network/router issues, DNS cache
 
+#### Network Troubleshooting (for router/network issues)
+
+**User's Network Setup:**
+- Optus-issued router connected to NBN device and phone line
+- PC connected via both ethernet and WiFi from TP Link mesh devices
+- When issue occurs, WiFi devices (including phone) are also ultra slow until switching to 5G Telstra
+
+**Quick Tests Before Router Reset:**
+```
+# Run in Command Prompt as Administrator:
+ipconfig /flushdns
+ipconfig /release
+ipconfig /renew
+```
+If this fixes it → DNS cache issue (no router reset needed)
+
+**Possible Causes:**
+- DNS cache corruption on router
+- QUIC connection state cached in router becoming invalid
+- Router NAT table stuck connections
+- Cloudflare edge caching interaction with router
+
+**Pattern:** Issue self-resolves after some time, or immediately after router restart.
+
 **IMPORTANT:** Before blaming infrastructure (Cloudflare, hosting, etc.), CHECK THE CODE FIRST. 100% of the time it has been code changes that caused issues, not infrastructure.
 
 ---
