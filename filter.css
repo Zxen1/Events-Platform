@@ -1379,6 +1379,7 @@
 .google-places-geocoder input{
   background:#ffffff;
   color:#000000;
+  caret-color:#000000;
   border:none;
   border-radius:8px;
   flex:1 1 auto;

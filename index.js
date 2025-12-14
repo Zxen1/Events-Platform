@@ -25105,7 +25105,7 @@ function openPanel(m){
         const input = document.createElement('input');
         input.type = 'text';
         input.placeholder = 'Search for a location...';
-        input.style.cssText = 'background:transparent;color:#fff;';
+        input.style.cssText = 'background:transparent;color:#fff;caret-color:#fff;';
         input.setAttribute('autocomplete', 'off');
         wrapper.appendChild(input);
         startingGeocoderContainer.appendChild(wrapper);
