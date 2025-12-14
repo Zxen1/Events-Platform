@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 15, 2025 at 08:38 AM
+-- Generation Time: Dec 15, 2025 at 09:31 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -378,8 +378,6 @@ CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `field_key` varchar(255) DEFAULT NULL,
   `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `field_icon` varchar(100) DEFAULT NULL,
-  `field_description` varchar(500) DEFAULT NULL,
   `min_length` int(11) DEFAULT NULL,
   `max_length` int(11) DEFAULT NULL,
   `show_limit` tinyint(1) DEFAULT 1,
@@ -391,32 +389,33 @@ CREATE TABLE `fields` (
 -- Dumping data for table `fields`
 --
 
-INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_icon`, `field_description`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
-(1, 'title', 'text', NULL, NULL, 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(2, 'description', 'textarea', NULL, NULL, 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(3, 'images', 'images', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(4, 'venue-name', 'text', NULL, NULL, 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
-(5, 'address-line', 'text', NULL, NULL, 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(6, 'latitude', 'decimal', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
-(7, 'longitude', 'decimal', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
-(8, 'session-date', 'date', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:22'),
-(9, 'session-time', 'time', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:27'),
-(10, 'seating-area', 'text', NULL, NULL, 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:44'),
-(11, 'pricing-tier', 'text', NULL, NULL, 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
-(12, 'ticket-price', 'decimal(10,2)', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
-(13, 'currency', 'dropdown', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(14, 'text-box', 'text', NULL, NULL, 3, 500, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:12'),
-(15, 'text-area', 'textarea', NULL, NULL, 10, 2000, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:18'),
-(16, 'dropdown', 'dropdown', NULL, NULL, 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
-(17, 'radio', 'radio', NULL, NULL, 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
-(18, 'email', 'email', NULL, NULL, 5, 254, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(19, 'phone', 'tel', NULL, NULL, 6, 30, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(20, 'website', 'url', NULL, NULL, 5, 500, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(21, 'item-name', 'text', NULL, NULL, 2, 200, 1, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
-(23, 'item-price', 'decimal(10,2)', NULL, NULL, 1, 50, 0, '2025-10-30 18:39:14', '2025-12-08 01:15:56'),
-(28, 'phone-prefix', 'dropdown', NULL, NULL, 1, 10, 0, '2025-12-08 03:17:25', '2025-12-08 03:17:25'),
-(35, 'city', 'text', NULL, 'City or town for your listing location', 2, 200, 0, '2025-12-15 02:49:27', '2025-12-15 02:49:27'),
-(36, 'amenities', 'checklist', NULL, 'Amenities checklist', 0, 100, 0, '2025-12-15 06:13:31', '2025-12-15 06:13:31');
+INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
+(1, 'title', 'text', 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(2, 'description', 'textarea', 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(3, 'images', 'images', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(4, 'venue-name', 'text', 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
+(5, 'address-line', 'text', 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(6, 'latitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
+(7, 'longitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
+(8, 'session-date', 'date', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:22'),
+(9, 'session-time', 'time', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:27'),
+(10, 'seating-area', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:44'),
+(11, 'pricing-tier', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
+(12, 'ticket-price', 'decimal(10,2)', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
+(13, 'currency', 'dropdown', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(14, 'text-box', 'text', 3, 500, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:12'),
+(15, 'text-area', 'textarea', 10, 2000, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:18'),
+(16, 'dropdown', 'dropdown', 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
+(17, 'radio', 'radio', 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
+(18, 'email', 'email', 5, 254, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(19, 'phone', 'tel', 6, 30, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(20, 'website', 'url', 5, 500, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(21, 'item-name', 'text', 2, 200, 1, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
+(23, 'item-price', 'decimal(10,2)', 1, 50, 0, '2025-10-30 18:39:14', '2025-12-08 01:15:56'),
+(28, 'phone-prefix', 'dropdown', 1, 10, 0, '2025-12-08 03:17:25', '2025-12-08 03:17:25'),
+(37, 'item-variant', 'text', 2, 200, 1, '2025-12-15 09:26:00', '2025-12-15 09:26:00'),
+(35, 'city', 'text', 2, 200, 0, '2025-12-15 02:49:27', '2025-12-15 02:49:27'),
+(36, 'amenities', 'checklist', 0, 100, 0, '2025-12-15 06:13:31', '2025-12-15 06:13:31');
 
 -- --------------------------------------------------------
 
@@ -456,11 +455,13 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (11, 'tickets-url', '[\"website\"]', 'Tickets (URL)', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(14, 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(14, 'item-pricing', '[\"item-name\", \"item-variant\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-14 22:26:00'),
 (15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-14 16:12:06'),
 (16, 'city', '[\"city\", \"latitude\", \"longitude\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 0, 9, '2025-12-14 15:49:27', '2025-12-14 15:49:27'),
 (17, 'venue', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\"]', 'Venue', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', 0, 9, '2025-12-14 18:30:38', '2025-12-14 18:30:38'),
-(18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 0, 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31');
+(18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 0, 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31'),
+(19, 'ticket-pricing', '[\"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Ticket Pricing', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', 0, 19, '2025-12-14 22:26:00', '2025-12-14 22:26:00'),
+(20, 'session', '[\"session-date\", \"session-time\"]', 'Session', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times for your event.', 0, 20, '2025-12-14 22:26:00', '2025-12-14 22:26:00');
 
 -- --------------------------------------------------------
 
@@ -1564,13 +1565,13 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT for table `fields`
 --
 ALTER TABLE `fields`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `fieldsets`
 --
 ALTER TABLE `fieldsets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`
