@@ -271,9 +271,9 @@
         .fieldset-calendar-day.selected.today { color: #ff0000; }
         .fieldset-calendar-today-marker {
             position: absolute;
-            bottom: 3px;
-            width: 12px;
-            height: 12px;
+            bottom: 0;
+            width: 8px;
+            height: 8px;
             background: #ff0000;
             border-radius: 50%;
             cursor: pointer;
@@ -1196,7 +1196,7 @@
                                 calScroll.scrollLeft = todayMonthEl.offsetLeft;
                             }
                             var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
-                            var markerPos = markerFraction * (calContainer.clientWidth - 12);
+                            var markerPos = markerFraction * (calContainer.clientWidth - 8);
                             marker.style.left = markerPos + 'px';
                         }, 0);
                         
