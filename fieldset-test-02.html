@@ -201,82 +201,81 @@
         .fieldset-date::-webkit-calendar-picker-indicator,
         .fieldset-time::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         
-        /* Horizontal scrolling calendar */
-        .fieldset-calendar-container {
+        /* Calendar picker */
+        .fieldset-calendar {
             width: 100%;
-            overflow: hidden;
             background: #222;
             border: 1px solid #333;
             border-radius: 4px;
-            position: relative;
+            padding: 10px;
             margin-bottom: 10px;
         }
-        .fieldset-calendar-scroll {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-        }
-        .fieldset-calendar {
-            display: flex;
-            width: max-content;
-        }
-        .fieldset-calendar-month {
-            flex: 0 0 auto;
-            width: 250px;
-        }
-        .fieldset-calendar-month:not(:first-child) {
-            border-left: 1px solid #1a1a1a;
-        }
         .fieldset-calendar-header {
-            height: 34px;
-            line-height: 34px;
-            text-align: center;
-            font-size: 13px;
-            font-weight: bold;
-            background: #2e3a72;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
         }
-        .fieldset-calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-        }
-        .fieldset-calendar-weekday, .fieldset-calendar-day {
-            height: 34px;
+        .fieldset-calendar-nav {
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
-        }
-        .fieldset-calendar-weekday { font-weight: bold; }
-        .fieldset-calendar-day { cursor: pointer; }
-        .fieldset-calendar-day.empty { cursor: default; background: #222; }
-        .fieldset-calendar-day.past { background: #1a1a1a; color: #808080; }
-        .fieldset-calendar-day.past:hover { background: #333; }
-        .fieldset-calendar-day.future { background: #222; }
-        .fieldset-calendar-day.future:hover { background: #333; }
-        .fieldset-calendar-day.today { color: #ff0000; font-weight: bold; }
-        .fieldset-calendar-day.selected { background: #2e3a72; color: #fff; }
-        .fieldset-calendar-day.selected.today { color: #ff0000; }
-        .fieldset-calendar-today-marker {
-            position: absolute;
-            bottom: 3px;
-            width: 12px;
-            height: 12px;
-            background: #ff0000;
-            border-radius: 50%;
+            background: #333;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
             cursor: pointer;
-            z-index: 10;
+            font-size: 16px;
         }
+        .fieldset-calendar-nav:hover { background: #3b82f5; }
+        .fieldset-calendar-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .fieldset-calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 4px;
+        }
+        .fieldset-calendar-weekday {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            padding: 4px 0;
+        }
+        .fieldset-calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .fieldset-calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #888;
+            background: #1a1a1a;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .fieldset-calendar-day:hover { background: #333; color: #fff; }
+        .fieldset-calendar-day.other-month { color: #444; }
+        .fieldset-calendar-day.today { border: 1px solid #3b82f5; }
+        .fieldset-calendar-day.past { color: #444; cursor: not-allowed; }
+        .fieldset-calendar-day.past:hover { background: #1a1a1a; color: #444; }
+        .fieldset-calendar-day.selected { background: #3b82f5; color: #fff; }
+        .fieldset-calendar-day.selected:hover { background: #2563eb; }
         
         /* Session rows (auto-generated from calendar) */
         .fieldset-sessions {
             display: flex;
             flex-direction: column;
             gap: 8px;
-        }
-        .fieldset-session-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
         }
         .fieldset-session-row {
             display: flex;
@@ -294,15 +293,12 @@
             font-size: 13px;
             display: flex;
             align-items: center;
-        }
-        .fieldset-session-date-spacer {
-            flex: 1;
-            height: 36px;
+            cursor: not-allowed;
         }
         .fieldset-session-time {
             flex: 0 0 100px;
         }
-        .fieldset-session-add {
+        .fieldset-session-remove {
             width: 32px;
             height: 32px;
             display: flex;
@@ -313,9 +309,9 @@
             border-radius: 4px;
             color: #666;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
         }
-        .fieldset-session-add:hover { border-color: #3b82f5; color: #3b82f5; }
+        .fieldset-session-remove:hover { border-color: #f87171; color: #f87171; }
         
         /* Section divider */
         .fieldset-divider {
@@ -1062,228 +1058,188 @@
                         break;
                         
                     case 'session':
-                        // Horizontal scrolling calendar + auto-generated session rows
+                        // Calendar picker + auto-generated session rows
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
-                        // Track selected dates and their times: { '2025-01-15': ['19:00', '14:00'], ... }
-                        var sessionData = {};
-                        
-                        var today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        var todayIso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-                        
-                        var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                        var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
-                        
-                        var todayMonthEl = null;
-                        var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                        
-                        function toISODate(d) {
-                            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                        }
+                        var selectedDates = [];
+                        var currentMonth = new Date();
+                        currentMonth.setDate(1);
                         
                         // Calendar container
-                        var calContainer = document.createElement('div');
-                        calContainer.className = 'fieldset-calendar-container';
-                        
-                        var calScroll = document.createElement('div');
-                        calScroll.className = 'fieldset-calendar-scroll';
-                        
                         var calendar = document.createElement('div');
                         calendar.className = 'fieldset-calendar';
                         
-                        // Build months
-                        var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-                        while (current <= maxDate) {
-                            var monthEl = document.createElement('div');
-                            monthEl.className = 'fieldset-calendar-month';
-                            
-                            var header = document.createElement('div');
-                            header.className = 'fieldset-calendar-header';
-                            header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-                            monthEl.appendChild(header);
-                            
-                            var grid = document.createElement('div');
-                            grid.className = 'fieldset-calendar-grid';
-                            
-                            weekdayNames.forEach(function(wd) {
-                                var w = document.createElement('div');
-                                w.className = 'fieldset-calendar-weekday';
-                                w.textContent = wd;
-                                grid.appendChild(w);
-                            });
-                            
-                            var firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
-                            var startDow = firstDay.getDay();
-                            var daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
-                            
-                            for (var i = 0; i < 42; i++) {
-                                var cell = document.createElement('div');
-                                cell.className = 'fieldset-calendar-day';
-                                var dayNum = i - startDow + 1;
-                                
-                                if (i < startDow || dayNum > daysInMonth) {
-                                    cell.classList.add('empty');
-                                } else {
-                                    cell.textContent = dayNum;
-                                    var dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
-                                    dateObj.setHours(0, 0, 0, 0);
-                                    var iso = toISODate(dateObj);
-                                    cell.dataset.iso = iso;
-                                    
-                                    if (dateObj < today) {
-                                        cell.classList.add('past');
-                                    } else {
-                                        cell.classList.add('future');
-                                    }
-                                    
-                                    if (iso === todayIso) {
-                                        cell.classList.add('today');
-                                        todayMonthEl = monthEl;
-                                    }
-                                }
-                                grid.appendChild(cell);
-                            }
-                            
-                            monthEl.appendChild(grid);
-                            calendar.appendChild(monthEl);
-                            current.setMonth(current.getMonth() + 1);
-                        }
+                        // Calendar header (nav + title)
+                        var calHeader = document.createElement('div');
+                        calHeader.className = 'fieldset-calendar-header';
                         
-                        calScroll.appendChild(calendar);
-                        calContainer.appendChild(calScroll);
+                        var prevBtn = document.createElement('button');
+                        prevBtn.type = 'button';
+                        prevBtn.className = 'fieldset-calendar-nav';
+                        prevBtn.textContent = '‹';
                         
-                        // Today marker
-                        var marker = document.createElement('div');
-                        marker.className = 'fieldset-calendar-today-marker';
-                        calContainer.appendChild(marker);
+                        var calTitle = document.createElement('div');
+                        calTitle.className = 'fieldset-calendar-title';
                         
-                        fieldset.appendChild(calContainer);
+                        var nextBtn = document.createElement('button');
+                        nextBtn.type = 'button';
+                        nextBtn.className = 'fieldset-calendar-nav';
+                        nextBtn.textContent = '›';
+                        
+                        calHeader.appendChild(prevBtn);
+                        calHeader.appendChild(calTitle);
+                        calHeader.appendChild(nextBtn);
+                        calendar.appendChild(calHeader);
+                        
+                        // Weekday headers
+                        var weekdays = document.createElement('div');
+                        weekdays.className = 'fieldset-calendar-weekdays';
+                        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(function(d) {
+                            var wd = document.createElement('div');
+                            wd.className = 'fieldset-calendar-weekday';
+                            wd.textContent = d;
+                            weekdays.appendChild(wd);
+                        });
+                        calendar.appendChild(weekdays);
+                        
+                        // Days grid
+                        var daysGrid = document.createElement('div');
+                        daysGrid.className = 'fieldset-calendar-days';
+                        calendar.appendChild(daysGrid);
+                        
+                        fieldset.appendChild(calendar);
                         
                         // Sessions container (below calendar)
                         var sessionsContainer = document.createElement('div');
                         sessionsContainer.className = 'fieldset-sessions';
                         fieldset.appendChild(sessionsContainer);
                         
-                        // Position marker and scroll to today
-                        setTimeout(function() {
-                            if (todayMonthEl) {
-                                calScroll.scrollLeft = todayMonthEl.offsetLeft;
+                        // Render calendar for current month
+                        function renderCalendar() {
+                            var year = currentMonth.getFullYear();
+                            var month = currentMonth.getMonth();
+                            var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                            calTitle.textContent = monthNames[month] + ' ' + year;
+                            
+                            daysGrid.innerHTML = '';
+                            
+                            var firstDay = new Date(year, month, 1);
+                            var lastDay = new Date(year, month + 1, 0);
+                            var startDay = firstDay.getDay();
+                            var today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            
+                            // Previous month padding
+                            var prevMonth = new Date(year, month, 0);
+                            for (var i = startDay - 1; i >= 0; i--) {
+                                var dayEl = document.createElement('div');
+                                dayEl.className = 'fieldset-calendar-day other-month past';
+                                dayEl.textContent = prevMonth.getDate() - i;
+                                daysGrid.appendChild(dayEl);
                             }
-                            var markerPos = (13 / 37) * (calContainer.clientWidth - 12);
-                            marker.style.left = markerPos + 'px';
-                        }, 0);
-                        
-                        // Marker click - scroll to today
-                        marker.addEventListener('click', function() {
-                            if (todayMonthEl) {
-                                calScroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
-                            }
-                        });
-                        
-                        // Horizontal wheel scroll
-                        calScroll.addEventListener('wheel', function(e) {
-                            e.preventDefault();
-                            calScroll.scrollLeft += e.deltaY || e.deltaX;
-                        });
-                        
-                        // Update selected state on all calendar days
-                        function updateCalendarSelection() {
-                            calendar.querySelectorAll('.fieldset-calendar-day').forEach(function(cell) {
-                                var iso = cell.dataset.iso;
-                                if (iso && sessionData[iso]) {
-                                    cell.classList.add('selected');
-                                } else if (iso) {
-                                    cell.classList.remove('selected');
+                            
+                            // Current month days
+                            for (var d = 1; d <= lastDay.getDate(); d++) {
+                                var dayEl = document.createElement('div');
+                                dayEl.className = 'fieldset-calendar-day';
+                                dayEl.textContent = d;
+                                
+                                var thisDate = new Date(year, month, d);
+                                var dateStr = thisDate.toISOString().split('T')[0];
+                                dayEl.setAttribute('data-date', dateStr);
+                                
+                                if (thisDate < today) {
+                                    dayEl.classList.add('past');
+                                } else {
+                                    if (thisDate.getTime() === today.getTime()) {
+                                        dayEl.classList.add('today');
+                                    }
+                                    if (selectedDates.indexOf(dateStr) !== -1) {
+                                        dayEl.classList.add('selected');
+                                    }
+                                    
+                                    dayEl.addEventListener('click', function() {
+                                        var dt = this.getAttribute('data-date');
+                                        var idx = selectedDates.indexOf(dt);
+                                        if (idx === -1) {
+                                            selectedDates.push(dt);
+                                            selectedDates.sort();
+                                            this.classList.add('selected');
+                                        } else {
+                                            selectedDates.splice(idx, 1);
+                                            this.classList.remove('selected');
+                                        }
+                                        renderSessions();
+                                    });
                                 }
-                            });
+                                
+                                daysGrid.appendChild(dayEl);
+                            }
+                            
+                            // Next month padding
+                            var remaining = 42 - daysGrid.children.length;
+                            for (var i = 1; i <= remaining; i++) {
+                                var dayEl = document.createElement('div');
+                                dayEl.className = 'fieldset-calendar-day other-month';
+                                dayEl.textContent = i;
+                                daysGrid.appendChild(dayEl);
+                            }
                         }
                         
                         // Render session rows
                         function renderSessions() {
                             sessionsContainer.innerHTML = '';
                             
-                            var sortedDates = Object.keys(sessionData).sort();
-                            
-                            sortedDates.forEach(function(dateStr) {
-                                var times = sessionData[dateStr];
-                                var group = document.createElement('div');
-                                group.className = 'fieldset-session-group';
+                            selectedDates.forEach(function(dateStr) {
+                                var row = document.createElement('div');
+                                row.className = 'fieldset-session-row';
                                 
-                                times.forEach(function(timeVal, idx) {
-                                    var row = document.createElement('div');
-                                    row.className = 'fieldset-session-row';
-                                    
-                                    if (idx === 0) {
-                                        // First row: show date
-                                        var dateDisplay = document.createElement('div');
-                                        dateDisplay.className = 'fieldset-session-date';
-                                        var d = new Date(dateStr + 'T00:00:00');
-                                        dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-                                        row.appendChild(dateDisplay);
-                                    } else {
-                                        // Additional rows: spacer instead of date
-                                        var spacer = document.createElement('div');
-                                        spacer.className = 'fieldset-session-date-spacer';
-                                        row.appendChild(spacer);
+                                // Read-only date display
+                                var dateDisplay = document.createElement('div');
+                                dateDisplay.className = 'fieldset-session-date';
+                                var d = new Date(dateStr + 'T00:00:00');
+                                dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                
+                                // Time input
+                                var timeWrapper = document.createElement('div');
+                                timeWrapper.className = 'fieldset-session-time';
+                                var timeInput = document.createElement('input');
+                                timeInput.type = 'time';
+                                timeInput.className = 'fieldset-time';
+                                timeWrapper.appendChild(timeInput);
+                                
+                                // Remove button
+                                var removeBtn = document.createElement('button');
+                                removeBtn.type = 'button';
+                                removeBtn.className = 'fieldset-session-remove';
+                                removeBtn.textContent = '×';
+                                removeBtn.addEventListener('click', function() {
+                                    var idx = selectedDates.indexOf(dateStr);
+                                    if (idx !== -1) {
+                                        selectedDates.splice(idx, 1);
+                                        renderCalendar();
+                                        renderSessions();
                                     }
-                                    
-                                    // Time input
-                                    var timeWrapper = document.createElement('div');
-                                    timeWrapper.className = 'fieldset-session-time';
-                                    var timeInput = document.createElement('input');
-                                    timeInput.type = 'time';
-                                    timeInput.className = 'fieldset-time';
-                                    timeInput.value = timeVal;
-                                    timeInput.addEventListener('change', function() {
-                                        sessionData[dateStr][idx] = this.value;
-                                    });
-                                    timeWrapper.appendChild(timeInput);
-                                    row.appendChild(timeWrapper);
-                                    
-                                    // + button (only on last row of group)
-                                    if (idx === times.length - 1) {
-                                        var addBtn = document.createElement('button');
-                                        addBtn.type = 'button';
-                                        addBtn.className = 'fieldset-session-add';
-                                        addBtn.textContent = '+';
-                                        addBtn.addEventListener('click', function() {
-                                            sessionData[dateStr].push('');
-                                            renderSessions();
-                                        });
-                                        row.appendChild(addBtn);
-                                    } else {
-                                        // Empty spacer for alignment
-                                        var btnSpacer = document.createElement('div');
-                                        btnSpacer.style.width = '32px';
-                                        row.appendChild(btnSpacer);
-                                    }
-                                    
-                                    group.appendChild(row);
                                 });
                                 
-                                sessionsContainer.appendChild(group);
+                                row.appendChild(dateDisplay);
+                                row.appendChild(timeWrapper);
+                                row.appendChild(removeBtn);
+                                sessionsContainer.appendChild(row);
                             });
                         }
                         
-                        // Calendar day click (past dates allowed - timezone flexibility)
-                        calendar.addEventListener('click', function(e) {
-                            var day = e.target;
-                            if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
-                                var iso = day.dataset.iso;
-                                if (sessionData[iso]) {
-                                    // Deselect - remove date
-                                    delete sessionData[iso];
-                                    day.classList.remove('selected');
-                                } else {
-                                    // Select - add date with one empty time
-                                    sessionData[iso] = [''];
-                                    day.classList.add('selected');
-                                }
-                                renderSessions();
-                            }
+                        // Nav buttons
+                        prevBtn.addEventListener('click', function() {
+                            currentMonth.setMonth(currentMonth.getMonth() - 1);
+                            renderCalendar();
+                        });
+                        nextBtn.addEventListener('click', function() {
+                            currentMonth.setMonth(currentMonth.getMonth() + 1);
+                            renderCalendar();
                         });
                         
+                        renderCalendar();
                         break;
                         
                     case 'venue':
