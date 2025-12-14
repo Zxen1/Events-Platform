@@ -134,25 +134,25 @@ try {
         'settings' => $settings,
     ];
 
-    // Fetch general_options for dropdown settings
+    // Fetch picklist data for dropdown settings (currencies, phone prefixes, amenities, etc.)
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'general_options'");
+        $stmt = $pdo->query("SHOW TABLES LIKE 'picklist'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `sort_order` FROM `general_options` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `sort_order` FROM `picklist` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $optionRows = $stmt->fetchAll();
             
-            $generalOptions = [];
+            $picklist = [];
             foreach ($optionRows as $row) {
                 $group = $row['option_group'];
-                if (!isset($generalOptions[$group])) {
-                    $generalOptions[$group] = [];
+                if (!isset($picklist[$group])) {
+                    $picklist[$group] = [];
                 }
-                $generalOptions[$group][] = [
+                $picklist[$group][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
                 ];
             }
-            $response['general_options'] = $generalOptions;
+            $response['picklist'] = $picklist;
         }
     } catch (Throwable $optionsError) {
         // If options fail, don't break the whole response

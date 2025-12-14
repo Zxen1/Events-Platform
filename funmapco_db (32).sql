@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 15, 2025 at 06:14 AM
+-- Generation Time: Dec 15, 2025 at 06:39 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -371,10 +371,309 @@ CREATE TABLE `coupons` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `extra_options`
+-- Table structure for table `fields`
 --
 
-CREATE TABLE `extra_options` (
+CREATE TABLE `fields` (
+  `id` int(11) NOT NULL,
+  `field_key` varchar(255) DEFAULT NULL,
+  `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `field_icon` varchar(100) DEFAULT NULL,
+  `field_description` varchar(500) DEFAULT NULL,
+  `min_length` int(11) DEFAULT NULL,
+  `max_length` int(11) DEFAULT NULL,
+  `show_limit` tinyint(1) DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `fields`
+--
+
+INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_icon`, `field_description`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
+(1, 'title', 'text', NULL, NULL, 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(2, 'description', 'textarea', NULL, NULL, 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(3, 'images', 'images', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(4, 'venue-name', 'text', NULL, NULL, 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
+(5, 'address-line', 'text', NULL, NULL, 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
+(6, 'latitude', 'decimal', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
+(7, 'longitude', 'decimal', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
+(8, 'session-date', 'date', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:22'),
+(9, 'session-time', 'time', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:27'),
+(10, 'seating-area', 'text', NULL, NULL, 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:44'),
+(11, 'pricing-tier', 'text', NULL, NULL, 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
+(12, 'ticket-price', 'decimal(10,2)', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
+(13, 'currency', 'dropdown', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
+(14, 'text-box', 'text', NULL, NULL, 3, 500, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:12'),
+(15, 'text-area', 'textarea', NULL, NULL, 10, 2000, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:18'),
+(16, 'dropdown', 'dropdown', NULL, NULL, 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
+(17, 'radio', 'radio', NULL, NULL, 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
+(18, 'email', 'email', NULL, NULL, 5, 254, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(19, 'phone', 'tel', NULL, NULL, 6, 30, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(20, 'website', 'url', NULL, NULL, 5, 500, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
+(21, 'item-name', 'text', NULL, NULL, 2, 200, 1, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
+(23, 'item-price', 'decimal(10,2)', NULL, NULL, 1, 50, 0, '2025-10-30 18:39:14', '2025-12-08 01:15:56'),
+(28, 'phone-prefix', 'dropdown', NULL, NULL, 1, 10, 0, '2025-12-08 03:17:25', '2025-12-08 03:17:25'),
+(35, 'city', 'text', NULL, 'City or town for your listing location', 2, 200, 0, '2025-12-15 02:49:27', '2025-12-15 02:49:27'),
+(36, 'amenities', 'checklist', NULL, 'Amenities checklist', 0, 100, 0, '2025-12-15 06:13:31', '2025-12-15 06:13:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fieldsets`
+--
+
+CREATE TABLE `fieldsets` (
+  `id` int(11) NOT NULL,
+  `fieldset_key` varchar(255) DEFAULT NULL,
+  `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
+  `fieldset_name` varchar(255) NOT NULL,
+  `fieldset_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
+  `fieldset_placeholder` text DEFAULT NULL,
+  `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
+  `fieldset_editable` tinyint(1) DEFAULT NULL,
+  `sort_order` int(10) UNSIGNED DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `fieldsets`
+--
+
+INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `fieldset_editable`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 'title', '[\"title\"]', 'Title', NULL, 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(2, 'description', '[\"description\"]', 'Description', NULL, 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(3, 'text-box', '[\"text-box\"]', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
+(4, 'text-area', '[\"text-area\"]', 'Text Area (editable)', NULL, 'eg. Sing along!', 'Write more stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
+(5, 'dropdown', '[\"dropdown\"]', 'Dropdown (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:39'),
+(6, 'radio', '[\"radio\"]', 'Radio Toggle (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:45'),
+(7, 'email', '[\"email\"]', 'Email', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(8, 'phone', '[\"phone-prefix\", \"phone\"]', 'Phone', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, 8, '2025-10-29 19:03:05', '2025-12-07 16:17:25'),
+(9, 'address', '[\"address-line\", \"latitude\", \"longitude\"]', 'Address', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', 0, 9, '2025-10-29 19:03:05', '2025-12-14 15:49:27'),
+(10, 'website-url', '[\"website\"]', 'Website (URL)', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 0, 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(11, 'tickets-url', '[\"website\"]', 'Tickets (URL)', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(14, 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-14 16:12:06'),
+(16, 'city', '[\"city\", \"latitude\", \"longitude\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 0, 9, '2025-12-14 15:49:27', '2025-12-14 15:49:27'),
+(17, 'venue', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\"]', 'Venue', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', 0, 9, '2025-12-14 18:30:38', '2025-12-14 18:30:38'),
+(18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 0, 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_containers`
+--
+
+CREATE TABLE `layout_containers` (
+  `id` int(11) NOT NULL,
+  `tab_id` int(11) NOT NULL COMMENT 'References layout_tabs.id',
+  `tab_name` varchar(100) DEFAULT NULL COMMENT 'Display reference (denormalized for readability)',
+  `container_key` varchar(100) NOT NULL COMMENT 'HTML ID/class or invented key',
+  `container_name` varchar(100) NOT NULL COMMENT 'Display name',
+  `icon_path` varchar(255) DEFAULT NULL COMMENT 'Path to icon',
+  `sort_order` int(11) NOT NULL DEFAULT 1 COMMENT 'Order within tab',
+  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
+  `is_deletable` tinyint(1) DEFAULT 0 COMMENT 'Allow deletion (0=prevent delete, 1=allow delete)',
+  `is_collapsible` tinyint(1) DEFAULT 0 COMMENT 'Has dropdown/collapse UI',
+  `is_active` tinyint(1) DEFAULT 1 COMMENT 'System enable/disable (db-only)',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `layout_containers`
+--
+
+INSERT INTO `layout_containers` (`id`, `tab_id`, `tab_name`, `container_key`, `container_name`, `icon_path`, `sort_order`, `is_visible`, `is_deletable`, `is_collapsible`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 4, 'Messages', 'msg_user', 'User Messages', 'assets/admin-icons/user-messages.svg', 1, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(2, 4, 'Messages', 'msg_member', 'Member Messages', 'assets/admin-icons/member-messages.svg', 2, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(3, 4, 'Messages', 'msg_admin', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(4, 4, 'Messages', 'msg_email', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(5, 3, 'Map', 'map-spin-container', 'Map Spin Settings', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(6, 1, 'Settings', 'map_shadow_container', 'Map Shadow', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-24 15:02:52'),
+(7, 1, 'Settings', 'settings-welcome-container', 'Welcome Message', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(8, 1, 'Settings', 'settings-paypal-container', 'PayPal Settings', NULL, 3, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(9, 1, 'Settings', 'settings-icon-folders-container', 'Icon Folders', NULL, 4, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(10, 1, 'Settings', 'container_console_filter', 'Console Filter', NULL, 5, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(11, 8, 'Filter Panel', 'filter-basics-container', 'Filter Basics', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
+(12, 8, 'Filter Panel', 'filter-category-container', 'Filter Categories', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
+(13, 5, 'Create Post', 'member-create-selects', 'Category Selection', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
+(14, 5, 'Create Post', 'member-create-form', 'Post Form', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
+(15, 7, 'Profile', 'member-auth', 'Authentication', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
+(16, 9, 'Advert Panel', 'ad-panel', 'Advertisement Panel', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_rows`
+--
+
+CREATE TABLE `layout_rows` (
+  `id` int(11) NOT NULL,
+  `container_id` int(11) NOT NULL COMMENT 'References layout_containers.id',
+  `container_name` varchar(100) DEFAULT NULL COMMENT 'Display reference (denormalized for readability)',
+  `row_key` varchar(100) NOT NULL COMMENT 'row_icon_folder, row_spin_on_load',
+  `row_name` varchar(100) NOT NULL COMMENT 'Display name',
+  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
+  `is_deletable` tinyint(1) DEFAULT 0 COMMENT 'Allow deletion (0=prevent delete, 1=allow delete)',
+  `is_active` tinyint(1) DEFAULT 1 COMMENT 'System enable/disable (db-only)',
+  `metadata` text DEFAULT NULL COMMENT 'JSON for additional config',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `layout_rows`
+--
+
+INSERT INTO `layout_rows` (`id`, `container_id`, `container_name`, `row_key`, `row_name`, `is_visible`, `is_deletable`, `is_active`, `metadata`, `created_at`, `updated_at`) VALUES
+(1, 9, 'Icon Folders', 'row_icon_folder', 'Icon Folder', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(2, 9, 'Icon Folders', 'row_admin_icon_folder', 'Admin Icon Folder', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(3, 10, 'Console Filter', 'row_console_filter', 'Enable Console Filter', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(4, 6, 'Map Shadow', 'row_map_shadow', 'Map Shadow Slider', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-24 14:50:33'),
+(5, 7, 'Welcome Message', 'row_welcome_message', 'Welcome Message Editor', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(6, 8, 'PayPal Settings', 'row_paypal_client_id', 'PayPal Client ID', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(7, 8, 'PayPal Settings', 'row_paypal_secret', 'PayPal Client Secret', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(8, 5, 'Map Spin Settings', 'row_spin_on_load', 'Spin on Load', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(9, 5, 'Map Spin Settings', 'row_spin_on_logo', 'Spin on Logo', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(10, 5, 'Map Spin Settings', 'row_spin_type', 'Spin Type', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(11, 5, 'Map Spin Settings', 'row_spin_max_zoom', 'Spin Max Zoom', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(12, 5, 'Map Spin Settings', 'row_spin_speed', 'Spin Speed', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(13, 13, 'Category Selection', 'row_member_category', 'Category Dropdown', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(14, 13, 'Category Selection', 'row_member_subcategory', 'Subcategory Dropdown', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(15, 11, 'Filter Basics', 'row_filter_keyword', 'Keywords', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(16, 11, 'Filter Basics', 'row_filter_price', 'Price Range', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(17, 11, 'Filter Basics', 'row_filter_daterange', 'Date Range', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
+(18, 11, 'Filter Basics', 'row_filter_expired', 'Show Expired Events', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `layout_tabs`
+--
+
+CREATE TABLE `layout_tabs` (
+  `id` int(11) NOT NULL,
+  `tab_key` varchar(100) NOT NULL COMMENT 'admin_settings, member_create, etc.',
+  `panel_key` enum('admin','member','filter','advert') NOT NULL COMMENT 'Which panel this tab belongs to',
+  `tab_name` varchar(100) NOT NULL COMMENT 'Display name',
+  `sort_order` int(11) NOT NULL DEFAULT 1 COMMENT 'Order within panel',
+  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
+  `is_deletable` tinyint(1) DEFAULT 0 COMMENT 'Allow deletion (0=prevent delete, 1=allow delete)',
+  `is_active` tinyint(1) DEFAULT 1 COMMENT 'System enable/disable (db-only)',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `layout_tabs`
+--
+
+INSERT INTO `layout_tabs` (`id`, `tab_key`, `panel_key`, `tab_name`, `sort_order`, `is_visible`, `is_deletable`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'admin_settings', 'admin', 'Settings', 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(2, 'admin_forms', 'admin', 'Forms', 2, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(3, 'admin_map', 'admin', 'Map', 3, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(4, 'admin_messages', 'admin', 'Messages', 4, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(5, 'member_create', 'member', 'Create Post', 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(6, 'member_myposts', 'member', 'My Posts', 2, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(7, 'member_profile', 'member', 'Profile', 3, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
+(8, 'filter_main', 'filter', 'Filter Panel', 1, 1, 0, 1, '2025-11-13 15:24:48', '2025-11-13 16:46:33'),
+(9, 'advert_main', 'advert', 'Advert Panel', 1, 1, 0, 1, '2025-11-13 15:24:48', '2025-11-13 16:46:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `logs`
+--
+
+CREATE TABLE `logs` (
+  `id` int(11) NOT NULL,
+  `actor_type` enum('admin','member','codex','system') DEFAULT 'codex',
+  `actor_id` int(11) DEFAULT NULL,
+  `action` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `media`
+--
+
+CREATE TABLE `media` (
+  `id` int(11) NOT NULL,
+  `member_id` int(11) DEFAULT NULL,
+  `post_id` int(11) DEFAULT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_url` varchar(500) DEFAULT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `uploaded_at` datetime DEFAULT current_timestamp(),
+  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `members`
+--
+
+CREATE TABLE `members` (
+  `id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `display_name` varchar(255) DEFAULT NULL,
+  `member_key` varchar(255) DEFAULT NULL,
+  `avatar_url` varchar(255) DEFAULT NULL,
+  `theme` varchar(20) DEFAULT NULL,
+  `language` varchar(10) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `members`
+--
+
+INSERT INTO `members` (`id`, `email`, `password_hash`, `display_name`, `member_key`, `avatar_url`, `theme`, `language`, `currency`, `created_at`, `backup_json`, `updated_at`) VALUES
+(1, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', 'testuser', NULL, NULL, NULL, NULL, '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
+(2, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'wikidata-/-wikipedia-(cc-by-sa-4.0)', 'assets/avatars/wikipedia.png', NULL, NULL, NULL, '2025-10-25 19:00:27', NULL, '2025-11-06 13:07:35'),
+(4, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', NULL, '', NULL, NULL, NULL, '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `moderation_log`
+--
+
+CREATE TABLE `moderation_log` (
+  `id` int(11) NOT NULL,
+  `post_id` int(11) DEFAULT NULL,
+  `post_title` varchar(255) DEFAULT NULL,
+  `moderator_id` int(11) DEFAULT NULL,
+  `moderator_name` varchar(255) DEFAULT NULL,
+  `action` varchar(50) DEFAULT NULL,
+  `reason` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `picklist`
+--
+
+CREATE TABLE `picklist` (
   `id` int(11) NOT NULL,
   `option_group` varchar(50) NOT NULL,
   `option_value` varchar(50) NOT NULL,
@@ -384,10 +683,10 @@ CREATE TABLE `extra_options` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `extra_options`
+-- Dumping data for table `picklist`
 --
 
-INSERT INTO `extra_options` (`id`, `option_group`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+INSERT INTO `picklist` (`id`, `option_group`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
 (1, 'currency', 'af AFN', 'Afghan Afghani', 1, 1),
 (2, 'currency', 'al ALL', 'Albanian Lek', 2, 1),
 (3, 'currency', 'dz DZD', 'Algerian Dinar', 3, 1),
@@ -772,305 +1071,6 @@ INSERT INTO `extra_options` (`id`, `option_group`, `option_value`, `option_label
 -- --------------------------------------------------------
 
 --
--- Table structure for table `fields`
---
-
-CREATE TABLE `fields` (
-  `id` int(11) NOT NULL,
-  `field_key` varchar(255) DEFAULT NULL,
-  `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `field_icon` varchar(100) DEFAULT NULL,
-  `field_description` varchar(500) DEFAULT NULL,
-  `min_length` int(11) DEFAULT NULL,
-  `max_length` int(11) DEFAULT NULL,
-  `show_limit` tinyint(1) DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `fields`
---
-
-INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_icon`, `field_description`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
-(1, 'title', 'text', NULL, NULL, 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(2, 'description', 'textarea', NULL, NULL, 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(3, 'images', 'images', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(4, 'venue-name', 'text', NULL, NULL, 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
-(5, 'address-line', 'text', NULL, NULL, 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(6, 'latitude', 'decimal', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
-(7, 'longitude', 'decimal', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
-(8, 'session-date', 'date', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:22'),
-(9, 'session-time', 'time', NULL, NULL, 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:27'),
-(10, 'seating-area', 'text', NULL, NULL, 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:44'),
-(11, 'pricing-tier', 'text', NULL, NULL, 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
-(12, 'ticket-price', 'decimal(10,2)', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
-(13, 'currency', 'dropdown', NULL, NULL, 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(14, 'text-box', 'text', NULL, NULL, 3, 500, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:12'),
-(15, 'text-area', 'textarea', NULL, NULL, 10, 2000, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:18'),
-(16, 'dropdown', 'dropdown', NULL, NULL, 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
-(17, 'radio', 'radio', NULL, NULL, 1, 500, 0, '2025-10-30 17:14:25', '2025-12-08 01:15:56'),
-(18, 'email', 'email', NULL, NULL, 5, 254, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(19, 'phone', 'tel', NULL, NULL, 6, 30, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(20, 'website', 'url', NULL, NULL, 5, 500, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(21, 'item-name', 'text', NULL, NULL, 2, 200, 1, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
-(23, 'item-price', 'decimal(10,2)', NULL, NULL, 1, 50, 0, '2025-10-30 18:39:14', '2025-12-08 01:15:56'),
-(28, 'phone-prefix', 'dropdown', NULL, NULL, 1, 10, 0, '2025-12-08 03:17:25', '2025-12-08 03:17:25'),
-(35, 'city', 'text', NULL, 'City or town for your listing location', 2, 200, 0, '2025-12-15 02:49:27', '2025-12-15 02:49:27'),
-(36, 'amenities', 'checklist', NULL, 'Amenities checklist', 0, 100, 0, '2025-12-15 06:13:31', '2025-12-15 06:13:31');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `fieldsets`
---
-
-CREATE TABLE `fieldsets` (
-  `id` int(11) NOT NULL,
-  `fieldset_key` varchar(255) DEFAULT NULL,
-  `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
-  `fieldset_name` varchar(255) NOT NULL,
-  `fieldset_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
-  `fieldset_placeholder` text DEFAULT NULL,
-  `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
-  `fieldset_editable` tinyint(1) DEFAULT NULL,
-  `sort_order` int(10) UNSIGNED DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `fieldsets`
---
-
-INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `fieldset_editable`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'title', '[\"title\"]', 'Title', NULL, 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 0, 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(2, 'description', '[\"description\"]', 'Description', NULL, 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 0, 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(3, 'text-box', '[\"text-box\"]', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
-(4, 'text-area', '[\"text-area\"]', 'Text Area (editable)', NULL, 'eg. Sing along!', 'Write more stuff here.', 1, 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
-(5, 'dropdown', '[\"dropdown\"]', 'Dropdown (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:39'),
-(6, 'radio', '[\"radio\"]', 'Radio Toggle (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:45'),
-(7, 'email', '[\"email\"]', 'Email', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(8, 'phone', '[\"phone-prefix\", \"phone\"]', 'Phone', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, 8, '2025-10-29 19:03:05', '2025-12-07 16:17:25'),
-(9, 'address', '[\"address-line\", \"latitude\", \"longitude\"]', 'Address', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', 0, 9, '2025-10-29 19:03:05', '2025-12-14 15:49:27'),
-(10, 'website-url', '[\"website\"]', 'Website (URL)', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 0, 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(11, 'tickets-url', '[\"website\"]', 'Tickets (URL)', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(14, 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-14 16:12:06'),
-(16, 'city', '[\"city\", \"latitude\", \"longitude\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 0, 9, '2025-12-14 15:49:27', '2025-12-14 15:49:27'),
-(17, 'venue', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\"]', 'Venue', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', 0, 9, '2025-12-14 18:30:38', '2025-12-14 18:30:38'),
-(18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 0, 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `layout_containers`
---
-
-CREATE TABLE `layout_containers` (
-  `id` int(11) NOT NULL,
-  `tab_id` int(11) NOT NULL COMMENT 'References layout_tabs.id',
-  `tab_name` varchar(100) DEFAULT NULL COMMENT 'Display reference (denormalized for readability)',
-  `container_key` varchar(100) NOT NULL COMMENT 'HTML ID/class or invented key',
-  `container_name` varchar(100) NOT NULL COMMENT 'Display name',
-  `icon_path` varchar(255) DEFAULT NULL COMMENT 'Path to icon',
-  `sort_order` int(11) NOT NULL DEFAULT 1 COMMENT 'Order within tab',
-  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
-  `is_deletable` tinyint(1) DEFAULT 0 COMMENT 'Allow deletion (0=prevent delete, 1=allow delete)',
-  `is_collapsible` tinyint(1) DEFAULT 0 COMMENT 'Has dropdown/collapse UI',
-  `is_active` tinyint(1) DEFAULT 1 COMMENT 'System enable/disable (db-only)',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `layout_containers`
---
-
-INSERT INTO `layout_containers` (`id`, `tab_id`, `tab_name`, `container_key`, `container_name`, `icon_path`, `sort_order`, `is_visible`, `is_deletable`, `is_collapsible`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 4, 'Messages', 'msg_user', 'User Messages', 'assets/admin-icons/user-messages.svg', 1, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(2, 4, 'Messages', 'msg_member', 'Member Messages', 'assets/admin-icons/member-messages.svg', 2, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(3, 4, 'Messages', 'msg_admin', 'Admin Messages', 'assets/admin-icons/admin-messages.svg', 3, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(4, 4, 'Messages', 'msg_email', 'Email Messages', 'assets/admin-icons/email-messages.svg', 4, 1, 0, 1, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(5, 3, 'Map', 'map-spin-container', 'Map Spin Settings', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(6, 1, 'Settings', 'map_shadow_container', 'Map Shadow', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-24 15:02:52'),
-(7, 1, 'Settings', 'settings-welcome-container', 'Welcome Message', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(8, 1, 'Settings', 'settings-paypal-container', 'PayPal Settings', NULL, 3, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(9, 1, 'Settings', 'settings-icon-folders-container', 'Icon Folders', NULL, 4, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(10, 1, 'Settings', 'container_console_filter', 'Console Filter', NULL, 5, 1, 0, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(11, 8, 'Filter Panel', 'filter-basics-container', 'Filter Basics', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
-(12, 8, 'Filter Panel', 'filter-category-container', 'Filter Categories', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
-(13, 5, 'Create Post', 'member-create-selects', 'Category Selection', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
-(14, 5, 'Create Post', 'member-create-form', 'Post Form', NULL, 2, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
-(15, 7, 'Profile', 'member-auth', 'Authentication', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33'),
-(16, 9, 'Advert Panel', 'ad-panel', 'Advertisement Panel', NULL, 1, 1, 0, 0, 1, '2025-11-13 15:58:57', '2025-11-13 16:46:33');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `layout_rows`
---
-
-CREATE TABLE `layout_rows` (
-  `id` int(11) NOT NULL,
-  `container_id` int(11) NOT NULL COMMENT 'References layout_containers.id',
-  `container_name` varchar(100) DEFAULT NULL COMMENT 'Display reference (denormalized for readability)',
-  `row_key` varchar(100) NOT NULL COMMENT 'row_icon_folder, row_spin_on_load',
-  `row_name` varchar(100) NOT NULL COMMENT 'Display name',
-  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
-  `is_deletable` tinyint(1) DEFAULT 0 COMMENT 'Allow deletion (0=prevent delete, 1=allow delete)',
-  `is_active` tinyint(1) DEFAULT 1 COMMENT 'System enable/disable (db-only)',
-  `metadata` text DEFAULT NULL COMMENT 'JSON for additional config',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `layout_rows`
---
-
-INSERT INTO `layout_rows` (`id`, `container_id`, `container_name`, `row_key`, `row_name`, `is_visible`, `is_deletable`, `is_active`, `metadata`, `created_at`, `updated_at`) VALUES
-(1, 9, 'Icon Folders', 'row_icon_folder', 'Icon Folder', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(2, 9, 'Icon Folders', 'row_admin_icon_folder', 'Admin Icon Folder', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(3, 10, 'Console Filter', 'row_console_filter', 'Enable Console Filter', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(4, 6, 'Map Shadow', 'row_map_shadow', 'Map Shadow Slider', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-24 14:50:33'),
-(5, 7, 'Welcome Message', 'row_welcome_message', 'Welcome Message Editor', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(6, 8, 'PayPal Settings', 'row_paypal_client_id', 'PayPal Client ID', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(7, 8, 'PayPal Settings', 'row_paypal_secret', 'PayPal Client Secret', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(8, 5, 'Map Spin Settings', 'row_spin_on_load', 'Spin on Load', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(9, 5, 'Map Spin Settings', 'row_spin_on_logo', 'Spin on Logo', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(10, 5, 'Map Spin Settings', 'row_spin_type', 'Spin Type', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(11, 5, 'Map Spin Settings', 'row_spin_max_zoom', 'Spin Max Zoom', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(12, 5, 'Map Spin Settings', 'row_spin_speed', 'Spin Speed', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(13, 13, 'Category Selection', 'row_member_category', 'Category Dropdown', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(14, 13, 'Category Selection', 'row_member_subcategory', 'Subcategory Dropdown', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(15, 11, 'Filter Basics', 'row_filter_keyword', 'Keywords', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(16, 11, 'Filter Basics', 'row_filter_price', 'Price Range', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(17, 11, 'Filter Basics', 'row_filter_daterange', 'Date Range', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33'),
-(18, 11, 'Filter Basics', 'row_filter_expired', 'Show Expired Events', 1, 0, 1, NULL, '2025-11-13 16:26:31', '2025-11-13 16:46:33');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `layout_tabs`
---
-
-CREATE TABLE `layout_tabs` (
-  `id` int(11) NOT NULL,
-  `tab_key` varchar(100) NOT NULL COMMENT 'admin_settings, member_create, etc.',
-  `panel_key` enum('admin','member','filter','advert') NOT NULL COMMENT 'Which panel this tab belongs to',
-  `tab_name` varchar(100) NOT NULL COMMENT 'Display name',
-  `sort_order` int(11) NOT NULL DEFAULT 1 COMMENT 'Order within panel',
-  `is_visible` tinyint(1) DEFAULT 1 COMMENT 'Show/hide from users',
-  `is_deletable` tinyint(1) DEFAULT 0 COMMENT 'Allow deletion (0=prevent delete, 1=allow delete)',
-  `is_active` tinyint(1) DEFAULT 1 COMMENT 'System enable/disable (db-only)',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `layout_tabs`
---
-
-INSERT INTO `layout_tabs` (`id`, `tab_key`, `panel_key`, `tab_name`, `sort_order`, `is_visible`, `is_deletable`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'admin_settings', 'admin', 'Settings', 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(2, 'admin_forms', 'admin', 'Forms', 2, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(3, 'admin_map', 'admin', 'Map', 3, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(4, 'admin_messages', 'admin', 'Messages', 4, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(5, 'member_create', 'member', 'Create Post', 1, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(6, 'member_myposts', 'member', 'My Posts', 2, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(7, 'member_profile', 'member', 'Profile', 3, 1, 0, 1, '2025-11-13 15:19:02', '2025-11-13 16:46:33'),
-(8, 'filter_main', 'filter', 'Filter Panel', 1, 1, 0, 1, '2025-11-13 15:24:48', '2025-11-13 16:46:33'),
-(9, 'advert_main', 'advert', 'Advert Panel', 1, 1, 0, 1, '2025-11-13 15:24:48', '2025-11-13 16:46:33');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `logs`
---
-
-CREATE TABLE `logs` (
-  `id` int(11) NOT NULL,
-  `actor_type` enum('admin','member','codex','system') DEFAULT 'codex',
-  `actor_id` int(11) DEFAULT NULL,
-  `action` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `media`
---
-
-CREATE TABLE `media` (
-  `id` int(11) NOT NULL,
-  `member_id` int(11) DEFAULT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `file_name` varchar(255) DEFAULT NULL,
-  `file_url` varchar(500) DEFAULT NULL,
-  `file_size` int(11) DEFAULT NULL,
-  `uploaded_at` datetime DEFAULT current_timestamp(),
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `members`
---
-
-CREATE TABLE `members` (
-  `id` int(11) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `display_name` varchar(255) DEFAULT NULL,
-  `member_key` varchar(255) DEFAULT NULL,
-  `avatar_url` varchar(255) DEFAULT NULL,
-  `theme` varchar(20) DEFAULT NULL,
-  `language` varchar(10) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `members`
---
-
-INSERT INTO `members` (`id`, `email`, `password_hash`, `display_name`, `member_key`, `avatar_url`, `theme`, `language`, `currency`, `created_at`, `backup_json`, `updated_at`) VALUES
-(1, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', 'testuser', NULL, NULL, NULL, NULL, '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
-(2, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'wikidata-/-wikipedia-(cc-by-sa-4.0)', 'assets/avatars/wikipedia.png', NULL, NULL, NULL, '2025-10-25 19:00:27', NULL, '2025-11-06 13:07:35'),
-(4, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', NULL, '', NULL, NULL, NULL, '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `moderation_log`
---
-
-CREATE TABLE `moderation_log` (
-  `id` int(11) NOT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `post_title` varchar(255) DEFAULT NULL,
-  `moderator_id` int(11) DEFAULT NULL,
-  `moderator_name` varchar(255) DEFAULT NULL,
-  `action` varchar(50) DEFAULT NULL,
-  `reason` text DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `posts`
 --
 
@@ -1368,13 +1368,6 @@ ALTER TABLE `coupons`
   ADD KEY `created_by_admin_id` (`created_by_admin_id`);
 
 --
--- Indexes for table `extra_options`
---
-ALTER TABLE `extra_options`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `option_group` (`option_group`);
-
---
 -- Indexes for table `fields`
 --
 ALTER TABLE `fields`
@@ -1439,6 +1432,13 @@ ALTER TABLE `moderation_log`
   ADD PRIMARY KEY (`id`),
   ADD KEY `post_id` (`post_id`),
   ADD KEY `moderator_id` (`moderator_id`);
+
+--
+-- Indexes for table `picklist`
+--
+ALTER TABLE `picklist`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `option_group` (`option_group`);
 
 --
 -- Indexes for table `posts`
@@ -1558,12 +1558,6 @@ ALTER TABLE `coupons`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `extra_options`
---
-ALTER TABLE `extra_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=429;
-
---
 -- AUTO_INCREMENT for table `fields`
 --
 ALTER TABLE `fields`
@@ -1616,6 +1610,12 @@ ALTER TABLE `members`
 --
 ALTER TABLE `moderation_log`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `picklist`
+--
+ALTER TABLE `picklist`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=429;
 
 --
 -- AUTO_INCREMENT for table `posts`

@@ -2705,16 +2705,16 @@ let __notifyMapOnInteraction = null;
               const websiteCurrencyMenu = document.getElementById('adminWebsiteCurrency-menu');
               const websiteCurrencyWrapper = websiteCurrencyBtn ? websiteCurrencyBtn.closest('.options-dropdown') : null;
               if(websiteCurrencyBtn && websiteCurrencyMenu && websiteCurrencyWrapper){
-                // Populate dropdown from general_options
-                if(data.general_options && data.general_options.currency){
+                // Populate dropdown from picklist
+                if(data.picklist && data.picklist.currency){
                   // Store currency data with labels globally for member dropdowns
-                  window.currencyData = data.general_options.currency.map(opt => ({
+                  window.currencyData = data.picklist.currency.map(opt => ({
                     value: opt.value,
                     label: opt.label
                   }));
                   // Store phone prefix data globally (same data source pattern)
-                  if(data.general_options['phone-prefix']){
-                    window.phonePrefixData = data.general_options['phone-prefix'].map(opt => ({
+                  if(data.picklist['phone-prefix']){
+                    window.phonePrefixData = data.picklist['phone-prefix'].map(opt => ({
                       value: opt.value,
                       label: opt.label
                     }));
@@ -2725,7 +2725,7 @@ let __notifyMapOnInteraction = null;
                   websiteCurrencyArrow.setAttribute('aria-hidden', 'true');
                   
                   // Populate menu with currency options
-                  data.general_options.currency.forEach(function(opt){
+                  data.picklist.currency.forEach(function(opt){
                     const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                     const optionBtn = document.createElement('button');
                     optionBtn.type = 'button';

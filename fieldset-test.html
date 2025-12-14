@@ -327,7 +327,7 @@
 <script>
 (function(){
     var container = document.getElementById('fieldset-container');
-    var generalOptions = {};
+    var picklist = {};
     
     // Close all menus when clicking outside
     document.addEventListener('click', function(e) {
@@ -467,7 +467,7 @@
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnText = menu.querySelector('.fieldset-menu-button-text');
         
-        var currencies = generalOptions['currency'] || [];
+        var currencies = picklist['currency'] || [];
         currencies.forEach(function(item) {
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
@@ -504,7 +504,7 @@
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnText = menu.querySelector('.fieldset-menu-button-text');
         
-        var prefixes = generalOptions['phone-prefix'] || [];
+        var prefixes = picklist['phone-prefix'] || [];
         if (prefixes.length > 0) {
             btnImg.src = 'assets/flags/' + prefixes[0].value.substring(0,2) + '.svg';
             btnText.textContent = prefixes[0].value.substring(3);
@@ -553,7 +553,7 @@
     fetch('/gateway.php?action=get-admin-settings')
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            generalOptions = res.general_options || {};
+            picklist = res.picklist || {};
             return fetch('/gateway.php?action=get-form');
         })
         .then(function(r) { return r.json(); })
@@ -742,8 +742,8 @@
                         var amenitiesGrid = document.createElement('div');
                         amenitiesGrid.className = 'fieldset-amenities';
                         
-                        // Get amenities from generalOptions (extra_options table)
-                        var amenities = generalOptions['amenity'] || [];
+                        // Get amenities from picklist table
+                        var amenities = picklist['amenity'] || [];
                         
                         amenities.forEach(function(item, i) {
                             // Parse value: "parking Parking" -> icon: parking, name: Parking
