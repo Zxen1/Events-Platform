@@ -801,17 +801,20 @@
                                 smartLatInput.value = lat;
                                 smartLngInput.value = lng;
                                 
-                                // Only fill EMPTY boxes
                                 if (isVenueBox) {
                                     // User searched in venue box
-                                    // Venue name: keep what user typed (it's in inputEl already from selection)
+                                    // Strip venue name to just the name (Google fills with full address)
+                                    if (isEstablishment && venueName) {
+                                        smartVenueInput.value = venueName;
+                                    }
                                     // Address: fill only if empty
                                     if (!smartAddrInput.value.trim()) {
                                         smartAddrInput.value = address;
                                     }
                                 } else {
                                     // User searched in address box
-                                    // Address: keep what user typed (it's in inputEl already from selection)
+                                    // Address: strip to just address (in case Google added extra)
+                                    smartAddrInput.value = address;
                                     // Venue name: fill only if empty AND result is an establishment
                                     if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
                                         smartVenueInput.value = venueName;
