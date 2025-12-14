@@ -15,9 +15,17 @@
             gap: 16px;
         }
         
-        /* Base fieldset wrapper */
+        /* Fieldset wrapper */
         .fieldset {
             width: 100%;
+        }
+        .fieldset-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: #3b82f5;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
         }
         
         /* Label row */
@@ -38,7 +46,7 @@
         .fieldset-label-tooltip {
             width: 16px;
             height: 16px;
-            margin-left: 8px;
+            margin-left: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -46,24 +54,29 @@
             border-radius: 50%;
             color: #888;
             font-size: 10px;
+            font-style: italic;
+            font-family: serif;
             cursor: help;
             position: relative;
         }
         .fieldset-label-tooltip:hover::after {
             content: attr(data-tooltip);
             position: absolute;
-            bottom: 100%;
+            bottom: calc(100% + 6px);
             left: 50%;
             transform: translateX(-50%);
             background: #000;
             border: 1px solid #3b82f5;
             border-radius: 4px;
-            padding: 6px 10px;
+            padding: 8px 12px;
             font-size: 12px;
+            font-style: normal;
+            font-family: sans-serif;
             color: #fff;
-            white-space: nowrap;
+            width: 250px;
+            white-space: normal;
             z-index: 100;
-            margin-bottom: 6px;
+            line-height: 1.4;
         }
         
         /* Text input */
@@ -77,21 +90,14 @@
             color: #fff;
             font-size: 13px;
         }
-        .fieldset-input:hover {
-            border-color: #555;
-        }
-        .fieldset-input:focus {
-            outline: none;
-            border-color: #3b82f5;
-        }
-        .fieldset-input::placeholder {
-            color: #666;
-        }
+        .fieldset-input:hover { border-color: #555; }
+        .fieldset-input:focus { outline: none; border-color: #3b82f5; }
+        .fieldset-input::placeholder { color: #666; }
         
         /* Textarea */
         .fieldset-textarea {
             width: 100%;
-            min-height: 100px;
+            min-height: 120px;
             padding: 10px;
             background: #222;
             border: 1px solid #333;
@@ -100,18 +106,29 @@
             font-size: 13px;
             resize: vertical;
         }
-        .fieldset-textarea:hover {
-            border-color: #555;
-        }
-        .fieldset-textarea:focus {
-            outline: none;
-            border-color: #3b82f5;
-        }
-        .fieldset-textarea::placeholder {
-            color: #666;
-        }
+        .fieldset-textarea:hover { border-color: #555; }
+        .fieldset-textarea:focus { outline: none; border-color: #3b82f5; }
+        .fieldset-textarea::placeholder { color: #666; }
         
-        /* Dropdown/Select */
+        /* Dropdown menu (reusable from menu-test) */
+        .fieldset-menu { width: 100%; height: 36px; position: relative; }
+        .fieldset-menu-button { width: 100%; height: 36px; display: flex; align-items: center; padding: 0 10px; background: #222; border: 1px solid #333; border-radius: 4px; cursor: pointer; }
+        .fieldset-menu-button:hover { border-color: #555; }
+        .fieldset-menu.open .fieldset-menu-button { border-color: #3b82f5; border-radius: 4px 4px 0 0; border-bottom: none; }
+        .fieldset-menu-button-image { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; }
+        .fieldset-menu-button-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fieldset-menu-button-arrow { width: 16px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #888; transition: transform 0.2s; }
+        .fieldset-menu.open .fieldset-menu-button-arrow { transform: rotate(180deg); }
+        .fieldset-menu-options { display: none; position: absolute; top: 36px; left: 0; width: 100%; background: #222; border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 4px 4px; max-height: 250px; overflow-y: auto; z-index: 100; scrollbar-width: thin; scrollbar-color: #888 transparent; }
+        .fieldset-menu-options::-webkit-scrollbar { width: 8px; background: transparent; }
+        .fieldset-menu-options::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .fieldset-menu.open .fieldset-menu-options { display: block; }
+        .fieldset-menu-option { width: 100%; height: 36px; display: flex; align-items: center; padding: 0 10px; cursor: pointer; color: #fff; font-size: 13px; }
+        .fieldset-menu-option:hover { background: #3b82f5; }
+        .fieldset-menu-option-image { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; }
+        .fieldset-menu-option-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; }
+        
+        /* Native select fallback */
         .fieldset-select {
             width: 100%;
             height: 36px;
@@ -127,66 +144,47 @@
             background-repeat: no-repeat;
             background-position: right 10px center;
         }
-        .fieldset-select:hover {
-            border-color: #555;
-        }
-        .fieldset-select:focus {
-            outline: none;
-            border-color: #3b82f5;
-        }
-        .fieldset-select option {
-            background: #222;
-            color: #fff;
-        }
+        .fieldset-select:hover { border-color: #555; }
+        .fieldset-select:focus { outline: none; border-color: #3b82f5; }
+        .fieldset-select option { background: #222; color: #fff; }
         
         /* Radio buttons */
-        .fieldset-radio-group {
+        .fieldset-radio-group { display: flex; flex-direction: column; gap: 8px; }
+        .fieldset-radio { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .fieldset-radio-input { width: 18px; height: 18px; accent-color: #3b82f5; cursor: pointer; }
+        .fieldset-radio-text { font-size: 13px; color: #fff; }
+        
+        /* Multi-field row */
+        .fieldset-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .fieldset-row > * { flex: 1; }
+        .fieldset-row > .fieldset-menu { flex: 0 0 120px; }
+        .fieldset-row > .fieldset-input-small { flex: 0 0 100px; }
+        
+        /* Images upload */
+        .fieldset-images {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            background: #222;
+            border: 2px dashed #333;
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-        }
-        .fieldset-radio {
-            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             cursor: pointer;
         }
-        .fieldset-radio-input {
-            width: 18px;
-            height: 18px;
-            accent-color: #3b82f5;
-            cursor: pointer;
-        }
-        .fieldset-radio-label {
-            font-size: 13px;
-            color: #fff;
-        }
+        .fieldset-images:hover { border-color: #3b82f5; }
+        .fieldset-images-icon { font-size: 32px; color: #555; }
+        .fieldset-images-text { font-size: 13px; color: #888; }
         
-        /* Checkboxes */
-        .fieldset-checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .fieldset-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .fieldset-checkbox-input {
-            width: 18px;
-            height: 18px;
-            accent-color: #3b82f5;
-            cursor: pointer;
-        }
-        .fieldset-checkbox-label {
-            font-size: 13px;
-            color: #fff;
-        }
-        
-        /* Number input */
-        .fieldset-number {
+        /* Date and time */
+        .fieldset-date, .fieldset-time {
             width: 100%;
             height: 36px;
             padding: 0 10px;
@@ -196,72 +194,10 @@
             color: #fff;
             font-size: 13px;
         }
-        .fieldset-number:hover {
-            border-color: #555;
-        }
-        .fieldset-number:focus {
-            outline: none;
-            border-color: #3b82f5;
-        }
-        .fieldset-number::placeholder {
-            color: #666;
-        }
-        
-        /* Date input */
-        .fieldset-date {
-            width: 100%;
-            height: 36px;
-            padding: 0 10px;
-            background: #222;
-            border: 1px solid #333;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 13px;
-        }
-        .fieldset-date:hover {
-            border-color: #555;
-        }
-        .fieldset-date:focus {
-            outline: none;
-            border-color: #3b82f5;
-        }
-        .fieldset-date::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-        
-        /* Error state */
-        .fieldset--error .fieldset-input,
-        .fieldset--error .fieldset-textarea,
-        .fieldset--error .fieldset-select,
-        .fieldset--error .fieldset-number,
-        .fieldset--error .fieldset-date {
-            border-color: #f87171;
-        }
-        .fieldset-error-message {
-            display: none;
-            color: #f87171;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-        .fieldset--error .fieldset-error-message {
-            display: block;
-        }
-        
-        /* Disabled state */
-        .fieldset--disabled .fieldset-input,
-        .fieldset--disabled .fieldset-textarea,
-        .fieldset--disabled .fieldset-select,
-        .fieldset--disabled .fieldset-number,
-        .fieldset--disabled .fieldset-date,
-        .fieldset--disabled .fieldset-radio-input,
-        .fieldset--disabled .fieldset-checkbox-input {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .fieldset--disabled .fieldset-label-text {
-            color: #666;
-        }
+        .fieldset-date:hover, .fieldset-time:hover { border-color: #555; }
+        .fieldset-date:focus, .fieldset-time:focus { outline: none; border-color: #3b82f5; }
+        .fieldset-date::-webkit-calendar-picker-indicator,
+        .fieldset-time::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         
         /* Section divider */
         .fieldset-divider {
@@ -270,129 +206,463 @@
             background: #333;
             margin: 8px 0;
         }
+        
+        /* Sub-label for multi-field */
+        .fieldset-sublabel {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
 
-<div class="fieldset-container">
+<div class="fieldset-container" id="fieldset-container"></div>
+
+<script>
+(function(){
+    var container = document.getElementById('fieldset-container');
+    var generalOptions = {};
     
-    <!-- Text Input -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Event Name</span>
-            <span class="fieldset-label-required">*</span>
-            <span class="fieldset-label-tooltip" data-tooltip="Enter the name of your event">?</span>
-        </div>
-        <input type="text" class="fieldset-input" placeholder="Enter event name">
-    </div>
+    // Close all menus when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.fieldset-menu')) {
+            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                el.classList.remove('open');
+            });
+        }
+    });
     
-    <!-- Textarea -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Description</span>
-            <span class="fieldset-label-required">*</span>
-        </div>
-        <textarea class="fieldset-textarea" placeholder="Describe your event"></textarea>
-    </div>
+    // Build currency menu
+    function buildCurrencyMenu(placeholder) {
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">Select currency...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        
+        var currencies = generalOptions['currency'] || [];
+        currencies.forEach(function(item) {
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
+                btnText.textContent = item.value.substring(3) + ' - ' + item.label;
+                menu.classList.remove('open');
+            };
+            opts.appendChild(op);
+        });
+        
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                if (el !== menu) el.classList.remove('open');
+            });
+            menu.classList.toggle('open');
+        };
+        
+        return menu;
+    }
     
-    <!-- Dropdown -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Category</span>
-            <span class="fieldset-label-required">*</span>
-        </div>
-        <select class="fieldset-select">
-            <option value="">Select a category</option>
-            <option value="music">Music</option>
-            <option value="sports">Sports</option>
-            <option value="food">Food & Drink</option>
-            <option value="arts">Arts & Culture</option>
-        </select>
-    </div>
+    // Build phone prefix menu
+    function buildPhonePrefixMenu() {
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu';
+        menu.style.flex = '0 0 140px';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        
+        var prefixes = generalOptions['phone-prefix'] || [];
+        if (prefixes.length > 0) {
+            btnImg.src = 'assets/flags/' + prefixes[0].value.substring(0,2) + '.svg';
+            btnText.textContent = prefixes[0].value.substring(3);
+        }
+        
+        prefixes.forEach(function(item) {
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
+                btnText.textContent = item.value.substring(3);
+                menu.classList.remove('open');
+            };
+            opts.appendChild(op);
+        });
+        
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                if (el !== menu) el.classList.remove('open');
+            });
+            menu.classList.toggle('open');
+        };
+        
+        return menu;
+    }
     
-    <!-- Radio buttons -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Event Type</span>
-            <span class="fieldset-label-required">*</span>
-        </div>
-        <div class="fieldset-radio-group">
-            <label class="fieldset-radio">
-                <input type="radio" name="event-type" class="fieldset-radio-input" value="public">
-                <span class="fieldset-radio-label">Public</span>
-            </label>
-            <label class="fieldset-radio">
-                <input type="radio" name="event-type" class="fieldset-radio-input" value="private">
-                <span class="fieldset-radio-label">Private</span>
-            </label>
-            <label class="fieldset-radio">
-                <input type="radio" name="event-type" class="fieldset-radio-input" value="invite">
-                <span class="fieldset-radio-label">Invite Only</span>
-            </label>
-        </div>
-    </div>
+    // Build label with required asterisk and tooltip
+    function buildLabel(name, tooltip) {
+        var label = document.createElement('div');
+        label.className = 'fieldset-label';
+        label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">*</span>';
+        if (tooltip) {
+            var tip = document.createElement('span');
+            tip.className = 'fieldset-label-tooltip';
+            tip.textContent = 'i';
+            tip.setAttribute('data-tooltip', tooltip);
+            label.appendChild(tip);
+        }
+        return label;
+    }
     
-    <!-- Checkboxes -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Amenities</span>
-        </div>
-        <div class="fieldset-checkbox-group">
-            <label class="fieldset-checkbox">
-                <input type="checkbox" class="fieldset-checkbox-input">
-                <span class="fieldset-checkbox-label">Parking Available</span>
-            </label>
-            <label class="fieldset-checkbox">
-                <input type="checkbox" class="fieldset-checkbox-input">
-                <span class="fieldset-checkbox-label">Wheelchair Accessible</span>
-            </label>
-            <label class="fieldset-checkbox">
-                <input type="checkbox" class="fieldset-checkbox-input">
-                <span class="fieldset-checkbox-label">Food & Beverages</span>
-            </label>
-        </div>
-    </div>
-    
-    <!-- Number input -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Capacity</span>
-            <span class="fieldset-label-tooltip" data-tooltip="Maximum number of attendees">?</span>
-        </div>
-        <input type="number" class="fieldset-number" placeholder="Enter capacity" min="1">
-    </div>
-    
-    <!-- Date input -->
-    <div class="fieldset">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Event Date</span>
-            <span class="fieldset-label-required">*</span>
-        </div>
-        <input type="date" class="fieldset-date">
-    </div>
-    
-    <div class="fieldset-divider"></div>
-    
-    <!-- Error state example -->
-    <div class="fieldset fieldset--error">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Email Address</span>
-            <span class="fieldset-label-required">*</span>
-        </div>
-        <input type="text" class="fieldset-input" placeholder="Enter email" value="invalid-email">
-        <div class="fieldset-error-message">Please enter a valid email address</div>
-    </div>
-    
-    <!-- Disabled state example -->
-    <div class="fieldset fieldset--disabled">
-        <div class="fieldset-label">
-            <span class="fieldset-label-text">Venue (Auto-detected)</span>
-        </div>
-        <input type="text" class="fieldset-input" value="Sydney Opera House" disabled>
-    </div>
-    
-</div>
+    // Fetch general options first, then fieldsets
+    fetch('/gateway.php?action=get-admin-settings')
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            generalOptions = res.general_options || {};
+            return fetch('/gateway.php?action=get-form');
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res.success || !res.snapshot) return;
+            
+            var fieldsets = res.snapshot.fieldsets || [];
+            
+            fieldsets.forEach(function(fs, index) {
+                var fieldset = document.createElement('div');
+                fieldset.className = 'fieldset';
+                
+                var key = fs.fieldset_key || fs.key || '';
+                var name = fs.fieldset_name || fs.name || 'Unnamed';
+                var tooltip = fs.fieldset_tooltip || '';
+                var placeholder = fs.fieldset_placeholder || '';
+                var options = fs.fieldset_options || [];
+                var fields = fs.fieldset_fields || [];
+                
+                // Add divider between fieldsets (except first)
+                if (index > 0) {
+                    var divider = document.createElement('div');
+                    divider.className = 'fieldset-divider';
+                    container.appendChild(divider);
+                }
+                
+                // Build based on fieldset type
+                switch (key) {
+                    case 'title':
+                    case 'coupon':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'fieldset-input';
+                        input.placeholder = placeholder;
+                        fieldset.appendChild(input);
+                        break;
+                        
+                    case 'description':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var textarea = document.createElement('textarea');
+                        textarea.className = 'fieldset-textarea';
+                        textarea.placeholder = placeholder;
+                        fieldset.appendChild(textarea);
+                        break;
+                        
+                    case 'text-box':
+                        fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                        var input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'fieldset-input';
+                        input.placeholder = placeholder;
+                        fieldset.appendChild(input);
+                        break;
+                        
+                    case 'text-area':
+                        fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                        var textarea = document.createElement('textarea');
+                        textarea.className = 'fieldset-textarea';
+                        textarea.placeholder = placeholder;
+                        fieldset.appendChild(textarea);
+                        break;
+                        
+                    case 'dropdown':
+                        fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                        var select = document.createElement('select');
+                        select.className = 'fieldset-select';
+                        select.innerHTML = '<option value="">Select an option...</option>';
+                        if (Array.isArray(options)) {
+                            options.forEach(function(opt) {
+                                var option = document.createElement('option');
+                                option.value = opt;
+                                option.textContent = opt;
+                                select.appendChild(option);
+                            });
+                        }
+                        fieldset.appendChild(select);
+                        break;
+                        
+                    case 'radio':
+                        fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                        var radioGroup = document.createElement('div');
+                        radioGroup.className = 'fieldset-radio-group';
+                        if (Array.isArray(options)) {
+                            options.forEach(function(opt, i) {
+                                var radio = document.createElement('label');
+                                radio.className = 'fieldset-radio';
+                                radio.innerHTML = '<input type="radio" name="radio-' + index + '" class="fieldset-radio-input" value="' + opt + '"><span class="fieldset-radio-text">' + opt + '</span>';
+                                radioGroup.appendChild(radio);
+                            });
+                        }
+                        fieldset.appendChild(radioGroup);
+                        break;
+                        
+                    case 'email':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var input = document.createElement('input');
+                        input.type = 'email';
+                        input.className = 'fieldset-input';
+                        input.placeholder = placeholder;
+                        fieldset.appendChild(input);
+                        break;
+                        
+                    case 'phone':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var row = document.createElement('div');
+                        row.className = 'fieldset-row';
+                        row.appendChild(buildPhonePrefixMenu());
+                        var phoneInput = document.createElement('input');
+                        phoneInput.type = 'tel';
+                        phoneInput.className = 'fieldset-input';
+                        phoneInput.placeholder = placeholder;
+                        row.appendChild(phoneInput);
+                        fieldset.appendChild(row);
+                        break;
+                        
+                    case 'location':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'fieldset-input';
+                        input.placeholder = placeholder;
+                        fieldset.appendChild(input);
+                        // Hidden lat/lng fields
+                        var latInput = document.createElement('input');
+                        latInput.type = 'hidden';
+                        latInput.className = 'fieldset-lat';
+                        var lngInput = document.createElement('input');
+                        lngInput.type = 'hidden';
+                        lngInput.className = 'fieldset-lng';
+                        fieldset.appendChild(latInput);
+                        fieldset.appendChild(lngInput);
+                        break;
+                        
+                    case 'website-url':
+                    case 'tickets-url':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var input = document.createElement('input');
+                        input.type = 'url';
+                        input.className = 'fieldset-input';
+                        input.placeholder = placeholder;
+                        fieldset.appendChild(input);
+                        break;
+                        
+                    case 'images':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var upload = document.createElement('div');
+                        upload.className = 'fieldset-images';
+                        upload.innerHTML = '<div class="fieldset-images-icon">📷</div><div class="fieldset-images-text">Click to upload images</div>';
+                        fieldset.appendChild(upload);
+                        break;
+                        
+                    case 'item-pricing':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var row = document.createElement('div');
+                        row.className = 'fieldset-row';
+                        
+                        var nameCol = document.createElement('div');
+                        nameCol.style.flex = '1';
+                        var nameSub = document.createElement('div');
+                        nameSub.className = 'fieldset-sublabel';
+                        nameSub.textContent = 'Item Name';
+                        var nameInput = document.createElement('input');
+                        nameInput.type = 'text';
+                        nameInput.className = 'fieldset-input';
+                        nameInput.placeholder = 'eg. Ruby Slippers';
+                        nameCol.appendChild(nameSub);
+                        nameCol.appendChild(nameInput);
+                        
+                        var priceCol = document.createElement('div');
+                        priceCol.style.flex = '0 0 100px';
+                        var priceSub = document.createElement('div');
+                        priceSub.className = 'fieldset-sublabel';
+                        priceSub.textContent = 'Price';
+                        var priceInput = document.createElement('input');
+                        priceInput.type = 'number';
+                        priceInput.className = 'fieldset-input';
+                        priceInput.placeholder = '0.00';
+                        priceInput.step = '0.01';
+                        priceCol.appendChild(priceSub);
+                        priceCol.appendChild(priceInput);
+                        
+                        var currencyCol = document.createElement('div');
+                        currencyCol.style.flex = '0 0 130px';
+                        var currencySub = document.createElement('div');
+                        currencySub.className = 'fieldset-sublabel';
+                        currencySub.textContent = 'Currency';
+                        currencyCol.appendChild(currencySub);
+                        currencyCol.appendChild(buildCurrencyMenu());
+                        
+                        row.appendChild(nameCol);
+                        row.appendChild(priceCol);
+                        row.appendChild(currencyCol);
+                        fieldset.appendChild(row);
+                        break;
+                        
+                    case 'venue-ticketing':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        
+                        // Venue name row
+                        var venueSub = document.createElement('div');
+                        venueSub.className = 'fieldset-sublabel';
+                        venueSub.textContent = 'Venue Name';
+                        fieldset.appendChild(venueSub);
+                        var venueInput = document.createElement('input');
+                        venueInput.type = 'text';
+                        venueInput.className = 'fieldset-input';
+                        venueInput.placeholder = 'eg. Sydney Opera House';
+                        venueInput.style.marginBottom = '10px';
+                        fieldset.appendChild(venueInput);
+                        
+                        // Address row
+                        var addrSub = document.createElement('div');
+                        addrSub.className = 'fieldset-sublabel';
+                        addrSub.textContent = 'Address';
+                        fieldset.appendChild(addrSub);
+                        var addrInput = document.createElement('input');
+                        addrInput.type = 'text';
+                        addrInput.className = 'fieldset-input';
+                        addrInput.placeholder = 'Search for address...';
+                        addrInput.style.marginBottom = '10px';
+                        fieldset.appendChild(addrInput);
+                        
+                        // Date/Time row
+                        var dtRow = document.createElement('div');
+                        dtRow.className = 'fieldset-row';
+                        dtRow.style.marginBottom = '10px';
+                        
+                        var dateCol = document.createElement('div');
+                        dateCol.style.flex = '1';
+                        var dateSub = document.createElement('div');
+                        dateSub.className = 'fieldset-sublabel';
+                        dateSub.textContent = 'Session Date';
+                        var dateInput = document.createElement('input');
+                        dateInput.type = 'date';
+                        dateInput.className = 'fieldset-date';
+                        dateCol.appendChild(dateSub);
+                        dateCol.appendChild(dateInput);
+                        
+                        var timeCol = document.createElement('div');
+                        timeCol.style.flex = '1';
+                        var timeSub = document.createElement('div');
+                        timeSub.className = 'fieldset-sublabel';
+                        timeSub.textContent = 'Session Time';
+                        var timeInput = document.createElement('input');
+                        timeInput.type = 'time';
+                        timeInput.className = 'fieldset-time';
+                        timeCol.appendChild(timeSub);
+                        timeCol.appendChild(timeInput);
+                        
+                        dtRow.appendChild(dateCol);
+                        dtRow.appendChild(timeCol);
+                        fieldset.appendChild(dtRow);
+                        
+                        // Seating/Tier row
+                        var stRow = document.createElement('div');
+                        stRow.className = 'fieldset-row';
+                        stRow.style.marginBottom = '10px';
+                        
+                        var seatCol = document.createElement('div');
+                        seatCol.style.flex = '1';
+                        var seatSub = document.createElement('div');
+                        seatSub.className = 'fieldset-sublabel';
+                        seatSub.textContent = 'Seating Area';
+                        var seatInput = document.createElement('input');
+                        seatInput.type = 'text';
+                        seatInput.className = 'fieldset-input';
+                        seatInput.placeholder = 'eg. Section A';
+                        seatCol.appendChild(seatSub);
+                        seatCol.appendChild(seatInput);
+                        
+                        var tierCol = document.createElement('div');
+                        tierCol.style.flex = '1';
+                        var tierSub = document.createElement('div');
+                        tierSub.className = 'fieldset-sublabel';
+                        tierSub.textContent = 'Pricing Tier';
+                        var tierInput = document.createElement('input');
+                        tierInput.type = 'text';
+                        tierInput.className = 'fieldset-input';
+                        tierInput.placeholder = 'eg. VIP';
+                        tierCol.appendChild(tierSub);
+                        tierCol.appendChild(tierInput);
+                        
+                        stRow.appendChild(seatCol);
+                        stRow.appendChild(tierCol);
+                        fieldset.appendChild(stRow);
+                        
+                        // Price/Currency row
+                        var pcRow = document.createElement('div');
+                        pcRow.className = 'fieldset-row';
+                        
+                        var ticketPriceCol = document.createElement('div');
+                        ticketPriceCol.style.flex = '1';
+                        var ticketPriceSub = document.createElement('div');
+                        ticketPriceSub.className = 'fieldset-sublabel';
+                        ticketPriceSub.textContent = 'Ticket Price';
+                        var ticketPriceInput = document.createElement('input');
+                        ticketPriceInput.type = 'number';
+                        ticketPriceInput.className = 'fieldset-input';
+                        ticketPriceInput.placeholder = '0.00';
+                        ticketPriceInput.step = '0.01';
+                        ticketPriceCol.appendChild(ticketPriceSub);
+                        ticketPriceCol.appendChild(ticketPriceInput);
+                        
+                        var ticketCurrencyCol = document.createElement('div');
+                        ticketCurrencyCol.style.flex = '0 0 130px';
+                        var ticketCurrencySub = document.createElement('div');
+                        ticketCurrencySub.className = 'fieldset-sublabel';
+                        ticketCurrencySub.textContent = 'Currency';
+                        ticketCurrencyCol.appendChild(ticketCurrencySub);
+                        ticketCurrencyCol.appendChild(buildCurrencyMenu());
+                        
+                        pcRow.appendChild(ticketPriceCol);
+                        pcRow.appendChild(ticketCurrencyCol);
+                        fieldset.appendChild(pcRow);
+                        break;
+                        
+                    default:
+                        // Generic text input fallback
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'fieldset-input';
+                        input.placeholder = placeholder;
+                        fieldset.appendChild(input);
+                }
+                
+                container.appendChild(fieldset);
+            });
+        });
+})();
+</script>
 
 </body>
 </html>
-
