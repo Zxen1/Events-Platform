@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 15, 2025 at 02:49 AM
+-- Generation Time: Dec 15, 2025 at 03:12 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -833,7 +833,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (14, 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Session Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-08 06:42:42'),
+(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-14 16:12:06'),
 (16, 'city', '[\"city\", \"latitude\", \"longitude\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 0, 9, '2025-12-14 15:49:27', '2025-12-14 15:49:27');
 
 -- --------------------------------------------------------
