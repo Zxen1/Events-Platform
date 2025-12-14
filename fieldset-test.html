@@ -1321,12 +1321,39 @@
                                     timeWrapper.appendChild(timeInput);
                                     row.appendChild(timeWrapper);
                                     
-                                    // - button (only show if more than 1 time slot)
-                                    if (data.times.length > 1) {
-                                        var removeBtn = document.createElement('button');
-                                        removeBtn.type = 'button';
-                                        removeBtn.className = 'fieldset-session-remove';
-                                        removeBtn.textContent = '−';
+                                    // + button (always visible, greyed out at max 10)
+                                    var maxTimesPerDate = 10;
+                                    var addBtn = document.createElement('button');
+                                    addBtn.type = 'button';
+                                    addBtn.className = 'fieldset-session-add';
+                                    addBtn.textContent = '+';
+                                    if (data.times.length >= maxTimesPerDate) {
+                                        addBtn.disabled = true;
+                                        addBtn.style.opacity = '0.3';
+                                        addBtn.style.cursor = 'not-allowed';
+                                    } else {
+                                        (function(dateStr, idx) {
+                                            addBtn.addEventListener('click', function() {
+                                                var newSlotIdx = idx + 1;
+                                                var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
+                                                sessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                                sessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                                renderSessions();
+                                            });
+                                        })(dateStr, idx);
+                                    }
+                                    row.appendChild(addBtn);
+                                    
+                                    // - button (always visible, greyed out if only 1 time)
+                                    var removeBtn = document.createElement('button');
+                                    removeBtn.type = 'button';
+                                    removeBtn.className = 'fieldset-session-remove';
+                                    removeBtn.textContent = '−';
+                                    if (data.times.length === 1) {
+                                        removeBtn.disabled = true;
+                                        removeBtn.style.opacity = '0.3';
+                                        removeBtn.style.cursor = 'not-allowed';
+                                    } else {
                                         (function(dateStr, idx) {
                                             removeBtn.addEventListener('click', function() {
                                                 sessionData[dateStr].times.splice(idx, 1);
@@ -1334,34 +1361,8 @@
                                                 renderSessions();
                                             });
                                         })(dateStr, idx);
-                                        row.appendChild(removeBtn);
-                                    } else {
-                                        var minusSpacer = document.createElement('div');
-                                        minusSpacer.style.width = '32px';
-                                        row.appendChild(minusSpacer);
                                     }
-                                    
-                                    // + button (only on last row of group)
-                                    if (idx === data.times.length - 1) {
-                                        var addBtn = document.createElement('button');
-                                        addBtn.type = 'button';
-                                        addBtn.className = 'fieldset-session-add';
-                                        addBtn.textContent = '+';
-                                        (function(dateStr) {
-                                            addBtn.addEventListener('click', function() {
-                                                var newSlotIdx = sessionData[dateStr].times.length;
-                                                var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
-                                                sessionData[dateStr].times.push(autofillVal);
-                                                sessionData[dateStr].edited.push(false);
-                                                renderSessions();
-                                            });
-                                        })(dateStr);
-                                        row.appendChild(addBtn);
-                                    } else {
-                                        var plusSpacer = document.createElement('div');
-                                        plusSpacer.style.width = '32px';
-                                        row.appendChild(plusSpacer);
-                                    }
+                                    row.appendChild(removeBtn);
                                     
                                     group.appendChild(row);
                                 });
