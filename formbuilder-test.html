@@ -505,6 +505,8 @@
         }
         .formbuilder-field-text {
             flex: 1;
+            display: flex;
+            align-items: center;
         }
         .formbuilder-field-required {
             color: #f87171;
@@ -806,12 +808,13 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            margin-left: 6px;
+            margin-left: 10px;
         }
         .formbuilder-field-indicator {
-            font-size: 11px;
+            font-size: 16px;
             color: #3b82f5;
             display: none;
+            line-height: 1;
         }
         .formbuilder-field-wrapper--location-repeat .formbuilder-field-indicator-repeat {
             display: inline;
@@ -1225,7 +1228,10 @@
                         
                         var fieldText = document.createElement('span');
                         fieldText.className = 'formbuilder-field-text';
-                        fieldText.textContent = fieldName;
+                        
+                        var fieldNameSpan = document.createElement('span');
+                        fieldNameSpan.className = 'formbuilder-field-name';
+                        fieldNameSpan.textContent = fieldName;
                         
                         var fieldRequired = document.createElement('span');
                         fieldRequired.className = 'formbuilder-field-required';
@@ -1262,6 +1268,7 @@
                         fieldEdit.className = 'formbuilder-field-edit';
                         fieldEdit.innerHTML = editPenSvg;
                         
+                        fieldText.appendChild(fieldNameSpan);
                         fieldText.appendChild(fieldRequired);
                         fieldText.appendChild(fieldIndicators);
                         field.appendChild(fieldText);
@@ -1409,9 +1416,7 @@
                             nameInput.placeholder = 'Field name';
                             nameInput.value = fieldData.name || '';
                             nameInput.oninput = function() {
-                                fieldText.textContent = nameInput.value || fieldsetDef.name || 'Unnamed';
-                                fieldText.appendChild(fieldRequired);
-                                fieldText.appendChild(fieldIndicators);
+                                fieldNameSpan.textContent = nameInput.value || fieldsetDef.name || 'Unnamed';
                             };
                             fieldEditPanel.appendChild(nameLabel);
                             fieldEditPanel.appendChild(nameInput);
