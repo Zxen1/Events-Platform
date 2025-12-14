@@ -365,7 +365,7 @@
         .menu-button-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .menu-button-arrow { width: 20px; height: 20px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; }
         .menu.open .menu-button-arrow { transform: rotate(180deg); }
-        .menu-options { display: none; position: absolute; top: 35px; left: 0; width: 100%; box-sizing: border-box; background: #062038; border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 5px 5px; max-height: 250px; overflow-y: auto; overflow-x: hidden; z-index: 100; scrollbar-width: thin; scrollbar-color: #888 transparent; }
+        .menu-options { display: none; position: absolute; top: 36px; left: 0; width: 100%; box-sizing: border-box; background: #062038; border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 5px 5px; max-height: 250px; overflow-y: auto; overflow-x: hidden; z-index: 100; scrollbar-width: thin; scrollbar-color: #888 transparent; }
         .menu-options::-webkit-scrollbar { width: 8px; background: transparent; }
         .menu-options::-webkit-scrollbar-track { background: transparent; }
         .menu-options::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
@@ -793,29 +793,6 @@
         });
     }
     
-    function extractDominantColor(img, callback) {
-        try {
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext('2d');
-            canvas.width = img.naturalWidth || 30;
-            canvas.height = img.naturalHeight || 30;
-            ctx.drawImage(img, 0, 0);
-            var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            var r = 0, g = 0, b = 0, count = 0;
-            for (var i = 0; i < data.length; i += 4) {
-                if (data[i + 3] > 128) {
-                    r += data[i];
-                    g += data[i + 1];
-                    b += data[i + 2];
-                    count++;
-                }
-            }
-            if (count > 0) {
-                callback(Math.round(r / count), Math.round(g / count), Math.round(b / count));
-            }
-        } catch(e) {}
-    }
-    
     function buildIconPicker(currentSrc, onSelect) {
         var menu = document.createElement('div');
         menu.className = 'menu';
@@ -1043,25 +1020,7 @@
                     
                     var optImg = document.createElement('img');
                     optImg.className = 'formbuilder-accordion-option-image';
-                    optImg.crossOrigin = 'anonymous';
                     optImg.src = subIconSrc;
-                    
-                    // Extract dominant color for inputs/menus only
-                    optImg.onload = function() {
-                        extractDominantColor(optImg, function(r, g, b) {
-                            // Blended color: rgba(r,g,b,0.2) on #222 (34,34,34)
-                            var blendedR = Math.round(0.2 * r + 0.8 * 34);
-                            var blendedG = Math.round(0.2 * g + 0.8 * 34);
-                            var blendedB = Math.round(0.2 * b + 0.8 * 34);
-                            // One shade darker (25% darker)
-                            var darkerR = Math.round(blendedR * 0.75);
-                            var darkerG = Math.round(blendedG * 0.75);
-                            var darkerB = Math.round(blendedB * 0.75);
-                            var darkerColor = 'rgb(' + darkerR + ',' + darkerG + ',' + darkerB + ')';
-                            
-                            subEditPanel.style.setProperty('--darker-bg', darkerColor);
-                        });
-                    };
                     
                     var optText = document.createElement('span');
                     optText.className = 'formbuilder-accordion-option-text';
@@ -1150,25 +1109,6 @@
                     
                     var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
                         optImg.src = newIcon;
-                        // Update input/menu colors
-                        var tempImg = new Image();
-                        tempImg.crossOrigin = 'anonymous';
-                        tempImg.onload = function() {
-                            extractDominantColor(tempImg, function(r, g, b) {
-                                // Blended color: rgba(r,g,b,0.2) on #222 (34,34,34)
-                                var blendedR = Math.round(0.2 * r + 0.8 * 34);
-                                var blendedG = Math.round(0.2 * g + 0.8 * 34);
-                                var blendedB = Math.round(0.2 * b + 0.8 * 34);
-                                // One shade darker (25% darker)
-                                var darkerR = Math.round(blendedR * 0.75);
-                                var darkerG = Math.round(blendedG * 0.75);
-                                var darkerB = Math.round(blendedB * 0.75);
-                                var darkerColor = 'rgb(' + darkerR + ',' + darkerG + ',' + darkerB + ')';
-                                
-                                subEditPanel.style.setProperty('--darker-bg', darkerColor);
-                            });
-                        };
-                        tempImg.src = newIcon;
                     });
                     
                     subEditPanel.appendChild(subNameRow);
