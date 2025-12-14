@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 15, 2025 at 02:07 AM
+-- Generation Time: Dec 15, 2025 at 02:49 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -791,7 +791,8 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_icon`, `field_desc
 (31, 'amenity-food', 'radio', 'assets/system-images/food.svg', 'Food and beverages available for purchase', 1, 10, 0, '2025-12-14 19:17:18', '2025-12-14 19:17:18'),
 (32, 'amenity-byo', 'radio', 'assets/system-images/byo.svg', 'BYO food or beverages permitted', 1, 10, 0, '2025-12-14 19:17:18', '2025-12-14 19:17:18'),
 (33, 'amenity-licensed', 'radio', 'assets/system-images/licensed.svg', 'Licensed to serve alcohol', 1, 10, 0, '2025-12-14 19:17:18', '2025-12-14 19:17:18'),
-(34, 'amenity-kids', 'radio', 'assets/system-images/kids.svg', 'Suitable for children', 1, 10, 0, '2025-12-14 19:17:18', '2025-12-14 19:17:18');
+(34, 'amenity-kids', 'radio', 'assets/system-images/kids.svg', 'Suitable for children', 1, 10, 0, '2025-12-14 19:17:18', '2025-12-14 19:17:18'),
+(35, 'city', 'text', NULL, 'City or town for your listing location', 2, 200, 0, '2025-12-15 02:49:27', '2025-12-15 02:49:27');
 
 -- --------------------------------------------------------
 
@@ -826,13 +827,14 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (6, 'radio', '[\"radio\"]', 'Radio Toggle (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 1, 100, '2025-10-29 19:03:05', '2025-12-07 11:26:45'),
 (7, 'email', '[\"email\"]', 'Email', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 0, 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (8, 'phone', '[\"phone-prefix\", \"phone\"]', 'Phone', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 0, 8, '2025-10-29 19:03:05', '2025-12-07 16:17:25'),
-(9, 'location', '[\"address-line\", \"latitude\", \"longitude\"]', 'Location', NULL, '1 Smith Street, Timbuctu, Kollasis, Tomeggia', 'Search for and select the location of your event or listing. The map will help you find the exact spot.', 0, 9, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(9, 'address', '[\"address-line\", \"latitude\", \"longitude\"]', 'Address', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', 0, 9, '2025-10-29 19:03:05', '2025-12-14 15:49:27'),
 (10, 'website-url', '[\"website\"]', 'Website (URL)', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 0, 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (11, 'tickets-url', '[\"website\"]', 'Tickets (URL)', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (14, 'item-pricing', '[\"item-name\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. Ruby Slippers - Small', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Session Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-08 06:42:42');
+(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Session Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-08 06:42:42'),
+(16, 'city', '[\"city\", \"latitude\", \"longitude\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 0, 9, '2025-12-14 15:49:27', '2025-12-14 15:49:27');
 
 -- --------------------------------------------------------
 
@@ -1538,7 +1540,7 @@ ALTER TABLE `extra_options`
 -- AUTO_INCREMENT for table `fields`
 --
 ALTER TABLE `fields`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `fieldsets`
