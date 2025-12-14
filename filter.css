@@ -1362,3 +1362,70 @@
     right:0;
   }
 }
+
+/* Google Places Autocomplete Geocoder */
+.google-places-geocoder{
+  display:flex;
+  align-items:center;
+  background:#ffffff;
+  border-radius:8px;
+  height:var(--geocoder-h);
+  min-height:var(--geocoder-h);
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  position:relative;
+}
+.google-places-geocoder input{
+  background:#ffffff;
+  color:#000000;
+  border:none;
+  border-radius:8px;
+  flex:1 1 auto;
+  min-width:0;
+  height:100%;
+  padding:0 12px;
+  line-height:var(--geocoder-h);
+  font:inherit;
+  font-size:14px;
+}
+.google-places-geocoder input:focus{
+  outline:none;
+}
+.google-places-geocoder input::placeholder{
+  color:#888888;
+}
+/* Google Places Autocomplete dropdown styling */
+.pac-container{
+  background:#ffffff;
+  border-radius:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+  border:none;
+  font-family:inherit;
+  font-size:14px;
+  margin-top:4px;
+  z-index:10000;
+}
+.pac-item{
+  padding:10px 12px;
+  cursor:pointer;
+  border:none;
+  border-bottom:1px solid #eee;
+}
+.pac-item:last-child{
+  border-bottom:none;
+}
+.pac-item:hover,
+.pac-item-selected{
+  background:#f0f4ff;
+}
+.pac-icon{
+  display:none;
+}
+.pac-item-query{
+  color:#000000;
+  font-weight:500;
+}
+.pac-matched{
+  font-weight:700;
+}

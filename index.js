@@ -1870,7 +1870,7 @@ let __notifyMapOnInteraction = null;
     const after = document.activeElement;
     requestAnimationFrame(() => {
       [after, before, getGeocoderInput(geocoder)].forEach(el => {
-        if(el && el.classList && el.classList.contains('mapboxgl-ctrl-geocoder--input') && typeof el.blur === 'function'){
+        if(el && el.tagName === 'INPUT' && typeof el.blur === 'function'){
           el.blur();
         }
       });
@@ -12019,7 +12019,7 @@ function makePosts(){
               const shouldStopPropagation = (e) => {
                 const target = e.target;
                 // Don't stop propagation for geocoder elements - they need events to work
-                if(target.closest('.mapboxgl-ctrl-geocoder')) return false;
+                if(target.closest('.mapboxgl-ctrl-geocoder') || target.closest('.google-places-geocoder')) return false;
                 // Don't stop propagation for buttons - they need clicks to work
                 if(target.tagName === 'BUTTON' || target.closest('button')) return false;
                 // Don't stop propagation for action button containers
@@ -12070,26 +12070,26 @@ function makePosts(){
             if(isMemberForm){
               venueList.addEventListener('click', (e)=>{
                 const target = e.target;
-                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !target.closest('.google-places-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
                   e.stopPropagation();
                 }
               }, true);
               venueList.addEventListener('pointerdown', (e)=>{
                 const target = e.target;
-                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !target.closest('.google-places-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
                   e.stopPropagation();
                 }
               }, true);
               venueList.addEventListener('change', (e)=>{
                 const target = e.target;
-                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !target.closest('.google-places-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
                   e.stopPropagation();
                 }
               }, true);
               // CRITICAL: Add input event handler to prevent form closure when typing
               venueList.addEventListener('input', (e)=>{
                 const target = e.target;
-                if(!target.closest('.mapboxgl-ctrl-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
+                if(!target.closest('.mapboxgl-ctrl-geocoder') && !target.closest('.google-places-geocoder') && !(target.tagName === 'BUTTON' || target.closest('button'))){
                   e.stopPropagation();
                   e.stopImmediatePropagation();
                 }
@@ -20194,12 +20194,9 @@ function makePosts(){
     }
 
     function addControls(){
-      if(typeof MapboxGeocoder === 'undefined'){
-        const script = document.createElement('script');
-        script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
-        script.onload = addControls;
-        script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
-        document.head.appendChild(script);
+      // Wait for Google Places API to load
+      if(typeof google === 'undefined' || !google.maps || !google.maps.places){
+        setTimeout(addControls, 100);
         return;
       }
       const cssLink = document.querySelector('style[data-mapbox], link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"]');
@@ -20219,34 +20216,69 @@ function makePosts(){
       const cityZoomLevel = 12;
 
       sets.forEach((sel, idx)=>{
-        const geocoderOptions = {
-          accessToken: mapboxgl.accessToken,
-          mapboxgl,
-          placeholder: 'Search venues or places',
-          types: 'poi,place,address',
-          marker: false,
-          limit: 10,
-          reverseGeocode: true,
-          language: navigator.language,
-          proximity: null, // Remove regional bias
-          bbox: null,      // Remove viewport limitation
-          flyTo: false
-        };
-
-        const gc = new MapboxGeocoder(geocoderOptions);
         const gEl = sel && sel.geo ? document.querySelector(sel.geo) : null;
+        
+        // Create Google Places geocoder
+        let gc = null;
         if(gEl){
-          gEl.appendChild(gc.onAdd(map));
-          // Disable autocomplete on geocoder input to prevent credential autofill
-          setTimeout(() => {
-            const geocoderInput = gEl.querySelector('.mapboxgl-ctrl-geocoder--input');
-            if(geocoderInput){
-              geocoderInput.setAttribute('autocomplete', 'off');
-              geocoderInput.setAttribute('data-lpignore', 'true'); // LastPass ignore
-              geocoderInput.setAttribute('data-form-type', 'other'); // Generic ignore
+          // Create wrapper and input
+          const wrapper = document.createElement('div');
+          wrapper.className = 'google-places-geocoder';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = 'Search venues or places';
+          input.setAttribute('autocomplete', 'off');
+          input.setAttribute('data-lpignore', 'true');
+          input.setAttribute('data-form-type', 'other');
+          wrapper.appendChild(input);
+          gEl.appendChild(wrapper);
+          
+          // Initialize Google Places Autocomplete
+          const autocomplete = new google.maps.places.Autocomplete(input, {
+            fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types', 'address_components']
+          });
+          
+          // Store reference for clear functionality
+          gc = {
+            _inputEl: input,
+            _autocomplete: autocomplete,
+            clear: function(){
+              input.value = '';
+            },
+            _inputReference: input
+          };
+          
+          // Handle place selection
+          autocomplete.addListener('place_changed', function(){
+            const place = autocomplete.getPlace();
+            if(!place || !place.geometry || !place.geometry.location){
+              return;
             }
-          }, 100);
+            
+            // Convert Google Places result to Mapbox-like format for handleGeocoderResult
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const result = {
+              center: [lng, lat],
+              geometry: {
+                type: 'Point',
+                coordinates: [lng, lat]
+              },
+              place_name: place.formatted_address || place.name,
+              text: place.name || place.formatted_address
+            };
+            
+            // Add bbox if viewport is available
+            if(place.geometry.viewport){
+              const ne = place.geometry.viewport.getNorthEast();
+              const sw = place.geometry.viewport.getSouthWest();
+              result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
+            }
+            
+            handleGeocoderResult(result);
+          });
         }
+        
         geocoders.push(gc);
         if(idx === 1){
           geocoder = gc;
@@ -20444,7 +20476,7 @@ function makePosts(){
 
           waitForIdle();
         };
-        gc.on('result', event => handleGeocoderResult(event && event.result));
+        // Note: Google Places result handling is done inline in autocomplete.addListener above
 
         const geolocateToken = `geolocate:${idx}`;
         let geolocateButton = null;
@@ -25771,7 +25803,8 @@ function formChangedWrapper(event){
     const isVenueField = target.closest('.venue-session-editor') || 
                         target.closest('.venue-card') ||
                         target.closest('.venue-session-venues') ||
-                        target.closest('.mapboxgl-ctrl-geocoder');
+                        target.closest('.mapboxgl-ctrl-geocoder') ||
+                        target.closest('.google-places-geocoder');
     if(isVenueField) return;
   }
   formChanged();
@@ -26711,7 +26744,8 @@ const adminPanelChangeManager = (()=>{
         const isVenueField = target.closest('.venue-session-editor') || 
                             target.closest('.venue-card') ||
                             target.closest('.venue-session-venues') ||
-                            target.closest('.mapboxgl-ctrl-geocoder');
+                            target.closest('.mapboxgl-ctrl-geocoder') ||
+                            target.closest('.google-places-geocoder');
         if(isVenueField) return;
       }
       formChanged();
