@@ -384,6 +384,7 @@ When I received the screenshot, I should have immediately said:
 - **Reusability:** Will be used for many different websites, so there cannot be any hard coding
 - **Modularity:** Addon plugins that form part of the core will be sold separately when the software is properly split at the end
 - **Testing:** All testing is done directly on the live site funmap.com, not locally
+- **CDN/DNS:** Cloudflare (manages DNS, SSL, caching, HTTP/3)
 
 ### Deployment Workflow
 1. **Commit:** User presses "Commit" which saves changes to a Git folder on their PC
