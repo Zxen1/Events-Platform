@@ -745,6 +745,83 @@
             border-color: #3b82f5;
             color: #fff;
         }
+        
+        /* Field repeat switches */
+        .formbuilder-field-switch-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .formbuilder-field-switch-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .formbuilder-field-switch-label.disabled {
+            color: #555;
+            cursor: not-allowed;
+        }
+        .formbuilder-field-switch {
+            width: 36px;
+            height: 20px;
+            background: #444;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .formbuilder-field-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+        .formbuilder-field-switch.on {
+            background: #3b82f5;
+        }
+        .formbuilder-field-switch.on::after {
+            left: 18px;
+        }
+        .formbuilder-field-switch.disabled {
+            background: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .formbuilder-field-switch.disabled::after {
+            background: #666;
+        }
+        
+        /* Field indicators (shown when panel closed) */
+        .formbuilder-field-indicators {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 6px;
+        }
+        .formbuilder-field-indicator {
+            font-size: 11px;
+            color: #3b82f5;
+            display: none;
+        }
+        .formbuilder-field-wrapper--location-repeat .formbuilder-field-indicator-repeat {
+            display: inline;
+        }
+        .formbuilder-field-wrapper--must-repeat .formbuilder-field-indicator-must {
+            display: inline;
+        }
+        .formbuilder-field-wrapper--autofill-repeat .formbuilder-field-indicator-autofill {
+            display: inline;
+        }
     </style>
 </head>
 <body>
@@ -1154,6 +1231,29 @@
                         fieldRequired.className = 'formbuilder-field-required';
                         fieldRequired.textContent = '*';
                         
+                        // Repeat indicators
+                        var fieldIndicators = document.createElement('span');
+                        fieldIndicators.className = 'formbuilder-field-indicators';
+                        
+                        var indicatorRepeat = document.createElement('span');
+                        indicatorRepeat.className = 'formbuilder-field-indicator formbuilder-field-indicator-repeat';
+                        indicatorRepeat.textContent = '↻';
+                        indicatorRepeat.title = 'Location Repeat';
+                        
+                        var indicatorMust = document.createElement('span');
+                        indicatorMust.className = 'formbuilder-field-indicator formbuilder-field-indicator-must';
+                        indicatorMust.textContent = '!';
+                        indicatorMust.title = 'Must Repeat';
+                        
+                        var indicatorAutofill = document.createElement('span');
+                        indicatorAutofill.className = 'formbuilder-field-indicator formbuilder-field-indicator-autofill';
+                        indicatorAutofill.textContent = '⟲';
+                        indicatorAutofill.title = 'Autofill Repeat';
+                        
+                        fieldIndicators.appendChild(indicatorRepeat);
+                        fieldIndicators.appendChild(indicatorMust);
+                        fieldIndicators.appendChild(indicatorAutofill);
+                        
                         var fieldDrag = document.createElement('div');
                         fieldDrag.className = 'formbuilder-field-drag';
                         fieldDrag.innerHTML = dragHandleSvg;
@@ -1163,6 +1263,7 @@
                         fieldEdit.innerHTML = editPenSvg;
                         
                         fieldText.appendChild(fieldRequired);
+                        fieldText.appendChild(fieldIndicators);
                         field.appendChild(fieldText);
                         field.appendChild(fieldDrag);
                         field.appendChild(fieldEdit);
@@ -1220,6 +1321,82 @@
                         editRow.appendChild(fieldMoreBtn);
                         fieldEditPanel.appendChild(editRow);
                         
+                        // Repeat switches row
+                        var switchRow = document.createElement('div');
+                        switchRow.className = 'formbuilder-field-switch-row';
+                        
+                        // Location Repeat switch
+                        var locationRepeatLabel = document.createElement('label');
+                        locationRepeatLabel.className = 'formbuilder-field-switch-label';
+                        var locationRepeatSwitch = document.createElement('div');
+                        locationRepeatSwitch.className = 'formbuilder-field-switch';
+                        locationRepeatLabel.appendChild(locationRepeatSwitch);
+                        locationRepeatLabel.appendChild(document.createTextNode('Location Repeat'));
+                        
+                        // Must Repeat switch
+                        var mustRepeatLabel = document.createElement('label');
+                        mustRepeatLabel.className = 'formbuilder-field-switch-label disabled';
+                        var mustRepeatSwitch = document.createElement('div');
+                        mustRepeatSwitch.className = 'formbuilder-field-switch disabled';
+                        mustRepeatLabel.appendChild(mustRepeatSwitch);
+                        mustRepeatLabel.appendChild(document.createTextNode('Must Repeat'));
+                        
+                        // Autofill Repeat switch
+                        var autofillRepeatLabel = document.createElement('label');
+                        autofillRepeatLabel.className = 'formbuilder-field-switch-label disabled';
+                        var autofillRepeatSwitch = document.createElement('div');
+                        autofillRepeatSwitch.className = 'formbuilder-field-switch disabled';
+                        autofillRepeatLabel.appendChild(autofillRepeatSwitch);
+                        autofillRepeatLabel.appendChild(document.createTextNode('Autofill Repeat'));
+                        
+                        // Location Repeat toggle logic
+                        locationRepeatSwitch.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            var isOn = locationRepeatSwitch.classList.toggle('on');
+                            if (isOn) {
+                                fieldWrapper.classList.add('formbuilder-field-wrapper--location-repeat');
+                                mustRepeatLabel.classList.remove('disabled');
+                                mustRepeatSwitch.classList.remove('disabled');
+                                autofillRepeatLabel.classList.remove('disabled');
+                                autofillRepeatSwitch.classList.remove('disabled');
+                            } else {
+                                fieldWrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
+                                mustRepeatLabel.classList.add('disabled');
+                                mustRepeatSwitch.classList.add('disabled');
+                                autofillRepeatLabel.classList.add('disabled');
+                                autofillRepeatSwitch.classList.add('disabled');
+                            }
+                        });
+                        
+                        // Must Repeat toggle logic
+                        mustRepeatSwitch.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (mustRepeatSwitch.classList.contains('disabled')) return;
+                            var isOn = mustRepeatSwitch.classList.toggle('on');
+                            if (isOn) {
+                                fieldWrapper.classList.add('formbuilder-field-wrapper--must-repeat');
+                            } else {
+                                fieldWrapper.classList.remove('formbuilder-field-wrapper--must-repeat');
+                            }
+                        });
+                        
+                        // Autofill Repeat toggle logic
+                        autofillRepeatSwitch.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (autofillRepeatSwitch.classList.contains('disabled')) return;
+                            var isOn = autofillRepeatSwitch.classList.toggle('on');
+                            if (isOn) {
+                                fieldWrapper.classList.add('formbuilder-field-wrapper--autofill-repeat');
+                            } else {
+                                fieldWrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
+                            }
+                        });
+                        
+                        switchRow.appendChild(locationRepeatLabel);
+                        switchRow.appendChild(mustRepeatLabel);
+                        switchRow.appendChild(autofillRepeatLabel);
+                        fieldEditPanel.appendChild(switchRow);
+                        
                         // If editable, add name, options, placeholder, tooltip inputs (after the required row)
                         if (isEditable) {
                             // Name input
@@ -1234,6 +1411,7 @@
                             nameInput.oninput = function() {
                                 fieldText.textContent = nameInput.value || fieldsetDef.name || 'Unnamed';
                                 fieldText.appendChild(fieldRequired);
+                                fieldText.appendChild(fieldIndicators);
                             };
                             fieldEditPanel.appendChild(nameLabel);
                             fieldEditPanel.appendChild(nameInput);
