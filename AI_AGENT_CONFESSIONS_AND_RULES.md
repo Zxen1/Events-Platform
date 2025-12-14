@@ -840,6 +840,21 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 ## INCIDENTS AND RESOLUTIONS
 
+### History of Failed Website Starts
+
+When the website fails to load or loads extremely slowly, check these causes in order:
+
+1. **Preloading too much at startup** - Formbuilder, categories, or other data loading synchronously at page load
+2. **Syntax errors** - JavaScript or PHP syntax errors preventing execution
+3. **Database mismatch** - Code references table/column names that don't exist in the database
+4. **Mapbox API** - Mapbox service issues or API key problems
+5. **Ventra IP shared hosting** - Server issues on the shared hosting provider
+6. **Cloudflare** - CDN/DNS issues, SSL problems, HTTP/3 (QUIC) protocol errors
+
+**IMPORTANT:** Before blaming infrastructure (Cloudflare, hosting, etc.), CHECK THE CODE FIRST. 100% of the time it has been code changes that caused issues, not infrastructure.
+
+---
+
 ### 2025-12-04: Website Speed Degradation (5-20 minute loads)
 
 **Issue:** funmap.com experienced 5-20 minute load times specifically on Paul's PC (8700k).
