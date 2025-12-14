@@ -193,7 +193,7 @@
         .formbuilder-accordion-header-edit {
             width: 20px;
             height: 20px;
-            color: #fff;
+            color: #888;
         }
         .formbuilder-accordion-header-editarea:hover .formbuilder-accordion-header-edit,
         .formbuilder-accordion--editing .formbuilder-accordion-header-edit {
@@ -302,7 +302,7 @@
         .formbuilder-accordion-option-edit {
             width: 16px;
             height: 16px;
-            color: #fff;
+            color: #888;
         }
         .formbuilder-accordion-option-editarea:hover .formbuilder-accordion-option-edit,
         .formbuilder-accordion-option--editing .formbuilder-accordion-option-edit {
@@ -538,7 +538,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            color: #fff;
+            color: #888;
         }
         .formbuilder-field-edit:hover {
             color: #3b82f5;
@@ -611,6 +611,7 @@
             cursor: pointer;
             color: #fff;
             position: relative;
+            margin-left: auto;
         }
         .formbuilder-field-more:hover {
             border-color: #3b82f5;
@@ -728,19 +729,16 @@
             color: #fff;
         }
         .formbuilder-field-option-add {
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            width: 100%;
-            height: 36px;
             background: #222;
             border: 1px solid #222222;
             border-radius: 4px;
             color: #888;
             cursor: pointer;
-            font-size: 13px;
-            box-sizing: border-box;
         }
         .formbuilder-field-option-add:hover {
             border-color: #3b82f5;
@@ -1322,6 +1320,14 @@
                                     input.value = value || '';
                                     input.placeholder = 'Option';
                                     
+                                    var addBtn = document.createElement('div');
+                                    addBtn.className = 'formbuilder-field-option-add';
+                                    addBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+                                    addBtn.onclick = function() {
+                                        var newRow = createOptionRow('');
+                                        row.parentNode.insertBefore(newRow, row.nextSibling);
+                                    };
+                                    
                                     var removeBtn = document.createElement('div');
                                     removeBtn.className = 'formbuilder-field-option-remove';
                                     removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
@@ -1332,16 +1338,10 @@
                                     };
                                     
                                     row.appendChild(input);
+                                    row.appendChild(addBtn);
                                     row.appendChild(removeBtn);
                                     return row;
                                 }
-                                
-                                var addBtn = document.createElement('div');
-                                addBtn.className = 'formbuilder-field-option-add';
-                                addBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Option';
-                                addBtn.onclick = function() {
-                                    optionsContainer.insertBefore(createOptionRow(''), addBtn);
-                                };
                                 
                                 // Load existing options
                                 var existingOptions = fieldData.options || fieldData.checkoutOptions || [];
@@ -1354,7 +1354,6 @@
                                     optionsContainer.appendChild(createOptionRow(''));
                                 }
                                 
-                                optionsContainer.appendChild(addBtn);
                                 fieldEditPanel.appendChild(optionsContainer);
                             }
                             
@@ -1505,16 +1504,7 @@
                         if (!option.classList.contains('formbuilder-accordion-option--editing')) {
                             closeAllEditPanels();
                         }
-                        var wasOpen = option.classList.contains('formbuilder-accordion-option--open');
-                        // Close all other subcategory drawers
-                        container.querySelectorAll('.formbuilder-accordion-option--open').forEach(function(el) {
-                            if (el !== option) el.classList.remove('formbuilder-accordion-option--open');
-                        });
-                        if (!wasOpen) {
-                            option.classList.add('formbuilder-accordion-option--open');
-                        } else {
-                            option.classList.remove('formbuilder-accordion-option--open');
-                        }
+                        option.classList.toggle('formbuilder-accordion-option--open');
                     });
                     
                     body.appendChild(option);
