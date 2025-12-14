@@ -315,7 +315,7 @@
         .fieldset-session-time {
             flex: 0 0 100px;
         }
-        .fieldset-session-add {
+        .fieldset-session-add, .fieldset-session-remove {
             width: 32px;
             height: 32px;
             display: flex;
@@ -329,6 +329,7 @@
             font-size: 18px;
         }
         .fieldset-session-add:hover { border-color: #3b82f5; color: #3b82f5; }
+        .fieldset-session-remove:hover { border-color: #f87171; color: #f87171; }
         
         /* Section divider */
         .fieldset-divider {
@@ -1247,23 +1248,24 @@
                             }
                         }
                         
-                        // Get autofill value for a new time slot
+                        // Get autofill value for a new time slot (worship the demigod - same weekday first)
                         function getAutofillForSlot(dateStr, slotIdx) {
                             var dow = getDayOfWeek(dateStr);
                             var sortedDates = Object.keys(sessionData).sort();
-                            var dateIdx = sortedDates.indexOf(dateStr);
                             
-                            // First check same day of week before this date
-                            for (var i = dateIdx - 1; i >= 0; i--) {
+                            // Priority 1: Same weekday with a value at this slot (worship the demigod)
+                            for (var i = 0; i < sortedDates.length; i++) {
                                 var d = sortedDates[i];
-                                if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx) {
+                                if (d === dateStr) continue;
+                                if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
                                     return sessionData[d].times[slotIdx];
                                 }
                             }
                             
-                            // Then check any previous date with this slot
-                            for (var i = dateIdx - 1; i >= 0; i--) {
+                            // Priority 2: Any date with a value at this slot (worship the god if no demigod)
+                            for (var i = 0; i < sortedDates.length; i++) {
                                 var d = sortedDates[i];
+                                if (d === dateStr) continue;
                                 if (sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
                                     return sessionData[d].times[slotIdx];
                                 }
@@ -1319,6 +1321,27 @@
                                     timeWrapper.appendChild(timeInput);
                                     row.appendChild(timeWrapper);
                                     
+                                    // - button (only show if more than 1 time slot)
+                                    if (data.times.length > 1) {
+                                        var removeBtn = document.createElement('button');
+                                        removeBtn.type = 'button';
+                                        removeBtn.className = 'fieldset-session-remove';
+                                        removeBtn.textContent = '−';
+                                        (function(dateStr, idx) {
+                                            removeBtn.addEventListener('click', function() {
+                                                sessionData[dateStr].times.splice(idx, 1);
+                                                sessionData[dateStr].edited.splice(idx, 1);
+                                                renderSessions();
+                                            });
+                                        })(dateStr, idx);
+                                        row.appendChild(removeBtn);
+                                    } else {
+                                        var minusSpacer = document.createElement('div');
+                                        minusSpacer.style.width = '32px';
+                                        row.appendChild(minusSpacer);
+                                    }
+                                    
+                                    // + button (only on last row of group)
                                     if (idx === data.times.length - 1) {
                                         var addBtn = document.createElement('button');
                                         addBtn.type = 'button';
@@ -1335,9 +1358,9 @@
                                         })(dateStr);
                                         row.appendChild(addBtn);
                                     } else {
-                                        var btnSpacer = document.createElement('div');
-                                        btnSpacer.style.width = '32px';
-                                        row.appendChild(btnSpacer);
+                                        var plusSpacer = document.createElement('div');
+                                        plusSpacer.style.width = '32px';
+                                        row.appendChild(plusSpacer);
                                     }
                                     
                                     group.appendChild(row);
