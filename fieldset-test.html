@@ -728,6 +728,115 @@
                         fieldset.appendChild(row);
                         break;
                         
+                    case 'venue':
+                        // SMART VENUE FIELDSET
+                        // - Both inputs have Google Places (unrestricted)
+                        // - Auto-fill ONLY empty boxes
+                        // - User edits are protected
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        
+                        // Hidden lat/lng fields
+                        var smartLatInput = document.createElement('input');
+                        smartLatInput.type = 'hidden';
+                        smartLatInput.className = 'fieldset-lat';
+                        var smartLngInput = document.createElement('input');
+                        smartLngInput.type = 'hidden';
+                        smartLngInput.className = 'fieldset-lng';
+                        
+                        // Venue name row
+                        var smartVenueSub = document.createElement('div');
+                        smartVenueSub.className = 'fieldset-sublabel';
+                        smartVenueSub.textContent = 'Venue Name';
+                        fieldset.appendChild(smartVenueSub);
+                        var smartVenueInput = document.createElement('input');
+                        smartVenueInput.type = 'text';
+                        smartVenueInput.className = 'fieldset-input';
+                        smartVenueInput.placeholder = 'Search or type venue name...';
+                        smartVenueInput.style.marginBottom = '8px';
+                        fieldset.appendChild(smartVenueInput);
+                        
+                        // Address row
+                        var smartAddrSub = document.createElement('div');
+                        smartAddrSub.className = 'fieldset-sublabel';
+                        smartAddrSub.textContent = 'Address';
+                        fieldset.appendChild(smartAddrSub);
+                        var smartAddrInput = document.createElement('input');
+                        smartAddrInput.type = 'text';
+                        smartAddrInput.className = 'fieldset-input';
+                        smartAddrInput.placeholder = 'Search or type address...';
+                        smartAddrInput.style.marginBottom = '4px';
+                        fieldset.appendChild(smartAddrInput);
+                        
+                        // Status indicator
+                        var smartStatus = document.createElement('div');
+                        smartStatus.className = 'fieldset-location-status';
+                        fieldset.appendChild(smartStatus);
+                        
+                        fieldset.appendChild(smartLatInput);
+                        fieldset.appendChild(smartLngInput);
+                        
+                        // Smart autofill function - only fills empty boxes
+                        function initSmartVenueAutocomplete(inputEl, otherInputEl, isVenueBox) {
+                            if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                                console.warn('Google Places API not loaded');
+                                return;
+                            }
+                            
+                            // Unrestricted search - finds both venues and addresses
+                            var autocomplete = new google.maps.places.Autocomplete(inputEl, {
+                                fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types']
+                            });
+                            
+                            autocomplete.addListener('place_changed', function() {
+                                var place = autocomplete.getPlace();
+                                if (!place.geometry || !place.geometry.location) return;
+                                
+                                var lat = place.geometry.location.lat();
+                                var lng = place.geometry.location.lng();
+                                var venueName = place.name || '';
+                                var address = place.formatted_address || '';
+                                var isEstablishment = place.types && place.types.includes('establishment');
+                                
+                                // Always update lat/lng
+                                smartLatInput.value = lat;
+                                smartLngInput.value = lng;
+                                
+                                // Only fill EMPTY boxes
+                                if (isVenueBox) {
+                                    // User searched in venue box
+                                    // Venue name: keep what user typed (it's in inputEl already from selection)
+                                    // Address: fill only if empty
+                                    if (!smartAddrInput.value.trim()) {
+                                        smartAddrInput.value = address;
+                                    }
+                                } else {
+                                    // User searched in address box
+                                    // Address: keep what user typed (it's in inputEl already from selection)
+                                    // Venue name: fill only if empty AND result is an establishment
+                                    if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
+                                        smartVenueInput.value = venueName;
+                                    }
+                                }
+                                
+                                // Update status
+                                smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                                smartStatus.className = 'fieldset-location-status success';
+                                
+                                console.log('Smart venue result:', {
+                                    name: venueName,
+                                    address: address,
+                                    isEstablishment: isEstablishment,
+                                    lat: lat,
+                                    lng: lng
+                                });
+                            });
+                        }
+                        
+                        // Init both inputs with smart autofill
+                        initSmartVenueAutocomplete(smartVenueInput, smartAddrInput, true);
+                        initSmartVenueAutocomplete(smartAddrInput, smartVenueInput, false);
+                        break;
+                    
                     case 'venue-ticketing':
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
