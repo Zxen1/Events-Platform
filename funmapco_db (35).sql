@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 15, 2025 at 09:31 AM
+-- Generation Time: Dec 15, 2025 at 09:41 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -455,12 +455,12 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (11, 'tickets-url', '[\"website\"]', 'Tickets (URL)', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 0, 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'Upload images that showcase your event or listing. Good quality photos help attract more visitors.', 0, 12, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 0, 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(14, 'item-pricing', '[\"item-name\", \"item-variant\", \"item-price\", \"currency\"]', 'Item Pricing', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-14 22:26:00'),
+(14, 'item-pricing', '[\"item-name\", \"item-variant\", \"currency\", \"item-price\"]', 'Item Pricing', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 0, 14, '2025-10-29 19:03:05', '2025-12-14 22:41:43'),
 (15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 0, 16, '2025-10-29 19:03:05', '2025-12-14 16:12:06'),
 (16, 'city', '[\"city\", \"latitude\", \"longitude\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 0, 9, '2025-12-14 15:49:27', '2025-12-14 15:49:27'),
 (17, 'venue', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\"]', 'Venue', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', 0, 9, '2025-12-14 18:30:38', '2025-12-14 18:30:38'),
 (18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 0, 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31'),
-(19, 'ticket-pricing', '[\"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Ticket Pricing', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', 0, 19, '2025-12-14 22:26:00', '2025-12-14 22:26:00'),
+(19, 'ticket-pricing', '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', 'Ticket Pricing', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', 0, 19, '2025-12-14 22:26:00', '2025-12-14 22:41:43'),
 (20, 'session', '[\"session-date\", \"session-time\"]', 'Session', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times for your event.', 0, 20, '2025-12-14 22:26:00', '2025-12-14 22:26:00');
 
 -- --------------------------------------------------------
