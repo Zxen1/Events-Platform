@@ -30,7 +30,7 @@
     c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
     var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
     fetch('/gateway.php?action=get-admin-settings').then(function(r){return r.json();}).then(function(res){
-        var d=res.general_options[s]||[];
+        var d=res.extra_options[s]||[];
         if(d.length>0){bi.src=f+d[0].value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',d[0].value.substring(3)).replace('{label}',d[0].label);}
         d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item.value.substring(0,2)+'.svg" alt=""><span class="menu-option-text">'+t.replace('{value}',item.value.substring(3)).replace('{label}',item.label)+'</span>';op.onclick=function(){bi.src=f+item.value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',item.value.substring(3)).replace('{label}',item.label);c.classList.remove('open');};o.appendChild(op);});
     });
@@ -47,7 +47,7 @@
     c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
     var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
     fetch('/gateway.php?action=get-admin-settings').then(function(r){return r.json();}).then(function(res){
-        var d=res.general_options[s]||[];
+        var d=res.extra_options[s]||[];
         if(d.length>0){bi.src=f+d[0].value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',d[0].value.substring(3)).replace('{label}',d[0].label);}
         d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item.value.substring(0,2)+'.svg" alt=""><span class="menu-option-text">'+t.replace('{value}',item.value.substring(3)).replace('{label}',item.label)+'</span>';op.onclick=function(){bi.src=f+item.value.substring(0,2)+'.svg';bt.textContent=t.replace('{value}',item.value.substring(3)).replace('{label}',item.label);c.classList.remove('open');};o.appendChild(op);});
     });

@@ -113,11 +113,11 @@ try {
         // Continue without fields
     }
     
-    // Fetch currency options from general_options table
+    // Fetch currency options from extra_options table
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'general_options'");
+        $stmt = $pdo->query("SHOW TABLES LIKE 'extra_options'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query("SELECT `option_value` FROM `general_options` WHERE `option_group` = 'currency' AND `is_active` = 1 ORDER BY `sort_order` ASC");
+            $stmt = $pdo->query("SELECT `option_value` FROM `extra_options` WHERE `option_group` = 'currency' AND `is_active` = 1 ORDER BY `sort_order` ASC");
             $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
             if (!empty($rows)) {
                 $currencyOptions = array_map('strtoupper', $rows);

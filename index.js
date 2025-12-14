@@ -2705,16 +2705,16 @@ let __notifyMapOnInteraction = null;
               const websiteCurrencyMenu = document.getElementById('adminWebsiteCurrency-menu');
               const websiteCurrencyWrapper = websiteCurrencyBtn ? websiteCurrencyBtn.closest('.options-dropdown') : null;
               if(websiteCurrencyBtn && websiteCurrencyMenu && websiteCurrencyWrapper){
-                // Populate dropdown from general_options
-                if(data.general_options && data.general_options.currency){
+                // Populate dropdown from extra_options
+                if(data.extra_options && data.extra_options.currency){
                   // Store currency data with labels globally for member dropdowns
-                  window.currencyData = data.general_options.currency.map(opt => ({
+                  window.currencyData = data.extra_options.currency.map(opt => ({
                     value: opt.value,
                     label: opt.label
                   }));
                   // Store phone prefix data globally (same data source pattern)
-                  if(data.general_options['phone-prefix']){
-                    window.phonePrefixData = data.general_options['phone-prefix'].map(opt => ({
+                  if(data.extra_options['phone-prefix']){
+                    window.phonePrefixData = data.extra_options['phone-prefix'].map(opt => ({
                       value: opt.value,
                       label: opt.label
                     }));
@@ -2725,7 +2725,7 @@ let __notifyMapOnInteraction = null;
                   websiteCurrencyArrow.setAttribute('aria-hidden', 'true');
                   
                   // Populate menu with currency options
-                  data.general_options.currency.forEach(function(opt){
+                  data.extra_options.currency.forEach(function(opt){
                     const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
                     const optionBtn = document.createElement('button');
                     optionBtn.type = 'button';
@@ -10826,7 +10826,7 @@ function makePosts(){
         if(allCheckoutOptions.length > 0){
           // Get subcategory data
           let surcharge = 0;
-          let subcategoryType = 'Standard';
+          let subcategoryType = 'General';
           if(window.categories && Array.isArray(window.categories)){
             const category = window.categories.find(c => c && c.name === categoryName);
             if(category && category.subFees && category.subFees[subcategoryName]){
@@ -10957,7 +10957,7 @@ function makePosts(){
               }
               priceSection.appendChild(priceText);
             } else {
-              // Standard: Two duration radio options inside card
+              // General: Two duration radio options inside card
               const durationBtns = document.createElement('div');
               durationBtns.className = 'form-checkout-duration-buttons';
               
@@ -11003,7 +11003,7 @@ function makePosts(){
             }
             
             optionContent.appendChild(priceSection);
-            // Only add card-level radio for Events (Standard has radios on each duration)
+            // Only add card-level radio for Events (General has radios on each duration)
             if(isEvent){
               card.appendChild(radio);
             }
@@ -16641,7 +16641,7 @@ function makePosts(){
           }
           // Set defaults only for missing values
           if(c.subFees[sub].checkout_surcharge === undefined) c.subFees[sub].checkout_surcharge = null;
-          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'Standard';
+          if(c.subFees[sub].subcategory_type === undefined) c.subFees[sub].subcategory_type = 'General';
           
           // Initialize subCheckoutOptions if not exists
           if(!c.subCheckoutOptions) c.subCheckoutOptions = {};
@@ -16842,16 +16842,16 @@ function makePosts(){
           const subTypeStandardInput = document.createElement('input');
           subTypeStandardInput.type = 'radio';
           subTypeStandardInput.name = `subType-${sub}`;
-          subTypeStandardInput.value = 'Standard';
-          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'Standard';
+          subTypeStandardInput.value = 'General';
+          subTypeStandardInput.checked = c.subFees[sub].subcategory_type === 'General';
           subTypeStandardInput.addEventListener('change', ()=>{
             if(subTypeStandardInput.checked){
-              c.subFees[sub].subcategory_type = 'Standard';
+              c.subFees[sub].subcategory_type = 'General';
               notifyFormbuilderChange();
             }
           });
           const subTypeStandardText = document.createElement('span');
-          subTypeStandardText.textContent = 'Standard';
+          subTypeStandardText.textContent = 'General';
           subTypeStandardLabel.append(subTypeStandardInput, subTypeStandardText);
           
           subTypeRow.append(subTypeLabel, subTypeEventsLabel, subTypeStandardLabel);

@@ -134,11 +134,11 @@ try {
         'settings' => $settings,
     ];
 
-    // Fetch general_options for dropdown settings
+    // Fetch extra_options for dropdown settings
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'general_options'");
+        $stmt = $pdo->query("SHOW TABLES LIKE 'extra_options'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `sort_order` FROM `general_options` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `sort_order` FROM `extra_options` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $optionRows = $stmt->fetchAll();
             
             $generalOptions = [];
@@ -152,7 +152,7 @@ try {
                     'label' => $row['option_label'],
                 ];
             }
-            $response['general_options'] = $generalOptions;
+            $response['extra_options'] = $generalOptions;
         }
     } catch (Throwable $optionsError) {
         // If options fail, don't break the whole response
