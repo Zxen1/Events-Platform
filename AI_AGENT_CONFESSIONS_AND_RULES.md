@@ -842,6 +842,8 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 ### History of Failed Website Starts
 
+**FIRST TEST: Check website load speed on phone using 5G (not WiFi).** If the site loads fast on phone 5G, the issue is the router/local network. Reset the router.
+
 When the website fails to load or loads extremely slowly, check these causes in order:
 
 1. **Preloading too much at startup** - Formbuilder, categories, or other data loading synchronously at page load

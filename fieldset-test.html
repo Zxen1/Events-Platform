@@ -812,47 +812,171 @@
                         break;
                         
                     case 'item-pricing':
+                        // Item Name > Item Variant > Item Price > Currency
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var row = document.createElement('div');
-                        row.className = 'fieldset-row';
                         
-                        var nameCol = document.createElement('div');
-                        nameCol.style.flex = '1';
-                        var nameSub = document.createElement('div');
-                        nameSub.className = 'fieldset-sublabel';
-                        nameSub.textContent = 'Item Name';
-                        var nameInput = document.createElement('input');
-                        nameInput.type = 'text';
-                        nameInput.className = 'fieldset-input';
-                        nameInput.placeholder = 'eg. Ruby Slippers';
-                        nameCol.appendChild(nameSub);
-                        nameCol.appendChild(nameInput);
+                        // Row 1: Item Name + Item Variant
+                        var itemRow1 = document.createElement('div');
+                        itemRow1.className = 'fieldset-row';
+                        itemRow1.style.marginBottom = '10px';
                         
-                        var priceCol = document.createElement('div');
-                        priceCol.style.flex = '0 0 100px';
-                        var priceSub = document.createElement('div');
-                        priceSub.className = 'fieldset-sublabel';
-                        priceSub.textContent = 'Price';
-                        var priceInput = document.createElement('input');
-                        priceInput.type = 'number';
-                        priceInput.className = 'fieldset-input';
-                        priceInput.placeholder = '0.00';
-                        priceInput.step = '0.01';
-                        priceCol.appendChild(priceSub);
-                        priceCol.appendChild(priceInput);
+                        var itemNameCol = document.createElement('div');
+                        itemNameCol.style.flex = '1';
+                        var itemNameSub = document.createElement('div');
+                        itemNameSub.className = 'fieldset-sublabel';
+                        itemNameSub.textContent = 'Item Name';
+                        var itemNameInput = document.createElement('input');
+                        itemNameInput.type = 'text';
+                        itemNameInput.className = 'fieldset-input';
+                        itemNameInput.placeholder = 'eg. T-Shirt';
+                        itemNameCol.appendChild(itemNameSub);
+                        itemNameCol.appendChild(itemNameInput);
                         
-                        var currencyCol = document.createElement('div');
-                        currencyCol.style.flex = '0 0 130px';
-                        var currencySub = document.createElement('div');
-                        currencySub.className = 'fieldset-sublabel';
-                        currencySub.textContent = 'Currency';
-                        currencyCol.appendChild(currencySub);
-                        currencyCol.appendChild(buildCurrencyMenu());
+                        var itemVariantCol = document.createElement('div');
+                        itemVariantCol.style.flex = '1';
+                        var itemVariantSub = document.createElement('div');
+                        itemVariantSub.className = 'fieldset-sublabel';
+                        itemVariantSub.textContent = 'Item Variant';
+                        var itemVariantInput = document.createElement('input');
+                        itemVariantInput.type = 'text';
+                        itemVariantInput.className = 'fieldset-input';
+                        itemVariantInput.placeholder = 'eg. Large Red';
+                        itemVariantCol.appendChild(itemVariantSub);
+                        itemVariantCol.appendChild(itemVariantInput);
                         
-                        row.appendChild(nameCol);
-                        row.appendChild(priceCol);
-                        row.appendChild(currencyCol);
-                        fieldset.appendChild(row);
+                        itemRow1.appendChild(itemNameCol);
+                        itemRow1.appendChild(itemVariantCol);
+                        fieldset.appendChild(itemRow1);
+                        
+                        // Row 2: Price + Currency
+                        var itemRow2 = document.createElement('div');
+                        itemRow2.className = 'fieldset-row';
+                        
+                        var itemPriceCol = document.createElement('div');
+                        itemPriceCol.style.flex = '1';
+                        var itemPriceSub = document.createElement('div');
+                        itemPriceSub.className = 'fieldset-sublabel';
+                        itemPriceSub.textContent = 'Item Price';
+                        var itemPriceInput = document.createElement('input');
+                        itemPriceInput.type = 'number';
+                        itemPriceInput.className = 'fieldset-input';
+                        itemPriceInput.placeholder = '0.00';
+                        itemPriceInput.step = '0.01';
+                        itemPriceCol.appendChild(itemPriceSub);
+                        itemPriceCol.appendChild(itemPriceInput);
+                        
+                        var itemCurrencyCol = document.createElement('div');
+                        itemCurrencyCol.style.flex = '0 0 130px';
+                        var itemCurrencySub = document.createElement('div');
+                        itemCurrencySub.className = 'fieldset-sublabel';
+                        itemCurrencySub.textContent = 'Currency';
+                        itemCurrencyCol.appendChild(itemCurrencySub);
+                        itemCurrencyCol.appendChild(buildCurrencyMenu());
+                        
+                        itemRow2.appendChild(itemPriceCol);
+                        itemRow2.appendChild(itemCurrencyCol);
+                        fieldset.appendChild(itemRow2);
+                        break;
+                        
+                    case 'ticket-pricing':
+                        // Seating Area > Pricing Tier > Ticket Price > Currency
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        
+                        // Row 1: Seating Area + Pricing Tier
+                        var ticketRow1 = document.createElement('div');
+                        ticketRow1.className = 'fieldset-row';
+                        ticketRow1.style.marginBottom = '10px';
+                        
+                        var seatAreaCol = document.createElement('div');
+                        seatAreaCol.style.flex = '1';
+                        var seatAreaSub = document.createElement('div');
+                        seatAreaSub.className = 'fieldset-sublabel';
+                        seatAreaSub.textContent = 'Seating Area';
+                        var seatAreaInput = document.createElement('input');
+                        seatAreaInput.type = 'text';
+                        seatAreaInput.className = 'fieldset-input';
+                        seatAreaInput.placeholder = 'eg. Orchestra';
+                        seatAreaCol.appendChild(seatAreaSub);
+                        seatAreaCol.appendChild(seatAreaInput);
+                        
+                        var priceTierCol = document.createElement('div');
+                        priceTierCol.style.flex = '1';
+                        var priceTierSub = document.createElement('div');
+                        priceTierSub.className = 'fieldset-sublabel';
+                        priceTierSub.textContent = 'Pricing Tier';
+                        var priceTierInput = document.createElement('input');
+                        priceTierInput.type = 'text';
+                        priceTierInput.className = 'fieldset-input';
+                        priceTierInput.placeholder = 'eg. Adult';
+                        priceTierCol.appendChild(priceTierSub);
+                        priceTierCol.appendChild(priceTierInput);
+                        
+                        ticketRow1.appendChild(seatAreaCol);
+                        ticketRow1.appendChild(priceTierCol);
+                        fieldset.appendChild(ticketRow1);
+                        
+                        // Row 2: Ticket Price + Currency
+                        var ticketRow2 = document.createElement('div');
+                        ticketRow2.className = 'fieldset-row';
+                        
+                        var ticketPriceCol2 = document.createElement('div');
+                        ticketPriceCol2.style.flex = '1';
+                        var ticketPriceSub2 = document.createElement('div');
+                        ticketPriceSub2.className = 'fieldset-sublabel';
+                        ticketPriceSub2.textContent = 'Ticket Price';
+                        var ticketPriceInput2 = document.createElement('input');
+                        ticketPriceInput2.type = 'number';
+                        ticketPriceInput2.className = 'fieldset-input';
+                        ticketPriceInput2.placeholder = '0.00';
+                        ticketPriceInput2.step = '0.01';
+                        ticketPriceCol2.appendChild(ticketPriceSub2);
+                        ticketPriceCol2.appendChild(ticketPriceInput2);
+                        
+                        var ticketCurrencyCol2 = document.createElement('div');
+                        ticketCurrencyCol2.style.flex = '0 0 130px';
+                        var ticketCurrencySub2 = document.createElement('div');
+                        ticketCurrencySub2.className = 'fieldset-sublabel';
+                        ticketCurrencySub2.textContent = 'Currency';
+                        ticketCurrencyCol2.appendChild(ticketCurrencySub2);
+                        ticketCurrencyCol2.appendChild(buildCurrencyMenu());
+                        
+                        ticketRow2.appendChild(ticketPriceCol2);
+                        ticketRow2.appendChild(ticketCurrencyCol2);
+                        fieldset.appendChild(ticketRow2);
+                        break;
+                        
+                    case 'session':
+                        // Session Date + Session Time
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        
+                        var sessionRow = document.createElement('div');
+                        sessionRow.className = 'fieldset-row';
+                        
+                        var sessionDateCol = document.createElement('div');
+                        sessionDateCol.style.flex = '1';
+                        var sessionDateSub = document.createElement('div');
+                        sessionDateSub.className = 'fieldset-sublabel';
+                        sessionDateSub.textContent = 'Session Date';
+                        var sessionDateInput = document.createElement('input');
+                        sessionDateInput.type = 'date';
+                        sessionDateInput.className = 'fieldset-date';
+                        sessionDateCol.appendChild(sessionDateSub);
+                        sessionDateCol.appendChild(sessionDateInput);
+                        
+                        var sessionTimeCol = document.createElement('div');
+                        sessionTimeCol.style.flex = '1';
+                        var sessionTimeSub = document.createElement('div');
+                        sessionTimeSub.className = 'fieldset-sublabel';
+                        sessionTimeSub.textContent = 'Session Time';
+                        var sessionTimeInput = document.createElement('input');
+                        sessionTimeInput.type = 'time';
+                        sessionTimeInput.className = 'fieldset-time';
+                        sessionTimeCol.appendChild(sessionTimeSub);
+                        sessionTimeCol.appendChild(sessionTimeInput);
+                        
+                        sessionRow.appendChild(sessionDateCol);
+                        sessionRow.appendChild(sessionTimeCol);
+                        fieldset.appendChild(sessionRow);
                         break;
                         
                     case 'venue':
