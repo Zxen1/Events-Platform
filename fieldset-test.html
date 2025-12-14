@@ -330,7 +330,7 @@
     fetch('/gateway.php?action=get-admin-settings')
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            generalOptions = res.extra_options || {};
+            generalOptions = res.general_options || {};
             return fetch('/gateway.php?action=get-form');
         })
         .then(function(r) { return r.json(); })
