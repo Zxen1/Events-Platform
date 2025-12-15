@@ -1017,6 +1017,7 @@
                             var block = document.createElement('div');
                             block.className = 'fieldset-variant-block';
                             block.style.marginBottom = '10px';
+                            block.style.marginLeft = '20px';
                             
                             // Row 1: Variant input + +/- buttons
                             var variantRow = document.createElement('div');
@@ -1060,9 +1061,10 @@
                             
                             block.appendChild(variantRow);
                             
-                            // Row 2: Currency + Price
+                            // Row 2: Currency + Price (cropped to align under variant)
                             var priceRow = document.createElement('div');
                             priceRow.className = 'fieldset-row';
+                            priceRow.style.marginRight = '82px'; // 36px + 10px + 36px buttons
                             
                             var currencyCol = document.createElement('div');
                             currencyCol.style.flex = '0 0 100px';
@@ -1174,9 +1176,10 @@
                             
                             block.appendChild(tierRow);
                             
-                            // Row 2: Currency + Price
+                            // Row 2: Currency + Price (cropped to align under tier)
                             var priceRow = document.createElement('div');
                             priceRow.className = 'fieldset-row';
+                            priceRow.style.marginRight = '82px'; // 36px + 10px + 36px buttons
                             
                             var currencyCol = document.createElement('div');
                             currencyCol.style.flex = '0 0 100px';
