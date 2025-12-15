@@ -745,10 +745,7 @@
     }
     
     // Add validation with char limit and invalid state
-    function addInputValidation(input, maxLength, validationFn) {
-        var wrapper = document.createElement('div');
-        wrapper.style.position = 'relative';
-        
+    function addInputValidation(input, minLength, maxLength, validationFn) {
         var charCount = document.createElement('div');
         charCount.className = 'fieldset-char-count';
         charCount.style.display = 'none';
@@ -773,12 +770,21 @@
         function validate() {
             if (!touched) return;
             var isValid = true;
-            if (input.value.length > 0 && validationFn) {
-                isValid = validationFn(input.value);
-            }
-            if (input.value.length > maxLength) {
+            var len = input.value.length;
+            
+            // Check min length (only if field has content)
+            if (len > 0 && minLength > 0 && len < minLength) {
                 isValid = false;
             }
+            // Check max length
+            if (len > maxLength) {
+                isValid = false;
+            }
+            // Check custom validation
+            if (len > 0 && validationFn && !validationFn(input.value)) {
+                isValid = false;
+            }
+            
             if (!isValid) {
                 input.classList.add('fieldset-input--invalid');
             } else {
@@ -802,7 +808,7 @@
             updateCharCount();
         });
         
-        return { wrapper: wrapper, charCount: charCount };
+        return { charCount: charCount };
     }
     
     // Email validation regex
@@ -810,9 +816,26 @@
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
     
-    // URL validation regex
+    // URL validation (accepts with or without protocol)
     function isValidUrl(url) {
-        return /^https?:\/\/.+\..+/.test(url);
+        return /^(https?:\/\/)?.+\..+/.test(url);
+    }
+    
+    // Phone digits-only filter
+    function makePhoneDigitsOnly(input) {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
+    
+    // URL auto-prepend https://
+    function autoUrlProtocol(input) {
+        input.addEventListener('blur', function() {
+            var val = this.value.trim();
+            if (val && !val.match(/^https?:\/\//i)) {
+                this.value = 'https://' + val;
+            }
+        });
     }
     
     // Fetch general options first, then fieldsets
@@ -856,7 +879,7 @@
                         titleInput.type = 'text';
                         titleInput.className = 'fieldset-input';
                         titleInput.placeholder = placeholder;
-                        var titleValidation = addInputValidation(titleInput, maxLength, null);
+                        var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
                         fieldset.appendChild(titleInput);
                         fieldset.appendChild(titleValidation.charCount);
                         break;
@@ -867,7 +890,7 @@
                         couponInput.type = 'text';
                         couponInput.className = 'fieldset-input';
                         couponInput.placeholder = placeholder;
-                        var couponValidation = addInputValidation(couponInput, maxLength, null);
+                        var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
                         fieldset.appendChild(couponInput);
                         fieldset.appendChild(couponValidation.charCount);
                         break;
@@ -877,7 +900,7 @@
                         var descTextarea = document.createElement('textarea');
                         descTextarea.className = 'fieldset-textarea';
                         descTextarea.placeholder = placeholder;
-                        var descValidation = addInputValidation(descTextarea, maxLength, null);
+                        var descValidation = addInputValidation(descTextarea, minLength, maxLength, null);
                         fieldset.appendChild(descTextarea);
                         fieldset.appendChild(descValidation.charCount);
                         break;
@@ -888,7 +911,7 @@
                         textBoxInput.type = 'text';
                         textBoxInput.className = 'fieldset-input';
                         textBoxInput.placeholder = placeholder;
-                        var textBoxValidation = addInputValidation(textBoxInput, maxLength, null);
+                        var textBoxValidation = addInputValidation(textBoxInput, minLength, maxLength, null);
                         fieldset.appendChild(textBoxInput);
                         fieldset.appendChild(textBoxValidation.charCount);
                         break;
@@ -898,7 +921,7 @@
                         var editableTextarea = document.createElement('textarea');
                         editableTextarea.className = 'fieldset-textarea';
                         editableTextarea.placeholder = placeholder;
-                        var textareaValidation = addInputValidation(editableTextarea, maxLength, null);
+                        var textareaValidation = addInputValidation(editableTextarea, minLength, maxLength, null);
                         fieldset.appendChild(editableTextarea);
                         fieldset.appendChild(textareaValidation.charCount);
                         break;
@@ -940,7 +963,7 @@
                         emailInput.type = 'email';
                         emailInput.className = 'fieldset-input';
                         emailInput.placeholder = placeholder;
-                        var emailValidation = addInputValidation(emailInput, maxLength, isValidEmail);
+                        var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                         fieldset.appendChild(emailInput);
                         fieldset.appendChild(emailValidation.charCount);
                         break;
@@ -954,7 +977,8 @@
                         phoneInput.type = 'tel';
                         phoneInput.className = 'fieldset-input';
                         phoneInput.placeholder = placeholder;
-                        var phoneValidation = addInputValidation(phoneInput, maxLength, null);
+                        makePhoneDigitsOnly(phoneInput);
+                        var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
                         phoneRow.appendChild(phoneInput);
                         fieldset.appendChild(phoneRow);
                         fieldset.appendChild(phoneValidation.charCount);
@@ -1013,10 +1037,11 @@
                     case 'tickets-url':
                         fieldset.appendChild(buildLabel(name, tooltip));
                         var urlInput = document.createElement('input');
-                        urlInput.type = 'url';
+                        urlInput.type = 'text'; // text not url, we handle protocol
                         urlInput.className = 'fieldset-input';
                         urlInput.placeholder = placeholder;
-                        var urlValidation = addInputValidation(urlInput, maxLength, isValidUrl);
+                        autoUrlProtocol(urlInput);
+                        var urlValidation = addInputValidation(urlInput, minLength, maxLength, isValidUrl);
                         fieldset.appendChild(urlInput);
                         fieldset.appendChild(urlValidation.charCount);
                         break;
