@@ -539,6 +539,8 @@
             document.getElementById('result-lng').textContent = lng;
             document.getElementById('result-placeid').textContent = place.place_id || '-';
             
+            console.log('Front-end search result:', place);
+            console.log('Mapbox flyTo command: map.flyTo({ center: [' + lng + ', ' + lat + '], zoom: 15 });');
         });
         
         status.textContent = 'Google Places ready - start typing';
@@ -601,9 +603,53 @@
                 statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
                 statusElement.className = 'fieldset-location-status success';
             }
+            
+            console.log('Google Places result:', {
+                name: place.name,
+                address: place.formatted_address,
+                lat: lat,
+                lng: lng,
+                place_id: place.place_id
+            });
         });
         
         return autocomplete;
+    }
+    
+    // Build currency menu (full width with label)
+    function buildCurrencyMenu(placeholder) {
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">Select currency...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        
+        var currencies = picklist['currency'] || [];
+        currencies.forEach(function(item) {
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
+                btnText.textContent = item.value.substring(3) + ' - ' + item.label;
+                menu.classList.remove('open');
+            };
+            opts.appendChild(op);
+        });
+        
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                if (el !== menu) el.classList.remove('open');
+            });
+            menu.classList.toggle('open');
+        };
+        
+        return menu;
     }
     
     // Build compact currency menu (100px, value only, default USD)
@@ -1888,7 +1934,7 @@
                                                 sessionData[dateStr].edited[idx] = true;
                                                 autofillTimes(dateStr, idx, newTime);
                                                 // Update other visible time inputs without full re-render
-                                                sessionsContainer.querySelectorAll('.fieldset-time').forEach(function(input) {
+                                                document.querySelectorAll('.fieldset-time').forEach(function(input) {
                                                     var d = input.dataset.date;
                                                     var i = parseInt(input.dataset.idx, 10);
                                                     if (d && sessionData[d] && sessionData[d].times[i] !== undefined) {
@@ -2072,12 +2118,169 @@
                                 // Update status
                                 smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
                                 smartStatus.className = 'fieldset-location-status success';
+                                
+                                console.log('Smart venue result:', {
+                                    name: venueName,
+                                    address: address,
+                                    isEstablishment: isEstablishment,
+                                    lat: lat,
+                                    lng: lng
+                                });
                             });
                         }
                         
                         // Init both inputs with smart autofill
                         initSmartVenueAutocomplete(smartVenueInput, smartAddrInput, true);
                         initSmartVenueAutocomplete(smartAddrInput, smartVenueInput, false);
+                        break;
+                    
+                    case 'venue-ticketing':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        
+                        // Hidden lat/lng fields for venue
+                        var venueLatInput = document.createElement('input');
+                        venueLatInput.type = 'hidden';
+                        venueLatInput.className = 'fieldset-lat';
+                        var venueLngInput = document.createElement('input');
+                        venueLngInput.type = 'hidden';
+                        venueLngInput.className = 'fieldset-lng';
+                        
+                        // Venue name row (POI search)
+                        var venueSub = document.createElement('div');
+                        venueSub.className = 'fieldset-sublabel';
+                        venueSub.textContent = 'Venue Name (search for business/venue)';
+                        fieldset.appendChild(venueSub);
+                        var venueInput = document.createElement('input');
+                        venueInput.type = 'text';
+                        venueInput.className = 'fieldset-input';
+                        venueInput.placeholder = 'eg. Sydney Opera House';
+                        venueInput.style.marginBottom = '4px';
+                        fieldset.appendChild(venueInput);
+                        
+                        // Venue status
+                        var venueStatus = document.createElement('div');
+                        venueStatus.className = 'fieldset-location-status';
+                        venueStatus.style.marginBottom = '10px';
+                        fieldset.appendChild(venueStatus);
+                        
+                        // Address row (address search - if venue not found)
+                        var vtAddrSub = document.createElement('div');
+                        vtAddrSub.className = 'fieldset-sublabel';
+                        vtAddrSub.textContent = 'Or search by address';
+                        fieldset.appendChild(vtAddrSub);
+                        var vtAddrInput = document.createElement('input');
+                        vtAddrInput.type = 'text';
+                        vtAddrInput.className = 'fieldset-input';
+                        vtAddrInput.placeholder = 'Search for address...';
+                        vtAddrInput.style.marginBottom = '4px';
+                        fieldset.appendChild(vtAddrInput);
+                        
+                        // Address status
+                        var vtAddrStatus = document.createElement('div');
+                        vtAddrStatus.className = 'fieldset-location-status';
+                        vtAddrStatus.style.marginBottom = '10px';
+                        fieldset.appendChild(vtAddrStatus);
+                        
+                        fieldset.appendChild(venueLatInput);
+                        fieldset.appendChild(venueLngInput);
+                        
+                        // Init Google Places for venue (establishment/POI)
+                        initGooglePlaces(venueInput, 'establishment', venueLatInput, venueLngInput, venueStatus);
+                        // Init Google Places for address fallback
+                        initGooglePlaces(vtAddrInput, 'address', venueLatInput, venueLngInput, vtAddrStatus);
+                        
+                        // Date/Time row
+                        var dtRow = document.createElement('div');
+                        dtRow.className = 'fieldset-row';
+                        dtRow.style.marginBottom = '10px';
+                        
+                        var dateCol = document.createElement('div');
+                        dateCol.style.flex = '1';
+                        var dateSub = document.createElement('div');
+                        dateSub.className = 'fieldset-sublabel';
+                        dateSub.textContent = 'Session Date';
+                        var dateInput = document.createElement('input');
+                        dateInput.type = 'date';
+                        dateInput.className = 'fieldset-date';
+                        dateCol.appendChild(dateSub);
+                        dateCol.appendChild(dateInput);
+                        
+                        var timeCol = document.createElement('div');
+                        timeCol.style.flex = '1';
+                        var timeSub = document.createElement('div');
+                        timeSub.className = 'fieldset-sublabel';
+                        timeSub.textContent = 'Session Time';
+                        var timeInput = document.createElement('input');
+                        timeInput.type = 'time';
+                        timeInput.className = 'fieldset-time';
+                        timeCol.appendChild(timeSub);
+                        timeCol.appendChild(timeInput);
+                        
+                        dtRow.appendChild(dateCol);
+                        dtRow.appendChild(timeCol);
+                        fieldset.appendChild(dtRow);
+                        
+                        // Seating/Tier row
+                        var stRow = document.createElement('div');
+                        stRow.className = 'fieldset-row';
+                        stRow.style.marginBottom = '10px';
+                        
+                        var seatCol = document.createElement('div');
+                        seatCol.style.flex = '1';
+                        var seatSub = document.createElement('div');
+                        seatSub.className = 'fieldset-sublabel';
+                        seatSub.textContent = 'Seating Area';
+                        var seatInput = document.createElement('input');
+                        seatInput.type = 'text';
+                        seatInput.className = 'fieldset-input';
+                        seatInput.placeholder = 'eg. Section A';
+                        seatCol.appendChild(seatSub);
+                        seatCol.appendChild(seatInput);
+                        
+                        var tierCol = document.createElement('div');
+                        tierCol.style.flex = '1';
+                        var tierSub = document.createElement('div');
+                        tierSub.className = 'fieldset-sublabel';
+                        tierSub.textContent = 'Pricing Tier';
+                        var tierInput = document.createElement('input');
+                        tierInput.type = 'text';
+                        tierInput.className = 'fieldset-input';
+                        tierInput.placeholder = 'eg. VIP';
+                        tierCol.appendChild(tierSub);
+                        tierCol.appendChild(tierInput);
+                        
+                        stRow.appendChild(seatCol);
+                        stRow.appendChild(tierCol);
+                        fieldset.appendChild(stRow);
+                        
+                        // Price/Currency row
+                        var pcRow = document.createElement('div');
+                        pcRow.className = 'fieldset-row';
+                        
+                        var ticketPriceCol = document.createElement('div');
+                        ticketPriceCol.style.flex = '1';
+                        var ticketPriceSub = document.createElement('div');
+                        ticketPriceSub.className = 'fieldset-sublabel';
+                        ticketPriceSub.textContent = 'Ticket Price';
+                        var ticketPriceInput = document.createElement('input');
+                        ticketPriceInput.type = 'number';
+                        ticketPriceInput.className = 'fieldset-input';
+                        ticketPriceInput.placeholder = '0.00';
+                        ticketPriceInput.step = '0.01';
+                        ticketPriceCol.appendChild(ticketPriceSub);
+                        ticketPriceCol.appendChild(ticketPriceInput);
+                        
+                        var ticketCurrencyCol = document.createElement('div');
+                        ticketCurrencyCol.style.flex = '0 0 130px';
+                        var ticketCurrencySub = document.createElement('div');
+                        ticketCurrencySub.className = 'fieldset-sublabel';
+                        ticketCurrencySub.textContent = 'Currency';
+                        ticketCurrencyCol.appendChild(ticketCurrencySub);
+                        ticketCurrencyCol.appendChild(buildCurrencyMenu());
+                        
+                        pcRow.appendChild(ticketPriceCol);
+                        pcRow.appendChild(ticketCurrencyCol);
+                        fieldset.appendChild(pcRow);
                         break;
                         
                     default:
