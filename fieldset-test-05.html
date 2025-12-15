@@ -175,7 +175,6 @@
         }
         .fieldset-row > * { flex: 1; }
         .fieldset-row > .fieldset-menu { flex: 0 0 120px; }
-        .fieldset-row > .fieldset-currency-compact { flex: 0 0 100px; }
         .fieldset-row > .fieldset-input-small { flex: 0 0 100px; }
         
         /* Images upload */
@@ -1089,7 +1088,7 @@
                             if (imageFiles.length < maxImages) {
                                 var uploadBox = document.createElement('div');
                                 uploadBox.className = 'fieldset-images';
-                                uploadBox.style.cssText = 'width: 100px; height: 100px; min-height: 100px; padding: 0; cursor: pointer;';
+                                uploadBox.style.cssText = 'width: 100px; height: 100px; cursor: pointer;';
                                 uploadBox.innerHTML = '<div class="fieldset-images-icon" style="font-size: 24px;">📷</div><div class="fieldset-images-text" style="font-size: 10px;">Add</div>';
                                 uploadBox.addEventListener('click', function() {
                                     fileInput.click();
