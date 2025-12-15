@@ -1013,12 +1013,16 @@
                         itemVariantsContainer.className = 'fieldset-variants-container';
                         fieldset.appendChild(itemVariantsContainer);
                         
-                        function createItemVariantRow(isFirst) {
-                            var row = document.createElement('div');
-                            row.className = 'fieldset-row';
-                            row.style.marginBottom = '10px';
+                        function createItemVariantBlock() {
+                            var block = document.createElement('div');
+                            block.className = 'fieldset-variant-block';
+                            block.style.marginBottom = '10px';
                             
-                            // Variant input
+                            // Row 1: Variant input + +/- buttons
+                            var variantRow = document.createElement('div');
+                            variantRow.className = 'fieldset-row';
+                            variantRow.style.marginBottom = '10px';
+                            
                             var variantCol = document.createElement('div');
                             variantCol.style.flex = '1';
                             var variantSub = document.createElement('div');
@@ -1030,9 +1034,36 @@
                             variantInput.placeholder = 'eg. Large Red';
                             variantCol.appendChild(variantSub);
                             variantCol.appendChild(variantInput);
-                            row.appendChild(variantCol);
+                            variantRow.appendChild(variantCol);
                             
-                            // Currency (100px)
+                            // + button
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-pricing-add';
+                            addBtn.textContent = '+';
+                            addBtn.addEventListener('click', function() {
+                                itemVariantsContainer.appendChild(createItemVariantBlock());
+                                updateItemVariantButtons();
+                            });
+                            variantRow.appendChild(addBtn);
+                            
+                            // - button
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-pricing-remove';
+                            removeBtn.textContent = '−';
+                            removeBtn.addEventListener('click', function() {
+                                block.remove();
+                                updateItemVariantButtons();
+                            });
+                            variantRow.appendChild(removeBtn);
+                            
+                            block.appendChild(variantRow);
+                            
+                            // Row 2: Currency + Price
+                            var priceRow = document.createElement('div');
+                            priceRow.className = 'fieldset-row';
+                            
                             var currencyCol = document.createElement('div');
                             currencyCol.style.flex = '0 0 100px';
                             var currencySub = document.createElement('div');
@@ -1040,11 +1071,10 @@
                             currencySub.textContent = 'Currency';
                             currencyCol.appendChild(currencySub);
                             currencyCol.appendChild(buildCurrencyMenuCompact());
-                            row.appendChild(currencyCol);
+                            priceRow.appendChild(currencyCol);
                             
-                            // Price
                             var priceCol = document.createElement('div');
-                            priceCol.style.flex = '0 0 100px';
+                            priceCol.style.flex = '1';
                             var priceSub = document.createElement('div');
                             priceSub.className = 'fieldset-sublabel';
                             priceSub.textContent = 'Price';
@@ -1060,39 +1090,18 @@
                             });
                             priceCol.appendChild(priceSub);
                             priceCol.appendChild(priceInput);
-                            row.appendChild(priceCol);
+                            priceRow.appendChild(priceCol);
                             
-                            // + button
-                            var addBtn = document.createElement('button');
-                            addBtn.type = 'button';
-                            addBtn.className = 'fieldset-pricing-add';
-                            addBtn.textContent = '+';
-                            addBtn.addEventListener('click', function() {
-                                var newRow = createItemVariantRow(false);
-                                itemVariantsContainer.appendChild(newRow);
-                                updateItemVariantButtons();
-                            });
-                            row.appendChild(addBtn);
+                            block.appendChild(priceRow);
                             
-                            // - button
-                            var removeBtn = document.createElement('button');
-                            removeBtn.type = 'button';
-                            removeBtn.className = 'fieldset-pricing-remove';
-                            removeBtn.textContent = '−';
-                            removeBtn.addEventListener('click', function() {
-                                row.remove();
-                                updateItemVariantButtons();
-                            });
-                            row.appendChild(removeBtn);
-                            
-                            return row;
+                            return block;
                         }
                         
                         function updateItemVariantButtons() {
-                            var rows = itemVariantsContainer.querySelectorAll('.fieldset-row');
-                            rows.forEach(function(row, idx) {
-                                var removeBtn = row.querySelector('.fieldset-pricing-remove');
-                                if (rows.length === 1) {
+                            var blocks = itemVariantsContainer.querySelectorAll('.fieldset-variant-block');
+                            blocks.forEach(function(block) {
+                                var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                                if (blocks.length === 1) {
                                     removeBtn.style.opacity = '0.3';
                                     removeBtn.style.cursor = 'not-allowed';
                                     removeBtn.disabled = true;
@@ -1104,8 +1113,8 @@
                             });
                         }
                         
-                        // Create first variant row
-                        itemVariantsContainer.appendChild(createItemVariantRow(true));
+                        // Create first variant block
+                        itemVariantsContainer.appendChild(createItemVariantBlock());
                         updateItemVariantButtons();
                         break;
                         
@@ -1117,13 +1126,17 @@
                         seatingAreasContainer.className = 'fieldset-seating-areas-container';
                         fieldset.appendChild(seatingAreasContainer);
                         
-                        function createPricingTierRow(tiersContainer) {
-                            var row = document.createElement('div');
-                            row.className = 'fieldset-row fieldset-tier-row';
-                            row.style.marginBottom = '10px';
-                            row.style.marginLeft = '20px';
+                        function createPricingTierBlock(tiersContainer) {
+                            var block = document.createElement('div');
+                            block.className = 'fieldset-tier-block';
+                            block.style.marginBottom = '10px';
+                            block.style.marginLeft = '20px';
                             
-                            // Tier name
+                            // Row 1: Tier name + +/- buttons
+                            var tierRow = document.createElement('div');
+                            tierRow.className = 'fieldset-row';
+                            tierRow.style.marginBottom = '10px';
+                            
                             var tierCol = document.createElement('div');
                             tierCol.style.flex = '1';
                             var tierSub = document.createElement('div');
@@ -1135,9 +1148,36 @@
                             tierInput.placeholder = 'eg. Adult';
                             tierCol.appendChild(tierSub);
                             tierCol.appendChild(tierInput);
-                            row.appendChild(tierCol);
+                            tierRow.appendChild(tierCol);
                             
-                            // Currency (100px)
+                            // + button
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-pricing-add';
+                            addBtn.textContent = '+';
+                            addBtn.addEventListener('click', function() {
+                                tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
+                                updateTierButtons(tiersContainer);
+                            });
+                            tierRow.appendChild(addBtn);
+                            
+                            // - button
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-pricing-remove';
+                            removeBtn.textContent = '−';
+                            removeBtn.addEventListener('click', function() {
+                                block.remove();
+                                updateTierButtons(tiersContainer);
+                            });
+                            tierRow.appendChild(removeBtn);
+                            
+                            block.appendChild(tierRow);
+                            
+                            // Row 2: Currency + Price
+                            var priceRow = document.createElement('div');
+                            priceRow.className = 'fieldset-row';
+                            
                             var currencyCol = document.createElement('div');
                             currencyCol.style.flex = '0 0 100px';
                             var currencySub = document.createElement('div');
@@ -1145,11 +1185,10 @@
                             currencySub.textContent = 'Currency';
                             currencyCol.appendChild(currencySub);
                             currencyCol.appendChild(buildCurrencyMenuCompact());
-                            row.appendChild(currencyCol);
+                            priceRow.appendChild(currencyCol);
                             
-                            // Price
                             var priceCol = document.createElement('div');
-                            priceCol.style.flex = '0 0 100px';
+                            priceCol.style.flex = '1';
                             var priceSub = document.createElement('div');
                             priceSub.className = 'fieldset-sublabel';
                             priceSub.textContent = 'Price';
@@ -1165,38 +1204,18 @@
                             });
                             priceCol.appendChild(priceSub);
                             priceCol.appendChild(priceInput);
-                            row.appendChild(priceCol);
+                            priceRow.appendChild(priceCol);
                             
-                            // + button
-                            var addBtn = document.createElement('button');
-                            addBtn.type = 'button';
-                            addBtn.className = 'fieldset-pricing-add';
-                            addBtn.textContent = '+';
-                            addBtn.addEventListener('click', function() {
-                                tiersContainer.appendChild(createPricingTierRow(tiersContainer));
-                                updateTierButtons(tiersContainer);
-                            });
-                            row.appendChild(addBtn);
+                            block.appendChild(priceRow);
                             
-                            // - button
-                            var removeBtn = document.createElement('button');
-                            removeBtn.type = 'button';
-                            removeBtn.className = 'fieldset-pricing-remove';
-                            removeBtn.textContent = '−';
-                            removeBtn.addEventListener('click', function() {
-                                row.remove();
-                                updateTierButtons(tiersContainer);
-                            });
-                            row.appendChild(removeBtn);
-                            
-                            return row;
+                            return block;
                         }
                         
                         function updateTierButtons(tiersContainer) {
-                            var rows = tiersContainer.querySelectorAll('.fieldset-tier-row');
-                            rows.forEach(function(row) {
-                                var removeBtn = row.querySelector('.fieldset-pricing-remove');
-                                if (rows.length === 1) {
+                            var blocks = tiersContainer.querySelectorAll('.fieldset-tier-block');
+                            blocks.forEach(function(block) {
+                                var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                                if (blocks.length === 1) {
                                     removeBtn.style.opacity = '0.3';
                                     removeBtn.style.cursor = 'not-allowed';
                                     removeBtn.disabled = true;
@@ -1260,7 +1279,7 @@
                             // Pricing tiers container for this seating area
                             var tiersContainer = document.createElement('div');
                             tiersContainer.className = 'fieldset-tiers-container';
-                            tiersContainer.appendChild(createPricingTierRow(tiersContainer));
+                            tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
                             updateTierButtons(tiersContainer);
                             block.appendChild(tiersContainer);
                             
