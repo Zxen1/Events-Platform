@@ -34,7 +34,7 @@
         .fieldset-label {
             display: flex;
             align-items: center;
-            margin-bottom: 3px;
+            margin-bottom: 6px;
         }
         .fieldset-label-text {
             font-size: 13px;
@@ -93,6 +93,10 @@
             font-size: 13px;
         }
         .fieldset-input:hover { border-color: #555; }
+        /* Remove number input spinners */
+        .fieldset-input[type="number"]::-webkit-outer-spin-button,
+        .fieldset-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .fieldset-input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         .fieldset-input:focus { outline: none; border-color: #3b82f5; }
         .fieldset-input::placeholder { color: #666; }
         
@@ -353,7 +357,7 @@
         .fieldset-sublabel {
             font-size: 11px;
             color: #666;
-            margin-bottom: 3px;
+            margin-bottom: 6px;
         }
         
         /* Google Places Autocomplete styling */
@@ -989,11 +993,10 @@
                         
                     case 'item-pricing':
                         // Item Name (full width, no buttons)
-                        // Item Variant (with +/- buttons)
-                        // Currency (100px) + Price
+                        // Variants container with repeating: Variant + Currency + Price + +/-
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
-                        // Row 1: Item Name (full width, no +/-)
+                        // Item Name (single, no +/-)
                         var itemNameSub = document.createElement('div');
                         itemNameSub.className = 'fieldset-sublabel';
                         itemNameSub.textContent = 'Item Name';
@@ -1005,177 +1008,284 @@
                         itemNameInput.style.marginBottom = '10px';
                         fieldset.appendChild(itemNameInput);
                         
-                        // Row 2: Item Variant (with +/- buttons)
-                        var itemVariantRow = document.createElement('div');
-                        itemVariantRow.className = 'fieldset-row';
-                        itemVariantRow.style.marginBottom = '10px';
+                        // Variants container
+                        var itemVariantsContainer = document.createElement('div');
+                        itemVariantsContainer.className = 'fieldset-variants-container';
+                        fieldset.appendChild(itemVariantsContainer);
                         
-                        var itemVariantCol = document.createElement('div');
-                        itemVariantCol.style.flex = '1';
-                        var itemVariantSub = document.createElement('div');
-                        itemVariantSub.className = 'fieldset-sublabel';
-                        itemVariantSub.textContent = 'Item Variant';
-                        var itemVariantInput = document.createElement('input');
-                        itemVariantInput.type = 'text';
-                        itemVariantInput.className = 'fieldset-input';
-                        itemVariantInput.placeholder = 'eg. Large Red';
-                        itemVariantCol.appendChild(itemVariantSub);
-                        itemVariantCol.appendChild(itemVariantInput);
-                        itemVariantRow.appendChild(itemVariantCol);
+                        function createItemVariantRow(isFirst) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-row';
+                            row.style.marginBottom = '10px';
+                            
+                            // Variant input
+                            var variantCol = document.createElement('div');
+                            variantCol.style.flex = '1';
+                            var variantSub = document.createElement('div');
+                            variantSub.className = 'fieldset-sublabel';
+                            variantSub.textContent = 'Item Variant';
+                            var variantInput = document.createElement('input');
+                            variantInput.type = 'text';
+                            variantInput.className = 'fieldset-input';
+                            variantInput.placeholder = 'eg. Large Red';
+                            variantCol.appendChild(variantSub);
+                            variantCol.appendChild(variantInput);
+                            row.appendChild(variantCol);
+                            
+                            // Currency (100px)
+                            var currencyCol = document.createElement('div');
+                            currencyCol.style.flex = '0 0 100px';
+                            var currencySub = document.createElement('div');
+                            currencySub.className = 'fieldset-sublabel';
+                            currencySub.textContent = 'Currency';
+                            currencyCol.appendChild(currencySub);
+                            currencyCol.appendChild(buildCurrencyMenuCompact());
+                            row.appendChild(currencyCol);
+                            
+                            // Price
+                            var priceCol = document.createElement('div');
+                            priceCol.style.flex = '0 0 100px';
+                            var priceSub = document.createElement('div');
+                            priceSub.className = 'fieldset-sublabel';
+                            priceSub.textContent = 'Price';
+                            var priceInput = document.createElement('input');
+                            priceInput.type = 'number';
+                            priceInput.className = 'fieldset-input';
+                            priceInput.placeholder = '0.00';
+                            priceInput.step = '0.01';
+                            priceInput.addEventListener('blur', function() {
+                                if (this.value !== '') {
+                                    this.value = parseFloat(this.value).toFixed(2);
+                                }
+                            });
+                            priceCol.appendChild(priceSub);
+                            priceCol.appendChild(priceInput);
+                            row.appendChild(priceCol);
+                            
+                            // + button
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-pricing-add';
+                            addBtn.textContent = '+';
+                            addBtn.addEventListener('click', function() {
+                                var newRow = createItemVariantRow(false);
+                                itemVariantsContainer.appendChild(newRow);
+                                updateItemVariantButtons();
+                            });
+                            row.appendChild(addBtn);
+                            
+                            // - button
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-pricing-remove';
+                            removeBtn.textContent = '−';
+                            removeBtn.addEventListener('click', function() {
+                                row.remove();
+                                updateItemVariantButtons();
+                            });
+                            row.appendChild(removeBtn);
+                            
+                            return row;
+                        }
                         
-                        var itemVariantAdd = document.createElement('button');
-                        itemVariantAdd.type = 'button';
-                        itemVariantAdd.className = 'fieldset-pricing-add';
-                        itemVariantAdd.textContent = '+';
-                        itemVariantRow.appendChild(itemVariantAdd);
+                        function updateItemVariantButtons() {
+                            var rows = itemVariantsContainer.querySelectorAll('.fieldset-row');
+                            rows.forEach(function(row, idx) {
+                                var removeBtn = row.querySelector('.fieldset-pricing-remove');
+                                if (rows.length === 1) {
+                                    removeBtn.style.opacity = '0.3';
+                                    removeBtn.style.cursor = 'not-allowed';
+                                    removeBtn.disabled = true;
+                                } else {
+                                    removeBtn.style.opacity = '1';
+                                    removeBtn.style.cursor = 'pointer';
+                                    removeBtn.disabled = false;
+                                }
+                            });
+                        }
                         
-                        var itemVariantRemove = document.createElement('button');
-                        itemVariantRemove.type = 'button';
-                        itemVariantRemove.className = 'fieldset-pricing-remove';
-                        itemVariantRemove.textContent = '−';
-                        itemVariantRemove.style.opacity = '0.3';
-                        itemVariantRemove.style.cursor = 'not-allowed';
-                        itemVariantRemove.disabled = true;
-                        itemVariantRow.appendChild(itemVariantRemove);
-                        
-                        fieldset.appendChild(itemVariantRow);
-                        
-                        // Row 3: Currency (100px left) + Price
-                        var itemPriceRow = document.createElement('div');
-                        itemPriceRow.className = 'fieldset-row';
-                        
-                        var itemCurrencyCol = document.createElement('div');
-                        itemCurrencyCol.style.flex = '0 0 100px';
-                        var itemCurrencySub = document.createElement('div');
-                        itemCurrencySub.className = 'fieldset-sublabel';
-                        itemCurrencySub.textContent = 'Currency';
-                        itemCurrencyCol.appendChild(itemCurrencySub);
-                        itemCurrencyCol.appendChild(buildCurrencyMenuCompact());
-                        itemPriceRow.appendChild(itemCurrencyCol);
-                        
-                        var itemPriceCol = document.createElement('div');
-                        itemPriceCol.style.flex = '1';
-                        itemPriceCol.style.marginLeft = '10px';
-                        var itemPriceSub = document.createElement('div');
-                        itemPriceSub.className = 'fieldset-sublabel';
-                        itemPriceSub.textContent = 'Item Price';
-                        var itemPriceInput = document.createElement('input');
-                        itemPriceInput.type = 'number';
-                        itemPriceInput.className = 'fieldset-input';
-                        itemPriceInput.placeholder = '0.00';
-                        itemPriceInput.step = '0.01';
-                        itemPriceCol.appendChild(itemPriceSub);
-                        itemPriceCol.appendChild(itemPriceInput);
-                        itemPriceRow.appendChild(itemPriceCol);
-                        
-                        fieldset.appendChild(itemPriceRow);
+                        // Create first variant row
+                        itemVariantsContainer.appendChild(createItemVariantRow(true));
+                        updateItemVariantButtons();
                         break;
                         
                     case 'ticket-pricing':
-                        // Seating Area (full width, with +/- buttons)
-                        // Pricing Tier (with +/- buttons)
-                        // Currency (100px) + Price
+                        // Seating Areas container with nested Pricing Tiers
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
-                        // Row 1: Seating Area (full width with +/-)
-                        var seatAreaRow = document.createElement('div');
-                        seatAreaRow.className = 'fieldset-row';
-                        seatAreaRow.style.marginBottom = '10px';
+                        var seatingAreasContainer = document.createElement('div');
+                        seatingAreasContainer.className = 'fieldset-seating-areas-container';
+                        fieldset.appendChild(seatingAreasContainer);
                         
-                        var seatAreaCol = document.createElement('div');
-                        seatAreaCol.style.flex = '1';
-                        var seatAreaSub = document.createElement('div');
-                        seatAreaSub.className = 'fieldset-sublabel';
-                        seatAreaSub.textContent = 'Seating Area';
-                        var seatAreaInput = document.createElement('input');
-                        seatAreaInput.type = 'text';
-                        seatAreaInput.className = 'fieldset-input';
-                        seatAreaInput.placeholder = 'eg. Orchestra';
-                        seatAreaCol.appendChild(seatAreaSub);
-                        seatAreaCol.appendChild(seatAreaInput);
-                        seatAreaRow.appendChild(seatAreaCol);
+                        function createPricingTierRow(tiersContainer) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-row fieldset-tier-row';
+                            row.style.marginBottom = '10px';
+                            row.style.marginLeft = '20px';
+                            
+                            // Tier name
+                            var tierCol = document.createElement('div');
+                            tierCol.style.flex = '1';
+                            var tierSub = document.createElement('div');
+                            tierSub.className = 'fieldset-sublabel';
+                            tierSub.textContent = 'Pricing Tier';
+                            var tierInput = document.createElement('input');
+                            tierInput.type = 'text';
+                            tierInput.className = 'fieldset-input';
+                            tierInput.placeholder = 'eg. Adult';
+                            tierCol.appendChild(tierSub);
+                            tierCol.appendChild(tierInput);
+                            row.appendChild(tierCol);
+                            
+                            // Currency (100px)
+                            var currencyCol = document.createElement('div');
+                            currencyCol.style.flex = '0 0 100px';
+                            var currencySub = document.createElement('div');
+                            currencySub.className = 'fieldset-sublabel';
+                            currencySub.textContent = 'Currency';
+                            currencyCol.appendChild(currencySub);
+                            currencyCol.appendChild(buildCurrencyMenuCompact());
+                            row.appendChild(currencyCol);
+                            
+                            // Price
+                            var priceCol = document.createElement('div');
+                            priceCol.style.flex = '0 0 100px';
+                            var priceSub = document.createElement('div');
+                            priceSub.className = 'fieldset-sublabel';
+                            priceSub.textContent = 'Price';
+                            var priceInput = document.createElement('input');
+                            priceInput.type = 'number';
+                            priceInput.className = 'fieldset-input';
+                            priceInput.placeholder = '0.00';
+                            priceInput.step = '0.01';
+                            priceInput.addEventListener('blur', function() {
+                                if (this.value !== '') {
+                                    this.value = parseFloat(this.value).toFixed(2);
+                                }
+                            });
+                            priceCol.appendChild(priceSub);
+                            priceCol.appendChild(priceInput);
+                            row.appendChild(priceCol);
+                            
+                            // + button
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-pricing-add';
+                            addBtn.textContent = '+';
+                            addBtn.addEventListener('click', function() {
+                                tiersContainer.appendChild(createPricingTierRow(tiersContainer));
+                                updateTierButtons(tiersContainer);
+                            });
+                            row.appendChild(addBtn);
+                            
+                            // - button
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-pricing-remove';
+                            removeBtn.textContent = '−';
+                            removeBtn.addEventListener('click', function() {
+                                row.remove();
+                                updateTierButtons(tiersContainer);
+                            });
+                            row.appendChild(removeBtn);
+                            
+                            return row;
+                        }
                         
-                        var seatAreaAdd = document.createElement('button');
-                        seatAreaAdd.type = 'button';
-                        seatAreaAdd.className = 'fieldset-pricing-add';
-                        seatAreaAdd.textContent = '+';
-                        seatAreaRow.appendChild(seatAreaAdd);
+                        function updateTierButtons(tiersContainer) {
+                            var rows = tiersContainer.querySelectorAll('.fieldset-tier-row');
+                            rows.forEach(function(row) {
+                                var removeBtn = row.querySelector('.fieldset-pricing-remove');
+                                if (rows.length === 1) {
+                                    removeBtn.style.opacity = '0.3';
+                                    removeBtn.style.cursor = 'not-allowed';
+                                    removeBtn.disabled = true;
+                                } else {
+                                    removeBtn.style.opacity = '1';
+                                    removeBtn.style.cursor = 'pointer';
+                                    removeBtn.disabled = false;
+                                }
+                            });
+                        }
                         
-                        var seatAreaRemove = document.createElement('button');
-                        seatAreaRemove.type = 'button';
-                        seatAreaRemove.className = 'fieldset-pricing-remove';
-                        seatAreaRemove.textContent = '−';
-                        seatAreaRemove.style.opacity = '0.3';
-                        seatAreaRemove.style.cursor = 'not-allowed';
-                        seatAreaRemove.disabled = true;
-                        seatAreaRow.appendChild(seatAreaRemove);
+                        function createSeatingAreaBlock() {
+                            var block = document.createElement('div');
+                            block.className = 'fieldset-seating-block';
+                            block.style.marginBottom = '20px';
+                            block.style.paddingBottom = '10px';
+                            block.style.borderBottom = '1px solid #333';
+                            
+                            // Seating Area row
+                            var seatRow = document.createElement('div');
+                            seatRow.className = 'fieldset-row';
+                            seatRow.style.marginBottom = '10px';
+                            
+                            var seatCol = document.createElement('div');
+                            seatCol.style.flex = '1';
+                            var seatSub = document.createElement('div');
+                            seatSub.className = 'fieldset-sublabel';
+                            seatSub.textContent = 'Seating Area';
+                            var seatInput = document.createElement('input');
+                            seatInput.type = 'text';
+                            seatInput.className = 'fieldset-input';
+                            seatInput.placeholder = 'eg. Orchestra';
+                            seatCol.appendChild(seatSub);
+                            seatCol.appendChild(seatInput);
+                            seatRow.appendChild(seatCol);
+                            
+                            // + button for seating area
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-pricing-add';
+                            addBtn.textContent = '+';
+                            addBtn.addEventListener('click', function() {
+                                seatingAreasContainer.appendChild(createSeatingAreaBlock());
+                                updateSeatingAreaButtons();
+                            });
+                            seatRow.appendChild(addBtn);
+                            
+                            // - button for seating area
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-pricing-remove';
+                            removeBtn.textContent = '−';
+                            removeBtn.addEventListener('click', function() {
+                                block.remove();
+                                updateSeatingAreaButtons();
+                            });
+                            seatRow.appendChild(removeBtn);
+                            
+                            block.appendChild(seatRow);
+                            
+                            // Pricing tiers container for this seating area
+                            var tiersContainer = document.createElement('div');
+                            tiersContainer.className = 'fieldset-tiers-container';
+                            tiersContainer.appendChild(createPricingTierRow(tiersContainer));
+                            updateTierButtons(tiersContainer);
+                            block.appendChild(tiersContainer);
+                            
+                            return block;
+                        }
                         
-                        fieldset.appendChild(seatAreaRow);
+                        function updateSeatingAreaButtons() {
+                            var blocks = seatingAreasContainer.querySelectorAll('.fieldset-seating-block');
+                            blocks.forEach(function(block) {
+                                var removeBtn = block.querySelector('.fieldset-row > .fieldset-pricing-remove');
+                                if (blocks.length === 1) {
+                                    removeBtn.style.opacity = '0.3';
+                                    removeBtn.style.cursor = 'not-allowed';
+                                    removeBtn.disabled = true;
+                                } else {
+                                    removeBtn.style.opacity = '1';
+                                    removeBtn.style.cursor = 'pointer';
+                                    removeBtn.disabled = false;
+                                }
+                            });
+                        }
                         
-                        // Row 2: Pricing Tier (with +/-)
-                        var priceTierRow = document.createElement('div');
-                        priceTierRow.className = 'fieldset-row';
-                        priceTierRow.style.marginBottom = '10px';
-                        
-                        var priceTierCol = document.createElement('div');
-                        priceTierCol.style.flex = '1';
-                        var priceTierSub = document.createElement('div');
-                        priceTierSub.className = 'fieldset-sublabel';
-                        priceTierSub.textContent = 'Pricing Tier';
-                        var priceTierInput = document.createElement('input');
-                        priceTierInput.type = 'text';
-                        priceTierInput.className = 'fieldset-input';
-                        priceTierInput.placeholder = 'eg. Adult';
-                        priceTierCol.appendChild(priceTierSub);
-                        priceTierCol.appendChild(priceTierInput);
-                        priceTierRow.appendChild(priceTierCol);
-                        
-                        var priceTierAdd = document.createElement('button');
-                        priceTierAdd.type = 'button';
-                        priceTierAdd.className = 'fieldset-pricing-add';
-                        priceTierAdd.textContent = '+';
-                        priceTierRow.appendChild(priceTierAdd);
-                        
-                        var priceTierRemove = document.createElement('button');
-                        priceTierRemove.type = 'button';
-                        priceTierRemove.className = 'fieldset-pricing-remove';
-                        priceTierRemove.textContent = '−';
-                        priceTierRemove.style.opacity = '0.3';
-                        priceTierRemove.style.cursor = 'not-allowed';
-                        priceTierRemove.disabled = true;
-                        priceTierRow.appendChild(priceTierRemove);
-                        
-                        fieldset.appendChild(priceTierRow);
-                        
-                        // Row 3: Currency (100px left) + Price
-                        var ticketPriceRow = document.createElement('div');
-                        ticketPriceRow.className = 'fieldset-row';
-                        
-                        var ticketCurrencyCol = document.createElement('div');
-                        ticketCurrencyCol.style.flex = '0 0 100px';
-                        var ticketCurrencySub = document.createElement('div');
-                        ticketCurrencySub.className = 'fieldset-sublabel';
-                        ticketCurrencySub.textContent = 'Currency';
-                        ticketCurrencyCol.appendChild(ticketCurrencySub);
-                        ticketCurrencyCol.appendChild(buildCurrencyMenuCompact());
-                        ticketPriceRow.appendChild(ticketCurrencyCol);
-                        
-                        var ticketPriceCol = document.createElement('div');
-                        ticketPriceCol.style.flex = '1';
-                        ticketPriceCol.style.marginLeft = '10px';
-                        var ticketPriceSub = document.createElement('div');
-                        ticketPriceSub.className = 'fieldset-sublabel';
-                        ticketPriceSub.textContent = 'Ticket Price';
-                        var ticketPriceInput = document.createElement('input');
-                        ticketPriceInput.type = 'number';
-                        ticketPriceInput.className = 'fieldset-input';
-                        ticketPriceInput.placeholder = '0.00';
-                        ticketPriceInput.step = '0.01';
-                        ticketPriceCol.appendChild(ticketPriceSub);
-                        ticketPriceCol.appendChild(ticketPriceInput);
-                        ticketPriceRow.appendChild(ticketPriceCol);
-                        
-                        fieldset.appendChild(ticketPriceRow);
+                        // Create first seating area
+                        seatingAreasContainer.appendChild(createSeatingAreaBlock());
+                        updateSeatingAreaButtons();
                         break;
                         
                     case 'session':
