@@ -2374,7 +2374,7 @@ let __notifyMapOnInteraction = null;
               waitForMapTiles = data.settings.wait_for_map_tiles !== undefined ? data.settings.wait_for_map_tiles : true;
               
               // Store icon folder path globally
-              window.iconFolder = data.settings.icon_folder || 'assets/icons-30';
+              window.iconFolder = data.settings.icon_folder || 'assets/category-icons';
               
               // Store system images folder globally - no fallback
               if(data.settings.system_images_folder && typeof data.settings.system_images_folder === 'string' && data.settings.system_images_folder.trim()){
@@ -11395,7 +11395,7 @@ function makePosts(){
       };
       
       // System Image Picker - for system images (map tab pills, messages tab category logos)
-      // Uses system-images folder by default (not icons-30 folder)
+      // Uses system-images folder by default (not category-icons folder)
       const attachSystemImagePicker = (trigger, container, options = {})=>{
         const opts = options || {};
         // Default to system-images folder unless explicitly overridden
@@ -11410,7 +11410,7 @@ function makePosts(){
       
       // Make icon picker functions globally available
       window.loadIconsFromFolder = loadIconsFromFolder;
-      window.attachIconPicker = attachIconPicker; // For formbuilder (uses icons-30 folder)
+      window.attachIconPicker = attachIconPicker; // For formbuilder (uses category-icons folder)
       window.attachSystemImagePicker = attachSystemImagePicker; // For system images (uses system-images folder)
       
       const frag = document.createDocumentFragment();
@@ -11563,7 +11563,7 @@ function makePosts(){
           }
         }
         iconPicker.append(iconPickerButton);
-        // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
+        // Use icon picker for formbuilder (uses category-icons folder, not system-images)
         if(typeof window.attachIconPicker === 'function'){
           window.attachIconPicker(iconPickerButton, iconPicker, {
             getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
@@ -11945,7 +11945,7 @@ function makePosts(){
           }
 
           subIconPicker.append(subIconButton);
-          // Use icon picker for formbuilder (uses icons-30 folder, not system-images)
+          // Use icon picker for formbuilder (uses category-icons folder, not system-images)
           if(typeof window.attachIconPicker === 'function'){
             window.attachIconPicker(subIconButton, subIconPicker, {
               getCurrentPath: ()=> applyNormalizeIconPath(getSubcategoryIconPath(c, currentSubName)),
