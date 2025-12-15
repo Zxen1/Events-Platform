@@ -1889,32 +1889,37 @@
                                     
                                     (function(dateStr, idx) {
                                         timeInput.addEventListener('blur', function() {
-                                            var v = this.value.replace(/[^0-9:]/g, '');
-                                            var newTime = '';
-                                            
-                                            // Auto-complete partial entries
-                                            if (/^\d$/.test(v)) {
-                                                // "9" → "09:00"
-                                                newTime = '0' + v + ':00';
-                                            } else if (/^\d{2}$/.test(v)) {
-                                                // "19" → "19:00"
-                                                newTime = v + ':00';
-                                            } else if (/^\d:\d{2}$/.test(v)) {
-                                                // "9:30" → "09:30"
-                                                newTime = '0' + v;
-                                            } else if (/^\d{2}:\d{2}$/.test(v)) {
-                                                // "19:30" → valid
-                                                newTime = v;
-                                            } else if (/^\d{2}:\d$/.test(v)) {
-                                                // "19:3" → "19:30"
-                                                newTime = v + '0';
-                                            } else if (v === '') {
+                                            var raw = this.value.replace(/[^0-9]/g, ''); // digits only
+                                            if (raw === '') {
                                                 sessionData[dateStr].times[idx] = '';
                                                 return;
                                             }
                                             
-                                            // Validate final format
-                                            if (/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
+                                            var hh, mm;
+                                            if (raw.length === 1) {
+                                                // "9" → "09:00"
+                                                hh = '0' + raw;
+                                                mm = '00';
+                                            } else if (raw.length === 2) {
+                                                // "19" → "19:00"
+                                                hh = raw;
+                                                mm = '00';
+                                            } else if (raw.length === 3) {
+                                                // "193" → "19:30"
+                                                hh = raw.substring(0, 2);
+                                                mm = raw.substring(2) + '0';
+                                            } else {
+                                                // "1930" → "19:30"
+                                                hh = raw.substring(0, 2);
+                                                mm = raw.substring(2, 4);
+                                            }
+                                            
+                                            var newTime = hh + ':' + mm;
+                                            
+                                            // Validate hours 00-23 and minutes 00-59
+                                            var hours = parseInt(hh, 10);
+                                            var mins = parseInt(mm, 10);
+                                            if (hours <= 23 && mins <= 59) {
                                                 this.value = newTime;
                                                 sessionData[dateStr].times[idx] = newTime;
                                                 sessionData[dateStr].edited[idx] = true;
