@@ -1775,10 +1775,10 @@
                             }
                         });
                         
-                        // Horizontal wheel scroll
+                        // Horizontal wheel scroll (reduced sensitivity)
                         calScroll.addEventListener('wheel', function(e) {
                             e.preventDefault();
-                            calScroll.scrollLeft += e.deltaY || e.deltaX;
+                            calScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
                         });
                         
                         // Track which slot indices have had their "god" time set
@@ -1872,17 +1872,36 @@
                                     var timeWrapper = document.createElement('div');
                                     timeWrapper.className = 'fieldset-session-time';
                                     var timeInput = document.createElement('input');
-                                    timeInput.type = 'time';
+                                    timeInput.type = 'text';
                                     timeInput.className = 'fieldset-time';
+                                    timeInput.placeholder = 'HH:MM';
+                                    timeInput.maxLength = 5;
                                     timeInput.value = timeVal;
                                     
+                                    // Auto-format time input (add colon after 2 digits)
+                                    timeInput.addEventListener('input', function() {
+                                        var v = this.value.replace(/[^0-9]/g, '');
+                                        if (v.length >= 2) {
+                                            v = v.substring(0, 2) + ':' + v.substring(2, 4);
+                                        }
+                                        this.value = v;
+                                    });
+                                    
                                     (function(dateStr, idx) {
-                                        timeInput.addEventListener('change', function() {
+                                        timeInput.addEventListener('blur', function() {
                                             var newTime = this.value;
-                                            sessionData[dateStr].times[idx] = newTime;
-                                            sessionData[dateStr].edited[idx] = true;
-                                            autofillTimes(dateStr, idx, newTime);
-                                            renderSessions();
+                                            // Validate HH:MM format
+                                            if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
+                                                // Pad hour if needed (9:30 -> 09:30)
+                                                if (newTime.length === 4) newTime = '0' + newTime;
+                                                this.value = newTime;
+                                                sessionData[dateStr].times[idx] = newTime;
+                                                sessionData[dateStr].edited[idx] = true;
+                                                autofillTimes(dateStr, idx, newTime);
+                                                renderSessions();
+                                            } else if (newTime === '') {
+                                                sessionData[dateStr].times[idx] = '';
+                                            }
                                         });
                                     })(dateStr, idx);
                                     
