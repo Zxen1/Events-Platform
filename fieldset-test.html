@@ -1644,72 +1644,61 @@
                         break;
                         
                     case 'sessions':
-                        // Inline horizontal calendar with session times below
+                        // Horizontal scrolling calendar + auto-generated session rows with autofill
                         fieldset.appendChild(buildLabel(name, tooltip));
                         
-                        // sessionsData: { '2025-01-15': ['19:00', '20:00'], ... }
-                        // Each date can have up to 10 times
-                        var sessionsData = {};
-                        // Track which times have been manually edited (immune to autofill)
-                        var editedTimes = {}; // { '2025-01-15_0': true, ... }
-                        var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                        // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
+                        var sessionData = {};
                         
                         var today = new Date();
                         today.setHours(0, 0, 0, 0);
                         var todayIso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
                         
+                        var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
+                        
+                        var todayMonthEl = null;
+                        var todayMonthIndex = 0;
+                        var totalMonths = 0;
+                        var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                        
                         function toISODate(d) {
                             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                         }
                         
-                        function formatDateDisplay(iso) {
-                            if (!iso) return '';
-                            var d = new Date(iso + 'T00:00:00');
-                            return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                        function getDayOfWeek(dateStr) {
+                            var d = new Date(dateStr + 'T00:00:00');
+                            return d.getDay();
                         }
                         
-                        function getWeekday(iso) {
-                            return new Date(iso + 'T00:00:00').getDay();
-                        }
-                        
-                        // Calendar container (inline)
+                        // Calendar container
                         var calContainer = document.createElement('div');
                         calContainer.className = 'fieldset-calendar-container';
-                        calContainer.style.cssText = 'position: relative; margin-bottom: 15px;';
                         
                         var calScroll = document.createElement('div');
                         calScroll.className = 'fieldset-calendar-scroll';
-                        calScroll.style.cssText = 'overflow-x: auto; overflow-y: hidden;';
                         
                         var calendar = document.createElement('div');
                         calendar.className = 'fieldset-calendar';
-                        calendar.style.cssText = 'display: flex; gap: 20px;';
                         
-                        // Build 24 months of calendar
-                        var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                        var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
-                        var current = new Date(minDate);
-                        var todayMonthEl = null;
-                        
+                        // Build months
+                        var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+                        var monthIdx = 0;
                         while (current <= maxDate) {
                             var monthEl = document.createElement('div');
                             monthEl.className = 'fieldset-calendar-month';
-                            monthEl.style.cssText = 'flex: 0 0 auto; min-width: 200px;';
                             
                             var header = document.createElement('div');
                             header.className = 'fieldset-calendar-header';
-                            header.style.cssText = 'text-align: center; color: #fff; font-weight: 600; padding: 8px 0; font-size: 13px;';
                             header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
                             monthEl.appendChild(header);
                             
                             var grid = document.createElement('div');
                             grid.className = 'fieldset-calendar-grid';
-                            grid.style.cssText = 'display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;';
                             
                             weekdayNames.forEach(function(wd) {
                                 var w = document.createElement('div');
                                 w.className = 'fieldset-calendar-weekday';
-                                w.style.cssText = 'text-align: center; font-size: 10px; color: #666; padding: 4px 0;';
                                 w.textContent = wd;
                                 grid.appendChild(w);
                             });
@@ -1721,44 +1710,28 @@
                             for (var i = 0; i < 42; i++) {
                                 var cell = document.createElement('div');
                                 cell.className = 'fieldset-calendar-day';
-                                cell.style.cssText = 'text-align: center; padding: 6px 2px; font-size: 12px; cursor: pointer; border-radius: 4px;';
                                 var dayNum = i - startDow + 1;
                                 
                                 if (i < startDow || dayNum > daysInMonth) {
                                     cell.classList.add('empty');
-                                    cell.style.visibility = 'hidden';
                                 } else {
                                     cell.textContent = dayNum;
                                     var dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
+                                    dateObj.setHours(0, 0, 0, 0);
                                     var iso = toISODate(dateObj);
                                     cell.dataset.iso = iso;
                                     
                                     if (dateObj < today) {
                                         cell.classList.add('past');
-                                        cell.style.color = '#444';
                                     } else {
                                         cell.classList.add('future');
-                                        cell.style.color = '#888';
                                     }
                                     
                                     if (iso === todayIso) {
                                         cell.classList.add('today');
-                                        cell.style.color = '#ef4444';
-                                        cell.style.fontWeight = 'bold';
                                         todayMonthEl = monthEl;
+                                        todayMonthIndex = monthIdx;
                                     }
-                                    
-                                    // Hover effect
-                                    cell.addEventListener('mouseenter', function() {
-                                        if (!this.classList.contains('selected')) {
-                                            this.style.background = 'rgba(59, 130, 245, 0.2)';
-                                        }
-                                    });
-                                    cell.addEventListener('mouseleave', function() {
-                                        if (!this.classList.contains('selected')) {
-                                            this.style.background = 'transparent';
-                                        }
-                                    });
                                 }
                                 grid.appendChild(cell);
                             }
@@ -1766,7 +1739,9 @@
                             monthEl.appendChild(grid);
                             calendar.appendChild(monthEl);
                             current.setMonth(current.getMonth() + 1);
+                            monthIdx++;
                         }
+                        totalMonths = monthIdx;
                         
                         calScroll.appendChild(calendar);
                         calContainer.appendChild(calScroll);
@@ -1774,34 +1749,31 @@
                         // Today marker
                         var marker = document.createElement('div');
                         marker.className = 'fieldset-calendar-today-marker';
-                        marker.style.cssText = 'position: absolute; bottom: 0; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; pointer-events: none;';
                         calContainer.appendChild(marker);
                         
                         fieldset.appendChild(calContainer);
                         
-                        // Helper note
-                        var helperNote = document.createElement('div');
-                        helperNote.className = 'fieldset-helper-note';
-                        helperNote.style.cssText = 'color: #666; font-size: 12px; margin-bottom: 15px; font-style: italic;';
-                        helperNote.textContent = 'Click dates above to add session times';
-                        fieldset.appendChild(helperNote);
-                        
-                        // Sessions container (for time inputs per date)
+                        // Sessions container (below calendar)
                         var sessionsContainer = document.createElement('div');
                         sessionsContainer.className = 'fieldset-sessions';
                         fieldset.appendChild(sessionsContainer);
                         
-                        // Position today marker dynamically
-                        function positionTodayMarker() {
-                            if (!todayMonthEl) return;
-                            var monthLeft = todayMonthEl.offsetLeft;
-                            var monthWidth = todayMonthEl.offsetWidth;
-                            var dayOfMonth = today.getDate();
-                            var daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-                            var fraction = dayOfMonth / daysInMonth;
-                            marker.style.left = (monthLeft + fraction * monthWidth - 4) + 'px';
-                        }
-                        setTimeout(positionTodayMarker, 0);
+                        // Position marker dynamically based on today's month index
+                        setTimeout(function() {
+                            if (todayMonthEl) {
+                                calScroll.scrollLeft = todayMonthEl.offsetLeft;
+                            }
+                            var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                            var markerPos = markerFraction * (calContainer.clientWidth - 8);
+                            marker.style.left = markerPos + 'px';
+                        }, 0);
+                        
+                        // Marker click - scroll to today
+                        marker.addEventListener('click', function() {
+                            if (todayMonthEl) {
+                                calScroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+                            }
+                        });
                         
                         // Horizontal wheel scroll
                         calScroll.addEventListener('wheel', function(e) {
@@ -1809,244 +1781,182 @@
                             calScroll.scrollLeft += e.deltaY || e.deltaX;
                         });
                         
-                        // Scroll to today on load
-                        setTimeout(function() {
-                            if (todayMonthEl) {
-                                calScroll.scrollLeft = todayMonthEl.offsetLeft - 20;
-                            }
-                        }, 0);
+                        // Track which slot indices have had their "god" time set
+                        // GOD = first edit fills ALL dates
+                        // DEMIGOD = subsequent edits fill same weekday only
+                        var godSetForSlot = {};
                         
-                        // Calendar date toggle selection
+                        function autofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                            var sortedDates = Object.keys(sessionData).sort();
+                            var changedDow = getDayOfWeek(changedDateStr);
+                            
+                            if (!godSetForSlot[changedSlotIdx]) {
+                                // GOD MODE: first edit at this slot - fill ALL unedited slots
+                                godSetForSlot[changedSlotIdx] = true;
+                                
+                                for (var i = 0; i < sortedDates.length; i++) {
+                                    var dateStr = sortedDates[i];
+                                    if (dateStr === changedDateStr) continue;
+                                    var data = sessionData[dateStr];
+                                    if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                        data.times[changedSlotIdx] = newTime;
+                                    }
+                                }
+                            } else {
+                                // DEMIGOD MODE: fill only same weekday unedited slots
+                                for (var i = 0; i < sortedDates.length; i++) {
+                                    var dateStr = sortedDates[i];
+                                    if (dateStr === changedDateStr) continue;
+                                    if (getDayOfWeek(dateStr) !== changedDow) continue;
+                                    var data = sessionData[dateStr];
+                                    if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                        data.times[changedSlotIdx] = newTime;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Get autofill value for a new time slot (worship the demigod - same weekday first)
+                        function getAutofillForSlot(dateStr, slotIdx) {
+                            var dow = getDayOfWeek(dateStr);
+                            var sortedDates = Object.keys(sessionData).sort();
+                            
+                            // Priority 1: Same weekday with a value at this slot (worship the demigod)
+                            for (var i = 0; i < sortedDates.length; i++) {
+                                var d = sortedDates[i];
+                                if (d === dateStr) continue;
+                                if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                                    return sessionData[d].times[slotIdx];
+                                }
+                            }
+                            
+                            // Priority 2: Any date with a value at this slot (worship the god if no demigod)
+                            for (var i = 0; i < sortedDates.length; i++) {
+                                var d = sortedDates[i];
+                                if (d === dateStr) continue;
+                                if (sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                                    return sessionData[d].times[slotIdx];
+                                }
+                            }
+                            
+                            return '';
+                        }
+                        
+                        // Render session rows
+                        function renderSessions() {
+                            sessionsContainer.innerHTML = '';
+                            
+                            var sortedDates = Object.keys(sessionData).sort();
+                            
+                            sortedDates.forEach(function(dateStr) {
+                                var data = sessionData[dateStr];
+                                var group = document.createElement('div');
+                                group.className = 'fieldset-session-group';
+                                
+                                data.times.forEach(function(timeVal, idx) {
+                                    var row = document.createElement('div');
+                                    row.className = 'fieldset-session-row';
+                                    
+                                    if (idx === 0) {
+                                        var dateDisplay = document.createElement('div');
+                                        dateDisplay.className = 'fieldset-session-date';
+                                        var d = new Date(dateStr + 'T00:00:00');
+                                        dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                        row.appendChild(dateDisplay);
+                                    } else {
+                                        var spacer = document.createElement('div');
+                                        spacer.className = 'fieldset-session-date-spacer';
+                                        row.appendChild(spacer);
+                                    }
+                                    
+                                    var timeWrapper = document.createElement('div');
+                                    timeWrapper.className = 'fieldset-session-time';
+                                    var timeInput = document.createElement('input');
+                                    timeInput.type = 'time';
+                                    timeInput.className = 'fieldset-time';
+                                    timeInput.value = timeVal;
+                                    
+                                    (function(dateStr, idx) {
+                                        timeInput.addEventListener('change', function() {
+                                            var newTime = this.value;
+                                            sessionData[dateStr].times[idx] = newTime;
+                                            sessionData[dateStr].edited[idx] = true;
+                                            autofillTimes(dateStr, idx, newTime);
+                                            renderSessions();
+                                        });
+                                    })(dateStr, idx);
+                                    
+                                    timeWrapper.appendChild(timeInput);
+                                    row.appendChild(timeWrapper);
+                                    
+                                    // + button (always visible, greyed out at max 10)
+                                    var maxTimesPerDate = 10;
+                                    var addBtn = document.createElement('button');
+                                    addBtn.type = 'button';
+                                    addBtn.className = 'fieldset-session-add';
+                                    addBtn.textContent = '+';
+                                    if (data.times.length >= maxTimesPerDate) {
+                                        addBtn.disabled = true;
+                                        addBtn.style.opacity = '0.3';
+                                        addBtn.style.cursor = 'not-allowed';
+                                    } else {
+                                        (function(dateStr, idx) {
+                                            addBtn.addEventListener('click', function() {
+                                                var newSlotIdx = idx + 1;
+                                                var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
+                                                sessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                                sessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                                renderSessions();
+                                            });
+                                        })(dateStr, idx);
+                                    }
+                                    row.appendChild(addBtn);
+                                    
+                                    // - button (always visible, greyed out if only 1 time)
+                                    var removeBtn = document.createElement('button');
+                                    removeBtn.type = 'button';
+                                    removeBtn.className = 'fieldset-session-remove';
+                                    removeBtn.textContent = '−';
+                                    if (data.times.length === 1) {
+                                        removeBtn.disabled = true;
+                                        removeBtn.style.opacity = '0.3';
+                                        removeBtn.style.cursor = 'not-allowed';
+                                    } else {
+                                        (function(dateStr, idx) {
+                                            removeBtn.addEventListener('click', function() {
+                                                sessionData[dateStr].times.splice(idx, 1);
+                                                sessionData[dateStr].edited.splice(idx, 1);
+                                                renderSessions();
+                                            });
+                                        })(dateStr, idx);
+                                    }
+                                    row.appendChild(removeBtn);
+                                    
+                                    group.appendChild(row);
+                                });
+                                
+                                sessionsContainer.appendChild(group);
+                            });
+                        }
+                        
+                        // Calendar day click
                         calendar.addEventListener('click', function(e) {
                             var day = e.target;
                             if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
                                 var iso = day.dataset.iso;
-                                if (sessionsData[iso]) {
-                                    // Deselect - remove date
-                                    delete sessionsData[iso];
-                                    // Clean up edited times for this date
-                                    Object.keys(editedTimes).forEach(function(k) {
-                                        if (k.startsWith(iso + '_')) delete editedTimes[k];
-                                    });
+                                if (sessionData[iso]) {
+                                    delete sessionData[iso];
                                     day.classList.remove('selected');
-                                    day.style.background = 'transparent';
-                                    day.style.color = day.classList.contains('today') ? '#ef4444' : (day.classList.contains('past') ? '#444' : '#888');
                                 } else {
-                                    // Select - add date with one empty time
-                                    sessionsData[iso] = [''];
+                                    // New date - autofill first time slot
+                                    var autofillVal = getAutofillForSlot(iso, 0);
+                                    sessionData[iso] = { times: [autofillVal], edited: [false] };
                                     day.classList.add('selected');
-                                    day.style.background = '#3b82f5';
-                                    day.style.color = '#fff';
-                                    // Autofill from God or Demigod
-                                    autofillNewDate(iso);
                                 }
-                                renderSessionRows();
+                                renderSessions();
                             }
                         });
                         
-                        // GOD/DEMIGOD AUTOFILL LOGIC
-                        // God: First edit ever for a time slot - fills ALL dates
-                        // Demigod: Subsequent edits - fills same weekday only
-                        // Atheist: Edited times are immune to autofill
-                        
-                        function autofillNewDate(newIso) {
-                            var newWeekday = getWeekday(newIso);
-                            var sortedDates = Object.keys(sessionsData).sort();
-                            
-                            // For each time slot, find a value to copy
-                            var maxSlots = 0;
-                            sortedDates.forEach(function(d) {
-                                if (sessionsData[d].length > maxSlots) maxSlots = sessionsData[d].length;
-                            });
-                            
-                            for (var slot = 0; slot < maxSlots; slot++) {
-                                // Look for same weekday first (demigod), then any date (god)
-                                var foundValue = null;
-                                // Same weekday
-                                for (var i = 0; i < sortedDates.length; i++) {
-                                    var d = sortedDates[i];
-                                    if (d === newIso) continue;
-                                    if (getWeekday(d) === newWeekday && sessionsData[d][slot]) {
-                                        foundValue = sessionsData[d][slot];
-                                        break;
-                                    }
-                                }
-                                // Any date if no weekday match
-                                if (!foundValue) {
-                                    for (var i = 0; i < sortedDates.length; i++) {
-                                        var d = sortedDates[i];
-                                        if (d === newIso) continue;
-                                        if (sessionsData[d][slot]) {
-                                            foundValue = sessionsData[d][slot];
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (foundValue && sessionsData[newIso]) {
-                                    if (!sessionsData[newIso][slot]) sessionsData[newIso][slot] = foundValue;
-                                }
-                            }
-                        }
-                        
-                        function autofillFromEdit(editedIso, slotIndex, newValue) {
-                            var editedWeekday = getWeekday(editedIso);
-                            var sortedDates = Object.keys(sessionsData).sort();
-                            var isFirstEdit = true;
-                            
-                            // Check if any time slot has been edited before (not by autofill)
-                            Object.keys(editedTimes).forEach(function(k) {
-                                if (k.endsWith('_' + slotIndex)) isFirstEdit = false;
-                            });
-                            
-                            sortedDates.forEach(function(d) {
-                                if (d === editedIso) return;
-                                var key = d + '_' + slotIndex;
-                                if (editedTimes[key]) return; // Already edited, immune
-                                
-                                // Ensure slot exists
-                                while (sessionsData[d].length <= slotIndex) {
-                                    sessionsData[d].push('');
-                                }
-                                
-                                if (isFirstEdit) {
-                                    // God mode: fill all
-                                    sessionsData[d][slotIndex] = newValue;
-                                } else {
-                                    // Demigod: same weekday only
-                                    if (getWeekday(d) === editedWeekday) {
-                                        sessionsData[d][slotIndex] = newValue;
-                                    }
-                                }
-                            });
-                        }
-                        
-                        function renderSessionRows() {
-                            sessionsContainer.innerHTML = '';
-                            var sortedDates = Object.keys(sessionsData).sort();
-                            
-                            // Update helper note visibility
-                            helperNote.style.display = sortedDates.length > 0 ? 'none' : 'block';
-                            
-                            sortedDates.forEach(function(dateStr) {
-                                var dateBlock = document.createElement('div');
-                                dateBlock.className = 'fieldset-session-date';
-                                dateBlock.style.cssText = 'margin-bottom: 15px; padding: 10px; background: rgba(59, 130, 245, 0.1); border-radius: 6px;';
-                                
-                                // Date header
-                                var dateHeader = document.createElement('div');
-                                dateHeader.style.cssText = 'color: #3b82f5; font-weight: 600; margin-bottom: 8px; font-size: 13px;';
-                                dateHeader.textContent = formatDateDisplay(dateStr);
-                                dateBlock.appendChild(dateHeader);
-                                
-                                // Time rows container
-                                var timesContainer = document.createElement('div');
-                                timesContainer.className = 'fieldset-times';
-                                
-                                function renderTimes() {
-                                    timesContainer.innerHTML = '';
-                                    var times = sessionsData[dateStr] || [''];
-                                    var atMax = times.length >= 10;
-                                    
-                                    times.forEach(function(timeVal, tIdx) {
-                                        var row = document.createElement('div');
-                                        row.className = 'fieldset-row';
-                                        row.style.cssText = 'display: flex; align-items: flex-end; gap: 10px; margin-bottom: 6px;';
-                                        
-                                        // Time input
-                                        var timeCol = document.createElement('div');
-                                        timeCol.style.flex = '0 0 120px';
-                                        var timeSub = document.createElement('div');
-                                        timeSub.className = 'fieldset-sublabel';
-                                        timeSub.style.marginBottom = '6px';
-                                        timeSub.textContent = 'Time ' + (tIdx + 1);
-                                        var timeInput = document.createElement('input');
-                                        timeInput.type = 'time';
-                                        timeInput.className = 'fieldset-input';
-                                        timeInput.value = timeVal || '';
-                                        (function(dateStr, tIdx) {
-                                            timeInput.addEventListener('change', function() {
-                                                var val = this.value;
-                                                sessionsData[dateStr][tIdx] = val;
-                                                editedTimes[dateStr + '_' + tIdx] = true;
-                                                autofillFromEdit(dateStr, tIdx, val);
-                                                renderSessionRows();
-                                            });
-                                        })(dateStr, tIdx);
-                                        timeCol.appendChild(timeSub);
-                                        timeCol.appendChild(timeInput);
-                                        row.appendChild(timeCol);
-                                        
-                                        // Spacer
-                                        var spacer = document.createElement('div');
-                                        spacer.style.flex = '1';
-                                        row.appendChild(spacer);
-                                        
-                                        // + button
-                                        var addBtn = document.createElement('button');
-                                        addBtn.type = 'button';
-                                        addBtn.className = 'fieldset-pricing-add';
-                                        addBtn.textContent = '+';
-                                        addBtn.style.cssText = 'width: 36px; height: 36px; min-width: 36px; max-width: 36px;';
-                                        if (atMax) {
-                                            addBtn.disabled = true;
-                                            addBtn.style.opacity = '0.3';
-                                            addBtn.style.cursor = 'not-allowed';
-                                        } else {
-                                            addBtn.addEventListener('click', function() {
-                                                sessionsData[dateStr].push('');
-                                                renderTimes();
-                                            });
-                                        }
-                                        row.appendChild(addBtn);
-                                        
-                                        // - button
-                                        var removeBtn = document.createElement('button');
-                                        removeBtn.type = 'button';
-                                        removeBtn.className = 'fieldset-pricing-remove';
-                                        removeBtn.textContent = '−';
-                                        removeBtn.style.cssText = 'width: 36px; height: 36px; min-width: 36px; max-width: 36px;';
-                                        if (times.length === 1) {
-                                            removeBtn.disabled = true;
-                                            removeBtn.style.opacity = '0.3';
-                                            removeBtn.style.cursor = 'not-allowed';
-                                        } else {
-                                            (function(tIdx) {
-                                                removeBtn.addEventListener('click', function() {
-                                                    sessionsData[dateStr].splice(tIdx, 1);
-                                                    delete editedTimes[dateStr + '_' + tIdx];
-                                                    // Reindex edited times
-                                                    var newEdited = {};
-                                                    Object.keys(editedTimes).forEach(function(k) {
-                                                        if (k.startsWith(dateStr + '_')) {
-                                                            var idx = parseInt(k.split('_')[1]);
-                                                            if (idx > tIdx) {
-                                                                newEdited[dateStr + '_' + (idx - 1)] = true;
-                                                            } else if (idx < tIdx) {
-                                                                newEdited[k] = true;
-                                                            }
-                                                        } else {
-                                                            newEdited[k] = editedTimes[k];
-                                                        }
-                                                    });
-                                                    editedTimes = newEdited;
-                                                    renderTimes();
-                                                });
-                                            })(tIdx);
-                                        }
-                                        row.appendChild(removeBtn);
-                                        
-                                        timesContainer.appendChild(row);
-                                    });
-                                }
-                                
-                                renderTimes();
-                                dateBlock.appendChild(timesContainer);
-                                sessionsContainer.appendChild(dateBlock);
-                            });
-                        }
-                        
-                        // Initial render
-                        renderSessionRows();
                         break;
                         
                     case 'venue':
