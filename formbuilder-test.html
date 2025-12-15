@@ -886,18 +886,6 @@
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            height: 36px;
-            padding: 0 10px;
-            background: #111111;
-            border: 1px solid #222222;
-            border-radius: 5px;
-        }
-        .formbuilder-type-option:hover {
-            border-color: #3b82f5;
-        }
-        .formbuilder-type-option.selected {
-            border-color: #3b82f5;
-            background: #062038;
         }
         .formbuilder-type-option input[type="radio"] {
             cursor: pointer;
@@ -1343,7 +1331,7 @@
                     
                     // Events option
                     var eventsLabel = document.createElement('label');
-                    eventsLabel.className = 'formbuilder-type-option' + (currentType === 'Events' ? ' selected' : '');
+                    eventsLabel.className = 'formbuilder-type-option';
                     var eventsInput = document.createElement('input');
                     eventsInput.type = 'radio';
                     eventsInput.name = 'subType-' + cat.name + '-' + subName;
@@ -1356,7 +1344,7 @@
                     
                     // General option
                     var generalLabel = document.createElement('label');
-                    generalLabel.className = 'formbuilder-type-option' + (currentType === 'General' ? ' selected' : '');
+                    generalLabel.className = 'formbuilder-type-option';
                     var generalInput = document.createElement('input');
                     generalInput.type = 'radio';
                     generalInput.name = 'subType-' + cat.name + '-' + subName;
@@ -1373,8 +1361,6 @@
                             if (!cat.subFees) cat.subFees = {};
                             if (!cat.subFees[subName]) cat.subFees[subName] = {};
                             cat.subFees[subName].subcategory_type = 'Events';
-                            eventsLabel.classList.add('selected');
-                            generalLabel.classList.remove('selected');
                         }
                     });
                     
@@ -1383,8 +1369,6 @@
                             if (!cat.subFees) cat.subFees = {};
                             if (!cat.subFees[subName]) cat.subFees[subName] = {};
                             cat.subFees[subName].subcategory_type = 'General';
-                            generalLabel.classList.add('selected');
-                            eventsLabel.classList.remove('selected');
                         }
                     });
                     
