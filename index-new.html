@@ -27,10 +27,44 @@
        File: header.js, header.css
        ======================================================================== -->
   <header class="header-bar">
+    
     <!-- Logo button -->
+    <button class="header-logo-button" type="button" aria-label="Home">
+      <img class="header-logo-button-image" src="assets/system-images/logo.webp" alt="">
+    </button>
+    
     <!-- Filter button -->
+    <button class="header-filter-button" type="button" aria-label="Toggle filters" aria-expanded="false" aria-controls="filter-panel">
+      <img class="header-filter-button-image" src="assets/system-images/filter-icon.webp" alt="">
+    </button>
+    
     <!-- Mode switch (Recents / Posts / Map) -->
+    <nav class="header-modeswitch" aria-label="View mode">
+      <button class="header-modeswitch-button" type="button" data-mode="recents">
+        <img class="header-modeswitch-button-image" src="assets/system-images/recents-icon.webp" alt="">
+        <span class="header-modeswitch-button-text">Recents</span>
+      </button>
+      <button class="header-modeswitch-button" type="button" data-mode="posts">
+        <img class="header-modeswitch-button-image" src="assets/system-images/posts-icon.webp" alt="">
+        <span class="header-modeswitch-button-text">Posts</span>
+      </button>
+      <button class="header-modeswitch-button" type="button" data-mode="map">
+        <img class="header-modeswitch-button-image" src="assets/system-images/map-icon.webp" alt="">
+        <span class="header-modeswitch-button-text">Map</span>
+      </button>
+    </nav>
+    
     <!-- Access buttons (Member / Admin / Fullscreen) -->
+    <button class="header-access-button" type="button" data-panel="member" aria-label="Member" aria-expanded="false" aria-controls="member-panel">
+      <img class="header-access-button-image" src="assets/system-images/member-icon.webp" alt="">
+    </button>
+    <button class="header-access-button" type="button" data-panel="admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel">
+      <img class="header-access-button-image" src="assets/system-images/admin-icon.webp" alt="">
+    </button>
+    <button class="header-access-button" type="button" data-action="fullscreen" aria-label="Toggle fullscreen">
+      <img class="header-access-button-image" src="assets/system-images/fullscreen-icon.webp" alt="">
+    </button>
+    
   </header>
 
   <!-- ========================================================================
