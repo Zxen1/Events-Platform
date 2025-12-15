@@ -1,23 +1,1285 @@
 /* ============================================================================
-   MEMBER.CSS - MEMBER SECTION STYLES
-   ============================================================================
-   
-   All styles for the member panel and its tabs.
-   
-   CONTAINERS (TBD):
-   - panel (member panel)
-   - tabs (tab buttons)
-   - profile (profile tab content)
-   - login (login form)
-   - register (register form)
-   - createpost (create post tab)
-   - myposts (my posts tab)
-   - formpicker (category/subcategory picker)
-   
-   CLASSES:
-   - (TBD - need to finalize container names first)
-   
+   MEMBER PANEL - Cleaned for new architecture
    ============================================================================ */
 
-/* Placeholder - to be built */
+/* ============================================================================
+   PANEL BASE
+   ============================================================================ */
 
+.member-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-panel);
+  pointer-events: none;
+}
+
+.member-panel--show {
+  display: block;
+}
+
+/* ============================================================================
+   PANEL CONTENT
+   ============================================================================ */
+
+.member-panel-content {
+  position: absolute;
+  left: auto;
+  right: 0;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  width: min(440px, 100%);
+  max-width: 100%;
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overflow-y: auto;
+  pointer-events: auto;
+  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform;
+  box-sizing: border-box;
+  background: #222222;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  overscroll-behavior: contain;
+}
+
+.member-panel-content--side-left {
+  transform: translateX(-100%);
+}
+
+.member-panel-content--side-right {
+  transform: translateX(100%);
+}
+
+.member-panel-content--hidden {
+  pointer-events: none;
+}
+
+.member-panel-content--visible {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .member-panel-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 440px) {
+  .member-panel-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+}
+
+/* ============================================================================
+   PANEL HEADER
+   ============================================================================ */
+
+.member-panel-header {
+  position: sticky;
+  top: 0;
+  padding: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  background: #222222;
+}
+
+.member-panel-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.member-panel-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   PANEL ACTIONS
+   ============================================================================ */
+
+.member-panel-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.member-panel-actions-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  min-width: 35px;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.member-panel-actions-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.member-panel-actions-icon-btn-icon {
+  width: 30px;
+  height: 30px;
+  background-color: #fff;
+  opacity: 1;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.member-panel-actions-icon-btn-icon--save {
+  -webkit-mask-image: url('assets/system-images/icon-save.svg');
+  mask-image: url('assets/system-images/icon-save.svg');
+}
+
+.member-panel-actions-icon-btn-icon--discard {
+  -webkit-mask-image: url('assets/system-images/icon-discard.svg');
+  mask-image: url('assets/system-images/icon-discard.svg');
+}
+
+.member-panel-actions-icon-btn-icon--close {
+  -webkit-mask-image: url('assets/system-images/icon-close.svg');
+  mask-image: url('assets/system-images/icon-close.svg');
+}
+
+.member-panel-actions-icon-btn--disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.member-panel-actions-icon-btn-icon--disabled {
+  background-color: #888;
+}
+
+.member-panel-actions-icon-btn-icon--save-enabled {
+  background-color: #22c55e;
+}
+
+.member-panel-actions-icon-btn--save-enabled:hover {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.member-panel-actions-icon-btn-icon--save-enabled-hover {
+  background-color: #4ade80;
+}
+
+.member-panel-actions-icon-btn-icon--discard-enabled {
+  background-color: #ef4444;
+}
+
+.member-panel-actions-icon-btn--discard-enabled:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.member-panel-actions-icon-btn-icon--discard-enabled-hover {
+  background-color: #f87171;
+}
+
+.member-panel-actions-icon-btn--close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.member-panel-actions-primary {
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.member-panel-actions-primary:hover {
+  background: var(--button-selected-hover, var(--btn-selected-hover));
+  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+.member-panel-actions-discard--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   PANEL BODY
+   ============================================================================ */
+
+.member-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 10px;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-scrollbar-thumb) transparent;
+}
+
+.member-panel-body::-webkit-scrollbar {
+  width: 12px;
+}
+
+.member-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.member-panel-body::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+}
+
+.member-panel-body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.member-panel-body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.member-panel-body-item {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+.member-panel-body-item--last {
+  margin-bottom: 0;
+}
+
+.member-panel-form {
+  padding: 10px;
+  padding-bottom: 100px;
+}
+
+/* ============================================================================
+   PANEL FIELD
+   ============================================================================ */
+
+.member-panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.member-panel-field-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.member-panel-field-label--alt {
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+
+.member-panel-field-title {
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
+
+.member-panel-field-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--input-text, #fff);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.member-panel-field-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--input-text, #fff);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* ============================================================================
+   TINY BUTTON (Logout button)
+   ============================================================================ */
+
+.member-tiny-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--btn);
+  cursor: pointer;
+  border: 1px solid var(--btn);
+}
+
+.member-tiny-btn--disabled {
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.member-tiny-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================================
+   BUTTON STYLES
+   ============================================================================ */
+
+.member-button-tab {
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+
+.member-button-tab:hover {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.member-button-tab:active {
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.member-button-tab--selected {
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.member-button-auth {
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+
+.member-button-auth:hover {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.member-button-auth:active {
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.member-button-auth:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.member-button-auth--disabled {
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ============================================================================
+   INPUT STYLES
+   ============================================================================ */
+
+.member-input-text {
+  font: inherit;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 8px;
+}
+
+.member-input-text::placeholder {
+  color: var(--placeholder-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.member-input-dropdown {
+  font: inherit;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  border-radius: var(--dropdown-radius);
+  height: var(--control-h);
+}
+
+/* ============================================================================
+   TAB BAR
+   ============================================================================ */
+
+.member-tab-bar {
+  display: flex;
+  gap: 6px;
+}
+
+.member-tab-bar-button {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  color: var(--button-text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.member-tab-bar-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.member-tab-bar-button:active {
+  transform: none;
+}
+
+.member-tab-bar-button--selected {
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
+  box-shadow: none;
+  color: var(--button-active-text);
+}
+
+.member-tab-bar-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   TAB PANELS
+   ============================================================================ */
+
+.member-tab-panel {
+  display: none;
+}
+
+.member-tab-panel--active {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================================================
+   MEMBER FORM CONTAINER
+   ============================================================================ */
+
+.member-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0 10px 10px;
+}
+
+.member-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 100px;
+}
+
+/* ============================================================================
+   MEMBER CREATE STYLES
+   ============================================================================ */
+
+.member-create-intro {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.member-create-selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.member-create-field {
+  margin: 0;
+}
+
+.member-create-select {
+  max-width: 240px;
+}
+
+.member-create-placeholder {
+  margin: 4px 0 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.member-create-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.member-create-checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.member-create-price-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.member-create-price-row-select {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.member-create-price-row-input {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.member-create-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.member-create-actions-primary--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   ADMIN SKIP PAYMENT BUTTON
+   ============================================================================ */
+
+.member-admin-skip-payment-btn {
+  background: rgba(100, 150, 200, 0.2);
+  border: 1px solid rgba(100, 150, 200, 0.4);
+  color: #8ab4ff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.member-admin-skip-payment-btn:hover {
+  background: rgba(100, 150, 200, 0.3);
+  border-color: rgba(100, 150, 200, 0.6);
+}
+
+.member-admin-skip-payment-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   MEMBER AUTH CONTAINER
+   ============================================================================ */
+
+.member-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.member-auth-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.member-auth-tab {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 38px;
+  border-radius: 20px;
+  border: 1px solid var(--btn);
+  background: var(--btn);
+  color: var(--button-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.member-auth-tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.member-auth-tab:active {
+  transform: none;
+}
+
+.member-auth-tab--selected {
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
+  color: var(--button-active-text);
+}
+
+.member-auth-tab:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+.member-auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-auth-panel--hidden {
+  display: none;
+}
+
+.member-auth-panel-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.member-auth-panel-input {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1c1c1c;
+  color: #fff;
+  padding: 0 12px;
+  box-sizing: border-box;
+  caret-color: #fff;
+  cursor: text;
+}
+
+/* Browser autofill styling - !important required to override browser defaults */
+.member-auth-panel-input:-webkit-autofill,
+.member-auth-panel-input:-webkit-autofill:hover,
+.member-auth-panel-input:-webkit-autofill:focus,
+.member-auth-panel-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1c1c1c inset !important;
+  -webkit-text-fill-color: #fff !important;
+  background: #1c1c1c !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.member-auth-panel-input:focus {
+  outline: 2px solid var(--btn-selected);
+  outline-offset: 2px;
+  background: #1c1c1c;
+}
+
+.member-auth-submit {
+  align-self: flex-start;
+}
+
+.member-auth-profile {
+  gap: 18px;
+}
+
+.member-auth-tabs--logged-in {
+  display: none;
+}
+
+.member-auth-panel--logged-in {
+  gap: 16px;
+}
+
+/* ============================================================================
+   MEMBER PROFILE
+   ============================================================================ */
+
+.member-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.member-profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-sizing: border-box;
+  background: #111111;
+}
+
+.member-profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-profile-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.member-profile-email {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.member-profile-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.member-profile-actions-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   UNSAVED PROMPT DIALOG
+   ============================================================================ */
+
+.member-unsaved-prompt {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: var(--layer-dialog);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.member-unsaved-prompt--show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.member-unsaved-dialog {
+  background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 360px;
+  width: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.member-unsaved-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ============================================================================
+   FORMPICKER (Category/Subcategory picker in Create tab)
+   ============================================================================ */
+
+.member-formpicker-container {
+  margin: 8px 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.member-formpicker-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.member-formpicker-category-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.member-formpicker-category-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.member-formpicker-category-trigger-wrap {
+  flex: 1;
+}
+
+.member-formpicker-category-trigger {
+  height: 36px;
+  border-radius: 8px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  color: var(--button-text);
+  font: inherit;
+  font-size: 16px;
+  margin: 0;
+}
+
+.member-formpicker-category-trigger--active {
+  border-color: var(--border-active);
+}
+
+.member-formpicker-category-logo {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-formpicker-category-logo-img {
+  width: 24px;
+  height: 24px;
+}
+
+.member-formpicker-category-label {
+  font-weight: 400;
+  letter-spacing: .2px;
+  flex: 1;
+}
+
+.member-formpicker-cat-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 38px;
+  height: 36px;
+  flex: 0 0 38px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.member-formpicker-cat-switch-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.member-formpicker-cat-switch-slider {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 38px;
+  height: 20px;
+  border-radius: 16px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  transition: .2s;
+}
+
+.member-formpicker-cat-switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 1px;
+  top: 1px;
+  border-radius: 50%;
+  background: var(--button-text);
+  transition: .2s;
+}
+
+.member-formpicker-cat-switch-slider--checked {
+  background: var(--category-switch-active);
+  border-color: var(--category-switch-active);
+}
+
+.member-formpicker-cat-switch-slider--checked::before {
+  transform: translateX(18px);
+}
+
+.member-formpicker-options-dropdown {
+  width: 100%;
+}
+
+.member-formpicker-options-dropdown-button {
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.member-formpicker-options-menu {
+  width: 100%;
+  box-sizing: border-box;
+  position: static;
+  margin-top: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  z-index: auto;
+}
+
+.member-formpicker-options-menu-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gap);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  padding: 0 12px;
+}
+
+.member-formpicker-subcategory-logo {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-formpicker-subcategory-logo-img {
+  width: 20px;
+  height: 20px;
+}
+
+.member-formpicker-subcategory-label {
+  flex: 1;
+  text-align: left;
+}
+
+.member-formpicker-subcategory-switch {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 34px;
+  height: 18px;
+  position: relative;
+  pointer-events: none;
+}
+
+.member-formpicker-subcategory-switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  transition: .2s;
+}
+
+.member-formpicker-subcategory-switch-thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--button-text);
+  left: 2px;
+  top: 2px;
+  transition: .2s;
+}
+
+.member-formpicker-options-menu-button--off {
+  color: var(--muted);
+}
+
+.member-formpicker-subcategory-logo--off {
+  opacity: 0.6;
+}
+
+.member-formpicker-subcategory-logo-img--off {
+  filter: grayscale(1);
+}
+
+.member-formpicker-subcategory-switch-track--off {
+  background: var(--btn);
+  border-color: var(--btn);
+}
+
+.member-formpicker-subcategory-switch-thumb--off {
+  transform: translateX(0);
+  opacity: 0.7;
+}
+
+.member-formpicker-options-menu-button--on {
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+  border-color: var(--dropdown-selected-bg);
+}
+
+.member-formpicker-subcategory-switch-track--on {
+  background: var(--category-switch-active);
+  border-color: var(--category-switch-active);
+}
+
+.member-formpicker-subcategory-switch-thumb--on {
+  transform: translateX(16px);
+}
+
+.member-formpicker-category-menu--off {
+  opacity: 0.6;
+}
+
+.member-formpicker-category-trigger--off {
+  cursor: default;
+}
+
+/* ============================================================================
+   FORMPICKER DROPDOWNS
+   ============================================================================ */
+
+.member-formpicker-dropdowns {
+  width: 100%;
+  max-width: 100%;
+}
+
+.member-formpicker-dropdowns-field {
+  width: 100%;
+  max-width: 100%;
+}
+
+.member-formpicker-dropdowns-field-label {
+  text-align: left;
+}
+
+.member-formpicker-dropdowns-dropdown {
+  width: 100%;
+  position: relative;
+}
+
+.member-formpicker-dropdowns-dropdown-button {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  padding-left: 10px;
+  padding-right: 30px;
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.member-formpicker-dropdowns-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: #222222;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  z-index: 66;
+}
+
+.member-formpicker-dropdowns-menu-option {
+  width: 100%;
+  background: transparent;
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-align: left;
+  justify-content: flex-start;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+}
+
+.member-formpicker-category-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.member-formpicker-subcategory-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.member-formpicker-category-icon--button {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+  padding: 10px;
+  box-sizing: content-box;
+}
+
+.member-formpicker-subcategory-icon--button {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+  padding: 10px;
+  box-sizing: content-box;
+}
+
+.member-formpicker-dropdowns-menu-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   DROPDOWN ARROW
+   ============================================================================ */
+
+.member-dropdown-arrow {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translate(0, -50%) rotate(45deg);
+  margin-top: -1px;
+  pointer-events: none;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-style: solid;
+  border-width: 0 2px 2px 0;
+  border-color: currentColor;
+}
+
+.member-dropdown-arrow--expanded {
+  transform: translate(0, -50%) rotate(-135deg);
+  margin-top: 1px;
+}
+
+/* ============================================================================
+   DROPDOWN FLAG & TEXT
+   ============================================================================ */
+
+.member-dropdown-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 15px;
+  line-height: 0;
+}
+
+.member-dropdown-flag-img {
+  display: block;
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.member-dropdown-text {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  line-height: 1;
+}
