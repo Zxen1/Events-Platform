@@ -1064,7 +1064,7 @@
                             // Row 2: Currency + Price (cropped to align under variant)
                             var priceRow = document.createElement('div');
                             priceRow.className = 'fieldset-row';
-                            priceRow.style.marginRight = '82px'; // 36px + 10px + 36px buttons
+                            priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
                             
                             var currencyCol = document.createElement('div');
                             currencyCol.style.flex = '0 0 100px';
@@ -1101,8 +1101,21 @@
                         
                         function updateItemVariantButtons() {
                             var blocks = itemVariantsContainer.querySelectorAll('.fieldset-variant-block');
+                            var atMax = blocks.length >= 10;
                             blocks.forEach(function(block) {
+                                var addBtn = block.querySelector('.fieldset-pricing-add');
                                 var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                                // + button: grey out at cap
+                                if (atMax) {
+                                    addBtn.style.opacity = '0.3';
+                                    addBtn.style.cursor = 'not-allowed';
+                                    addBtn.disabled = true;
+                                } else {
+                                    addBtn.style.opacity = '1';
+                                    addBtn.style.cursor = 'pointer';
+                                    addBtn.disabled = false;
+                                }
+                                // - button: grey out when only 1
                                 if (blocks.length === 1) {
                                     removeBtn.style.opacity = '0.3';
                                     removeBtn.style.cursor = 'not-allowed';
@@ -1179,7 +1192,7 @@
                             // Row 2: Currency + Price (cropped to align under tier)
                             var priceRow = document.createElement('div');
                             priceRow.className = 'fieldset-row';
-                            priceRow.style.marginRight = '82px'; // 36px + 10px + 36px buttons
+                            priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
                             
                             var currencyCol = document.createElement('div');
                             currencyCol.style.flex = '0 0 100px';
@@ -1216,8 +1229,21 @@
                         
                         function updateTierButtons(tiersContainer) {
                             var blocks = tiersContainer.querySelectorAll('.fieldset-tier-block');
+                            var atMax = blocks.length >= 10;
                             blocks.forEach(function(block) {
+                                var addBtn = block.querySelector('.fieldset-pricing-add');
                                 var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                                // + button: grey out at cap
+                                if (atMax) {
+                                    addBtn.style.opacity = '0.3';
+                                    addBtn.style.cursor = 'not-allowed';
+                                    addBtn.disabled = true;
+                                } else {
+                                    addBtn.style.opacity = '1';
+                                    addBtn.style.cursor = 'pointer';
+                                    addBtn.disabled = false;
+                                }
+                                // - button: grey out when only 1
                                 if (blocks.length === 1) {
                                     removeBtn.style.opacity = '0.3';
                                     removeBtn.style.cursor = 'not-allowed';
@@ -1291,8 +1317,21 @@
                         
                         function updateSeatingAreaButtons() {
                             var blocks = seatingAreasContainer.querySelectorAll('.fieldset-seating-block');
+                            var atMax = blocks.length >= 10;
                             blocks.forEach(function(block) {
+                                var addBtn = block.querySelector('.fieldset-row > .fieldset-pricing-add');
                                 var removeBtn = block.querySelector('.fieldset-row > .fieldset-pricing-remove');
+                                // + button: grey out at cap
+                                if (atMax) {
+                                    addBtn.style.opacity = '0.3';
+                                    addBtn.style.cursor = 'not-allowed';
+                                    addBtn.disabled = true;
+                                } else {
+                                    addBtn.style.opacity = '1';
+                                    addBtn.style.cursor = 'pointer';
+                                    addBtn.disabled = false;
+                                }
+                                // - button: grey out when only 1
                                 if (blocks.length === 1) {
                                     removeBtn.style.opacity = '0.3';
                                     removeBtn.style.cursor = 'not-allowed';
