@@ -980,24 +980,11 @@
             var subcategoryIconPaths = res.snapshot.subcategoryIconPaths || {};
             var fieldsets = res.snapshot.fieldsets || [];
             
-            // New SVG category icons
-            var categoryIconMap = {
-                "What's On": 'assets/category-icons/whats-on.svg',
-                'Opportunities': 'assets/category-icons/opportunities.svg',
-                'Learning': 'assets/category-icons/learning.svg',
-                'Buy and Sell': 'assets/category-icons/buy-and-sell.svg',
-                'For Hire': 'assets/category-icons/for-hire.svg',
-                'Eat & Drink': 'assets/category-icons/eat-and-drink.svg',
-                'Stay': 'assets/category-icons/stay.svg',
-                'Get Around': 'assets/category-icons/get-around.svg',
-                'Test': 'assets/category-icons/opportunities.svg'
-            };
-            
             categories.forEach(function(cat) {
                 var accordion = document.createElement('div');
                 accordion.className = 'formbuilder-accordion formbuilder-accordion--open';
                 
-                var catIconSrc = categoryIconMap[cat.name] || categoryIconPaths[cat.name] || '';
+                var catIconSrc = categoryIconPaths[cat.name] || '';
                 
                 // Header
                 var header = document.createElement('div');
@@ -1090,7 +1077,7 @@
                 nameRow.appendChild(nameInput);
                 nameRow.appendChild(moreBtn);
                 
-                var iconPicker = buildIconPicker(catIconSrc || categoryIconMap[cat.name] || '', function(newIcon) {
+                var iconPicker = buildIconPicker(catIconSrc, function(newIcon) {
                     headerImg.src = newIcon;
                 });
                 
