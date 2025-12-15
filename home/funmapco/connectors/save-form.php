@@ -289,7 +289,7 @@ try {
             $categoryUpdateParts[] = $categoryNameColumn . ' = :category_name';
             $categoryParams[':category_name'] = $categoryName;
         }
-        if (in_array('icon_path', $categoryColumns, true)) {
+        if (in_array('icon_path', $categoryColumns, true) && $categoryIconVariants['icon'] !== '') {
             $categoryUpdateParts[] = 'icon_path = :category_icon_path';
             $categoryParams[':category_icon_path'] = $categoryIconVariants['icon'];
         }
@@ -1000,13 +1000,10 @@ try {
                 $updateParts[] = 'subcategory_type = :subcategory_type';
                 $params[':subcategory_type'] = $subcategoryType;
             }
-            // Only update icon_path if icon data was provided in payload
-            $hasIconInPayload = !empty($subcategoryIconPaths) || !empty($subcategoryIcons);
-            if ($hasIconInPayload) {
-                if (in_array('icon_path', $subcategoryColumns, true)) {
-                    $updateParts[] = 'icon_path = :icon_path';
-                    $params[':icon_path'] = $subIconVariants['icon'];
-                }
+            // Only update icon_path if we have a non-empty icon path to save
+            if (in_array('icon_path', $subcategoryColumns, true) && $subIconVariants['icon'] !== '') {
+                $updateParts[] = 'icon_path = :icon_path';
+                $params[':icon_path'] = $subIconVariants['icon'];
             }
 
             if (!$updateParts) {
