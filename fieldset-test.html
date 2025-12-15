@@ -1931,6 +1931,10 @@
                                                 sessionData[dateStr].edited[idx] = true;
                                                 autofillTimes(dateStr, idx, newTime);
                                                 renderSessions();
+                                            } else {
+                                                // Invalid time - reset input
+                                                this.value = '';
+                                                sessionData[dateStr].times[idx] = '';
                                             }
                                         });
                                     })(dateStr, idx);
