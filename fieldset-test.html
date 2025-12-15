@@ -1889,18 +1889,37 @@
                                     
                                     (function(dateStr, idx) {
                                         timeInput.addEventListener('blur', function() {
-                                            var newTime = this.value;
-                                            // Validate HH:MM format
-                                            if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
-                                                // Pad hour if needed (9:30 -> 09:30)
-                                                if (newTime.length === 4) newTime = '0' + newTime;
+                                            var v = this.value.replace(/[^0-9:]/g, '');
+                                            var newTime = '';
+                                            
+                                            // Auto-complete partial entries
+                                            if (/^\d$/.test(v)) {
+                                                // "9" → "09:00"
+                                                newTime = '0' + v + ':00';
+                                            } else if (/^\d{2}$/.test(v)) {
+                                                // "19" → "19:00"
+                                                newTime = v + ':00';
+                                            } else if (/^\d:\d{2}$/.test(v)) {
+                                                // "9:30" → "09:30"
+                                                newTime = '0' + v;
+                                            } else if (/^\d{2}:\d{2}$/.test(v)) {
+                                                // "19:30" → valid
+                                                newTime = v;
+                                            } else if (/^\d{2}:\d$/.test(v)) {
+                                                // "19:3" → "19:30"
+                                                newTime = v + '0';
+                                            } else if (v === '') {
+                                                sessionData[dateStr].times[idx] = '';
+                                                return;
+                                            }
+                                            
+                                            // Validate final format
+                                            if (/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
                                                 this.value = newTime;
                                                 sessionData[dateStr].times[idx] = newTime;
                                                 sessionData[dateStr].edited[idx] = true;
                                                 autofillTimes(dateStr, idx, newTime);
                                                 renderSessions();
-                                            } else if (newTime === '') {
-                                                sessionData[dateStr].times[idx] = '';
                                             }
                                         });
                                     })(dateStr, idx);
