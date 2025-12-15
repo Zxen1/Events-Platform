@@ -1541,6 +1541,23 @@
 }
 
 /* ============================================================================
+   FORMS TAB (Formbuilder)
+   ============================================================================
+   
+   Inline CSS from formbuilder-test.html will be extracted here once JS is ready.
+   
+   SECTIONS:
+   - Accordion (category/subcategory headers)
+   - Edit Panel (name input, more menu)
+   - Subcategory List
+   - Field Type Picker
+   - Field Configuration
+   - Drag & Drop
+   - Form Preview
+   
+   ============================================================================ */
+
+/* ============================================================================
    MESSAGES TAB
    ============================================================================ */
 
