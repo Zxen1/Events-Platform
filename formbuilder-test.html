@@ -867,6 +867,47 @@
         .formbuilder-fee-input::placeholder {
             color: #666;
         }
+        
+        /* Subcategory type row */
+        .formbuilder-type-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 36px;
+            margin-top: 10px;
+        }
+        .formbuilder-type-row-label {
+            min-width: 120px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .formbuilder-type-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            height: 36px;
+            padding: 0 10px;
+            background: #111111;
+            border: 1px solid #222222;
+            border-radius: 5px;
+        }
+        .formbuilder-type-option:hover {
+            border-color: #3b82f5;
+        }
+        .formbuilder-type-option.selected {
+            border-color: #3b82f5;
+            background: #062038;
+        }
+        .formbuilder-type-option input[type="radio"] {
+            cursor: pointer;
+            accent-color: #3b82f5;
+        }
+        .formbuilder-type-option span {
+            font-size: 13px;
+            color: #fff;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -1288,6 +1329,69 @@
                     surchargeRow.appendChild(surchargePercent);
                     surchargeRow.appendChild(surchargeInput);
                     subEditPanel.appendChild(surchargeRow);
+                    
+                    // Subcategory Type row
+                    var typeRow = document.createElement('div');
+                    typeRow.className = 'formbuilder-type-row';
+                    
+                    var typeLabel = document.createElement('span');
+                    typeLabel.className = 'formbuilder-type-row-label';
+                    typeLabel.textContent = 'Subcategory Type';
+                    
+                    // Get current type from subFees
+                    var currentType = (subFeeData.subcategory_type) || 'General';
+                    
+                    // Events option
+                    var eventsLabel = document.createElement('label');
+                    eventsLabel.className = 'formbuilder-type-option' + (currentType === 'Events' ? ' selected' : '');
+                    var eventsInput = document.createElement('input');
+                    eventsInput.type = 'radio';
+                    eventsInput.name = 'subType-' + cat.name + '-' + subName;
+                    eventsInput.value = 'Events';
+                    eventsInput.checked = currentType === 'Events';
+                    var eventsText = document.createElement('span');
+                    eventsText.textContent = 'Events';
+                    eventsLabel.appendChild(eventsInput);
+                    eventsLabel.appendChild(eventsText);
+                    
+                    // General option
+                    var generalLabel = document.createElement('label');
+                    generalLabel.className = 'formbuilder-type-option' + (currentType === 'General' ? ' selected' : '');
+                    var generalInput = document.createElement('input');
+                    generalInput.type = 'radio';
+                    generalInput.name = 'subType-' + cat.name + '-' + subName;
+                    generalInput.value = 'General';
+                    generalInput.checked = currentType === 'General';
+                    var generalText = document.createElement('span');
+                    generalText.textContent = 'General';
+                    generalLabel.appendChild(generalInput);
+                    generalLabel.appendChild(generalText);
+                    
+                    // Radio change handlers
+                    eventsInput.addEventListener('change', function() {
+                        if (eventsInput.checked) {
+                            if (!cat.subFees) cat.subFees = {};
+                            if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                            cat.subFees[subName].subcategory_type = 'Events';
+                            eventsLabel.classList.add('selected');
+                            generalLabel.classList.remove('selected');
+                        }
+                    });
+                    
+                    generalInput.addEventListener('change', function() {
+                        if (generalInput.checked) {
+                            if (!cat.subFees) cat.subFees = {};
+                            if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                            cat.subFees[subName].subcategory_type = 'General';
+                            generalLabel.classList.add('selected');
+                            eventsLabel.classList.remove('selected');
+                        }
+                    });
+                    
+                    typeRow.appendChild(typeLabel);
+                    typeRow.appendChild(eventsLabel);
+                    typeRow.appendChild(generalLabel);
+                    subEditPanel.appendChild(typeRow);
                     
                     // Subcategory body with fieldset menu and form preview
                     var optBody = document.createElement('div');
