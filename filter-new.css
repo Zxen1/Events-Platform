@@ -390,11 +390,11 @@
   transition: 0.2s;
 }
 
-.filter-expired-switch-input:checked + .filter-expired-switch-slider {
+.filter-expired-switch-slider--checked {
   background: #cc6600;
 }
 
-.filter-expired-switch-input:checked + .filter-expired-switch-slider::before {
+.filter-expired-switch-slider--checked::before {
   transform: translateX(24px);
 }
 
