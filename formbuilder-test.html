@@ -1116,11 +1116,20 @@
         }
     });
     
-    // Fetch icons then categories
-    fetch('/gateway.php?action=list-icons&folder=assets/icons-30/')
+    // Fetch admin settings first to get checkout options and currency
+    fetch('/gateway.php?action=get-admin-settings')
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            allIcons = (res.icons || []).map(function(name) { return 'assets/icons-30/' + name; });
+            if (res.success && res.settings) {
+                window.CHECKOUT_OPTIONS = res.settings.checkout_options || [];
+                window.SITE_CURRENCY = res.settings.site_currency || '$';
+            }
+            // Then fetch icons
+            return fetch('/gateway.php?action=list-icons&folder=assets/category-icons/');
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            allIcons = (res.icons || []).map(function(name) { return 'assets/category-icons/' + name; });
             return fetch('/gateway.php?action=get-form');
         })
         .then(function(r) { return r.json(); })
@@ -1495,7 +1504,7 @@
                             return;
                         }
                         
-                        var siteCurrency = '$';
+                        var siteCurrency = window.SITE_CURRENCY || '$';
                         
                         allCheckoutOptions.forEach(function(opt) {
                             var card = document.createElement('div');
