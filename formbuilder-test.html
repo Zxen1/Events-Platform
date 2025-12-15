@@ -1120,9 +1120,9 @@
     fetch('/gateway.php?action=get-admin-settings')
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            if (res.success && res.settings) {
-                window.CHECKOUT_OPTIONS = res.settings.checkout_options || [];
-                window.SITE_CURRENCY = res.settings.site_currency || '$';
+            if (res.success) {
+                window.CHECKOUT_OPTIONS = res.checkout_options || [];
+                window.SITE_CURRENCY = (res.settings && res.settings.site_currency) || '$';
             }
             // Then fetch icons
             return fetch('/gateway.php?action=list-icons&folder=assets/category-icons/');
