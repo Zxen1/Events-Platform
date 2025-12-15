@@ -1877,6 +1877,8 @@
                                     timeInput.placeholder = 'HH:MM';
                                     timeInput.maxLength = 5;
                                     timeInput.value = timeVal;
+                                    timeInput.dataset.date = dateStr;
+                                    timeInput.dataset.idx = idx;
                                     
                                     // Select all on focus for easy overwrite
                                     timeInput.addEventListener('focus', function() {
@@ -1930,7 +1932,14 @@
                                                 sessionData[dateStr].times[idx] = newTime;
                                                 sessionData[dateStr].edited[idx] = true;
                                                 autofillTimes(dateStr, idx, newTime);
-                                                renderSessions();
+                                                // Update other visible time inputs without full re-render
+                                                document.querySelectorAll('.fieldset-time').forEach(function(input) {
+                                                    var d = input.dataset.date;
+                                                    var i = parseInt(input.dataset.idx, 10);
+                                                    if (d && sessionData[d] && sessionData[d].times[i] !== undefined) {
+                                                        input.value = sessionData[d].times[i];
+                                                    }
+                                                });
                                             } else {
                                                 // Invalid time - reset input
                                                 this.value = '';
