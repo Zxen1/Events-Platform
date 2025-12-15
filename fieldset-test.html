@@ -1878,6 +1878,12 @@
                                     timeInput.maxLength = 5;
                                     timeInput.value = timeVal;
                                     
+                                    // Select all on focus for easy overwrite
+                                    timeInput.addEventListener('focus', function() {
+                                        var input = this;
+                                        setTimeout(function() { input.select(); }, 0);
+                                    });
+                                    
                                     // Auto-format time input (add colon after 2 digits)
                                     timeInput.addEventListener('input', function() {
                                         var v = this.value.replace(/[^0-9]/g, '');
