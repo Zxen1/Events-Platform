@@ -758,6 +758,24 @@ Mapbox layers in rendering order (bottom to top):
 
 ---
 
+## SHARED COMPONENTS: MENUS AND CALENDARS
+
+**Reference for where menus and calendars appear across the site:**
+
+| Section | Menus | Calendars |
+|---------|-------|-----------|
+| **Filter Panel** | Sort menu | Daterange calendar |
+| **Member Panel** | Formpicker menus | Calendars and menus in fieldsets (multiple forms) |
+| **Admin Settings** | 3 system image picker menus, 1 currency menu | - |
+| **Admin Forms** | 100+ menus (unlimited with fieldsets in form preview) | Calendars in fieldsets |
+| **Admin Map** | 5 system image picker menus | - |
+| **Admin Messages** | Menu per message category + edit panel system image pickers | - |
+| **Recents/Posts** | Venue menu, Session menu, Entries menu (expand/collapse is NOT a menu) | User session calendar |
+
+**Note:** The calendar in sessions fieldset is the "member session calendar". Fieldset menus are too numerous to list individually.
+
+---
+
 ## RULES: MANDATORY COMPLIANCE
 
 ### Rule 1: USER IS IN CHARGE OF ALL NAMING
