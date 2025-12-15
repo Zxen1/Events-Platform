@@ -65,8 +65,7 @@
             content: attr(data-tooltip);
             position: absolute;
             bottom: calc(100% + 6px);
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
             background: #000;
             border: 1px solid #3b82f5;
             border-radius: 4px;
@@ -76,8 +75,9 @@
             font-family: sans-serif;
             color: #fff;
             width: 250px;
+            max-width: calc(100vw - 40px);
             white-space: normal;
-            z-index: 100;
+            z-index: 1000;
             line-height: 1.4;
         }
         
@@ -1689,6 +1689,13 @@
                         
                         fieldset.appendChild(calContainer);
                         
+                        // Helper text (disappears when dates are selected)
+                        var sessionHelper = document.createElement('div');
+                        sessionHelper.className = 'fieldset-session-helper';
+                        sessionHelper.textContent = 'Click dates above to add session times';
+                        sessionHelper.style.cssText = 'color: #666; font-size: 12px; margin: 10px 0; text-align: center;';
+                        fieldset.appendChild(sessionHelper);
+                        
                         // Sessions container (below calendar)
                         var sessionsContainer = document.createElement('div');
                         sessionsContainer.className = 'fieldset-sessions';
@@ -1783,6 +1790,9 @@
                             sessionsContainer.innerHTML = '';
                             
                             var sortedDates = Object.keys(sessionData).sort();
+                            
+                            // Hide/show helper text
+                            sessionHelper.style.display = sortedDates.length > 0 ? 'none' : 'block';
                             
                             sortedDates.forEach(function(dateStr) {
                                 var data = sessionData[dateStr];
