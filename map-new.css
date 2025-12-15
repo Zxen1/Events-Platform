@@ -1,25 +1,628 @@
 /* ============================================================================
-   MAP.CSS - MAP SECTION STYLES
-   ============================================================================
-   
-   All styles for the map and its components.
-   Note: Many map elements are rendered by Mapbox GL JS, not CSS.
-   
-   CONTAINERS:
-   - area (map display area)
-   - controls (geocoder, geolocate, compass row)
-   - shadow (shadow overlay)
-   - zoomindicator (zoom level display)
-   - smallcard (small map cards 150x40)
-   - bigcard (big map cards 225x60)
-   - hovercard (hover map cards)
-   - cluster (marker clusters)
-   - multipost (multi-post venue markers)
-   
-   CLASSES:
-   - (TBD - need to finalize after reviewing Mapbox integration)
-   
+   MAP DISPLAY STYLES
+   Map cards, markers, pills, labels, clusters, shadows
    ============================================================================ */
 
-/* Placeholder - to be built */
+/* ============================================================================
+   MAPBOX CRITICAL CSS
+   Required for map to render correctly
+   Note: !important flags are allowed for Mapbox overrides only
+   ============================================================================ */
 
+.mapboxgl-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.mapboxgl-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  cursor: grab;
+}
+
+.mapboxgl-canvas:active {
+  cursor: grabbing;
+}
+
+.mapboxgl-canvas-container {
+  position: absolute;
+  inset: 0;
+}
+
+.mapboxgl-ctrl {
+  box-sizing: border-box;
+}
+
+.mapboxgl-marker {
+  cursor: pointer;
+}
+
+.mapboxgl-popup {
+  border-radius: 8px;
+}
+
+.mapboxgl-popup-content {
+  border-radius: 8px;
+  background: var(--popup-bg);
+  color: var(--popup-text);
+  overflow: hidden;
+}
+
+.mapboxgl-popup-close-button {
+  color: var(--popup-text);
+}
+
+.mapboxgl-popup-track-pointer {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mapbox geocoder font - !important allowed for Mapbox */
+.mapboxgl-ctrl-geocoder {
+  font-family: inherit;
+}
+
+.mapboxgl-ctrl-geocoder--input {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.mapboxgl-ctrl-geocoder--input::placeholder {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* Mapbox geolocate/compass buttons - !important allowed for Mapbox */
+.mapboxgl-ctrl-geolocate-button {
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: none !important;
+}
+
+.mapboxgl-ctrl-geolocate-button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading) {
+  background-color: #ffffff;
+}
+
+.mapboxgl-ctrl-compass-button {
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================================
+   MAP CONTAINER & AREA
+   ============================================================================ */
+
+.map-container {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.map-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}
+
+.map-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   MAP CONTROLS CONTAINER
+   ============================================================================ */
+
+.map-controls {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--header-h) + 10px);
+  transform: translateX(-50%);
+  width: auto;
+  max-width: calc(100% - 20px);
+  min-width: 0;
+  z-index: 10;
+  flex-wrap: nowrap;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.map-controls--in-header {
+  top: calc(var(--safe-top) + var(--header-h) / 2);
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: none;
+}
+
+.map-controls-geocoder {
+  flex: 1 1 300px;
+  min-width: 0;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Mapbox geocoder width overrides - !important allowed */
+.map-controls-geocoder-input {
+  width: 100% !important;
+  max-width: 300px !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 600px) {
+  .map-controls {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .map-controls:not(.map-controls--in-header) {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+  }
+  
+  .map-controls-geocoder {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: min(100%, 300px);
+  }
+}
+
+/* ============================================================================
+   MAP MARKER OVERLAY
+   ============================================================================ */
+
+.map-marker-overlay {
+  position: relative;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  touch-action: none;
+  background: transparent;
+  border-radius: 999px;
+  box-shadow: none;
+  z-index: 5;
+}
+
+.map-marker-overlay--interactive {
+  pointer-events: auto;
+}
+
+/* ============================================================================
+   MAP CARD CONTAINERS
+   ============================================================================ */
+
+.map-card-container-small {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  isolation: isolate;
+  contain: layout style paint;
+  z-index: 1;
+}
+
+.map-card-container-small--interactive {
+  pointer-events: auto;
+}
+
+.map-card-container-big {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  isolation: isolate;
+  contain: layout style paint;
+  z-index: 2;
+  width: 225px;
+  height: 60px;
+  transform: translate3d(-90px, -50%, 0);
+}
+
+.map-card-container-big--interactive {
+  pointer-events: auto;
+}
+
+/* ============================================================================
+   SMALL MAP CARD
+   ============================================================================ */
+
+.map-card-small {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 150px;
+  height: 40px;
+  transform: translate3d(-75px, -50%, 0);
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 5px;
+  box-sizing: border-box;
+  z-index: 1;
+  transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease;
+  border-color: var(--border);
+}
+
+.map-card-small:hover {
+  border-color: var(--border-hover);
+}
+
+.map-card-small:active {
+  border-color: var(--border-active);
+}
+
+.map-card-small--clicked {
+  width: 225px;
+  height: 60px;
+  transform: translate3d(-90px, -50%, 0);
+}
+
+.map-card-small--post-open {
+  width: 225px;
+  height: 60px;
+  transform: translate3d(-90px, -50%, 0);
+}
+
+.map-card-small-image {
+  display: block;
+}
+
+.map-card-small-link {
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.map-card-small-link:hover {
+  color: var(--accent);
+}
+
+.map-card-small-link:active {
+  color: var(--active);
+}
+
+.map-card-small-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* ============================================================================
+   BIG MAP CARD
+   ============================================================================ */
+
+.map-card-big {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 999px;
+  background: rgba(46, 58, 114, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 5px;
+  box-sizing: border-box;
+  z-index: 1;
+  border-color: var(--border);
+}
+
+.map-card-big:hover {
+  border-color: var(--border-hover);
+}
+
+.map-card-big:active {
+  border-color: var(--border-active);
+}
+
+.map-card-big-image {
+  display: block;
+}
+
+.map-card-big-link {
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.map-card-big-link:hover {
+  color: var(--accent);
+}
+
+.map-card-big-link:active {
+  color: var(--active);
+}
+
+.map-card-big-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* ============================================================================
+   MULTI-POST MAP CARD
+   ============================================================================ */
+
+.map-card-multipost {
+  gap: 5px;
+  padding-right: 10px;
+}
+
+.map-card-multipost-marker {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.map-card-multipost-label {
+  position: static;
+  left: auto;
+  top: auto;
+  width: auto;
+  height: auto;
+  padding: 0;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.map-card-multipost-label-line {
+  width: auto;
+  text-align: left;
+}
+
+.map-card-multipost-label-line--primary {
+  font-weight: 600;
+}
+
+/* ============================================================================
+   MAP MARKER
+   ============================================================================ */
+
+.map-marker {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  z-index: 10;
+  flex: 0 0 30px;
+  cursor: pointer;
+}
+
+.map-marker--clickable {
+  cursor: pointer;
+}
+
+.map-marker--midzoom {
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #000;
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   MAP MARKER PILL
+   ============================================================================ */
+
+.map-marker-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 150px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  mix-blend-mode: normal;
+  z-index: 0;
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.map-marker-pill--expanded {
+  width: 225px;
+  height: 60px;
+}
+
+/* ============================================================================
+   MAP MARKER LABEL
+   ============================================================================ */
+
+.map-marker-label {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: auto;
+  height: auto;
+  padding: 0;
+  pointer-events: none;
+  color: #fff;
+  gap: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  white-space: normal;
+  z-index: 3;
+  text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.map-marker-label-line {
+  width: 100%;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+.map-marker-label-line--primary {
+  font-weight: 600;
+}
+
+/* ============================================================================
+   POST LOCATION MARKER
+   ============================================================================ */
+
+.map-post-location-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+  display: block;
+}
+
+.map-post-location-marker--dimmed {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  transform: scale(0.9);
+}
+
+.map-post-location-marker--selected {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* ============================================================================
+   MAP ZOOM INDICATOR
+   ============================================================================ */
+
+.map-zoom-indicator {
+  position: absolute;
+  bottom: calc(var(--safe-bottom, 0px) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+  min-width: 72px;
+  text-align: center;
+}
+
+/* ============================================================================
+   MAP SCALE BAR
+   ============================================================================ */
+
+.map-scale-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 30px;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.map-scale-bar-line {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  background: #000;
+  margin-bottom: 0;
+}
+
+.map-scale-bar-mark {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 6px;
+  background: #000;
+}
+
+.map-scale-bar-mark--major {
+  height: 10px;
+}
+
+.map-scale-bar-label {
+  position: absolute;
+  bottom: 12px;
+  font-size: 10px;
+  color: #000;
+  font-weight: 600;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   MAP ZOOM TOAST
+   ============================================================================ */
+
+.map-zoom-toast {
+  position: fixed;
+  top: calc(var(--safe-top, 0px) + 20px);
+  left: 50%;
+  transform: translate(-50%, -10px);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  font-weight: normal;
+  z-index: var(--layer-dialog);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.map-zoom-toast--show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ============================================================================
+   UTILITY: HIDE MAP/CALENDAR
+   ============================================================================ */
+
+.map-container--hidden {
+  display: none;
+}
+
+.map-calendar-container--hidden {
+  display: none;
+}
