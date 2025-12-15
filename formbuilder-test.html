@@ -825,6 +825,48 @@
         .formbuilder-field-wrapper--autofill-repeat .formbuilder-field-indicator-autofill {
             display: inline;
         }
+        
+        /* Surcharge row */
+        .formbuilder-fee-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .formbuilder-fee-row-label {
+            min-width: 120px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .formbuilder-fee-percent {
+            font-weight: 600;
+            font-size: 13px;
+            color: #888;
+        }
+        .formbuilder-fee-input {
+            width: 100px;
+            height: 36px;
+            padding: 0 10px;
+            background: #111111;
+            border: 1px solid #222222;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 13px;
+            -moz-appearance: textfield;
+        }
+        .formbuilder-fee-input::-webkit-inner-spin-button,
+        .formbuilder-fee-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .formbuilder-fee-input:hover,
+        .formbuilder-fee-input:focus {
+            outline: none;
+            border-color: #3b82f5;
+        }
+        .formbuilder-fee-input::placeholder {
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -1193,6 +1235,59 @@
                     
                     subEditPanel.appendChild(subNameRow);
                     subEditPanel.appendChild(subIconPicker);
+                    
+                    // Surcharge row
+                    var surchargeRow = document.createElement('div');
+                    surchargeRow.className = 'formbuilder-fee-row';
+                    
+                    var surchargeLabel = document.createElement('span');
+                    surchargeLabel.className = 'formbuilder-fee-row-label';
+                    surchargeLabel.textContent = 'Checkout Surcharge';
+                    
+                    var surchargePercent = document.createElement('span');
+                    surchargePercent.className = 'formbuilder-fee-percent';
+                    surchargePercent.textContent = '%';
+                    
+                    var surchargeInput = document.createElement('input');
+                    surchargeInput.type = 'number';
+                    surchargeInput.step = '0.01';
+                    surchargeInput.min = '-100';
+                    surchargeInput.className = 'formbuilder-fee-input';
+                    surchargeInput.placeholder = 'N/A';
+                    
+                    // Get surcharge from subFees if available
+                    var subFees = cat.subFees || {};
+                    var subFeeData = subFees[subName] || {};
+                    if (subFeeData.checkout_surcharge !== null && subFeeData.checkout_surcharge !== undefined) {
+                        surchargeInput.value = parseFloat(subFeeData.checkout_surcharge).toFixed(2);
+                    }
+                    
+                    surchargeInput.addEventListener('input', function() {
+                        var value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+                        if (value !== null && value < -100) {
+                            value = -100;
+                            surchargeInput.value = value.toFixed(2);
+                        }
+                        // Store locally (would save to backend on form submit)
+                        if (!cat.subFees) cat.subFees = {};
+                        if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                        cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
+                    });
+                    
+                    surchargeInput.addEventListener('blur', function() {
+                        var value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+                        if (value !== null && value < -100) {
+                            value = -100;
+                        }
+                        if (value !== null) {
+                            surchargeInput.value = value.toFixed(2);
+                        }
+                    });
+                    
+                    surchargeRow.appendChild(surchargeLabel);
+                    surchargeRow.appendChild(surchargePercent);
+                    surchargeRow.appendChild(surchargeInput);
+                    subEditPanel.appendChild(surchargeRow);
                     
                     // Subcategory body with fieldset menu and form preview
                     var optBody = document.createElement('div');
