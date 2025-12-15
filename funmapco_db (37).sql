@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 15, 2025 at 12:38 PM
+-- Generation Time: Dec 15, 2025 at 12:42 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -461,7 +461,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (17, 'venue', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\"]', 'Venue', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', 0, 9, '2025-12-14 18:30:38', '2025-12-14 18:30:38'),
 (18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 0, 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31'),
 (19, 'ticket-pricing', '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', 'Ticket Pricing', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', 0, 19, '2025-12-14 22:26:00', '2025-12-14 22:41:43'),
-(20, 'session', '[\"session-date\", \"session-time\"]', 'Sessions', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times for your event.', 0, 20, '2025-12-14 22:26:00', '2025-12-15 01:35:50');
+(20, 'sessions', '[\"session-date\", \"session-time\"]', 'Sessions', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times for your event.', 0, 20, '2025-12-14 22:26:00', '2025-12-15 01:42:09');
 
 -- --------------------------------------------------------
 
