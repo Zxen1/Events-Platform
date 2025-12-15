@@ -687,11 +687,10 @@
         return menu;
     }
     
-    // Build phone prefix menu
+    // Build phone prefix menu (100px compact, same style as currency)
     function buildPhonePrefixMenu() {
         var menu = document.createElement('div');
-        menu.className = 'fieldset-menu';
-        menu.style.flex = '0 0 140px';
+        menu.className = 'fieldset-menu fieldset-currency-compact';
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
