@@ -34,7 +34,7 @@
         .fieldset-label {
             display: flex;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
         }
         .fieldset-label-text {
             font-size: 13px;
@@ -317,8 +317,10 @@
         }
         .fieldset-session-add, .fieldset-session-remove,
         .fieldset-pricing-add, .fieldset-pricing-remove {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            min-width: 36px;
+            max-width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -328,7 +330,7 @@
             color: #666;
             cursor: pointer;
             font-size: 18px;
-            flex-shrink: 0;
+            flex: 0 0 36px;
         }
         .fieldset-session-add:hover, .fieldset-pricing-add:hover { border-color: #3b82f5; color: #3b82f5; }
         .fieldset-session-remove:hover, .fieldset-pricing-remove:hover { border-color: #f87171; color: #f87171; }
@@ -337,7 +339,7 @@
         .fieldset-currency-compact { width: 100px; height: 36px; position: relative; flex-shrink: 0; }
         .fieldset-currency-compact .fieldset-menu-button { width: 100px; }
         .fieldset-currency-compact .fieldset-menu-button-text { padding-left: 6px; font-size: 12px; }
-        .fieldset-currency-compact .fieldset-menu-options { width: 250px; right: 0; left: auto; }
+        .fieldset-currency-compact .fieldset-menu-options { width: 250px; left: 0; right: auto; }
         
         /* Section divider */
         .fieldset-divider {
@@ -351,7 +353,7 @@
         .fieldset-sublabel {
             font-size: 11px;
             color: #666;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         
         /* Google Places Autocomplete styling */
@@ -1025,14 +1027,12 @@
                         itemVariantAdd.type = 'button';
                         itemVariantAdd.className = 'fieldset-pricing-add';
                         itemVariantAdd.textContent = '+';
-                        itemVariantAdd.style.marginTop = '18px';
                         itemVariantRow.appendChild(itemVariantAdd);
                         
                         var itemVariantRemove = document.createElement('button');
                         itemVariantRemove.type = 'button';
                         itemVariantRemove.className = 'fieldset-pricing-remove';
                         itemVariantRemove.textContent = '−';
-                        itemVariantRemove.style.marginTop = '18px';
                         itemVariantRemove.style.opacity = '0.3';
                         itemVariantRemove.style.cursor = 'not-allowed';
                         itemVariantRemove.disabled = true;
@@ -1099,14 +1099,12 @@
                         seatAreaAdd.type = 'button';
                         seatAreaAdd.className = 'fieldset-pricing-add';
                         seatAreaAdd.textContent = '+';
-                        seatAreaAdd.style.marginTop = '18px';
                         seatAreaRow.appendChild(seatAreaAdd);
                         
                         var seatAreaRemove = document.createElement('button');
                         seatAreaRemove.type = 'button';
                         seatAreaRemove.className = 'fieldset-pricing-remove';
                         seatAreaRemove.textContent = '−';
-                        seatAreaRemove.style.marginTop = '18px';
                         seatAreaRemove.style.opacity = '0.3';
                         seatAreaRemove.style.cursor = 'not-allowed';
                         seatAreaRemove.disabled = true;
@@ -1136,14 +1134,12 @@
                         priceTierAdd.type = 'button';
                         priceTierAdd.className = 'fieldset-pricing-add';
                         priceTierAdd.textContent = '+';
-                        priceTierAdd.style.marginTop = '18px';
                         priceTierRow.appendChild(priceTierAdd);
                         
                         var priceTierRemove = document.createElement('button');
                         priceTierRemove.type = 'button';
                         priceTierRemove.className = 'fieldset-pricing-remove';
                         priceTierRemove.textContent = '−';
-                        priceTierRemove.style.marginTop = '18px';
                         priceTierRemove.style.opacity = '0.3';
                         priceTierRemove.style.cursor = 'not-allowed';
                         priceTierRemove.disabled = true;
