@@ -125,7 +125,7 @@
         .fieldset-menu-button-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .fieldset-menu-button-arrow { width: 16px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #888; transition: transform 0.2s; }
         .fieldset-menu.open .fieldset-menu-button-arrow { transform: rotate(180deg); }
-        .fieldset-menu-options { display: none; position: absolute; top: 36px; left: 0; width: 100%; background: #222; border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 4px 4px; max-height: 250px; overflow-y: auto; z-index: 100; scrollbar-width: thin; scrollbar-color: #888 transparent; }
+        .fieldset-menu-options { display: none; position: absolute; top: 36px; left: 0; width: 100%; background: #222; border: 1px solid #3b82f5; border-top: none; border-radius: 0 0 4px 4px; max-height: 250px; overflow-y: auto; z-index: 1000; scrollbar-width: thin; scrollbar-color: #888 transparent; }
         .fieldset-menu-options::-webkit-scrollbar { width: 8px; background: transparent; }
         .fieldset-menu-options::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         .fieldset-menu.open .fieldset-menu-options { display: block; }
@@ -992,9 +992,56 @@
                         break;
                         
                     case 'item-pricing':
-                        // Item Name (full width, no buttons)
-                        // Variants container with repeating: Variant + Currency + Price + +/-
+                        // Item Name (full width), then variants with currency + price
                         fieldset.appendChild(buildLabel(name, tooltip));
+                        
+                        // Track shared currency state for item pricing
+                        var itemCurrencyState = { flag: 'us', code: 'USD' };
+                        var itemCurrencyMenus = [];
+                        
+                        function syncAllItemCurrencies() {
+                            itemCurrencyMenus.forEach(function(menu) {
+                                var img = menu.querySelector('.fieldset-menu-button-image');
+                                var text = menu.querySelector('.fieldset-menu-button-text');
+                                img.src = 'assets/flags/' + itemCurrencyState.flag + '.svg';
+                                text.textContent = itemCurrencyState.code;
+                            });
+                        }
+                        
+                        function buildItemCurrencyMenu() {
+                            var menu = document.createElement('div');
+                            menu.className = 'fieldset-menu fieldset-currency-compact';
+                            menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + itemCurrencyState.flag + '.svg" alt=""><span class="fieldset-menu-button-text">' + itemCurrencyState.code + '</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+                            
+                            var btn = menu.querySelector('.fieldset-menu-button');
+                            var opts = menu.querySelector('.fieldset-menu-options');
+                            
+                            var currencies = picklist['currency'] || [];
+                            currencies.forEach(function(item) {
+                                var op = document.createElement('div');
+                                op.className = 'fieldset-menu-option';
+                                op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+                                op.onclick = function(e) {
+                                    e.stopPropagation();
+                                    itemCurrencyState.flag = item.value.substring(0,2);
+                                    itemCurrencyState.code = item.value.substring(3);
+                                    syncAllItemCurrencies();
+                                    menu.classList.remove('open');
+                                };
+                                opts.appendChild(op);
+                            });
+                            
+                            btn.onclick = function(e) {
+                                e.stopPropagation();
+                                container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                                    if (el !== menu) el.classList.remove('open');
+                                });
+                                menu.classList.toggle('open');
+                            };
+                            
+                            itemCurrencyMenus.push(menu);
+                            return menu;
+                        }
                         
                         // Item Name (single, no +/-)
                         var itemNameSub = document.createElement('div');
@@ -1055,6 +1102,10 @@
                             removeBtn.textContent = '−';
                             removeBtn.addEventListener('click', function() {
                                 block.remove();
+                                // Remove from tracked menus
+                                var blockMenu = block.querySelector('.fieldset-currency-compact');
+                                var idx = itemCurrencyMenus.indexOf(blockMenu);
+                                if (idx > -1) itemCurrencyMenus.splice(idx, 1);
                                 updateItemVariantButtons();
                             });
                             variantRow.appendChild(removeBtn);
@@ -1072,7 +1123,7 @@
                             currencySub.className = 'fieldset-sublabel';
                             currencySub.textContent = 'Currency';
                             currencyCol.appendChild(currencySub);
-                            currencyCol.appendChild(buildCurrencyMenuCompact());
+                            currencyCol.appendChild(buildItemCurrencyMenu());
                             priceRow.appendChild(currencyCol);
                             
                             var priceCol = document.createElement('div');
@@ -1105,7 +1156,6 @@
                             blocks.forEach(function(block) {
                                 var addBtn = block.querySelector('.fieldset-pricing-add');
                                 var removeBtn = block.querySelector('.fieldset-pricing-remove');
-                                // + button: grey out at cap
                                 if (atMax) {
                                     addBtn.style.opacity = '0.3';
                                     addBtn.style.cursor = 'not-allowed';
@@ -1115,7 +1165,6 @@
                                     addBtn.style.cursor = 'pointer';
                                     addBtn.disabled = false;
                                 }
-                                // - button: grey out when only 1
                                 if (blocks.length === 1) {
                                     removeBtn.style.opacity = '0.3';
                                     removeBtn.style.cursor = 'not-allowed';
@@ -1140,6 +1189,54 @@
                         var seatingAreasContainer = document.createElement('div');
                         seatingAreasContainer.className = 'fieldset-seating-areas-container';
                         fieldset.appendChild(seatingAreasContainer);
+                        
+                        // Track shared currency state
+                        var ticketCurrencyState = { flag: 'us', code: 'USD' };
+                        var ticketCurrencyMenus = [];
+                        
+                        function syncAllTicketCurrencies() {
+                            ticketCurrencyMenus.forEach(function(menu) {
+                                var img = menu.querySelector('.fieldset-menu-button-image');
+                                var text = menu.querySelector('.fieldset-menu-button-text');
+                                img.src = 'assets/flags/' + ticketCurrencyState.flag + '.svg';
+                                text.textContent = ticketCurrencyState.code;
+                            });
+                        }
+                        
+                        function buildTicketCurrencyMenu() {
+                            var menu = document.createElement('div');
+                            menu.className = 'fieldset-menu fieldset-currency-compact';
+                            menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + ticketCurrencyState.flag + '.svg" alt=""><span class="fieldset-menu-button-text">' + ticketCurrencyState.code + '</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+                            
+                            var btn = menu.querySelector('.fieldset-menu-button');
+                            var opts = menu.querySelector('.fieldset-menu-options');
+                            
+                            var currencies = picklist['currency'] || [];
+                            currencies.forEach(function(item) {
+                                var op = document.createElement('div');
+                                op.className = 'fieldset-menu-option';
+                                op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+                                op.onclick = function(e) {
+                                    e.stopPropagation();
+                                    ticketCurrencyState.flag = item.value.substring(0,2);
+                                    ticketCurrencyState.code = item.value.substring(3);
+                                    syncAllTicketCurrencies();
+                                    menu.classList.remove('open');
+                                };
+                                opts.appendChild(op);
+                            });
+                            
+                            btn.onclick = function(e) {
+                                e.stopPropagation();
+                                container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                                    if (el !== menu) el.classList.remove('open');
+                                });
+                                menu.classList.toggle('open');
+                            };
+                            
+                            ticketCurrencyMenus.push(menu);
+                            return menu;
+                        }
                         
                         function createPricingTierBlock(tiersContainer) {
                             var block = document.createElement('div');
@@ -1183,6 +1280,10 @@
                             removeBtn.textContent = '−';
                             removeBtn.addEventListener('click', function() {
                                 block.remove();
+                                // Remove from tracked menus
+                                var blockMenu = block.querySelector('.fieldset-currency-compact');
+                                var idx = ticketCurrencyMenus.indexOf(blockMenu);
+                                if (idx > -1) ticketCurrencyMenus.splice(idx, 1);
                                 updateTierButtons(tiersContainer);
                             });
                             tierRow.appendChild(removeBtn);
@@ -1200,7 +1301,7 @@
                             currencySub.className = 'fieldset-sublabel';
                             currencySub.textContent = 'Currency';
                             currencyCol.appendChild(currencySub);
-                            currencyCol.appendChild(buildCurrencyMenuCompact());
+                            currencyCol.appendChild(buildTicketCurrencyMenu());
                             priceRow.appendChild(currencyCol);
                             
                             var priceCol = document.createElement('div');
