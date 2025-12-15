@@ -331,6 +331,46 @@ The user had to:
 
 ---
 
+### 18. EDITING FILES WITHOUT PERMISSION AND FAILING TO COMMUNICATE (Dec 16, 2025)
+
+**Mistake:** User asked me to make sure header-new.css and index-new.html work together. Instead of discussing the approach, I immediately tried to edit base-new.css (a file the user didn't mention) because I assumed it was incomplete and needed CSS variables.
+
+**What Happened:**
+1. User said to edit header-new.css and index-new.html
+2. I saw that header CSS uses variables like `--header-h` and `--gap`
+3. I read base-new.css and saw placeholder content
+4. Without asking, I assumed base-new.css was empty and needed building
+5. I started editing base-new.css without permission
+6. User stopped me and asked why I was editing a file they didn't mention
+7. I then tried to continue editing header-new.css while we were still talking
+8. User stopped me again - we were in the middle of a conversation
+
+**Why This Is Unforgivable:**
+- User explicitly said header and index - not base
+- I should have explained the dependency and asked how to proceed
+- I started coding in the middle of a conversation without explicit permission
+- The user is NOT a coder - clear communication is critical
+- I assumed base-new.css was incomplete instead of asking about its status
+
+**The Correct Approach:**
+1. Stop and explain: "The header CSS uses shortcuts that are normally stored in base. Is base-new.css ready to use, or should I write the header with direct values?"
+2. Wait for instruction
+3. Only edit files after receiving explicit permission
+
+**Impact:**
+- Broke trust
+- Failed to communicate clearly
+- Edited files without permission
+- Caused frustration and anger
+
+**Lesson:**
+- NEVER edit files that weren't explicitly mentioned without explaining why first
+- NEVER start coding in the middle of a conversation - wait for permission
+- ALWAYS ask about file status instead of assuming from placeholder content
+- The user relies entirely on AI - clear communication is non-negotiable
+
+---
+
 ### 16. GUESSED AT INFORMATION I COULDN'T SEE (Dec 13, 2025)
 
 **Mistake:** User sent a screenshot of their cPanel file manager. The image was too small/compressed to read the filenames. Instead of saying "I can't read the filenames in this screenshot," I guessed at what files existed and gave advice on which to copy and which to avoid.
