@@ -99,6 +99,11 @@
         .fieldset-input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         .fieldset-input:focus { outline: none; border-color: #3b82f5; }
         .fieldset-input::placeholder { color: #666; }
+        .fieldset-input--invalid { border-color: #ef4444; }
+        .fieldset-input--invalid:focus { border-color: #ef4444; }
+        .fieldset-char-count { font-size: 11px; color: #666; text-align: right; margin-top: 3px; }
+        .fieldset-char-count--warning { color: #f59e0b; }
+        .fieldset-char-count--danger { color: #ef4444; }
         
         /* Textarea */
         .fieldset-textarea {
@@ -115,6 +120,8 @@
         .fieldset-textarea:hover { border-color: #555; }
         .fieldset-textarea:focus { outline: none; border-color: #3b82f5; }
         .fieldset-textarea::placeholder { color: #666; }
+        .fieldset-textarea.fieldset-input--invalid { border-color: #ef4444; }
+        .fieldset-textarea.fieldset-input--invalid:focus { border-color: #ef4444; }
         
         /* Dropdown menu (reusable from menu-test) */
         .fieldset-menu { width: 100%; height: 36px; position: relative; }
@@ -737,6 +744,77 @@
         return label;
     }
     
+    // Add validation with char limit and invalid state
+    function addInputValidation(input, maxLength, validationFn) {
+        var wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        
+        var charCount = document.createElement('div');
+        charCount.className = 'fieldset-char-count';
+        charCount.style.display = 'none';
+        
+        var touched = false;
+        
+        function updateCharCount() {
+            var remaining = maxLength - input.value.length;
+            if (remaining <= 5 && input.value.length > 0) {
+                charCount.style.display = 'block';
+                charCount.textContent = remaining + ' characters remaining';
+                if (remaining <= 0) {
+                    charCount.className = 'fieldset-char-count fieldset-char-count--danger';
+                } else {
+                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+                }
+            } else {
+                charCount.style.display = 'none';
+            }
+        }
+        
+        function validate() {
+            if (!touched) return;
+            var isValid = true;
+            if (input.value.length > 0 && validationFn) {
+                isValid = validationFn(input.value);
+            }
+            if (input.value.length > maxLength) {
+                isValid = false;
+            }
+            if (!isValid) {
+                input.classList.add('fieldset-input--invalid');
+            } else {
+                input.classList.remove('fieldset-input--invalid');
+            }
+        }
+        
+        input.setAttribute('maxlength', maxLength);
+        
+        input.addEventListener('input', function() {
+            updateCharCount();
+            if (touched) validate();
+        });
+        
+        input.addEventListener('blur', function() {
+            touched = true;
+            validate();
+        });
+        
+        input.addEventListener('focus', function() {
+            updateCharCount();
+        });
+        
+        return { wrapper: wrapper, charCount: charCount };
+    }
+    
+    // Email validation regex
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    
+    // URL validation regex
+    function isValidUrl(url) {
+        return /^https?:\/\/.+\..+/.test(url);
+    }
+    
     // Fetch general options first, then fieldsets
     fetch('/gateway.php?action=get-admin-settings')
         .then(function(r) { return r.json(); })
@@ -758,6 +836,8 @@
                 var name = fs.fieldset_name || fs.name || 'Unnamed';
                 var tooltip = fs.fieldset_tooltip || '';
                 var placeholder = fs.fieldset_placeholder || '';
+                var minLength = fs.min_length || 0;
+                var maxLength = fs.max_length || 500;
                 var options = fs.fieldset_options || [];
                 var fields = fs.fieldset_fields || [];
                 
@@ -771,38 +851,56 @@
                 // Build based on fieldset type
                 switch (key) {
                     case 'title':
+                        fieldset.appendChild(buildLabel(name, tooltip));
+                        var titleInput = document.createElement('input');
+                        titleInput.type = 'text';
+                        titleInput.className = 'fieldset-input';
+                        titleInput.placeholder = placeholder;
+                        var titleValidation = addInputValidation(titleInput, maxLength, null);
+                        fieldset.appendChild(titleInput);
+                        fieldset.appendChild(titleValidation.charCount);
+                        break;
+                    
                     case 'coupon':
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'fieldset-input';
-                        input.placeholder = placeholder;
-                        fieldset.appendChild(input);
+                        var couponInput = document.createElement('input');
+                        couponInput.type = 'text';
+                        couponInput.className = 'fieldset-input';
+                        couponInput.placeholder = placeholder;
+                        var couponValidation = addInputValidation(couponInput, maxLength, null);
+                        fieldset.appendChild(couponInput);
+                        fieldset.appendChild(couponValidation.charCount);
                         break;
                         
                     case 'description':
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var textarea = document.createElement('textarea');
-                        textarea.className = 'fieldset-textarea';
-                        textarea.placeholder = placeholder;
-                        fieldset.appendChild(textarea);
+                        var descTextarea = document.createElement('textarea');
+                        descTextarea.className = 'fieldset-textarea';
+                        descTextarea.placeholder = placeholder;
+                        var descValidation = addInputValidation(descTextarea, maxLength, null);
+                        fieldset.appendChild(descTextarea);
+                        fieldset.appendChild(descValidation.charCount);
                         break;
                         
                     case 'text-box':
                         fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
-                        var input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'fieldset-input';
-                        input.placeholder = placeholder;
-                        fieldset.appendChild(input);
+                        var textBoxInput = document.createElement('input');
+                        textBoxInput.type = 'text';
+                        textBoxInput.className = 'fieldset-input';
+                        textBoxInput.placeholder = placeholder;
+                        var textBoxValidation = addInputValidation(textBoxInput, maxLength, null);
+                        fieldset.appendChild(textBoxInput);
+                        fieldset.appendChild(textBoxValidation.charCount);
                         break;
                         
                     case 'text-area':
                         fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
-                        var textarea = document.createElement('textarea');
-                        textarea.className = 'fieldset-textarea';
-                        textarea.placeholder = placeholder;
-                        fieldset.appendChild(textarea);
+                        var editableTextarea = document.createElement('textarea');
+                        editableTextarea.className = 'fieldset-textarea';
+                        editableTextarea.placeholder = placeholder;
+                        var textareaValidation = addInputValidation(editableTextarea, maxLength, null);
+                        fieldset.appendChild(editableTextarea);
+                        fieldset.appendChild(textareaValidation.charCount);
                         break;
                         
                     case 'dropdown':
@@ -838,24 +936,28 @@
                         
                     case 'email':
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var input = document.createElement('input');
-                        input.type = 'email';
-                        input.className = 'fieldset-input';
-                        input.placeholder = placeholder;
-                        fieldset.appendChild(input);
+                        var emailInput = document.createElement('input');
+                        emailInput.type = 'email';
+                        emailInput.className = 'fieldset-input';
+                        emailInput.placeholder = placeholder;
+                        var emailValidation = addInputValidation(emailInput, maxLength, isValidEmail);
+                        fieldset.appendChild(emailInput);
+                        fieldset.appendChild(emailValidation.charCount);
                         break;
                         
                     case 'phone':
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var row = document.createElement('div');
-                        row.className = 'fieldset-row';
-                        row.appendChild(buildPhonePrefixMenu());
+                        var phoneRow = document.createElement('div');
+                        phoneRow.className = 'fieldset-row';
+                        phoneRow.appendChild(buildPhonePrefixMenu());
                         var phoneInput = document.createElement('input');
                         phoneInput.type = 'tel';
                         phoneInput.className = 'fieldset-input';
                         phoneInput.placeholder = placeholder;
-                        row.appendChild(phoneInput);
-                        fieldset.appendChild(row);
+                        var phoneValidation = addInputValidation(phoneInput, maxLength, null);
+                        phoneRow.appendChild(phoneInput);
+                        fieldset.appendChild(phoneRow);
+                        fieldset.appendChild(phoneValidation.charCount);
                         break;
                         
                     case 'address':
@@ -910,11 +1012,13 @@
                     case 'website-url':
                     case 'tickets-url':
                         fieldset.appendChild(buildLabel(name, tooltip));
-                        var input = document.createElement('input');
-                        input.type = 'url';
-                        input.className = 'fieldset-input';
-                        input.placeholder = placeholder;
-                        fieldset.appendChild(input);
+                        var urlInput = document.createElement('input');
+                        urlInput.type = 'url';
+                        urlInput.className = 'fieldset-input';
+                        urlInput.placeholder = placeholder;
+                        var urlValidation = addInputValidation(urlInput, maxLength, isValidUrl);
+                        fieldset.appendChild(urlInput);
+                        fieldset.appendChild(urlValidation.charCount);
                         break;
                         
                     case 'images':
