@@ -180,8 +180,8 @@
         
         /* Images upload */
         .fieldset-images {
-            width: 68px;
-            height: 68px;
+            width: 76px;
+            height: 76px;
             padding: 0;
             background: #222;
             border: 2px dashed #333;
@@ -195,7 +195,7 @@
             flex-shrink: 0;
         }
         .fieldset-images:hover { border-color: #3b82f5; }
-        .fieldset-images-icon { font-size: 20px; color: #555; }
+        .fieldset-images-icon { font-size: 22px; color: #555; }
         .fieldset-images-text { font-size: 10px; color: #888; }
         
         /* Date and time */
@@ -1006,7 +1006,7 @@
                         
                         var imagesContainer = document.createElement('div');
                         imagesContainer.className = 'fieldset-images-container';
-                        imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px;';
+                        imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 5px;';
                         
                         var imageFiles = [];
                         var maxImages = 10;
@@ -1018,7 +1018,7 @@
                             imageFiles.forEach(function(file, idx) {
                                 var thumb = document.createElement('div');
                                 thumb.className = 'fieldset-image-thumb';
-                                thumb.style.cssText = 'width: 68px; height: 68px; position: relative; border-radius: 4px; overflow: hidden; background: #222; border: 1px solid #333; flex-shrink: 0;';
+                                thumb.style.cssText = 'width: 76px; height: 76px; position: relative; border-radius: 4px; overflow: hidden; background: #222; border: 1px solid #333; flex-shrink: 0;';
                                 
                                 var img = document.createElement('img');
                                 img.src = URL.createObjectURL(file);
