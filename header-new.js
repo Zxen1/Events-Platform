@@ -174,7 +174,7 @@ const HeaderModule = (function() {
         var exitIcon = fullscreenBtn.querySelector('.header-access-button-icon--fullscreen-exit');
         
         fullscreenBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
-        fullscreenBtn.classList.toggle('header-access-button--active', !!isFull);
+        fullscreenBtn.classList.toggle('is-fullscreen', !!isFull);
         
         if (enterIcon) enterIcon.classList.toggle('header-access-button-icon--hidden', !!isFull);
         if (exitIcon) exitIcon.classList.toggle('header-access-button-icon--hidden', !isFull);
