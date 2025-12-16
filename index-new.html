@@ -38,48 +38,36 @@
     
     <!-- Filter button -->
     <button class="header-filter-button" type="button" aria-label="Toggle filters" aria-expanded="false" aria-controls="filter-panel">
-      <svg class="header-filter-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
+      <img class="header-filter-button-icon" src="assets/system-images/icon-filter.svg" alt="">
     </button>
     
     <!-- Mode switch (Recents / Posts / Map) -->
     <nav class="header-modeswitch" aria-label="View mode">
       <button class="header-modeswitch-button" type="button" data-mode="recents">
-        <svg class="header-modeswitch-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
+        <img class="header-modeswitch-button-icon" src="assets/system-images/icon-recents.svg" alt="">
         <span class="header-modeswitch-button-text">Recents</span>
       </button>
       <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="posts">
-        <svg class="header-modeswitch-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="6" x2="19" y2="6"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <line x1="5" y1="18" x2="13" y2="18"></line>
-        </svg>
+        <img class="header-modeswitch-button-icon" src="assets/system-images/icon-posts.svg" alt="">
         <span class="header-modeswitch-button-text">Posts</span>
       </button>
       <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="map">
-        <svg class="header-modeswitch-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s-6-4.5-6-10a6 6 0 1112 0c0 5.5-6 10-6 10z"></path>
-          <circle cx="12" cy="11" r="2.5"></circle>
-        </svg>
+        <img class="header-modeswitch-button-icon" src="assets/system-images/icon-map.svg" alt="">
         <span class="header-modeswitch-button-text">Map</span>
       </button>
     </nav>
     
     <!-- Access buttons (Member / Admin / Fullscreen) -->
     <button class="header-access-button" type="button" data-panel="member" aria-label="Member" aria-expanded="false" aria-controls="member-panel">
-      <span class="header-access-button-image header-access-button-image--member"></span>
+      <img class="header-access-button-icon header-access-button-icon--member" src="assets/system-images/icon-member.svg" alt="">
       <img class="header-access-button-avatar header-access-button-avatar--hidden" src="" alt="">
     </button>
     <button class="header-access-button" type="button" data-panel="admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel">
-      <span class="header-access-button-image header-access-button-image--admin"></span>
+      <img class="header-access-button-icon header-access-button-icon--admin" src="assets/system-images/icon-admin.svg" alt="">
     </button>
     <button class="header-access-button" type="button" data-action="fullscreen" aria-label="Toggle fullscreen">
-      <span class="header-access-button-image header-access-button-image--fullscreen"></span>
+      <img class="header-access-button-icon header-access-button-icon--fullscreen" src="assets/system-images/icon-fullscreen.svg" alt="">
+      <img class="header-access-button-icon header-access-button-icon--fullscreen-exit header-access-button-icon--hidden" src="assets/system-images/icon-fullscreen-exit.svg" alt="">
     </button>
     
   </header>
