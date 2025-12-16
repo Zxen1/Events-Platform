@@ -170,14 +170,8 @@ const HeaderModule = (function() {
         if (!fullscreenBtn) return;
         
         var isFull = getFullscreenElement();
-        var enterIcon = fullscreenBtn.querySelector('.header-access-button-icon--fullscreen');
-        var exitIcon = fullscreenBtn.querySelector('.header-access-button-icon--fullscreen-exit');
-        
         fullscreenBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
         fullscreenBtn.classList.toggle('is-fullscreen', !!isFull);
-        
-        if (enterIcon) enterIcon.classList.toggle('header-access-button-icon--hidden', !!isFull);
-        if (exitIcon) exitIcon.classList.toggle('header-access-button-icon--hidden', !isFull);
     }
 
 
