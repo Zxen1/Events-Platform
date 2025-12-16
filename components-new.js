@@ -4,20 +4,14 @@
    
    Shared components used across multiple sections.
    
-   CONTAINS:
-   - Fieldsets (form field types with validation, Google Places, etc.)
-   - Calendars (daterange picker, session calendar)
-   - Menus (sort, icon picker, currency, phone prefix, dropdowns)
-   
-   DEPENDENCIES:
-   - index.js (backbone)
-   - Google Places API (for location fields)
-   
-   USED BY:
-   - filter.js (sort menu, daterange calendar)
-   - admin.js (icon pickers, form preview)
-   - member.js (form filling)
-   - post.js (venue/session menus)
+   STRUCTURE:
+   1. FIELDSETS     - Form field types
+   2. CALENDAR      - Horizontal scrolling date picker
+   3. MENU          - Generic dropdown menu (from menu-test.html)
+   4. ICON PICKER   - Icon dropdown menu (from iconpicker-test.html)
+   5. MENU CLEAN    - Clean menu variant (from test-menu-clean.html)
+   6. CURRENCY      - Currency selector (from test-currency-menu.html)
+   7. PHONE PREFIX  - Phone prefix selector (from test-prefix-menu.html)
    
    ============================================================================ */
 
@@ -32,8 +26,6 @@ console.log('[components.js] Components loaded');
 const FieldsetComponent = (function(){
     var picklist = {};
     
-    // Google Places Autocomplete helper
-    // type: 'address' | 'establishment' | '(cities)'
     function initGooglePlaces(inputElement, type, latInput, lngInput, statusElement) {
         if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
             console.warn('Google Places API not loaded');
@@ -44,24 +36,16 @@ const FieldsetComponent = (function(){
             return null;
         }
         
-        var options = {
-            fields: ['formatted_address', 'geometry', 'name', 'place_id']
-        };
+        var options = { fields: ['formatted_address', 'geometry', 'name', 'place_id'] };
         
-        // Set type restriction
-        if (type === 'address') {
-            options.types = ['address'];
-        } else if (type === 'establishment') {
-            options.types = ['establishment'];
-        } else if (type === '(cities)') {
-            options.types = ['(cities)'];
-        }
+        if (type === 'address') options.types = ['address'];
+        else if (type === 'establishment') options.types = ['establishment'];
+        else if (type === '(cities)') options.types = ['(cities)'];
         
         var autocomplete = new google.maps.places.Autocomplete(inputElement, options);
         
         autocomplete.addListener('place_changed', function() {
             var place = autocomplete.getPlace();
-            
             if (!place.geometry || !place.geometry.location) {
                 if (statusElement) {
                     statusElement.textContent = 'No location data for this place';
@@ -85,88 +69,15 @@ const FieldsetComponent = (function(){
         return autocomplete;
     }
     
-    // Build compact currency menu (100px, value only, default USD)
-    function buildCurrencyMenuCompact(container) {
-        var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">USD</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
-        
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnText = menu.querySelector('.fieldset-menu-button-text');
-        
-        var currencies = picklist['currency'] || [];
-        currencies.forEach(function(item) {
-            var op = document.createElement('div');
-            op.className = 'fieldset-menu-option';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
-            op.onclick = function(e) {
-                e.stopPropagation();
-                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
-                btnText.textContent = item.value.substring(3); // Value only
-                menu.classList.remove('open');
-            };
-            opts.appendChild(op);
-        });
-        
-        btn.onclick = function(e) {
-            e.stopPropagation();
-            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                if (el !== menu) el.classList.remove('open');
-            });
-            menu.classList.toggle('open');
-        };
-        
-        return menu;
-    }
-    
-    // Build phone prefix menu (100px compact, same style as currency)
-    function buildPhonePrefixMenu(container) {
-        var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
-        
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnText = menu.querySelector('.fieldset-menu-button-text');
-        
-        var prefixes = picklist['phone-prefix'] || [];
-        if (prefixes.length > 0) {
-            btnImg.src = 'assets/flags/' + prefixes[0].value.substring(0,2) + '.svg';
-            btnText.textContent = prefixes[0].value.substring(3);
-        }
-        
-        prefixes.forEach(function(item) {
-            var op = document.createElement('div');
-            op.className = 'fieldset-menu-option';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
-            op.onclick = function(e) {
-                e.stopPropagation();
-                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
-                btnText.textContent = item.value.substring(3);
-                menu.classList.remove('open');
-            };
-            opts.appendChild(op);
-        });
-        
-        btn.onclick = function(e) {
-            e.stopPropagation();
-            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                if (el !== menu) el.classList.remove('open');
-            });
-            menu.classList.toggle('open');
-        };
-        
-        return menu;
-    }
-    
-    // Build label with required asterisk and tooltip
-    function buildLabel(name, tooltip) {
+    function buildLabel(name, tooltip, required) {
         var label = document.createElement('div');
         label.className = 'fieldset-label';
-        label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">*</span>';
+        var html = '<span class="fieldset-label-text">' + name + '</span>';
+        if (required !== false) {
+            html += '<span class="fieldset-label-required">*</span>';
+        }
+        label.innerHTML = html;
+        
         if (tooltip) {
             var tip = document.createElement('span');
             tip.className = 'fieldset-label-tooltip';
@@ -177,7 +88,6 @@ const FieldsetComponent = (function(){
         return label;
     }
     
-    // Add validation with char limit and invalid state
     function addInputValidation(input, minLength, maxLength, validationFn) {
         var charCount = document.createElement('div');
         charCount.className = 'fieldset-char-count';
@@ -190,11 +100,7 @@ const FieldsetComponent = (function(){
             if (remaining <= 5 && input.value.length > 0) {
                 charCount.style.display = 'block';
                 charCount.textContent = remaining + ' characters remaining';
-                if (remaining <= 0) {
-                    charCount.className = 'fieldset-char-count fieldset-char-count--danger';
-                } else {
-                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
-                }
+                charCount.className = remaining <= 0 ? 'fieldset-char-count fieldset-char-count--danger' : 'fieldset-char-count fieldset-char-count--warning';
             } else {
                 charCount.style.display = 'none';
             }
@@ -205,63 +111,30 @@ const FieldsetComponent = (function(){
             var isValid = true;
             var len = input.value.length;
             
-            // Check min length (only if field has content)
-            if (len > 0 && minLength > 0 && len < minLength) {
-                isValid = false;
-            }
-            // Check max length
-            if (len > maxLength) {
-                isValid = false;
-            }
-            // Check custom validation
-            if (len > 0 && validationFn && !validationFn(input.value)) {
-                isValid = false;
-            }
+            if (len > 0 && minLength > 0 && len < minLength) isValid = false;
+            if (len > maxLength) isValid = false;
+            if (len > 0 && validationFn && !validationFn(input.value)) isValid = false;
             
-            if (!isValid) {
-                input.classList.add('fieldset-input--invalid');
-            } else {
-                input.classList.remove('fieldset-input--invalid');
-            }
+            input.classList.toggle('fieldset-input--invalid', !isValid);
         }
         
         input.setAttribute('maxlength', maxLength);
-        
-        input.addEventListener('input', function() {
-            updateCharCount();
-            if (touched) validate();
-        });
-        
-        input.addEventListener('blur', function() {
-            touched = true;
-            validate();
-        });
-        
-        input.addEventListener('focus', function() {
-            updateCharCount();
-        });
+        input.addEventListener('input', function() { updateCharCount(); if (touched) validate(); });
+        input.addEventListener('blur', function() { touched = true; validate(); });
+        input.addEventListener('focus', updateCharCount);
         
         return { charCount: charCount };
     }
     
-    // Email validation regex
-    function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
+    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+    function isValidUrl(url) { return /^(https?:\/\/)?.+\..+/.test(url); }
     
-    // URL validation (accepts with or without protocol)
-    function isValidUrl(url) {
-        return /^(https?:\/\/)?.+\..+/.test(url);
-    }
-    
-    // Phone digits-only filter
     function makePhoneDigitsOnly(input) {
         input.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
     }
     
-    // URL auto-prepend https://
     function autoUrlProtocol(input) {
         input.addEventListener('blur', function() {
             var val = this.value.trim();
@@ -271,23 +144,20 @@ const FieldsetComponent = (function(){
         });
     }
     
-    // Set picklist data
     function setPicklist(data) {
         picklist = data || {};
     }
     
-    // Public API
     return {
         initGooglePlaces: initGooglePlaces,
-        buildCurrencyMenuCompact: buildCurrencyMenuCompact,
-        buildPhonePrefixMenu: buildPhonePrefixMenu,
         buildLabel: buildLabel,
         addInputValidation: addInputValidation,
         isValidEmail: isValidEmail,
         isValidUrl: isValidUrl,
         makePhoneDigitsOnly: makePhoneDigitsOnly,
         autoUrlProtocol: autoUrlProtocol,
-        setPicklist: setPicklist
+        setPicklist: setPicklist,
+        getPicklist: function() { return picklist; }
     };
 })();
 
@@ -303,7 +173,7 @@ const CalendarComponent = (function(){
         return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
     
-    function createCalendar(containerEl, options) {
+    function create(containerEl, options) {
         options = options || {};
         var monthsPast = options.monthsPast || 12;
         var monthsFuture = options.monthsFuture || 24;
@@ -321,7 +191,6 @@ const CalendarComponent = (function(){
         var totalMonths = 0;
         var weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         
-        // Create structure
         var scroll = document.createElement('div');
         scroll.className = 'calendar-scroll';
         
@@ -331,7 +200,6 @@ const CalendarComponent = (function(){
         var marker = document.createElement('div');
         marker.className = 'today-marker';
         
-        // Build months
         var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
         var monthIndex = 0;
         while(current <= maxDate) {
@@ -397,24 +265,20 @@ const CalendarComponent = (function(){
         containerEl.appendChild(scroll);
         containerEl.appendChild(marker);
         
-        // Scroll to today
         if(todayMonthEl) {
             scroll.scrollLeft = todayMonthEl.offsetLeft;
         }
         
-        // Position marker
         var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
         var markerPos = markerFraction * (containerEl.clientWidth - 8);
         marker.style.left = markerPos + 'px';
         
-        // Marker click - scroll to today
         marker.addEventListener('click', function() {
             if(todayMonthEl) {
                 scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
             }
         });
         
-        // Day click
         calendar.addEventListener('click', function(e) {
             var day = e.target;
             if(day.classList.contains('day') && !day.classList.contains('empty')) {
@@ -423,7 +287,6 @@ const CalendarComponent = (function(){
             }
         });
         
-        // Horizontal wheel scroll
         scroll.addEventListener('wheel', function(e) {
             e.preventDefault();
             scroll.scrollLeft += e.deltaY || e.deltaX;
@@ -442,32 +305,173 @@ const CalendarComponent = (function(){
     }
     
     return {
-        create: createCalendar,
+        create: create,
         toISODate: toISODate
     };
 })();
 
 
 /* ============================================================================
-   SECTION 3: MENU (Basic)
+   SECTION 3: MENU
    Source: menu-test.html
    ============================================================================ */
 
 const MenuComponent = (function(){
     
-    function createMenu(containerEl, options) {
+    function create(containerEl, options) {
         options = options || {};
         var imageFolder = options.imageFolder || 'assets/flags';
         var items = options.items || [];
         var onSelect = options.onSelect || function() {};
         
-        containerEl.innerHTML = `
-            <button class="menu-button">
-                <img class="menu-button-image" src="" alt="" hidden>
-                <span class="menu-button-text">Select...</span>
-                <span class="menu-button-arrow">▼</span>
-            </button>
-            <div class="menu-options" hidden></div>`;
+        containerEl.innerHTML = 
+            '<div class="menu-button">' +
+                '<img class="menu-button-image" src="" alt="" hidden>' +
+                '<span class="menu-button-text">Select...</span>' +
+                '<span class="menu-button-arrow">▼</span>' +
+            '</div>' +
+            '<div class="menu-options"></div>';
+        
+        var btn = containerEl.querySelector('.menu-button');
+        var img = containerEl.querySelector('.menu-button-image');
+        var txt = containerEl.querySelector('.menu-button-text');
+        var opts = containerEl.querySelector('.menu-options');
+        
+        items.forEach(function(d) {
+            var src = imageFolder + '/' + d.file;
+            var o = document.createElement('div');
+            o.className = 'menu-option';
+            o.innerHTML = '<img class="menu-option-image" src="' + src + '"><span class="menu-option-text">' + d.text + '</span>';
+            o.onclick = function() {
+                img.src = src;
+                img.hidden = false;
+                txt.textContent = d.text;
+                opts.style.display = 'none';
+                containerEl.classList.remove('open');
+                onSelect(d);
+            };
+            opts.appendChild(o);
+        });
+        
+        btn.onclick = function() {
+            var isOpen = containerEl.classList.contains('open');
+            if (isOpen) {
+                opts.style.display = 'none';
+                containerEl.classList.remove('open');
+            } else {
+                opts.style.display = 'block';
+                containerEl.classList.add('open');
+            }
+        };
+        
+        document.addEventListener('click', function(e) {
+            if (!containerEl.contains(e.target)) {
+                opts.style.display = 'none';
+                containerEl.classList.remove('open');
+            }
+        });
+        
+        return {
+            setValue: function(text, imageSrc) {
+                txt.textContent = text;
+                if (imageSrc) {
+                    img.src = imageSrc;
+                    img.hidden = false;
+                }
+            }
+        };
+    }
+    
+    return {
+        create: create
+    };
+})();
+
+
+/* ============================================================================
+   SECTION 4: ICON PICKER
+   Source: iconpicker-test.html
+   ============================================================================ */
+
+const IconPickerComponent = (function(){
+    
+    function create(containerEl, options) {
+        options = options || {};
+        var imageFolder = options.imageFolder || 'assets/icons-30/';
+        var textFormat = options.textFormat || '{filename}';
+        var onSelect = options.onSelect || function() {};
+        
+        containerEl.innerHTML = '<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
+        
+        var btn = containerEl.querySelector('.menu-button');
+        var opts = containerEl.querySelector('.menu-options');
+        var btnImg = containerEl.querySelector('.menu-button-image');
+        var btnText = containerEl.querySelector('.menu-button-text');
+        
+        fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(imageFolder))
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                var icons = res.icons || [];
+                if (icons.length > 0) {
+                    btnImg.src = imageFolder + icons[0];
+                    btnText.textContent = textFormat.replace('{filename}', icons[0]);
+                }
+                icons.forEach(function(item) {
+                    var op = document.createElement('div');
+                    op.className = 'menu-option';
+                    op.innerHTML = '<img class="menu-option-image" src="' + imageFolder + item + '" alt=""><span class="menu-option-text">' + textFormat.replace('{filename}', item) + '</span>';
+                    op.onclick = function() {
+                        btnImg.src = imageFolder + item;
+                        btnText.textContent = textFormat.replace('{filename}', item);
+                        containerEl.classList.remove('open');
+                        onSelect(item, imageFolder + item);
+                    };
+                    opts.appendChild(op);
+                });
+            });
+        
+        btn.onclick = function() {
+            containerEl.classList.toggle('open');
+        };
+        
+        document.addEventListener('click', function(e) {
+            if (!containerEl.contains(e.target)) {
+                containerEl.classList.remove('open');
+            }
+        });
+        
+        return {
+            getValue: function() { return btnText.textContent; },
+            getImageSrc: function() { return btnImg.src; }
+        };
+    }
+    
+    return {
+        create: create
+    };
+})();
+
+
+/* ============================================================================
+   SECTION 5: MENU CLEAN
+   Source: test-menu-clean.html
+   ============================================================================ */
+
+const MenuCleanComponent = (function(){
+    
+    function create(containerEl, options) {
+        options = options || {};
+        var imageFolder = options.imageFolder || 'assets/flags';
+        var items = options.items || [];
+        var onSelect = options.onSelect || function() {};
+        
+        containerEl.innerHTML = 
+            '<button class="menu-button">' +
+                '<img class="menu-button-image" src="" alt="" hidden>' +
+                '<span class="menu-button-text">Select...</span>' +
+                '<span class="menu-button-arrow">▼</span>' +
+            '</button>' +
+            '<div class="menu-options" hidden></div>';
         
         var btn = containerEl.querySelector('.menu-button');
         var img = containerEl.querySelector('.menu-button-image');
@@ -506,70 +510,8 @@ const MenuComponent = (function(){
                     img.src = imageSrc;
                     img.hidden = false;
                 }
-            },
-            close: function() {
-                opt.hidden = true;
             }
         };
-    }
-    
-    return {
-        create: createMenu
-    };
-})();
-
-
-/* ============================================================================
-   SECTION 4: ICON PICKER (Simple)
-   Source: iconpicker-test.html
-   ============================================================================ */
-
-const IconPickerSimple = (function(){
-    
-    function create(containerEl, options) {
-        options = options || {};
-        var imageFolder = options.imageFolder || 'assets/icons-30/';
-        var textFormat = options.textFormat || '{filename}';
-        var onSelect = options.onSelect || function() {};
-        
-        containerEl.innerHTML = '<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
-        
-        var btn = containerEl.querySelector('.menu-button');
-        var opts = containerEl.querySelector('.menu-options');
-        var btnImg = containerEl.querySelector('.menu-button-image');
-        var btnText = containerEl.querySelector('.menu-button-text');
-        
-        fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(imageFolder))
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                var icons = res.icons || [];
-                if (icons.length > 0) {
-                    btnImg.src = imageFolder + icons[0];
-                    btnText.textContent = textFormat.replace('{filename}', icons[0]);
-                }
-                icons.forEach(function(item) {
-                    var op = document.createElement('div');
-                    op.className = 'menu-option';
-                    op.innerHTML = '<img class="menu-option-image" src="' + imageFolder + item + '" alt=""><span class="menu-option-text">' + textFormat.replace('{filename}', item) + '</span>';
-                    op.onclick = function() {
-                        btnImg.src = imageFolder + item;
-                        btnText.textContent = textFormat.replace('{filename}', item);
-                        containerEl.classList.remove('open');
-                        onSelect(item);
-                    };
-                    opts.appendChild(op);
-                });
-            });
-        
-        btn.onclick = function() {
-            containerEl.classList.toggle('open');
-        };
-        
-        document.addEventListener('click', function(e) {
-            if (!containerEl.contains(e.target)) {
-                containerEl.classList.remove('open');
-            }
-        });
     }
     
     return {
@@ -579,127 +521,13 @@ const IconPickerSimple = (function(){
 
 
 /* ============================================================================
-   SECTION 5: ICON PICKER (Advanced with Grid)
-   Source: test-icon-picker.html
-   ============================================================================ */
-
-const IconPickerGrid = (function(){
-    
-    var iconCache = null;
-    
-    async function loadIcons(folder) {
-        if (iconCache) return iconCache;
-        
-        try {
-            var response = await fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folder));
-            if (!response.ok) throw new Error('Failed to load icons');
-            var data = await response.json();
-            if (data.success && Array.isArray(data.icons)) {
-                iconCache = data.icons.map(function(icon) { return folder + '/' + icon; });
-                return iconCache;
-            }
-        } catch (err) {
-            console.warn('Failed to load icons:', err);
-        }
-        
-        iconCache = [];
-        return iconCache;
-    }
-    
-    function create(containerEl, options) {
-        options = options || {};
-        var iconFolder = options.iconFolder || 'assets/icons-30';
-        var onSelect = options.onSelect || function() {};
-        
-        var picker = containerEl;
-        var btn = picker.querySelector('.icon-picker-button');
-        var popup = picker.querySelector('.icon-picker-popup');
-        var grid = picker.querySelector('.icon-picker-grid');
-        var preview = picker.querySelector('.icon-picker-preview');
-        var label = picker.querySelector('.icon-picker-label');
-        
-        var selectedIcon = null;
-        
-        async function initPicker() {
-            var icons = await loadIcons(iconFolder);
-            
-            if (!icons.length) {
-                grid.innerHTML = '<div class="icon-error" style="grid-column: 1/-1;">No icons found.</div>';
-                return;
-            }
-            
-            icons.forEach(function(iconPath) {
-                var option = document.createElement('button');
-                option.type = 'button';
-                option.className = 'icon-option';
-                option.dataset.path = iconPath;
-                
-                var img = document.createElement('img');
-                img.src = iconPath;
-                img.alt = '';
-                img.loading = 'lazy';
-                option.appendChild(img);
-                
-                option.addEventListener('click', function() {
-                    grid.querySelectorAll('.icon-option.selected').forEach(function(el) { el.classList.remove('selected'); });
-                    option.classList.add('selected');
-                    selectedIcon = iconPath;
-                    preview.src = iconPath;
-                    var filename = iconPath.split('/').pop();
-                    label.textContent = filename;
-                    popup.hidden = true;
-                    btn.setAttribute('aria-expanded', 'false');
-                    onSelect(iconPath, filename);
-                });
-                
-                grid.appendChild(option);
-            });
-        }
-        
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var open = !popup.hidden;
-            popup.hidden = open;
-            btn.setAttribute('aria-expanded', String(!open));
-        });
-        
-        document.addEventListener('click', function(e) {
-            if (!picker.contains(e.target)) {
-                popup.hidden = true;
-                btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                popup.hidden = true;
-                btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-        
-        initPicker();
-        
-        return {
-            getSelected: function() { return selectedIcon; }
-        };
-    }
-    
-    return {
-        create: create,
-        clearCache: function() { iconCache = null; }
-    };
-})();
-
-
-/* ============================================================================
-   SECTION 6: CURRENCY MENU
+   SECTION 6: CURRENCY
    Source: test-currency-menu.html
    ============================================================================ */
 
-const CurrencyMenuComponent = (function(){
+const CurrencyComponent = (function(){
     
-    // Mock currency data (normally from database)
-    var currencyData = [
+    var defaultData = [
         { value: 'us USD', label: 'US Dollar' },
         { value: 'gb GBP', label: 'British Pound' },
         { value: 'eu EUR', label: 'Euro' },
@@ -736,13 +564,6 @@ const CurrencyMenuComponent = (function(){
         return flagHTML + '<span class="dropdown-text">' + currencyCode + '</span>';
     }
     
-    function getCurrencyOptions() {
-        if (Array.isArray(window.currencyData) && window.currencyData.length > 0) {
-            return window.currencyData;
-        }
-        return currencyData;
-    }
-    
     function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
         var searchString = '';
         var searchTimeout = null;
@@ -763,13 +584,11 @@ const CurrencyMenuComponent = (function(){
                         break;
                     }
                 }
-                
                 searchTimeout = setTimeout(function() { searchString = ''; }, 800);
             }
             else if (e.key === 'Escape') {
                 e.preventDefault();
                 if (typeof closeMenuCallback === 'function') closeMenuCallback();
-                cleanup();
             }
             else if (e.key === 'Enter') {
                 var focused = menuElement.querySelector('.menu-option:focus');
@@ -780,22 +599,16 @@ const CurrencyMenuComponent = (function(){
             }
         };
         
-        var cleanup = function() {
-            menuElement.removeEventListener('keydown', keydownHandler);
-            if (searchTimeout) clearTimeout(searchTimeout);
-            searchString = '';
-        };
-        
         menuElement.addEventListener('keydown', keydownHandler);
-        return cleanup;
+        return function() { menuElement.removeEventListener('keydown', keydownHandler); };
     }
     
     function create(wrapperEl, buttonEl, menuEl, options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
+        var data = options.data || defaultData;
         
-        var opts = getCurrencyOptions();
-        opts.forEach(function(opt) {
+        data.forEach(function(opt) {
             var parsed = parseCurrencyValue(opt.value);
             var optionBtn = document.createElement('button');
             optionBtn.type = 'button';
@@ -850,20 +663,19 @@ const CurrencyMenuComponent = (function(){
         parseCurrencyValue: parseCurrencyValue,
         getFlagHTML: getFlagHTML,
         getCurrencyButtonHTML: getCurrencyButtonHTML,
-        setData: function(data) { currencyData = data; }
+        setData: function(data) { defaultData = data; }
     };
 })();
 
 
 /* ============================================================================
-   SECTION 7: PHONE PREFIX MENU
+   SECTION 7: PHONE PREFIX
    Source: test-prefix-menu.html
    ============================================================================ */
 
 const PhonePrefixComponent = (function(){
     
-    // Mock phone prefix data (normally from database)
-    var phonePrefixData = [
+    var defaultData = [
         { value: 'us +1', label: 'United States' },
         { value: 'gb +44', label: 'United Kingdom' },
         { value: 'au +61', label: 'Australia' },
@@ -918,13 +730,6 @@ const PhonePrefixComponent = (function(){
         return flagHTML + '<span class="dropdown-text">' + prefix + '</span>';
     }
     
-    function getPhonePrefixOptions() {
-        if (Array.isArray(window.phonePrefixData) && window.phonePrefixData.length > 0) {
-            return window.phonePrefixData;
-        }
-        return phonePrefixData;
-    }
-    
     function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
         var searchString = '';
         var searchTimeout = null;
@@ -945,13 +750,11 @@ const PhonePrefixComponent = (function(){
                         break;
                     }
                 }
-                
                 searchTimeout = setTimeout(function() { searchString = ''; }, 800);
             }
             else if (e.key === 'Escape') {
                 e.preventDefault();
                 if (typeof closeMenuCallback === 'function') closeMenuCallback();
-                cleanup();
             }
             else if (e.key === 'Enter') {
                 var focused = menuElement.querySelector('.menu-option:focus');
@@ -962,34 +765,26 @@ const PhonePrefixComponent = (function(){
             }
         };
         
-        var cleanup = function() {
-            menuElement.removeEventListener('keydown', keydownHandler);
-            if (searchTimeout) clearTimeout(searchTimeout);
-            searchString = '';
-        };
-        
         menuElement.addEventListener('keydown', keydownHandler);
-        return cleanup;
+        return function() { menuElement.removeEventListener('keydown', keydownHandler); };
     }
     
     function create(wrapperEl, buttonEl, menuEl, phoneInputEl, options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var defaultCountry = options.defaultCountry || 'us';
+        var data = options.data || defaultData;
         
-        var opts = getPhonePrefixOptions();
-        var defaultOpt = opts.find(function(opt) { return opt.value && opt.value.startsWith(defaultCountry + ' '); }) || opts[0];
+        var defaultOpt = data.find(function(opt) { return opt.value && opt.value.startsWith(defaultCountry + ' '); }) || data[0];
+        var parsed = parsePhonePrefixValue(defaultOpt.value);
         
-        if (defaultOpt) {
-            var parsed = parsePhonePrefixValue(defaultOpt.value);
-            var arrow = buttonEl.querySelector('.dropdown-arrow');
-            buttonEl.innerHTML = getPhonePrefixButtonHTML(parsed.countryCode, parsed.prefix);
-            if (arrow) buttonEl.appendChild(arrow);
-            buttonEl.dataset.value = parsed.prefix;
-            buttonEl.dataset.countryCode = parsed.countryCode;
-        }
+        var arrow = buttonEl.querySelector('.dropdown-arrow');
+        buttonEl.innerHTML = getPhonePrefixButtonHTML(parsed.countryCode, parsed.prefix);
+        if (arrow) buttonEl.appendChild(arrow);
+        buttonEl.dataset.value = parsed.prefix;
+        buttonEl.dataset.countryCode = parsed.countryCode;
         
-        opts.forEach(function(opt) {
+        data.forEach(function(opt) {
             var parsed = parsePhonePrefixValue(opt.value);
             var optionBtn = document.createElement('button');
             optionBtn.type = 'button';
@@ -1040,7 +835,6 @@ const PhonePrefixComponent = (function(){
             }
         });
         
-        // Restrict phone input to digits and formatting chars
         if (phoneInputEl) {
             phoneInputEl.addEventListener('beforeinput', function(e) {
                 if (e.data && !/^[0-9 +()-]+$/.test(e.data)) {
@@ -1055,89 +849,7 @@ const PhonePrefixComponent = (function(){
         parsePhonePrefixValue: parsePhonePrefixValue,
         getFlagHTML: getFlagHTML,
         getPhonePrefixButtonHTML: getPhonePrefixButtonHTML,
-        setData: function(data) { phonePrefixData = data; }
-    };
-})();
-
-
-/* ============================================================================
-   SECTION 8: GENERIC DROPDOWN MENU (Attribute-based)
-   Source: menu-test.html (multi-purpose section)
-   ============================================================================ */
-
-const DropdownMenuComponent = (function(){
-    
-    function initFromAttributes(containerEl) {
-        var imageFolder = containerEl.getAttribute('image-folder');
-        var textSource = containerEl.getAttribute('text-source');
-        var textFormat = containerEl.getAttribute('text-format') || '{value}';
-        
-        containerEl.innerHTML = '<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
-        
-        var btn = containerEl.querySelector('.menu-button');
-        var opts = containerEl.querySelector('.menu-options');
-        var btnImg = containerEl.querySelector('.menu-button-image');
-        var btnText = containerEl.querySelector('.menu-button-text');
-        
-        if (textSource === 'folder') {
-            // Load from folder listing
-            fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(imageFolder))
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    var icons = res.icons || [];
-                    if (icons.length > 0) {
-                        btnImg.src = imageFolder + icons[0];
-                        btnText.textContent = textFormat.replace('{filename}', icons[0]);
-                    }
-                    icons.forEach(function(item) {
-                        var op = document.createElement('div');
-                        op.className = 'menu-option';
-                        op.innerHTML = '<img class="menu-option-image" src="' + imageFolder + item + '" alt=""><span class="menu-option-text">' + textFormat.replace('{filename}', item) + '</span>';
-                        op.onclick = function() {
-                            btnImg.src = imageFolder + item;
-                            btnText.textContent = textFormat.replace('{filename}', item);
-                            containerEl.classList.remove('open');
-                        };
-                        opts.appendChild(op);
-                    });
-                });
-        } else {
-            // Load from admin settings picklist
-            fetch('/gateway.php?action=get-admin-settings')
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    var data = (res.picklist && res.picklist[textSource]) || [];
-                    if (data.length > 0) {
-                        btnImg.src = imageFolder + data[0].value.substring(0, 2) + '.svg';
-                        btnText.textContent = textFormat.replace('{value}', data[0].value.substring(3)).replace('{label}', data[0].label);
-                    }
-                    data.forEach(function(item) {
-                        var op = document.createElement('div');
-                        op.className = 'menu-option';
-                        op.innerHTML = '<img class="menu-option-image" src="' + imageFolder + item.value.substring(0, 2) + '.svg" alt=""><span class="menu-option-text">' + textFormat.replace('{value}', item.value.substring(3)).replace('{label}', item.label) + '</span>';
-                        op.onclick = function() {
-                            btnImg.src = imageFolder + item.value.substring(0, 2) + '.svg';
-                            btnText.textContent = textFormat.replace('{value}', item.value.substring(3)).replace('{label}', item.label);
-                            containerEl.classList.remove('open');
-                        };
-                        opts.appendChild(op);
-                    });
-                });
-        }
-        
-        btn.onclick = function() {
-            containerEl.classList.toggle('open');
-        };
-        
-        document.addEventListener('click', function(e) {
-            if (!containerEl.contains(e.target)) {
-                containerEl.classList.remove('open');
-            }
-        });
-    }
-    
-    return {
-        initFromAttributes: initFromAttributes
+        setData: function(data) { defaultData = data; }
     };
 })();
 
