@@ -74,10 +74,31 @@
 }
 
 /* ============================================================================
-   AD PANEL
+   AD PANEL BASE (outer container - matches other panels)
    ============================================================================ */
 
 .advert-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-panel);
+  pointer-events: none;
+}
+
+.advert-panel--show {
+  display: block;
+}
+
+/* ============================================================================
+   AD PANEL CONTENT (inner container)
+   ============================================================================ */
+
+.advert-panel-content {
   width: 100%;
   height: 100%;
   position: relative;
