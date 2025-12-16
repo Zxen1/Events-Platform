@@ -146,6 +146,66 @@ const FieldsetComponent = (function(){
     
     function setPicklist(data) {
         picklist = data || {};
+        // Also set data in Currency and PhonePrefix components
+        if (data.currency && typeof CurrencyComponent !== 'undefined') {
+            CurrencyComponent.setData(data.currency);
+        }
+        if (data['phone-prefix'] && typeof PhonePrefixComponent !== 'undefined') {
+            PhonePrefixComponent.setData(data['phone-prefix']);
+        }
+    }
+    
+    // Build a currency menu using CurrencyComponent
+    // options: { container, onSelect }
+    function buildCurrencyMenu(options) {
+        if (typeof CurrencyComponent === 'undefined') {
+            console.error('CurrencyComponent not loaded');
+            return document.createElement('div');
+        }
+        return CurrencyComponent.buildCompactMenu(options);
+    }
+    
+    // Build a phone prefix menu using PhonePrefixComponent
+    // options: { container, onSelect }
+    function buildPhonePrefixMenu(options) {
+        if (typeof PhonePrefixComponent === 'undefined') {
+            console.error('PhonePrefixComponent not loaded');
+            return document.createElement('div');
+        }
+        return PhonePrefixComponent.buildCompactMenu(options);
+    }
+    
+    // Build a complete phone field (prefix dropdown + input)
+    // options: { container, placeholder, minLength, maxLength, onPrefixSelect }
+    function buildPhoneField(options) {
+        options = options || {};
+        
+        var row = document.createElement('div');
+        row.className = 'fieldset-row';
+        
+        // Phone prefix menu from PhonePrefixComponent
+        var prefixMenu = buildPhonePrefixMenu({
+            container: options.container,
+            onSelect: options.onPrefixSelect || function() {}
+        });
+        row.appendChild(prefixMenu);
+        
+        // Phone number input
+        var phoneInput = document.createElement('input');
+        phoneInput.type = 'tel';
+        phoneInput.className = 'fieldset-input';
+        phoneInput.placeholder = options.placeholder || '';
+        makePhoneDigitsOnly(phoneInput);
+        
+        var validation = addInputValidation(phoneInput, options.minLength || 0, options.maxLength || 20, null);
+        row.appendChild(phoneInput);
+        
+        return {
+            row: row,
+            prefixMenu: prefixMenu,
+            input: phoneInput,
+            charCount: validation.charCount
+        };
     }
     
     return {
@@ -157,7 +217,10 @@ const FieldsetComponent = (function(){
         makePhoneDigitsOnly: makePhoneDigitsOnly,
         autoUrlProtocol: autoUrlProtocol,
         setPicklist: setPicklist,
-        getPicklist: function() { return picklist; }
+        getPicklist: function() { return picklist; },
+        buildCurrencyMenu: buildCurrencyMenu,
+        buildPhonePrefixMenu: buildPhonePrefixMenu,
+        buildPhoneField: buildPhoneField
     };
 })();
 
@@ -527,23 +590,9 @@ const MenuCleanComponent = (function(){
 
 const CurrencyComponent = (function(){
     
-    var defaultData = [
-        { value: 'us USD', label: 'US Dollar' },
-        { value: 'gb GBP', label: 'British Pound' },
-        { value: 'eu EUR', label: 'Euro' },
-        { value: 'au AUD', label: 'Australian Dollar' },
-        { value: 'ca CAD', label: 'Canadian Dollar' },
-        { value: 'jp JPY', label: 'Japanese Yen' },
-        { value: 'cn CNY', label: 'Chinese Yuan' },
-        { value: 'in INR', label: 'Indian Rupee' },
-        { value: 'br BRL', label: 'Brazilian Real' },
-        { value: 'mx MXN', label: 'Mexican Peso' },
-        { value: 'kr KRW', label: 'South Korean Won' },
-        { value: 'sg SGD', label: 'Singapore Dollar' },
-        { value: 'nz NZD', label: 'New Zealand Dollar' },
-        { value: 'ch CHF', label: 'Swiss Franc' },
-        { value: 'se SEK', label: 'Swedish Krona' },
-    ];
+    // Data loaded from database - no hardcoded fallback
+    var currencyData = [];
+    var dataLoaded = false;
     
     function parseCurrencyValue(optionValue) {
         if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, currencyCode: optionValue || '' };
@@ -554,116 +603,93 @@ const CurrencyComponent = (function(){
         return { countryCode: null, currencyCode: optionValue };
     }
     
-    function getFlagHTML(countryCode) {
-        if (!countryCode) return '';
-        return '<span class="dropdown-flag"><img src="assets/flags/' + countryCode + '.svg" alt="" /></span>';
+    function getData() {
+        return currencyData;
     }
     
-    function getCurrencyButtonHTML(countryCode, currencyCode) {
-        var flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-        return flagHTML + '<span class="dropdown-text">' + currencyCode + '</span>';
+    function setData(data) {
+        currencyData = data || [];
+        dataLoaded = true;
     }
     
-    function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
-        var searchString = '';
-        var searchTimeout = null;
-        
-        var keydownHandler = function(e) {
-            if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.isComposing) {
-                e.preventDefault();
-                if (searchTimeout) clearTimeout(searchTimeout);
-                searchString += e.key.toUpperCase();
-                
-                var options = menuElement.querySelectorAll('.menu-option[data-label]');
-                for (var i = 0; i < options.length; i++) {
-                    var opt = options[i];
-                    var label = (opt.dataset.label || '').toUpperCase();
-                    if (label && label.startsWith(searchString)) {
-                        opt.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                        opt.focus();
-                        break;
-                    }
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    // Load currency data from database via gateway
+    function loadFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.picklist && res.picklist.currency) {
+                    currencyData = res.picklist.currency;
+                    dataLoaded = true;
                 }
-                searchTimeout = setTimeout(function() { searchString = ''; }, 800);
-            }
-            else if (e.key === 'Escape') {
-                e.preventDefault();
-                if (typeof closeMenuCallback === 'function') closeMenuCallback();
-            }
-            else if (e.key === 'Enter') {
-                var focused = menuElement.querySelector('.menu-option:focus');
-                if (focused) {
-                    e.preventDefault();
-                    focused.click();
-                }
-            }
-        };
-        
-        menuElement.addEventListener('keydown', keydownHandler);
-        return function() { menuElement.removeEventListener('keydown', keydownHandler); };
+                return currencyData;
+            });
     }
     
-    function create(wrapperEl, buttonEl, menuEl, options) {
+    // Build a compact currency menu (100px, value only, default USD)
+    // Returns the complete menu element
+    function buildCompactMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var data = options.data || defaultData;
+        var containerEl = options.container || null; // For closing other menus
         
-        data.forEach(function(opt) {
-            var parsed = parseCurrencyValue(opt.value);
-            var optionBtn = document.createElement('button');
-            optionBtn.type = 'button';
-            optionBtn.className = 'menu-option';
-            optionBtn.dataset.value = parsed.currencyCode;
-            optionBtn.dataset.countryCode = parsed.countryCode;
-            optionBtn.dataset.label = opt.label;
-            optionBtn.innerHTML = getFlagHTML(parsed.countryCode) + '<span class="dropdown-text">' + parsed.currencyCode + ' - ' + opt.label + '</span>';
-            
-            optionBtn.addEventListener('click', function() {
-                var arrow = buttonEl.querySelector('.dropdown-arrow');
-                buttonEl.innerHTML = getCurrencyButtonHTML(parsed.countryCode, parsed.currencyCode);
-                if (arrow) buttonEl.appendChild(arrow);
-                buttonEl.dataset.value = parsed.currencyCode;
-                menuEl.hidden = true;
-                buttonEl.setAttribute('aria-expanded', 'false');
-                onSelect(parsed.currencyCode, opt.label, parsed.countryCode);
-            });
-            
-            menuEl.appendChild(optionBtn);
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu fieldset-currency-compact';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">USD</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        
+        var currencies = currencyData;
+        currencies.forEach(function(item) {
+            var countryCode = item.value.substring(0, 2);
+            var currencyCode = item.value.substring(3);
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + currencyCode + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnText.textContent = currencyCode;
+                menu.classList.remove('open');
+                onSelect(currencyCode, item.label, countryCode);
+            };
+            opts.appendChild(op);
         });
         
-        var cleanupKeyboardNav = null;
-        buttonEl.addEventListener('click', function(e) {
+        btn.onclick = function(e) {
             e.stopPropagation();
-            var open = !menuEl.hasAttribute('hidden');
-            if (open) {
-                menuEl.hidden = true;
-                buttonEl.setAttribute('aria-expanded', 'false');
-                if (cleanupKeyboardNav) cleanupKeyboardNav();
-            } else {
-                menuEl.hidden = false;
-                buttonEl.setAttribute('aria-expanded', 'true');
-                cleanupKeyboardNav = setupDropdownKeyboardNav(menuEl, function() {
-                    menuEl.hidden = true;
-                    buttonEl.setAttribute('aria-expanded', 'false');
+            // Close other open menus in container
+            if (containerEl) {
+                containerEl.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                    if (el !== menu) el.classList.remove('open');
                 });
             }
-        });
+            menu.classList.toggle('open');
+        };
         
+        // Close when clicking outside
         document.addEventListener('click', function(e) {
-            if (!wrapperEl.contains(e.target)) {
-                menuEl.hidden = true;
-                buttonEl.setAttribute('aria-expanded', 'false');
-                if (cleanupKeyboardNav) cleanupKeyboardNav();
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
             }
         });
+        
+        return menu;
     }
     
     return {
-        create: create,
-        parseCurrencyValue: parseCurrencyValue,
-        getFlagHTML: getFlagHTML,
-        getCurrencyButtonHTML: getCurrencyButtonHTML,
-        setData: function(data) { defaultData = data; }
+        getData: getData,
+        setData: setData,
+        isLoaded: isLoaded,
+        loadFromDatabase: loadFromDatabase,
+        buildCompactMenu: buildCompactMenu,
+        parseCurrencyValue: parseCurrencyValue
     };
 })();
 
@@ -675,40 +701,11 @@ const CurrencyComponent = (function(){
 
 const PhonePrefixComponent = (function(){
     
-    var defaultData = [
-        { value: 'us +1', label: 'United States' },
-        { value: 'gb +44', label: 'United Kingdom' },
-        { value: 'au +61', label: 'Australia' },
-        { value: 'ca +1', label: 'Canada' },
-        { value: 'de +49', label: 'Germany' },
-        { value: 'fr +33', label: 'France' },
-        { value: 'jp +81', label: 'Japan' },
-        { value: 'cn +86', label: 'China' },
-        { value: 'in +91', label: 'India' },
-        { value: 'br +55', label: 'Brazil' },
-        { value: 'mx +52', label: 'Mexico' },
-        { value: 'it +39', label: 'Italy' },
-        { value: 'es +34', label: 'Spain' },
-        { value: 'kr +82', label: 'South Korea' },
-        { value: 'nl +31', label: 'Netherlands' },
-        { value: 'se +46', label: 'Sweden' },
-        { value: 'ch +41', label: 'Switzerland' },
-        { value: 'nz +64', label: 'New Zealand' },
-        { value: 'sg +65', label: 'Singapore' },
-        { value: 'hk +852', label: 'Hong Kong' },
-        { value: 'ae +971', label: 'United Arab Emirates' },
-        { value: 'za +27', label: 'South Africa' },
-        { value: 'ru +7', label: 'Russia' },
-        { value: 'pl +48', label: 'Poland' },
-        { value: 'ie +353', label: 'Ireland' },
-    ];
+    // Data loaded from database - no hardcoded fallback
+    var prefixData = [];
+    var dataLoaded = false;
     
-    function getFlagHTML(countryCode) {
-        if (!countryCode) return '';
-        return '<span class="dropdown-flag"><img src="assets/flags/' + countryCode + '.svg" alt="" /></span>';
-    }
-    
-    function parsePhonePrefixValue(optionValue) {
+    function parsePrefixValue(optionValue) {
         if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, prefix: optionValue || '' };
         var parts = optionValue.trim().split(' ');
         if (parts.length >= 2) {
@@ -717,139 +714,102 @@ const PhonePrefixComponent = (function(){
         return { countryCode: null, prefix: optionValue };
     }
     
-    function getPhonePrefixDisplayText(opt) {
-        if (!opt) return '';
-        var parsed = parsePhonePrefixValue(opt.value);
-        var label = opt.label || '';
-        var flagHTML = parsed.countryCode ? getFlagHTML(parsed.countryCode) : '';
-        return flagHTML + '<span class="dropdown-text">' + parsed.prefix + ' - ' + label + '</span>';
+    function getData() {
+        return prefixData;
     }
     
-    function getPhonePrefixButtonHTML(countryCode, prefix) {
-        var flagHTML = countryCode ? getFlagHTML(countryCode) : '';
-        return flagHTML + '<span class="dropdown-text">' + prefix + '</span>';
+    function setData(data) {
+        prefixData = data || [];
+        dataLoaded = true;
     }
     
-    function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
-        var searchString = '';
-        var searchTimeout = null;
-        
-        var keydownHandler = function(e) {
-            if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.isComposing) {
-                e.preventDefault();
-                if (searchTimeout) clearTimeout(searchTimeout);
-                searchString += e.key.toUpperCase();
-                
-                var options = menuElement.querySelectorAll('.menu-option[data-label]');
-                for (var i = 0; i < options.length; i++) {
-                    var opt = options[i];
-                    var label = (opt.dataset.label || '').toUpperCase();
-                    if (label && label.startsWith(searchString)) {
-                        opt.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                        opt.focus();
-                        break;
-                    }
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    // Load phone prefix data from database via gateway
+    function loadFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.picklist && res.picklist['phone-prefix']) {
+                    prefixData = res.picklist['phone-prefix'];
+                    dataLoaded = true;
                 }
-                searchTimeout = setTimeout(function() { searchString = ''; }, 800);
-            }
-            else if (e.key === 'Escape') {
-                e.preventDefault();
-                if (typeof closeMenuCallback === 'function') closeMenuCallback();
-            }
-            else if (e.key === 'Enter') {
-                var focused = menuElement.querySelector('.menu-option:focus');
-                if (focused) {
-                    e.preventDefault();
-                    focused.click();
-                }
-            }
-        };
-        
-        menuElement.addEventListener('keydown', keydownHandler);
-        return function() { menuElement.removeEventListener('keydown', keydownHandler); };
+                return prefixData;
+            });
     }
     
-    function create(wrapperEl, buttonEl, menuEl, phoneInputEl, options) {
+    // Build a compact phone prefix menu (100px, same style as currency)
+    // Returns the complete menu element
+    function buildCompactMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var defaultCountry = options.defaultCountry || 'us';
-        var data = options.data || defaultData;
+        var containerEl = options.container || null; // For closing other menus
         
-        var defaultOpt = data.find(function(opt) { return opt.value && opt.value.startsWith(defaultCountry + ' '); }) || data[0];
-        var parsed = parsePhonePrefixValue(defaultOpt.value);
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu fieldset-currency-compact';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
-        var arrow = buttonEl.querySelector('.dropdown-arrow');
-        buttonEl.innerHTML = getPhonePrefixButtonHTML(parsed.countryCode, parsed.prefix);
-        if (arrow) buttonEl.appendChild(arrow);
-        buttonEl.dataset.value = parsed.prefix;
-        buttonEl.dataset.countryCode = parsed.countryCode;
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
         
-        data.forEach(function(opt) {
-            var parsed = parsePhonePrefixValue(opt.value);
-            var optionBtn = document.createElement('button');
-            optionBtn.type = 'button';
-            optionBtn.className = 'menu-option';
-            optionBtn.innerHTML = getPhonePrefixDisplayText(opt);
-            optionBtn.dataset.value = parsed.prefix;
-            optionBtn.dataset.countryCode = parsed.countryCode || '';
-            optionBtn.dataset.label = opt.label || '';
-            
-            optionBtn.addEventListener('click', function(e) {
+        var prefixes = prefixData;
+        
+        // Set default to first item if available
+        if (prefixes.length > 0) {
+            var firstCountry = prefixes[0].value.substring(0, 2);
+            var firstPrefix = prefixes[0].value.substring(3);
+            btnImg.src = 'assets/flags/' + firstCountry + '.svg';
+            btnText.textContent = firstPrefix;
+        }
+        
+        prefixes.forEach(function(item) {
+            var countryCode = item.value.substring(0, 2);
+            var prefix = item.value.substring(3);
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + prefix + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
                 e.stopPropagation();
-                var arrow = buttonEl.querySelector('.dropdown-arrow');
-                buttonEl.innerHTML = getPhonePrefixButtonHTML(parsed.countryCode, parsed.prefix);
-                if (arrow) buttonEl.appendChild(arrow);
-                buttonEl.dataset.value = parsed.prefix;
-                buttonEl.dataset.countryCode = parsed.countryCode || '';
-                menuEl.hidden = true;
-                buttonEl.setAttribute('aria-expanded', 'false');
-                onSelect(parsed.prefix, opt.label, parsed.countryCode);
-            });
-            
-            menuEl.appendChild(optionBtn);
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnText.textContent = prefix;
+                menu.classList.remove('open');
+                onSelect(prefix, item.label, countryCode);
+            };
+            opts.appendChild(op);
         });
         
-        var cleanupKeyboardNav = null;
-        buttonEl.addEventListener('click', function(e) {
+        btn.onclick = function(e) {
             e.stopPropagation();
-            var open = !menuEl.hasAttribute('hidden');
-            if (open) {
-                menuEl.hidden = true;
-                buttonEl.setAttribute('aria-expanded', 'false');
-                if (cleanupKeyboardNav) cleanupKeyboardNav();
-            } else {
-                menuEl.hidden = false;
-                buttonEl.setAttribute('aria-expanded', 'true');
-                cleanupKeyboardNav = setupDropdownKeyboardNav(menuEl, function() {
-                    menuEl.hidden = true;
-                    buttonEl.setAttribute('aria-expanded', 'false');
+            // Close other open menus in container
+            if (containerEl) {
+                containerEl.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                    if (el !== menu) el.classList.remove('open');
                 });
             }
-        });
+            menu.classList.toggle('open');
+        };
         
+        // Close when clicking outside
         document.addEventListener('click', function(e) {
-            if (!wrapperEl.contains(e.target)) {
-                menuEl.hidden = true;
-                buttonEl.setAttribute('aria-expanded', 'false');
-                if (cleanupKeyboardNav) cleanupKeyboardNav();
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
             }
         });
         
-        if (phoneInputEl) {
-            phoneInputEl.addEventListener('beforeinput', function(e) {
-                if (e.data && !/^[0-9 +()-]+$/.test(e.data)) {
-                    e.preventDefault();
-                }
-            });
-        }
+        return menu;
     }
     
     return {
-        create: create,
-        parsePhonePrefixValue: parsePhonePrefixValue,
-        getFlagHTML: getFlagHTML,
-        getPhonePrefixButtonHTML: getPhonePrefixButtonHTML,
-        setData: function(data) { defaultData = data; }
+        getData: getData,
+        setData: setData,
+        isLoaded: isLoaded,
+        loadFromDatabase: loadFromDatabase,
+        buildCompactMenu: buildCompactMenu,
+        parsePrefixValue: parsePrefixValue
     };
 })();
 
