@@ -127,7 +127,7 @@ const App = (function() {
       'post',
       'admin',
       'member',
-      'advert',
+      'marquee',
       'fieldset'
     ];
 
