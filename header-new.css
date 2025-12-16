@@ -75,9 +75,10 @@
   border-color: #3b82f6;
 }
 
-.header-filter-button-image {
+.header-filter-button-icon {
   width: 24px;
   height: 24px;
+  color: #fff;
 }
 
 /* Mode switch container */
@@ -127,9 +128,10 @@
   border-left: 1px solid rgba(255,255,255,0.1);
 }
 
-.header-modeswitch-button-image {
+.header-modeswitch-button-icon {
   width: 20px;
   height: 20px;
+  color: #fff;
 }
 
 .header-modeswitch-button-text {
@@ -144,7 +146,7 @@
     padding: 0 16px;
   }
   
-  .header-modeswitch-button-image {
+  .header-modeswitch-button-icon {
     display: none;
   }
   
