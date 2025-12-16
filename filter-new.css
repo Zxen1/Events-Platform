@@ -181,7 +181,9 @@
 .filter-keyword-row {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
 }
 
 .filter-keyword-input {
@@ -235,7 +237,15 @@
 .filter-daterange-row {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.filter-daterange-row-inputs {
+  display: flex;
+  align-items: center;
 }
 
 .filter-daterange-input {
@@ -253,6 +263,8 @@
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
   font: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 
 .filter-daterange-input::placeholder {
@@ -289,7 +301,10 @@
 .filter-price-row {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .filter-price-input {
@@ -304,6 +319,7 @@
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.1);
   font: inherit;
+  text-align: left;
 }
 
 .filter-price-separator {
@@ -449,6 +465,102 @@
   margin: 0 auto;
   display: flex;
   justify-content: center;
+}
+
+/* Sort menu (follows components pattern) */
+.filter-sort-menu {
+  width: 100%;
+  height: 36px;
+  position: relative;
+}
+
+.filter-sort-menu-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.filter-sort-menu-button:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.filter-sort-menu.open .filter-sort-menu-button {
+  border-color: #3b82f5;
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+
+.filter-sort-menu-button-text {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  color: #fff;
+}
+
+.filter-sort-menu-button-arrow {
+  width: 16px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #888;
+  transition: transform 0.2s;
+}
+
+.filter-sort-menu.open .filter-sort-menu-button-arrow {
+  transform: rotate(180deg);
+}
+
+.filter-sort-menu-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  background: #222;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.filter-sort-menu.open .filter-sort-menu-options {
+  display: block;
+}
+
+.filter-sort-menu-option {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+}
+
+.filter-sort-menu-option:hover {
+  background: #3b82f5;
+}
+
+.filter-sort-menu-option--selected {
+  background: rgba(59, 130, 245, 0.3);
+}
+
+.filter-sort-menu-option-text {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
 }
 
 /* ============================================================================
@@ -640,6 +752,204 @@
 
 .pac-matched {
   font-weight: 700;
+}
+
+/* ============================================================================
+   CATEGORY FILTER ACCORDIONS
+   ============================================================================ */
+
+.filter-categoryfilter-accordion {
+  width: 100%;
+  margin-bottom: 3px;
+  background: #222222;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.filter-categoryfilter-accordion-header {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  background: #2e3a72;
+}
+
+.filter-categoryfilter-accordion-header-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.filter-categoryfilter-accordion-header-text {
+  flex: 1;
+  padding-left: 10px;
+  font-weight: bold;
+  text-align: left;
+}
+
+.filter-categoryfilter-accordion-header-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.filter-categoryfilter-accordion--open .filter-categoryfilter-accordion-header-arrow {
+  transform: rotate(180deg);
+}
+
+.filter-categoryfilter-accordion-header-togglearea {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-right: -10px;
+  cursor: pointer;
+}
+
+.filter-categoryfilter-accordion-header-toggle {
+  width: 36px;
+  height: 20px;
+  background: #444;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+}
+
+.filter-categoryfilter-accordion-header-toggle::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #888;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.filter-categoryfilter-accordion-header-toggle.on {
+  background: #3b82f5;
+}
+
+.filter-categoryfilter-accordion-header-toggle.on::after {
+  transform: translateX(16px);
+  background: #fff;
+}
+
+.filter-categoryfilter-accordion-body {
+  display: none;
+  padding: 5px;
+}
+
+.filter-categoryfilter-accordion--open .filter-categoryfilter-accordion-body {
+  display: block;
+}
+
+.filter-categoryfilter-accordion-option {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-categoryfilter-accordion-option:hover {
+  background: #333;
+}
+
+.filter-categoryfilter-accordion-option-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.filter-categoryfilter-accordion-option-text {
+  flex: 1;
+  padding-left: 10px;
+  text-align: left;
+}
+
+.filter-categoryfilter-accordion-option-toggle {
+  width: 32px;
+  height: 18px;
+  background: #444;
+  border-radius: 9px;
+  position: relative;
+  cursor: pointer;
+}
+
+.filter-categoryfilter-accordion-option-toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #888;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.filter-categoryfilter-accordion-option-toggle.on {
+  background: #3b82f5;
+}
+
+.filter-categoryfilter-accordion-option-toggle.on::after {
+  transform: translateX(14px);
+  background: #fff;
+}
+
+/* Disabled state */
+.filter-categoryfilter-accordion--disabled .filter-categoryfilter-accordion-header {
+  opacity: 0.5;
+}
+
+.filter-categoryfilter-accordion--disabled .filter-categoryfilter-accordion-option {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   CALENDAR CONTAINER (for date range picker)
+   ============================================================================ */
+
+.filter-calendar-container {
+  width: 100%;
+  overflow: hidden;
+  background: #222222;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  position: relative;
+  margin-top: 10px;
+  display: none;
+}
+
+.filter-calendar-container--visible {
+  display: block;
+}
+
+/* Date range highlighting */
+.filter-calendar-container .day.in-range {
+  background: rgba(59, 130, 245, 0.3);
+}
+
+.filter-calendar-container .day.range-start {
+  background: #3b82f5;
+  border-radius: 4px 0 0 4px;
+}
+
+.filter-calendar-container .day.range-end {
+  background: #3b82f5;
+  border-radius: 0 4px 4px 0;
 }
 
 /* ============================================================================

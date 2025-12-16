@@ -658,7 +658,6 @@ const IconPickerComponent = (function(){
     var iconFolder = null;
     var icons = [];
     var dataLoaded = false;
-    var iconCache = new Map();
     
     function getIconFolder() {
         return iconFolder;
@@ -688,15 +687,10 @@ const IconPickerComponent = (function(){
             });
     }
     
-    // Load icons list from folder (with caching)
+    // Load icons list from folder
     function loadIconsFromFolder(folderPath) {
         folderPath = folderPath || iconFolder;
         if (!folderPath) return Promise.resolve([]);
-        
-        // Return cached result if available
-        if (iconCache.has(folderPath)) {
-            return Promise.resolve(iconCache.get(folderPath));
-        }
         
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
@@ -705,7 +699,6 @@ const IconPickerComponent = (function(){
                     var iconList = res.icons.map(function(icon) {
                         return folderPath + '/' + icon;
                     });
-                    iconCache.set(folderPath, iconList);
                     icons = iconList;
                     dataLoaded = true;
                     return iconList;
@@ -866,7 +859,6 @@ const SystemImagePickerComponent = (function(){
     var imageFolder = null;
     var images = [];
     var dataLoaded = false;
-    var imageCache = new Map();
     
     function getImageFolder() {
         return imageFolder;
@@ -896,15 +888,10 @@ const SystemImagePickerComponent = (function(){
             });
     }
     
-    // Load images list from folder (with caching)
+    // Load images list from folder
     function loadImagesFromFolder(folderPath) {
         folderPath = folderPath || imageFolder;
         if (!folderPath) return Promise.resolve([]);
-        
-        // Return cached result if available
-        if (imageCache.has(folderPath)) {
-            return Promise.resolve(imageCache.get(folderPath));
-        }
         
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
@@ -913,7 +900,6 @@ const SystemImagePickerComponent = (function(){
                     var imageList = res.icons.map(function(img) {
                         return folderPath + '/' + img;
                     });
-                    imageCache.set(folderPath, imageList);
                     images = imageList;
                     dataLoaded = true;
                     return imageList;
