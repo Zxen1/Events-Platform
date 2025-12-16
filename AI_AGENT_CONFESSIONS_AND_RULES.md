@@ -956,6 +956,15 @@ Mapbox layers in rendering order (bottom to top):
 - Never assume a question is permission to write code
 - This rule exists because an agent implemented code changes when user only asked how something would work
 
+### Rule 18: NEVER GUESS - CHECK EXISTING CODE FIRST
+**CRITICAL:** Do NOT guess how something should work. The live site code is your reference.
+- Before implementing ANY functionality, search the existing codebase for how it's already done
+- The live site (index.js, etc.) contains working implementations - USE THEM
+- Copy patterns exactly from existing code rather than inventing new approaches
+- If you can't find existing code, ASK before guessing
+- Guessing wastes time and creates bugs that the user (who can't code) cannot fix
+- This rule exists because an agent guessed at fullscreen button behavior instead of checking the 30,000 line index.js where it was already implemented correctly
+
 ---
 
 ## LIMITATIONS: WHAT AI AGENTS CANNOT DO
