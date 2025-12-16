@@ -128,7 +128,7 @@ const App = (function() {
       'admin',
       'member',
       'marquee',
-      'fieldset'
+      'components'
     ];
 
     initOrder.forEach(name => {

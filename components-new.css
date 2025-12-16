@@ -1,0 +1,24 @@
+/* ============================================================================
+   COMPONENTS - Reusable UI Components
+   ============================================================================
+   
+   Shared component styles used across multiple sections.
+   
+   SECTIONS:
+   - Calendars (daterange picker, session calendar)
+   - Menus (sort, icon picker, system image picker, dropdowns)
+   - Fieldsets (form field types):
+     - Text Input
+     - Textarea
+     - Phone (with prefix menu)
+     - Dropdown (custom menu)
+     - Radio/Checkbox
+     - Calendar/Date
+     - Address/Location
+     - Sessions
+     - Item Pricing
+     - Ticket Pricing
+     - Venue
+   
+   ============================================================================ */
+
