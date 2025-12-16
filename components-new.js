@@ -239,7 +239,6 @@ const CalendarComponent = (function(){
         options = options || {};
         var monthsPast = options.monthsPast || 12;
         var monthsFuture = options.monthsFuture || 24;
-        var onDateClick = options.onDateClick || function() {};
         
         var today = new Date();
         today.setHours(0,0,0,0);
@@ -338,14 +337,6 @@ const CalendarComponent = (function(){
         marker.addEventListener('click', function() {
             if(todayMonthEl) {
                 scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
-            }
-        });
-        
-        calendar.addEventListener('click', function(e) {
-            var day = e.target;
-            if(day.classList.contains('day') && !day.classList.contains('empty')) {
-                day.classList.toggle('selected');
-                onDateClick(day.dataset.iso, day.classList.contains('selected'));
             }
         });
         
