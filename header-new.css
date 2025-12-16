@@ -189,6 +189,11 @@
   background: rgba(255,255,255,0.1);
 }
 
+.header-access-button--active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
 .header-access-button--hidden {
   display: none;
 }

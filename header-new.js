@@ -137,11 +137,13 @@ const HeaderModule = (function() {
         var exitIcon = fullscreenBtn.querySelector('.header-access-button-icon--fullscreen-exit');
         
         if (document.fullscreenElement) {
-            // In fullscreen - show exit icon
+            // In fullscreen - show exit icon, add blue glow
+            fullscreenBtn.classList.add('header-access-button--active');
             if (enterIcon) enterIcon.classList.add('header-access-button-icon--hidden');
             if (exitIcon) exitIcon.classList.remove('header-access-button-icon--hidden');
         } else {
-            // Not in fullscreen - show enter icon
+            // Not in fullscreen - show enter icon, remove glow
+            fullscreenBtn.classList.remove('header-access-button--active');
             if (enterIcon) enterIcon.classList.remove('header-access-button-icon--hidden');
             if (exitIcon) exitIcon.classList.add('header-access-button-icon--hidden');
         }
