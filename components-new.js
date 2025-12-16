@@ -5,13 +5,12 @@
    Shared components used across multiple sections.
    
    STRUCTURE:
-   1. FIELDSETS     - Form field types
-   2. CALENDAR      - Horizontal scrolling date picker
-   3. MENU          - Generic dropdown menu (from menu-test.html)
-   4. ICON PICKER   - Icon dropdown menu (from iconpicker-test.html)
-   5. MENU CLEAN    - Clean menu variant (from test-menu-clean.html)
-   6. CURRENCY      - Currency selector (from test-currency-menu.html)
-   7. PHONE PREFIX  - Phone prefix selector (from test-prefix-menu.html)
+   1. FIELDSETS           - Form field types
+   2. CALENDAR            - Horizontal scrolling date picker
+   3. CURRENCY            - Currency selector (compact + full)
+   4. PHONE PREFIX        - Phone prefix selector
+   5. ICON PICKER         - Category icon picker
+   6. SYSTEM IMAGE PICKER - System image picker
    
    ============================================================================ */
 
@@ -375,216 +374,7 @@ const CalendarComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 3: MENU
-   Source: menu-test.html
-   ============================================================================ */
-
-const MenuComponent = (function(){
-    
-    function create(containerEl, options) {
-        options = options || {};
-        var imageFolder = options.imageFolder || 'assets/flags';
-        var items = options.items || [];
-        var onSelect = options.onSelect || function() {};
-        
-        containerEl.innerHTML = 
-            '<div class="menu-button">' +
-                '<img class="menu-button-image" src="" alt="" hidden>' +
-                '<span class="menu-button-text">Select...</span>' +
-                '<span class="menu-button-arrow">▼</span>' +
-            '</div>' +
-            '<div class="menu-options"></div>';
-        
-        var btn = containerEl.querySelector('.menu-button');
-        var img = containerEl.querySelector('.menu-button-image');
-        var txt = containerEl.querySelector('.menu-button-text');
-        var opts = containerEl.querySelector('.menu-options');
-        
-        items.forEach(function(d) {
-            var src = imageFolder + '/' + d.file;
-            var o = document.createElement('div');
-            o.className = 'menu-option';
-            o.innerHTML = '<img class="menu-option-image" src="' + src + '"><span class="menu-option-text">' + d.text + '</span>';
-            o.onclick = function() {
-                img.src = src;
-                img.hidden = false;
-                txt.textContent = d.text;
-                opts.style.display = 'none';
-                containerEl.classList.remove('open');
-                onSelect(d);
-            };
-            opts.appendChild(o);
-        });
-        
-        btn.onclick = function() {
-            var isOpen = containerEl.classList.contains('open');
-            if (isOpen) {
-                opts.style.display = 'none';
-                containerEl.classList.remove('open');
-            } else {
-                opts.style.display = 'block';
-                containerEl.classList.add('open');
-            }
-        };
-        
-        document.addEventListener('click', function(e) {
-            if (!containerEl.contains(e.target)) {
-                opts.style.display = 'none';
-                containerEl.classList.remove('open');
-            }
-        });
-        
-        return {
-            setValue: function(text, imageSrc) {
-                txt.textContent = text;
-                if (imageSrc) {
-                    img.src = imageSrc;
-                    img.hidden = false;
-                }
-            }
-        };
-    }
-    
-    return {
-        create: create
-    };
-})();
-
-
-/* ============================================================================
-   SECTION 4: ICON PICKER
-   Source: iconpicker-test.html
-   ============================================================================ */
-
-const IconPickerComponent = (function(){
-    
-    function create(containerEl, options) {
-        options = options || {};
-        var imageFolder = options.imageFolder || 'assets/icons-30/';
-        var textFormat = options.textFormat || '{filename}';
-        var onSelect = options.onSelect || function() {};
-        
-        containerEl.innerHTML = '<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
-        
-        var btn = containerEl.querySelector('.menu-button');
-        var opts = containerEl.querySelector('.menu-options');
-        var btnImg = containerEl.querySelector('.menu-button-image');
-        var btnText = containerEl.querySelector('.menu-button-text');
-        
-        fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(imageFolder))
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                var icons = res.icons || [];
-                if (icons.length > 0) {
-                    btnImg.src = imageFolder + icons[0];
-                    btnText.textContent = textFormat.replace('{filename}', icons[0]);
-                }
-                icons.forEach(function(item) {
-                    var op = document.createElement('div');
-                    op.className = 'menu-option';
-                    op.innerHTML = '<img class="menu-option-image" src="' + imageFolder + item + '" alt=""><span class="menu-option-text">' + textFormat.replace('{filename}', item) + '</span>';
-                    op.onclick = function() {
-                        btnImg.src = imageFolder + item;
-                        btnText.textContent = textFormat.replace('{filename}', item);
-                        containerEl.classList.remove('open');
-                        onSelect(item, imageFolder + item);
-                    };
-                    opts.appendChild(op);
-                });
-            });
-        
-        btn.onclick = function() {
-            containerEl.classList.toggle('open');
-        };
-        
-        document.addEventListener('click', function(e) {
-            if (!containerEl.contains(e.target)) {
-                containerEl.classList.remove('open');
-            }
-        });
-        
-        return {
-            getValue: function() { return btnText.textContent; },
-            getImageSrc: function() { return btnImg.src; }
-        };
-    }
-    
-    return {
-        create: create
-    };
-})();
-
-
-/* ============================================================================
-   SECTION 5: MENU CLEAN
-   Source: test-menu-clean.html
-   ============================================================================ */
-
-const MenuCleanComponent = (function(){
-    
-    function create(containerEl, options) {
-        options = options || {};
-        var imageFolder = options.imageFolder || 'assets/flags';
-        var items = options.items || [];
-        var onSelect = options.onSelect || function() {};
-        
-        containerEl.innerHTML = 
-            '<button class="menu-button">' +
-                '<img class="menu-button-image" src="" alt="" hidden>' +
-                '<span class="menu-button-text">Select...</span>' +
-                '<span class="menu-button-arrow">▼</span>' +
-            '</button>' +
-            '<div class="menu-options" hidden></div>';
-        
-        var btn = containerEl.querySelector('.menu-button');
-        var img = containerEl.querySelector('.menu-button-image');
-        var txt = containerEl.querySelector('.menu-button-text');
-        var opt = containerEl.querySelector('.menu-options');
-        
-        items.forEach(function(d) {
-            var src = imageFolder + '/' + d.file;
-            var o = document.createElement('button');
-            o.className = 'menu-option';
-            o.innerHTML = '<img class="menu-option-image" src="' + src + '"><span class="menu-option-text">' + d.text + '</span>';
-            o.onclick = function() {
-                img.src = src;
-                img.hidden = false;
-                txt.textContent = d.text;
-                opt.hidden = true;
-                onSelect(d);
-            };
-            opt.appendChild(o);
-        });
-        
-        btn.onclick = function() {
-            opt.hidden = !opt.hidden;
-        };
-        
-        document.addEventListener('click', function(e) {
-            if (!containerEl.contains(e.target)) {
-                opt.hidden = true;
-            }
-        });
-        
-        return {
-            setValue: function(text, imageSrc) {
-                txt.textContent = text;
-                if (imageSrc) {
-                    img.src = imageSrc;
-                    img.hidden = false;
-                }
-            }
-        };
-    }
-    
-    return {
-        create: create
-    };
-})();
-
-
-/* ============================================================================
-   SECTION 6: CURRENCY
+   SECTION 3: CURRENCY
    Source: test-currency-menu.html
    ============================================================================ */
 
@@ -629,7 +419,7 @@ const CurrencyComponent = (function(){
             });
     }
     
-    // Build a compact currency menu (100px, value only, default USD)
+    // Build a compact currency menu (100px, code only)
     // Returns the complete menu element
     function buildCompactMenu(options) {
         options = options || {};
@@ -683,19 +473,72 @@ const CurrencyComponent = (function(){
         return menu;
     }
     
+    // Build a full currency menu (wide, shows code + label)
+    // Returns the complete menu element
+    function buildFullMenu(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var containerEl = options.container || null;
+        
+        var menu = document.createElement('div');
+        menu.className = 'admin-menu admin-currency-menu';
+        menu.innerHTML = '<div class="admin-menu-button"><img class="admin-menu-button-image" src="assets/flags/us.svg" alt=""><span class="admin-menu-button-text">USD - US Dollar</span><span class="admin-menu-button-arrow">▼</span></div><div class="admin-menu-options"></div>';
+        
+        var btn = menu.querySelector('.admin-menu-button');
+        var opts = menu.querySelector('.admin-menu-options');
+        var btnImg = menu.querySelector('.admin-menu-button-image');
+        var btnText = menu.querySelector('.admin-menu-button-text');
+        
+        var currencies = currencyData;
+        currencies.forEach(function(item) {
+            var countryCode = item.value.substring(0, 2);
+            var currencyCode = item.value.substring(3);
+            var op = document.createElement('div');
+            op.className = 'admin-menu-option';
+            op.innerHTML = '<img class="admin-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="admin-menu-option-text">' + currencyCode + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnText.textContent = currencyCode + ' - ' + item.label;
+                menu.classList.remove('open');
+                onSelect(currencyCode, item.label, countryCode);
+            };
+            opts.appendChild(op);
+        });
+        
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            if (containerEl) {
+                containerEl.querySelectorAll('.admin-menu.open').forEach(function(el) {
+                    if (el !== menu) el.classList.remove('open');
+                });
+            }
+            menu.classList.toggle('open');
+        };
+        
+        document.addEventListener('click', function(e) {
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+        
+        return menu;
+    }
+    
     return {
         getData: getData,
         setData: setData,
         isLoaded: isLoaded,
         loadFromDatabase: loadFromDatabase,
         buildCompactMenu: buildCompactMenu,
+        buildFullMenu: buildFullMenu,
         parseCurrencyValue: parseCurrencyValue
     };
 })();
 
 
 /* ============================================================================
-   SECTION 7: PHONE PREFIX
+   SECTION 4: PHONE PREFIX
    Source: test-prefix-menu.html
    ============================================================================ */
 
@@ -740,7 +583,7 @@ const PhonePrefixComponent = (function(){
             });
     }
     
-    // Build a compact phone prefix menu (100px, same style as currency)
+    // Build a compact phone prefix menu (100px, prefix only)
     // Returns the complete menu element
     function buildCompactMenu(options) {
         options = options || {};
@@ -813,4 +656,419 @@ const PhonePrefixComponent = (function(){
     };
 })();
 
+
+/* ============================================================================
+   SECTION 5: ICON PICKER
+   Uses icon folder path from admin settings (e.g. assets/category-icons)
+   ============================================================================ */
+
+const IconPickerComponent = (function(){
+    
+    var iconFolder = null;
+    var icons = [];
+    var dataLoaded = false;
+    var iconCache = new Map();
+    
+    function getIconFolder() {
+        return iconFolder;
+    }
+    
+    function setIconFolder(folder) {
+        iconFolder = folder;
+    }
+    
+    function getIcons() {
+        return icons;
+    }
+    
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    // Load icon folder path from admin settings
+    function loadFolderFromSettings() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.settings && res.settings.icon_folder) {
+                    iconFolder = res.settings.icon_folder;
+                }
+                return iconFolder;
+            });
+    }
+    
+    // Load icons list from folder (with caching)
+    function loadIconsFromFolder(folderPath) {
+        folderPath = folderPath || iconFolder;
+        if (!folderPath) return Promise.resolve([]);
+        
+        // Return cached result if available
+        if (iconCache.has(folderPath)) {
+            return Promise.resolve(iconCache.get(folderPath));
+        }
+        
+        return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success && Array.isArray(res.icons)) {
+                    var iconList = res.icons.map(function(icon) {
+                        return folderPath + '/' + icon;
+                    });
+                    iconCache.set(folderPath, iconList);
+                    icons = iconList;
+                    dataLoaded = true;
+                    return iconList;
+                }
+                return [];
+            })
+            .catch(function(err) {
+                console.warn('Failed to load icons from folder:', err);
+                return [];
+            });
+    }
+    
+    // Build icon picker popup
+    // options: { onSelect, label, currentIcon }
+    function buildPicker(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var label = options.label || 'Select Icon';
+        var currentIcon = options.currentIcon || null;
+        
+        var picker = document.createElement('div');
+        picker.className = 'iconpicker';
+        
+        // Preview button
+        var button = document.createElement('button');
+        button.className = 'iconpicker-button';
+        button.type = 'button';
+        
+        var preview = document.createElement('img');
+        preview.className = 'iconpicker-button-preview';
+        preview.src = currentIcon || '';
+        preview.alt = '';
+        if (!currentIcon) preview.style.display = 'none';
+        
+        var placeholder = document.createElement('span');
+        placeholder.className = 'iconpicker-button-placeholder';
+        placeholder.textContent = '+';
+        if (currentIcon) placeholder.style.display = 'none';
+        
+        button.appendChild(preview);
+        button.appendChild(placeholder);
+        picker.appendChild(button);
+        
+        // Popup
+        var popup = document.createElement('div');
+        popup.className = 'iconpicker-popup';
+        popup.style.display = 'none';
+        
+        var popupHeader = document.createElement('div');
+        popupHeader.className = 'iconpicker-popup-header';
+        popupHeader.textContent = label;
+        popup.appendChild(popupHeader);
+        
+        var grid = document.createElement('div');
+        grid.className = 'iconpicker-grid';
+        popup.appendChild(grid);
+        
+        picker.appendChild(popup);
+        
+        // Toggle popup
+        button.onclick = function(e) {
+            e.stopPropagation();
+            var isOpen = popup.style.display !== 'none';
+            if (isOpen) {
+                popup.style.display = 'none';
+            } else {
+                // Load and show icons
+                loadIconsFromFolder().then(function(iconList) {
+                    grid.innerHTML = '';
+                    if (iconList.length === 0) {
+                        var msg = document.createElement('div');
+                        msg.className = 'iconpicker-error';
+                        msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
+                        grid.appendChild(msg);
+                    } else {
+                        iconList.forEach(function(iconPath) {
+                            var cell = document.createElement('button');
+                            cell.className = 'iconpicker-cell';
+                            cell.type = 'button';
+                            var img = document.createElement('img');
+                            img.src = iconPath;
+                            img.alt = '';
+                            cell.appendChild(img);
+                            
+                            if (iconPath === currentIcon) {
+                                cell.classList.add('selected');
+                            }
+                            
+                            cell.onclick = function(ev) {
+                                ev.stopPropagation();
+                                currentIcon = iconPath;
+                                preview.src = iconPath;
+                                preview.style.display = '';
+                                placeholder.style.display = 'none';
+                                popup.style.display = 'none';
+                                
+                                // Update selected state
+                                grid.querySelectorAll('.iconpicker-cell').forEach(function(c) {
+                                    c.classList.remove('selected');
+                                });
+                                cell.classList.add('selected');
+                                
+                                onSelect(iconPath);
+                            };
+                            grid.appendChild(cell);
+                        });
+                    }
+                    popup.style.display = 'block';
+                });
+            }
+        };
+        
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!picker.contains(e.target)) {
+                popup.style.display = 'none';
+            }
+        });
+        
+        return {
+            element: picker,
+            setIcon: function(iconPath) {
+                currentIcon = iconPath;
+                if (iconPath) {
+                    preview.src = iconPath;
+                    preview.style.display = '';
+                    placeholder.style.display = 'none';
+                } else {
+                    preview.style.display = 'none';
+                    placeholder.style.display = '';
+                }
+            },
+            getIcon: function() {
+                return currentIcon;
+            }
+        };
+    }
+    
+    return {
+        getIconFolder: getIconFolder,
+        setIconFolder: setIconFolder,
+        getIcons: getIcons,
+        isLoaded: isLoaded,
+        loadFolderFromSettings: loadFolderFromSettings,
+        loadIconsFromFolder: loadIconsFromFolder,
+        buildPicker: buildPicker
+    };
+})();
+
+
+/* ============================================================================
+   SECTION 6: SYSTEM IMAGE PICKER
+   Uses system_images folder path from admin settings
+   ============================================================================ */
+
+const SystemImagePickerComponent = (function(){
+    
+    var imageFolder = null;
+    var images = [];
+    var dataLoaded = false;
+    var imageCache = new Map();
+    
+    function getImageFolder() {
+        return imageFolder;
+    }
+    
+    function setImageFolder(folder) {
+        imageFolder = folder;
+    }
+    
+    function getImages() {
+        return images;
+    }
+    
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    // Load system images folder path from admin settings
+    function loadFolderFromSettings() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.settings && res.settings.system_images_folder) {
+                    imageFolder = res.settings.system_images_folder;
+                }
+                return imageFolder;
+            });
+    }
+    
+    // Load images list from folder (with caching)
+    function loadImagesFromFolder(folderPath) {
+        folderPath = folderPath || imageFolder;
+        if (!folderPath) return Promise.resolve([]);
+        
+        // Return cached result if available
+        if (imageCache.has(folderPath)) {
+            return Promise.resolve(imageCache.get(folderPath));
+        }
+        
+        return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success && Array.isArray(res.icons)) {
+                    var imageList = res.icons.map(function(img) {
+                        return folderPath + '/' + img;
+                    });
+                    imageCache.set(folderPath, imageList);
+                    images = imageList;
+                    dataLoaded = true;
+                    return imageList;
+                }
+                return [];
+            })
+            .catch(function(err) {
+                console.warn('Failed to load system images from folder:', err);
+                return [];
+            });
+    }
+    
+    // Build system image picker popup
+    // options: { onSelect, label, currentImage }
+    function buildPicker(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var label = options.label || 'Select Image';
+        var currentImage = options.currentImage || null;
+        
+        var picker = document.createElement('div');
+        picker.className = 'systemimagepicker';
+        
+        // Preview button
+        var button = document.createElement('button');
+        button.className = 'systemimagepicker-button';
+        button.type = 'button';
+        
+        var preview = document.createElement('img');
+        preview.className = 'systemimagepicker-button-preview';
+        preview.src = currentImage || '';
+        preview.alt = '';
+        if (!currentImage) preview.style.display = 'none';
+        
+        var placeholder = document.createElement('span');
+        placeholder.className = 'systemimagepicker-button-placeholder';
+        placeholder.textContent = '+';
+        if (currentImage) placeholder.style.display = 'none';
+        
+        button.appendChild(preview);
+        button.appendChild(placeholder);
+        picker.appendChild(button);
+        
+        // Popup
+        var popup = document.createElement('div');
+        popup.className = 'systemimagepicker-popup';
+        popup.style.display = 'none';
+        
+        var popupHeader = document.createElement('div');
+        popupHeader.className = 'systemimagepicker-popup-header';
+        popupHeader.textContent = label;
+        popup.appendChild(popupHeader);
+        
+        var grid = document.createElement('div');
+        grid.className = 'systemimagepicker-grid';
+        popup.appendChild(grid);
+        
+        picker.appendChild(popup);
+        
+        // Toggle popup
+        button.onclick = function(e) {
+            e.stopPropagation();
+            var isOpen = popup.style.display !== 'none';
+            if (isOpen) {
+                popup.style.display = 'none';
+            } else {
+                // Load and show images
+                loadImagesFromFolder().then(function(imageList) {
+                    grid.innerHTML = '';
+                    if (imageList.length === 0) {
+                        var msg = document.createElement('div');
+                        msg.className = 'systemimagepicker-error';
+                        msg.innerHTML = 'No images found.<br>Please set system images folder in Admin Settings.';
+                        grid.appendChild(msg);
+                    } else {
+                        imageList.forEach(function(imagePath) {
+                            var cell = document.createElement('button');
+                            cell.className = 'systemimagepicker-cell';
+                            cell.type = 'button';
+                            var img = document.createElement('img');
+                            img.src = imagePath;
+                            img.alt = '';
+                            cell.appendChild(img);
+                            
+                            if (imagePath === currentImage) {
+                                cell.classList.add('selected');
+                            }
+                            
+                            cell.onclick = function(ev) {
+                                ev.stopPropagation();
+                                currentImage = imagePath;
+                                preview.src = imagePath;
+                                preview.style.display = '';
+                                placeholder.style.display = 'none';
+                                popup.style.display = 'none';
+                                
+                                // Update selected state
+                                grid.querySelectorAll('.systemimagepicker-cell').forEach(function(c) {
+                                    c.classList.remove('selected');
+                                });
+                                cell.classList.add('selected');
+                                
+                                onSelect(imagePath);
+                            };
+                            grid.appendChild(cell);
+                        });
+                    }
+                    popup.style.display = 'block';
+                });
+            }
+        };
+        
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!picker.contains(e.target)) {
+                popup.style.display = 'none';
+            }
+        });
+        
+        return {
+            element: picker,
+            setImage: function(imagePath) {
+                currentImage = imagePath;
+                if (imagePath) {
+                    preview.src = imagePath;
+                    preview.style.display = '';
+                    placeholder.style.display = 'none';
+                } else {
+                    preview.style.display = 'none';
+                    placeholder.style.display = '';
+                }
+            },
+            getImage: function() {
+                return currentImage;
+            }
+        };
+    }
+    
+    return {
+        getImageFolder: getImageFolder,
+        setImageFolder: setImageFolder,
+        getImages: getImages,
+        isLoaded: isLoaded,
+        loadFolderFromSettings: loadFolderFromSettings,
+        loadImagesFromFolder: loadImagesFromFolder,
+        buildPicker: buildPicker
+    };
+})();
 

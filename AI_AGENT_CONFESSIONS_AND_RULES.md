@@ -940,6 +940,22 @@ Mapbox layers in rendering order (bottom to top):
 - If the user is upset, angry, or processing - WAIT
 - Pushing creates pressure and destroys trust
 
+### Rule 16: USE COPY/PASTE FOR REORDERING
+**CRITICAL:** When reordering sections or moving code blocks within a file, use search_replace to cut and paste - do NOT rewrite the entire file.
+- Moving a section = cut it, then paste it in the new location
+- Much faster than rewriting hundreds of lines
+- Less chance of introducing errors
+- The write tool should only be used when creating new files or when changes are so extensive that rewriting is actually necessary
+
+### Rule 17: QUESTIONS ARE NOT INSTRUCTIONS
+**CRITICAL:** When the user asks "how do we do X?" or "what about X?" - this is a QUESTION, not an instruction.
+- ANSWER the question first
+- EXPLAIN the approach
+- WAIT for explicit approval before implementing
+- User asking "how?" means they want to understand the plan, NOT have you execute it
+- Never assume a question is permission to write code
+- This rule exists because an agent implemented code changes when user only asked how something would work
+
 ---
 
 ## LIMITATIONS: WHAT AI AGENTS CANNOT DO

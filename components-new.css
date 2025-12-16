@@ -5,13 +5,12 @@
    Shared component styles used across multiple sections.
    
    STRUCTURE:
-   1. FIELDSETS     - Form field types
-   2. CALENDAR      - Horizontal scrolling date picker
-   3. MENU          - Generic dropdown menu (from menu-test.html)
-   4. ICON PICKER   - Icon dropdown menu (from iconpicker-test.html)
-   5. MENU CLEAN    - Clean menu variant (from test-menu-clean.html)
-   6. CURRENCY      - Currency selector (from test-currency-menu.html)
-   7. PHONE PREFIX  - Phone prefix selector (from test-prefix-menu.html)
+   1. FIELDSETS           - Form field types
+   2. CALENDAR            - Horizontal scrolling date picker
+   3. CURRENCY            - Currency selector (compact + full)
+   4. PHONE PREFIX        - Phone prefix selector
+   5. ICON PICKER         - Category icon picker
+   6. SYSTEM IMAGE PICKER - System image picker
    
    ============================================================================ */
 
@@ -930,223 +929,7 @@
 
 
 /* ============================================================================
-   SECTION 3: MENU
-   Source: menu-test.html
-   ============================================================================ */
-
-.menu {
-    width: 400px;
-    height: 36px;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-.menu-button {
-    width: 400px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
-    background: #333;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.menu-button-image {
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.menu-button-text {
-    flex: 1;
-    text-align: left;
-    padding-left: 10px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.menu-button-arrow {
-    width: 16px;
-    height: 36px;
-    margin-left: 10px;
-    transition: transform 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.menu.open .menu-button-arrow {
-    transform: rotate(180deg);
-}
-
-.menu-options {
-    display: none;
-    position: absolute;
-    top: 36px;
-    left: 0;
-    width: 400px;
-    background: #333;
-    border-radius: 5px;
-    max-height: 200px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    z-index: 10;
-}
-
-.menu.open .menu-options {
-    display: block;
-}
-
-.menu-option {
-    width: 100%;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
-    cursor: pointer;
-}
-
-.menu-option:hover {
-    background: #444;
-}
-
-.menu-option-image {
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.menu-option-text {
-    flex: 1;
-    text-align: left;
-    padding-left: 10px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-/* ============================================================================
-   SECTION 4: ICON PICKER
-   Source: iconpicker-test.html
-   ============================================================================ */
-
-/* Uses same classes as MENU section above */
-
-
-/* ============================================================================
-   SECTION 5: MENU CLEAN
-   Source: test-menu-clean.html
-   ============================================================================ */
-
-.menu-clean {
-    position: relative;
-    display: inline-block;
-}
-
-.menu-clean .menu-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 400px;
-    height: 40px;
-    padding: 0 12px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    background: rgba(0,0,0,0.35);
-    color: #fff;
-    font: inherit;
-    cursor: pointer;
-}
-
-.menu-clean .menu-button:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-.menu-clean .menu-button-image {
-    width: 20px;
-    height: 15px;
-    object-fit: cover;
-    border-radius: 2px;
-}
-
-.menu-clean .menu-button-text {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.menu-clean .menu-button-arrow {
-    font-size: 10px;
-    opacity: 0.6;
-}
-
-.menu-clean .menu-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 100;
-    margin-top: 4px;
-    width: 400px;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #222;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-}
-
-.menu-clean .menu-options[hidden] {
-    display: none;
-}
-
-.menu-clean .menu-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    background: none;
-    color: #fff;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-
-.menu-clean .menu-option:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-.menu-clean .menu-option-image {
-    width: 20px;
-    height: 15px;
-    object-fit: cover;
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-.menu-clean .menu-option-text {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-/* ============================================================================
-   SECTION 6: CURRENCY
+   SECTION 3: CURRENCY
    Source: test-currency-menu.html
    ============================================================================ */
 
@@ -1261,9 +1044,137 @@
     min-width: 0;
 }
 
+/* Currency full menu */
+.admin-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.admin-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.admin-menu-button:hover {
+    border-color: rgba(255,255,255,0.4);
+}
+
+.admin-menu.open .admin-menu-button {
+    border-color: #3b82f5;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.admin-menu-button-image {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.admin-menu-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.admin-menu.open .admin-menu-button-arrow {
+    transform: rotate(180deg);
+}
+
+.admin-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.admin-menu-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.admin-menu-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.admin-menu.open .admin-menu-options {
+    display: block;
+}
+
+.admin-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 14px;
+}
+
+.admin-menu-option:hover {
+    background: #3b82f5;
+}
+
+.admin-menu-option-image {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.admin-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.admin-currency-menu {
+    max-width: 300px;
+}
+
 
 /* ============================================================================
-   SECTION 7: PHONE PREFIX
+   SECTION 4: PHONE PREFIX
    Source: test-prefix-menu.html
    ============================================================================ */
 
@@ -1324,3 +1235,242 @@
     outline: none;
     border-color: #3b82f6;
 }
+
+
+/* ============================================================================
+   SECTION 5: ICON PICKER
+   Category icon picker component
+   ============================================================================ */
+
+.iconpicker {
+    position: relative;
+    display: inline-block;
+}
+
+.iconpicker-button {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #222;
+    border: 2px dashed #333;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.iconpicker-button:hover {
+    border-color: #3b82f5;
+}
+
+.iconpicker-button-preview {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.iconpicker-button-placeholder {
+    font-size: 24px;
+    color: #555;
+}
+
+.iconpicker-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    width: 280px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-radius: 8px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.iconpicker-popup-header {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    background: #2e3a72;
+    border-bottom: 1px solid #333;
+}
+
+.iconpicker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.iconpicker-grid::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.iconpicker-grid::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.iconpicker-cell {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #333;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.iconpicker-cell:hover {
+    border-color: #3b82f5;
+}
+
+.iconpicker-cell.selected {
+    border-color: #3b82f5;
+    background: #2e3a72;
+}
+
+.iconpicker-cell img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.iconpicker-error {
+    grid-column: 1 / -1;
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
+
+/* ============================================================================
+   SECTION 6: SYSTEM IMAGE PICKER
+   System image picker component
+   ============================================================================ */
+
+.systemimagepicker {
+    position: relative;
+    display: inline-block;
+}
+
+.systemimagepicker-button {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #222;
+    border: 2px dashed #333;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.systemimagepicker-button:hover {
+    border-color: #3b82f5;
+}
+
+.systemimagepicker-button-preview {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.systemimagepicker-button-placeholder {
+    font-size: 24px;
+    color: #555;
+}
+
+.systemimagepicker-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    width: 280px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-radius: 8px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.systemimagepicker-popup-header {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    background: #2e3a72;
+    border-bottom: 1px solid #333;
+}
+
+.systemimagepicker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.systemimagepicker-grid::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.systemimagepicker-grid::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.systemimagepicker-cell {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #333;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.systemimagepicker-cell:hover {
+    border-color: #3b82f5;
+}
+
+.systemimagepicker-cell.selected {
+    border-color: #3b82f5;
+    background: #2e3a72;
+}
+
+.systemimagepicker-cell img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.systemimagepicker-error {
+    grid-column: 1 / -1;
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
