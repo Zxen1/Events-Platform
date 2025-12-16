@@ -1,22 +1,26 @@
 /* ============================================================================
-   ADVERT.JS - ADVERT SECTION
+   MARQUEE.JS - MARQUEE SECTION
    ============================================================================
    
-   Controls the sidebar advertisement panel (right side, 1920px+ screens).
+   Controls the marquee panel - premium ads, testimonials, competitions, notices.
    
    CONTAINS:
-   - Hero image with slow zoom animation
-   - Featured post card data (no thumbnail)
-   - 20-second cycle to next ad
-   - Click to open post in post board
+   - Premium post ads with slow zoom animation
+   - Testimonials and comments
+   - FunMap notices and announcements
+   - Competitions
+   - 20-second cycle for full-screen premium ads
+   - Mixed content scrolling feed
    
    RULES:
-   - Only shows "Featured Post + Sidebar Ad" checkout option posts
+   - Premium full-screen ads: "Featured Post + Marquee" checkout option
    - Only shows posts not filtered out by current filters
    - Cycles through available featured posts
    
    CONTAINERS:
-   - (TBD - need to name advert containers)
+   - .marquee (outer panel)
+   - .marquee-content (inner content area)
+   - .marquee-slide (individual slides)
    
    DEPENDENCIES:
    - index.js (backbone)
@@ -28,5 +32,4 @@
    ============================================================================ */
 
 // Placeholder - to be built
-console.log('[advert.js] Advert section loaded');
-
+console.log('[marquee.js] Marquee section loaded');

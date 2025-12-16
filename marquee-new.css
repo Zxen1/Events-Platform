@@ -1,29 +1,50 @@
 /* ============================================================================
-   AD BOARD - Cleaned for new architecture
+   MARQUEE - Premium ads, testimonials, competitions, notices
    ============================================================================
    
-   CRITICAL SPECIFICATIONS - DO NOT MODIFY:
+   CRITICAL SPECIFICATIONS:
    
-   1. .advert-board MUST have padding: 0 (no margins/padding)
-   2. .advert-panel MUST have border-radius: 0px (no rounded corners)
+   1. .marquee MUST have padding: 0 (no margins/padding)
+   2. .marquee MUST have border-radius: 0px (no rounded corners)
    3. Height MUST span from header base to viewport bottom
-   4. .advert-slide-info displays FOUR lines from post cards:
-      - Title line (.advert-slide-info-title)
-      - Category line (.advert-slide-info-cat) with subcategory icon
-      - Location line (.advert-slide-info-loc) with 📍 badge
-      - Date line (.advert-slide-info-date) with 📅 badge
+   4. .marquee-slide-info displays FOUR lines from post cards:
+      - Title line (.marquee-slide-info-title)
+      - Category line (.marquee-slide-info-cat) with subcategory icon
+      - Location line (.marquee-slide-info-loc) with 📍 badge
+      - Date line (.marquee-slide-info-date) with 📅 badge
    
-   These specifications ensure the ad panel displays edge-to-edge with
+   These specifications ensure the marquee displays edge-to-edge with
    complete event information matching the post card structure.
    
    ========================================================================== */
 
 /* ============================================================================
-   AD BOARD CONTAINER
+   MARQUEE BASE (outer container)
    ============================================================================ */
 
-.advert-board {
+.marquee {
   position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-panel);
+  pointer-events: none;
+}
+
+.marquee--show {
+  display: block;
+}
+
+/* ============================================================================
+   MARQUEE CONTENT (inner container)
+   ============================================================================ */
+
+.marquee-content {
+  position: absolute;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
   right: 0;
@@ -40,78 +61,41 @@
   max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 0px;
 }
 
-.advert-board--side-left {
+.marquee-content--side-left {
+  right: auto;
+  left: 0;
   transform: translateX(-110%);
 }
 
-.advert-board--side-right {
+.marquee-content--side-right {
   transform: translateX(110%);
 }
 
-.advert-board--visible {
+.marquee-content--visible {
   transform: translateX(0);
   opacity: 1;
 }
 
-.advert-board--hidden {
+.marquee-content--hidden {
   pointer-events: none;
   opacity: 0;
 }
 
-.advert-board--ads-hidden {
-  pointer-events: none;
-}
-
 @media (min-width: 1900px) {
-  .advert-board {
-    display: block;
-  }
-  .advert-board--ads-hidden {
+  .marquee-content {
     display: block;
   }
 }
 
 /* ============================================================================
-   AD PANEL BASE (outer container - matches other panels)
+   MARQUEE SLIDE
    ============================================================================ */
 
-.advert-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: calc(var(--vh, 1vh) * 100);
-  background: transparent;
-  display: none;
-  z-index: var(--layer-panel);
-  pointer-events: none;
-}
-
-.advert-panel--show {
-  display: block;
-}
-
-/* ============================================================================
-   AD PANEL CONTENT (inner container)
-   ============================================================================ */
-
-.advert-panel-content {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  border-radius: 0px;
-  box-sizing: border-box;
-}
-
-/* ============================================================================
-   AD SLIDE
-   ============================================================================ */
-
-.advert-slide {
+.marquee-slide {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -120,22 +104,22 @@
   box-sizing: border-box;
 }
 
-.advert-slide--active {
+.marquee-slide--active {
   opacity: 1;
 }
 
 /* ============================================================================
-   AD SLIDE IMAGE
+   MARQUEE SLIDE IMAGE
    ============================================================================ */
 
-.advert-slide-image {
+.marquee-slide-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: advert-zoom 20s linear forwards;
+  animation: marquee-zoom 20s linear forwards;
 }
 
-@keyframes advert-zoom {
+@keyframes marquee-zoom {
   from {
     transform: scale(1);
   }
@@ -145,10 +129,10 @@
 }
 
 /* ============================================================================
-   AD SLIDE INFO
+   MARQUEE SLIDE INFO
    ============================================================================ */
 
-.advert-slide-info {
+.marquee-slide-info {
   position: absolute;
   left: 0;
   right: 0;
@@ -166,31 +150,31 @@
 }
 
 /* Info Lines - Title, Category, Location, Date */
-.advert-slide-info-line {
+.marquee-slide-info-line {
   display: flex;
   align-items: center;
   gap: 0;
 }
 
-.advert-slide-info-title {
+.marquee-slide-info-title {
   display: flex;
   align-items: center;
   gap: 0;
 }
 
-.advert-slide-info-cat {
+.marquee-slide-info-cat {
   display: flex;
   align-items: center;
   gap: 0;
 }
 
-.advert-slide-info-loc {
+.marquee-slide-info-loc {
   display: flex;
   align-items: center;
   gap: 0;
 }
 
-.advert-slide-info-date {
+.marquee-slide-info-date {
   display: flex;
   align-items: center;
   gap: 0;
@@ -200,7 +184,7 @@
    SUBCATEGORY ICON
    ============================================================================ */
 
-.advert-sub-icon {
+.marquee-subicon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,12 +192,12 @@
   padding-right: 5px;
 }
 
-.advert-sub-icon--empty {
+.marquee-subicon--empty {
   display: none;
   padding-right: 0;
 }
 
-.advert-sub-icon-image {
+.marquee-subicon-image {
   width: 18px;
   height: 18px;
 }
