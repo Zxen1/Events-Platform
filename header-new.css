@@ -53,6 +53,7 @@
 
 /* Filter button */
 .header-filter-button {
+  position: relative;
   width: 40px;
   height: 40px;
   padding: 0;
@@ -78,6 +79,22 @@
 .header-filter-button-icon {
   width: 24px;
   height: 24px;
+}
+
+.header-filter-button-counter {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
 }
 
 /* Mode switch container */
