@@ -114,39 +114,70 @@ const HeaderModule = (function() {
         fullscreenBtn = document.querySelector('.header-access-button[data-action="fullscreen"]');
         if (!fullscreenBtn) return;
         
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        var docEl = document.documentElement;
+        var canFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+        var enabled = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
         
-        // Listen for fullscreen changes (from Escape key, etc.)
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        // Hide button if fullscreen not supported
+        if (!canFS || enabled === false) {
+            fullscreenBtn.style.display = 'none';
+            return;
+        }
+        
+        // Initial state
+        updateFullscreenState();
+        
+        // Listen for fullscreen changes (cross-browser)
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
+            document.addEventListener(evt, updateFullscreenState);
+        });
+        
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
+    
+    function getFullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
     }
     
     function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(function(err) {
-                console.warn('[Header] Fullscreen request failed:', err);
-            });
+        var docEl = document.documentElement;
+        var isFull = getFullscreenElement();
+        
+        if (!isFull) {
+            var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            if (req) {
+                try {
+                    var result = req.call(docEl);
+                    if (result && typeof result.catch === 'function') result.catch(function() {});
+                } catch (err) {
+                    updateFullscreenState();
+                }
+            }
         } else {
-            document.exitFullscreen();
+            var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (exit) {
+                try {
+                    var result = exit.call(document);
+                    if (result && typeof result.catch === 'function') result.catch(function() {});
+                } catch (err) {
+                    updateFullscreenState();
+                }
+            }
         }
     }
     
-    function updateFullscreenIcon() {
+    function updateFullscreenState() {
         if (!fullscreenBtn) return;
         
+        var isFull = getFullscreenElement();
         var enterIcon = fullscreenBtn.querySelector('.header-access-button-icon--fullscreen');
         var exitIcon = fullscreenBtn.querySelector('.header-access-button-icon--fullscreen-exit');
         
-        if (document.fullscreenElement) {
-            // In fullscreen - show exit icon, add blue glow
-            fullscreenBtn.classList.add('header-access-button--active');
-            if (enterIcon) enterIcon.classList.add('header-access-button-icon--hidden');
-            if (exitIcon) exitIcon.classList.remove('header-access-button-icon--hidden');
-        } else {
-            // Not in fullscreen - show enter icon, remove glow
-            fullscreenBtn.classList.remove('header-access-button--active');
-            if (enterIcon) enterIcon.classList.remove('header-access-button-icon--hidden');
-            if (exitIcon) exitIcon.classList.add('header-access-button-icon--hidden');
-        }
+        fullscreenBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
+        fullscreenBtn.classList.toggle('header-access-button--active', !!isFull);
+        
+        if (enterIcon) enterIcon.classList.toggle('header-access-button-icon--hidden', !!isFull);
+        if (exitIcon) exitIcon.classList.toggle('header-access-button-icon--hidden', !isFull);
     }
 
 
