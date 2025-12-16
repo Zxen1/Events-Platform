@@ -75,7 +75,7 @@
        SECTION 2: FILTER PANEL
        File: filter.js, filter.css
        ======================================================================== -->
-  <aside id="filter-panel">
+  <aside class="filter-panel">
     <!-- Geocoder, geolocate, compass -->
     <!-- Reset buttons -->
     <!-- Sort dropdown -->
@@ -88,18 +88,31 @@
        SECTION 3: MAP
        File: map.js, map.css
        ======================================================================== -->
-  <main id="map-area">
-    <!-- Mapbox map renders here -->
-    <!-- Map controls -->
-    <!-- Map shadow -->
+  <main class="map-area">
+    
+    <!-- Map controls (geocoder, geolocate, compass) -->
+    <div class="map-controls">
+      <div class="map-geocoder"></div>
+      <div class="map-geolocate"></div>
+      <div class="map-compass"></div>
+    </div>
+    
     <!-- Zoom indicator -->
+    <div class="map-zoom-indicator">Zoom -- • Pitch --</div>
+    
+    <!-- Mapbox map renders here -->
+    <div class="map-container"></div>
+    
+    <!-- Map shadow overlay (post mode) -->
+    <div class="map-shadow"></div>
+    
   </main>
 
   <!-- ========================================================================
        SECTION 4: POST PANEL (includes Recents)
        File: post.js, post.css
        ======================================================================== -->
-  <section id="post-panel">
+  <section class="post-panel">
     <!-- Post cards -->
     <!-- Open post view -->
     <!-- Recents view with mascot -->
@@ -109,7 +122,7 @@
        SECTION 5: ADMIN PANEL
        File: admin.js, admin.css
        ======================================================================== -->
-  <aside id="admin-panel">
+  <aside class="admin-panel">
     <!-- Panel header -->
     <!-- Settings tab -->
     <!-- Forms tab -->
@@ -121,7 +134,7 @@
        SECTION 6: MEMBER PANEL
        File: member.js, member.css
        ======================================================================== -->
-  <aside id="member-panel">
+  <aside class="member-panel">
     <!-- Profile tab -->
     <!-- Create Post tab -->
     <!-- My Posts tab -->
@@ -131,7 +144,7 @@
        SECTION 7: ADVERT PANEL
        File: advert.js, advert.css
        ======================================================================== -->
-  <aside id="advert-panel">
+  <aside class="advert-panel">
     <!-- Hero image -->
     <!-- Featured post card -->
   </aside>
@@ -139,15 +152,15 @@
   <!-- ========================================================================
        MODALS (not counted as sections)
        ======================================================================== -->
-  <div id="welcome-modal">
+  <div class="welcome-modal">
     <!-- Welcome message, geocoder, instructions -->
   </div>
 
-  <div id="terms-modal">
+  <div class="terms-modal">
     <!-- Terms and conditions -->
   </div>
 
-  <div id="lightbox-modal">
+  <div class="lightbox-modal">
     <!-- Image lightbox -->
   </div>
 
