@@ -6,6 +6,7 @@
    
    STRUCTURE:
    0. ICONS               - SVG icon library
+   0b. CLEAR BUTTON       - Reusable X/clear button
    1. FIELDSETS           - Form field types
    2. CALENDAR            - Horizontal scrolling date picker
    3. CURRENCY            - Currency selector (compact + full)
@@ -35,6 +36,61 @@ const Icons = {
     
     chevronDown: '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
 };
+
+
+/* ============================================================================
+   SECTION 0b: CLEAR BUTTON
+   Reusable X/clear button component
+   ============================================================================ */
+
+const ClearButtonComponent = (function(){
+    
+    /**
+     * Create a new clear button element
+     * @param {Object} options - Configuration options
+     * @param {string} options.className - Additional CSS class(es) to add
+     * @param {string} options.ariaLabel - Accessible label (default: 'Clear')
+     * @param {Function} options.onClick - Click handler
+     * @returns {HTMLButtonElement} The clear button element
+     */
+    function create(options) {
+        options = options || {};
+        
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'clear-button';
+        if (options.className) {
+            btn.className += ' ' + options.className;
+        }
+        btn.setAttribute('aria-label', options.ariaLabel || 'Clear');
+        btn.innerHTML = Icons.clear;
+        
+        if (typeof options.onClick === 'function') {
+            btn.addEventListener('click', options.onClick);
+        }
+        
+        return btn;
+    }
+    
+    /**
+     * Inject SVG icon into existing buttons that don't have one
+     * @param {string} selector - CSS selector for buttons to upgrade
+     */
+    function upgradeAll(selector) {
+        var buttons = document.querySelectorAll(selector);
+        buttons.forEach(function(btn) {
+            // Add SVG if button doesn't already have one
+            if (!btn.querySelector('svg')) {
+                btn.innerHTML = Icons.clear;
+            }
+        });
+    }
+    
+    return {
+        create: create,
+        upgradeAll: upgradeAll
+    };
+})();
 
 
 /* ============================================================================
@@ -292,6 +348,7 @@ const CalendarComponent = (function(){
         options = options || {};
         var monthsPast = options.monthsPast || 12;
         var monthsFuture = options.monthsFuture || 24;
+        var onSelect = options.onSelect || null;
         
         var today = new Date();
         today.setHours(0,0,0,0);
@@ -304,6 +361,10 @@ const CalendarComponent = (function(){
         var todayMonthIndex = 0;
         var totalMonths = 0;
         var weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        
+        // Date selection state
+        var selectedStart = null;
+        var selectedEnd = null;
         
         var scroll = document.createElement('div');
         scroll.className = 'calendar-scroll';
@@ -357,6 +418,31 @@ const CalendarComponent = (function(){
                         cell.classList.add('past');
                     } else {
                         cell.classList.add('future');
+                        
+                        // Add click handler for date selection
+                        cell.addEventListener('click', function() {
+                            var clickedDate = this.dataset.iso;
+                            
+                            if (!selectedStart || (selectedStart && selectedEnd)) {
+                                // Start new selection
+                                selectedStart = clickedDate;
+                                selectedEnd = null;
+                                updateSelection(calendar);
+                            } else {
+                                // Complete selection
+                                if (clickedDate < selectedStart) {
+                                    selectedEnd = selectedStart;
+                                    selectedStart = clickedDate;
+                                } else {
+                                    selectedEnd = clickedDate;
+                                }
+                                updateSelection(calendar);
+                                
+                                if (onSelect) {
+                                    onSelect(selectedStart, selectedEnd);
+                                }
+                            }
+                        });
                     }
                     
                     if(iso === todayIso) {
@@ -398,6 +484,25 @@ const CalendarComponent = (function(){
             scroll.scrollLeft += e.deltaY || e.deltaX;
         });
         
+        // Update visual selection state
+        function updateSelection(calendarEl) {
+            var days = calendarEl.querySelectorAll('.day[data-iso]');
+            days.forEach(function(d) {
+                d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+                var iso = d.dataset.iso;
+                
+                if (selectedStart && iso === selectedStart) {
+                    d.classList.add('selected', 'range-start');
+                }
+                if (selectedEnd && iso === selectedEnd) {
+                    d.classList.add('selected', 'range-end');
+                }
+                if (selectedStart && selectedEnd && iso > selectedStart && iso < selectedEnd) {
+                    d.classList.add('in-range');
+                }
+            });
+        }
+        
         return {
             scroll: scroll,
             calendar: calendar,
@@ -406,6 +511,14 @@ const CalendarComponent = (function(){
                 if(todayMonthEl) {
                     scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
                 }
+            },
+            clearSelection: function() {
+                selectedStart = null;
+                selectedEnd = null;
+                updateSelection(calendar);
+            },
+            getSelection: function() {
+                return { start: selectedStart, end: selectedEnd };
             }
         };
     }
@@ -946,12 +1059,11 @@ const MapControlRowComponent = (function(){
         input.autocomplete = 'off';
         geocoderEl.appendChild(input);
         
-        var clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'geocoder-clear';
-        clearBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+        var clearBtn = ClearButtonComponent.create({
+            className: 'geocoder-clear',
+            ariaLabel: 'Clear location'
+        });
         clearBtn.style.display = 'none';
-        clearBtn.title = 'Clear';
         geocoderEl.appendChild(clearBtn);
         
         var dropdown = document.createElement('div');

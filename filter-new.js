@@ -34,6 +34,7 @@ const FilterModule = (function() {
     var daterangeClear = null;
     var expiredInput = null;
     var calendarContainer = null;
+    var calendarInstance = null;
     var dateStart = null;
     var dateEnd = null;
 
@@ -61,6 +62,7 @@ const FilterModule = (function() {
         initFavouritesButton();
         initSortMenu();
         initFilterBasics();
+        initCategoryFilter();
         initHeaderDrag();
         bindPanelEvents();
         
@@ -340,6 +342,11 @@ const FilterModule = (function() {
         var container = panelEl.querySelector('.filter-basics-container');
         if (!container) return;
         
+        // Upgrade clear buttons to use SVG icons
+        if (typeof ClearButtonComponent !== 'undefined') {
+            ClearButtonComponent.upgradeAll('.filter-keyword-clear, .filter-price-clear, .filter-daterange-clear');
+        }
+        
         // Keyword
         keywordInput = container.querySelector('.filter-keyword-input');
         keywordClear = container.querySelector('.filter-keyword-clear');
@@ -385,6 +392,23 @@ const FilterModule = (function() {
         daterangeInput = container.querySelector('.filter-daterange-input');
         daterangeClear = container.querySelector('.filter-daterange-clear');
         calendarContainer = container.querySelector('.filter-calendar-container');
+        
+        // Initialize calendar component
+        if (calendarContainer && typeof CalendarComponent !== 'undefined') {
+            var calendarEl = calendarContainer.querySelector('.filter-calendar');
+            if (calendarEl) {
+                calendarInstance = CalendarComponent.create(calendarEl, {
+                    monthsPast: 1,
+                    monthsFuture: 12,
+                    onSelect: function(start, end) {
+                        setDateRange(start, end);
+                        closeCalendar();
+                        applyFilters();
+                        updateClearButtons();
+                    }
+                });
+            }
+        }
         
         if (daterangeInput) {
             daterangeInput.addEventListener('click', function() {
@@ -511,6 +535,9 @@ const FilterModule = (function() {
         dateStart = null;
         dateEnd = null;
         if (daterangeInput) daterangeInput.value = '';
+        if (calendarInstance && calendarInstance.clearSelection) {
+            calendarInstance.clearSelection();
+        }
         closeCalendar();
     }
     
@@ -532,6 +559,121 @@ const FilterModule = (function() {
     }
 
 
+    /* --------------------------------------------------------------------------
+       CATEGORY FILTER
+       -------------------------------------------------------------------------- */
+    
+    function initCategoryFilter() {
+        var container = panelEl.querySelector('.filter-categoryfilter-container');
+        if (!container) return;
+        
+        // Fetch categories from database
+        fetch('/gateway.php?action=get-form')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (!res.success || !res.snapshot) return;
+                
+                var categories = res.snapshot.categories || [];
+                var categoryIconPaths = res.snapshot.categoryIconPaths || {};
+                var subcategoryIconPaths = res.snapshot.subcategoryIconPaths || {};
+                
+                categories.forEach(function(cat) {
+                    var accordion = document.createElement('div');
+                    accordion.className = 'filter-categoryfilter-accordion';
+                    
+                    // Header
+                    var header = document.createElement('div');
+                    header.className = 'filter-categoryfilter-accordion-header';
+                    
+                    var headerImg = document.createElement('img');
+                    headerImg.className = 'filter-categoryfilter-accordion-header-image';
+                    headerImg.src = categoryIconPaths[cat.name] || '';
+                    headerImg.alt = '';
+                    
+                    var headerText = document.createElement('span');
+                    headerText.className = 'filter-categoryfilter-accordion-header-text';
+                    headerText.textContent = cat.name;
+                    
+                    var headerArrow = document.createElement('span');
+                    headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
+                    headerArrow.textContent = '▼';
+                    
+                    var headerToggleArea = document.createElement('div');
+                    headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
+                    var headerToggle = document.createElement('div');
+                    headerToggle.className = 'filter-categoryfilter-accordion-header-toggle on';
+                    headerToggleArea.appendChild(headerToggle);
+                    
+                    header.appendChild(headerImg);
+                    header.appendChild(headerText);
+                    header.appendChild(headerArrow);
+                    header.appendChild(headerToggleArea);
+                    
+                    // Body
+                    var body = document.createElement('div');
+                    body.className = 'filter-categoryfilter-accordion-body';
+                    
+                    var subs = cat.subs || [];
+                    subs.forEach(function(subName) {
+                        var option = document.createElement('div');
+                        option.className = 'filter-categoryfilter-accordion-option';
+                        
+                        var optImg = document.createElement('img');
+                        optImg.className = 'filter-categoryfilter-accordion-option-image';
+                        optImg.src = subcategoryIconPaths[subName] || '';
+                        optImg.alt = '';
+                        
+                        var optText = document.createElement('span');
+                        optText.className = 'filter-categoryfilter-accordion-option-text';
+                        optText.textContent = subName;
+                        
+                        var optToggle = document.createElement('div');
+                        optToggle.className = 'filter-categoryfilter-accordion-option-toggle on';
+                        
+                        option.appendChild(optImg);
+                        option.appendChild(optText);
+                        option.appendChild(optToggle);
+                        
+                        // Click anywhere on option toggles the switch
+                        option.addEventListener('click', function() {
+                            optToggle.classList.toggle('on');
+                            applyFilters();
+                        });
+                        
+                        body.appendChild(option);
+                    });
+                    
+                    accordion.appendChild(header);
+                    accordion.appendChild(body);
+                    
+                    // Category toggle area click - disable and force close
+                    headerToggleArea.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        headerToggle.classList.toggle('on');
+                        if (headerToggle.classList.contains('on')) {
+                            accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+                        } else {
+                            accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                            accordion.classList.remove('filter-categoryfilter-accordion--open');
+                        }
+                        applyFilters();
+                    });
+                    
+                    // Click anywhere except toggle area expands/collapses
+                    header.addEventListener('click', function(e) {
+                        if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
+                        accordion.classList.toggle('filter-categoryfilter-accordion--open');
+                    });
+                    
+                    container.appendChild(accordion);
+                });
+            })
+            .catch(function(err) {
+                console.warn('[Filter] Failed to load categories:', err);
+            });
+    }
+    
+    
     /* --------------------------------------------------------------------------
        HEADER DRAG
        -------------------------------------------------------------------------- */

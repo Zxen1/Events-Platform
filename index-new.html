@@ -109,7 +109,7 @@
           <div class="filter-keyword-row">
             <div class="filter-keyword-input-wrap">
               <input class="filter-keyword-input" type="text" placeholder="Keywords" aria-label="Keywords">
-              <button class="filter-keyword-clear" type="button" aria-label="Clear keywords">X</button>
+              <button class="clear-button filter-keyword-clear" type="button" aria-label="Clear keywords"></button>
             </div>
           </div>
           <div class="filter-price-row">
@@ -117,13 +117,13 @@
               <input class="filter-price-input filter-price-min" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Min price" aria-label="Minimum price">
               <span class="filter-price-separator" aria-hidden="true">-</span>
               <input class="filter-price-input filter-price-max" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Max price" aria-label="Maximum price">
-              <button class="filter-price-clear" type="button" aria-label="Clear price range">X</button>
+              <button class="clear-button filter-price-clear" type="button" aria-label="Clear price range"></button>
             </div>
           </div>
           <div class="filter-daterange-row">
             <div class="filter-daterange-input-wrap">
               <input class="filter-daterange-input" type="text" placeholder="Date Range" aria-label="Date range" readonly aria-haspopup="dialog" aria-expanded="false">
-              <button class="filter-daterange-clear" type="button" aria-label="Clear date">X</button>
+              <button class="clear-button filter-daterange-clear" type="button" aria-label="Clear date"></button>
             </div>
           </div>
           <div class="filter-expired-row">
@@ -136,6 +136,11 @@
           <div class="filter-calendar-container" aria-hidden="true">
             <div class="filter-calendar"></div>
           </div>
+        </section>
+        
+        <!-- Category Filter Container -->
+        <section class="filter-categoryfilter-container" aria-label="Categories">
+          <!-- Populated by JavaScript from database -->
         </section>
         
       </div>

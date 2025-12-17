@@ -5,6 +5,7 @@
    Shared component styles used across multiple sections.
    
    STRUCTURE:
+   0. CLEAR BUTTON        - Reusable X/clear button
    1. FIELDSETS           - Form field types
    2. CALENDAR            - Horizontal scrolling date picker
    3. CURRENCY            - Currency selector (compact + full)
@@ -14,6 +15,36 @@
    7. MAP CONTROL ROW     - Geocoder + Geolocate + Compass
    
    ============================================================================ */
+
+
+/* ============================================================================
+   SECTION 0: CLEAR BUTTON
+   Base styles for reusable X/clear button
+   CSS color property controls icon color via currentColor
+   ============================================================================ */
+
+.clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: inherit;
+    transition: opacity 0.15s ease;
+}
+
+.clear-button:hover {
+    opacity: 0.7;
+}
+
+.clear-button svg {
+    display: block;
+}
 
 
 /* ============================================================================
@@ -919,6 +950,19 @@
     color: #ff0000;
 }
 
+.day.range-start {
+    border-radius: 4px 0 0 4px;
+}
+
+.day.range-end {
+    border-radius: 0 4px 4px 0;
+}
+
+.day.in-range {
+    background: rgba(46, 58, 114, 0.5);
+    color: #fff;
+}
+
 .today-marker {
     position: absolute;
     bottom: 0;
@@ -1512,6 +1556,7 @@
     border-radius: 8px;
     font-size: 14px;
     color: #000000;
+    caret-color: #000000;
     box-sizing: border-box;
 }
 
@@ -1642,6 +1687,7 @@
     height: 28px;
     font-size: 13px;
     padding: 0 28px 0 10px;
+    caret-color: #000000;
 }
 
 .map-controls-welcome .geocoder-clear {
