@@ -4,31 +4,36 @@
    
    Controls the Mapbox map and all map-related functionality.
    
-   CONTAINS:
-   - Mapbox GL JS initialization
-   - Google Places geocoder (map, filter, welcome)
-   - Mapbox geocoder (admin starting location only)
-   - Geolocate and compass controls
-   - Map markers and clusters
-   - Map cards (small, big, hover states)
-   - Spin animation
-   - Map shadow overlay
-   - Zoom indicator
-   - Post mini-maps
+   STRUCTURE:
+   1. CONSTANTS & STATE
+   2. MAPBOX - Map initialization, controls, events
+   3. GOOGLE PLACES - Geocoder result handling
+   4. MAPBOX GEOCODER - Admin starting location (Mapbox-only)
+   5. CLUSTERS - Marker clustering
+   6. MARKERS - Map card markers
+   7. SPIN - Globe spin animation
+   8. ZOOM INDICATOR
+   9. POST MINI-MAPS
+   10. SETTINGS
+   11. PUBLIC API
    
-   DEPENDENCIES:
+   EXTERNAL DEPENDENCIES:
+   - Mapbox GL JS (mapboxgl)
+   - Google Places API (google.maps.places) - via MapControlRowComponent
+   - Mapbox Geocoder (MapboxGeocoder) - admin only
+   
+   INTERNAL DEPENDENCIES:
    - index-new.js (App backbone)
-   - Mapbox GL JS (external)
-   - Google Places API (external)
+   - components-new.js (MapControlRowComponent)
    
    ============================================================================ */
 
 const MapModule = (function() {
   'use strict';
 
-  /* --------------------------------------------------------------------------
-     CONSTANTS
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 1: CONSTANTS & STATE
+     ========================================================================== */
   
   // Mapbox access token
   const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -58,9 +63,7 @@ const MapModule = (function() {
   const MARKER_LABEL_MAX_WIDTH_BIG = 145;
 
 
-  /* --------------------------------------------------------------------------
-     STATE
-     -------------------------------------------------------------------------- */
+  /* State */
   
   let map = null;                    // Main Mapbox map instance
   let postMaps = new Map();          // Post mini-maps: postId -> map instance
@@ -97,9 +100,9 @@ const MapModule = (function() {
   let adminSettings = {};
 
 
-  /* --------------------------------------------------------------------------
-     MAP INITIALIZATION
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 2: MAPBOX - Map Initialization
+     ========================================================================== */
   
   /**
    * Initialize the main wallpaper map
@@ -196,9 +199,9 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     SETTINGS
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 10: SETTINGS
+     ========================================================================== */
   
   /**
    * Load admin settings from server
@@ -268,15 +271,16 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     CONTROLS (Geocoder, Geolocate, Compass)
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 3: GOOGLE PLACES - Geocoder Controls
+     Uses MapControlRowComponent from components-new.js
+     ========================================================================== */
   
   // Store control instances
   let mapControls = null;
   
   /**
-   * Initialize all map controls using MapControlRowComponent
+   * Initialize map controls (Google Places geocoder + Mapbox geolocate/compass)
    */
   function initControls() {
     // Wait for Google Places API
@@ -291,7 +295,7 @@ const MapModule = (function() {
       return;
     }
 
-    // Map area controls
+    // Map area controls (Google Places + Mapbox geolocate/compass)
     const mapControlsContainer = document.querySelector('.map-controls');
     if (mapControlsContainer) {
       mapControls = MapControlRowComponent.create(mapControlsContainer, {
@@ -306,45 +310,17 @@ const MapModule = (function() {
       geocoders.map = mapControls.geocoder;
     }
 
-    // Admin starting location uses Mapbox geocoder (no Google Places)
+    // Admin starting location uses Mapbox geocoder (separate)
     initAdminStartingGeocoder();
 
     console.log('[Map] Controls initialized');
   }
 
   /**
-   * Initialize admin starting location geocoder (Mapbox only)
-   */
-  function initAdminStartingGeocoder() {
-    const container = document.querySelector('.admin-map-geocoder');
-    if (!container || !window.MapboxGeocoder) return;
-
-    const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
-      mapboxgl: mapboxgl,
-      marker: false,
-      placeholder: 'Set starting location'
-    });
-
-    geocoder.addTo(container);
-
-    geocoder.on('result', (e) => {
-      if (e.result && e.result.center) {
-        App.emit('map:startingLocationChanged', {
-          lng: e.result.center[0],
-          lat: e.result.center[1],
-          address: e.result.place_name
-        });
-      }
-    });
-
-    geocoders.adminStarting = geocoder;
-  }
-
-  /**
-   * Handle geocoder result (from MapControlRowComponent)
+   * Handle Google Places geocoder result (from MapControlRowComponent)
    */
   function handleGeocoderResult(result, geocoderKey) {
+    console.log('[Map] Geocoder result:', result, geocoderKey);
     if (!result || !result.center) return;
 
     const lng = result.center[0];
@@ -353,7 +329,7 @@ const MapModule = (function() {
     // Stop spin on interaction
     stopSpin();
 
-    // Fly to location
+    // Fly to location (Mapbox)
     if (map) {
       // Use viewport bounds if available
       if (result.bbox && result.bbox.length === 4) {
@@ -384,9 +360,44 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     MAP EVENTS
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 4: MAPBOX GEOCODER - Admin Starting Location Only
+     Uses Mapbox Geocoder (not Google Places)
+     ========================================================================== */
+
+  /**
+   * Initialize admin starting location geocoder (Mapbox only, not Google)
+   */
+  function initAdminStartingGeocoder() {
+    const container = document.querySelector('.admin-map-geocoder');
+    if (!container || !window.MapboxGeocoder) return;
+
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      marker: false,
+      placeholder: 'Set starting location'
+    });
+
+    geocoder.addTo(container);
+
+    geocoder.on('result', (e) => {
+      if (e.result && e.result.center) {
+        App.emit('map:startingLocationChanged', {
+          lng: e.result.center[0],
+          lat: e.result.center[1],
+          address: e.result.place_name
+        });
+      }
+    });
+
+    geocoders.adminStarting = geocoder;
+  }
+
+
+  /* ==========================================================================
+     SECTION 2B: MAPBOX - Map Events
+     ========================================================================== */
   
   /**
    * Bind map interaction events
@@ -428,9 +439,9 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     SPIN ANIMATION
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 7: SPIN - Globe Spin Animation (Mapbox)
+     ========================================================================== */
   
   /**
    * Update spin enabled state based on settings
@@ -501,9 +512,9 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     CLUSTERS
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 5: CLUSTERS - Marker Clustering (Mapbox)
+     ========================================================================== */
   
   const CLUSTER_LAYER_ID = 'post-clusters';
   const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
@@ -852,9 +863,9 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     ZOOM INDICATOR
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 8: ZOOM INDICATOR (Mapbox)
+     ========================================================================== */
   
   /**
    * Update the zoom indicator display
@@ -927,9 +938,9 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     PUBLIC API
-     -------------------------------------------------------------------------- */
+  /* ==========================================================================
+     SECTION 11: PUBLIC API
+     ========================================================================== */
   
   return {
     init,

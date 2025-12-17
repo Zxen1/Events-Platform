@@ -47,6 +47,20 @@ const FieldsetComponent = (function(){
                 placeAutocomplete.placeholder = inputElement.placeholder;
             }
             
+            // Style via JavaScript (shadow DOM doesn't accept external CSS)
+            placeAutocomplete.style.width = '100%';
+            placeAutocomplete.style.height = '36px';
+            placeAutocomplete.style.backgroundColor = '#333';
+            placeAutocomplete.style.border = '1px solid #444';
+            placeAutocomplete.style.borderRadius = '6px';
+            placeAutocomplete.style.colorScheme = 'dark';
+            placeAutocomplete.style.setProperty('--gmpx-color-surface', '#333');
+            placeAutocomplete.style.setProperty('--gmpx-color-on-surface', '#ffffff');
+            placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
+            placeAutocomplete.style.setProperty('--gmpx-color-primary', '#3b82f5');
+            placeAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
+            placeAutocomplete.style.setProperty('--gmpx-font-size-base', '13px');
+            
             // Replace the original input with the new element
             inputElement.parentNode.replaceChild(placeAutocomplete, inputElement);
             
@@ -57,25 +71,25 @@ const FieldsetComponent = (function(){
                 await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
                 
                 if (!place.location) {
-                    if (statusElement) {
-                        statusElement.textContent = 'No location data for this place';
-                        statusElement.className = 'fieldset-location-status error';
-                    }
-                    return;
+                if (statusElement) {
+                    statusElement.textContent = 'No location data for this place';
+                    statusElement.className = 'fieldset-location-status error';
                 }
-                
+                return;
+            }
+            
                 var lat = place.location.lat();
                 var lng = place.location.lng();
-                
-                if (latInput) latInput.value = lat;
-                if (lngInput) lngInput.value = lng;
-                
-                if (statusElement) {
-                    statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
-                    statusElement.className = 'fieldset-location-status success';
-                }
-            });
             
+            if (latInput) latInput.value = lat;
+            if (lngInput) lngInput.value = lng;
+            
+            if (statusElement) {
+                statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                statusElement.className = 'fieldset-location-status success';
+            }
+        });
+        
             return placeAutocomplete;
         }
         
@@ -623,7 +637,7 @@ const PhonePrefixComponent = (function(){
         prefixes.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
             var prefix = item.value.substring(3);
-            var op = document.createElement('div');
+                    var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
             op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + prefix + ' - ' + item.label + '</span>';
             op.onclick = function(e) {
@@ -632,8 +646,8 @@ const PhonePrefixComponent = (function(){
                 btnText.textContent = prefix;
                 menu.classList.remove('open');
                 onSelect(prefix, item.label, countryCode);
-            };
-            opts.appendChild(op);
+                    };
+                    opts.appendChild(op);
         });
         
         btn.onclick = function(e) {
@@ -876,7 +890,14 @@ const IconPickerComponent = (function(){
 
 /* ============================================================================
    SECTION 7: MAP CONTROL ROW
-   Geocoder (Google Places) + Geolocate + Compass controls
+   
+   Combined control row containing:
+   - GOOGLE PLACES: PlaceAutocompleteElement geocoder (new API)
+   - MAPBOX: GeolocateControl (user location button)
+   - MAPBOX: NavigationControl (compass)
+   
+   Styling is applied via JavaScript because PlaceAutocompleteElement
+   uses Shadow DOM and doesn't accept external CSS.
    ============================================================================ */
 
 const MapControlRowComponent = (function(){
@@ -885,13 +906,17 @@ const MapControlRowComponent = (function(){
     var instances = [];
     
     // Create the HTML structure for a map control row
-    // options: { location, placeholder, onResult, map }
+    // options: { location, placeholder, onResult, map, height, colorScheme }
     function create(containerEl, options) {
         options = options || {};
         var location = options.location || 'default';
         var placeholder = options.placeholder || 'Search venues or places';
         var onResult = options.onResult || function() {};
         var map = options.map || null;
+        var height = options.height || '36px';
+        var colorScheme = options.colorScheme || 'light';
+        var bgColor = colorScheme === 'dark' ? '#333' : '#ffffff';
+        var textColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
         
         // Create row container
         var row = document.createElement('div');
@@ -937,6 +962,20 @@ const MapControlRowComponent = (function(){
                 componentRestrictions: { country: [] }
             });
             placeAutocomplete.placeholder = placeholder;
+            
+            // Style via JavaScript (shadow DOM doesn't accept external CSS)
+            placeAutocomplete.style.width = '100%';
+            placeAutocomplete.style.height = height;
+            placeAutocomplete.style.backgroundColor = bgColor;
+            placeAutocomplete.style.border = 'none';
+            placeAutocomplete.style.borderRadius = '8px';
+            placeAutocomplete.style.colorScheme = colorScheme;
+            placeAutocomplete.style.setProperty('--gmpx-color-surface', bgColor);
+            placeAutocomplete.style.setProperty('--gmpx-color-on-surface', textColor);
+            placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
+            placeAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
+            placeAutocomplete.style.setProperty('--gmpx-font-size-base', '14px');
+            
             wrapper.appendChild(placeAutocomplete);
             geocoderEl.appendChild(wrapper);
             
@@ -953,16 +992,31 @@ const MapControlRowComponent = (function(){
             };
             
             placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
+                console.log('[Geocoder] Place selected:', event);
                 var place = event.place;
-                if (!place) return;
+                if (!place) {
+                    console.warn('[Geocoder] No place in event');
+                    return;
+                }
                 
                 // Fetch full place details
-                await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
+                try {
+                    await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
+                    console.log('[Geocoder] Place details:', place);
+                } catch (err) {
+                    console.error('[Geocoder] Failed to fetch place details:', err);
+                    return;
+                }
                 
-                if (!place.location) return;
+                if (!place.location) {
+                    console.warn('[Geocoder] No location in place');
+                    return;
+                }
                 
                 var lat = place.location.lat();
                 var lng = place.location.lng();
+                console.log('[Geocoder] Flying to:', lat, lng);
+                
                 var result = {
                     center: [lng, lat],
                     geometry: { type: 'Point', coordinates: [lng, lat] },
@@ -983,7 +1037,7 @@ const MapControlRowComponent = (function(){
         // Initialize Mapbox Geolocate control (requires map)
         if (map && typeof mapboxgl !== 'undefined') {
             var geolocate = new mapboxgl.GeolocateControl({
-                positionOptions: { enableHighAccuracy: true },
+                positionOptions: { enableHighAccuracy: false },
                 trackUserLocation: false,
                 fitBoundsOptions: { maxZoom: 12 }
             });

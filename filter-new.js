@@ -168,14 +168,21 @@ const FilterModule = (function() {
     }
     
     function handleGeocoderResult(result) {
-        if (!result || !result.center) return;
+        console.log('[Filter] Geocoder result received:', result);
+        if (!result || !result.center) {
+            console.warn('[Filter] Invalid result');
+            return;
+        }
         
         var lng = result.center[0];
         var lat = result.center[1];
+        console.log('[Filter] Flying to:', lng, lat);
         
         // Fly to location via MapModule
         if (typeof MapModule !== 'undefined' && MapModule.flyTo) {
             MapModule.flyTo(lng, lat);
+        } else {
+            console.warn('[Filter] MapModule.flyTo not available');
         }
         
         // Emit event
