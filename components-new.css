@@ -875,6 +875,22 @@
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #222;
+}
+
+.calendar-scroll::-webkit-scrollbar {
+    height: 8px;
+    background: #222;
+}
+
+.calendar-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.calendar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
 }
 
 .calendar {
@@ -969,7 +985,6 @@
     width: 8px;
     height: 8px;
     background: #ff0000;
-    border-radius: 50%;
     cursor: pointer;
     z-index: 100;
 }

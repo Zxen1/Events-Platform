@@ -489,6 +489,20 @@ const FilterModule = (function() {
             });
         }
         
+        // Close calendar when clicking outside
+        document.addEventListener('click', function(e) {
+            if (calendarContainer && calendarContainer.classList.contains('open')) {
+                // Check if click is outside calendar and daterange input
+                if (!calendarContainer.contains(e.target) && e.target !== daterangeInput) {
+                    // Clear any incomplete selection and close
+                    if (calendarInstance && calendarInstance.clearSelection) {
+                        calendarInstance.clearSelection();
+                    }
+                    closeCalendar();
+                }
+            }
+        });
+        
         // Expired toggle
         expiredInput = container.querySelector('.filter-expired-input');
         

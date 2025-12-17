@@ -485,9 +485,9 @@
   position: absolute;
   top: 0;
   left: 0;
+  right: 0;
   display: none;
   overflow: hidden;
-  width: 340px;
   border-radius: 8px;
   z-index: 10;
 }
