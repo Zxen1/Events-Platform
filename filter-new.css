@@ -33,7 +33,7 @@
 
 .filter-panel-content {
   position: absolute;
-  left: 50%;
+  left: 0;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
   width: 100%;
