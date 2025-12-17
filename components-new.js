@@ -5,6 +5,7 @@
    Shared components used across multiple sections.
    
    STRUCTURE:
+   0. ICONS               - SVG icon library
    1. FIELDSETS           - Form field types
    2. CALENDAR            - Horizontal scrolling date picker
    3. CURRENCY            - Currency selector (compact + full)
@@ -16,6 +17,24 @@
    ============================================================================ */
 
 console.log('[components.js] Components loaded');
+
+
+/* ============================================================================
+   SECTION 0: ICONS
+   SVG icon library for consistent icons across the site
+   ============================================================================ */
+
+const Icons = {
+    clear: '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    
+    geolocate: '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>',
+    
+    compass: '<svg viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>',
+    
+    search: '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M14.5 14.5L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    
+    chevronDown: '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
+};
 
 
 /* ============================================================================
@@ -891,197 +910,240 @@ const IconPickerComponent = (function(){
 /* ============================================================================
    SECTION 7: MAP CONTROL ROW
    
-   Combined control row containing:
-   - GOOGLE PLACES: PlaceAutocompleteElement geocoder (new API)
-   - MAPBOX: GeolocateControl (user location button)
-   - MAPBOX: NavigationControl (compass)
-   
-   Styling is applied via JavaScript because PlaceAutocompleteElement
-   uses Shadow DOM and doesn't accept external CSS.
+   Plain HTML controls - fully styled via CSS:
+   - Input field for geocoder (Google Places API provides data only)
+   - Geolocate button (Browser Geolocation API)
+   - Compass button (Mapbox bearing reset)
    ============================================================================ */
 
 const MapControlRowComponent = (function(){
     
-    // Store references to created controls for cleanup
     var instances = [];
+    var autocompleteService = null;
+    var placesService = null;
     
     // Create the HTML structure for a map control row
-    // options: { location, placeholder, onResult, map, height, colorScheme }
+    // options: { location, placeholder, onResult, map }
     function create(containerEl, options) {
         options = options || {};
         var location = options.location || 'default';
         var placeholder = options.placeholder || 'Search venues or places';
         var onResult = options.onResult || function() {};
         var map = options.map || null;
-        var height = options.height || '36px';
-        var colorScheme = options.colorScheme || 'light';
-        var bgColor = colorScheme === 'dark' ? '#333' : '#ffffff';
-        var textColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
         
         // Create row container
         var row = document.createElement('div');
         row.className = 'map-control-row map-controls-' + location;
         
-        // Geocoder container
+        // Geocoder input
         var geocoderEl = document.createElement('div');
         geocoderEl.className = 'geocoder';
-        geocoderEl.id = 'geocoder-' + location;
+        
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'geocoder-input';
+        input.placeholder = placeholder;
+        input.autocomplete = 'off';
+        geocoderEl.appendChild(input);
+        
+        var clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'geocoder-clear';
+        clearBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+        clearBtn.style.display = 'none';
+        clearBtn.title = 'Clear';
+        geocoderEl.appendChild(clearBtn);
+        
+        var dropdown = document.createElement('div');
+        dropdown.className = 'geocoder-dropdown';
+        dropdown.style.display = 'none';
+        geocoderEl.appendChild(dropdown);
+        
         row.appendChild(geocoderEl);
         
-        // Geolocate container
-        var geolocateEl = document.createElement('div');
-        geolocateEl.className = 'geolocate-btn';
-        geolocateEl.id = 'geolocate-' + location;
-        row.appendChild(geolocateEl);
+        // Geolocate button
+        var geolocateBtn = document.createElement('button');
+        geolocateBtn.type = 'button';
+        geolocateBtn.className = 'geolocate-btn';
+        geolocateBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+        geolocateBtn.title = 'Find my location';
+        row.appendChild(geolocateBtn);
         
-        // Compass container
-        var compassEl = document.createElement('div');
-        compassEl.className = 'compass-btn';
-        compassEl.id = 'compass-' + location;
-        row.appendChild(compassEl);
+        // Compass button
+        var compassBtn = document.createElement('button');
+        compassBtn.type = 'button';
+        compassBtn.className = 'compass-btn';
+        compassBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
+        compassBtn.title = 'Reset north';
+        row.appendChild(compassBtn);
         
         containerEl.appendChild(row);
         
         var instance = {
             row: row,
-            geocoderEl: geocoderEl,
-            geolocateEl: geolocateEl,
-            compassEl: compassEl,
-            geocoder: null,
-            geolocate: null,
-            compass: null,
-            inputEl: null
+            input: input,
+            clearBtn: clearBtn,
+            dropdown: dropdown,
+            geolocateBtn: geolocateBtn,
+            compassBtn: compassBtn,
+            map: map
         };
         
-        // Initialize Google Places geocoder (new PlaceAutocompleteElement API)
-        if (typeof google !== 'undefined' && google.maps && google.maps.places && google.maps.places.PlaceAutocompleteElement) {
-            var wrapper = document.createElement('div');
-            wrapper.className = 'google-places-geocoder';
-            
-            var placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
-                componentRestrictions: { country: [] }
-            });
-            placeAutocomplete.placeholder = placeholder;
-            
-            // Style via JavaScript (shadow DOM doesn't accept external CSS)
-            placeAutocomplete.style.width = '100%';
-            placeAutocomplete.style.height = height;
-            placeAutocomplete.style.minHeight = height;
-            placeAutocomplete.style.maxHeight = height;
-            placeAutocomplete.style.backgroundColor = bgColor;
-            placeAutocomplete.style.border = '1px solid rgba(0,0,0,0.15)';
-            placeAutocomplete.style.borderRadius = '8px';
-            placeAutocomplete.style.overflow = 'hidden';
-            placeAutocomplete.style.padding = '0';
-            placeAutocomplete.style.boxSizing = 'border-box';
-            placeAutocomplete.style.colorScheme = colorScheme;
-            placeAutocomplete.style.caretColor = textColor;
-            placeAutocomplete.style.setProperty('--gmpx-color-surface', bgColor);
-            placeAutocomplete.style.setProperty('--gmpx-color-on-surface', textColor);
-            placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
-            placeAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
-            placeAutocomplete.style.setProperty('--gmpx-font-size-base', '14px');
-            
-            wrapper.appendChild(placeAutocomplete);
-            geocoderEl.appendChild(wrapper);
-            
-            instance.inputEl = placeAutocomplete;
-            
-            instance.geocoder = {
-                _element: placeAutocomplete,
-                clear: function() {
-                    // PlaceAutocompleteElement doesn't expose value directly
-                    // We need to access the internal input
-                    var input = placeAutocomplete.querySelector('input');
-                    if (input) input.value = '';
-                }
-            };
-            
-            placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
-                console.log('[Geocoder] Place selected:', event);
-                var place = event.place;
-                if (!place) {
-                    console.warn('[Geocoder] No place in event');
-                    return;
-                }
-                
-                // Fetch full place details
-                try {
-                    await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
-                    console.log('[Geocoder] Place details:', place);
-                } catch (err) {
-                    console.error('[Geocoder] Failed to fetch place details:', err);
-                    return;
-                }
-                
-                if (!place.location) {
-                    console.warn('[Geocoder] No location in place');
-                    return;
-                }
-                
-                var lat = place.location.lat();
-                var lng = place.location.lng();
-                console.log('[Geocoder] Flying to:', lat, lng);
-                
-                var result = {
-                    center: [lng, lat],
-                    geometry: { type: 'Point', coordinates: [lng, lat] },
-                    place_name: place.formattedAddress || place.displayName,
-                    text: place.displayName || place.formattedAddress
-                };
-                
-                if (place.viewport) {
-                    var ne = place.viewport.getNorthEast();
-                    var sw = place.viewport.getSouthWest();
-                    result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
-                }
-                
-                onResult(result);
-            });
+        // Initialize Google Places AutocompleteService (data only, no UI)
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            if (!autocompleteService) {
+                autocompleteService = new google.maps.places.AutocompleteService();
+            }
+            if (!placesService) {
+                var div = document.createElement('div');
+                placesService = new google.maps.places.PlacesService(div);
+            }
         }
         
-        // Initialize Mapbox Geolocate control (requires map)
-        if (map && typeof mapboxgl !== 'undefined') {
-            var geolocate = new mapboxgl.GeolocateControl({
-                positionOptions: { enableHighAccuracy: false },
-                trackUserLocation: false,
-                fitBoundsOptions: { maxZoom: 12 }
-            });
+        // Input events
+        var debounceTimer = null;
+        input.addEventListener('input', function() {
+            clearBtn.style.display = input.value ? 'flex' : 'none';
             
-            var geolocateControlEl = geolocate.onAdd(map);
-            geolocateEl.appendChild(geolocateControlEl);
-            instance.geolocate = geolocate;
+            clearTimeout(debounceTimer);
+            if (input.value.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
             
-            geolocate.on('geolocate', function(event) {
-                if (event && event.coords) {
-                    var result = {
-                        center: [event.coords.longitude, event.coords.latitude],
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [event.coords.longitude, event.coords.latitude]
-                        },
+            debounceTimer = setTimeout(function() {
+                fetchSuggestions(input.value, dropdown, function(place) {
+                    input.value = place.name;
+                    dropdown.style.display = 'none';
+                    clearBtn.style.display = 'flex';
+                    onResult({
+                        center: [place.lng, place.lat],
+                        geometry: { type: 'Point', coordinates: [place.lng, place.lat] },
+                        place_name: place.address,
+                        text: place.name
+                    });
+                });
+            }, 300);
+        });
+        
+        clearBtn.addEventListener('click', function() {
+            input.value = '';
+            clearBtn.style.display = 'none';
+            dropdown.style.display = 'none';
+            input.focus();
+        });
+        
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (!geocoderEl.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Geolocate button
+        geolocateBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                console.warn('[Geolocate] Geolocation not supported');
+                return;
+            }
+            
+            geolocateBtn.classList.add('loading');
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    geolocateBtn.classList.remove('loading');
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    
+                    if (map) {
+                        map.flyTo({ center: [lng, lat], zoom: 14 });
+                    }
+                    
+                    onResult({
+                        center: [lng, lat],
+                        geometry: { type: 'Point', coordinates: [lng, lat] },
                         isGeolocate: true
-                    };
-                    onResult(result);
+                    });
+                },
+                function(err) {
+                    geolocateBtn.classList.remove('loading');
+                    console.error('[Geolocate] Error:', err.message);
+                },
+                { enableHighAccuracy: false, timeout: 10000 }
+            );
+        });
+        
+        // Compass button - reset bearing on click
+        compassBtn.addEventListener('click', function() {
+            if (map) {
+                map.easeTo({ bearing: 0, pitch: 0, duration: 300 });
+            }
+        });
+        
+        // Sync compass rotation with map bearing
+        if (map) {
+            var compassIcon = compassBtn.querySelector('svg');
+            function updateCompass() {
+                if (compassIcon) {
+                    var bearing = map.getBearing();
+                    compassIcon.style.transform = 'rotate(' + (-bearing) + 'deg)';
                 }
-            });
-            
-            // Initialize compass control
-            var nav = new mapboxgl.NavigationControl({
-                showZoom: false,
-                visualizePitch: true
-            });
-            var compassControlEl = nav.onAdd(map);
-            compassEl.appendChild(compassControlEl);
-            instance.compass = nav;
+            }
+            map.on('rotate', updateCompass);
+            map.on('load', updateCompass);
+            updateCompass();
         }
         
         instances.push(instance);
-        
         return instance;
     }
     
-    // Clear all instances
+    // Fetch suggestions from Google Places
+    function fetchSuggestions(query, dropdown, onSelect) {
+        if (!autocompleteService) {
+            console.warn('[Geocoder] AutocompleteService not available');
+            return;
+        }
+        
+        autocompleteService.getPlacePredictions(
+            { input: query },
+            function(predictions, status) {
+                dropdown.innerHTML = '';
+                
+                if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                predictions.forEach(function(prediction) {
+                    var item = document.createElement('div');
+                    item.className = 'geocoder-dropdown-item';
+                    item.textContent = prediction.description;
+                    
+                    item.addEventListener('click', function() {
+                        // Get place details for coordinates
+                        placesService.getDetails(
+                            { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
+                            function(place, detailStatus) {
+                                if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                                    onSelect({
+                                        name: place.name || prediction.description,
+                                        address: place.formatted_address || prediction.description,
+                                        lat: place.geometry.location.lat(),
+                                        lng: place.geometry.location.lng()
+                                    });
+                                }
+                            }
+                        );
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            }
+        );
+    }
+    
     function destroyAll() {
         instances.forEach(function(inst) {
             if (inst.row && inst.row.parentNode) {

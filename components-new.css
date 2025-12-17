@@ -1481,100 +1481,152 @@
 /* ============================================================================
    SECTION 7: MAP CONTROL ROW
    
-   Combined control row containing:
-   - GOOGLE PLACES: PlaceAutocompleteElement (styled via JS, not CSS)
-   - MAPBOX: GeolocateControl button
-   - MAPBOX: NavigationControl compass button
+   Plain HTML controls - fully styled via CSS:
+   - Geocoder input with dropdown
+   - Geolocate button
+   - Compass button
    ============================================================================ */
 
 .map-control-row {
     display: flex;
     align-items: center;
-    gap: var(--gap, 10px);
+    gap: 10px;
     flex-wrap: nowrap;
 }
 
+/* Geocoder container */
 .map-control-row .geocoder {
-    background-color: #ffffff;
-    border-radius: 8px;
+    position: relative;
     flex: 1 1 240px;
     min-width: 0;
-    height: 36px;
-    min-height: 36px;
-    max-height: 36px;
     max-width: 100%;
-    display: flex;
-    overflow: hidden;
-    box-sizing: border-box;
 }
 
-.map-control-row .google-places-geocoder {
+/* Geocoder input */
+.map-control-row .geocoder-input {
     width: 100%;
     height: 36px;
-    min-height: 36px;
-    max-height: 36px;
-    display: flex;
-    overflow: hidden;
+    padding: 0 36px 0 12px;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
     border-radius: 8px;
+    font-size: 14px;
+    color: #000000;
     box-sizing: border-box;
 }
 
-/* PlaceAutocompleteElement is styled via JavaScript (shadow DOM) */
+.map-control-row .geocoder-input:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
 
+.map-control-row .geocoder-input::placeholder {
+    color: #888888;
+}
+
+/* Clear button */
+.map-control-row .geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    color: #888888;
+    cursor: pointer;
+    padding: 0;
+}
+
+.map-control-row .geocoder-clear:hover {
+    background-color: rgba(0,0,0,0.05);
+    color: #000000;
+}
+
+/* Dropdown */
+.map-control-row .geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.map-control-row .geocoder-dropdown-item {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #000000;
+    cursor: pointer;
+}
+
+.map-control-row .geocoder-dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.map-control-row .geocoder-dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.map-control-row .geocoder-dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+/* Geolocate and Compass buttons */
 .map-control-row .geolocate-btn,
 .map-control-row .compass-btn {
-    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
 }
 
-.map-control-row .mapboxgl-ctrl-geolocate,
-.map-control-row .mapboxgl-ctrl-compass {
-    margin: 0;
-}
-
-.map-control-row .mapboxgl-ctrl-group button,
-.map-control-row .mapboxgl-ctrl-geolocate button,
-.map-control-row .mapboxgl-ctrl-compass button,
-.map-control-row .mapboxgl-ctrl button {
-    width: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    max-height: 36px !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(0,0,0,0.15) !important;
-    box-shadow: none !important;
-    background-color: #ffffff !important;
-    padding: 0 !important;
-}
-
-.map-control-row .mapboxgl-ctrl-group {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-.map-control-row .mapboxgl-ctrl-geolocate button:hover,
-.map-control-row .mapboxgl-ctrl-compass button:hover {
+.map-control-row .geolocate-btn:hover,
+.map-control-row .compass-btn:hover {
     background-color: #f2f2f2;
 }
 
-.map-control-row .mapboxgl-ctrl-geolocate button svg,
-.map-control-row .mapboxgl-ctrl-compass button svg {
-    filter: none;
+.map-control-row .geolocate-btn.loading {
+    pointer-events: none;
 }
 
-/* Hide Mapbox geolocate pulsing ring/circle */
-.map-control-row .mapboxgl-ctrl-geolocate-background,
-.map-control-row .mapboxgl-ctrl-geolocate-background-dot {
-    display: none;
+.map-control-row .geolocate-btn.loading svg {
+    animation: geolocate-pulse 1s ease-in-out infinite;
 }
 
-.map-control-row .mapboxgl-ctrl-geolocate button::after {
-    display: none;
+@keyframes geolocate-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.9); }
 }
 
-/* Google Places PlaceAutocompleteElement */
-/* Note: Clear button hover circle is inside Shadow DOM and cannot be styled externally */
+.map-control-row .geolocate-btn svg,
+.map-control-row .compass-btn svg {
+    display: block;
+}
+
+.map-control-row .compass-btn svg {
+    transition: transform 0.1s ease-out;
+}
 
 /* Welcome modal variant (28px height) */
 .map-controls-welcome {
@@ -1584,12 +1636,29 @@
 .map-controls-welcome .geocoder {
     flex: 0 1 420px;
     max-width: 420px;
+}
+
+.map-controls-welcome .geocoder-input {
+    height: 28px;
+    font-size: 13px;
+    padding: 0 28px 0 10px;
+}
+
+.map-controls-welcome .geocoder-clear {
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
+}
+
+.map-controls-welcome .geolocate-btn,
+.map-controls-welcome .compass-btn {
+    width: 28px;
     height: 28px;
 }
 
-.map-controls-welcome .mapboxgl-ctrl-geolocate button,
-.map-controls-welcome .mapboxgl-ctrl-compass button {
-    width: 28px;
-    height: 28px;
+.map-controls-welcome .geolocate-btn svg,
+.map-controls-welcome .compass-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
