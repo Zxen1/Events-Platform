@@ -608,6 +608,9 @@ const FilterModule = (function() {
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'true');
         }
+        if (calendarInstance && calendarInstance.scrollToToday) {
+            calendarInstance.scrollToToday();
+        }
     }
     
     function closeCalendar() {
