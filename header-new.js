@@ -178,14 +178,23 @@ const HeaderModule = (function() {
     }
     
     function showAdminButton() {
-        if (!adminBtn) return;
+        if (!adminBtn) {
+            console.warn('[Header] Cannot show admin button - element not found');
+            return;
+        }
+        console.log('[Header] Showing admin button');
         adminBtn.classList.remove('header-access-button--hidden');
+        adminBtn.style.display = 'flex';
+        adminBtn.hidden = false;
         adminBtn.setAttribute('aria-hidden', 'false');
     }
     
     function hideAdminButton() {
         if (!adminBtn) return;
+        console.log('[Header] Hiding admin button');
         adminBtn.classList.add('header-access-button--hidden');
+        adminBtn.style.display = 'none';
+        adminBtn.hidden = true;
         adminBtn.setAttribute('aria-hidden', 'true');
     }
 
