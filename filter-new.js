@@ -569,6 +569,7 @@ const FilterModule = (function() {
             monthsPast: monthsPast,
             monthsFuture: 24,
             allowPast: showExpired,
+            showActions: true,
             onSelect: function(start, end) {
                 setDateRange(start, end);
                 closeCalendar();

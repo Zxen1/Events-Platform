@@ -350,6 +350,7 @@ const CalendarComponent = (function(){
         var monthsFuture = typeof options.monthsFuture === 'number' ? options.monthsFuture : 24;
         var allowPast = options.allowPast || false;
         var onSelect = options.onSelect || null;
+        var showActions = options.showActions || false;
         
         var today = new Date();
         today.setHours(0,0,0,0);
@@ -441,7 +442,7 @@ const CalendarComponent = (function(){
                                 }
                                 updateSelection(calendar);
                                 
-                                if (onSelect) {
+                                if (!showActions && onSelect) {
                                     onSelect(selectedStart, selectedEnd);
                                 }
                             }
@@ -467,6 +468,36 @@ const CalendarComponent = (function(){
         scroll.appendChild(calendar);
         containerEl.appendChild(scroll);
         containerEl.appendChild(marker);
+        
+        // Add action buttons if showActions is true
+        var actionsEl = null;
+        if (showActions) {
+            actionsEl = document.createElement('div');
+            actionsEl.className = 'calendar-actions';
+            
+            var cancelBtn = document.createElement('button');
+            cancelBtn.className = 'calendar-cancel';
+            cancelBtn.type = 'button';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', function() {
+                selectedStart = null;
+                selectedEnd = null;
+                updateSelection(calendar);
+                if (onSelect) onSelect(null, null);
+            });
+            
+            var okBtn = document.createElement('button');
+            okBtn.className = 'calendar-ok';
+            okBtn.type = 'button';
+            okBtn.textContent = 'OK';
+            okBtn.addEventListener('click', function() {
+                if (onSelect) onSelect(selectedStart, selectedEnd);
+            });
+            
+            actionsEl.appendChild(cancelBtn);
+            actionsEl.appendChild(okBtn);
+            containerEl.appendChild(actionsEl);
+        }
         
         // Scroll to today's month initially
         if (todayMonthEl) {

@@ -808,6 +808,34 @@
     z-index: 10;
 }
 
+.calendar-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid #333;
+}
+
+.calendar-ok,
+.calendar-cancel {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.calendar-ok {
+    background: #3b82f5;
+    color: #fff;
+}
+
+.calendar-cancel {
+    background: #333;
+    color: #fff;
+}
+
 /* States */
 .calendar-day.empty {
     cursor: default;
@@ -857,6 +885,14 @@
 .calendar-day.in-range {
     background: rgba(46, 58, 114, 0.5);
     color: #fff;
+}
+
+.calendar-ok:hover {
+    background: #2563eb;
+}
+
+.calendar-cancel:hover {
+    background: #444;
 }
 
 
