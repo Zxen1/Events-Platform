@@ -808,6 +808,7 @@
     bottom: 0;
     width: 8px;
     height: 8px;
+    border-radius: 50%;
     background: #ff0000;
     cursor: pointer;
     z-index: 10;
