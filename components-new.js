@@ -1208,7 +1208,7 @@ const MapControlRowComponent = (function(){
                         
                         item.addEventListener('click', function() {
                             placesService.getDetails(
-                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
+                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address', 'types'] },
                                 function(place, detailStatus) {
                                     if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
                                         var lat = place.geometry.location.lat();
@@ -1219,7 +1219,20 @@ const MapControlRowComponent = (function(){
                                         clearBtn.style.display = 'flex';
                                         
                                         if (map) {
-                                            map.flyTo({ center: [lng, lat], zoom: 14 });
+                                            // Use viewport bounds if available (better for cities, countries, regions)
+                                            if (place.geometry.viewport) {
+                                                var ne = place.geometry.viewport.getNorthEast();
+                                                var sw = place.geometry.viewport.getSouthWest();
+                                                map.fitBounds([
+                                                    [sw.lng(), sw.lat()],
+                                                    [ne.lng(), ne.lat()]
+                                                ], {
+                                                    padding: 50,
+                                                    maxZoom: 15
+                                                });
+                                            } else {
+                                                map.flyTo({ center: [lng, lat], zoom: 14 });
+                                            }
                                         }
                                         
                                         onResult({
