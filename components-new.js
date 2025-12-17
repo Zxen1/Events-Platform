@@ -465,42 +465,39 @@ const CalendarComponent = (function(){
         containerEl.appendChild(scroll);
         containerEl.appendChild(marker);
         
-        // Function to position marker correctly
+        // Scroll to today's month initially
+        if (todayMonthEl) {
+            scroll.scrollLeft = todayMonthEl.offsetLeft;
+        }
+        
+        // Position the red dot marker
+        // Formula: (todayMonthIndex + 0.5) / totalMonths gives the fraction
+        // e.g., month 13 of 37 = (13 + 0.5) / 37 = 0.365 (about 1/3 along)
         function positionMarker() {
             var width = containerEl.clientWidth;
             if (width > 0 && totalMonths > 0) {
-        var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
                 var markerPos = markerFraction * (width - 8);
-        marker.style.left = markerPos + 'px';
+                marker.style.left = markerPos + 'px';
             }
         }
         
-        // Function to scroll to today
-        function scrollToToday(animate) {
-            if (todayMonthEl) {
-                if (animate) {
-                scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
-                } else {
-                    scroll.scrollLeft = todayMonthEl.offsetLeft;
-                }
-            }
-        }
-        
-        // Initial position (may need recalc if container hidden)
-        scrollToToday(false);
+        // Initial position
         positionMarker();
         
-        // Recalculate marker position when container becomes visible
-        var resizeObserver = null;
+        // Recalculate marker position when container resizes (e.g., becomes visible)
         if (typeof ResizeObserver !== 'undefined') {
-            resizeObserver = new ResizeObserver(function() {
+            var resizeObserver = new ResizeObserver(function() {
                 positionMarker();
             });
             resizeObserver.observe(containerEl);
         }
         
+        // Click marker to scroll to today
         marker.addEventListener('click', function() {
-            scrollToToday(true);
+            if (todayMonthEl) {
+                scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+            }
         });
         
         // Mouse wheel horizontal scrolling
@@ -533,7 +530,9 @@ const CalendarComponent = (function(){
             calendar: calendar,
             marker: marker,
             scrollToToday: function() {
-                scrollToToday(true);
+                if (todayMonthEl) {
+                    scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+                }
             },
             positionMarker: positionMarker,
             clearSelection: function() {
