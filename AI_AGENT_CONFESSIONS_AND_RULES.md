@@ -1305,6 +1305,23 @@ Reads as: "In admin, the systemimagepicker's menu option's text's image, disable
 7. **NEVER style bare element tags** - every element gets its own class
 8. **Section matches CSS filename** - admin- classes go in admin.css
 
+### Component Variant Rule
+
+Components (in components-new.css) use their raw name if there are no variants. If there ARE variants, each variant is prefixed by where it belongs:
+- If it belongs in a CSS file (filter.css, admin.css, map.css, etc.) → prefix = that filename
+- If it does not belong in a CSS file → prefix = the parent component it lives inside
+
+**Example - Map Control Row (belongs in CSS files):**
+- `.map-map-control-row` - belongs in map.css
+- `.filter-map-control-row` - belongs in filter.css
+- `.welcome-map-control-row` - belongs in index.css (welcome modal)
+
+**Example - Currency (mixed):**
+- `.fieldset-currency-*` - lives inside fieldset component
+- `.admin-currency-*` - belongs in admin.css
+
+**Key principle:** No base + override pattern. Each variant has its own complete CSS block. One JS component, multiple independent CSS blocks.
+
 ### Why This System
 
 - **Plugin extraction:** `grep "^\.filter-"` = all filter plugin CSS
