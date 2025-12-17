@@ -1559,3 +1559,25 @@
     filter: none;
 }
 
+/* Welcome modal variant */
+.map-controls-welcome {
+    --geocoder-h: 28px;
+    justify-content: center;
+}
+
+.map-controls-welcome .geocoder {
+    flex: 0 1 420px;
+    max-width: 420px;
+}
+
+.map-controls-welcome .google-places-geocoder input {
+    font-size: 13px;
+    padding: 0 12px;
+}
+
+.map-controls-welcome .mapboxgl-ctrl-geolocate button,
+.map-controls-welcome .mapboxgl-ctrl-compass button {
+    width: 28px;
+    height: 28px;
+}
+

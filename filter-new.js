@@ -17,8 +17,7 @@ const FilterModule = (function() {
     var contentEl = null;
     var bodyEl = null;
     var summaryEl = null;
-    var geocoderInput = null;
-    var geocoderAutocomplete = null;
+    var mapControls = null;
 
 
     /* --------------------------------------------------------------------------
@@ -98,94 +97,77 @@ const FilterModule = (function() {
 
     /* --------------------------------------------------------------------------
        PART 4: MAP CONTROL ROW (Geocoder, Geolocate, Compass)
+       Uses MapControlRowComponent from components-new.js
        -------------------------------------------------------------------------- */
     
     function initMapControls() {
-        initGeocoder();
-        initGeolocate();
-        initCompass();
-    }
-    
-    function initGeocoder() {
-        var container = panelEl.querySelector('.filter-geocoder');
+        // Wait for dependencies
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            setTimeout(initMapControls, 100);
+            return;
+        }
+        if (typeof MapControlRowComponent === 'undefined') {
+            setTimeout(initMapControls, 100);
+            return;
+        }
+        
+        var container = panelEl.querySelector('.filter-map-controls');
         if (!container) return;
         
-        // Create input
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'Search venues or places';
-        input.setAttribute('autocomplete', 'off');
-        input.setAttribute('data-lpignore', 'true');
-        container.appendChild(input);
+        // Get map instance from MapModule
+        var map = null;
+        if (typeof MapModule !== 'undefined' && MapModule.getMap) {
+            map = MapModule.getMap();
+        }
         
-        geocoderInput = input;
+        // If map not ready yet, wait and retry
+        if (!map) {
+            App.on('map:ready', function(data) {
+                if (data && data.map) {
+                    createControls(container, data.map);
+                }
+            });
+            return;
+        }
         
-        // Wait for Google Places API
-        waitForGooglePlaces(function() {
-            geocoderAutocomplete = new google.maps.places.Autocomplete(input, {
-                fields: ['formatted_address', 'geometry', 'name', 'place_id']
-            });
-            
-            geocoderAutocomplete.addListener('place_changed', function() {
-                var place = geocoderAutocomplete.getPlace();
-                if (!place || !place.geometry || !place.geometry.location) return;
-                
-                var lat = place.geometry.location.lat();
-                var lng = place.geometry.location.lng();
-                
-                App.emit('filter:placeSelected', {
-                    lat: lat,
-                    lng: lng,
-                    name: place.name,
-                    address: place.formatted_address
-                });
-            });
+        createControls(container, map);
+    }
+    
+    function createControls(container, map) {
+        mapControls = MapControlRowComponent.create(container, {
+            location: 'filter',
+            placeholder: 'Search venues or places',
+            map: map,
+            onResult: function(result) {
+                handleGeocoderResult(result);
+            }
         });
     }
     
-    function waitForGooglePlaces(callback) {
-        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-            callback();
-        } else {
-            setTimeout(function() { waitForGooglePlaces(callback); }, 100);
+    function handleGeocoderResult(result) {
+        if (!result || !result.center) return;
+        
+        var lng = result.center[0];
+        var lat = result.center[1];
+        
+        // Fly to location via MapModule
+        if (typeof MapModule !== 'undefined' && MapModule.flyTo) {
+            MapModule.flyTo(lng, lat);
         }
+        
+        // Emit event
+        App.emit('filter:placeSelected', {
+            lat: lat,
+            lng: lng,
+            name: result.text || '',
+            address: result.place_name || ''
+        });
     }
     
     function clearGeocoder() {
-        if (geocoderInput) {
-            geocoderInput.value = '';
+        if (mapControls && mapControls.geocoder && mapControls.geocoder.clear) {
+            mapControls.geocoder.clear();
         }
-    }
-    
-    function initGeolocate() {
-        var container = panelEl.querySelector('.filter-geolocate');
-        if (!container) return;
-        
-        // Add icon
-        container.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>';
-        
-        container.addEventListener('click', function() {
-            if (!navigator.geolocation) return;
-            
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                App.emit('filter:geolocate', {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude
-                });
-            });
-        });
-    }
-    
-    function initCompass() {
-        var container = panelEl.querySelector('.filter-compass');
-        if (!container) return;
-        
-        // Add icon
-        container.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3,12 12,3 21,12 12,21"/></svg>';
-        
-        container.addEventListener('click', function() {
-            App.emit('filter:compass');
-        });
     }
 
 

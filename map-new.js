@@ -272,8 +272,11 @@ const MapModule = (function() {
      CONTROLS (Geocoder, Geolocate, Compass)
      -------------------------------------------------------------------------- */
   
+  // Store control instances
+  let mapControls = null;
+  
   /**
-   * Initialize all map controls
+   * Initialize all map controls using MapControlRowComponent
    */
   function initControls() {
     // Wait for Google Places API
@@ -281,76 +284,32 @@ const MapModule = (function() {
       setTimeout(initControls, 100);
       return;
     }
+    
+    // Wait for MapControlRowComponent
+    if (typeof MapControlRowComponent === 'undefined') {
+      setTimeout(initControls, 100);
+      return;
+    }
 
-    // Control sets: welcome, map, filter (using class selectors)
-    const controlSets = [
-      { geo: '.welcome-geocoder', locate: '.welcome-geolocate', compass: '.welcome-compass', key: 'welcome' },
-      { geo: '.map-geocoder', locate: '.map-geolocate', compass: '.map-compass', key: 'map' },
-      { geo: '.filter-geocoder', locate: '.filter-geolocate', compass: '.filter-compass', key: 'filter' }
-    ];
-
-    controlSets.forEach(set => {
-      initGeocoderSet(set);
-    });
+    // Map area controls
+    const mapControlsContainer = document.querySelector('.map-controls');
+    if (mapControlsContainer) {
+      mapControls = MapControlRowComponent.create(mapControlsContainer, {
+        location: 'map',
+        placeholder: 'Search venues or places',
+        map: map,
+        onResult: function(result) {
+          handleGeocoderResult(result, 'map');
+        }
+      });
+      
+      geocoders.map = mapControls.geocoder;
+    }
 
     // Admin starting location uses Mapbox geocoder (no Google Places)
     initAdminStartingGeocoder();
 
     console.log('[Map] Controls initialized');
-  }
-
-  /**
-   * Initialize a geocoder set (Google Places + geolocate + compass)
-   */
-  function initGeocoderSet(set) {
-    const geoEl = document.querySelector(set.geo);
-    const locateEl = document.querySelector(set.locate);
-    const compassEl = document.querySelector(set.compass);
-
-    // Create Google Places geocoder
-    if (geoEl) {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'map-geocoder-input';
-      input.placeholder = 'Search venues or places';
-      input.setAttribute('autocomplete', 'off');
-      input.setAttribute('data-lpignore', 'true');
-      geoEl.appendChild(input);
-
-      const autocomplete = new google.maps.places.Autocomplete(input, {
-        fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types', 'address_components']
-      });
-
-      autocomplete.addListener('place_changed', () => {
-        handlePlaceSelected(autocomplete, set.key);
-      });
-
-      geocoders[set.key] = {
-        input: input,
-        autocomplete: autocomplete,
-        clear: () => { input.value = ''; }
-      };
-    }
-
-    // Create geolocate button
-    if (locateEl && map) {
-      const geolocate = new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: false,
-        showUserLocation: true
-      });
-      // Note: Geolocate control needs to be added to map, then element moved
-      // This is a workaround for placing controls outside the map
-    }
-
-    // Create compass button
-    if (compassEl && map) {
-      const compass = new mapboxgl.NavigationControl({
-        showCompass: true,
-        showZoom: false
-      });
-      // Similar workaround needed
-    }
   }
 
   /**
@@ -383,36 +342,34 @@ const MapModule = (function() {
   }
 
   /**
-   * Handle Google Places selection
+   * Handle geocoder result (from MapControlRowComponent)
    */
-  function handlePlaceSelected(autocomplete, geocoderKey) {
-    const place = autocomplete.getPlace();
-    if (!place || !place.geometry || !place.geometry.location) return;
+  function handleGeocoderResult(result, geocoderKey) {
+    if (!result || !result.center) return;
 
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
+    const lng = result.center[0];
+    const lat = result.center[1];
 
     // Stop spin on interaction
     stopSpin();
 
     // Fly to location
     if (map) {
-      const options = {
-        center: [lng, lat],
-        essential: true
-      };
-
       // Use viewport bounds if available
-      if (place.geometry.viewport) {
-        const ne = place.geometry.viewport.getNorthEast();
-        const sw = place.geometry.viewport.getSouthWest();
-        map.fitBounds([[sw.lng(), sw.lat()], [ne.lng(), ne.lat()]], {
+      if (result.bbox && result.bbox.length === 4) {
+        map.fitBounds([
+          [result.bbox[0], result.bbox[1]],
+          [result.bbox[2], result.bbox[3]]
+        ], {
           padding: 50,
           maxZoom: 15
         });
       } else {
-        options.zoom = 14;
-        map.flyTo(options);
+        map.flyTo({
+          center: [lng, lat],
+          zoom: 14,
+          essential: true
+        });
       }
     }
 
@@ -421,9 +378,8 @@ const MapModule = (function() {
       geocoder: geocoderKey,
       lat: lat,
       lng: lng,
-      name: place.name,
-      address: place.formatted_address,
-      placeId: place.place_id
+      name: result.text || '',
+      address: result.place_name || ''
     });
   }
 
