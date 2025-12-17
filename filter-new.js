@@ -160,7 +160,7 @@ const FilterModule = (function() {
     
     function createControls(container, map) {
         mapControls = MapControlRowComponent.create(container, {
-            location: 'filter',
+            variant: 'filter',
             placeholder: 'Search venues or places',
             map: map,
             onResult: function(result) {

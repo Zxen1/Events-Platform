@@ -1097,7 +1097,7 @@ const MapControlRowComponent = (function(){
     // variant: 'filter', 'map', or 'welcome'
     function create(containerEl, options) {
         options = options || {};
-        var variant = options.variant || options.location || 'filter';
+        var variant = options.variant || 'filter';
         var placeholder = options.placeholder || 'Search venues or places';
         var onResult = options.onResult || function() {};
         var map = options.map || null;
