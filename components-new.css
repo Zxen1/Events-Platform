@@ -8,21 +8,22 @@
    0. CLEAR BUTTON        - Reusable X/clear button
    1. FIELDSETS           - Form field types
    2. CALENDAR            - Horizontal scrolling date picker
-   3. CURRENCY            - Currency selector (compact + full)
+   3. CURRENCY            - Currency selector (has variants)
    4. PHONE PREFIX        - Phone prefix selector
    5. ICON PICKER         - Category icon picker
    6. SYSTEM IMAGE PICKER - System image picker
-   7. MAP CONTROL ROW     - Geocoder + Geolocate + Compass
+   7. MAP CONTROL         - Geocoder + Geolocate + Compass (has variants)
    
    ============================================================================ */
 
 
 /* ============================================================================
    SECTION 0: CLEAR BUTTON
-   Base styles for reusable X/clear button
-   CSS color property controls icon color via currentColor
+   
+   No variants - same everywhere.
    ============================================================================ */
 
+/* Appearance */
 .clear-button {
     display: flex;
     align-items: center;
@@ -38,29 +39,28 @@
     transition: opacity 0.15s ease;
 }
 
-.clear-button:hover {
-    opacity: 0.7;
+.clear-button-icon {
+    display: block;
 }
 
-.clear-button svg {
-    display: block;
+/* States */
+.clear-button:hover {
+    opacity: 0.7;
 }
 
 
 /* ============================================================================
    SECTION 1: FIELDSETS
-   Source: fieldset-test.html
+   
+   No variants - same everywhere.
    ============================================================================ */
 
+/* Appearance - Container */
 .fieldset-container {
-    width: 400px;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-.fieldset-container {
-    width: 100%;
 }
 
 .fieldset-header {
@@ -72,7 +72,14 @@
     border-bottom: 1px solid #333;
 }
 
-/* Label row */
+.fieldset-divider {
+    width: 100%;
+    height: 1px;
+    background: #333;
+    margin: 8px 0;
+}
+
+/* Appearance - Label */
 .fieldset-label {
     display: flex;
     align-items: center;
@@ -107,27 +114,13 @@
     position: relative;
 }
 
-.fieldset-label-tooltip:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 0;
-    background: #000;
-    border: 1px solid #3b82f5;
-    border-radius: 4px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-style: normal;
-    font-family: sans-serif;
-    color: #fff;
-    width: 250px;
-    max-width: calc(100vw - 40px);
-    white-space: normal;
-    z-index: 1000;
-    line-height: 1.4;
+.fieldset-sublabel {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 6px;
 }
 
-/* Text input */
+/* Appearance - Input */
 .fieldset-input {
     width: 100%;
     height: 36px;
@@ -139,8 +132,9 @@
     font-size: 13px;
 }
 
-.fieldset-input:hover {
-    border-color: #555;
+.fieldset-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .fieldset-input[type="number"]::-webkit-outer-spin-button,
@@ -149,29 +143,9 @@
     margin: 0;
 }
 
-.fieldset-input[type="number"] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-.fieldset-input:focus {
-    outline: none;
-    border-color: #3b82f5;
-}
-
 .fieldset-input::placeholder {
     color: #666;
 }
-
-.fieldset-input--invalid {
-    border-color: #ef4444;
-}
-
-.fieldset-input--invalid:focus {
-    border-color: #ef4444;
-}
-
-/* PlaceAutocompleteElement in fieldsets is styled via JavaScript (shadow DOM) */
 
 .fieldset-char-count {
     font-size: 11px;
@@ -180,15 +154,7 @@
     margin-top: 3px;
 }
 
-.fieldset-char-count--warning {
-    color: #f59e0b;
-}
-
-.fieldset-char-count--danger {
-    color: #ef4444;
-}
-
-/* Textarea */
+/* Appearance - Textarea */
 .fieldset-textarea {
     width: 100%;
     min-height: 120px;
@@ -201,28 +167,11 @@
     resize: vertical;
 }
 
-.fieldset-textarea:hover {
-    border-color: #555;
-}
-
-.fieldset-textarea:focus {
-    outline: none;
-    border-color: #3b82f5;
-}
-
 .fieldset-textarea::placeholder {
     color: #666;
 }
 
-.fieldset-textarea.fieldset-input--invalid {
-    border-color: #ef4444;
-}
-
-.fieldset-textarea.fieldset-input--invalid:focus {
-    border-color: #ef4444;
-}
-
-/* Fieldset dropdown menu */
+/* Appearance - Menu */
 .fieldset-menu {
     width: 100%;
     height: 36px;
@@ -239,16 +188,6 @@
     border: 1px solid #333;
     border-radius: 4px;
     cursor: pointer;
-}
-
-.fieldset-menu-button:hover {
-    border-color: #555;
-}
-
-.fieldset-menu.open .fieldset-menu-button {
-    border-color: #3b82f5;
-    border-radius: 4px 4px 0 0;
-    border-bottom: none;
 }
 
 .fieldset-menu-button-image {
@@ -280,10 +219,6 @@
     transition: transform 0.2s;
 }
 
-.fieldset-menu.open .fieldset-menu-button-arrow {
-    transform: rotate(180deg);
-}
-
 .fieldset-menu-options {
     display: none;
     position: absolute;
@@ -311,10 +246,6 @@
     border-radius: 4px;
 }
 
-.fieldset-menu.open .fieldset-menu-options {
-    display: block;
-}
-
 .fieldset-menu-option {
     width: 100%;
     height: 36px;
@@ -324,10 +255,6 @@
     cursor: pointer;
     color: #fff;
     font-size: 13px;
-}
-
-.fieldset-menu-option:hover {
-    background: #3b82f5;
 }
 
 .fieldset-menu-option-image {
@@ -344,7 +271,7 @@
     font-size: 13px;
 }
 
-/* Native select fallback */
+/* Appearance - Select */
 .fieldset-select {
     width: 100%;
     height: 36px;
@@ -361,21 +288,12 @@
     background-position: right 10px center;
 }
 
-.fieldset-select:hover {
-    border-color: #555;
-}
-
-.fieldset-select:focus {
-    outline: none;
-    border-color: #3b82f5;
-}
-
 .fieldset-select option {
     background: #222;
     color: #fff;
 }
 
-/* Radio buttons */
+/* Appearance - Radio */
 .fieldset-radio-group {
     display: flex;
     flex-direction: column;
@@ -401,7 +319,7 @@
     color: #fff;
 }
 
-/* Multi-field row */
+/* Appearance - Row */
 .fieldset-row {
     display: flex;
     gap: 10px;
@@ -416,7 +334,7 @@
     flex: 0 0 120px;
 }
 
-.fieldset-row > .fieldset-currency-compact {
+.fieldset-row > .fieldset-currency-wrapper {
     flex: 0 0 100px;
 }
 
@@ -424,7 +342,7 @@
     flex: 0 0 100px;
 }
 
-/* Images upload */
+/* Appearance - Images Upload */
 .fieldset-images {
     width: 76px;
     height: 76px;
@@ -441,10 +359,6 @@
     flex-shrink: 0;
 }
 
-.fieldset-images:hover {
-    border-color: #3b82f5;
-}
-
 .fieldset-images-icon {
     font-size: 22px;
     color: #555;
@@ -455,7 +369,7 @@
     color: #888;
 }
 
-/* Date and time */
+/* Appearance - Date and Time */
 .fieldset-date,
 .fieldset-time {
     width: 100%;
@@ -468,149 +382,13 @@
     font-size: 13px;
 }
 
-.fieldset-date:hover,
-.fieldset-time:hover {
-    border-color: #555;
-}
-
-.fieldset-date:focus,
-.fieldset-time:focus {
-    outline: none;
-    border-color: #3b82f5;
-}
-
 .fieldset-date::-webkit-calendar-picker-indicator,
 .fieldset-time::-webkit-calendar-picker-indicator {
     filter: invert(1);
     cursor: pointer;
 }
 
-/* Horizontal scrolling calendar (fieldset variant) */
-.fieldset-calendar-container {
-    width: 100%;
-    overflow: hidden;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 4px;
-    position: relative;
-    margin-bottom: 10px;
-}
-
-.fieldset-calendar-scroll {
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #222;
-}
-
-.fieldset-calendar-scroll::-webkit-scrollbar {
-    height: 8px;
-    background: #222;
-}
-
-.fieldset-calendar-scroll::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-
-.fieldset-calendar-scroll::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
-
-.fieldset-calendar {
-    display: flex;
-    width: max-content;
-}
-
-.fieldset-calendar-month {
-    flex: 0 0 auto;
-    width: 250px;
-}
-
-.fieldset-calendar-month:not(:first-child) {
-    border-left: 1px solid #1a1a1a;
-}
-
-.fieldset-calendar-header {
-    height: 34px;
-    line-height: 34px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: bold;
-    background: #2e3a72;
-}
-
-.fieldset-calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-}
-
-.fieldset-calendar-weekday,
-.fieldset-calendar-day {
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-}
-
-.fieldset-calendar-weekday {
-    font-weight: bold;
-}
-
-.fieldset-calendar-day {
-    cursor: pointer;
-}
-
-.fieldset-calendar-day.empty {
-    cursor: default;
-    background: #222;
-}
-
-.fieldset-calendar-day.past {
-    background: #1a1a1a;
-    color: #808080;
-}
-
-.fieldset-calendar-day.future {
-    background: #222;
-}
-
-.fieldset-calendar-day.today {
-    color: #ff0000;
-    font-weight: bold;
-}
-
-.fieldset-calendar-day:not(.selected):not(.empty):hover {
-    background: #333;
-}
-
-.fieldset-calendar-day:not(.selected):not(.empty):active {
-    background: #2e3a72;
-    color: #fff;
-}
-
-.fieldset-calendar-day.selected {
-    background: #2e3a72;
-    color: #fff;
-}
-
-.fieldset-calendar-day.selected.today {
-    color: #ff0000;
-}
-
-.fieldset-calendar-today-marker {
-    position: absolute;
-    bottom: 0;
-    width: 8px;
-    height: 8px;
-    background: #ff0000;
-    cursor: pointer;
-    z-index: 10;
-}
-
-/* Session rows */
+/* Appearance - Sessions */
 .fieldset-sessions {
     display: flex;
     flex-direction: column;
@@ -671,121 +449,14 @@
     flex: 0 0 36px;
 }
 
-.fieldset-session-add:hover,
-.fieldset-pricing-add:hover {
-    border-color: #3b82f5;
-    color: #3b82f5;
-}
-
-.fieldset-session-remove:hover,
-.fieldset-pricing-remove:hover {
-    border-color: #f87171;
-    color: #f87171;
-}
-
-/* Compact currency button */
-.fieldset-currency-compact {
-    width: 100px;
-    height: 36px;
-    position: relative;
-    flex-shrink: 0;
-}
-
-.fieldset-currency-compact .fieldset-menu-button {
-    width: 100px;
-}
-
-.fieldset-currency-compact .fieldset-menu-button-text {
-    padding-left: 6px;
-    font-size: 12px;
-}
-
-.fieldset-currency-compact .fieldset-menu-options {
-    width: 250px;
-    left: 0;
-    right: auto;
-    border-top: 1px solid #3b82f5;
-    border-radius: 4px;
-}
-
-/* Section divider */
-.fieldset-divider {
-    width: 100%;
-    height: 1px;
-    background: #333;
-    margin: 8px 0;
-}
-
-/* Sub-label */
-.fieldset-sublabel {
-    font-size: 11px;
-    color: #666;
-    margin-bottom: 6px;
-}
-
-/* Google Places Autocomplete styling */
-.pac-container {
-    background: #222;
-    border: 1px solid #3b82f5;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    font-family: sans-serif;
-    font-size: 13px;
-    z-index: 10000;
-}
-
-.pac-item {
-    padding: 8px 10px;
-    color: #fff;
-    cursor: pointer;
-    border-top: 1px solid #333;
-}
-
-.pac-item:first-child {
-    border-top: none;
-}
-
-.pac-item:hover {
-    background: #3b82f5;
-}
-
-.pac-item-query {
-    color: #fff;
-    font-weight: bold;
-}
-
-.pac-matched {
-    color: #3b82f5;
-}
-
-.pac-item:hover .pac-matched {
-    color: #fff;
-}
-
-.pac-icon {
-    display: none;
-}
-
-.pac-item-selected {
-    background: #3b82f5;
-}
-
-/* Location status */
+/* Appearance - Location */
 .fieldset-location-status {
     font-size: 11px;
     color: #888;
     margin-top: 4px;
 }
 
-.fieldset-location-status.success {
-    color: #22c55e;
-}
-
-.fieldset-location-status.error {
-    color: #ef4444;
-}
-
-/* Amenities checklist */
+/* Appearance - Amenities */
 .fieldset-amenities {
     display: flex;
     flex-direction: column;
@@ -843,6 +514,159 @@
     accent-color: #3b82f5;
 }
 
+/* Appearance - Google Places */
+.pac-container {
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    font-family: sans-serif;
+    font-size: 13px;
+    z-index: 10000;
+}
+
+.pac-item {
+    padding: 8px 10px;
+    color: #fff;
+    cursor: pointer;
+    border-top: 1px solid #333;
+}
+
+.pac-item:first-child {
+    border-top: none;
+}
+
+.pac-item-query {
+    color: #fff;
+    font-weight: bold;
+}
+
+.pac-matched {
+    color: #3b82f5;
+}
+
+.pac-icon {
+    display: none;
+}
+
+/* States - Input */
+.fieldset-input:hover {
+    border-color: #555;
+}
+
+.fieldset-input:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+.fieldset-input--invalid {
+    border-color: #ef4444;
+}
+
+.fieldset-input--invalid:focus {
+    border-color: #ef4444;
+}
+
+/* States - Char Count */
+.fieldset-char-count--warning {
+    color: #f59e0b;
+}
+
+.fieldset-char-count--danger {
+    color: #ef4444;
+}
+
+/* States - Textarea */
+.fieldset-textarea:hover {
+    border-color: #555;
+}
+
+.fieldset-textarea:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+.fieldset-textarea.fieldset-input--invalid {
+    border-color: #ef4444;
+}
+
+.fieldset-textarea.fieldset-input--invalid:focus {
+    border-color: #ef4444;
+}
+
+/* States - Menu */
+.fieldset-menu-button:hover {
+    border-color: #555;
+}
+
+.fieldset-menu.open .fieldset-menu-button {
+    border-color: #3b82f5;
+    border-radius: 4px 4px 0 0;
+    border-bottom: none;
+}
+
+.fieldset-menu.open .fieldset-menu-button-arrow {
+    transform: rotate(180deg);
+}
+
+.fieldset-menu.open .fieldset-menu-options {
+    display: block;
+}
+
+.fieldset-menu-option:hover {
+    background: #3b82f5;
+}
+
+/* States - Select */
+.fieldset-select:hover {
+    border-color: #555;
+}
+
+.fieldset-select:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+/* States - Images Upload */
+.fieldset-images:hover {
+    border-color: #3b82f5;
+}
+
+/* States - Date and Time */
+.fieldset-date:hover,
+.fieldset-time:hover {
+    border-color: #555;
+}
+
+.fieldset-date:focus,
+.fieldset-time:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+/* States - Session Buttons */
+.fieldset-session-add:hover,
+.fieldset-pricing-add:hover {
+    border-color: #3b82f5;
+    color: #3b82f5;
+}
+
+.fieldset-session-remove:hover,
+.fieldset-pricing-remove:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+/* States - Location */
+.fieldset-location-status.success {
+    color: #22c55e;
+}
+
+.fieldset-location-status.error {
+    color: #ef4444;
+}
+
+/* States - Amenities */
 .fieldset-amenity-row.selected-yes .fieldset-amenity-icon img {
     filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
 }
@@ -855,18 +679,54 @@
     color: #666;
 }
 
+/* States - Google Places */
+.pac-item:hover {
+    background: #3b82f5;
+}
+
+.pac-item:hover .pac-matched {
+    color: #fff;
+}
+
+.pac-item-selected {
+    background: #3b82f5;
+}
+
+/* States - Tooltip */
+.fieldset-label-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    background: #000;
+    border: 1px solid #3b82f5;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-style: normal;
+    font-family: sans-serif;
+    color: #fff;
+    width: 250px;
+    max-width: calc(100vw - 40px);
+    white-space: normal;
+    z-index: 1000;
+    line-height: 1.4;
+}
+
 
 /* ============================================================================
    SECTION 2: CALENDAR
-   Source: calendar-test.html
+   
+   No variants - same everywhere.
    ============================================================================ */
 
+/* Appearance */
 .calendar-container {
-    width: 400px;
+    width: 100%;
     overflow: hidden;
-    background: #222222;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 5px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
     position: relative;
 }
 
@@ -935,11 +795,23 @@
 
 .calendar-day {
     cursor: pointer;
+    background: #222;
 }
 
+.calendar-today-marker {
+    position: absolute;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
+    background: #ff0000;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* States */
 .calendar-day.empty {
     cursor: default;
-    background: #222222;
+    background: #222;
 }
 
 .calendar-day.past {
@@ -948,12 +820,21 @@
 }
 
 .calendar-day.future {
-    background: #222222;
+    background: #222;
 }
 
 .calendar-day.today {
     color: #ff0000;
     font-weight: bold;
+}
+
+.calendar-day:not(.selected):not(.empty):hover {
+    background: #333;
+}
+
+.calendar-day:not(.selected):not(.empty):active {
+    background: #2e3a72;
+    color: #fff;
 }
 
 .calendar-day.selected {
@@ -978,163 +859,40 @@
     color: #fff;
 }
 
-.today-marker {
-    position: absolute;
-    bottom: 0;
-    width: 8px;
-    height: 8px;
-    background: #ff0000;
-    cursor: pointer;
-    z-index: 100;
-}
-
 
 /* ============================================================================
    SECTION 3: CURRENCY
-   Source: test-currency-menu.html
+   
+   This component has variants - no base styles.
+   Each location where it appears has its own complete CSS block.
    ============================================================================ */
 
-.currency-wrapper {
+
+/* ----------------------------------------------------------------------------
+   FIELDSET VARIANT (compact)
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.fieldset-currency-wrapper {
+    width: 100px;
+    height: 36px;
     position: relative;
+    flex-shrink: 0;
 }
 
-.currency-button {
+.fieldset-currency-button {
+    width: 100px;
+    height: 36px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: 150px;
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    background: rgba(0,0,0,0.35);
-    color: #fff;
-    font: inherit;
-    cursor: pointer;
-    position: relative;
-}
-
-.currency-button:hover {
-    border-color: rgba(255,255,255,0.4);
-}
-
-/* Shared dropdown flag */
-.dropdown-flag {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 20px;
-    height: 15px;
-    line-height: 0;
-}
-
-.dropdown-flag img {
-    display: block;
-    width: 20px;
-    height: 15px;
-    object-fit: cover;
-    border-radius: 2px;
-}
-
-/* Shared dropdown text */
-.dropdown-text {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    line-height: 1;
-    flex: 1;
-}
-
-/* Shared dropdown arrow */
-.dropdown-arrow {
-    margin-left: auto;
-    font-size: 10px;
-    opacity: 0.6;
-    transition: transform 0.15s;
-}
-
-.currency-button[aria-expanded="true"] .dropdown-arrow {
-    transform: rotate(180deg);
-}
-
-/* Options menu */
-.options-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    max-height: 200px;
-    overflow-y: auto;
+    padding: 0 8px;
     background: #222;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    margin-top: 4px;
-    z-index: 100;
-}
-
-.options-menu[hidden] {
-    display: none;
-}
-
-.options-menu .menu-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    background: transparent;
-    color: #fff;
-    font: inherit;
-    text-align: left;
+    border: 1px solid #333;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-.options-menu .menu-option:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-.options-menu .menu-option:focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: -2px;
-}
-
-.options-menu .menu-option .dropdown-text {
-    flex-shrink: 1;
-    min-width: 0;
-}
-
-/* Currency full menu */
-.admin-menu {
-    width: 100%;
-    height: 36px;
-    position: relative;
-}
-
-.admin-menu-button {
-    width: 100%;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.admin-menu-button:hover {
-    border-color: rgba(255,255,255,0.4);
-}
-
-.admin-menu.open .admin-menu-button {
-    border-color: #3b82f5;
-    border-radius: 8px 8px 0 0;
-    border-bottom: none;
-}
-
-.admin-menu-button-image {
+.fieldset-currency-button-flag {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -1142,18 +900,18 @@
     flex-shrink: 0;
 }
 
-.admin-menu-button-text {
+.fieldset-currency-button-text {
     flex: 1;
     text-align: left;
-    padding-left: 10px;
-    font-size: 14px;
+    padding-left: 6px;
+    font-size: 12px;
     color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.admin-menu-button-arrow {
+.fieldset-currency-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
@@ -1164,11 +922,114 @@
     transition: transform 0.2s;
 }
 
-.admin-menu.open .admin-menu-button-arrow {
-    transform: rotate(180deg);
+.fieldset-currency-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 250px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-radius: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
 }
 
-.admin-menu-options {
+.fieldset-currency-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.fieldset-currency-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.fieldset-currency-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+}
+
+.fieldset-currency-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+
+/* ----------------------------------------------------------------------------
+   ADMIN VARIANT (full width)
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.admin-currency-wrapper {
+    width: 100%;
+    max-width: 300px;
+    height: 36px;
+    position: relative;
+}
+
+.admin-currency-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.admin-currency-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.admin-currency-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-currency-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.admin-currency-options {
     display: none;
     position: absolute;
     top: 36px;
@@ -1185,21 +1046,17 @@
     scrollbar-color: #888 transparent;
 }
 
-.admin-menu-options::-webkit-scrollbar {
+.admin-currency-options::-webkit-scrollbar {
     width: 8px;
     background: transparent;
 }
 
-.admin-menu-options::-webkit-scrollbar-thumb {
+.admin-currency-options::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
 }
 
-.admin-menu.open .admin-menu-options {
-    display: block;
-}
-
-.admin-menu-option {
+.admin-currency-option {
     width: 100%;
     height: 40px;
     display: flex;
@@ -1210,11 +1067,7 @@
     font-size: 14px;
 }
 
-.admin-menu-option:hover {
-    background: #3b82f5;
-}
-
-.admin-menu-option-image {
+.admin-currency-option-flag {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -1222,35 +1075,68 @@
     flex-shrink: 0;
 }
 
-.admin-menu-option-text {
+.admin-currency-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
 }
 
-.admin-currency-menu {
-    max-width: 300px;
+
+/* ----------------------------------------------------------------------------
+   STATES (shared)
+   ---------------------------------------------------------------------------- */
+
+.fieldset-currency-button:hover,
+.admin-currency-button:hover {
+    border-color: #555;
+}
+
+.fieldset-currency-wrapper.open .fieldset-currency-button,
+.admin-currency-wrapper.open .admin-currency-button {
+    border-color: #3b82f5;
+}
+
+.admin-currency-wrapper.open .admin-currency-button {
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.fieldset-currency-wrapper.open .fieldset-currency-button-arrow,
+.admin-currency-wrapper.open .admin-currency-button-arrow {
+    transform: rotate(180deg);
+}
+
+.fieldset-currency-wrapper.open .fieldset-currency-options,
+.admin-currency-wrapper.open .admin-currency-options {
+    display: block;
+}
+
+.fieldset-currency-option:hover,
+.admin-currency-option:hover {
+    background: #3b82f5;
 }
 
 
 /* ============================================================================
    SECTION 4: PHONE PREFIX
-   Source: test-prefix-menu.html
+   
+   No variants - same everywhere.
    ============================================================================ */
 
-.form-phone-wrapper {
+/* Appearance */
+.phoneprefix-wrapper {
     display: flex;
     gap: 8px;
     align-items: stretch;
 }
 
-.prefix-wrapper {
+.phoneprefix-button-wrapper {
     position: relative;
     flex-shrink: 0;
 }
 
-.prefix-button {
+.phoneprefix-button {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1267,20 +1153,76 @@
     flex-shrink: 0;
 }
 
-.prefix-button:hover {
-    border-color: rgba(255,255,255,0.4);
+.phoneprefix-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
 }
 
-.prefix-button[aria-expanded="true"] .dropdown-arrow {
-    transform: rotate(180deg);
+.phoneprefix-button-text {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    line-height: 1;
+    flex: 1;
 }
 
-.prefix-wrapper .options-menu {
+.phoneprefix-button-arrow {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.15s;
+}
+
+.phoneprefix-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
     width: 280px;
     max-height: 250px;
+    overflow-y: auto;
+    background: #222;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    margin-top: 4px;
+    z-index: 100;
 }
 
-.phone-input {
+.phoneprefix-options[hidden] {
+    display: none;
+}
+
+.phoneprefix-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.phoneprefix-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.phoneprefix-option-text {
+    flex: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.phoneprefix-input {
     flex: 1;
     min-width: 0;
     height: 36px;
@@ -1292,7 +1234,25 @@
     font: inherit;
 }
 
-.phone-input:focus {
+/* States */
+.phoneprefix-button:hover {
+    border-color: rgba(255,255,255,0.4);
+}
+
+.phoneprefix-button[aria-expanded="true"] .phoneprefix-button-arrow {
+    transform: rotate(180deg);
+}
+
+.phoneprefix-option:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.phoneprefix-option:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.phoneprefix-input:focus {
     outline: none;
     border-color: #3b82f6;
 }
@@ -1300,9 +1260,11 @@
 
 /* ============================================================================
    SECTION 5: ICON PICKER
-   Category icon picker component
+   
+   No variants - same everywhere.
    ============================================================================ */
 
+/* Appearance */
 .iconpicker-container {
     position: relative;
     display: inline-block;
@@ -1319,10 +1281,6 @@
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
-}
-
-.iconpicker-button:hover {
-    border-color: #3b82f5;
 }
 
 .iconpicker-button-preview {
@@ -1392,16 +1350,7 @@
     padding: 4px;
 }
 
-.iconpicker-cell:hover {
-    border-color: #3b82f5;
-}
-
-.iconpicker-cell.selected {
-    border-color: #3b82f5;
-    background: #2e3a72;
-}
-
-.iconpicker-cell img {
+.iconpicker-cell-image {
     width: 28px;
     height: 28px;
     object-fit: contain;
@@ -1416,12 +1365,28 @@
     line-height: 1.6;
 }
 
+/* States */
+.iconpicker-button:hover {
+    border-color: #3b82f5;
+}
+
+.iconpicker-cell:hover {
+    border-color: #3b82f5;
+}
+
+.iconpicker-cell.selected {
+    border-color: #3b82f5;
+    background: #2e3a72;
+}
+
 
 /* ============================================================================
    SECTION 6: SYSTEM IMAGE PICKER
-   System image picker component
+   
+   No variants - same everywhere.
    ============================================================================ */
 
+/* Appearance */
 .systemimagepicker-container {
     position: relative;
     display: inline-block;
@@ -1438,10 +1403,6 @@
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
-}
-
-.systemimagepicker-button:hover {
-    border-color: #3b82f5;
 }
 
 .systemimagepicker-button-preview {
@@ -1511,16 +1472,7 @@
     padding: 4px;
 }
 
-.systemimagepicker-cell:hover {
-    border-color: #3b82f5;
-}
-
-.systemimagepicker-cell.selected {
-    border-color: #3b82f5;
-    background: #2e3a72;
-}
-
-.systemimagepicker-cell img {
+.systemimagepicker-cell-image {
     width: 28px;
     height: 28px;
     object-fit: contain;
@@ -1535,33 +1487,49 @@
     line-height: 1.6;
 }
 
+/* States */
+.systemimagepicker-button:hover {
+    border-color: #3b82f5;
+}
+
+.systemimagepicker-cell:hover {
+    border-color: #3b82f5;
+}
+
+.systemimagepicker-cell.selected {
+    border-color: #3b82f5;
+    background: #2e3a72;
+}
+
 
 /* ============================================================================
-   SECTION 7: MAP CONTROL ROW
+   SECTION 7: MAP CONTROL
    
-   Plain HTML controls - fully styled via CSS:
-   - Geocoder input with dropdown
-   - Geolocate button
-   - Compass button
+   This component has variants - no base styles.
+   Each location where it appears has its own complete CSS block.
    ============================================================================ */
 
-.map-control-row {
+
+/* ----------------------------------------------------------------------------
+   FILTER PANEL VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.filter-mapcontrol-row {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: nowrap;
 }
 
-/* Geocoder container */
-.map-control-row .geocoder {
+.filter-mapcontrol-geocoder {
     position: relative;
     flex: 1 1 240px;
     min-width: 0;
     max-width: 100%;
 }
 
-/* Geocoder input - plain input fallback */
-.map-control-row .geocoder-input {
+.filter-mapcontrol-geocoder-input {
     width: 100%;
     height: 36px;
     padding: 0 36px 0 12px;
@@ -1574,17 +1542,11 @@
     box-sizing: border-box;
 }
 
-.map-control-row .geocoder-input:focus {
-    outline: none;
-    border-color: #3b82f5;
-}
-
-.map-control-row .geocoder-input::placeholder {
+.filter-mapcontrol-geocoder-input::placeholder {
     color: #888888;
 }
 
-/* Dropdown - Google Places native style */
-.map-control-row .geocoder-dropdown {
+.filter-mapcontrol-geocoder-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
@@ -1599,29 +1561,24 @@
     font-family: Roboto, Arial, sans-serif;
 }
 
-.map-control-row .geocoder-dropdown-item {
+.filter-mapcontrol-geocoder-dropdown-item {
     padding: 8px 12px;
     cursor: pointer;
 }
 
-.map-control-row .geocoder-dropdown-item:hover {
-    background-color: #f1f3f4;
-}
-
-.map-control-row .geocoder-dropdown-main {
+.filter-mapcontrol-geocoder-dropdown-main {
     font-size: 14px;
     font-weight: 500;
     color: #202124;
 }
 
-.map-control-row .geocoder-dropdown-secondary {
+.filter-mapcontrol-geocoder-dropdown-secondary {
     font-size: 12px;
     color: #70757a;
     margin-top: 2px;
 }
 
-/* Clear button */
-.map-control-row .geocoder-clear {
+.filter-mapcontrol-geocoder-clear {
     position: absolute;
     right: 4px;
     top: 50%;
@@ -1640,14 +1597,7 @@
     padding: 0;
 }
 
-.map-control-row .geocoder-clear:hover {
-    background-color: rgba(0,0,0,0.05);
-    color: #000000;
-}
-
-/* Geolocate and Compass buttons */
-.map-control-row .geolocate-btn,
-.map-control-row .compass-btn {
+.filter-mapcontrol-geolocate {
     width: 36px;
     height: 36px;
     display: flex;
@@ -1662,65 +1612,336 @@
     color: #333333;
 }
 
-.map-control-row .geolocate-btn:hover,
-.map-control-row .compass-btn:hover {
-    background-color: #f2f2f2;
-}
-
-.map-control-row .geolocate-btn.loading {
-    pointer-events: none;
-}
-
-.map-control-row .geolocate-btn.loading svg {
-    animation: geolocate-pulse 1s ease-in-out infinite;
-}
-
-@keyframes geolocate-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.9); }
-}
-
-.map-control-row .geolocate-btn svg,
-.map-control-row .compass-btn svg {
+.filter-mapcontrol-geolocate-icon {
     display: block;
 }
 
-.map-control-row .compass-btn svg {
+.filter-mapcontrol-compass {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.filter-mapcontrol-compass-icon {
+    display: block;
     transition: transform 0.1s ease-out;
 }
 
-/* Welcome modal variant (28px height) */
-.map-controls-welcome {
+
+/* ----------------------------------------------------------------------------
+   MAP VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.map-mapcontrol-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.map-mapcontrol-geocoder {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.map-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 36px 0 12px;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #000000;
+    caret-color: #000000;
+    box-sizing: border-box;
+}
+
+.map-mapcontrol-geocoder-input::placeholder {
+    color: #888888;
+}
+
+.map-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    background: #ffffff;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    font-family: Roboto, Arial, sans-serif;
+}
+
+.map-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.map-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.map-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #70757a;
+    margin-top: 2px;
+}
+
+.map-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    color: #888888;
+    cursor: pointer;
+    padding: 0;
+}
+
+.map-mapcontrol-geolocate {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.map-mapcontrol-geolocate-icon {
+    display: block;
+}
+
+.map-mapcontrol-compass {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.map-mapcontrol-compass-icon {
+    display: block;
+    transition: transform 0.1s ease-out;
+}
+
+
+/* ----------------------------------------------------------------------------
+   WELCOME MODAL VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.welcome-mapcontrol-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
     justify-content: center;
 }
 
-.map-controls-welcome .geocoder {
+.welcome-mapcontrol-geocoder {
+    position: relative;
     flex: 0 1 420px;
     max-width: 420px;
+    min-width: 0;
 }
 
-.map-controls-welcome .geocoder-input {
+.welcome-mapcontrol-geocoder-input {
+    width: 100%;
     height: 28px;
-    font-size: 13px;
     padding: 0 28px 0 10px;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    font-size: 13px;
+    color: #000000;
     caret-color: #000000;
+    box-sizing: border-box;
 }
 
-.map-controls-welcome .geocoder-clear {
+.welcome-mapcontrol-geocoder-input::placeholder {
+    color: #888888;
+}
+
+.welcome-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    background: #ffffff;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    font-family: Roboto, Arial, sans-serif;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #70757a;
+    margin-top: 2px;
+}
+
+.welcome-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 22px;
     height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
     font-size: 14px;
+    color: #888888;
+    cursor: pointer;
+    padding: 0;
 }
 
-.map-controls-welcome .geolocate-btn,
-.map-controls-welcome .compass-btn {
+.welcome-mapcontrol-geolocate {
     width: 28px;
     height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
 }
 
-.map-controls-welcome .geolocate-btn svg,
-.map-controls-welcome .compass-btn svg {
+.welcome-mapcontrol-geolocate-icon {
+    display: block;
     width: 16px;
     height: 16px;
 }
 
+.welcome-mapcontrol-compass {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.welcome-mapcontrol-compass-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+    transition: transform 0.1s ease-out;
+}
+
+
+/* ----------------------------------------------------------------------------
+   STATES (shared)
+   ---------------------------------------------------------------------------- */
+
+.filter-mapcontrol-geocoder-input:focus,
+.map-mapcontrol-geocoder-input:focus,
+.welcome-mapcontrol-geocoder-input:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+.filter-mapcontrol-geocoder-dropdown-item:hover,
+.map-mapcontrol-geocoder-dropdown-item:hover,
+.welcome-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: #f1f3f4;
+}
+
+.filter-mapcontrol-geocoder-clear:hover,
+.map-mapcontrol-geocoder-clear:hover,
+.welcome-mapcontrol-geocoder-clear:hover {
+    background-color: rgba(0,0,0,0.05);
+    color: #000000;
+}
+
+.filter-mapcontrol-geolocate:hover,
+.map-mapcontrol-geolocate:hover,
+.welcome-mapcontrol-geolocate:hover,
+.filter-mapcontrol-compass:hover,
+.map-mapcontrol-compass:hover,
+.welcome-mapcontrol-compass:hover {
+    background-color: #f2f2f2;
+}
+
+.filter-mapcontrol-geolocate.loading,
+.map-mapcontrol-geolocate.loading,
+.welcome-mapcontrol-geolocate.loading {
+    pointer-events: none;
+}
+
+.filter-mapcontrol-geolocate.loading .filter-mapcontrol-geolocate-icon,
+.map-mapcontrol-geolocate.loading .map-mapcontrol-geolocate-icon,
+.welcome-mapcontrol-geolocate.loading .welcome-mapcontrol-geolocate-icon {
+    animation: mapcontrol-geolocate-pulse 1s ease-in-out infinite;
+}
+
+@keyframes mapcontrol-geolocate-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.9); }
+}
