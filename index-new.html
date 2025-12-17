@@ -75,10 +75,18 @@
        SECTION 2: FILTER PANEL
        File: filter.js, filter.css
        ======================================================================== -->
-  <aside class="filter-panel">
-    <div class="filter-panel-content filter-panel-content--side-left filter-panel-content--hidden">
+  <aside class="filter-panel" role="dialog" aria-hidden="true">
+    <div class="filter-panel-content" data-side="left">
+      <div class="filter-panel-header">
+        <div class="filter-panel-summary"></div>
+      </div>
       <div class="filter-panel-body">
-        <!-- Built by filter-new.js -->
+        <div class="filter-map-control-row">
+          <div class="filter-geocoder"></div>
+          <div class="filter-geolocate"></div>
+          <div class="filter-compass"></div>
+        </div>
+        <!-- Parts 5-9 to be added -->
       </div>
     </div>
   </aside>
