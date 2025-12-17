@@ -36,14 +36,10 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
-        console.log('[Header] Initializing header module...');
-        
         initFilterButton();
         initMemberButton();
         initAdminButton();
         initFullscreenButton();
-        
-        console.log('[Header] Header module initialized');
     }
 
 
@@ -158,43 +154,30 @@ const HeaderModule = (function() {
     
     function initAdminButton() {
         adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
-        if (!adminBtn) {
-            console.log('[Header] Admin button not found');
-            return;
-        }
+        if (!adminBtn) return;
         
         // Listen for member state changes to show/hide admin button
         App.on('member:stateChanged', function(data) {
             var user = data && data.user;
-            console.log('[Header] member:stateChanged received, user:', user, 'isAdmin:', user && user.isAdmin);
             if (user && user.isAdmin === true) {
-                console.log('[Header] Showing admin button');
                 showAdminButton();
             } else {
-                console.log('[Header] Hiding admin button');
                 hideAdminButton();
             }
         });
     }
     
     function showAdminButton() {
-        if (!adminBtn) {
-            console.warn('[Header] Cannot show admin button - element not found');
-            return;
-        }
-        console.log('[Header] Showing admin button');
+        if (!adminBtn) return;
         adminBtn.classList.remove('header-access-button--hidden');
-        adminBtn.style.display = 'flex';
-        adminBtn.hidden = false;
+        adminBtn.removeAttribute('hidden');
         adminBtn.setAttribute('aria-hidden', 'false');
     }
     
     function hideAdminButton() {
         if (!adminBtn) return;
-        console.log('[Header] Hiding admin button');
         adminBtn.classList.add('header-access-button--hidden');
-        adminBtn.style.display = 'none';
-        adminBtn.hidden = true;
+        adminBtn.setAttribute('hidden', '');
         adminBtn.setAttribute('aria-hidden', 'true');
     }
 
