@@ -967,9 +967,11 @@ const MapControlRowComponent = (function(){
             placeAutocomplete.style.width = '100%';
             placeAutocomplete.style.height = height;
             placeAutocomplete.style.backgroundColor = bgColor;
-            placeAutocomplete.style.border = 'none';
+            placeAutocomplete.style.border = '1px solid rgba(0,0,0,0.15)';
             placeAutocomplete.style.borderRadius = '8px';
+            placeAutocomplete.style.overflow = 'hidden';
             placeAutocomplete.style.colorScheme = colorScheme;
+            placeAutocomplete.style.caretColor = textColor;
             placeAutocomplete.style.setProperty('--gmpx-color-surface', bgColor);
             placeAutocomplete.style.setProperty('--gmpx-color-on-surface', textColor);
             placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
