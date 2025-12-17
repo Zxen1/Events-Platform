@@ -1515,6 +1515,7 @@
     font: inherit;
     font-size: 14px;
     text-align: left;
+    cursor: text;
 }
 
 .map-control-row .google-places-geocoder input:focus {

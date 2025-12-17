@@ -4,7 +4,7 @@
 
 /* Header bar */
 .header-bar {
-  height: 50px;
+  height: var(--header-h, 56px);
   display: flex;
   align-items: center;
   padding: 0 10px;
