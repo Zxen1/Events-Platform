@@ -139,9 +139,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 35px;
-  height: 35px;
-  min-width: 35px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   padding: 0;
   border-radius: 6px;
   background: transparent;
@@ -353,8 +353,8 @@
 .member-tiny-btn {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   background: var(--btn);
   cursor: pointer;
@@ -684,7 +684,7 @@
 .member-auth-tab {
   flex: 1 1 auto;
   min-width: 0;
-  height: 38px;
+  height: 36px;
   border-radius: 20px;
   border: 1px solid var(--btn);
   background: var(--btn);
@@ -730,7 +730,7 @@
 }
 
 .member-auth-panel-input {
-  height: 40px;
+  height: 36px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: #1c1c1c;
