@@ -375,7 +375,7 @@ const CalendarComponent = (function(){
         calendar.className = 'calendar-body';
         
         var marker = document.createElement('div');
-        marker.className = 'today-marker';
+        marker.className = 'calendar-today-marker';
         
         var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
         var monthIndex = 0;
@@ -1093,38 +1093,42 @@ const MapControlRowComponent = (function(){
     
     var instances = [];
     // Create the HTML structure for a map control row
-    // options: { location, placeholder, onResult, map }
+    // options: { variant, placeholder, onResult, map }
+    // variant: 'filter', 'map', or 'welcome'
     function create(containerEl, options) {
         options = options || {};
-        var location = options.location || 'default';
+        var variant = options.variant || options.location || 'filter';
         var placeholder = options.placeholder || 'Search venues or places';
         var onResult = options.onResult || function() {};
         var map = options.map || null;
         
+        // Build class prefix based on variant
+        var prefix = variant + '-mapcontrol';
+        
         // Create row container
         var row = document.createElement('div');
-        row.className = 'map-control-row map-controls-' + location;
+        row.className = prefix + '-row';
         
         // Geocoder container
         var geocoderEl = document.createElement('div');
-        geocoderEl.className = 'geocoder';
+        geocoderEl.className = prefix + '-geocoder';
         
         // Our styled input
         var input = document.createElement('input');
         input.type = 'text';
-        input.className = 'geocoder-input';
+        input.className = prefix + '-geocoder-input';
         input.placeholder = placeholder;
         input.autocomplete = 'off';
         geocoderEl.appendChild(input);
         
         // Dropdown for suggestions
         var dropdown = document.createElement('div');
-        dropdown.className = 'geocoder-dropdown';
+        dropdown.className = prefix + '-geocoder-dropdown';
         dropdown.style.display = 'none';
         geocoderEl.appendChild(dropdown);
         
         var clearBtn = ClearButtonComponent.create({
-            className: 'geocoder-clear',
+            className: prefix + '-geocoder-clear',
             ariaLabel: 'Clear location'
         });
         clearBtn.style.display = 'none';
@@ -1135,16 +1139,16 @@ const MapControlRowComponent = (function(){
         // Geolocate button
         var geolocateBtn = document.createElement('button');
         geolocateBtn.type = 'button';
-        geolocateBtn.className = 'geolocate-btn';
-        geolocateBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+        geolocateBtn.className = prefix + '-geolocate';
+        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
         geolocateBtn.title = 'Find my location';
         row.appendChild(geolocateBtn);
         
         // Compass button
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
-        compassBtn.className = 'compass-btn';
-        compassBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
+        compassBtn.className = prefix + '-compass';
+        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
@@ -1186,14 +1190,14 @@ const MapControlRowComponent = (function(){
                     
                     predictions.forEach(function(prediction) {
                         var item = document.createElement('div');
-                        item.className = 'geocoder-dropdown-item';
+                        item.className = prefix + '-geocoder-dropdown-item';
                         
                         var mainText = prediction.structured_formatting ? prediction.structured_formatting.main_text : prediction.description;
                         var secondaryText = prediction.structured_formatting ? prediction.structured_formatting.secondary_text : '';
                         
                         item.innerHTML = 
-                            '<div class="geocoder-dropdown-main">' + mainText + '</div>' +
-                            (secondaryText ? '<div class="geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
+                            '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
+                            (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
                         
                         item.addEventListener('click', function() {
                             placesService.getDetails(
