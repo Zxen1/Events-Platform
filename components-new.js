@@ -466,9 +466,14 @@ const CalendarComponent = (function(){
         totalMonths = monthIndex;
         
         scroll.appendChild(calendar);
-        containerEl.appendChild(scroll);
-        containerEl.appendChild(marker);
         
+        // Wrap scroll and marker so marker stays at bottom of scroll area
+        var scrollWrapper = document.createElement('div');
+        scrollWrapper.className = 'calendar-scroll-wrapper';
+        scrollWrapper.appendChild(scroll);
+        scrollWrapper.appendChild(marker);
+        containerEl.appendChild(scrollWrapper);
+
         // Add action buttons if showActions is true
         var actionsEl = null;
         if (showActions) {
@@ -510,11 +515,11 @@ const CalendarComponent = (function(){
         // Formula: (todayMonthIndex + 0.5) / totalMonths gives the fraction
         // e.g., month 13 of 37 = (13 + 0.5) / 37 = 0.365 (about 1/3 along)
         function positionMarker() {
-            var width = containerEl.clientWidth;
+            var width = scrollWrapper.clientWidth;
             if (width > 0 && totalMonths > 0) {
-        var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
                 var markerPos = markerFraction * (width - 8);
-        marker.style.left = markerPos + 'px';
+                marker.style.left = markerPos + 'px';
             }
         }
         
@@ -526,7 +531,7 @@ const CalendarComponent = (function(){
             var resizeObserver = new ResizeObserver(function() {
                 positionMarker();
             });
-            resizeObserver.observe(containerEl);
+            resizeObserver.observe(scrollWrapper);
         }
         
         // Click marker to scroll to today

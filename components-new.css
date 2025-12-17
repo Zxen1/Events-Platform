@@ -730,6 +730,11 @@
     position: relative;
 }
 
+.calendar-scroll-wrapper {
+    position: relative;
+    width: 100%;
+}
+
 .calendar-scroll {
     width: 100%;
     overflow-x: auto;
