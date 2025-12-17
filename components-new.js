@@ -11,6 +11,7 @@
    4. PHONE PREFIX        - Phone prefix selector
    5. ICON PICKER         - Category icon picker
    6. SYSTEM IMAGE PICKER - System image picker
+   7. MAP CONTROL ROW     - Geocoder + Geolocate + Compass
    
    ============================================================================ */
 
@@ -853,6 +854,171 @@ const IconPickerComponent = (function(){
    SECTION 6: SYSTEM IMAGE PICKER
    Uses system_images folder path from admin settings
    ============================================================================ */
+
+/* ============================================================================
+   SECTION 7: MAP CONTROL ROW
+   Geocoder (Google Places) + Geolocate + Compass controls
+   ============================================================================ */
+
+const MapControlRowComponent = (function(){
+    
+    // Store references to created controls for cleanup
+    var instances = [];
+    
+    // Create the HTML structure for a map control row
+    // options: { location, placeholder, onResult, map }
+    function create(containerEl, options) {
+        options = options || {};
+        var location = options.location || 'default';
+        var placeholder = options.placeholder || 'Search venues or places';
+        var onResult = options.onResult || function() {};
+        var map = options.map || null;
+        
+        // Create row container
+        var row = document.createElement('div');
+        row.className = 'map-control-row map-controls-' + location;
+        
+        // Geocoder container
+        var geocoderEl = document.createElement('div');
+        geocoderEl.className = 'geocoder';
+        geocoderEl.id = 'geocoder-' + location;
+        row.appendChild(geocoderEl);
+        
+        // Geolocate container
+        var geolocateEl = document.createElement('div');
+        geolocateEl.className = 'geolocate-btn';
+        geolocateEl.id = 'geolocate-' + location;
+        row.appendChild(geolocateEl);
+        
+        // Compass container
+        var compassEl = document.createElement('div');
+        compassEl.className = 'compass-btn';
+        compassEl.id = 'compass-' + location;
+        row.appendChild(compassEl);
+        
+        containerEl.appendChild(row);
+        
+        var instance = {
+            row: row,
+            geocoderEl: geocoderEl,
+            geolocateEl: geolocateEl,
+            compassEl: compassEl,
+            geocoder: null,
+            geolocate: null,
+            compass: null,
+            inputEl: null
+        };
+        
+        // Initialize Google Places geocoder
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'google-places-geocoder';
+            
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = placeholder;
+            input.setAttribute('autocomplete', 'off');
+            input.setAttribute('data-lpignore', 'true');
+            input.setAttribute('data-form-type', 'other');
+            wrapper.appendChild(input);
+            geocoderEl.appendChild(wrapper);
+            
+            instance.inputEl = input;
+            
+            var autocomplete = new google.maps.places.Autocomplete(input, {
+                fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types', 'address_components']
+            });
+            
+            instance.geocoder = {
+                _inputEl: input,
+                _autocomplete: autocomplete,
+                clear: function() {
+                    input.value = '';
+                }
+            };
+            
+            autocomplete.addListener('place_changed', function() {
+                var place = autocomplete.getPlace();
+                if (!place || !place.geometry || !place.geometry.location) {
+                    return;
+                }
+                
+                var lat = place.geometry.location.lat();
+                var lng = place.geometry.location.lng();
+                var result = {
+                    center: [lng, lat],
+                    geometry: { type: 'Point', coordinates: [lng, lat] },
+                    place_name: place.formatted_address || place.name,
+                    text: place.name || place.formatted_address
+                };
+                
+                if (place.geometry.viewport) {
+                    var ne = place.geometry.viewport.getNorthEast();
+                    var sw = place.geometry.viewport.getSouthWest();
+                    result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
+                }
+                
+                onResult(result);
+            });
+        }
+        
+        // Initialize Mapbox Geolocate control (requires map)
+        if (map && typeof mapboxgl !== 'undefined') {
+            var geolocate = new mapboxgl.GeolocateControl({
+                positionOptions: { enableHighAccuracy: true },
+                trackUserLocation: false,
+                fitBoundsOptions: { maxZoom: 12 }
+            });
+            
+            var geolocateControlEl = geolocate.onAdd(map);
+            geolocateEl.appendChild(geolocateControlEl);
+            instance.geolocate = geolocate;
+            
+            geolocate.on('geolocate', function(event) {
+                if (event && event.coords) {
+                    var result = {
+                        center: [event.coords.longitude, event.coords.latitude],
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [event.coords.longitude, event.coords.latitude]
+                        },
+                        isGeolocate: true
+                    };
+                    onResult(result);
+                }
+            });
+            
+            // Initialize compass control
+            var nav = new mapboxgl.NavigationControl({
+                showZoom: false,
+                visualizePitch: true
+            });
+            var compassControlEl = nav.onAdd(map);
+            compassEl.appendChild(compassControlEl);
+            instance.compass = nav;
+        }
+        
+        instances.push(instance);
+        
+        return instance;
+    }
+    
+    // Clear all instances
+    function destroyAll() {
+        instances.forEach(function(inst) {
+            if (inst.row && inst.row.parentNode) {
+                inst.row.parentNode.removeChild(inst.row);
+            }
+        });
+        instances.length = 0;
+    }
+    
+    return {
+        create: create,
+        destroyAll: destroyAll
+    };
+})();
+
 
 const SystemImagePickerComponent = (function(){
     
