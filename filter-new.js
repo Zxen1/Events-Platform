@@ -178,13 +178,13 @@ const FilterModule = (function() {
         
         var lng = result.center[0];
         var lat = result.center[1];
-        console.log('[Filter] Flying to:', lng, lat);
+        console.log('[Filter] Flying to:', lng, lat, 'bbox:', result.bbox);
         
-        // Fly to location via MapModule
-        if (typeof MapModule !== 'undefined' && MapModule.flyTo) {
-            MapModule.flyTo(lng, lat);
+        // Pass to MapModule to handle bbox/viewport for proper zoom
+        if (typeof MapModule !== 'undefined' && MapModule.handleGeocoderResult) {
+            MapModule.handleGeocoderResult(result, 'filter');
         } else {
-            console.warn('[Filter] MapModule.flyTo not available');
+            console.warn('[Filter] MapModule.handleGeocoderResult not available');
         }
         
         // Emit event

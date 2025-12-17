@@ -1208,7 +1208,7 @@ const MapControlRowComponent = (function(){
                         
                         item.addEventListener('click', function() {
                             placesService.getDetails(
-                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address', 'types'] },
+                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
                                 function(place, detailStatus) {
                                     if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
                                         var lat = place.geometry.location.lat();
@@ -1218,29 +1218,21 @@ const MapControlRowComponent = (function(){
                                         dropdown.style.display = 'none';
                                         clearBtn.style.display = 'flex';
                                         
-                                        if (map) {
-                                            // Use viewport bounds if available (better for cities, countries, regions)
-                                            if (place.geometry.viewport) {
-                                                var ne = place.geometry.viewport.getNorthEast();
-                                                var sw = place.geometry.viewport.getSouthWest();
-                                                map.fitBounds([
-                                                    [sw.lng(), sw.lat()],
-                                                    [ne.lng(), ne.lat()]
-                                                ], {
-                                                    padding: 50,
-                                                    maxZoom: 15
-                                                });
-                                            } else {
-                                                map.flyTo({ center: [lng, lat], zoom: 14 });
-                                            }
-                                        }
-                                        
-                                        onResult({
+                                        var result = {
                                             center: [lng, lat],
                                             geometry: { type: 'Point', coordinates: [lng, lat] },
                                             place_name: place.formatted_address || prediction.description,
                                             text: place.name || prediction.description
-                                        });
+                                        };
+                                        
+                                        // Add bbox if viewport available (for proper zoom on cities/countries)
+                                        if (place.geometry.viewport) {
+                                            var ne = place.geometry.viewport.getNorthEast();
+                                            var sw = place.geometry.viewport.getSouthWest();
+                                            result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
+                                        }
+                                        
+                                        onResult(result);
                                     }
                                 }
                             );

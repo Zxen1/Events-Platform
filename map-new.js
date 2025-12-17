@@ -949,6 +949,7 @@ const MapModule = (function() {
     getMap: () => map,
     getBounds,
     flyTo,
+    handleGeocoderResult,
     
     // Geocoders
     getGeocoder: (key) => geocoders[key],
