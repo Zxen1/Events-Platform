@@ -19,6 +19,10 @@ const FilterModule = (function() {
     var resetCategoriesBtn = null;
     var favouritesBtn = null;
     var favouritesOn = false;
+    var sortMenuEl = null;
+    var sortButtonEl = null;
+    var sortButtonText = null;
+    var currentSort = 'az';
 
 
     /* --------------------------------------------------------------------------
@@ -42,6 +46,7 @@ const FilterModule = (function() {
         initMapControls();
         initResetButtons();
         initFavouritesButton();
+        initSortMenu();
         initHeaderDrag();
         bindPanelEvents();
         
@@ -238,6 +243,74 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
+       SORT MENU
+       -------------------------------------------------------------------------- */
+    
+    function initSortMenu() {
+        sortMenuEl = panelEl.querySelector('.filter-sort-menu');
+        if (!sortMenuEl) return;
+        
+        sortButtonEl = sortMenuEl.querySelector('.filter-sort-menu-button');
+        sortButtonText = sortMenuEl.querySelector('.filter-sort-menu-button-text');
+        var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
+        
+        // Toggle menu open/close
+        if (sortButtonEl) {
+            sortButtonEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sortMenuEl.classList.toggle('open');
+            });
+        }
+        
+        // Handle option selection
+        options.forEach(function(option) {
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var sort = option.getAttribute('data-sort');
+                selectSort(sort, option.textContent);
+                sortMenuEl.classList.remove('open');
+            });
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', function(e) {
+            if (sortMenuEl && !sortMenuEl.contains(e.target)) {
+                sortMenuEl.classList.remove('open');
+            }
+        });
+        
+        // Set initial selected state
+        var firstOption = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="az"]');
+        if (firstOption) {
+            firstOption.classList.add('selected');
+        }
+    }
+    
+    function selectSort(sortKey, label) {
+        currentSort = sortKey;
+        
+        if (sortButtonText) {
+            sortButtonText.textContent = label;
+        }
+        
+        // Update selected state
+        var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
+        options.forEach(function(opt) {
+            opt.classList.toggle('selected', opt.getAttribute('data-sort') === sortKey);
+        });
+        
+        App.emit('filter:sortChanged', { sort: sortKey });
+    }
+    
+    function setSort(sortKey) {
+        var option = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + sortKey + '"]') : null;
+        if (option) {
+            selectSort(sortKey, option.textContent);
+        }
+    }
+
+
+    /* --------------------------------------------------------------------------
        HEADER DRAG
        -------------------------------------------------------------------------- */
     
@@ -298,7 +371,8 @@ const FilterModule = (function() {
         clearGeocoder: clearGeocoder,
         setResetFiltersActive: setResetFiltersActive,
         setResetCategoriesActive: setResetCategoriesActive,
-        setFavouritesOn: setFavouritesOn
+        setFavouritesOn: setFavouritesOn,
+        setSort: setSort
     };
 
 })();
