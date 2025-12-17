@@ -1,9 +1,11 @@
 /* ============================================================================
-   FILTER PANEL - Parts 1-4
+   FILTER PANEL
    1. Panel Container
    2. Panel Content  
    3. Panel Header
-   4. Map Control Row
+   4. Panel Body
+   5. Reset Buttons + Favourites
+   6. Responsive
    ============================================================================ */
 
 /* ============================================================================
@@ -137,131 +139,90 @@
 }
 
 /* ============================================================================
-   PART 4: MAP CONTROL ROW (Geocoder, Geolocate, Compass)
+   PART 5: RESET BUTTONS + FAVOURITES
    ============================================================================ */
 
-.filter-map-control-row {
-  display: flex;
-  align-items: center;
-  gap: var(--gap);
-  flex-wrap: nowrap;
+.filter-reset-box {
   width: 100%;
-  max-width: 100%;
+  max-width: 420px;
   margin: 0;
-  justify-content: flex-start;
-  background: none;
-  border-radius: 0;
   padding: 0;
+}
+
+.filter-reset-btn {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #666;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  padding: 0 12px;
+  cursor: not-allowed;
+  opacity: 0.5;
   box-sizing: border-box;
 }
 
-.filter-geocoder {
-  background-color: #ffffff;
-  border-radius: 8px;
-  flex: 1 1 auto;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  height: var(--geocoder-h);
-  min-height: var(--geocoder-h);
-  position: relative;
+.filter-reset-btn:not(:disabled) {
+  background: #cc6600;
+  border-color: #cc6600;
+  color: #fff;
+  opacity: 1;
+  cursor: pointer;
 }
 
-.filter-geocoder input {
-  background: #ffffff;
-  color: #000000;
-  caret-color: #000000;
-  border: none;
+.filter-reset-btn:not(:disabled):hover {
+  background: #e67300;
+  border-color: #e67300;
+}
+
+/* Favourites button */
+.filter-favourites-btn {
+  width: 100%;
+  max-width: 420px;
+  height: 36px;
   border-radius: 8px;
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 100%;
-  padding: 0 12px;
-  line-height: var(--geocoder-h);
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
   font: inherit;
   font-size: 14px;
-}
-
-.filter-geocoder input:focus {
-  outline: none;
-}
-
-.filter-geocoder input::placeholder {
-  color: #888888;
-}
-
-.filter-geolocate,
-.filter-compass {
-  flex: 0 0 auto;
-  width: 35px;
-  height: 35px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  box-shadow: none;
-  background-color: #ffffff;
+  text-align: left;
+  padding: 0 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
 }
 
-.filter-geolocate:hover,
-.filter-compass:hover {
-  background-color: #f2f2f2;
+.filter-favourites-btn:hover {
+  border-color: rgba(255,255,255,0.3);
 }
 
-.filter-geolocate svg,
-.filter-compass svg {
+.filter-favourites-btn svg {
   width: 18px;
   height: 18px;
-  stroke: currentColor;
   fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  flex-shrink: 0;
 }
 
-/* Google Places Autocomplete dropdown */
-.pac-container {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  border: none;
-  font-family: inherit;
-  font-size: 14px;
-  margin-top: 4px;
-  z-index: 10000;
+.filter-favourites-btn[aria-pressed="true"] {
+  background: #3b82f6;
+  border-color: #3b82f6;
 }
 
-.pac-item {
-  padding: 10px 12px;
-  cursor: pointer;
-  border: none;
-  border-bottom: 1px solid #eee;
-}
-
-.pac-item:last-child {
-  border-bottom: none;
-}
-
-.pac-item:hover,
-.pac-item-selected {
-  background: #f0f4ff;
-}
-
-.pac-icon {
-  display: none;
-}
-
-.pac-item-query {
-  color: #000000;
-  font-weight: 500;
-}
-
-.pac-matched {
-  font-weight: 700;
+.filter-favourites-btn[aria-pressed="true"] svg {
+  fill: #fbbf24;
+  stroke: #fbbf24;
 }
 
 /* ============================================================================
-   RESPONSIVE
+   PART 6: RESPONSIVE
    ============================================================================ */
 
 @media (max-width: 600px) {

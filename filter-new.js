@@ -1,9 +1,10 @@
 /* ============================================================================
-   FILTER PANEL - Parts 1-4
+   FILTER PANEL - Parts 1-5
    1. Panel Container
    2. Panel Content
    3. Panel Header
    4. Map Control Row (Geocoder, Geolocate, Compass)
+   5. Reset Buttons + Favourites
    ============================================================================ */
 
 const FilterModule = (function() {
@@ -15,9 +16,14 @@ const FilterModule = (function() {
     
     var panelEl = null;
     var contentEl = null;
+    var headerEl = null;
     var bodyEl = null;
     var summaryEl = null;
     var mapControls = null;
+    var resetFiltersBtn = null;
+    var resetCategoriesBtn = null;
+    var favouritesBtn = null;
+    var favouritesOn = false;
 
 
     /* --------------------------------------------------------------------------
@@ -34,10 +40,14 @@ const FilterModule = (function() {
         }
         
         contentEl = panelEl.querySelector('.filter-panel-content');
+        headerEl = panelEl.querySelector('.filter-panel-header');
         bodyEl = panelEl.querySelector('.filter-panel-body');
         summaryEl = panelEl.querySelector('.filter-panel-summary');
         
         initMapControls();
+        initResetButtons();
+        initFavouritesButton();
+        initHeaderDrag();
         bindPanelEvents();
         
         console.log('[Filter] Filter module initialized');
@@ -172,6 +182,99 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
+       PART 5: RESET BUTTONS + FAVOURITES
+       -------------------------------------------------------------------------- */
+    
+    function initResetButtons() {
+        resetFiltersBtn = panelEl.querySelector('.filter-reset-btn[data-reset="filters"]');
+        resetCategoriesBtn = panelEl.querySelector('.filter-reset-btn[data-reset="categories"]');
+        
+        if (resetFiltersBtn) {
+            resetFiltersBtn.addEventListener('click', function() {
+                if (!resetFiltersBtn.disabled) {
+                    App.emit('filter:resetAll');
+                }
+            });
+        }
+        
+        if (resetCategoriesBtn) {
+            resetCategoriesBtn.addEventListener('click', function() {
+                if (!resetCategoriesBtn.disabled) {
+                    App.emit('filter:resetCategories');
+                }
+            });
+        }
+    }
+    
+    function setResetFiltersActive(active) {
+        if (resetFiltersBtn) {
+            resetFiltersBtn.disabled = !active;
+        }
+    }
+    
+    function setResetCategoriesActive(active) {
+        if (resetCategoriesBtn) {
+            resetCategoriesBtn.disabled = !active;
+        }
+    }
+    
+    function initFavouritesButton() {
+        favouritesBtn = panelEl.querySelector('.filter-favourites-btn');
+        
+        if (favouritesBtn) {
+            favouritesBtn.addEventListener('click', function() {
+                favouritesOn = !favouritesOn;
+                favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
+                App.emit('filter:favouritesToggle', { enabled: favouritesOn });
+            });
+        }
+    }
+    
+    function setFavouritesOn(on) {
+        favouritesOn = !!on;
+        if (favouritesBtn) {
+            favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
+        }
+    }
+
+
+    /* --------------------------------------------------------------------------
+       PANEL HEADER DRAG (move panel left/right)
+       Source: index.js line 27210
+       -------------------------------------------------------------------------- */
+    
+    function initHeaderDrag() {
+        if (!headerEl || !contentEl) return;
+        
+        headerEl.addEventListener('mousedown', function(e) {
+            if (e.target.closest('button')) return;
+            
+            var rect = contentEl.getBoundingClientRect();
+            var startX = e.clientX;
+            var startLeft = rect.left;
+            
+            function onMove(ev) {
+                var dx = ev.clientX - startX;
+                var newLeft = startLeft + dx;
+                var maxLeft = window.innerWidth - rect.width;
+                if (newLeft < 0) newLeft = 0;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+                contentEl.style.left = newLeft + 'px';
+                contentEl.style.right = 'auto';
+            }
+            
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    }
+
+
+    /* --------------------------------------------------------------------------
        PANEL EVENTS
        -------------------------------------------------------------------------- */
     
@@ -194,7 +297,10 @@ const FilterModule = (function() {
         closePanel: closePanel,
         togglePanel: togglePanel,
         updateSummary: updateSummary,
-        clearGeocoder: clearGeocoder
+        clearGeocoder: clearGeocoder,
+        setResetFiltersActive: setResetFiltersActive,
+        setResetCategoriesActive: setResetCategoriesActive,
+        setFavouritesOn: setFavouritesOn
     };
 
 })();
