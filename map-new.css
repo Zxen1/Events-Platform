@@ -77,14 +77,29 @@
 }
 
 /* Mapbox geolocate/compass buttons - !important allowed for Mapbox */
+.mapboxgl-ctrl-group button,
 .mapboxgl-ctrl-geolocate button,
-.mapboxgl-ctrl-compass button {
+.mapboxgl-ctrl-compass button,
+.mapboxgl-ctrl button,
+.mapboxgl-ctrl-group > button,
+button.mapboxgl-ctrl-geolocate,
+button.mapboxgl-ctrl-compass {
   width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
   height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
   border-radius: 8px !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
   box-shadow: none !important;
-  background-color: #ffffff;
+  background-color: #ffffff !important;
+  padding: 0 !important;
+}
+
+.mapboxgl-ctrl-group {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* Remove the pulsing circle animation on geolocate */
