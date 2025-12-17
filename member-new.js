@@ -873,7 +873,9 @@ const MemberModule = (function() {
             }
             
             // Build user object from response
+            // API returns { success, role, user } - role is at top level
             var payload = result.user || {};
+            payload.role = result.role; // Merge role from top level into payload
             console.log('[Member] Login payload:', payload);
             currentUser = buildUserObject(payload, username);
             console.log('[Member] Built user object:', currentUser, 'isAdmin:', currentUser.isAdmin);
@@ -1021,15 +1023,13 @@ const MemberModule = (function() {
         var normalized = email.toLowerCase();
         var username = payload.username || email;
         
-        // Check for admin status
+        // Check for admin status from API response
         var isAdmin = false;
         if (payload.isAdmin === true) {
             isAdmin = true;
         } else if (payload.role === 'admin') {
             isAdmin = true;
         } else if (Array.isArray(payload.roles) && payload.roles.includes('admin')) {
-            isAdmin = true;
-        } else if (normalized === 'admin' || username.toLowerCase() === 'admin') {
             isAdmin = true;
         }
         
