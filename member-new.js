@@ -274,8 +274,13 @@ const MemberModule = (function() {
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
-        // Fetch form snapshot from database (same as forms.js)
-        App.api('get-form').then(function(response) {
+        // Fetch form snapshot from database (same as forms.js - uses GET)
+        fetch('/gateway.php?action=get-form', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        }).then(function(response) {
+            return response.json();
+        }).then(function(response) {
             if (response && response.success && response.snapshot) {
                 memberSnapshot = response.snapshot;
                 memberCategories = response.snapshot.categories || [];
@@ -984,6 +989,10 @@ const MemberModule = (function() {
             // Update header (no avatar)
             updateHeaderAvatar(null);
         }
+        
+        // Update App state
+        App.setState('user', currentUser);
+        App.setState('isAdmin', currentUser ? currentUser.isAdmin === true : false);
         
         App.emit('member:stateChanged', { user: currentUser });
     }
