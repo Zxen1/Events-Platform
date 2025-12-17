@@ -10,7 +10,7 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.3/mapbox-gl-geocoder.min.js"></script>
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.3/mapbox-gl-geocoder.css">
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&libraries=places"></script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&libraries=places&loading=async"></script>
   
   <!-- CSS Files (9 total) -->
   <link rel="stylesheet" href="base-new.css">
@@ -103,7 +103,41 @@
             <div class="filter-sort-menu-option" data-sort="soon">Sort by Soonest</div>
           </div>
         </div>
-        <!-- More to be added -->
+        
+        <!-- Filter Basics Container -->
+        <section class="filter-basics-container" aria-label="Filters">
+          <div class="filter-keyword-row">
+            <div class="filter-keyword-input-wrap">
+              <input class="filter-keyword-input" type="text" placeholder="Keywords" aria-label="Keywords">
+              <button class="filter-keyword-clear" type="button" aria-label="Clear keywords">X</button>
+            </div>
+          </div>
+          <div class="filter-price-row">
+            <div class="filter-price-input-wrap">
+              <input class="filter-price-input filter-price-min" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Min price" aria-label="Minimum price">
+              <span class="filter-price-separator" aria-hidden="true">-</span>
+              <input class="filter-price-input filter-price-max" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Max price" aria-label="Maximum price">
+              <button class="filter-price-clear" type="button" aria-label="Clear price range">X</button>
+            </div>
+          </div>
+          <div class="filter-daterange-row">
+            <div class="filter-daterange-input-wrap">
+              <input class="filter-daterange-input" type="text" placeholder="Date Range" aria-label="Date range" readonly aria-haspopup="dialog" aria-expanded="false">
+              <button class="filter-daterange-clear" type="button" aria-label="Clear date">X</button>
+            </div>
+          </div>
+          <div class="filter-expired-row">
+            <span class="filter-expired-text">Show Expired Events</span>
+            <label class="filter-switch">
+              <input class="filter-expired-input" type="checkbox">
+              <span class="filter-switch-slider"></span>
+            </label>
+          </div>
+          <div class="filter-calendar-container" aria-hidden="true">
+            <div class="filter-calendar"></div>
+          </div>
+        </section>
+        
       </div>
     </div>
   </aside>

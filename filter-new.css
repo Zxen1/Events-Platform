@@ -295,6 +295,185 @@
   background: rgba(59,130,246,0.3);
 }
 
+/* Filter basics container */
+.filter-basics-container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Row base */
+.filter-keyword-row,
+.filter-price-row,
+.filter-daterange-row,
+.filter-expired-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Input wrap base */
+.filter-keyword-input-wrap,
+.filter-price-input-wrap,
+.filter-daterange-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+/* Input base */
+.filter-keyword-input,
+.filter-price-input,
+.filter-daterange-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: text;
+}
+
+.filter-keyword-input::placeholder,
+.filter-price-input::placeholder,
+.filter-daterange-input::placeholder {
+  color: #666;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.filter-daterange-input {
+  cursor: pointer;
+}
+
+/* Price row specific */
+.filter-price-separator {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Clear buttons */
+.filter-keyword-clear,
+.filter-price-clear,
+.filter-daterange-clear {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  line-height: 36px;
+  text-align: center;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.filter-keyword-clear.active,
+.filter-price-clear.active,
+.filter-daterange-clear.active {
+  background: #cc6600;
+  color: #fff;
+  border-color: #cc6600;
+}
+
+/* Expired row */
+.filter-expired-row {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.filter-expired-text {
+  color: #fff;
+  font-size: 14px;
+}
+
+/* Switch toggle */
+.filter-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.filter-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.filter-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 26px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.filter-switch-slider::before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.filter-switch input:checked + .filter-switch-slider {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.filter-switch input:checked + .filter-switch-slider::before {
+  transform: translateX(24px);
+}
+
+/* Calendar container */
+.filter-calendar-container {
+  background: #222222;
+  border: 1px solid rgba(255,255,255,0.1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: content-box;
+  width: 340px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.filter-calendar-container.open {
+  display: flex;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .filter-panel-content {

@@ -140,6 +140,29 @@
     border-color: #ef4444;
 }
 
+/* PlaceAutocompleteElement in fieldsets */
+.fieldset-row gmp-place-autocomplete {
+    width: 100%;
+    height: 36px;
+    --gmpx-color-surface: #333;
+    --gmpx-color-on-surface: #fff;
+    --gmpx-color-on-surface-variant: #666;
+    --gmpx-color-primary: #3b82f5;
+    --gmpx-font-family-base: inherit;
+    --gmpx-font-size-base: 13px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.fieldset-row gmp-place-autocomplete:hover {
+    border-color: #555;
+}
+
+.fieldset-row gmp-place-autocomplete:focus-within {
+    border-color: #3b82f5;
+}
+
 .fieldset-char-count {
     font-size: 11px;
     color: #666;
@@ -1504,6 +1527,19 @@
     display: flex;
 }
 
+/* New PlaceAutocompleteElement styling */
+.map-control-row .google-places-geocoder gmp-place-autocomplete {
+    width: 100%;
+    height: 100%;
+    --gmpx-color-surface: #ffffff;
+    --gmpx-color-on-surface: #000000;
+    --gmpx-color-on-surface-variant: #666666;
+    --gmpx-font-family-base: inherit;
+    --gmpx-font-size-base: 14px;
+    border-radius: 8px;
+}
+
+/* Fallback for legacy input styling */
 .map-control-row .google-places-geocoder input {
     width: 100%;
     height: 100%;
@@ -1512,6 +1548,7 @@
     border-radius: 8px;
     background: #ffffff;
     color: #000000;
+    caret-color: #000000;
     font: inherit;
     font-size: 14px;
     text-align: left;
@@ -1569,6 +1606,10 @@
 .map-controls-welcome .geocoder {
     flex: 0 1 420px;
     max-width: 420px;
+}
+
+.map-controls-welcome .google-places-geocoder gmp-place-autocomplete {
+    --gmpx-font-size-base: 13px;
 }
 
 .map-controls-welcome .google-places-geocoder input {

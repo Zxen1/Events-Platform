@@ -36,37 +36,56 @@ const FieldsetComponent = (function(){
             return null;
         }
         
-        var options = { fields: ['formatted_address', 'geometry', 'name', 'place_id'] };
-        
-        if (type === 'address') options.types = ['address'];
-        else if (type === 'establishment') options.types = ['establishment'];
-        else if (type === '(cities)') options.types = ['(cities)'];
-        
-        var autocomplete = new google.maps.places.Autocomplete(inputElement, options);
-        
-        autocomplete.addListener('place_changed', function() {
-            var place = autocomplete.getPlace();
-            if (!place.geometry || !place.geometry.location) {
-                if (statusElement) {
-                    statusElement.textContent = 'No location data for this place';
-                    statusElement.className = 'fieldset-location-status error';
+        // Use new PlaceAutocompleteElement API
+        if (google.maps.places.PlaceAutocompleteElement) {
+            var placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+                componentRestrictions: { country: [] }
+            });
+            
+            // Copy placeholder from original input
+            if (inputElement.placeholder) {
+                placeAutocomplete.placeholder = inputElement.placeholder;
+            }
+            
+            // Replace the original input with the new element
+            inputElement.parentNode.replaceChild(placeAutocomplete, inputElement);
+            
+            placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
+                var place = event.place;
+                if (!place) return;
+                
+                await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
+                
+                if (!place.location) {
+                    if (statusElement) {
+                        statusElement.textContent = 'No location data for this place';
+                        statusElement.className = 'fieldset-location-status error';
+                    }
+                    return;
                 }
-                return;
-            }
+                
+                var lat = place.location.lat();
+                var lng = place.location.lng();
+                
+                if (latInput) latInput.value = lat;
+                if (lngInput) lngInput.value = lng;
+                
+                if (statusElement) {
+                    statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                    statusElement.className = 'fieldset-location-status success';
+                }
+            });
             
-            var lat = place.geometry.location.lat();
-            var lng = place.geometry.location.lng();
-            
-            if (latInput) latInput.value = lat;
-            if (lngInput) lngInput.value = lng;
-            
-            if (statusElement) {
-                statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
-                statusElement.className = 'fieldset-location-status success';
-            }
-        });
+            return placeAutocomplete;
+        }
         
-        return autocomplete;
+        // PlaceAutocompleteElement not available
+        console.warn('PlaceAutocompleteElement not available');
+        if (statusElement) {
+            statusElement.textContent = 'Location search unavailable';
+            statusElement.className = 'fieldset-location-status error';
+        }
+        return null;
     }
     
     function buildLabel(name, tooltip, required) {
@@ -909,52 +928,51 @@ const MapControlRowComponent = (function(){
             inputEl: null
         };
         
-        // Initialize Google Places geocoder
-        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+        // Initialize Google Places geocoder (new PlaceAutocompleteElement API)
+        if (typeof google !== 'undefined' && google.maps && google.maps.places && google.maps.places.PlaceAutocompleteElement) {
             var wrapper = document.createElement('div');
             wrapper.className = 'google-places-geocoder';
             
-            var input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = placeholder;
-            input.setAttribute('autocomplete', 'off');
-            input.setAttribute('data-lpignore', 'true');
-            input.setAttribute('data-form-type', 'other');
-            wrapper.appendChild(input);
+            var placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+                componentRestrictions: { country: [] }
+            });
+            placeAutocomplete.placeholder = placeholder;
+            wrapper.appendChild(placeAutocomplete);
             geocoderEl.appendChild(wrapper);
             
-            instance.inputEl = input;
-            
-            var autocomplete = new google.maps.places.Autocomplete(input, {
-                fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types', 'address_components']
-            });
+            instance.inputEl = placeAutocomplete;
             
             instance.geocoder = {
-                _inputEl: input,
-                _autocomplete: autocomplete,
+                _element: placeAutocomplete,
                 clear: function() {
-                    input.value = '';
+                    // PlaceAutocompleteElement doesn't expose value directly
+                    // We need to access the internal input
+                    var input = placeAutocomplete.querySelector('input');
+                    if (input) input.value = '';
                 }
             };
             
-            autocomplete.addListener('place_changed', function() {
-                var place = autocomplete.getPlace();
-                if (!place || !place.geometry || !place.geometry.location) {
-                    return;
-                }
+            placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
+                var place = event.place;
+                if (!place) return;
                 
-                var lat = place.geometry.location.lat();
-                var lng = place.geometry.location.lng();
+                // Fetch full place details
+                await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
+                
+                if (!place.location) return;
+                
+                var lat = place.location.lat();
+                var lng = place.location.lng();
                 var result = {
                     center: [lng, lat],
                     geometry: { type: 'Point', coordinates: [lng, lat] },
-                    place_name: place.formatted_address || place.name,
-                    text: place.name || place.formatted_address
+                    place_name: place.formattedAddress || place.displayName,
+                    text: place.displayName || place.formattedAddress
                 };
                 
-                if (place.geometry.viewport) {
-                    var ne = place.geometry.viewport.getNorthEast();
-                    var sw = place.geometry.viewport.getSouthWest();
+                if (place.viewport) {
+                    var ne = place.viewport.getNorthEast();
+                    var sw = place.viewport.getSouthWest();
                     result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
                 }
                 

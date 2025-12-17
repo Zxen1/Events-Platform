@@ -23,6 +23,19 @@ const FilterModule = (function() {
     var sortButtonEl = null;
     var sortButtonText = null;
     var currentSort = 'az';
+    
+    // Filter basics
+    var keywordInput = null;
+    var keywordClear = null;
+    var priceMinInput = null;
+    var priceMaxInput = null;
+    var priceClear = null;
+    var daterangeInput = null;
+    var daterangeClear = null;
+    var expiredInput = null;
+    var calendarContainer = null;
+    var dateStart = null;
+    var dateEnd = null;
 
 
     /* --------------------------------------------------------------------------
@@ -47,6 +60,7 @@ const FilterModule = (function() {
         initResetButtons();
         initFavouritesButton();
         initSortMenu();
+        initFilterBasics();
         initHeaderDrag();
         bindPanelEvents();
         
@@ -191,6 +205,7 @@ const FilterModule = (function() {
         if (resetFiltersBtn) {
             resetFiltersBtn.addEventListener('click', function() {
                 if (!resetFiltersBtn.disabled) {
+                    resetAllFilters();
                     App.emit('filter:resetAll');
                 }
             });
@@ -311,6 +326,206 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
+       FILTER BASICS
+       -------------------------------------------------------------------------- */
+    
+    function initFilterBasics() {
+        var container = panelEl.querySelector('.filter-basics-container');
+        if (!container) return;
+        
+        // Keyword
+        keywordInput = container.querySelector('.filter-keyword-input');
+        keywordClear = container.querySelector('.filter-keyword-clear');
+        
+        if (keywordInput) {
+            keywordInput.addEventListener('input', function() {
+                applyFilters();
+                updateClearButtons();
+            });
+        }
+        
+        if (keywordClear) {
+            keywordClear.addEventListener('click', function() {
+                if (keywordInput) keywordInput.value = '';
+                applyFilters();
+                updateClearButtons();
+            });
+        }
+        
+        // Price
+        priceMinInput = container.querySelector('.filter-price-min');
+        priceMaxInput = container.querySelector('.filter-price-max');
+        priceClear = container.querySelector('.filter-price-clear');
+        
+        [priceMinInput, priceMaxInput].forEach(function(input) {
+            if (!input) return;
+            input.addEventListener('input', function() {
+                applyFilters();
+                updateClearButtons();
+            });
+        });
+        
+        if (priceClear) {
+            priceClear.addEventListener('click', function() {
+                if (priceMinInput) priceMinInput.value = '';
+                if (priceMaxInput) priceMaxInput.value = '';
+                applyFilters();
+                updateClearButtons();
+            });
+        }
+        
+        // Daterange
+        daterangeInput = container.querySelector('.filter-daterange-input');
+        daterangeClear = container.querySelector('.filter-daterange-clear');
+        calendarContainer = container.querySelector('.filter-calendar-container');
+        
+        if (daterangeInput) {
+            daterangeInput.addEventListener('click', function() {
+                toggleCalendar();
+            });
+        }
+        
+        if (daterangeClear) {
+            daterangeClear.addEventListener('click', function() {
+                clearDateRange();
+                applyFilters();
+                updateClearButtons();
+            });
+        }
+        
+        // Expired toggle
+        expiredInput = container.querySelector('.filter-expired-input');
+        
+        if (expiredInput) {
+            expiredInput.addEventListener('change', function() {
+                applyFilters();
+            });
+        }
+        
+        updateClearButtons();
+    }
+    
+    function updateClearButtons() {
+        // Keyword
+        if (keywordClear && keywordInput) {
+            keywordClear.classList.toggle('active', keywordInput.value.trim() !== '');
+        }
+        
+        // Price
+        if (priceClear) {
+            var hasPrice = (priceMinInput && priceMinInput.value.trim() !== '') || 
+                           (priceMaxInput && priceMaxInput.value.trim() !== '');
+            priceClear.classList.toggle('active', hasPrice);
+        }
+        
+        // Daterange
+        if (daterangeClear && daterangeInput) {
+            var hasDate = daterangeInput.value.trim() !== '' || dateStart || dateEnd;
+            daterangeClear.classList.toggle('active', !!hasDate);
+        }
+        
+        updateResetBtn();
+    }
+    
+    function updateResetBtn() {
+        var hasKeyword = keywordInput && keywordInput.value.trim() !== '';
+        var hasPrice = (priceMinInput && priceMinInput.value.trim() !== '') || 
+                       (priceMaxInput && priceMaxInput.value.trim() !== '');
+        var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
+        var hasExpired = expiredInput && expiredInput.checked;
+        
+        var active = hasKeyword || hasPrice || hasDate || hasExpired;
+        setResetFiltersActive(active);
+    }
+    
+    function applyFilters() {
+        App.emit('filter:changed', getFilterState());
+    }
+    
+    function getFilterState() {
+        return {
+            keyword: keywordInput ? keywordInput.value.trim() : '',
+            minPrice: priceMinInput ? priceMinInput.value.trim() : '',
+            maxPrice: priceMaxInput ? priceMaxInput.value.trim() : '',
+            dateStart: dateStart,
+            dateEnd: dateEnd,
+            expired: expiredInput ? expiredInput.checked : false,
+            favourites: favouritesOn,
+            sort: currentSort
+        };
+    }
+    
+    function toggleCalendar() {
+        if (!calendarContainer) return;
+        
+        var isOpen = calendarContainer.classList.contains('open');
+        
+        if (isOpen) {
+            closeCalendar();
+        } else {
+            openCalendar();
+        }
+    }
+    
+    function openCalendar() {
+        if (!calendarContainer) return;
+        calendarContainer.classList.add('open');
+        if (daterangeInput) {
+            daterangeInput.setAttribute('aria-expanded', 'true');
+        }
+    }
+    
+    function closeCalendar() {
+        if (!calendarContainer) return;
+        calendarContainer.classList.remove('open');
+        if (daterangeInput) {
+            daterangeInput.setAttribute('aria-expanded', 'false');
+        }
+    }
+    
+    function setDateRange(start, end) {
+        dateStart = start;
+        dateEnd = end;
+        
+        if (daterangeInput) {
+            if (start && end) {
+                daterangeInput.value = formatDateShort(start) + ' - ' + formatDateShort(end);
+            } else if (start) {
+                daterangeInput.value = formatDateShort(start);
+            } else {
+                daterangeInput.value = '';
+            }
+        }
+        
+        updateClearButtons();
+    }
+    
+    function clearDateRange() {
+        dateStart = null;
+        dateEnd = null;
+        if (daterangeInput) daterangeInput.value = '';
+        closeCalendar();
+    }
+    
+    function formatDateShort(date) {
+        if (!date) return '';
+        var d = new Date(date);
+        return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/,/g, '');
+    }
+    
+    function resetAllFilters() {
+        if (keywordInput) keywordInput.value = '';
+        if (priceMinInput) priceMinInput.value = '';
+        if (priceMaxInput) priceMaxInput.value = '';
+        if (expiredInput) expiredInput.checked = false;
+        clearDateRange();
+        clearGeocoder();
+        updateClearButtons();
+        applyFilters();
+    }
+
+
+    /* --------------------------------------------------------------------------
        HEADER DRAG
        -------------------------------------------------------------------------- */
     
@@ -372,7 +587,12 @@ const FilterModule = (function() {
         setResetFiltersActive: setResetFiltersActive,
         setResetCategoriesActive: setResetCategoriesActive,
         setFavouritesOn: setFavouritesOn,
-        setSort: setSort
+        setSort: setSort,
+        getFilterState: getFilterState,
+        setDateRange: setDateRange,
+        openCalendar: openCalendar,
+        closeCalendar: closeCalendar,
+        resetAllFilters: resetAllFilters
     };
 
 })();
