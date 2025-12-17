@@ -1049,36 +1049,19 @@ const MapControlRowComponent = (function(){
         var geocoderEl = document.createElement('div');
         geocoderEl.className = 'geocoder';
         
-        var input = null;
-        var placeAutocomplete = null;
+        // Our styled input
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'geocoder-input';
+        input.placeholder = placeholder;
+        input.autocomplete = 'off';
+        geocoderEl.appendChild(input);
         
-        // Use native PlaceAutocompleteElement for Google's dropdown
-        if (typeof google !== 'undefined' && google.maps && google.maps.places && google.maps.places.PlaceAutocompleteElement) {
-            placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
-                componentRestrictions: { country: [] }
-            });
-            placeAutocomplete.placeholder = placeholder;
-            placeAutocomplete.className = 'geocoder-input geocoder-google';
-            
-            // Style via CSS custom properties
-            placeAutocomplete.style.setProperty('--gmpx-color-surface', '#ffffff');
-            placeAutocomplete.style.setProperty('--gmpx-color-on-surface', '#000000');
-            placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
-            placeAutocomplete.style.setProperty('--gmpx-color-primary', '#3b82f5');
-            placeAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
-            placeAutocomplete.style.setProperty('--gmpx-font-size-base', '14px');
-            
-            geocoderEl.appendChild(placeAutocomplete);
-            input = placeAutocomplete;
-        } else {
-            // Fallback to plain input if Google API not available
-            input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'geocoder-input';
-            input.placeholder = placeholder;
-            input.autocomplete = 'off';
-            geocoderEl.appendChild(input);
-        }
+        // Dropdown for suggestions
+        var dropdown = document.createElement('div');
+        dropdown.className = 'geocoder-dropdown';
+        dropdown.style.display = 'none';
+        geocoderEl.appendChild(dropdown);
         
         var clearBtn = ClearButtonComponent.create({
             className: 'geocoder-clear',
@@ -1111,96 +1094,106 @@ const MapControlRowComponent = (function(){
             row: row,
             input: input,
             clearBtn: clearBtn,
+            dropdown: dropdown,
             geolocateBtn: geolocateBtn,
             compassBtn: compassBtn,
-            map: map,
-            placeAutocomplete: placeAutocomplete
+            map: map
         };
         
-        // Handle place selection from native Google dropdown
-        if (placeAutocomplete) {
-            placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
-                var place = event.place;
-                if (!place) return;
-                
-                await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
-                
-                if (place.location) {
-                    var lat = place.location.lat();
-                    var lng = place.location.lng();
-                    
-                    clearBtn.style.display = 'flex';
-                    
-                    if (map) {
-                        map.flyTo({ center: [lng, lat], zoom: 14 });
-                    }
-                    
-                    onResult({
-                        center: [lng, lat],
-                        geometry: { type: 'Point', coordinates: [lng, lat] },
-                        place_name: place.formattedAddress || place.displayName,
-                        text: place.displayName
-                    });
-                }
-            });
-            
-            // Show/hide clear button based on input
-            placeAutocomplete.addEventListener('input', function() {
-                // PlaceAutocompleteElement doesn't expose value easily, 
-                // so we show clear button after any interaction
-                clearBtn.style.display = 'flex';
-            });
+        // Initialize Google Places services for suggestions
+        var autocompleteService = null;
+        var placesService = null;
+        
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            autocompleteService = new google.maps.places.AutocompleteService();
+            var serviceDiv = document.createElement('div');
+            placesService = new google.maps.places.PlacesService(serviceDiv);
         }
         
-        clearBtn.addEventListener('click', function() {
-            if (placeAutocomplete) {
-                // Clear the PlaceAutocompleteElement by replacing it
-                var newAutocomplete = new google.maps.places.PlaceAutocompleteElement({
-                    componentRestrictions: { country: [] }
-                });
-                newAutocomplete.placeholder = placeholder;
-                newAutocomplete.className = 'geocoder-input geocoder-google';
-                newAutocomplete.style.setProperty('--gmpx-color-surface', '#ffffff');
-                newAutocomplete.style.setProperty('--gmpx-color-on-surface', '#000000');
-                newAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
-                newAutocomplete.style.setProperty('--gmpx-color-primary', '#3b82f5');
-                newAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
-                newAutocomplete.style.setProperty('--gmpx-font-size-base', '14px');
-                
-                geocoderEl.replaceChild(newAutocomplete, placeAutocomplete);
-                placeAutocomplete = newAutocomplete;
-                instance.placeAutocomplete = newAutocomplete;
-                instance.input = newAutocomplete;
-                
-                // Re-attach event listener
-                newAutocomplete.addEventListener('gmp-placeselect', async function(event) {
-                    var place = event.place;
-                    if (!place) return;
+        // Fetch and display suggestions
+        function fetchSuggestions(query) {
+            if (!autocompleteService) return;
+            
+            autocompleteService.getPlacePredictions(
+                { input: query },
+                function(predictions, status) {
+                    dropdown.innerHTML = '';
                     
-                    await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
-                    
-                    if (place.location) {
-                        var lat = place.location.lat();
-                        var lng = place.location.lng();
-                        
-                        clearBtn.style.display = 'flex';
-                        
-                        if (map) {
-                            map.flyTo({ center: [lng, lat], zoom: 14 });
-                        }
-                        
-                        onResult({
-                            center: [lng, lat],
-                            geometry: { type: 'Point', coordinates: [lng, lat] },
-                            place_name: place.formattedAddress || place.displayName,
-                            text: place.displayName
-                        });
+                    if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                        dropdown.style.display = 'none';
+                        return;
                     }
-                });
-            } else if (input) {
-                input.value = '';
+                    
+                    predictions.forEach(function(prediction) {
+                        var item = document.createElement('div');
+                        item.className = 'geocoder-dropdown-item';
+                        
+                        // Match Google's styling with icon + text
+                        item.innerHTML = '<span class="geocoder-dropdown-icon">📍</span><span class="geocoder-dropdown-text">' + prediction.description + '</span>';
+                        
+                        item.addEventListener('click', function() {
+                            placesService.getDetails(
+                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
+                                function(place, detailStatus) {
+                                    if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                                        var lat = place.geometry.location.lat();
+                                        var lng = place.geometry.location.lng();
+                                        
+                                        input.value = place.name || prediction.description;
+                                        dropdown.style.display = 'none';
+                                        clearBtn.style.display = 'flex';
+                                        
+                                        if (map) {
+                                            map.flyTo({ center: [lng, lat], zoom: 14 });
+                                        }
+                                        
+                                        onResult({
+                                            center: [lng, lat],
+                                            geometry: { type: 'Point', coordinates: [lng, lat] },
+                                            place_name: place.formatted_address || prediction.description,
+                                            text: place.name || prediction.description
+                                        });
+                                    }
+                                }
+                            );
+                        });
+                        
+                        dropdown.appendChild(item);
+                    });
+                    
+                    dropdown.style.display = 'block';
+                }
+            );
+        }
+        
+        // Input events
+        var debounceTimer = null;
+        input.addEventListener('input', function() {
+            clearBtn.style.display = input.value ? 'flex' : 'none';
+            
+            clearTimeout(debounceTimer);
+            if (input.value.length < 2) {
+                dropdown.style.display = 'none';
+                return;
             }
+            
+            debounceTimer = setTimeout(function() {
+                fetchSuggestions(input.value);
+            }, 300);
+        });
+        
+        clearBtn.addEventListener('click', function() {
+            input.value = '';
             clearBtn.style.display = 'none';
+            dropdown.style.display = 'none';
+            input.focus();
+        });
+        
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (!geocoderEl.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
         });
         
         // Geolocate button
