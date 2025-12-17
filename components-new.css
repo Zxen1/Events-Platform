@@ -1569,51 +1569,65 @@
     color: #888888;
 }
 
-/* Dropdown - styled like Google Places */
+/* Dropdown - Google Places native style */
 .map-control-row .geocoder-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    margin-top: 4px;
+    margin-top: 2px;
     background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     max-height: 300px;
     overflow-y: auto;
     z-index: 1000;
+    font-family: Roboto, Arial, sans-serif;
 }
 
 .map-control-row .geocoder-dropdown-item {
     display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    font-size: 14px;
-    color: #000000;
+    align-items: flex-start;
+    padding: 10px 16px;
     cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.map-control-row .geocoder-dropdown-item:last-child {
-    border-bottom: none;
 }
 
 .map-control-row .geocoder-dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: #f1f3f4;
 }
 
 .map-control-row .geocoder-dropdown-icon {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 12px;
-    font-size: 16px;
+    margin-right: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
 }
 
 .map-control-row .geocoder-dropdown-text {
     flex: 1;
+    min-width: 0;
+}
+
+.map-control-row .geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+    line-height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.map-control-row .geocoder-dropdown-secondary {
+    font-size: 12px;
+    font-weight: 400;
+    color: #70757a;
+    line-height: 16px;
+    margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
