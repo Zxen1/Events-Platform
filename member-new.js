@@ -281,12 +281,15 @@ const MemberModule = (function() {
         }).then(function(response) {
             return response.json();
         }).then(function(response) {
+            console.log('[Member] API response:', response);
             if (response && response.success && response.snapshot) {
                 memberSnapshot = response.snapshot;
                 memberCategories = response.snapshot.categories || [];
+                console.log('[Member] Categories loaded:', memberCategories.length, memberCategories.map(function(c) { return c.name + ' (' + (c.subs ? c.subs.length : 0) + ' subs)'; }));
                 renderFormpicker(container);
                 formpickerLoaded = true;
             } else {
+                console.error('[Member] Invalid response:', response);
                 container.innerHTML = '<p class="member-create-intro member-create-intro--error">Failed to load categories.</p>';
             }
         }).catch(function(err) {
@@ -364,15 +367,8 @@ const MemberModule = (function() {
             optionBtn.type = 'button';
             optionBtn.className = 'fieldset-menu-option';
             
-            var iconPath = '';
-            if (cat.id !== null && cat.id !== undefined) {
-                var idKey = 'id:' + cat.id;
-                if (categoryIconPaths[idKey]) iconPath = categoryIconPaths[idKey];
-            }
-            if (!iconPath && cat.name) {
-                var nameKey = 'name:' + cat.name.toLowerCase();
-                if (categoryIconPaths[nameKey]) iconPath = categoryIconPaths[nameKey];
-            }
+            // Get icon path - API returns paths keyed by category name directly
+            var iconPath = categoryIconPaths[cat.name] || '';
             
             if (iconPath) {
                 var iconImg = document.createElement('img');
@@ -422,16 +418,8 @@ const MemberModule = (function() {
                         subBtn.type = 'button';
                         subBtn.className = 'fieldset-menu-option';
                         
-                        var subIconPath = '';
-                        var subId = cat.subIds && cat.subIds[subName] ? cat.subIds[subName] : null;
-                        if (subId !== null) {
-                            var subIdKey = 'id:' + subId;
-                            if (subcategoryIconPaths[subIdKey]) subIconPath = subcategoryIconPaths[subIdKey];
-                        }
-                        if (!subIconPath && subName) {
-                            var subNameKey = 'name:' + subName.toLowerCase();
-                            if (subcategoryIconPaths[subNameKey]) subIconPath = subcategoryIconPaths[subNameKey];
-                        }
+                        // Get icon path - API returns paths keyed by subcategory name directly
+                        var subIconPath = subcategoryIconPaths[subName] || '';
                         
                         if (subIconPath) {
                             var subIconImg = document.createElement('img');
