@@ -18813,7 +18813,7 @@ function makePosts(){
         expiredWasOn = expiredToggle.checked;
         updateRangeClasses();
         updateInput();
-        closeCalendarPopup();
+        scrollCalendarToToday('auto');
       });
       if(expiredToggle.checked){
         expiredToggle.dispatchEvent(new Event('change'));
