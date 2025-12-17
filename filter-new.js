@@ -1,10 +1,5 @@
 /* ============================================================================
-   FILTER PANEL - Parts 1-5
-   1. Panel Container
-   2. Panel Content
-   3. Panel Header
-   4. Map Control Row (Geocoder, Geolocate, Compass)
-   5. Reset Buttons + Favourites
+   FILTER.JS - FILTER PANEL
    ============================================================================ */
 
 const FilterModule = (function() {
@@ -55,7 +50,7 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       PART 1-2: PANEL SHOW/HIDE
+       PANEL SHOW/HIDE
        -------------------------------------------------------------------------- */
     
     function openPanel() {
@@ -95,7 +90,7 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       PART 3: PANEL HEADER / SUMMARY
+       SUMMARY
        -------------------------------------------------------------------------- */
     
     function updateSummary(text) {
@@ -106,8 +101,7 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       PART 4: MAP CONTROL ROW (Geocoder, Geolocate, Compass)
-       Uses MapControlRowComponent from components-new.js
+       MAP CONTROLS
        -------------------------------------------------------------------------- */
     
     function initMapControls() {
@@ -182,7 +176,7 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       PART 5: RESET BUTTONS + FAVOURITES
+       RESET BUTTONS
        -------------------------------------------------------------------------- */
     
     function initResetButtons() {
@@ -217,6 +211,11 @@ const FilterModule = (function() {
             resetCategoriesBtn.disabled = !active;
         }
     }
+
+
+    /* --------------------------------------------------------------------------
+       FAVOURITES BUTTON
+       -------------------------------------------------------------------------- */
     
     function initFavouritesButton() {
         favouritesBtn = panelEl.querySelector('.filter-favourites-btn');
@@ -239,8 +238,7 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       PANEL HEADER DRAG (move panel left/right)
-       Source: index.js line 27210
+       HEADER DRAG
        -------------------------------------------------------------------------- */
     
     function initHeaderDrag() {
@@ -307,4 +305,3 @@ const FilterModule = (function() {
 
 // Register module with App
 App.registerModule('filter', FilterModule);
-
