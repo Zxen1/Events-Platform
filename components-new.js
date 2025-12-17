@@ -465,24 +465,49 @@ const CalendarComponent = (function(){
         containerEl.appendChild(scroll);
         containerEl.appendChild(marker);
         
-        if(todayMonthEl) {
-            scroll.scrollLeft = todayMonthEl.offsetLeft;
+        // Function to position marker correctly
+        function positionMarker() {
+            var width = containerEl.clientWidth;
+            if (width > 0 && totalMonths > 0) {
+        var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                var markerPos = markerFraction * (width - 8);
+        marker.style.left = markerPos + 'px';
+            }
         }
         
-        var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
-        var markerPos = markerFraction * (containerEl.clientWidth - 8);
-        marker.style.left = markerPos + 'px';
+        // Function to scroll to today
+        function scrollToToday(animate) {
+            if (todayMonthEl) {
+                if (animate) {
+                scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+                } else {
+                    scroll.scrollLeft = todayMonthEl.offsetLeft;
+                }
+            }
+        }
+        
+        // Initial position (may need recalc if container hidden)
+        scrollToToday(false);
+        positionMarker();
+        
+        // Recalculate marker position when container becomes visible
+        var resizeObserver = null;
+        if (typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(function() {
+                positionMarker();
+            });
+            resizeObserver.observe(containerEl);
+        }
         
         marker.addEventListener('click', function() {
-            if(todayMonthEl) {
-                scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
-            }
+            scrollToToday(true);
         });
         
+        // Mouse wheel horizontal scrolling
         scroll.addEventListener('wheel', function(e) {
             e.preventDefault();
             scroll.scrollLeft += e.deltaY || e.deltaX;
-        });
+        }, { passive: false });
         
         // Update visual selection state
         function updateSelection(calendarEl) {
@@ -508,10 +533,9 @@ const CalendarComponent = (function(){
             calendar: calendar,
             marker: marker,
             scrollToToday: function() {
-                if(todayMonthEl) {
-                    scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
-                }
+                scrollToToday(true);
             },
+            positionMarker: positionMarker,
             clearSelection: function() {
                 selectedStart = null;
                 selectedEnd = null;

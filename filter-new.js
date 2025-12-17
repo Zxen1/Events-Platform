@@ -223,10 +223,37 @@ const FilterModule = (function() {
         if (resetCategoriesBtn) {
             resetCategoriesBtn.addEventListener('click', function() {
                 if (!resetCategoriesBtn.disabled) {
+                    resetAllCategories();
                     App.emit('filter:resetCategories');
                 }
             });
         }
+    }
+    
+    function resetAllCategories() {
+        var container = panelEl.querySelector('.filter-categoryfilter-container');
+        if (!container) return;
+        
+        // Turn on all header toggles
+        var headerToggles = container.querySelectorAll('.filter-categoryfilter-accordion-header-toggle');
+        headerToggles.forEach(function(toggle) {
+            toggle.classList.add('on');
+        });
+        
+        // Turn on all option toggles
+        var optionToggles = container.querySelectorAll('.filter-categoryfilter-accordion-option-toggle');
+        optionToggles.forEach(function(toggle) {
+            toggle.classList.add('on');
+        });
+        
+        // Remove disabled state from all accordions
+        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
+        accordions.forEach(function(accordion) {
+            accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+        });
+        
+        applyFilters();
+        setResetCategoriesActive(false);
     }
     
     function setResetFiltersActive(active) {
@@ -239,6 +266,34 @@ const FilterModule = (function() {
         if (resetCategoriesBtn) {
             resetCategoriesBtn.disabled = !active;
         }
+    }
+    
+    function updateResetCategoriesButton() {
+        // Check if any category or subcategory toggle is OFF
+        var container = panelEl.querySelector('.filter-categoryfilter-container');
+        if (!container) return;
+        
+        // Check header toggles (categories)
+        var headerToggles = container.querySelectorAll('.filter-categoryfilter-accordion-header-toggle');
+        var anyOff = false;
+        
+        headerToggles.forEach(function(toggle) {
+            if (!toggle.classList.contains('on')) {
+                anyOff = true;
+            }
+        });
+        
+        // Check option toggles (subcategories)
+        if (!anyOff) {
+            var optionToggles = container.querySelectorAll('.filter-categoryfilter-accordion-option-toggle');
+            optionToggles.forEach(function(toggle) {
+                if (!toggle.classList.contains('on')) {
+                    anyOff = true;
+                }
+            });
+        }
+        
+        setResetCategoriesActive(anyOff);
     }
 
 
@@ -366,16 +421,26 @@ const FilterModule = (function() {
             });
         }
         
-        // Price
+        // Price - numbers only
         priceMinInput = container.querySelector('.filter-price-min');
         priceMaxInput = container.querySelector('.filter-price-max');
         priceClear = container.querySelector('.filter-price-clear');
         
         [priceMinInput, priceMaxInput].forEach(function(input) {
             if (!input) return;
+            
+            // Only allow numbers
             input.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
                 applyFilters();
                 updateClearButtons();
+            });
+            
+            // Prevent non-numeric keys
+            input.addEventListener('keypress', function(e) {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
             });
         });
         
@@ -638,6 +703,7 @@ const FilterModule = (function() {
                         option.addEventListener('click', function() {
                             optToggle.classList.toggle('on');
                             applyFilters();
+                            updateResetCategoriesButton();
                         });
                         
                         body.appendChild(option);
@@ -657,6 +723,7 @@ const FilterModule = (function() {
                             accordion.classList.remove('filter-categoryfilter-accordion--open');
                         }
                         applyFilters();
+                        updateResetCategoriesButton();
                     });
                     
                     // Click anywhere except toggle area expands/collapses
