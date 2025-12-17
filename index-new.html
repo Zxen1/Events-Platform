@@ -62,7 +62,7 @@
       <span class="header-access-button-icon header-access-button-icon--member"></span>
       <img class="header-access-button-avatar header-access-button-avatar--hidden" src="" alt="">
     </button>
-    <button class="header-access-button" type="button" data-panel="admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel">
+    <button class="header-access-button header-access-button--hidden" type="button" data-panel="admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel" aria-hidden="true">
       <span class="header-access-button-icon header-access-button-icon--admin"></span>
     </button>
     <button class="header-access-button fullscreen-btn" type="button" data-action="fullscreen" aria-label="Toggle fullscreen">
@@ -191,11 +191,124 @@
        SECTION 6: MEMBER PANEL
        File: member.js, member.css
        ======================================================================== -->
-  <aside class="member-panel">
-    <!-- Profile tab -->
-    <!-- Create Post tab -->
-    <!-- My Posts tab -->
+  <aside id="member-panel" class="member-panel" role="dialog" aria-hidden="true">
+    <div class="member-panel-content member-panel-content--side-right member-panel-content--hidden">
+      
+      <!-- Panel Header -->
+      <div class="member-panel-header">
+        <div class="member-panel-header-top">
+          <h2 class="member-panel-header-title">Members</h2>
+          <div class="member-panel-actions">
+            <button type="button" class="member-panel-actions-icon-btn member-panel-actions-icon-btn--close" aria-label="Close Panel">
+              <span class="member-panel-actions-icon-btn-icon member-panel-actions-icon-btn-icon--close" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Tab Bar -->
+        <div class="member-tab-bar" role="tablist" aria-label="Member sections">
+          <button type="button" id="member-tab-profile-btn" class="member-tab-bar-button member-tab-bar-button--selected" data-tab="profile" role="tab" aria-selected="true" aria-controls="member-tab-profile">Profile</button>
+          <button type="button" id="member-tab-create-btn" class="member-tab-bar-button" data-tab="create" role="tab" aria-selected="false" aria-controls="member-tab-create">Create Post</button>
+          <button type="button" id="member-tab-myposts-btn" class="member-tab-bar-button" data-tab="myposts" role="tab" aria-selected="false" aria-controls="member-tab-myposts">My Posts</button>
+        </div>
+      </div>
+      
+      <!-- Panel Body -->
+      <div class="member-panel-body">
+        
+        <!-- ================================================================
+             PROFILE TAB
+             ================================================================ -->
+        <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
+          
+          <form class="member-auth" data-state="logged-out" autocomplete="off">
+            
+            <!-- Login/Register Subtabs -->
+            <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
+              <button type="button" class="member-auth-tab member-auth-tab--selected" data-target="login" role="tab" aria-selected="true" aria-controls="member-auth-login">Login</button>
+              <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="member-auth-register">Register</button>
+            </div>
+            
+            <!-- Login Panel -->
+            <section id="member-auth-login" class="member-auth-panel" role="tabpanel">
+              <label class="member-auth-panel-label" for="member-login-email">Email</label>
+              <input type="email" id="member-login-email" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
+              <label class="member-auth-panel-label" for="member-login-password">Password</label>
+              <input type="password" id="member-login-password" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
+              <button type="submit" class="member-button-auth member-auth-submit" data-action="login">Log In</button>
+            </section>
+            
+            <!-- Register Panel -->
+            <section id="member-auth-register" class="member-auth-panel member-auth-panel--hidden" role="tabpanel" hidden>
+              <label class="member-auth-panel-label" for="member-register-name">Display Name</label>
+              <input type="text" id="member-register-name" class="member-auth-panel-input" name="registerName" autocomplete="name">
+              <label class="member-auth-panel-label" for="member-register-email">Email</label>
+              <input type="email" id="member-register-email" class="member-auth-panel-input" name="registerEmail" autocomplete="email">
+              <label class="member-auth-panel-label" for="member-register-password">Password</label>
+              <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
+              <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
+              <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
+              <label class="member-auth-panel-label" for="member-register-avatar">Avatar URL</label>
+              <input type="url" id="member-register-avatar" class="member-auth-panel-input" name="registerAvatar" placeholder="https://example.com/avatar.jpg">
+              <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
+            </section>
+            
+            <!-- Profile Panel (shown when logged in) -->
+            <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
+              <div class="member-profile">
+                <img id="member-profile-avatar" class="member-profile-avatar" src="" alt="">
+                <div class="member-profile-details">
+                  <p id="member-profile-name" class="member-profile-name"></p>
+                  <p id="member-profile-email" class="member-profile-email"></p>
+                </div>
+              </div>
+              <div class="member-profile-actions">
+                <button type="button" class="member-button-auth member-profile-actions-btn" id="member-logout-btn">Log Out</button>
+              </div>
+            </section>
+            
+          </form>
+          
+        </section>
+        
+        <!-- ================================================================
+             CREATE POST TAB
+             ================================================================ -->
+        <section id="member-tab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-create-btn" hidden>
+          <p class="member-create-intro">Choose a category and subcategory to load the matching post form.</p>
+          <div class="member-formpicker-container">
+            <div class="member-formpicker-cats" id="member-formpicker-cats" aria-label="Categories"></div>
+          </div>
+          <div id="member-create-form-wrapper" class="member-form-container" hidden>
+            <div id="member-create-fields" class="member-create-fields" role="group" aria-live="polite"></div>
+            <div class="member-create-actions" id="member-create-actions" hidden>
+              <button type="submit" id="member-create-post-btn" class="member-button-auth" hidden disabled>Post Listing</button>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================================================================
+             MY POSTS TAB
+             ================================================================ -->
+        <section id="member-tab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-myposts-btn" hidden>
+          <!-- Content loaded when logged in -->
+        </section>
+        
+      </div>
+    </div>
   </aside>
+  
+  <!-- Unsaved Changes Prompt -->
+  <div class="member-unsaved-prompt" id="member-unsaved-prompt" aria-hidden="true">
+    <div class="member-unsaved-dialog">
+      <p>You have unsaved changes. What would you like to do?</p>
+      <div class="member-unsaved-actions">
+        <button type="button" class="member-button-auth" data-action="cancel">Cancel</button>
+        <button type="button" class="member-button-auth" data-action="discard">Discard</button>
+        <button type="button" class="member-button-auth" data-action="save">Save</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================================
        SECTION 7: MARQUEE

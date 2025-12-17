@@ -6,12 +6,13 @@
    
    CURRENTLY IMPLEMENTED:
    - Filter button (opens/closes filter panel, shows active filter count)
+   - Member button (opens/closes member panel)
+   - Admin button (hidden until admin logged in)
    - Fullscreen button (toggles fullscreen mode)
    
    NOT YET IMPLEMENTED (dependencies needed):
    - Logo button (needs admin settings)
    - Mode switch (needs post module)
-   - Member/Admin buttons (need their panels)
    
    ============================================================================ */
 
@@ -23,7 +24,10 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     var filterPanelOpen = false;
+    var memberPanelOpen = false;
     var filterBtn = null;
+    var memberBtn = null;
+    var adminBtn = null;
     var fullscreenBtn = null;
 
 
@@ -35,6 +39,8 @@ const HeaderModule = (function() {
         console.log('[Header] Initializing header module...');
         
         initFilterButton();
+        initMemberButton();
+        initAdminButton();
         initFullscreenButton();
         
         console.log('[Header] Header module initialized');
@@ -103,6 +109,78 @@ const HeaderModule = (function() {
             if (counter) counter.remove();
             filterBtn.classList.remove('header-filter-button--active');
         }
+    }
+
+
+    /* --------------------------------------------------------------------------
+       MEMBER BUTTON
+       -------------------------------------------------------------------------- */
+    
+    function initMemberButton() {
+        memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
+        if (!memberBtn) return;
+        
+        memberBtn.addEventListener('click', function() {
+            memberPanelOpen = !memberPanelOpen;
+            
+            // Update aria state
+            memberBtn.setAttribute('aria-expanded', memberPanelOpen ? 'true' : 'false');
+            
+            // Emit event to member module
+            App.emit('panel:toggle', {
+                panel: 'member',
+                show: memberPanelOpen
+            });
+        });
+        
+        // Listen for member panel close events
+        App.on('member:closed', function() {
+            memberPanelOpen = false;
+            if (memberBtn) {
+                memberBtn.setAttribute('aria-expanded', 'false');
+                memberBtn.classList.remove('header-access-button--active');
+            }
+        });
+        
+        App.on('member:opened', function() {
+            memberPanelOpen = true;
+            if (memberBtn) {
+                memberBtn.setAttribute('aria-expanded', 'true');
+                memberBtn.classList.add('header-access-button--active');
+            }
+        });
+    }
+
+
+    /* --------------------------------------------------------------------------
+       ADMIN BUTTON
+       -------------------------------------------------------------------------- */
+    
+    function initAdminButton() {
+        adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
+        if (!adminBtn) return;
+        
+        // Listen for member state changes to show/hide admin button
+        App.on('member:stateChanged', function(data) {
+            var user = data && data.user;
+            if (user && user.isAdmin === true) {
+                showAdminButton();
+            } else {
+                hideAdminButton();
+            }
+        });
+    }
+    
+    function showAdminButton() {
+        if (!adminBtn) return;
+        adminBtn.classList.remove('header-access-button--hidden');
+        adminBtn.setAttribute('aria-hidden', 'false');
+    }
+    
+    function hideAdminButton() {
+        if (!adminBtn) return;
+        adminBtn.classList.add('header-access-button--hidden');
+        adminBtn.setAttribute('aria-hidden', 'true');
     }
 
 
