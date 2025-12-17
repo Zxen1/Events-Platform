@@ -166,13 +166,15 @@ const HeaderModule = (function() {
         // Listen for member state changes to show/hide admin button
         App.on('member:stateChanged', function(data) {
             var user = data && data.user;
+            console.log('[Header] member:stateChanged received, user:', user, 'isAdmin:', user && user.isAdmin);
             if (user && user.isAdmin === true) {
+                console.log('[Header] Showing admin button');
                 showAdminButton();
             } else {
+                console.log('[Header] Hiding admin button');
                 hideAdminButton();
             }
         });
-        
     }
     
     function showAdminButton() {

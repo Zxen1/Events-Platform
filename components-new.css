@@ -260,6 +260,8 @@
     cursor: pointer;
     color: #fff;
     font-size: 13px;
+    background: transparent;
+    border: none;
 }
 
 .fieldset-menu-option-image {
@@ -274,6 +276,7 @@
     text-align: left;
     padding-left: 10px;
     font-size: 13px;
+    color: #fff;
 }
 
 /* Appearance - Select */

@@ -248,7 +248,7 @@ const MemberModule = (function() {
 
     /* --------------------------------------------------------------------------
        FORMPICKER (Category/Subcategory selection)
-       Copied from forms.js, using fieldset-menu classes from components-new.css
+       Copied from forms.js, using member-formpicker-menu classes from member-new.css
        -------------------------------------------------------------------------- */
     
     var formpickerLoaded = false;
@@ -325,15 +325,15 @@ const MemberModule = (function() {
         subcategoryLabel.textContent = 'Subcategory';
         
         var subcategoryMenu = document.createElement('div');
-        subcategoryMenu.className = 'fieldset-menu';
+        subcategoryMenu.className = 'member-formpicker-menu';
         
         var subcategoryBtn = document.createElement('button');
         subcategoryBtn.type = 'button';
-        subcategoryBtn.className = 'fieldset-menu-button';
-        subcategoryBtn.innerHTML = '<span class="fieldset-menu-button-text">Select a subcategory</span><span class="fieldset-menu-button-arrow">▼</span>';
+        subcategoryBtn.className = 'member-formpicker-menu-button';
+        subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow">▼</span>';
         
         var subcategoryOpts = document.createElement('div');
-        subcategoryOpts.className = 'fieldset-menu-options';
+        subcategoryOpts.className = 'member-formpicker-menu-options';
         
         subcategoryMenu.appendChild(subcategoryBtn);
         subcategoryMenu.appendChild(subcategoryOpts);
@@ -349,15 +349,15 @@ const MemberModule = (function() {
         categoryLabel.textContent = 'Category';
         
         var categoryMenu = document.createElement('div');
-        categoryMenu.className = 'fieldset-menu';
+        categoryMenu.className = 'member-formpicker-menu';
         
         var categoryBtn = document.createElement('button');
         categoryBtn.type = 'button';
-        categoryBtn.className = 'fieldset-menu-button';
-        categoryBtn.innerHTML = '<span class="fieldset-menu-button-text">Select a category</span><span class="fieldset-menu-button-arrow">▼</span>';
+        categoryBtn.className = 'member-formpicker-menu-button';
+        categoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text">Select a category</span><span class="member-formpicker-menu-button-arrow">▼</span>';
         
         var categoryOpts = document.createElement('div');
-        categoryOpts.className = 'fieldset-menu-options';
+        categoryOpts.className = 'member-formpicker-menu-options';
         
         // Populate category options
         memberCategories.forEach(function(cat) {
@@ -365,21 +365,21 @@ const MemberModule = (function() {
             
             var optionBtn = document.createElement('button');
             optionBtn.type = 'button';
-            optionBtn.className = 'fieldset-menu-option';
+            optionBtn.className = 'member-formpicker-menu-option';
             
             // Get icon path - API returns paths keyed by category name directly
             var iconPath = categoryIconPaths[cat.name] || '';
             
             if (iconPath) {
                 var iconImg = document.createElement('img');
-                iconImg.className = 'fieldset-menu-option-image';
+                iconImg.className = 'member-formpicker-menu-option-image';
                 iconImg.src = iconPath;
                 iconImg.alt = '';
                 optionBtn.appendChild(iconImg);
             }
             
             var textSpan = document.createElement('span');
-            textSpan.className = 'fieldset-menu-option-text';
+            textSpan.className = 'member-formpicker-menu-option-text';
             textSpan.textContent = cat.name;
             optionBtn.appendChild(textSpan);
             optionBtn.dataset.value = cat.name;
@@ -392,17 +392,17 @@ const MemberModule = (function() {
                 categoryBtn.innerHTML = '';
                 if (iconPath) {
                     var btnIcon = document.createElement('img');
-                    btnIcon.className = 'fieldset-menu-button-image';
+                    btnIcon.className = 'member-formpicker-menu-button-image';
                     btnIcon.src = iconPath;
                     btnIcon.alt = '';
                     categoryBtn.appendChild(btnIcon);
                 }
                 var btnText = document.createElement('span');
-                btnText.className = 'fieldset-menu-button-text';
+                btnText.className = 'member-formpicker-menu-button-text';
                 btnText.textContent = cat.name;
                 categoryBtn.appendChild(btnText);
                 var btnArrow = document.createElement('span');
-                btnArrow.className = 'fieldset-menu-button-arrow';
+                btnArrow.className = 'member-formpicker-menu-button-arrow';
                 btnArrow.textContent = '▼';
                 categoryBtn.appendChild(btnArrow);
                 
@@ -416,21 +416,21 @@ const MemberModule = (function() {
                     cat.subs.forEach(function(subName) {
                         var subBtn = document.createElement('button');
                         subBtn.type = 'button';
-                        subBtn.className = 'fieldset-menu-option';
+                        subBtn.className = 'member-formpicker-menu-option';
                         
                         // Get icon path - API returns paths keyed by subcategory name directly
                         var subIconPath = subcategoryIconPaths[subName] || '';
                         
                         if (subIconPath) {
                             var subIconImg = document.createElement('img');
-                            subIconImg.className = 'fieldset-menu-option-image';
+                            subIconImg.className = 'member-formpicker-menu-option-image';
                             subIconImg.src = subIconPath;
                             subIconImg.alt = '';
                             subBtn.appendChild(subIconImg);
                         }
                         
                         var subTextSpan = document.createElement('span');
-                        subTextSpan.className = 'fieldset-menu-option-text';
+                        subTextSpan.className = 'member-formpicker-menu-option-text';
                         subTextSpan.textContent = subName;
                         subBtn.appendChild(subTextSpan);
                         subBtn.dataset.value = subName;
@@ -443,17 +443,17 @@ const MemberModule = (function() {
                             subcategoryBtn.innerHTML = '';
                             if (subIconPath) {
                                 var subBtnIcon = document.createElement('img');
-                                subBtnIcon.className = 'fieldset-menu-button-image';
+                                subBtnIcon.className = 'member-formpicker-menu-button-image';
                                 subBtnIcon.src = subIconPath;
                                 subBtnIcon.alt = '';
                                 subcategoryBtn.appendChild(subBtnIcon);
                             }
                             var subBtnText = document.createElement('span');
-                            subBtnText.className = 'fieldset-menu-button-text';
+                            subBtnText.className = 'member-formpicker-menu-button-text';
                             subBtnText.textContent = subName;
                             subcategoryBtn.appendChild(subBtnText);
                             var subBtnArrow = document.createElement('span');
-                            subBtnArrow.className = 'fieldset-menu-button-arrow';
+                            subBtnArrow.className = 'member-formpicker-menu-button-arrow';
                             subBtnArrow.textContent = '▼';
                             subcategoryBtn.appendChild(subBtnArrow);
                             
@@ -465,7 +465,7 @@ const MemberModule = (function() {
                         subcategoryOpts.appendChild(subBtn);
                     });
                     
-                    subcategoryBtn.innerHTML = '<span class="fieldset-menu-button-text">Select a subcategory</span><span class="fieldset-menu-button-arrow">▼</span>';
+                    subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow">▼</span>';
                     subcategoryWrapper.hidden = false;
                 } else {
                     subcategoryWrapper.hidden = true;
@@ -874,7 +874,9 @@ const MemberModule = (function() {
             
             // Build user object from response
             var payload = result.user || {};
+            console.log('[Member] Login payload:', payload);
             currentUser = buildUserObject(payload, username);
+            console.log('[Member] Built user object:', currentUser, 'isAdmin:', currentUser.isAdmin);
             
             storeCurrent(currentUser);
             render();
@@ -1201,6 +1203,7 @@ const MemberModule = (function() {
         App.setState('user', currentUser);
         App.setState('isAdmin', currentUser ? currentUser.isAdmin === true : false);
         
+        console.log('[Member] Emitting member:stateChanged, isAdmin:', currentUser ? currentUser.isAdmin : false);
         App.emit('member:stateChanged', { user: currentUser });
     }
 
