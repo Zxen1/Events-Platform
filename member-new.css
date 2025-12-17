@@ -378,44 +378,6 @@
    BUTTON STYLES
    ============================================================================ */
 
-.member-button-tab {
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  color: var(--button-text);
-  font-family: inherit;
-  font-size: 13px;
-  padding: 0 10px;
-  height: var(--control-h);
-  min-height: var(--control-h);
-  min-width: 35px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  cursor: pointer;
-  transition: background .2s, border-color .2s, color .2s, transform .05s;
-}
-
-.member-button-tab:hover {
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
-.member-button-tab:active {
-  background: var(--btn-active);
-  border-color: var(--btn-active);
-  color: var(--button-active-text);
-  transform: scale(0.97);
-}
-
-.member-button-tab--selected {
-  background: var(--button-selected-bg, var(--btn-selected));
-  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
-  color: var(--button-selected-text, var(--button-active-text));
-}
-
 .member-button-auth {
   background: var(--btn);
   border: 1px solid var(--btn);
@@ -576,6 +538,11 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.member-create-intro--error {
+  color: #ff6b6b;
 }
 
 .member-create-selects {
@@ -1129,138 +1096,10 @@
   cursor: default;
 }
 
-/* ============================================================================
-   MEMBER MENU (Standard dropdown menu - matches fieldset-menu pattern)
-   ============================================================================ */
-
-.member-menu {
-  position: relative;
-  width: 100%;
-}
-
-.member-menu-button {
-  width: 100%;
-  height: 36px;
+/* Formpicker dropdowns container */
+.member-formpicker-dropdowns {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #fff;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.member-menu-button:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.member-menu-button-image {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.member-menu-button-text {
-  flex: 1;
-  text-align: left;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.member-menu-button-arrow {
-  width: 16px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  flex-shrink: 0;
-  transition: transform 0.2s;
-}
-
-.member-menu-options {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  width: 100%;
-  box-sizing: border-box;
-  background: #222222;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  z-index: 66;
-  max-height: 200px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #888 transparent;
-}
-
-.member-menu-options::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
-}
-
-.member-menu-options::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.member-menu-option {
-  width: 100%;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px;
-  background: transparent;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.member-menu-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.member-menu-option--selected {
-  background: var(--dropdown-selected-bg, #3b82f5);
-}
-
-.member-menu-option-image {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.member-menu-option-text {
-  flex: 1;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Menu open state */
-.member-menu--open .member-menu-button {
-  border-color: var(--btn-selected, #3b82f5);
-  border-radius: 8px 8px 0 0;
-}
-
-.member-menu--open .member-menu-button-arrow {
-  transform: rotate(180deg);
-}
-
-.member-menu--open .member-menu-options {
-  display: block;
-  border-radius: 0 0 8px 8px;
-  top: 100%;
-  border-top: none;
-}

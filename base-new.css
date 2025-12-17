@@ -46,7 +46,7 @@
   --panel-area-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
   --media-h: 200px;
   --calendar-scale: 1;
-  --control-h: 35px;
+  --control-h: 36px;
   --geocoder-h: var(--control-h);
   --footer-h: 0px;
   --safe-top: env(safe-area-inset-top, 0px);

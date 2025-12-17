@@ -46,7 +46,6 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var currentUser = null;
-    var lastAction = 'login';
 
     // DOM references
     var panel = null;
@@ -148,23 +147,21 @@ const MemberModule = (function() {
             });
         }
         
-        // Form submission
-        if (authForm) {
-            authForm.addEventListener('submit', function(e) {
+        // Login button click
+        var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                var submitter = e.submitter || null;
-                if (!submitter) {
-                    var active = document.activeElement;
-                    if (active && authForm.contains(active)) {
-                        submitter = active;
-                    }
-                }
-                var action = submitter && submitter.dataset.action ? submitter.dataset.action : lastAction;
-                if (action === 'register') {
-                    handleRegister();
-                } else {
-                    handleLogin();
-                }
+                handleLogin();
+            });
+        }
+        
+        // Register button click
+        var registerBtn = panel.querySelector('.member-auth-submit[data-action="register"]');
+        if (registerBtn) {
+            registerBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleRegister();
             });
         }
         
@@ -251,12 +248,18 @@ const MemberModule = (function() {
 
     /* --------------------------------------------------------------------------
        FORMPICKER (Category/Subcategory selection)
+       Copied from forms.js, using fieldset-menu classes from components-new.css
        -------------------------------------------------------------------------- */
     
     var formpickerLoaded = false;
-    var categories = [];
-    var selectedCategory = null;
-    var selectedSubcategory = null;
+    var memberSnapshot = null;
+    var memberCategories = [];
+    var selectedCategory = '';
+    var selectedSubcategory = '';
+    var formWrapper = null;
+    var formFields = null;
+    var postButton = null;
+    var postActions = null;
     
     function loadFormpicker() {
         if (formpickerLoaded) return;
@@ -264,205 +267,301 @@ const MemberModule = (function() {
         var container = document.getElementById('member-formpicker-cats');
         if (!container) return;
         
-        // Show loading
-        container.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Loading categories...</p>';
+        formWrapper = document.getElementById('member-create-form-wrapper');
+        formFields = document.getElementById('member-create-fields');
+        postButton = document.getElementById('member-create-post-btn');
+        postActions = document.getElementById('member-create-actions');
         
-        // Fetch categories from database
-        App.api('get-categories').then(function(response) {
-            if (response && response.categories) {
-                categories = response.categories;
+        container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
+        
+        // Fetch form snapshot from database (same as forms.js)
+        App.api('get-form').then(function(response) {
+            if (response && response.success && response.snapshot) {
+                memberSnapshot = response.snapshot;
+                memberCategories = response.snapshot.categories || [];
                 renderFormpicker(container);
                 formpickerLoaded = true;
             } else {
-                container.innerHTML = '<p style="color: #ff6b6b;">Failed to load categories.</p>';
+                container.innerHTML = '<p class="member-create-intro member-create-intro--error">Failed to load categories.</p>';
             }
         }).catch(function(err) {
-            console.error('[Member] Failed to load categories:', err);
-            container.innerHTML = '<p style="color: #ff6b6b;">Failed to load categories.</p>';
+            console.error('[Member] Failed to load form data:', err);
+            container.innerHTML = '<p class="member-create-intro member-create-intro--error">Failed to load categories.</p>';
         });
     }
     
     function renderFormpicker(container) {
         container.innerHTML = '';
+        selectedCategory = '';
+        selectedSubcategory = '';
+        
+        if (formWrapper) formWrapper.hidden = true;
+        if (formFields) formFields.innerHTML = '';
+        if (postButton) { postButton.disabled = true; postButton.hidden = true; }
+        if (postActions) postActions.hidden = true;
+        
+        var categoryIconPaths = memberSnapshot.categoryIconPaths || {};
+        var subcategoryIconPaths = memberSnapshot.subcategoryIconPaths || {};
+        
+        // Container for dropdowns
+        var dropdownsContainer = document.createElement('div');
+        dropdownsContainer.className = 'member-formpicker-dropdowns';
+        
+        // Subcategory dropdown (created first, shown after category selection)
+        var subcategoryWrapper = document.createElement('div');
+        subcategoryWrapper.className = 'member-panel-field';
+        subcategoryWrapper.hidden = true;
+        
+        var subcategoryLabel = document.createElement('label');
+        subcategoryLabel.className = 'member-panel-field-label';
+        subcategoryLabel.textContent = 'Subcategory';
+        
+        var subcategoryMenu = document.createElement('div');
+        subcategoryMenu.className = 'fieldset-menu';
+        
+        var subcategoryBtn = document.createElement('button');
+        subcategoryBtn.type = 'button';
+        subcategoryBtn.className = 'fieldset-menu-button';
+        subcategoryBtn.innerHTML = '<span class="fieldset-menu-button-text">Select a subcategory</span><span class="fieldset-menu-button-arrow">▼</span>';
+        
+        var subcategoryOpts = document.createElement('div');
+        subcategoryOpts.className = 'fieldset-menu-options';
+        
+        subcategoryMenu.appendChild(subcategoryBtn);
+        subcategoryMenu.appendChild(subcategoryOpts);
+        subcategoryWrapper.appendChild(subcategoryLabel);
+        subcategoryWrapper.appendChild(subcategoryMenu);
         
         // Category dropdown
-        var catField = document.createElement('div');
-        catField.className = 'member-panel-field';
+        var categoryWrapper = document.createElement('div');
+        categoryWrapper.className = 'member-panel-field';
         
-        var catLabel = document.createElement('label');
-        catLabel.className = 'member-panel-field-label';
-        catLabel.textContent = 'Category';
-        catField.appendChild(catLabel);
+        var categoryLabel = document.createElement('label');
+        categoryLabel.className = 'member-panel-field-label';
+        categoryLabel.textContent = 'Category';
         
-        var catMenu = createMenu({
-            placeholder: 'Select a category...',
-            options: categories.map(function(cat) {
-                return {
-                    value: cat.category_key || cat.id,
-                    label: cat.category_name || cat.name,
-                    image: cat.icon_path ? 'assets/icons-30/' + cat.icon_path : null
-                };
-            }),
-            onSelect: function(value) {
-                selectedCategory = categories.find(function(c) {
-                    return (c.category_key || c.id) === value;
-                });
-                selectedSubcategory = null;
-                updateSubcategoryMenu();
-            }
-        });
-        catField.appendChild(catMenu);
-        container.appendChild(catField);
+        var categoryMenu = document.createElement('div');
+        categoryMenu.className = 'fieldset-menu';
         
-        // Subcategory dropdown (initially hidden)
-        var subField = document.createElement('div');
-        subField.className = 'member-panel-field';
-        subField.id = 'member-formpicker-sub-field';
-        subField.style.display = 'none';
+        var categoryBtn = document.createElement('button');
+        categoryBtn.type = 'button';
+        categoryBtn.className = 'fieldset-menu-button';
+        categoryBtn.innerHTML = '<span class="fieldset-menu-button-text">Select a category</span><span class="fieldset-menu-button-arrow">▼</span>';
         
-        var subLabel = document.createElement('label');
-        subLabel.className = 'member-panel-field-label';
-        subLabel.textContent = 'Subcategory';
-        subField.appendChild(subLabel);
+        var categoryOpts = document.createElement('div');
+        categoryOpts.className = 'fieldset-menu-options';
         
-        var subMenuContainer = document.createElement('div');
-        subMenuContainer.id = 'member-formpicker-sub-menu';
-        subField.appendChild(subMenuContainer);
-        container.appendChild(subField);
-    }
-    
-    function updateSubcategoryMenu() {
-        var subField = document.getElementById('member-formpicker-sub-field');
-        var subMenuContainer = document.getElementById('member-formpicker-sub-menu');
-        if (!subField || !subMenuContainer) return;
-        
-        if (!selectedCategory || !selectedCategory.subcategories || selectedCategory.subcategories.length === 0) {
-            subField.style.display = 'none';
-            return;
-        }
-        
-        subMenuContainer.innerHTML = '';
-        
-        var subMenu = createMenu({
-            placeholder: 'Select a subcategory...',
-            options: selectedCategory.subcategories.map(function(sub) {
-                return {
-                    value: sub.subcategory_key || sub.id,
-                    label: sub.subcategory_name || sub.name,
-                    image: sub.icon_path ? 'assets/icons-30/' + sub.icon_path : null
-                };
-            }),
-            onSelect: function(value) {
-                selectedSubcategory = selectedCategory.subcategories.find(function(s) {
-                    return (s.subcategory_key || s.id) === value;
-                });
-                loadSubcategoryForm();
-            }
-        });
-        
-        subMenuContainer.appendChild(subMenu);
-        subField.style.display = '';
-    }
-    
-    function loadSubcategoryForm() {
-        var formWrapper = document.getElementById('member-create-form-wrapper');
-        var fieldsContainer = document.getElementById('member-create-fields');
-        if (!formWrapper || !fieldsContainer) return;
-        
-        if (!selectedSubcategory) {
-            formWrapper.hidden = true;
-            return;
-        }
-        
-        // Show form wrapper
-        formWrapper.hidden = false;
-        fieldsContainer.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Loading form fields...</p>';
-        
-        // TODO: Load form fields from database using selectedSubcategory
-        // For now, show placeholder
-        fieldsContainer.innerHTML = '<p>Form for: ' + (selectedSubcategory.subcategory_name || selectedSubcategory.name) + '</p><p style="color: rgba(255,255,255,0.6);">(Form fields will be loaded here)</p>';
-    }
-    
-    function createMenu(options) {
-        var menu = document.createElement('div');
-        menu.className = 'member-menu';
-        
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'member-menu-button';
-        
-        var btnText = document.createElement('span');
-        btnText.className = 'member-menu-button-text';
-        btnText.textContent = options.placeholder || 'Select...';
-        
-        var btnArrow = document.createElement('span');
-        btnArrow.className = 'member-menu-button-arrow';
-        btnArrow.textContent = '▼';
-        
-        button.appendChild(btnText);
-        button.appendChild(btnArrow);
-        menu.appendChild(button);
-        
-        var optionsContainer = document.createElement('div');
-        optionsContainer.className = 'member-menu-options';
-        
-        options.options.forEach(function(opt) {
-            var option = document.createElement('button');
-            option.type = 'button';
-            option.className = 'member-menu-option';
-            option.dataset.value = opt.value;
+        // Populate category options
+        memberCategories.forEach(function(cat) {
+            if (!cat || typeof cat.name !== 'string') return;
             
-            if (opt.image) {
-                var img = document.createElement('img');
-                img.className = 'member-menu-option-image';
-                img.src = opt.image;
-                img.alt = '';
-                option.appendChild(img);
+            var optionBtn = document.createElement('button');
+            optionBtn.type = 'button';
+            optionBtn.className = 'fieldset-menu-option';
+            
+            var iconPath = '';
+            if (cat.id !== null && cat.id !== undefined) {
+                var idKey = 'id:' + cat.id;
+                if (categoryIconPaths[idKey]) iconPath = categoryIconPaths[idKey];
+            }
+            if (!iconPath && cat.name) {
+                var nameKey = 'name:' + cat.name.toLowerCase();
+                if (categoryIconPaths[nameKey]) iconPath = categoryIconPaths[nameKey];
             }
             
-            var text = document.createElement('span');
-            text.className = 'member-menu-option-text';
-            text.textContent = opt.label;
-            option.appendChild(text);
+            if (iconPath) {
+                var iconImg = document.createElement('img');
+                iconImg.className = 'fieldset-menu-option-image';
+                iconImg.src = iconPath;
+                iconImg.alt = '';
+                optionBtn.appendChild(iconImg);
+            }
             
-            option.addEventListener('click', function() {
-                // Update button text
-                btnText.textContent = opt.label;
+            var textSpan = document.createElement('span');
+            textSpan.className = 'fieldset-menu-option-text';
+            textSpan.textContent = cat.name;
+            optionBtn.appendChild(textSpan);
+            optionBtn.dataset.value = cat.name;
+            optionBtn.dataset.icon = iconPath;
+            
+            optionBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
                 
-                // Close menu
-                menu.classList.remove('member-menu--open');
-                
-                // Mark selected
-                optionsContainer.querySelectorAll('.member-menu-option').forEach(function(o) {
-                    o.classList.remove('member-menu-option--selected');
-                });
-                option.classList.add('member-menu-option--selected');
-                
-                // Callback
-                if (typeof options.onSelect === 'function') {
-                    options.onSelect(opt.value);
+                // Update button
+                categoryBtn.innerHTML = '';
+                if (iconPath) {
+                    var btnIcon = document.createElement('img');
+                    btnIcon.className = 'fieldset-menu-button-image';
+                    btnIcon.src = iconPath;
+                    btnIcon.alt = '';
+                    categoryBtn.appendChild(btnIcon);
                 }
+                var btnText = document.createElement('span');
+                btnText.className = 'fieldset-menu-button-text';
+                btnText.textContent = cat.name;
+                categoryBtn.appendChild(btnText);
+                var btnArrow = document.createElement('span');
+                btnArrow.className = 'fieldset-menu-button-arrow';
+                btnArrow.textContent = '▼';
+                categoryBtn.appendChild(btnArrow);
+                
+                categoryMenu.classList.remove('open');
+                selectedCategory = cat.name;
+                selectedSubcategory = '';
+                
+                // Populate subcategories
+                subcategoryOpts.innerHTML = '';
+                if (cat.subs && cat.subs.length > 0) {
+                    cat.subs.forEach(function(subName) {
+                        var subBtn = document.createElement('button');
+                        subBtn.type = 'button';
+                        subBtn.className = 'fieldset-menu-option';
+                        
+                        var subIconPath = '';
+                        var subId = cat.subIds && cat.subIds[subName] ? cat.subIds[subName] : null;
+                        if (subId !== null) {
+                            var subIdKey = 'id:' + subId;
+                            if (subcategoryIconPaths[subIdKey]) subIconPath = subcategoryIconPaths[subIdKey];
+                        }
+                        if (!subIconPath && subName) {
+                            var subNameKey = 'name:' + subName.toLowerCase();
+                            if (subcategoryIconPaths[subNameKey]) subIconPath = subcategoryIconPaths[subNameKey];
+                        }
+                        
+                        if (subIconPath) {
+                            var subIconImg = document.createElement('img');
+                            subIconImg.className = 'fieldset-menu-option-image';
+                            subIconImg.src = subIconPath;
+                            subIconImg.alt = '';
+                            subBtn.appendChild(subIconImg);
+                        }
+                        
+                        var subTextSpan = document.createElement('span');
+                        subTextSpan.className = 'fieldset-menu-option-text';
+                        subTextSpan.textContent = subName;
+                        subBtn.appendChild(subTextSpan);
+                        subBtn.dataset.value = subName;
+                        subBtn.dataset.icon = subIconPath;
+                        
+                        subBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            
+                            // Update subcategory button
+                            subcategoryBtn.innerHTML = '';
+                            if (subIconPath) {
+                                var subBtnIcon = document.createElement('img');
+                                subBtnIcon.className = 'fieldset-menu-button-image';
+                                subBtnIcon.src = subIconPath;
+                                subBtnIcon.alt = '';
+                                subcategoryBtn.appendChild(subBtnIcon);
+                            }
+                            var subBtnText = document.createElement('span');
+                            subBtnText.className = 'fieldset-menu-button-text';
+                            subBtnText.textContent = subName;
+                            subcategoryBtn.appendChild(subBtnText);
+                            var subBtnArrow = document.createElement('span');
+                            subBtnArrow.className = 'fieldset-menu-button-arrow';
+                            subBtnArrow.textContent = '▼';
+                            subcategoryBtn.appendChild(subBtnArrow);
+                            
+                            subcategoryMenu.classList.remove('open');
+                            selectedSubcategory = subName;
+                            renderConfiguredFields();
+                        });
+                        
+                        subcategoryOpts.appendChild(subBtn);
+                    });
+                    
+                    subcategoryBtn.innerHTML = '<span class="fieldset-menu-button-text">Select a subcategory</span><span class="fieldset-menu-button-arrow">▼</span>';
+                    subcategoryWrapper.hidden = false;
+                } else {
+                    subcategoryWrapper.hidden = true;
+                }
+                
+                renderConfiguredFields();
             });
             
-            optionsContainer.appendChild(option);
+            categoryOpts.appendChild(optionBtn);
         });
         
-        menu.appendChild(optionsContainer);
-        
-        // Toggle menu on button click
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            menu.classList.toggle('member-menu--open');
+        // Toggle category menu
+        categoryBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            subcategoryMenu.classList.remove('open');
+            categoryMenu.classList.toggle('open');
         });
         
-        // Close menu when clicking outside
+        // Toggle subcategory menu
+        subcategoryBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            categoryMenu.classList.remove('open');
+            subcategoryMenu.classList.toggle('open');
+        });
+        
+        // Close menus on outside click
         document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('member-menu--open');
-            }
+            if (!categoryMenu.contains(e.target)) categoryMenu.classList.remove('open');
+            if (!subcategoryMenu.contains(e.target)) subcategoryMenu.classList.remove('open');
         });
         
-        return menu;
+        categoryMenu.appendChild(categoryBtn);
+        categoryMenu.appendChild(categoryOpts);
+        categoryWrapper.appendChild(categoryLabel);
+        categoryWrapper.appendChild(categoryMenu);
+        
+        dropdownsContainer.appendChild(categoryWrapper);
+        dropdownsContainer.appendChild(subcategoryWrapper);
+        container.appendChild(dropdownsContainer);
+    }
+    
+    function renderConfiguredFields() {
+        if (!selectedCategory || !selectedSubcategory) {
+            if (formWrapper) formWrapper.hidden = true;
+            if (formFields) formFields.innerHTML = '';
+            if (postButton) { postButton.disabled = true; postButton.hidden = true; }
+            if (postActions) postActions.hidden = true;
+            return;
+        }
+        
+        // Get fields for this category/subcategory from snapshot
+        var fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
+        
+        if (formFields) formFields.innerHTML = '';
+        
+        if (fields.length === 0) {
+            var placeholder = document.createElement('p');
+            placeholder.className = 'member-create-intro';
+            placeholder.textContent = 'No fields configured for this subcategory yet.';
+            if (formFields) formFields.appendChild(placeholder);
+        } else {
+            // Render form using window.renderForm
+            window.renderForm({
+                formFields: formFields,
+                formId: 'memberCreate',
+                fields: fields,
+                categoryName: selectedCategory,
+                subcategoryName: selectedSubcategory,
+                fieldIdCounter: 0,
+                formLabel: 'Create Post',
+                isUserForm: true
+            });
+        }
+        
+        if (formWrapper) formWrapper.hidden = false;
+        if (postActions) postActions.hidden = false;
+        if (postButton) { postButton.hidden = false; postButton.disabled = false; }
+    }
+    
+    function getFieldsForSelection(categoryName, subcategoryName) {
+        if (!memberSnapshot || !memberCategories) return [];
+        
+        var category = memberCategories.find(function(c) {
+            return c.name === categoryName;
+        });
+        
+        if (!category || !category.subFields) return [];
+        
+        return category.subFields[subcategoryName] || [];
     }
 
     /* --------------------------------------------------------------------------
@@ -485,7 +584,6 @@ const MemberModule = (function() {
         setAuthPanelState(registerPanel, !isLogin, registerInputs);
         
         authForm.dataset.active = target;
-        lastAction = target;
         
         // Focus first field
         focusFirstField(isLogin ? loginPanel : registerPanel);
@@ -683,15 +781,19 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     function verifyLogin(username, password) {
-        var formData = new FormData();
-        formData.set('username', username);
-        formData.set('password', password);
-        
         return fetch('/gateway.php?action=verify-login', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password })
         }).then(function(response) {
-            return response.json();
+            return response.text();
+        }).then(function(text) {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('verifyLogin failed: invalid JSON response', text);
+                return { success: false };
+            }
         });
     }
 
@@ -848,8 +950,6 @@ const MemberModule = (function() {
             // Update header avatar
             updateHeaderAvatar(currentUser);
             
-            lastAction = 'login';
-            
         } else {
             // Logged out state
             authForm.dataset.state = 'logged-out';
@@ -911,7 +1011,7 @@ const MemberModule = (function() {
                 avatarImg.classList.remove('header-access-button-avatar--hidden');
             }
             if (iconSpan) {
-                iconSpan.style.display = 'none';
+                iconSpan.classList.add('header-access-button-icon--hidden');
             }
             memberBtn.classList.add('has-avatar');
         } else {
@@ -921,7 +1021,7 @@ const MemberModule = (function() {
                 avatarImg.classList.add('header-access-button-avatar--hidden');
             }
             if (iconSpan) {
-                iconSpan.style.display = '';
+                iconSpan.classList.remove('header-access-button-icon--hidden');
             }
             memberBtn.classList.remove('has-avatar');
         }
