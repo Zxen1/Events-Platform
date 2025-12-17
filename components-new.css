@@ -59,7 +59,7 @@
     gap: 16px;
 }
 
-.fieldset {
+.fieldset-container {
     width: 100%;
 }
 
@@ -892,17 +892,17 @@
     background: #aaa;
 }
 
-.calendar {
+.calendar-body {
     display: flex;
     width: max-content;
 }
 
-.month {
+.calendar-month {
     flex: 0 0 auto;
     width: 250px;
 }
 
-.month:not(:first-child) {
+.calendar-month:not(:first-child) {
     border-left: 1px solid #1a1a1a;
 }
 
@@ -915,13 +915,13 @@
     background: #2e3a72;
 }
 
-.grid {
+.calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
 }
 
-.weekday,
-.day {
+.calendar-weekday,
+.calendar-day {
     height: 34px;
     display: flex;
     align-items: center;
@@ -929,51 +929,51 @@
     font-size: 11px;
 }
 
-.weekday {
+.calendar-weekday {
     font-weight: bold;
 }
 
-.day {
+.calendar-day {
     cursor: pointer;
 }
 
-.day.empty {
+.calendar-day.empty {
     cursor: default;
     background: #222222;
 }
 
-.day.past {
+.calendar-day.past {
     background: #1a1a1a;
     color: #808080;
 }
 
-.day.future {
+.calendar-day.future {
     background: #222222;
 }
 
-.day.today {
+.calendar-day.today {
     color: #ff0000;
     font-weight: bold;
 }
 
-.day.selected {
+.calendar-day.selected {
     background: #2e3a72;
     color: #fff;
 }
 
-.day.selected.today {
+.calendar-day.selected.today {
     color: #ff0000;
 }
 
-.day.range-start {
+.calendar-day.range-start {
     border-radius: 4px 0 0 4px;
 }
 
-.day.range-end {
+.calendar-day.range-end {
     border-radius: 0 4px 4px 0;
 }
 
-.day.in-range {
+.calendar-day.in-range {
     background: rgba(46, 58, 114, 0.5);
     color: #fff;
 }
@@ -1303,7 +1303,7 @@
    Category icon picker component
    ============================================================================ */
 
-.iconpicker {
+.iconpicker-container {
     position: relative;
     display: inline-block;
 }
@@ -1422,7 +1422,7 @@
    System image picker component
    ============================================================================ */
 
-.systemimagepicker {
+.systemimagepicker-container {
     position: relative;
     display: inline-block;
 }
@@ -1600,9 +1600,6 @@
 }
 
 .map-control-row .geocoder-dropdown-item {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
     padding: 8px 12px;
     cursor: pointer;
 }
@@ -1620,6 +1617,7 @@
 .map-control-row .geocoder-dropdown-secondary {
     font-size: 12px;
     color: #70757a;
+    margin-top: 2px;
 }
 
 /* Clear button */

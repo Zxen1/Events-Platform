@@ -370,7 +370,7 @@ const CalendarComponent = (function(){
         scroll.className = 'calendar-scroll';
         
         var calendar = document.createElement('div');
-        calendar.className = 'calendar';
+        calendar.className = 'calendar-body';
         
         var marker = document.createElement('div');
         marker.className = 'today-marker';
@@ -379,7 +379,7 @@ const CalendarComponent = (function(){
         var monthIndex = 0;
         while(current <= maxDate) {
             var monthEl = document.createElement('div');
-            monthEl.className = 'month';
+            monthEl.className = 'calendar-month';
             
             var header = document.createElement('div');
             header.className = 'calendar-header';
@@ -387,11 +387,11 @@ const CalendarComponent = (function(){
             monthEl.appendChild(header);
             
             var grid = document.createElement('div');
-            grid.className = 'grid';
+            grid.className = 'calendar-grid';
             
             weekdays.forEach(function(wd) {
                 var w = document.createElement('div');
-                w.className = 'weekday';
+                w.className = 'calendar-weekday';
                 w.textContent = wd;
                 grid.appendChild(w);
             });
@@ -402,7 +402,7 @@ const CalendarComponent = (function(){
             
             for(var i = 0; i < 42; i++) {
                 var cell = document.createElement('div');
-                cell.className = 'day';
+                cell.className = 'calendar-day';
                 var dayNum = i - startDow + 1;
                 
                 if(i < startDow || dayNum > daysInMonth) {
@@ -511,7 +511,7 @@ const CalendarComponent = (function(){
         
         // Update visual selection state
         function updateSelection(calendarEl) {
-            var days = calendarEl.querySelectorAll('.day[data-iso]');
+            var days = calendarEl.querySelectorAll('.calendar-day[data-iso]');
             days.forEach(function(d) {
                 d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
                 var iso = d.dataset.iso;
@@ -912,7 +912,7 @@ const IconPickerComponent = (function(){
         var currentIcon = options.currentIcon || null;
         
         var picker = document.createElement('div');
-        picker.className = 'iconpicker';
+        picker.className = 'iconpicker-container';
         
         // Preview button
         var button = document.createElement('button');
@@ -1158,8 +1158,8 @@ const MapControlRowComponent = (function(){
                         var secondaryText = prediction.structured_formatting ? prediction.structured_formatting.secondary_text : '';
                         
                         item.innerHTML = 
-                            '<span class="geocoder-dropdown-main">' + mainText + '</span>' +
-                            (secondaryText ? '<span class="geocoder-dropdown-secondary">' + secondaryText + '</span>' : '');
+                            '<div class="geocoder-dropdown-main">' + mainText + '</div>' +
+                            (secondaryText ? '<div class="geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
                         
                         item.addEventListener('click', function() {
                             placesService.getDetails(
@@ -1366,7 +1366,7 @@ const SystemImagePickerComponent = (function(){
         var currentImage = options.currentImage || null;
         
         var picker = document.createElement('div');
-        picker.className = 'systemimagepicker';
+        picker.className = 'systemimagepicker-container';
         
         // Preview button
         var button = document.createElement('button');

@@ -560,13 +560,14 @@ const FilterModule = (function() {
         var calendarEl = calendarContainer.querySelector('.filter-calendar');
         if (!calendarEl) return;
         
-        // Show 37 months past when expired is on, otherwise just 1
+        // Match index.js: 12 months past when expired is on, 0 months past when off
+        // maxPickerDate is 2 years forward (24 months)
         var showExpired = expiredInput && expiredInput.checked;
-        var monthsPast = showExpired ? 37 : 1;
+        var monthsPast = showExpired ? 12 : 0;
         
         calendarInstance = CalendarComponent.create(calendarEl, {
             monthsPast: monthsPast,
-            monthsFuture: 12,
+            monthsFuture: 24,
             onSelect: function(start, end) {
                 setDateRange(start, end);
                 closeCalendar();
