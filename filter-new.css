@@ -329,6 +329,12 @@
   align-items: center;
   gap: 6px;
   flex: 1;
+  min-width: 0;
+}
+
+/* Price wrap needs tighter gap */
+.filter-price-input-wrap {
+  gap: 4px;
 }
 
 /* Input base */
@@ -364,6 +370,7 @@
 /* Price row specific */
 .filter-price-input {
   min-width: 0;
+  padding: 0 8px;
 }
 
 .filter-price-separator {
@@ -371,6 +378,11 @@
   font-size: 14px;
   font-weight: 600;
   flex-shrink: 0;
+}
+
+.filter-price-clear {
+  width: 32px;
+  height: 32px;
 }
 
 /* Clear buttons - uses ClearButtonComponent SVG icon */

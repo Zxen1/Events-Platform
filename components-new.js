@@ -1032,9 +1032,6 @@ const IconPickerComponent = (function(){
 const MapControlRowComponent = (function(){
     
     var instances = [];
-    var autocompleteService = null;
-    var placesService = null;
-    
     // Create the HTML structure for a map control row
     // options: { location, placeholder, onResult, map }
     function create(containerEl, options) {
@@ -1048,16 +1045,40 @@ const MapControlRowComponent = (function(){
         var row = document.createElement('div');
         row.className = 'map-control-row map-controls-' + location;
         
-        // Geocoder input
+        // Geocoder container
         var geocoderEl = document.createElement('div');
         geocoderEl.className = 'geocoder';
         
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'geocoder-input';
-        input.placeholder = placeholder;
-        input.autocomplete = 'off';
-        geocoderEl.appendChild(input);
+        var input = null;
+        var placeAutocomplete = null;
+        
+        // Use native PlaceAutocompleteElement for Google's dropdown
+        if (typeof google !== 'undefined' && google.maps && google.maps.places && google.maps.places.PlaceAutocompleteElement) {
+            placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+                componentRestrictions: { country: [] }
+            });
+            placeAutocomplete.placeholder = placeholder;
+            placeAutocomplete.className = 'geocoder-input geocoder-google';
+            
+            // Style via CSS custom properties
+            placeAutocomplete.style.setProperty('--gmpx-color-surface', '#ffffff');
+            placeAutocomplete.style.setProperty('--gmpx-color-on-surface', '#000000');
+            placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
+            placeAutocomplete.style.setProperty('--gmpx-color-primary', '#3b82f5');
+            placeAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
+            placeAutocomplete.style.setProperty('--gmpx-font-size-base', '14px');
+            
+            geocoderEl.appendChild(placeAutocomplete);
+            input = placeAutocomplete;
+        } else {
+            // Fallback to plain input if Google API not available
+            input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'geocoder-input';
+            input.placeholder = placeholder;
+            input.autocomplete = 'off';
+            geocoderEl.appendChild(input);
+        }
         
         var clearBtn = ClearButtonComponent.create({
             className: 'geocoder-clear',
@@ -1065,11 +1086,6 @@ const MapControlRowComponent = (function(){
         });
         clearBtn.style.display = 'none';
         geocoderEl.appendChild(clearBtn);
-        
-        var dropdown = document.createElement('div');
-        dropdown.className = 'geocoder-dropdown';
-        dropdown.style.display = 'none';
-        geocoderEl.appendChild(dropdown);
         
         row.appendChild(geocoderEl);
         
@@ -1095,61 +1111,96 @@ const MapControlRowComponent = (function(){
             row: row,
             input: input,
             clearBtn: clearBtn,
-            dropdown: dropdown,
             geolocateBtn: geolocateBtn,
             compassBtn: compassBtn,
-            map: map
+            map: map,
+            placeAutocomplete: placeAutocomplete
         };
         
-        // Initialize Google Places AutocompleteService (data only, no UI)
-        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-            if (!autocompleteService) {
-                autocompleteService = new google.maps.places.AutocompleteService();
-            }
-            if (!placesService) {
-                var div = document.createElement('div');
-                placesService = new google.maps.places.PlacesService(div);
-            }
+        // Handle place selection from native Google dropdown
+        if (placeAutocomplete) {
+            placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
+                var place = event.place;
+                if (!place) return;
+                
+                await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
+                
+                if (place.location) {
+                    var lat = place.location.lat();
+                    var lng = place.location.lng();
+                    
+                    clearBtn.style.display = 'flex';
+                    
+                    if (map) {
+                        map.flyTo({ center: [lng, lat], zoom: 14 });
+                    }
+                    
+                    onResult({
+                        center: [lng, lat],
+                        geometry: { type: 'Point', coordinates: [lng, lat] },
+                        place_name: place.formattedAddress || place.displayName,
+                        text: place.displayName
+                    });
+                }
+            });
+            
+            // Show/hide clear button based on input
+            placeAutocomplete.addEventListener('input', function() {
+                // PlaceAutocompleteElement doesn't expose value easily, 
+                // so we show clear button after any interaction
+                clearBtn.style.display = 'flex';
+            });
         }
         
-        // Input events
-        var debounceTimer = null;
-        input.addEventListener('input', function() {
-            clearBtn.style.display = input.value ? 'flex' : 'none';
-            
-            clearTimeout(debounceTimer);
-            if (input.value.length < 2) {
-                dropdown.style.display = 'none';
-                return;
-            }
-            
-            debounceTimer = setTimeout(function() {
-                fetchSuggestions(input.value, dropdown, function(place) {
-                    input.value = place.name;
-                    dropdown.style.display = 'none';
-                    clearBtn.style.display = 'flex';
-                    onResult({
-                        center: [place.lng, place.lat],
-                        geometry: { type: 'Point', coordinates: [place.lng, place.lat] },
-                        place_name: place.address,
-                        text: place.name
-                    });
-                });
-            }, 300);
-        });
-        
         clearBtn.addEventListener('click', function() {
-            input.value = '';
-            clearBtn.style.display = 'none';
-            dropdown.style.display = 'none';
-            input.focus();
-        });
-        
-        // Close dropdown on outside click
-        document.addEventListener('click', function(e) {
-            if (!geocoderEl.contains(e.target)) {
-                dropdown.style.display = 'none';
+            if (placeAutocomplete) {
+                // Clear the PlaceAutocompleteElement by replacing it
+                var newAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+                    componentRestrictions: { country: [] }
+                });
+                newAutocomplete.placeholder = placeholder;
+                newAutocomplete.className = 'geocoder-input geocoder-google';
+                newAutocomplete.style.setProperty('--gmpx-color-surface', '#ffffff');
+                newAutocomplete.style.setProperty('--gmpx-color-on-surface', '#000000');
+                newAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
+                newAutocomplete.style.setProperty('--gmpx-color-primary', '#3b82f5');
+                newAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
+                newAutocomplete.style.setProperty('--gmpx-font-size-base', '14px');
+                
+                geocoderEl.replaceChild(newAutocomplete, placeAutocomplete);
+                placeAutocomplete = newAutocomplete;
+                instance.placeAutocomplete = newAutocomplete;
+                instance.input = newAutocomplete;
+                
+                // Re-attach event listener
+                newAutocomplete.addEventListener('gmp-placeselect', async function(event) {
+                    var place = event.place;
+                    if (!place) return;
+                    
+                    await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
+                    
+                    if (place.location) {
+                        var lat = place.location.lat();
+                        var lng = place.location.lng();
+                        
+                        clearBtn.style.display = 'flex';
+                        
+                        if (map) {
+                            map.flyTo({ center: [lng, lat], zoom: 14 });
+                        }
+                        
+                        onResult({
+                            center: [lng, lat],
+                            geometry: { type: 'Point', coordinates: [lng, lat] },
+                            place_name: place.formattedAddress || place.displayName,
+                            text: place.displayName
+                        });
+                    }
+                });
+            } else if (input) {
+                input.value = '';
             }
+            clearBtn.style.display = 'none';
         });
         
         // Geolocate button
@@ -1207,53 +1258,6 @@ const MapControlRowComponent = (function(){
         
         instances.push(instance);
         return instance;
-    }
-    
-    // Fetch suggestions from Google Places
-    function fetchSuggestions(query, dropdown, onSelect) {
-        if (!autocompleteService) {
-            console.warn('[Geocoder] AutocompleteService not available');
-            return;
-        }
-        
-        autocompleteService.getPlacePredictions(
-            { input: query },
-            function(predictions, status) {
-                dropdown.innerHTML = '';
-                
-                if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
-                    dropdown.style.display = 'none';
-                    return;
-                }
-                
-                predictions.forEach(function(prediction) {
-                    var item = document.createElement('div');
-                    item.className = 'geocoder-dropdown-item';
-                    item.textContent = prediction.description;
-                    
-                    item.addEventListener('click', function() {
-                        // Get place details for coordinates
-                        placesService.getDetails(
-                            { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
-                            function(place, detailStatus) {
-                                if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
-                                    onSelect({
-                                        name: place.name || prediction.description,
-                                        address: place.formatted_address || prediction.description,
-                                        lat: place.geometry.location.lat(),
-                                        lng: place.geometry.location.lng()
-                                    });
-                                }
-                            }
-                        );
-                    });
-                    
-                    dropdown.appendChild(item);
-                });
-                
-                dropdown.style.display = 'block';
-            }
-        );
     }
     
     function destroyAll() {

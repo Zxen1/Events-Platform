@@ -1546,7 +1546,7 @@
     max-width: 100%;
 }
 
-/* Geocoder input */
+/* Geocoder input - plain input fallback */
 .map-control-row .geocoder-input {
     width: 100%;
     height: 36px;
@@ -1567,6 +1567,21 @@
 
 .map-control-row .geocoder-input::placeholder {
     color: #888888;
+}
+
+/* Google PlaceAutocompleteElement - uses native Google dropdown */
+.map-control-row .geocoder-google {
+    width: 100%;
+    height: 36px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    background-color: #ffffff;
+    --gmpx-color-surface: #ffffff;
+    --gmpx-color-on-surface: #000000;
+    --gmpx-color-on-surface-variant: #888888;
+    --gmpx-color-primary: #3b82f5;
+    --gmpx-font-family-base: inherit;
+    --gmpx-font-size-base: 14px;
 }
 
 /* Clear button */
@@ -1592,41 +1607,6 @@
 .map-control-row .geocoder-clear:hover {
     background-color: rgba(0,0,0,0.05);
     color: #000000;
-}
-
-/* Dropdown */
-.map-control-row .geocoder-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 4px;
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.15);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1000;
-}
-
-.map-control-row .geocoder-dropdown-item {
-    padding: 10px 12px;
-    font-size: 14px;
-    color: #000000;
-    cursor: pointer;
-}
-
-.map-control-row .geocoder-dropdown-item:hover {
-    background-color: #f0f0f0;
-}
-
-.map-control-row .geocoder-dropdown-item:first-child {
-    border-radius: 8px 8px 0 0;
-}
-
-.map-control-row .geocoder-dropdown-item:last-child {
-    border-radius: 0 0 8px 8px;
 }
 
 /* Geolocate and Compass buttons */
