@@ -1108,6 +1108,8 @@ const MapControlRowComponent = (function(){
         var placeholder = options.placeholder || 'Search venues or places';
         var onResult = options.onResult || function() {};
         var map = options.map || null;
+        var includeGeolocate = options.includeGeolocate !== false;
+        var includeCompass = options.includeCompass !== false;
         
         // Build class prefix based on variant
         var prefix = variant + '-mapcontrol';
@@ -1143,21 +1145,27 @@ const MapControlRowComponent = (function(){
         
         row.appendChild(geocoderEl);
         
-        // Geolocate button
-        var geolocateBtn = document.createElement('button');
-        geolocateBtn.type = 'button';
-        geolocateBtn.className = prefix + '-geolocate';
-        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
-        geolocateBtn.title = 'Find my location';
-        row.appendChild(geolocateBtn);
+        // Geolocate button (optional)
+        var geolocateBtn = null;
+        if (includeGeolocate) {
+            geolocateBtn = document.createElement('button');
+            geolocateBtn.type = 'button';
+            geolocateBtn.className = prefix + '-geolocate';
+            geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+            geolocateBtn.title = 'Find my location';
+            row.appendChild(geolocateBtn);
+        }
         
-        // Compass button
-        var compassBtn = document.createElement('button');
-        compassBtn.type = 'button';
-        compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
-        compassBtn.title = 'Reset north';
-        row.appendChild(compassBtn);
+        // Compass button (optional)
+        var compassBtn = null;
+        if (includeCompass) {
+            compassBtn = document.createElement('button');
+            compassBtn.type = 'button';
+            compassBtn.className = prefix + '-compass';
+            compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
+            compassBtn.title = 'Reset north';
+            row.appendChild(compassBtn);
+        }
         
         containerEl.appendChild(row);
         
@@ -1276,57 +1284,62 @@ const MapControlRowComponent = (function(){
             }
         });
         
-        // Geolocate button
-        geolocateBtn.addEventListener('click', function() {
-            if (!navigator.geolocation) {
-                console.warn('[Geolocate] Geolocation not supported');
-                return;
-            }
-            
-            geolocateBtn.classList.add('loading');
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    geolocateBtn.classList.remove('loading');
-                    var lat = pos.coords.latitude;
-                    var lng = pos.coords.longitude;
-                    
-                    if (map) {
-                        map.flyTo({ center: [lng, lat], zoom: 14 });
-                    }
-                    
-                    onResult({
-                        center: [lng, lat],
-                        geometry: { type: 'Point', coordinates: [lng, lat] },
-                        isGeolocate: true
-                    });
-                },
-                function(err) {
-                    geolocateBtn.classList.remove('loading');
-                    console.error('[Geolocate] Error:', err.message);
-                },
-                { enableHighAccuracy: false, timeout: 10000 }
-            );
-        });
-        
-        // Compass button - reset bearing on click
-        compassBtn.addEventListener('click', function() {
-            if (map) {
-                map.easeTo({ bearing: 0, pitch: 0, duration: 300 });
-            }
-        });
-        
-        // Sync compass rotation with map bearing
-        if (map) {
-            var compassIcon = compassBtn.querySelector('svg');
-            function updateCompass() {
-                if (compassIcon) {
-                    var bearing = map.getBearing();
-                    compassIcon.style.transform = 'rotate(' + (-bearing) + 'deg)';
+        // Geolocate button (if included)
+        if (geolocateBtn) {
+            geolocateBtn.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    console.warn('[Geolocate] Geolocation not supported');
+                    return;
                 }
+                
+                geolocateBtn.classList.add('loading');
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        geolocateBtn.classList.remove('loading');
+                        var lat = pos.coords.latitude;
+                        var lng = pos.coords.longitude;
+                        
+                        if (map) {
+                            map.flyTo({ center: [lng, lat], zoom: 14 });
+                        }
+                        
+                        onResult({
+                            center: [lng, lat],
+                            geometry: { type: 'Point', coordinates: [lng, lat] },
+                            isGeolocate: true
+                        });
+                    },
+                    function(err) {
+                        geolocateBtn.classList.remove('loading');
+                        console.error('[Geolocate] Error:', err.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+        
+        // Compass button (if included)
+        if (compassBtn) {
+            // Reset bearing on click
+            compassBtn.addEventListener('click', function() {
+                if (map) {
+                    map.easeTo({ bearing: 0, pitch: 0, duration: 300 });
+                }
+            });
+            
+            // Sync compass rotation with map bearing
+            if (map) {
+                var compassIcon = compassBtn.querySelector('svg');
+                function updateCompass() {
+                    if (compassIcon) {
+                        var bearing = map.getBearing();
+                        compassIcon.style.transform = 'rotate(' + (-bearing) + 'deg)';
+                    }
+                }
+                map.on('rotate', updateCompass);
+                map.on('load', updateCompass);
+                updateCompass();
             }
-            map.on('rotate', updateCompass);
-            map.on('load', updateCompass);
-            updateCompass();
         }
         
         instances.push(instance);

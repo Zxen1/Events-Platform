@@ -295,16 +295,42 @@ const MapModule = (function() {
       return;
     }
 
-    // Map area controls (Google Places + Mapbox geolocate/compass)
+    // Add Mapbox GeolocateControl (blue spinning button)
+    const geolocateControl = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: false,
+      showUserHeading: false,
+      showUserLocation: true
+    });
+    map.addControl(geolocateControl, 'top-left');
+    
+    // Stop spin when geolocate is triggered
+    geolocateControl.on('geolocate', function() {
+      stopSpin();
+    });
+
+    // Add Mapbox NavigationControl (compass + zoom buttons)
+    const navigationControl = new mapboxgl.NavigationControl({
+      showCompass: true,
+      showZoom: true,
+      visualizePitch: true
+    });
+    map.addControl(navigationControl, 'top-left');
+
+    // Map area geocoder (Google Places - keep custom implementation)
     const mapControlsContainer = document.querySelector('.map-controls');
     if (mapControlsContainer) {
       mapControls = MapControlRowComponent.create(mapControlsContainer, {
-        location: 'map',
+        variant: 'map',
         placeholder: 'Search venues or places',
         map: map,
         onResult: function(result) {
           handleGeocoderResult(result, 'map');
-        }
+        },
+        includeGeolocate: false,
+        includeCompass: false
       });
       
       geocoders.map = mapControls.geocoder;
