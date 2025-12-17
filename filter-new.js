@@ -459,21 +459,7 @@ const FilterModule = (function() {
         calendarContainer = container.querySelector('.filter-calendar-container');
         
         // Initialize calendar component
-        if (calendarContainer && typeof CalendarComponent !== 'undefined') {
-            var calendarEl = calendarContainer.querySelector('.filter-calendar');
-            if (calendarEl) {
-                calendarInstance = CalendarComponent.create(calendarEl, {
-                    monthsPast: 1,
-                    monthsFuture: 12,
-                    onSelect: function(start, end) {
-                        setDateRange(start, end);
-                        closeCalendar();
-                        applyFilters();
-                        updateClearButtons();
-                    }
-                });
-            }
-        }
+        buildCalendar();
         
         if (daterangeInput) {
             daterangeInput.addEventListener('click', function() {
@@ -508,7 +494,10 @@ const FilterModule = (function() {
         
         if (expiredInput) {
             expiredInput.addEventListener('change', function() {
+                // Rebuild calendar with extended date range when showing expired
+                rebuildCalendar();
                 applyFilters();
+                updateClearButtons();
             });
         }
         
@@ -563,6 +552,39 @@ const FilterModule = (function() {
             favourites: favouritesOn,
             sort: currentSort
         };
+    }
+    
+    function buildCalendar() {
+        if (!calendarContainer || typeof CalendarComponent === 'undefined') return;
+        
+        var calendarEl = calendarContainer.querySelector('.filter-calendar');
+        if (!calendarEl) return;
+        
+        // Show 37 months past when expired is on, otherwise just 1
+        var showExpired = expiredInput && expiredInput.checked;
+        var monthsPast = showExpired ? 37 : 1;
+        
+        calendarInstance = CalendarComponent.create(calendarEl, {
+            monthsPast: monthsPast,
+            monthsFuture: 12,
+            onSelect: function(start, end) {
+                setDateRange(start, end);
+                closeCalendar();
+                applyFilters();
+                updateClearButtons();
+            }
+        });
+    }
+    
+    function rebuildCalendar() {
+        if (!calendarContainer) return;
+        
+        var calendarEl = calendarContainer.querySelector('.filter-calendar');
+        if (calendarEl) {
+            calendarEl.innerHTML = '';
+        }
+        
+        buildCalendar();
     }
     
     function toggleCalendar() {
@@ -631,6 +653,7 @@ const FilterModule = (function() {
         if (priceMinInput) priceMinInput.value = '';
         if (priceMaxInput) priceMaxInput.value = '';
         if (expiredInput) expiredInput.checked = false;
+        rebuildCalendar();
         clearDateRange();
         clearGeocoder();
         updateClearButtons();

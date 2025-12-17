@@ -424,27 +424,27 @@
   gap: 8px;
 }
 
-.filter-expired-text {
+.filter-expired-label {
   color: #fff;
   font-size: 14px;
 }
 
-/* Switch toggle */
-.filter-switch {
+.filter-expired-switch {
   position: relative;
   display: inline-block;
   width: 50px;
   height: 26px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
-.filter-switch input {
+.filter-expired-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.filter-switch-slider {
+.filter-expired-slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -457,7 +457,7 @@
   transition: background 0.2s, border-color 0.2s;
 }
 
-.filter-switch-slider::before {
+.filter-expired-slider::before {
   position: absolute;
   content: "";
   height: 20px;
@@ -469,12 +469,12 @@
   transition: transform 0.2s;
 }
 
-.filter-switch input:checked + .filter-switch-slider {
+.filter-expired-input:checked + .filter-expired-slider {
   background: #3b82f6;
   border-color: #3b82f6;
 }
 
-.filter-switch input:checked + .filter-switch-slider::before {
+.filter-expired-input:checked + .filter-expired-slider::before {
   transform: translateX(24px);
 }
 

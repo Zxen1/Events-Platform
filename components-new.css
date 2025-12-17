@@ -606,7 +606,6 @@
     width: 8px;
     height: 8px;
     background: #ff0000;
-    border-radius: 50%;
     cursor: pointer;
     z-index: 10;
 }
@@ -1602,8 +1601,9 @@
 
 .map-control-row .geocoder-dropdown-item {
     display: flex;
-    align-items: flex-start;
-    padding: 10px 16px;
+    align-items: baseline;
+    gap: 6px;
+    padding: 8px 12px;
     cursor: pointer;
 }
 
@@ -1611,41 +1611,15 @@
     background-color: #f1f3f4;
 }
 
-.map-control-row .geocoder-dropdown-icon {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 16px;
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-
-.map-control-row .geocoder-dropdown-text {
-    flex: 1;
-    min-width: 0;
-}
-
 .map-control-row .geocoder-dropdown-main {
     font-size: 14px;
     font-weight: 500;
     color: #202124;
-    line-height: 20px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .map-control-row .geocoder-dropdown-secondary {
     font-size: 12px;
-    font-weight: 400;
     color: #70757a;
-    line-height: 16px;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* Clear button */
