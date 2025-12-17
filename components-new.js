@@ -502,9 +502,12 @@ const CalendarComponent = (function(){
         
         // Mouse wheel horizontal scrolling
         scroll.addEventListener('wheel', function(e) {
-            e.preventDefault();
-            scroll.scrollLeft += e.deltaY || e.deltaX;
-        }, { passive: false });
+            var delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+            if (delta !== 0) {
+                scroll.scrollLeft += delta;
+                e.preventDefault();
+            }
+        }, {passive: false});
         
         // Update visual selection state
         function updateSelection(calendarEl) {

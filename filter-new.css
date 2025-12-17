@@ -486,17 +486,20 @@
   top: 0;
   left: 0;
   display: none;
-  align-items: stretch;
-  overflow-x: auto;
-  overflow-y: hidden;
-  box-sizing: content-box;
+  overflow: hidden;
   width: 340px;
   border-radius: 8px;
   z-index: 10;
 }
 
 .filter-calendar-container.open {
-  display: flex;
+  display: block;
+}
+
+.filter-calendar {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
 
