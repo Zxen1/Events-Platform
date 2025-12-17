@@ -568,6 +568,7 @@ const FilterModule = (function() {
         calendarInstance = CalendarComponent.create(calendarEl, {
             monthsPast: monthsPast,
             monthsFuture: 24,
+            allowPast: showExpired,
             onSelect: function(start, end) {
                 setDateRange(start, end);
                 closeCalendar();

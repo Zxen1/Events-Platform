@@ -346,8 +346,9 @@ const CalendarComponent = (function(){
     
     function create(containerEl, options) {
         options = options || {};
-        var monthsPast = options.monthsPast || 12;
-        var monthsFuture = options.monthsFuture || 24;
+        var monthsPast = typeof options.monthsPast === 'number' ? options.monthsPast : 12;
+        var monthsFuture = typeof options.monthsFuture === 'number' ? options.monthsFuture : 24;
+        var allowPast = options.allowPast || false;
         var onSelect = options.onSelect || null;
         
         var today = new Date();
@@ -418,8 +419,10 @@ const CalendarComponent = (function(){
                         cell.classList.add('past');
                     } else {
                         cell.classList.add('future');
-                        
-                        // Add click handler for date selection
+                    }
+                    
+                    // Add click handler if future OR if allowPast is true
+                    if (dateObj >= today || allowPast) {
                         cell.addEventListener('click', function() {
                             var clickedDate = this.dataset.iso;
                             
@@ -476,9 +479,9 @@ const CalendarComponent = (function(){
         function positionMarker() {
             var width = containerEl.clientWidth;
             if (width > 0 && totalMonths > 0) {
-                var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+        var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
                 var markerPos = markerFraction * (width - 8);
-                marker.style.left = markerPos + 'px';
+        marker.style.left = markerPos + 'px';
             }
         }
         
@@ -505,7 +508,7 @@ const CalendarComponent = (function(){
             var delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
             if (delta !== 0) {
                 scroll.scrollLeft += delta;
-                e.preventDefault();
+            e.preventDefault();
             }
         }, {passive: false});
         
