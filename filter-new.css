@@ -176,6 +176,7 @@
   align-items: center;
   gap: 8px;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .filter-favourites-btn:hover {

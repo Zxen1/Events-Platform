@@ -499,9 +499,11 @@ const CalendarComponent = (function(){
             containerEl.appendChild(actionsEl);
         }
         
-        // Scroll to today's month initially
+        // Scroll to today's month initially (defer to allow layout)
         if (todayMonthEl) {
-            scroll.scrollLeft = todayMonthEl.offsetLeft;
+            requestAnimationFrame(function() {
+                scroll.scrollLeft = todayMonthEl.offsetLeft;
+            });
         }
         
         // Position the red dot marker
