@@ -158,12 +158,26 @@ const HeaderModule = (function() {
     
     function initAdminButton() {
         adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
-        if (!adminBtn) return;
+        if (!adminBtn) {
+            console.log('[Header] Admin button not found');
+            return;
+        }
         
         // Listen for member state changes to show/hide admin button
         App.on('member:stateChanged', function(data) {
             var user = data && data.user;
+            console.log('[Header] member:stateChanged received, isAdmin:', user && user.isAdmin);
             if (user && user.isAdmin === true) {
+                showAdminButton();
+            } else {
+                hideAdminButton();
+            }
+        });
+        
+        // Also listen for direct state changes
+        App.on('state:isAdmin', function(data) {
+            console.log('[Header] state:isAdmin received:', data.value);
+            if (data.value === true) {
                 showAdminButton();
             } else {
                 hideAdminButton();
@@ -198,7 +212,7 @@ const HeaderModule = (function() {
         
         // Hide button if fullscreen not supported
         if (!canFS || enabled === false) {
-            fullscreenBtn.style.display = 'none';
+            fullscreenBtn.classList.add('header-access-button--hidden');
             return;
         }
         

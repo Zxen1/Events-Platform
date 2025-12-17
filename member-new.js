@@ -539,22 +539,241 @@ const MemberModule = (function() {
             placeholder.textContent = 'No fields configured for this subcategory yet.';
             if (formFields) formFields.appendChild(placeholder);
         } else {
-            // Render form using window.renderForm
-            window.renderForm({
-                formFields: formFields,
-                formId: 'memberCreate',
-                fields: fields,
-                categoryName: selectedCategory,
-                subcategoryName: selectedSubcategory,
-                fieldIdCounter: 0,
-                formLabel: 'Create Post',
-                isUserForm: true
+            // Render each field using fieldset rendering logic from fieldset-test.html
+            var fieldIdCounter = 0;
+            
+            fields.forEach(function(fieldData, index) {
+                var field = ensureFieldDefaults(fieldData);
+                var key = field.fieldsetKey || field.key || field.type || '';
+                var name = field.name || 'Field ' + (index + 1);
+                var tooltip = field.tooltip || '';
+                var placeholder = field.placeholder || '';
+                var minLength = field.min_length || 0;
+                var maxLength = field.max_length || 500;
+                var options = field.options || [];
+                
+                var fieldset = document.createElement('div');
+                fieldset.className = 'fieldset';
+                
+                // Build based on fieldset type (from fieldset-test.html)
+                switch (key) {
+                    case 'title':
+                    case 'coupon':
+                    case 'text-box':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var textInput = document.createElement('input');
+                        textInput.type = 'text';
+                        textInput.className = 'fieldset-input';
+                        textInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        textInput.placeholder = placeholder;
+                        textInput.setAttribute('maxlength', maxLength);
+                        fieldset.appendChild(textInput);
+                        break;
+                        
+                    case 'description':
+                    case 'text-area':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var textarea = document.createElement('textarea');
+                        textarea.className = 'fieldset-textarea';
+                        textarea.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        textarea.placeholder = placeholder;
+                        textarea.setAttribute('maxlength', maxLength);
+                        textarea.rows = 5;
+                        fieldset.appendChild(textarea);
+                        break;
+                        
+                    case 'dropdown':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var select = document.createElement('select');
+                        select.className = 'fieldset-select';
+                        select.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        select.innerHTML = '<option value="">Select an option...</option>';
+                        if (Array.isArray(options)) {
+                            options.forEach(function(opt) {
+                                var option = document.createElement('option');
+                                option.value = opt;
+                                option.textContent = opt;
+                                select.appendChild(option);
+                            });
+                        }
+                        fieldset.appendChild(select);
+                        break;
+                        
+                    case 'radio':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var radioGroup = document.createElement('div');
+                        radioGroup.className = 'fieldset-radio-group';
+                        if (Array.isArray(options)) {
+                            options.forEach(function(opt, i) {
+                                var radioLabel = document.createElement('label');
+                                radioLabel.className = 'fieldset-radio';
+                                var radioInput = document.createElement('input');
+                                radioInput.type = 'radio';
+                                radioInput.name = 'memberCreate-radio-' + index;
+                                radioInput.className = 'fieldset-radio-input';
+                                radioInput.value = opt;
+                                var radioText = document.createElement('span');
+                                radioText.className = 'fieldset-radio-text';
+                                radioText.textContent = opt;
+                                radioLabel.appendChild(radioInput);
+                                radioLabel.appendChild(radioText);
+                                radioGroup.appendChild(radioLabel);
+                            });
+                        }
+                        fieldset.appendChild(radioGroup);
+                        break;
+                        
+                    case 'email':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var emailInput = document.createElement('input');
+                        emailInput.type = 'email';
+                        emailInput.className = 'fieldset-input';
+                        emailInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        emailInput.placeholder = placeholder;
+                        emailInput.setAttribute('maxlength', maxLength);
+                        fieldset.appendChild(emailInput);
+                        break;
+                        
+                    case 'phone':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var phoneRow = document.createElement('div');
+                        phoneRow.className = 'fieldset-row';
+                        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.buildPhonePrefixMenu) {
+                            phoneRow.appendChild(FieldsetComponent.buildPhonePrefixMenu({ container: formFields }));
+                        }
+                        var phoneInput = document.createElement('input');
+                        phoneInput.type = 'tel';
+                        phoneInput.className = 'fieldset-input';
+                        phoneInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        phoneInput.placeholder = placeholder;
+                        phoneInput.addEventListener('input', function() {
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                        });
+                        phoneRow.appendChild(phoneInput);
+                        fieldset.appendChild(phoneRow);
+                        break;
+                        
+                    case 'address':
+                    case 'location':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var addrInput = document.createElement('input');
+                        addrInput.type = 'text';
+                        addrInput.className = 'fieldset-input';
+                        addrInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        addrInput.placeholder = placeholder || 'Search for address...';
+                        fieldset.appendChild(addrInput);
+                        var addrLatInput = document.createElement('input');
+                        addrLatInput.type = 'hidden';
+                        addrLatInput.className = 'fieldset-lat';
+                        var addrLngInput = document.createElement('input');
+                        addrLngInput.type = 'hidden';
+                        addrLngInput.className = 'fieldset-lng';
+                        fieldset.appendChild(addrLatInput);
+                        fieldset.appendChild(addrLngInput);
+                        var addrStatus = document.createElement('div');
+                        addrStatus.className = 'fieldset-location-status';
+                        fieldset.appendChild(addrStatus);
+                        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.initGooglePlaces) {
+                            FieldsetComponent.initGooglePlaces(addrInput, 'address', addrLatInput, addrLngInput, addrStatus);
+                        }
+                        break;
+                        
+                    case 'city':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var cityInput = document.createElement('input');
+                        cityInput.type = 'text';
+                        cityInput.className = 'fieldset-input';
+                        cityInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        cityInput.placeholder = placeholder || 'Search for city or town...';
+                        fieldset.appendChild(cityInput);
+                        var cityLatInput = document.createElement('input');
+                        cityLatInput.type = 'hidden';
+                        cityLatInput.className = 'fieldset-lat';
+                        var cityLngInput = document.createElement('input');
+                        cityLngInput.type = 'hidden';
+                        cityLngInput.className = 'fieldset-lng';
+                        fieldset.appendChild(cityLatInput);
+                        fieldset.appendChild(cityLngInput);
+                        var cityStatus = document.createElement('div');
+                        cityStatus.className = 'fieldset-location-status';
+                        fieldset.appendChild(cityStatus);
+                        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.initGooglePlaces) {
+                            FieldsetComponent.initGooglePlaces(cityInput, '(cities)', cityLatInput, cityLngInput, cityStatus);
+                        }
+                        break;
+                        
+                    case 'website-url':
+                    case 'tickets-url':
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var urlInput = document.createElement('input');
+                        urlInput.type = 'text';
+                        urlInput.className = 'fieldset-input';
+                        urlInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        urlInput.placeholder = placeholder;
+                        urlInput.addEventListener('blur', function() {
+                            var val = this.value.trim();
+                            if (val && !val.match(/^https?:\/\//i)) {
+                                this.value = 'https://' + val;
+                            }
+                        });
+                        fieldset.appendChild(urlInput);
+                        break;
+                        
+                    default:
+                        // Generic text input for unknown types
+                        fieldset.appendChild(buildFieldLabel(name, tooltip));
+                        var genericInput = document.createElement('input');
+                        genericInput.type = 'text';
+                        genericInput.className = 'fieldset-input';
+                        genericInput.id = 'memberCreate-field-' + (++fieldIdCounter);
+                        genericInput.placeholder = placeholder;
+                        fieldset.appendChild(genericInput);
+                        break;
+                }
+                
+                formFields.appendChild(fieldset);
             });
         }
         
         if (formWrapper) formWrapper.hidden = false;
         if (postActions) postActions.hidden = false;
         if (postButton) { postButton.hidden = false; postButton.disabled = false; }
+    }
+    
+    // Build label element for fieldsets (from fieldset-test.html)
+    function buildFieldLabel(name, tooltip) {
+        var label = document.createElement('div');
+        label.className = 'fieldset-label';
+        var html = '<span class="fieldset-label-text">' + name + '</span>';
+        html += '<span class="fieldset-label-required">*</span>';
+        label.innerHTML = html;
+        
+        if (tooltip) {
+            var tip = document.createElement('span');
+            tip.className = 'fieldset-label-tooltip';
+            tip.textContent = 'i';
+            tip.setAttribute('data-tooltip', tooltip);
+            label.appendChild(tip);
+        }
+        return label;
+    }
+    
+    // Ensure field has safe defaults (from forms.js)
+    function ensureFieldDefaults(field) {
+        if (!field || typeof field !== 'object') {
+            return { name: '', placeholder: '', options: [], fieldsetKey: '' };
+        }
+        return {
+            name: field.name || '',
+            placeholder: field.placeholder || '',
+            tooltip: field.tooltip || field.fieldset_tooltip || '',
+            options: Array.isArray(field.options) ? field.options : [],
+            fieldsetKey: field.fieldsetKey || field.key || field.type || '',
+            key: field.key || '',
+            type: field.type || '',
+            min_length: field.min_length || 0,
+            max_length: field.max_length || 500
+        };
     }
     
     function getFieldsForSelection(categoryName, subcategoryName) {
