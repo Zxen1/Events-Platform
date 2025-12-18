@@ -1155,7 +1155,7 @@ const MapControlRowComponent = (function(){
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
         compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
+        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 20 20" width="20" height="20"><polygon fill="#333333" points="6,9 10,1 14,9"/><polygon fill="#3b82f6" points="6,11 10,19 14,11"/></svg>';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
