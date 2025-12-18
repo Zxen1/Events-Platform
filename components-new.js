@@ -1147,7 +1147,7 @@ const MapControlRowComponent = (function(){
         var geolocateBtn = document.createElement('button');
         geolocateBtn.type = 'button';
         geolocateBtn.className = prefix + '-geolocate';
-        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 29 29" width="20" height="20"><path d="M14.5 8.5C11.7 8.5 9.5 10.7 9.5 13.5C9.5 16.3 11.7 18.5 14.5 18.5C17.3 18.5 19.5 16.3 19.5 13.5C19.5 10.7 17.3 8.5 14.5 8.5Z M14.5 3.5V0.5 M14.5 26.5V23.5 M0.5 14.5H3.5 M23.5 14.5H26.5" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="14.5" cy="14.5" r="3.5" fill="currentColor"/></svg>';
         geolocateBtn.title = 'Find my location';
         row.appendChild(geolocateBtn);
         
@@ -1155,7 +1155,7 @@ const MapControlRowComponent = (function(){
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
         compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
+        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 29 29" width="20" height="20"><path d="M10.5 14l4-8 4 8h-8z" fill="#333"/><path d="M10.5 16l4 8 4-8h-8z" fill="#ccc"/><path d="M14.5 28v-4M14.5 4V0M4 14.5H0M28 14.5h-4" stroke="#333" stroke-width="1.5"/></svg>';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
@@ -1171,79 +1171,83 @@ const MapControlRowComponent = (function(){
             map: map
         };
         
-        // Initialize Google Places services for suggestions
-        var autocompleteService = null;
-        var placesService = null;
+        // Initialize Google Places with new AutocompleteSuggestion API (data only, keep our UI)
+        var placesLibrary = null;
         
         if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-            autocompleteService = new google.maps.places.AutocompleteService();
-            var serviceDiv = document.createElement('div');
-            placesService = new google.maps.places.PlacesService(serviceDiv);
+            placesLibrary = google.maps.places;
         }
         
-        // Fetch and display suggestions
-        function fetchSuggestions(query) {
-            if (!autocompleteService) return;
+        // Fetch and display suggestions using new API
+        async function fetchSuggestions(query) {
+            if (!placesLibrary || !placesLibrary.AutocompleteSuggestion) {
+                console.warn('[Geocoder] Google Places AutocompleteSuggestion not available');
+                return;
+            }
             
-            autocompleteService.getPlacePredictions(
-                { input: query },
-                function(predictions, status) {
-                    dropdown.innerHTML = '';
+            try {
+                var request = { input: query };
+                var suggestions = await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+                
+                dropdown.innerHTML = '';
+                
+                if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                suggestions.suggestions.forEach(function(suggestion) {
+                    var item = document.createElement('div');
+                    item.className = prefix + '-geocoder-dropdown-item';
                     
-                    if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                    var mainText = suggestion.placePrediction.structuredFormat.mainText.text;
+                    var secondaryText = suggestion.placePrediction.structuredFormat.secondaryText ? suggestion.placePrediction.structuredFormat.secondaryText.text : '';
+                    
+                    item.innerHTML = 
+                        '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
+                        (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
+                    
+                    item.addEventListener('click', async function() {
+                        var place = suggestion.placePrediction.toPlace();
+                        await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
+                        
+                        if (!place.location) {
+                            console.warn('[Geocoder] No location data for place');
+                            return;
+                        }
+                        
+                        var lat = place.location.lat();
+                        var lng = place.location.lng();
+                        
+                        input.value = place.displayName || mainText;
                         dropdown.style.display = 'none';
-                        return;
-                    }
-                    
-                    predictions.forEach(function(prediction) {
-                        var item = document.createElement('div');
-                        item.className = prefix + '-geocoder-dropdown-item';
+                        clearBtn.style.display = 'flex';
                         
-                        var mainText = prediction.structured_formatting ? prediction.structured_formatting.main_text : prediction.description;
-                        var secondaryText = prediction.structured_formatting ? prediction.structured_formatting.secondary_text : '';
+                        var result = {
+                            center: [lng, lat],
+                            geometry: { type: 'Point', coordinates: [lng, lat] },
+                            place_name: place.formattedAddress || mainText,
+                            text: place.displayName || mainText
+                        };
                         
-                        item.innerHTML = 
-                            '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
-                            (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
+                        // Add bbox if viewport available (for proper zoom on cities/countries)
+                        if (place.viewport) {
+                            var ne = place.viewport.northeast;
+                            var sw = place.viewport.southwest;
+                            result.bbox = [sw.lng, sw.lat, ne.lng, ne.lat];
+                        }
                         
-                        item.addEventListener('click', function() {
-                            placesService.getDetails(
-                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
-                                function(place, detailStatus) {
-                                    if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
-                                        var lat = place.geometry.location.lat();
-                                        var lng = place.geometry.location.lng();
-                                        
-                                        input.value = place.name || prediction.description;
-                                        dropdown.style.display = 'none';
-                                        clearBtn.style.display = 'flex';
-                                        
-                                        var result = {
-                                            center: [lng, lat],
-                                            geometry: { type: 'Point', coordinates: [lng, lat] },
-                                            place_name: place.formatted_address || prediction.description,
-                                            text: place.name || prediction.description
-                                        };
-                                        
-                                        // Add bbox if viewport available (for proper zoom on cities/countries)
-                                        if (place.geometry.viewport) {
-                                            var ne = place.geometry.viewport.getNorthEast();
-                                            var sw = place.geometry.viewport.getSouthWest();
-                                            result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
-                                        }
-                                        
-                                        onResult(result);
-                                    }
-                                }
-                            );
-                        });
-                        
-                        dropdown.appendChild(item);
+                        onResult(result);
                     });
                     
-                    dropdown.style.display = 'block';
-                }
-            );
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            } catch (err) {
+                console.error('[Geocoder] Error fetching suggestions:', err);
+                dropdown.style.display = 'none';
+            }
         }
         
         // Input events
