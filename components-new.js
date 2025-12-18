@@ -1099,6 +1099,7 @@ const IconPickerComponent = (function(){
 const MapControlRowComponent = (function(){
     
     var instances = [];
+    var geolocateActive = false;
     
     // Sync all geolocate buttons to loading state
     function setAllGeolocateLoading() {
@@ -1111,6 +1112,7 @@ const MapControlRowComponent = (function(){
     
     // Sync all geolocate buttons to active state
     function setAllGeolocateActive() {
+        geolocateActive = true;
         instances.forEach(function(inst) {
             if (inst.geolocateBtn) {
                 inst.geolocateBtn.classList.remove('loading');
@@ -1357,6 +1359,11 @@ const MapControlRowComponent = (function(){
             map.on('pitch', updateCompass);
             map.on('load', updateCompass);
             updateCompass();
+        }
+        
+        // If geolocate was already active, mark this button too
+        if (geolocateActive) {
+            geolocateBtn.classList.add('active');
         }
         
         instances.push(instance);
