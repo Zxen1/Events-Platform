@@ -30,10 +30,14 @@ if ($connectorDir === null) {
 if ($action === 'get-checkout-options') {
   header('Content-Type: application/json');
   
-  // Include database config (same paths as connectors)
+  // Include database config (same paths as connectors use from their __DIR__)
   $configCandidates = [
     $connectorDir . '/../config/config-db.php',
     dirname($connectorDir) . '/config/config-db.php',
+    dirname($connectorDir, 2) . '/config/config-db.php',
+    dirname($connectorDir, 3) . '/../config/config-db.php',
+    dirname($connectorDir) . '/../config/config-db.php',
+    $connectorDir . '/config-db.php',
   ];
   
   $configPath = null;
