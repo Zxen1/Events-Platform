@@ -1131,3 +1131,96 @@
   color: #fff;
   cursor: pointer;
 }
+
+/* Checkout Options Editor */
+.formbuilder-checkout-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.formbuilder-checkout-label {
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-checkout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formbuilder-checkout-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  background: #111111;
+}
+
+.formbuilder-checkout-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.formbuilder-checkout-prices {
+  display: flex;
+  gap: 16px;
+}
+
+.formbuilder-checkout-price-item {
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-checkout-price-item .price-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.formbuilder-checkout-calculator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-checkout-calc-input {
+  width: 80px;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  -moz-appearance: textfield;
+}
+
+.formbuilder-checkout-calc-input::-webkit-inner-spin-button,
+.formbuilder-checkout-calc-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.formbuilder-checkout-calc-input:hover,
+.formbuilder-checkout-calc-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-checkout-calc-total {
+  color: #fff;
+  font-weight: 600;
+}
+
+.formbuilder-checkout-empty {
+  color: #888;
+  padding: 12px;
+  text-align: center;
+}
