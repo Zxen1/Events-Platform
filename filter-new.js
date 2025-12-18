@@ -653,14 +653,6 @@ const FilterModule = (function() {
     function formatDateShort(date) {
         if (!date) return '';
         var d = new Date(date);
-        var currentYear = new Date().getFullYear();
-        var dateYear = d.getFullYear();
-        
-        // Include year if date is not in current year
-        if (dateYear !== currentYear) {
-            return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).replace(/,/g, '');
-        }
-        
         return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/,/g, '');
     }
     

@@ -299,7 +299,7 @@ const MapModule = (function() {
     const mapControlsContainer = document.querySelector('.map-controls');
     if (mapControlsContainer) {
       mapControls = MapControlRowComponent.create(mapControlsContainer, {
-        variant: 'map',
+        location: 'map',
         placeholder: 'Search venues or places',
         map: map,
         onResult: function(result) {

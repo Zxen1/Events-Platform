@@ -1147,7 +1147,7 @@ const MapControlRowComponent = (function(){
         var geolocateBtn = document.createElement('button');
         geolocateBtn.type = 'button';
         geolocateBtn.className = prefix + '-geolocate';
-        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="2.5" fill="currentColor"/><path d="M10 1v3M10 16v3M1 10h3M16 10h3" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
         geolocateBtn.title = 'Find my location';
         row.appendChild(geolocateBtn);
         
@@ -1155,7 +1155,7 @@ const MapControlRowComponent = (function(){
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
         compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 20 20" width="20" height="20"><path d="M10 2l2 6-2-1-2 1z" fill="#3b82f5"/><path d="M10 18l-2-6 2 1 2-1z" fill="#888"/></svg>';
+        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
@@ -1171,84 +1171,79 @@ const MapControlRowComponent = (function(){
             map: map
         };
         
-        // Initialize Google Places with new AutocompleteSuggestion API (data only, keep our UI)
-        var placesLibrary = null;
+        // Initialize Google Places services for suggestions
+        var autocompleteService = null;
+        var placesService = null;
         
         if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-            placesLibrary = google.maps.places;
+            autocompleteService = new google.maps.places.AutocompleteService();
+            var serviceDiv = document.createElement('div');
+            placesService = new google.maps.places.PlacesService(serviceDiv);
         }
         
-        // Fetch and display suggestions using new API
-        async function fetchSuggestions(query) {
-            if (!placesLibrary || !placesLibrary.AutocompleteSuggestion) {
-                console.warn('[Geocoder] Google Places AutocompleteSuggestion not available');
-                return;
-            }
+        // Fetch and display suggestions
+        function fetchSuggestions(query) {
+            if (!autocompleteService) return;
             
-            try {
-                var request = { input: query };
-                var suggestions = await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
-                
-                dropdown.innerHTML = '';
-                
-                if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
-                    dropdown.style.display = 'none';
-                    return;
-                }
-                
-                suggestions.suggestions.forEach(function(suggestion) {
-                    var item = document.createElement('div');
-                    item.className = prefix + '-geocoder-dropdown-item';
+            autocompleteService.getPlacePredictions(
+                { input: query },
+                function(predictions, status) {
+                    dropdown.innerHTML = '';
                     
-                    var pred = suggestion.placePrediction;
-                    var mainText = pred.text && pred.text.text ? pred.text.text : (pred.mainText || '');
-                    var secondaryText = pred.secondaryText && pred.secondaryText.text ? pred.secondaryText.text : '';
-                    
-                    item.innerHTML = 
-                        '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
-                        (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
-                    
-                    item.addEventListener('click', async function() {
-                        var place = pred.toPlace();
-                        await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
-                        
-                        if (!place.location) {
-                            console.warn('[Geocoder] No location data for place');
-                            return;
-                        }
-                        
-                        var lat = place.location.lat();
-                        var lng = place.location.lng();
-                        
-                        input.value = place.displayName || mainText;
+                    if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
                         dropdown.style.display = 'none';
-                        clearBtn.style.display = 'flex';
+                        return;
+                    }
+                    
+                    predictions.forEach(function(prediction) {
+                        var item = document.createElement('div');
+                        item.className = prefix + '-geocoder-dropdown-item';
                         
-                        var result = {
-                            center: [lng, lat],
-                            geometry: { type: 'Point', coordinates: [lng, lat] },
-                            place_name: place.formattedAddress || mainText,
-                            text: place.displayName || mainText
-                        };
+                        var mainText = prediction.structured_formatting ? prediction.structured_formatting.main_text : prediction.description;
+                        var secondaryText = prediction.structured_formatting ? prediction.structured_formatting.secondary_text : '';
                         
-                        // Add bbox if viewport available (for proper zoom on cities/countries)
-                        if (place.viewport) {
-                            var ne = place.viewport.northeast;
-                            var sw = place.viewport.southwest;
-                            result.bbox = [sw.lng, sw.lat, ne.lng, ne.lat];
-                        }
+                        item.innerHTML = 
+                            '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
+                            (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
                         
-                        onResult(result);
+                        item.addEventListener('click', function() {
+                            placesService.getDetails(
+                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
+                                function(place, detailStatus) {
+                                    if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                                        var lat = place.geometry.location.lat();
+                                        var lng = place.geometry.location.lng();
+                                        
+                                        input.value = place.name || prediction.description;
+                                        dropdown.style.display = 'none';
+                                        clearBtn.style.display = 'flex';
+                                        
+                                        var result = {
+                                            center: [lng, lat],
+                                            geometry: { type: 'Point', coordinates: [lng, lat] },
+                                            place_name: place.formatted_address || prediction.description,
+                                            text: place.name || prediction.description
+                                        };
+                                        
+                                        // Add bbox if viewport available (for proper zoom on cities/countries)
+                                        if (place.geometry.viewport) {
+                                            var ne = place.geometry.viewport.getNorthEast();
+                                            var sw = place.geometry.viewport.getSouthWest();
+                                            result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
+                                        }
+                                        
+                                        onResult(result);
+                                    }
+                                }
+                            );
+                        });
+                        
+                        dropdown.appendChild(item);
                     });
                     
-                    dropdown.appendChild(item);
-                });
-                
-                dropdown.style.display = 'block';
-            } catch (err) {
-                console.error('[Geocoder] Error fetching suggestions:', err);
-                dropdown.style.display = 'none';
-            }
+                    dropdown.style.display = 'block';
+                }
+            );
         }
         
         // Input events
@@ -1309,7 +1304,7 @@ const MapControlRowComponent = (function(){
                     geolocateBtn.classList.remove('loading');
                     console.error('[Geolocate] Error:', err.message);
                 },
-                { enableHighAccuracy: true, timeout: 10000 }
+                { enableHighAccuracy: false, timeout: 10000 }
             );
         });
         
@@ -1321,7 +1316,7 @@ const MapControlRowComponent = (function(){
         });
         
         // Sync compass rotation with map bearing
-        if (map && compassBtn) {
+        if (map) {
             var compassIcon = compassBtn.querySelector('svg');
             function updateCompass() {
                 if (compassIcon) {
