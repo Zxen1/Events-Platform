@@ -1084,19 +1084,19 @@
     function init() {
         container = document.getElementById('admin-formbuilder');
         if (!container) return;
-        
+
         bindDocumentListeners();
-        loadFormData();
+        // Data loads only when admin panel opens - NOT on page load
     }
-    
-    // Initialize when DOM ready or when admin panel opens
+
+    // Initialize DOM references when ready (no data loading)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-    
-    // Also listen for admin panel open to refresh data
+
+    // Load data ONLY when admin panel opens
     if (window.App && App.on) {
         App.on('admin:opened', function() {
             if (container) {

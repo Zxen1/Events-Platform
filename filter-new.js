@@ -37,6 +37,7 @@ const FilterModule = (function() {
     var calendarInstance = null;
     var dateStart = null;
     var dateEnd = null;
+    var categoryFilterLoaded = false;
 
 
     /* --------------------------------------------------------------------------
@@ -62,7 +63,7 @@ const FilterModule = (function() {
         initFavouritesButton();
         initSortMenu();
         initFilterBasics();
-        initCategoryFilter();
+        // Category filter loads lazily when panel opens
         initHeaderDrag();
         initBackdropClose();
         bindPanelEvents();
@@ -87,6 +88,12 @@ const FilterModule = (function() {
     
     function openPanel() {
         if (!panelEl || !contentEl) return;
+        
+        // Lazy load category filter on first open
+        if (!categoryFilterLoaded) {
+            initCategoryFilter();
+            categoryFilterLoaded = true;
+        }
         
         panelEl.classList.add('show');
         panelEl.setAttribute('aria-hidden', 'false');
