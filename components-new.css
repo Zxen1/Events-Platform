@@ -1584,11 +1584,11 @@
     height: 36px;
     padding: 0 36px 0 12px;
     background-color: rgba(0,0,0,0.2);
-    border: 1px solid rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
     font-size: 14px;
-    color: #000000;
-    caret-color: #000000;
+    color: #ffffff;
+    caret-color: #ffffff;
     box-sizing: border-box;
 }
 
@@ -1602,9 +1602,10 @@
     left: 0;
     right: 0;
     margin-top: 2px;
-    background: #ffffff;
+    background: #222222;
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
     max-height: 300px;
     overflow-y: auto;
     z-index: 1000;
@@ -1619,12 +1620,12 @@
 .filter-mapcontrol-geocoder-dropdown-main {
     font-size: 14px;
     font-weight: 500;
-    color: #202124;
+    color: #ffffff;
 }
 
 .filter-mapcontrol-geocoder-dropdown-secondary {
     font-size: 12px;
-    color: #70757a;
+    color: #aaaaaa;
     margin-top: 2px;
 }
 
@@ -1642,7 +1643,7 @@
     border: none;
     border-radius: 4px;
     font-size: 18px;
-    color: #888888;
+    color: #aaaaaa;
     cursor: pointer;
     padding: 0;
 }
@@ -1653,13 +1654,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
-    border: 1px solid rgba(0,0,0,0.15);
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    color: #333333;
+    color: #ffffff;
 }
 
 .filter-mapcontrol-geolocate-icon {
@@ -1674,13 +1675,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
-    border: 1px solid rgba(0,0,0,0.15);
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    color: #333333;
+    color: #ffffff;
 }
 
 .filter-mapcontrol-compass-icon {
@@ -1965,13 +1966,20 @@
     border-color: #3b82f5;
 }
 
-.filter-mapcontrol-geocoder-dropdown-item:hover,
+.filter-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
 .map-mapcontrol-geocoder-dropdown-item:hover,
 .welcome-mapcontrol-geocoder-dropdown-item:hover {
     background-color: #f1f3f4;
 }
 
-.filter-mapcontrol-geocoder-clear:hover,
+.filter-mapcontrol-geocoder-clear:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #ffffff;
+}
+
 .map-mapcontrol-geocoder-clear:hover,
 .welcome-mapcontrol-geocoder-clear:hover {
     background-color: rgba(0,0,0,0.05);
@@ -1979,9 +1987,12 @@
 }
 
 .filter-mapcontrol-geolocate:hover,
+.filter-mapcontrol-compass:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
 .map-mapcontrol-geolocate:hover,
 .welcome-mapcontrol-geolocate:hover,
-.filter-mapcontrol-compass:hover,
 .map-mapcontrol-compass:hover,
 .welcome-mapcontrol-compass:hover {
     background-color: #f2f2f2;
