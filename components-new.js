@@ -1099,6 +1099,35 @@ const IconPickerComponent = (function(){
 const MapControlRowComponent = (function(){
     
     var instances = [];
+    
+    // Sync all geolocate buttons to loading state
+    function setAllGeolocateLoading() {
+        instances.forEach(function(inst) {
+            if (inst.geolocateBtn) {
+                inst.geolocateBtn.classList.add('loading');
+            }
+        });
+    }
+    
+    // Sync all geolocate buttons to active state
+    function setAllGeolocateActive() {
+        instances.forEach(function(inst) {
+            if (inst.geolocateBtn) {
+                inst.geolocateBtn.classList.remove('loading');
+                inst.geolocateBtn.classList.add('active');
+            }
+        });
+    }
+    
+    // Clear loading state from all geolocate buttons
+    function clearAllGeolocateLoading() {
+        instances.forEach(function(inst) {
+            if (inst.geolocateBtn) {
+                inst.geolocateBtn.classList.remove('loading');
+            }
+        });
+    }
+    
     // Create the HTML structure for a map control row
     // options: { variant, placeholder, onResult, map }
     // variant: 'filter', 'map', or 'welcome'
@@ -1282,11 +1311,10 @@ const MapControlRowComponent = (function(){
                 return;
             }
             
-            geolocateBtn.classList.add('loading');
+            setAllGeolocateLoading();
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
-                    geolocateBtn.classList.remove('loading');
-                    geolocateBtn.classList.add('active');
+                    setAllGeolocateActive();
                     var lat = pos.coords.latitude;
                     var lng = pos.coords.longitude;
                     
@@ -1301,7 +1329,7 @@ const MapControlRowComponent = (function(){
                     });
                 },
                 function(err) {
-                    geolocateBtn.classList.remove('loading');
+                    clearAllGeolocateLoading();
                     console.error('[Geolocate] Error:', err.message);
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
