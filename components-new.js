@@ -1315,16 +1315,18 @@ const MapControlRowComponent = (function(){
             }
         });
         
-        // Sync compass rotation with map bearing
+        // Sync compass rotation with map bearing and pitch
         if (map) {
             var compassIcon = compassBtn.querySelector('svg');
             function updateCompass() {
                 if (compassIcon) {
                     var bearing = map.getBearing();
-                    compassIcon.style.transform = 'rotate(' + (-bearing) + 'deg)';
+                    var pitch = map.getPitch();
+                    compassIcon.style.transform = 'rotateX(' + pitch + 'deg) rotateZ(' + (-bearing) + 'deg)';
                 }
             }
             map.on('rotate', updateCompass);
+            map.on('pitch', updateCompass);
             map.on('load', updateCompass);
             updateCompass();
         }
