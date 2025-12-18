@@ -24,7 +24,6 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     var filterPanelOpen = false;
-    var memberPanelOpen = false;
     var filterBtn = null;
     var memberBtn = null;
     var adminBtn = null;
@@ -164,22 +163,17 @@ const HeaderModule = (function() {
         memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
         if (!memberBtn) return;
         
+        // Click only opens panel (like live site) - close via panel's close button
         memberBtn.addEventListener('click', function() {
-            memberPanelOpen = !memberPanelOpen;
-            
-            // Update aria state
-            memberBtn.setAttribute('aria-expanded', memberPanelOpen ? 'true' : 'false');
-            
-            // Emit event to member module
+            // Always open, never close via header button
             App.emit('panel:toggle', {
                 panel: 'member',
-                show: memberPanelOpen
+                show: true
             });
         });
         
         // Listen for member panel close events
         App.on('member:closed', function() {
-            memberPanelOpen = false;
             if (memberBtn) {
                 memberBtn.setAttribute('aria-expanded', 'false');
                 memberBtn.classList.remove('header-access-button--active');
@@ -187,7 +181,6 @@ const HeaderModule = (function() {
         });
         
         App.on('member:opened', function() {
-            memberPanelOpen = true;
             if (memberBtn) {
                 memberBtn.setAttribute('aria-expanded', 'true');
                 memberBtn.classList.add('header-access-button--active');
@@ -200,35 +193,27 @@ const HeaderModule = (function() {
        ADMIN BUTTON
        -------------------------------------------------------------------------- */
     
-    var adminPanelOpen = false;
-    
     function initAdminButton() {
         adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
         if (!adminBtn) return;
         
+        // Click only opens panel (like live site) - close via panel's close button
         adminBtn.addEventListener('click', function() {
-            adminPanelOpen = !adminPanelOpen;
-            
-            // Update aria state
-            adminBtn.setAttribute('aria-expanded', adminPanelOpen ? 'true' : 'false');
-            
-            // Emit event to admin module
+            // Always open, never close via header button
             App.emit('panel:toggle', {
                 panel: 'admin',
-                show: adminPanelOpen
+                show: true
             });
         });
         
         // Listen for admin panel close events
         App.on('admin:closed', function() {
-            adminPanelOpen = false;
             if (adminBtn) {
                 adminBtn.setAttribute('aria-expanded', 'false');
             }
         });
         
         App.on('admin:opened', function() {
-            adminPanelOpen = true;
             if (adminBtn) {
                 adminBtn.setAttribute('aria-expanded', 'true');
             }

@@ -477,8 +477,9 @@
 }
 
 .member-tab-bar-button:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
+  color: var(--button-active-text);
 }
 
 .member-tab-bar-button:active {
