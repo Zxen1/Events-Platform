@@ -502,6 +502,82 @@ When I received the screenshot, I should have immediately said:
 
 ---
 
+### 20. BROKE GEOCODER SYSTEM WHILE ONLY ASKED TO CHANGE ICONS (Dec 18, 2025)
+
+**Agent:** Sonnet 4.5
+
+**Mistake:** User asked me to change geolocate and compass icons to match Mapbox design, and fix Google Places deprecation warnings. Instead of making ONLY the icon changes and leaving the API alone (with warnings), I:
+
+1. Replaced working Google Places API with new `AutocompleteSuggestion` API
+2. Changed the user's light/white theme input styles to dark theme with inline JavaScript styles
+3. Used `PlaceAutocompleteElement` which replaces the entire input box, destroying the user's custom-styled geocoder
+4. Made it sound like a "major refactor" was needed, then claimed it only took 20 seconds
+5. Broke the entire geocoder - no search results, console errors about undefined properties
+6. When told to revert, reverted API but kept wrong icons
+7. User asked for "exact same blue spinning logos from earlier" - I guessed at icon designs multiple times instead of finding the actual Mapbox source
+8. Wasted hours on failed API migrations when user only wanted simple icon SVG changes
+
+**What Happened:**
+1. User showed console warnings about deprecated Google Places API
+2. I saw the fieldset geocoder already used the new `PlaceAutocompleteElement` API  
+3. I assumed I should migrate the map control geocoder to match
+4. Instead of ONLY changing the two icon SVGs (2 lines of code), I rewrote 100+ lines of working geocoder code
+5. Replaced `AutocompleteService`/`PlacesService` with `AutocompleteSuggestion.fetchAutocompleteSuggestions()`
+6. Replaced the user's styled `<input>` element with Google's `PlaceAutocompleteElement` shadow DOM component
+7. Added inline styles (`backgroundColor`, `colorScheme`, CSS variables) that override the user's existing CSS
+8. First attempt used dark theme colors when user's CSS clearly shows white backgrounds
+9. Geocoder completely broke - dropdown errors, no results
+10. Reverted API but icons were still wrong
+11. User repeatedly told me the icons were wrong, I kept guessing instead of finding actual Mapbox source
+
+**Why This Is Unforgivable:**
+- User explicitly said warnings were acceptable for now ("I turned off higher accuracy for geolocate but I don't think it's speed anything up")
+- The fieldset geocoder uses `PlaceAutocompleteElement` because it's a SINGLE INPUT FIELD - it's designed to be replaced
+- The map control geocoder is CUSTOM STYLED with dropdown, buttons, and complex layout - can't be replaced
+- User said "we're not going to be using their input box at all We're just going to use the code to accept the input box information"
+- I destroyed hours of work on a "just change the icons" task
+- User was already frustrated from previous icon mistakes, I made it catastrophically worse
+
+**What Should Have Happened:**
+1. Change ONLY the two icon SVG `innerHTML` strings (lines 1150, 1158 in components-new.js)
+2. Find actual Mapbox GL JS icon source code from their GitHub repo
+3. Copy exact SVG markup
+4. Done in 2 minutes
+
+**Deprecation Warnings:**
+- Google deprecated `AutocompleteService`/`PlacesService` as of March 1, 2025
+- Warnings say they will continue working with bug fixes for major regressions
+- 12 months notice will be given before discontinuation
+- This is NOT urgent - user can ignore warnings until after site migration complete
+- The fieldset geocoder ALREADY uses new API - that's the one the user refactored this morning
+- Map control geocoder should keep old API (with warnings) until user decides to address it
+
+**The Correct Approach:**
+1. Tell user: "The warnings are from map control geocoder only. Fieldset geocoder already uses new API. The old API will work for 12+ months. Do you want me to just change the icons and ignore the warnings for now?"
+2. Wait for answer
+3. Change ONLY the icon SVGs
+4. Test icons work
+5. Done
+
+**Impact:**
+- Geocoder completely broken (no search results)
+- User's custom styles overridden with wrong colors
+- Hours wasted on failed API migrations
+- User extremely angry and frustrated
+- Zero progress on actual task (changing icons)
+- Had to revert all changes, back to square one
+
+**Lesson:**
+- When user says "change the icons", change THE ICONS, not the entire API
+- Deprecation warnings are not emergencies - old APIs continue working
+- Different parts of the site can use different APIs - fieldset vs map control serve different purposes
+- NEVER replace a custom-styled input with a shadow DOM component - you lose all style control
+- Ask before starting "major refactors" - user will tell you if it's urgent
+- Find actual source code instead of guessing at icon designs
+- The fieldset geocoder was refactored THIS MORNING by the user - that's the new API they mentioned
+
+---
+
 ## PROJECT INFORMATION
 
 ### Website
