@@ -2023,6 +2023,5 @@
 .filter-mapcontrol-geolocate.active,
 .map-mapcontrol-geolocate.active,
 .welcome-mapcontrol-geolocate.active {
-    background-color: #33b5e5;
-    color: #ffffff;
+    color: #33b5e5;
 }
