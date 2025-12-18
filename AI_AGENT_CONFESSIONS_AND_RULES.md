@@ -1412,6 +1412,52 @@ Phone line → NBN decoder → Optus router → Ethernet → TP-Link Mesh → PC
 
 ---
 
+#### Funmap.com Speed Mystery - December 19, 2025 (9:48 AM)
+
+**Symptom:** At approximately 9:48 AM on Friday, December 19, 2025, both funmap.com and the new funmap site suddenly became 100x faster - loading almost instantly when they had been extremely slow.
+
+**Context:** This occurred after days of troubleshooting the slow loading issue documented above (December 18-19). The speed improvement happened spontaneously.
+
+**What Was Happening Before:**
+- funmap.com was taking 60+ seconds to load
+- All troubleshooting attempts had failed (see December 18-19 session above)
+- Suspected causes: Cloudflare, Optus ISP routing issues
+- User had reset the computer
+
+**The Spontaneous Fix:**
+- At 9:48 AM, loading speed suddenly improved dramatically
+- Both the live site (funmap.com) and new site became fast
+- No specific action taken to cause the improvement
+- Self-resolved after the Cloudflare Singapore maintenance ended (or ISP routing corrected)
+
+**However - PageSpeed Insights Still Shows Problems:**
+- After the local speed improvement, user checked PageSpeed Insights (Google's website speed testing tool)
+- PageSpeed showed the site loading was "awful"
+- This indicates the speed issue may depend on WHERE you test from
+- PageSpeed tests from Google's servers (likely US-based or various global locations)
+- User's local experience (Australia) improved, but global experience may still be degraded
+
+**Current Investigation:**
+- Testing speeds from multiple countries to identify geographic patterns
+- Mapbox API may be causing speed discrepancies depending on location
+- The speed issues may be specific to certain geographic regions/routes
+
+**Theories:**
+1. **Geographic routing issue** - Cloudflare or Mapbox CDN edge servers in certain regions may be slow/degraded
+2. **Mapbox API latency** - Mapbox tile servers or style loading may be slow from certain locations
+3. **ISP-specific routing** - Australian ISPs (Optus) may have had bad routes to Cloudflare that are now fixed locally
+4. **Cloudflare edge caching** - Some Cloudflare datacenters may have cached bad responses or be experiencing issues
+5. **Cursor IDE resource bottleneck** - Starting a new Cursor session freed up computer resources, which may have improved website loading. Less likely because other websites were already loading quickly (only funmap.com was slow), but worth noting as a coincidental factor
+
+**Action Items:**
+- Check multi-location speed test results
+- Compare Mapbox API response times from different countries
+- Determine if issue is Cloudflare-related, Mapbox-related, or ISP-related
+
+**Status:** Under investigation. Local speed resolved but global speed may still have issues.
+
+---
+
 ### 2025-12-04: Website Speed Degradation (5-20 minute loads)
 
 **Issue:** funmap.com experienced 5-20 minute load times specifically on Paul's PC (8700k).
