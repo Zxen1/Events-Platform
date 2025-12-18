@@ -254,15 +254,8 @@ const MemberModule = (function() {
     var selectedSubcategory = '';
     var formWrapper = null;
     var formFields = null;
-    var checkoutContainer = null;
-    var checkoutInstance = null;
-    var termsRow = null;
-    var termsCheckbox = null;
-    var termsLink = null;
-    var termsModal = null;
-    var submitBtn = null;
-    var adminBtn = null;
-    var actionsRow = null;
+    var postButton = null;
+    var postActions = null;
     
     function loadFormpicker() {
         if (formpickerLoaded) return;
@@ -272,58 +265,8 @@ const MemberModule = (function() {
         
         formWrapper = document.getElementById('member-create-form-wrapper');
         formFields = document.getElementById('member-create-fields');
-        checkoutContainer = document.getElementById('member-create-checkout');
-        termsRow = document.getElementById('member-create-terms');
-        termsCheckbox = document.getElementById('member-create-terms-checkbox');
-        termsLink = document.getElementById('member-create-terms-link');
-        termsModal = document.getElementById('member-terms-modal');
-        submitBtn = document.getElementById('member-create-submit-btn');
-        adminBtn = document.getElementById('member-create-admin-btn');
-        actionsRow = document.getElementById('member-create-actions');
-        
-        // Wire up terms checkbox to enable/disable submit
-        if (termsCheckbox) {
-            termsCheckbox.addEventListener('change', updateSubmitState);
-        }
-        
-        // Wire up terms link to open modal
-        if (termsLink) {
-            termsLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openTermsModal();
-            });
-        }
-        
-        // Wire up terms modal close and accept buttons
-        if (termsModal) {
-            var closeBtn = termsModal.querySelector('.member-terms-modal-close');
-            var backdrop = termsModal.querySelector('.member-terms-modal-backdrop');
-            var acceptBtn = termsModal.querySelector('.member-terms-modal-accept');
-            
-            if (closeBtn) {
-                closeBtn.addEventListener('click', closeTermsModal);
-            }
-            if (backdrop) {
-                backdrop.addEventListener('click', closeTermsModal);
-            }
-            if (acceptBtn) {
-                acceptBtn.addEventListener('click', function() {
-                    if (termsCheckbox) termsCheckbox.checked = true;
-                    updateSubmitState();
-                    closeTermsModal();
-                });
-            }
-        }
-        
-        // Wire up submit button
-        if (submitBtn) {
-            submitBtn.addEventListener('click', handleSubmit);
-        }
-        
-        // Wire up admin button
-        if (adminBtn) {
-            adminBtn.addEventListener('click', handleAdminSubmit);
-        }
+        postButton = document.getElementById('member-create-post-btn');
+        postActions = document.getElementById('member-create-actions');
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
@@ -355,13 +298,8 @@ const MemberModule = (function() {
         
         if (formWrapper) formWrapper.hidden = true;
         if (formFields) formFields.innerHTML = '';
-        if (checkoutContainer) { checkoutContainer.innerHTML = ''; checkoutContainer.hidden = true; }
-        if (termsRow) termsRow.hidden = true;
-        if (termsCheckbox) termsCheckbox.checked = false;
-        if (actionsRow) actionsRow.hidden = true;
-        if (submitBtn) submitBtn.disabled = true;
-        if (adminBtn) { adminBtn.hidden = true; adminBtn.disabled = true; }
-        checkoutInstance = null;
+        if (postButton) { postButton.disabled = true; postButton.hidden = true; }
+        if (postActions) postActions.hidden = true;
         
         var categoryIconPaths = memberSnapshot.categoryIconPaths || {};
         var subcategoryIconPaths = memberSnapshot.subcategoryIconPaths || {};
@@ -566,13 +504,8 @@ const MemberModule = (function() {
         if (!selectedCategory || !selectedSubcategory) {
             if (formWrapper) formWrapper.hidden = true;
             if (formFields) formFields.innerHTML = '';
-            if (checkoutContainer) { checkoutContainer.innerHTML = ''; checkoutContainer.hidden = true; }
-            if (termsRow) termsRow.hidden = true;
-            if (termsCheckbox) termsCheckbox.checked = false;
-            if (actionsRow) actionsRow.hidden = true;
-            if (submitBtn) submitBtn.disabled = true;
-            if (adminBtn) { adminBtn.hidden = true; adminBtn.disabled = true; }
-            checkoutInstance = null;
+            if (postButton) { postButton.disabled = true; postButton.hidden = true; }
+            if (postActions) postActions.hidden = true;
             return;
         }
         
@@ -586,13 +519,6 @@ const MemberModule = (function() {
             placeholder.className = 'member-create-intro';
             placeholder.textContent = 'No fields configured for this subcategory yet.';
             if (formFields) formFields.appendChild(placeholder);
-            
-            // No fields = no checkout, terms, or actions
-            if (formWrapper) formWrapper.hidden = false;
-            if (checkoutContainer) checkoutContainer.hidden = true;
-            if (termsRow) termsRow.hidden = true;
-            if (actionsRow) actionsRow.hidden = true;
-            return;
         } else {
             // Render each field using fieldset rendering logic from fieldset-test.html
             var fieldIdCounter = 0;
@@ -790,156 +716,9 @@ const MemberModule = (function() {
             });
         }
         
-        // Render checkout options
-        renderCheckoutOptions();
-        
-        // Show form wrapper, terms, and actions
         if (formWrapper) formWrapper.hidden = false;
-        if (termsRow) termsRow.hidden = false;
-        if (actionsRow) actionsRow.hidden = false;
-        
-        // Show admin button if user is admin
-        if (adminBtn && currentUser && currentUser.isAdmin) {
-            adminBtn.hidden = false;
-        }
-        
-        // Update submit button state based on terms checkbox
-        updateSubmitState();
-    }
-    
-    function renderCheckoutOptions() {
-        if (!checkoutContainer) return;
-        
-        checkoutContainer.innerHTML = '';
-        checkoutInstance = null;
-        
-        // Fetch checkout options from existing get-admin-settings endpoint
-        fetch('/gateway.php?action=get-admin-settings', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(function(response) { 
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
-            return response.json(); 
-        })
-        .then(function(data) {
-            if (data && data.success && Array.isArray(data.checkout_options)) {
-                var activeOptions = data.checkout_options.filter(function(opt) {
-                    return opt && opt.is_active === true;
-                });
-                
-                if (activeOptions.length) {
-                    var currency = data.settings && data.settings.site_currency ? data.settings.site_currency : 'USD';
-                    displayCheckoutOptions(activeOptions, currency);
-                } else {
-                    checkoutContainer.hidden = true;
-                }
-            } else {
-                checkoutContainer.hidden = true;
-            }
-        })
-        .catch(function(err) {
-            console.error('[Member] Failed to fetch checkout options:', err);
-            checkoutContainer.hidden = true;
-        });
-    }
-    
-    function displayCheckoutOptions(checkoutOptions, currency) {
-        if (!checkoutContainer || !checkoutOptions.length) return;
-        
-        checkoutContainer.innerHTML = '';
-        checkoutInstance = null;
-        
-        // Add section label
-        var sectionLabel = document.createElement('div');
-        sectionLabel.className = 'member-create-section-label';
-        sectionLabel.textContent = 'Checkout Options';
-        checkoutContainer.appendChild(sectionLabel);
-        
-        // Determine if this is an event (has sessions) or general post
-        // For now, assume general post - events would need session date calculation
-        var isEvent = false;
-        
-        // Create checkout options using CheckoutOptionsComponent
-        checkoutInstance = CheckoutOptionsComponent.create(checkoutContainer, {
-            checkoutOptions: checkoutOptions,
-            currency: currency,
-            isEvent: isEvent,
-            calculatedDays: null,
-            baseId: 'member-create-checkout',
-            groupName: 'member-create-checkout-option',
-            onSelect: function(optionId, days, price) {
-                console.log('[Member] Checkout option selected:', optionId, days, price);
-            }
-        });
-        
-        checkoutContainer.hidden = false;
-    }
-    
-    function updateSubmitState() {
-        var termsAccepted = termsCheckbox && termsCheckbox.checked;
-        
-        if (submitBtn) {
-            submitBtn.disabled = !termsAccepted;
-        }
-        if (adminBtn && !adminBtn.hidden) {
-            adminBtn.disabled = !termsAccepted;
-        }
-    }
-    
-    function openTermsModal() {
-        if (!termsModal) return;
-        termsModal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-        
-        // Focus close button for accessibility
-        var closeBtn = termsModal.querySelector('.member-terms-modal-close');
-        if (closeBtn) closeBtn.focus();
-    }
-    
-    function closeTermsModal() {
-        if (!termsModal) return;
-        termsModal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-        
-        // Return focus to terms link
-        if (termsLink) termsLink.focus();
-    }
-    
-    function handleSubmit() {
-        if (!termsCheckbox || !termsCheckbox.checked) {
-            showStatus('Please accept the Terms and Conditions', { error: true });
-            return;
-        }
-        
-        // Get selected checkout option
-        var checkoutSelection = checkoutInstance ? checkoutInstance.getSelected() : null;
-        
-        // TODO: Collect form data and submit to backend
-        console.log('[Member] Submit post:', {
-            category: selectedCategory,
-            subcategory: selectedSubcategory,
-            checkout: checkoutSelection
-        });
-        
-        showStatus('Post submission - not yet implemented');
-    }
-    
-    function handleAdminSubmit() {
-        if (!termsCheckbox || !termsCheckbox.checked) {
-            showStatus('Please accept the Terms and Conditions', { error: true });
-            return;
-        }
-        
-        // Admin bypass - post without payment
-        console.log('[Member] Admin bypass submit:', {
-            category: selectedCategory,
-            subcategory: selectedSubcategory
-        });
-        
-        showStatus('Admin post bypass - not yet implemented');
+        if (postActions) postActions.hidden = false;
+        if (postButton) { postButton.hidden = false; postButton.disabled = false; }
     }
     
     // Build label element for fieldsets (from fieldset-test.html)

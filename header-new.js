@@ -29,8 +29,6 @@ const HeaderModule = (function() {
     var memberBtn = null;
     var adminBtn = null;
     var fullscreenBtn = null;
-    var modeSwitchBtns = null;
-    var currentMode = 'map';
 
 
     /* --------------------------------------------------------------------------
@@ -42,7 +40,6 @@ const HeaderModule = (function() {
         initMemberButton();
         initAdminButton();
         initFullscreenButton();
-        initModeSwitch();
     }
 
 
@@ -251,43 +248,6 @@ const HeaderModule = (function() {
         var isFull = getFullscreenElement();
         fullscreenBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
         fullscreenBtn.classList.toggle('is-fullscreen', !!isFull);
-    }
-
-
-    /* --------------------------------------------------------------------------
-       MODE SWITCH
-       -------------------------------------------------------------------------- */
-    
-    function initModeSwitch() {
-        modeSwitchBtns = document.querySelectorAll('.header-modeswitch-button');
-        if (!modeSwitchBtns.length) return;
-        
-        // Set initial active state (map mode by default)
-        setMode(currentMode);
-        
-        // Add click handlers
-        modeSwitchBtns.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var mode = btn.dataset.mode;
-                if (mode) {
-                    setMode(mode);
-                }
-            });
-        });
-    }
-    
-    function setMode(mode) {
-        currentMode = mode;
-        
-        // Update button states
-        modeSwitchBtns.forEach(function(btn) {
-            var isActive = btn.dataset.mode === mode;
-            btn.classList.toggle('header-modeswitch-button--active', isActive);
-            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        });
-        
-        // Emit event for other modules
-        App.emit('mode:changed', { mode: mode });
     }
 
 
