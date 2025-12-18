@@ -231,6 +231,24 @@
   background-color: #60a5fa;
 }
 
+/* Member button active state */
+.header-access-button--active .header-access-button-icon--member {
+  background-color: #3b82f6;
+}
+
+.header-access-button--active:hover .header-access-button-icon--member {
+  background-color: #60a5fa;
+}
+
+/* Admin button active state */
+.header-access-button--active .header-access-button-icon--admin {
+  background-color: #3b82f6;
+}
+
+.header-access-button--active:hover .header-access-button-icon--admin {
+  background-color: #60a5fa;
+}
+
 /* Access button avatar (for logged-in member) */
 .header-access-button-avatar {
   width: 28px;
