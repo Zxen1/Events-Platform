@@ -94,6 +94,7 @@
   gap: 10px;
   flex-shrink: 0;
   background: #222222;
+  cursor: ew-resize;
 }
 
 .admin-panel-header-top {

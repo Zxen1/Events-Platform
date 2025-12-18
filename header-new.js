@@ -200,9 +200,39 @@ const HeaderModule = (function() {
        ADMIN BUTTON
        -------------------------------------------------------------------------- */
     
+    var adminPanelOpen = false;
+    
     function initAdminButton() {
         adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
         if (!adminBtn) return;
+        
+        adminBtn.addEventListener('click', function() {
+            adminPanelOpen = !adminPanelOpen;
+            
+            // Update aria state
+            adminBtn.setAttribute('aria-expanded', adminPanelOpen ? 'true' : 'false');
+            
+            // Emit event to admin module
+            App.emit('panel:toggle', {
+                panel: 'admin',
+                show: adminPanelOpen
+            });
+        });
+        
+        // Listen for admin panel close events
+        App.on('admin:closed', function() {
+            adminPanelOpen = false;
+            if (adminBtn) {
+                adminBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        
+        App.on('admin:opened', function() {
+            adminPanelOpen = true;
+            if (adminBtn) {
+                adminBtn.setAttribute('aria-expanded', 'true');
+            }
+        });
         
         // Listen for member state changes to show/hide admin button
         App.on('member:stateChanged', function(data) {

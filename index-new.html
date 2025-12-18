@@ -180,12 +180,65 @@
        SECTION 5: ADMIN PANEL
        File: admin.js, admin.css
        ======================================================================== -->
-  <aside class="admin-panel">
-    <!-- Panel header -->
-    <!-- Settings tab -->
-    <!-- Forms tab -->
-    <!-- Map tab -->
-    <!-- Messages tab -->
+  <aside id="admin-panel" class="admin-panel" role="dialog" aria-hidden="true">
+    <div class="admin-panel-content admin-panel-content--side-right admin-panel-content--hidden">
+      
+      <!-- Panel Header -->
+      <div class="admin-panel-header">
+        <div class="admin-panel-header-top">
+          <h2 class="admin-panel-header-title">Admin</h2>
+          <div class="admin-panel-actions">
+            <label class="admin-autosave-toggle" title="Auto-save changes">
+              <input type="checkbox" id="admin-autosave-checkbox" class="admin-autosave-toggle-input">
+              <span class="admin-autosave-toggle-label">Auto</span>
+            </label>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--save admin-panel-actions-icon-btn--disabled" aria-label="Save Changes" disabled>
+              <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--save admin-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--discard admin-panel-actions-icon-btn--disabled" aria-label="Discard Changes" disabled>
+              <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--discard admin-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--close" aria-label="Close Panel">
+              <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--close" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Tab Bar -->
+        <div class="admin-tab-bar" role="tablist" aria-label="Admin sections">
+          <button type="button" id="admin-tab-settings-btn" class="admin-tab-bar-button admin-tab-bar-button--selected" data-tab="settings" role="tab" aria-selected="true" aria-controls="admin-tab-settings">Settings</button>
+          <button type="button" id="admin-tab-forms-btn" class="admin-tab-bar-button" data-tab="forms" role="tab" aria-selected="false" aria-controls="admin-tab-forms">Forms</button>
+          <button type="button" id="admin-tab-map-btn" class="admin-tab-bar-button" data-tab="map" role="tab" aria-selected="false" aria-controls="admin-tab-map">Map</button>
+          <button type="button" id="admin-tab-messages-btn" class="admin-tab-bar-button" data-tab="messages" role="tab" aria-selected="false" aria-controls="admin-tab-messages">Messages</button>
+        </div>
+      </div>
+      
+      <!-- Panel Body -->
+      <div class="admin-panel-body">
+        
+        <!-- Settings Tab -->
+        <section id="admin-tab-settings" class="admin-tab-panel admin-tab-panel--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
+          <p class="admin-tab-intro">Settings content will go here.</p>
+        </section>
+        
+        <!-- Forms Tab -->
+        <section id="admin-tab-forms" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-forms-btn">
+          <p class="admin-tab-intro">Forms content will go here.</p>
+        </section>
+        
+        <!-- Map Tab -->
+        <section id="admin-tab-map" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-map-btn">
+          <p class="admin-tab-intro">Map content will go here.</p>
+        </section>
+        
+        <!-- Messages Tab -->
+        <section id="admin-tab-messages" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-messages-btn">
+          <p class="admin-tab-intro">Messages content will go here.</p>
+        </section>
+        
+      </div>
+      
+    </div>
   </aside>
 
   <!-- ========================================================================
