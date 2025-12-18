@@ -1147,7 +1147,7 @@ const MapControlRowComponent = (function(){
         var geolocateBtn = document.createElement('button');
         geolocateBtn.type = 'button';
         geolocateBtn.className = prefix + '-geolocate';
-        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 29 29" width="20" height="20"><path d="M14.5 8.5C11.7 8.5 9.5 10.7 9.5 13.5C9.5 16.3 11.7 18.5 14.5 18.5C17.3 18.5 19.5 16.3 19.5 13.5C19.5 10.7 17.3 8.5 14.5 8.5Z M14.5 3.5V0.5 M14.5 26.5V23.5 M0.5 14.5H3.5 M23.5 14.5H26.5" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="14.5" cy="14.5" r="3.5" fill="currentColor"/></svg>';
+        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="2.5" fill="currentColor"/><path d="M10 1v3M10 16v3M1 10h3M16 10h3" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
         geolocateBtn.title = 'Find my location';
         row.appendChild(geolocateBtn);
         
@@ -1155,7 +1155,7 @@ const MapControlRowComponent = (function(){
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
         compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 29 29" width="20" height="20"><path d="M10.5 14l4-8 4 8h-8z" fill="#333"/><path d="M10.5 16l4 8 4-8h-8z" fill="#ccc"/><path d="M14.5 28v-4M14.5 4V0M4 14.5H0M28 14.5h-4" stroke="#333" stroke-width="1.5"/></svg>';
+        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 20 20" width="20" height="20"><path d="M10 2l2 6-2-1-2 1z" fill="#3b82f5"/><path d="M10 18l-2-6 2 1 2-1z" fill="#888"/></svg>';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
@@ -1200,15 +1200,16 @@ const MapControlRowComponent = (function(){
                     var item = document.createElement('div');
                     item.className = prefix + '-geocoder-dropdown-item';
                     
-                    var mainText = suggestion.placePrediction.structuredFormat.mainText.text;
-                    var secondaryText = suggestion.placePrediction.structuredFormat.secondaryText ? suggestion.placePrediction.structuredFormat.secondaryText.text : '';
+                    var pred = suggestion.placePrediction;
+                    var mainText = pred.text && pred.text.text ? pred.text.text : (pred.mainText || '');
+                    var secondaryText = pred.secondaryText && pred.secondaryText.text ? pred.secondaryText.text : '';
                     
                     item.innerHTML = 
                         '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
                         (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
                     
                     item.addEventListener('click', async function() {
-                        var place = suggestion.placePrediction.toPlace();
+                        var place = pred.toPlace();
                         await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'viewport'] });
                         
                         if (!place.location) {
