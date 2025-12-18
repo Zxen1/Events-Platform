@@ -1158,6 +1158,16 @@ Mapbox layers in rendering order (bottom to top):
 - Consistency across all forms and panels
 - If a different size is needed, it must be explicitly requested
 
+### Rule 21: VERIFY CODE BEFORE COMPLETING
+**CRITICAL:** Before marking any task complete, check the code for:
+- **Problems:** Syntax errors, logic errors, missing dependencies
+- **Unauthorized names:** Any variables, functions, classes, or IDs created without permission
+- **Inconsistencies:** Naming patterns that don't match existing code, mixed conventions
+- **Overrides:** CSS !important usage, inline styles that override external CSS
+- **Conflicts:** Duplicate class names, duplicate function names, conflicting selectors
+- **Fallbacks:** Any fallback chains or default values that hide errors (Rule 11)
+- **Snapshots:** Any cached window globals or snapshot patterns (Rule 19)
+
 ---
 
 ## LIMITATIONS: WHAT AI AGENTS CANNOT DO

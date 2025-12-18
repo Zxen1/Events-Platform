@@ -14,6 +14,7 @@
    5. ICON PICKER         - Category icon picker
    6. SYSTEM IMAGE PICKER - System image picker
    7. MAP CONTROL ROW     - Geocoder + Geolocate + Compass
+   8. CHECKOUT OPTIONS    - Radio card selector for checkout tiers
    
    ============================================================================ */
 
@@ -1474,6 +1475,259 @@ const MapControlRowComponent = (function(){
     return {
         create: create,
         destroyAll: destroyAll
+    };
+})();
+
+
+/* ============================================================================
+   SECTION 8: CHECKOUT OPTIONS
+   
+   Radio card selector for checkout tiers (events and general posts).
+   Used in member panel create post form.
+   
+   Events: Show calculated price based on session dates
+   General: Show 30-day and 365-day duration options
+   ============================================================================ */
+
+const CheckoutOptionsComponent = (function(){
+    
+    /**
+     * Build checkout options UI
+     * @param {HTMLElement} containerEl - Container to append to
+     * @param {Object} options - Configuration
+     * @param {Array} options.checkoutOptions - Array of checkout option objects from database
+     * @param {string} options.currency - Currency code (default: 'USD')
+     * @param {number} options.surcharge - Subcategory surcharge amount (default: 0)
+     * @param {boolean} options.isEvent - True for events with session dates
+     * @param {number|null} options.calculatedDays - Pre-calculated days for events (null = no dates yet)
+     * @param {string} options.baseId - Base ID for form elements
+     * @param {string} options.groupName - Radio group name
+     * @param {Function} options.onSelect - Callback when option selected (optionId, days, price)
+     * @returns {Object} Component instance with update methods
+     */
+    function create(containerEl, options) {
+        options = options || {};
+        var checkoutOptions = options.checkoutOptions || [];
+        var currency = options.currency || 'USD';
+        var surcharge = options.surcharge || 0;
+        var isEvent = options.isEvent || false;
+        var calculatedDays = options.calculatedDays !== undefined ? options.calculatedDays : null;
+        var baseId = options.baseId || 'checkout';
+        var groupName = options.groupName || baseId + '-option';
+        var onSelect = options.onSelect || function() {};
+        
+        var group = document.createElement('div');
+        group.className = 'member-checkout-group';
+        group.dataset.isEvent = isEvent ? 'true' : 'false';
+        
+        if (!checkoutOptions || checkoutOptions.length === 0) {
+            var placeholder = document.createElement('div');
+            placeholder.className = 'member-checkout-placeholder';
+            placeholder.textContent = 'No checkout options configured.';
+            group.appendChild(placeholder);
+            containerEl.appendChild(group);
+            return { element: group, update: function() {} };
+        }
+        
+        var hasDates = isEvent ? calculatedDays !== null : true;
+        
+        checkoutOptions.forEach(function(option, optionIndex) {
+            var flagfallPrice = (parseFloat(option.checkout_flagfall_price) || 0) + surcharge;
+            var basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null 
+                ? parseFloat(option.checkout_basic_day_rate) : null;
+            var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null 
+                ? parseFloat(option.checkout_discount_day_rate) : null;
+            var title = option.checkout_title || 'Untitled';
+            var description = option.checkout_description || '';
+            
+            var card = document.createElement('label');
+            card.className = 'member-checkout-option' + (hasDates ? '' : ' member-checkout-option--disabled');
+            card.dataset.optionId = String(option.id || '');
+            card.dataset.flagfall = String(flagfallPrice);
+            card.dataset.basicRate = String(basicDayRate !== null ? basicDayRate : '');
+            card.dataset.discountRate = String(discountDayRate !== null ? discountDayRate : '');
+            card.dataset.currency = currency;
+            
+            if (isEvent) {
+                // Events: Single radio per option card
+                var radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.className = 'member-checkout-option-radio';
+                radio.name = groupName;
+                radio.value = String(option.id || '');
+                radio.id = baseId + '-checkout-' + optionIndex;
+                radio.dataset.optionId = String(option.id || '');
+                if (optionIndex === 0 && hasDates) radio.checked = true;
+                radio.required = true;
+                radio.disabled = !hasDates;
+                card.appendChild(radio);
+            }
+            
+            var optionContent = document.createElement('div');
+            optionContent.className = 'member-checkout-option-content';
+            
+            var titleRow = document.createElement('div');
+            titleRow.className = 'member-checkout-option-title';
+            
+            var titleText = document.createElement('span');
+            titleText.className = 'member-checkout-option-name';
+            titleText.textContent = title;
+            
+            titleRow.appendChild(titleText);
+            optionContent.appendChild(titleRow);
+            
+            if (description) {
+                var descText = document.createElement('div');
+                descText.className = 'member-checkout-option-description';
+                descText.textContent = description;
+                optionContent.appendChild(descText);
+            }
+            
+            // Price section
+            var priceSection = document.createElement('div');
+            priceSection.className = 'member-checkout-price-section';
+            
+            if (isEvent) {
+                // Events: Single calculated price display
+                var priceText = document.createElement('span');
+                priceText.className = 'member-checkout-price-display';
+                if (hasDates) {
+                    var dayRate = calculatedDays >= 365 && discountDayRate !== null ? discountDayRate : basicDayRate;
+                    var price = dayRate !== null ? flagfallPrice + (dayRate * calculatedDays) : flagfallPrice;
+                    priceText.textContent = '(' + calculatedDays + ' days) — ' + (price > 0 ? currency + ' ' + price.toFixed(2) : 'Free');
+                } else {
+                    priceText.textContent = 'Select session dates for price';
+                }
+                priceSection.appendChild(priceText);
+            } else {
+                // General posts: Two duration radio options
+                var durationBtns = document.createElement('div');
+                durationBtns.className = 'member-checkout-duration-buttons';
+                
+                var price30 = basicDayRate !== null ? flagfallPrice + (basicDayRate * 30) : flagfallPrice;
+                var price365 = discountDayRate !== null 
+                    ? flagfallPrice + (discountDayRate * 365) 
+                    : (basicDayRate !== null ? flagfallPrice + (basicDayRate * 365) : flagfallPrice);
+                
+                // 30 days option
+                var label30 = document.createElement('label');
+                label30.className = 'member-checkout-duration-option';
+                var radio30 = document.createElement('input');
+                radio30.type = 'radio';
+                radio30.className = 'member-checkout-duration-radio';
+                radio30.name = groupName;
+                radio30.value = (option.id || '') + '-30';
+                radio30.dataset.optionId = String(option.id || '');
+                radio30.dataset.days = '30';
+                radio30.dataset.price = price30.toFixed(2);
+                radio30.required = true;
+                if (optionIndex === 0) radio30.checked = true;
+                var text30 = document.createElement('span');
+                text30.className = 'member-checkout-duration-text';
+                text30.textContent = '30 days — ' + (price30 > 0 ? currency + ' ' + price30.toFixed(2) : 'Free');
+                label30.appendChild(radio30);
+                label30.appendChild(text30);
+                
+                // 365 days option
+                var label365 = document.createElement('label');
+                label365.className = 'member-checkout-duration-option';
+                var radio365 = document.createElement('input');
+                radio365.type = 'radio';
+                radio365.className = 'member-checkout-duration-radio';
+                radio365.name = groupName;
+                radio365.value = (option.id || '') + '-365';
+                radio365.dataset.optionId = String(option.id || '');
+                radio365.dataset.days = '365';
+                radio365.dataset.price = price365.toFixed(2);
+                radio365.required = true;
+                var text365 = document.createElement('span');
+                text365.className = 'member-checkout-duration-text';
+                text365.textContent = '365 days — ' + (price365 > 0 ? currency + ' ' + price365.toFixed(2) : 'Free');
+                label365.appendChild(radio365);
+                label365.appendChild(text365);
+                
+                durationBtns.appendChild(label30);
+                durationBtns.appendChild(label365);
+                priceSection.appendChild(durationBtns);
+            }
+            
+            optionContent.appendChild(priceSection);
+            card.appendChild(optionContent);
+            group.appendChild(card);
+        });
+        
+        // Selection change handler
+        group.addEventListener('change', function(e) {
+            if (e.target.type === 'radio') {
+                var optionId = e.target.dataset.optionId;
+                var days = e.target.dataset.days ? parseInt(e.target.dataset.days, 10) : calculatedDays;
+                var price = e.target.dataset.price ? parseFloat(e.target.dataset.price) : null;
+                onSelect(optionId, days, price);
+            }
+        });
+        
+        containerEl.appendChild(group);
+        
+        // Return component instance with update method for reactive price updates
+        return {
+            element: group,
+            
+            // Update prices when event session dates change
+            updateEventPrices: function(newCalculatedDays) {
+                if (!isEvent) return;
+                
+                var nowHasDates = newCalculatedDays !== null;
+                
+                group.querySelectorAll('.member-checkout-option').forEach(function(card, idx) {
+                    var radio = card.querySelector('input[type="radio"]');
+                    var priceDisplay = card.querySelector('.member-checkout-price-display');
+                    
+                    if (nowHasDates) {
+                        card.classList.remove('member-checkout-option--disabled');
+                        if (radio) {
+                            radio.disabled = false;
+                            if (idx === 0 && !group.querySelector('input[type="radio"]:checked')) {
+                                radio.checked = true;
+                            }
+                        }
+                        if (priceDisplay) {
+                            var flagfall = parseFloat(card.dataset.flagfall) || 0;
+                            var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
+                            var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
+                            var curr = card.dataset.currency || 'USD';
+                            var dayRate = newCalculatedDays >= 365 && discountRate !== null ? discountRate : basicRate;
+                            var price = dayRate !== null ? flagfall + (dayRate * newCalculatedDays) : flagfall;
+                            priceDisplay.textContent = '(' + newCalculatedDays + ' days) — ' + (price > 0 ? curr + ' ' + price.toFixed(2) : 'Free');
+                        }
+                    } else {
+                        card.classList.add('member-checkout-option--disabled');
+                        if (radio) {
+                            radio.disabled = true;
+                            radio.checked = false;
+                        }
+                        if (priceDisplay) {
+                            priceDisplay.textContent = 'Select session dates for price';
+                        }
+                    }
+                });
+            },
+            
+            // Get selected option data
+            getSelected: function() {
+                var checked = group.querySelector('input[type="radio"]:checked');
+                if (!checked) return null;
+                return {
+                    optionId: checked.dataset.optionId,
+                    days: checked.dataset.days ? parseInt(checked.dataset.days, 10) : null,
+                    price: checked.dataset.price ? parseFloat(checked.dataset.price) : null,
+                    value: checked.value
+                };
+            }
+        };
+    }
+    
+    return {
+        create: create
     };
 })();
 

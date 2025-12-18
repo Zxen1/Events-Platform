@@ -256,6 +256,9 @@ const MemberModule = (function() {
     var formFields = null;
     var postButton = null;
     var postActions = null;
+    var checkoutOptions = [];
+    var siteCurrency = 'USD';
+    var checkoutInstance = null;
     
     function loadFormpicker() {
         if (formpickerLoaded) return;
@@ -270,16 +273,36 @@ const MemberModule = (function() {
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
-        // Fetch form snapshot from database (same as forms.js - uses GET)
-        fetch('/gateway.php?action=get-form', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        }).then(function(response) {
-            return response.json();
-        }).then(function(response) {
-            if (response && response.success && response.snapshot) {
-                memberSnapshot = response.snapshot;
-                memberCategories = response.snapshot.categories || [];
+        // Fetch form snapshot and checkout options from database
+        Promise.all([
+            fetch('/gateway.php?action=get-form', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            }).then(function(r) { return r.json(); }),
+            fetch('/gateway.php?action=get-admin-settings', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            }).then(function(r) { return r.json(); })
+        ]).then(function(results) {
+            var formResponse = results[0];
+            var settingsResponse = results[1];
+            
+            if (formResponse && formResponse.success && formResponse.snapshot) {
+                memberSnapshot = formResponse.snapshot;
+                memberCategories = formResponse.snapshot.categories || [];
+            }
+            
+            // Get checkout options and currency from admin settings
+            if (settingsResponse && settingsResponse.checkout_options) {
+                checkoutOptions = (settingsResponse.checkout_options || []).filter(function(opt) {
+                    return opt.is_active !== false && opt.is_active !== 0;
+                });
+            }
+            if (settingsResponse && settingsResponse.settings && settingsResponse.settings.site_currency) {
+                siteCurrency = settingsResponse.settings.site_currency;
+            }
+            
+            if (memberCategories.length > 0) {
                 renderFormpicker(container);
                 formpickerLoaded = true;
             } else {
@@ -716,9 +739,73 @@ const MemberModule = (function() {
             });
         }
         
+        // Render checkout options at the bottom of the form
+        renderCheckoutOptionsSection();
+        
         if (formWrapper) formWrapper.hidden = false;
         if (postActions) postActions.hidden = false;
         if (postButton) { postButton.hidden = false; postButton.disabled = false; }
+    }
+    
+    function renderCheckoutOptionsSection() {
+        if (!formFields || checkoutOptions.length === 0) return;
+        
+        // Get subcategory data for surcharge and type
+        var surcharge = 0;
+        var subcategoryType = 'General';
+        if (memberSnapshot && memberCategories) {
+            var category = memberCategories.find(function(c) {
+                return c.name === selectedCategory;
+            });
+            if (category && category.subFees && category.subFees[selectedSubcategory]) {
+                var subData = category.subFees[selectedSubcategory];
+                if (subData.checkout_surcharge !== null && subData.checkout_surcharge !== undefined) {
+                    surcharge = parseFloat(subData.checkout_surcharge) || 0;
+                }
+                if (subData.subcategory_type) {
+                    subcategoryType = subData.subcategory_type;
+                }
+            }
+        }
+        
+        var isEvent = subcategoryType === 'Events';
+        
+        // Create checkout options wrapper
+        var wrapper = document.createElement('div');
+        wrapper.className = 'fieldset member-checkout-wrapper';
+        
+        // Label
+        var label = document.createElement('div');
+        label.className = 'fieldset-label';
+        var labelText = surcharge > 0 
+            ? 'Checkout Options (+' + surcharge.toFixed(2) + ' surcharge)' 
+            : 'Checkout Options';
+        label.innerHTML = '<span class="fieldset-label-text">' + labelText + '</span><span class="fieldset-label-required">*</span>';
+        wrapper.appendChild(label);
+        
+        // Create checkout options using CheckoutOptionsComponent
+        if (typeof CheckoutOptionsComponent !== 'undefined') {
+            checkoutInstance = CheckoutOptionsComponent.create(wrapper, {
+                checkoutOptions: checkoutOptions,
+                currency: siteCurrency,
+                surcharge: surcharge,
+                isEvent: isEvent,
+                calculatedDays: isEvent ? null : null, // Events: will update when dates selected
+                baseId: 'member-create',
+                groupName: 'member-create-checkout-option',
+                onSelect: function(optionId, days, price) {
+                    // Selection handler - can be used for validation
+                }
+            });
+        } else {
+            // Fallback if component not loaded
+            var placeholder = document.createElement('div');
+            placeholder.className = 'member-checkout-placeholder';
+            placeholder.textContent = 'Checkout options not available.';
+            wrapper.appendChild(placeholder);
+        }
+        
+        formFields.appendChild(wrapper);
     }
     
     // Build label element for fieldsets (from fieldset-test.html)
