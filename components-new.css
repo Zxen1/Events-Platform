@@ -1997,65 +1997,22 @@
 }
 
 /* ============================================================================
-   MAPBOX NATIVE CONTROLS (GeolocateControl + NavigationControl)
+   MAPBOX GEOLOCATE CONTROL (Hidden button, visible location marker)
    ============================================================================ */
 
-.mapboxgl-ctrl-top-left {
-    top: 12px;
-    left: 12px;
-}
-
-.mapboxgl-ctrl-group {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-}
-
-.mapboxgl-ctrl-group button {
-    width: 36px !important;
-    height: 36px !important;
-    border: none !important;
-}
-
-.mapboxgl-ctrl-group button + button {
-    border-top: 1px solid rgba(0,0,0,0.1) !important;
-}
-
-/* Compass and zoom buttons */
-.mapboxgl-ctrl-compass,
-.mapboxgl-ctrl-zoom-in,
-.mapboxgl-ctrl-zoom-out {
-    background-color: transparent !important;
-}
-
-.mapboxgl-ctrl-compass:hover,
-.mapboxgl-ctrl-zoom-in:hover,
-.mapboxgl-ctrl-zoom-out:hover {
-    background-color: rgba(0,0,0,0.05) !important;
-}
-
-/* Geolocate control states */
+/* Hide the Mapbox control button (we use custom styled button) */
 .mapboxgl-ctrl-geolocate {
-    background-color: transparent !important;
+    position: absolute !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
-.mapboxgl-ctrl-geolocate:hover {
-    background-color: rgba(0,0,0,0.05) !important;
+.mapboxgl-ctrl-group:has(.mapboxgl-ctrl-geolocate) {
+    display: none !important;
 }
 
-.mapboxgl-ctrl-geolocate-active {
-    background-color: rgba(33, 150, 243, 0.1) !important;
-}
-
-.mapboxgl-ctrl-geolocate-active:hover {
-    background-color: rgba(33, 150, 243, 0.15) !important;
-}
-
-.mapboxgl-ctrl-geolocate-background {
-    background-color: rgba(33, 150, 243, 0.15) !important;
-}
-
-/* Blue dot for user location */
+/* Blue dot for user location on map */
 .mapboxgl-user-location-dot {
     background-color: #4285F4 !important;
     box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.3) !important;

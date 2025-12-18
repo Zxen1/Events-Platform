@@ -295,7 +295,7 @@ const MapModule = (function() {
       return;
     }
 
-    // Add Mapbox GeolocateControl (blue spinning button)
+    // Add hidden Mapbox GeolocateControl (for functionality only)
     const geolocateControl = new mapboxgl.GeolocateControl({
       positionOptions: {
         enableHighAccuracy: true
@@ -304,33 +304,27 @@ const MapModule = (function() {
       showUserHeading: false,
       showUserLocation: true
     });
-    map.addControl(geolocateControl, 'top-left');
+    map.addControl(geolocateControl);
     
     // Stop spin when geolocate is triggered
     geolocateControl.on('geolocate', function() {
       stopSpin();
     });
+    
+    // Store reference for triggering
+    geocoders.geolocate = geolocateControl;
 
-    // Add Mapbox NavigationControl (compass + zoom buttons)
-    const navigationControl = new mapboxgl.NavigationControl({
-      showCompass: true,
-      showZoom: true,
-      visualizePitch: true
-    });
-    map.addControl(navigationControl, 'top-left');
-
-    // Map area geocoder (Google Places - keep custom implementation)
+    // Map area controls (Google Places + custom styled buttons)
     const mapControlsContainer = document.querySelector('.map-controls');
     if (mapControlsContainer) {
       mapControls = MapControlRowComponent.create(mapControlsContainer, {
         variant: 'map',
         placeholder: 'Search venues or places',
         map: map,
+        geolocateControl: geolocateControl,
         onResult: function(result) {
           handleGeocoderResult(result, 'map');
-        },
-        includeGeolocate: false,
-        includeCompass: false
+        }
       });
       
       geocoders.map = mapControls.geocoder;
