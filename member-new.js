@@ -806,15 +806,38 @@ const MemberModule = (function() {
         checkoutContainer.innerHTML = '';
         checkoutInstance = null;
         
-        // Get checkout options from snapshot
-        var checkoutOptions = memberSnapshot && memberSnapshot.checkoutOptions 
-            ? memberSnapshot.checkoutOptions 
-            : [];
-        
-        if (!checkoutOptions.length) {
+        // Fetch checkout options directly from database
+        fetch('/gateway.php?action=get-checkout-options', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data && data.success && Array.isArray(data.checkout_options)) {
+                var activeOptions = data.checkout_options.filter(function(opt) {
+                    return opt && opt.is_active === 1;
+                });
+                
+                if (activeOptions.length) {
+                    displayCheckoutOptions(activeOptions, data.currency || 'USD');
+                } else {
+                    checkoutContainer.hidden = true;
+                }
+            } else {
+                checkoutContainer.hidden = true;
+            }
+        })
+        .catch(function(err) {
+            console.error('[Member] Failed to fetch checkout options:', err);
             checkoutContainer.hidden = true;
-            return;
-        }
+        });
+    }
+    
+    function displayCheckoutOptions(checkoutOptions, currency) {
+        if (!checkoutContainer || !checkoutOptions.length) return;
+        
+        checkoutContainer.innerHTML = '';
+        checkoutInstance = null;
         
         // Add section label
         var sectionLabel = document.createElement('div');
@@ -825,24 +848,19 @@ const MemberModule = (function() {
         // Determine if this is an event (has sessions) or general post
         // For now, assume general post - events would need session date calculation
         var isEvent = false;
-        var currency = memberSnapshot && memberSnapshot.settings && memberSnapshot.settings.site_currency 
-            ? memberSnapshot.settings.site_currency 
-            : 'USD';
         
         // Create checkout options using CheckoutOptionsComponent
-        if (typeof CheckoutOptionsComponent !== 'undefined') {
-            checkoutInstance = CheckoutOptionsComponent.create(checkoutContainer, {
-                checkoutOptions: checkoutOptions,
-                currency: currency,
-                isEvent: isEvent,
-                calculatedDays: null,
-                baseId: 'member-create-checkout',
-                groupName: 'member-create-checkout-option',
-                onSelect: function(optionId, days, price) {
-                    console.log('[Member] Checkout option selected:', optionId, days, price);
-                }
-            });
-        }
+        checkoutInstance = CheckoutOptionsComponent.create(checkoutContainer, {
+            checkoutOptions: checkoutOptions,
+            currency: currency,
+            isEvent: isEvent,
+            calculatedDays: null,
+            baseId: 'member-create-checkout',
+            groupName: 'member-create-checkout-option',
+            onSelect: function(optionId, days, price) {
+                console.log('[Member] Checkout option selected:', optionId, days, price);
+            }
+        });
         
         checkoutContainer.hidden = false;
     }

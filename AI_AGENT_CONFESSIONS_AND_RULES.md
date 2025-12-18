@@ -1089,6 +1089,24 @@ Mapbox layers in rendering order (bottom to top):
 - Guessing wastes time and creates bugs that the user (who can't code) cannot fix
 - This rule exists because an agent guessed at fullscreen button behavior instead of checking the 30,000 line index.js where it was already implemented correctly
 
+### Rule 19: NEW SITE - NO SNAPSHOTS OR FALLBACKS
+**CRITICAL:** The new site (`*-new.*` files) must NOT use snapshots, cached window globals, or fallback chains.
+- NO snapshots or cached window globals (like `window.CHECKOUT_OPTIONS`)
+- NO fallback chains (if X fails, try Y, then try Z...)
+- Fetch data directly from dedicated API endpoints when needed
+- Each endpoint returns exactly what's needed, nothing more
+- If data isn't available, show an error - don't silently fall back to something else
+- Single source of truth: database → API → component
+- This rule exists because snapshots and fallbacks caused immense debugging trouble on the old site
+
+### Rule 20: NEW SITE - DEFAULT BUTTON AND INPUT SIZING
+**CRITICAL:** On the new site, buttons and inputs have standard default sizing:
+- Height: 36px
+- Padding: 10px
+- These are the defaults unless explicitly specified otherwise
+- Consistency across all forms and panels
+- If a different size is needed, it must be explicitly requested
+
 ---
 
 ## LIMITATIONS: WHAT AI AGENTS CANNOT DO

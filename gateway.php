@@ -26,6 +26,61 @@ if ($connectorDir === null) {
   exit;
 }
 
+// Handle get-checkout-options inline - returns active checkout options with site currency
+if ($action === 'get-checkout-options') {
+  header('Content-Type: application/json');
+  
+  // Include database config
+  $configPath = null;
+  $configCandidates = [
+    $baseDir . '/../config/config.php',
+    $baseDir . '/home/funmapco/config/config.php'
+  ];
+  foreach ($configCandidates as $candidate) {
+    if (file_exists($candidate)) {
+      $configPath = $candidate;
+      break;
+    }
+  }
+  
+  if (!$configPath) {
+    echo json_encode(['success' => false, 'message' => 'Configuration not found']);
+    exit;
+  }
+  
+  require_once $configPath;
+  
+  try {
+    $pdo = new PDO(
+      "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+      DB_USER,
+      DB_PASS,
+      [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    
+    // Get checkout options
+    $stmt = $pdo->query("SELECT id, tier_name, price_per_day, is_active FROM checkout_options ORDER BY id ASC");
+    $checkoutOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get site currency from settings
+    $currency = 'USD';
+    $stmt = $pdo->query("SELECT setting_value FROM site_settings WHERE setting_key = 'site_currency' LIMIT 1");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row && !empty($row['setting_value'])) {
+      $currency = $row['setting_value'];
+    }
+    
+    echo json_encode([
+      'success' => true,
+      'checkout_options' => $checkoutOptions,
+      'currency' => $currency
+    ]);
+  } catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Database error']);
+  }
+  exit;
+}
+
 // Handle list-icons inline (no separate file needed)
 if ($action === 'list-icons') {
   header('Content-Type: application/json');
