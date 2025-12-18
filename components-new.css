@@ -1653,13 +1653,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
-    border: 1px solid rgba(0,0,0,0.15);
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    color: #333333;
+    color: #ffffff;
 }
 
 .filter-mapcontrol-geolocate-icon {
@@ -1674,13 +1674,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
-    border: 1px solid rgba(0,0,0,0.15);
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    color: #333333;
+    color: #ffffff;
 }
 
 .filter-mapcontrol-compass-icon {
@@ -1688,6 +1688,14 @@
     width: 20px;
     height: 20px;
     transition: transform 0.1s ease-out;
+}
+
+.filter-mapcontrol-compass-north {
+    fill: #3b82f6;
+}
+
+.filter-mapcontrol-compass-south {
+    fill: #ffffff;
 }
 
 
@@ -1821,6 +1829,14 @@
     transition: transform 0.1s ease-out;
 }
 
+.map-mapcontrol-compass-north {
+    fill: #3b82f6;
+}
+
+.map-mapcontrol-compass-south {
+    fill: #333333;
+}
+
 
 /* ----------------------------------------------------------------------------
    WELCOME MODAL VARIANT
@@ -1951,6 +1967,14 @@
     width: 16px;
     height: 16px;
     transition: transform 0.1s ease-out;
+}
+
+.welcome-mapcontrol-compass-north {
+    fill: #3b82f6;
+}
+
+.welcome-mapcontrol-compass-south {
+    fill: #333333;
 }
 
 
