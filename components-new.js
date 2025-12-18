@@ -1286,6 +1286,7 @@ const MapControlRowComponent = (function(){
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
                     geolocateBtn.classList.remove('loading');
+                    geolocateBtn.classList.add('active');
                     var lat = pos.coords.latitude;
                     var lng = pos.coords.longitude;
                     
@@ -1303,7 +1304,7 @@ const MapControlRowComponent = (function(){
                     geolocateBtn.classList.remove('loading');
                     console.error('[Geolocate] Error:', err.message);
                 },
-                { enableHighAccuracy: false, timeout: 10000 }
+                { enableHighAccuracy: true, timeout: 10000 }
             );
         });
         

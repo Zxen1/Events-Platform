@@ -1988,10 +1988,41 @@
 .filter-mapcontrol-geolocate.loading .filter-mapcontrol-geolocate-icon,
 .map-mapcontrol-geolocate.loading .map-mapcontrol-geolocate-icon,
 .welcome-mapcontrol-geolocate.loading .welcome-mapcontrol-geolocate-icon {
-    animation: mapcontrol-geolocate-pulse 1s ease-in-out infinite;
+    -webkit-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -moz-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -o-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -ms-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    animation: mapcontrol-geolocate-spin 2s infinite linear;
 }
 
-@keyframes mapcontrol-geolocate-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.9); }
+@-webkit-keyframes mapcontrol-geolocate-spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes mapcontrol-geolocate-spin {
+    0% { -moz-transform: rotate(0deg); }
+    100% { -moz-transform: rotate(360deg); }
+}
+
+@-o-keyframes mapcontrol-geolocate-spin {
+    0% { -o-transform: rotate(0deg); }
+    100% { -o-transform: rotate(360deg); }
+}
+
+@-ms-keyframes mapcontrol-geolocate-spin {
+    0% { -ms-transform: rotate(0deg); }
+    100% { -ms-transform: rotate(360deg); }
+}
+
+@keyframes mapcontrol-geolocate-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.filter-mapcontrol-geolocate.active,
+.map-mapcontrol-geolocate.active,
+.welcome-mapcontrol-geolocate.active {
+    background-color: #33b5e5;
+    color: #ffffff;
 }
