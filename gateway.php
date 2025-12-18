@@ -30,14 +30,10 @@ if ($connectorDir === null) {
 if ($action === 'get-checkout-options') {
   header('Content-Type: application/json');
   
-  // Include database config (same paths as connectors use from their __DIR__)
+  // Include database config (paths relative to gateway.php location)
   $configCandidates = [
-    $connectorDir . '/../config/config-db.php',
-    dirname($connectorDir) . '/config/config-db.php',
-    dirname($connectorDir, 2) . '/config/config-db.php',
-    dirname($connectorDir, 3) . '/../config/config-db.php',
-    dirname($connectorDir) . '/../config/config-db.php',
-    $connectorDir . '/config-db.php',
+    $baseDir . '/../config/config-db.php',
+    $baseDir . '/home/funmapco/config/config-db.php',
   ];
   
   $configPath = null;
@@ -112,7 +108,7 @@ if ($action === 'get-checkout-options') {
       'currency' => $currency
     ]);
   } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Database error']);
   }
   exit;
 }
