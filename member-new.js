@@ -68,6 +68,16 @@ const MemberModule = (function() {
     var profileName = null;
     var profileEmail = null;
     var logoutBtn = null;
+    
+    // Create post elements
+    var submitBtn = null;
+    var adminSubmitBtn = null;
+    var termsLink = null;
+    var termsAgreed = false;
+    
+    // Terms modal elements
+    var termsModalContainer = null;
+    var termsAgreedCheckbox = null;
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -254,7 +264,6 @@ const MemberModule = (function() {
     var selectedSubcategory = '';
     var formWrapper = null;
     var formFields = null;
-    var postButton = null;
     var postActions = null;
     var checkoutOptions = [];
     var siteCurrency = 'USD';
@@ -268,8 +277,18 @@ const MemberModule = (function() {
         
         formWrapper = document.getElementById('member-create-form-wrapper');
         formFields = document.getElementById('member-create-fields');
-        postButton = document.getElementById('member-create-post-btn');
+        submitBtn = document.getElementById('member-create-submit-btn');
+        adminSubmitBtn = document.getElementById('member-admin-submit-btn');
+        termsLink = document.getElementById('member-terms-link');
         postActions = document.getElementById('member-create-actions');
+        
+        // Bind terms link
+        if (termsLink) {
+            termsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openTermsModal();
+            });
+        }
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
@@ -321,8 +340,10 @@ const MemberModule = (function() {
         
         if (formWrapper) formWrapper.hidden = true;
         if (formFields) formFields.innerHTML = '';
-        if (postButton) { postButton.disabled = true; postButton.hidden = true; }
+        if (submitBtn) submitBtn.disabled = true;
+        if (adminSubmitBtn) adminSubmitBtn.hidden = true;
         if (postActions) postActions.hidden = true;
+        termsAgreed = false;
         
         var categoryIconPaths = memberSnapshot.categoryIconPaths || {};
         var subcategoryIconPaths = memberSnapshot.subcategoryIconPaths || {};
@@ -527,7 +548,8 @@ const MemberModule = (function() {
         if (!selectedCategory || !selectedSubcategory) {
             if (formWrapper) formWrapper.hidden = true;
             if (formFields) formFields.innerHTML = '';
-            if (postButton) { postButton.disabled = true; postButton.hidden = true; }
+            if (submitBtn) submitBtn.disabled = true;
+            if (adminSubmitBtn) { adminSubmitBtn.disabled = true; adminSubmitBtn.hidden = true; }
             if (postActions) postActions.hidden = true;
             return;
         }
@@ -744,7 +766,14 @@ const MemberModule = (function() {
         
         if (formWrapper) formWrapper.hidden = false;
         if (postActions) postActions.hidden = false;
-        if (postButton) { postButton.hidden = false; postButton.disabled = false; }
+        
+        // Update submit buttons - disabled until terms agreed
+        updateSubmitButtonState();
+        
+        // Show admin submit button if user is admin
+        if (adminSubmitBtn && currentUser && currentUser.isAdmin) {
+            adminSubmitBtn.hidden = false;
+        }
     }
     
     function renderCheckoutOptionsSection() {
@@ -806,6 +835,129 @@ const MemberModule = (function() {
         }
         
         formFields.appendChild(wrapper);
+    }
+    
+    function updateSubmitButtonState() {
+        var ready = termsAgreed;
+        if (submitBtn) {
+            submitBtn.disabled = !ready;
+        }
+        if (adminSubmitBtn) {
+            adminSubmitBtn.disabled = !ready;
+        }
+    }
+    
+    /* --------------------------------------------------------------------------
+       TERMS AND CONDITIONS MODAL
+       -------------------------------------------------------------------------- */
+    
+    function openTermsModal() {
+        if (!termsModalContainer) {
+            createTermsModal();
+        }
+        
+        // Sync checkbox with current state
+        if (termsAgreedCheckbox) {
+            termsAgreedCheckbox.checked = termsAgreed;
+        }
+        
+        termsModalContainer.classList.remove('terms-modal-container--hidden');
+    }
+    
+    function closeTermsModal() {
+        if (termsModalContainer) {
+            termsModalContainer.classList.add('terms-modal-container--hidden');
+        }
+    }
+    
+    function createTermsModal() {
+        termsModalContainer = document.createElement('div');
+        termsModalContainer.className = 'terms-modal-container terms-modal-container--hidden';
+        
+        var modal = document.createElement('div');
+        modal.className = 'terms-modal';
+        
+        // Header
+        var header = document.createElement('div');
+        header.className = 'terms-modal-header';
+        
+        var title = document.createElement('h2');
+        title.className = 'terms-modal-title';
+        title.textContent = 'Terms and Conditions';
+        
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'terms-modal-close';
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.addEventListener('click', closeTermsModal);
+        
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+        
+        // Content
+        var content = document.createElement('div');
+        content.className = 'terms-modal-content';
+        
+        var termsText = document.createElement('div');
+        termsText.className = 'terms-modal-text';
+        termsText.innerHTML = '<p class="terms-modal-text-paragraph">Please read and agree to the terms and conditions before submitting your post.</p>' +
+            '<p class="terms-modal-text-paragraph">By submitting this listing, you confirm that:</p>' +
+            '<ul class="terms-modal-text-list">' +
+            '<li class="terms-modal-text-item">All information provided is accurate and truthful</li>' +
+            '<li class="terms-modal-text-item">You have the right to post this content</li>' +
+            '<li class="terms-modal-text-item">You agree to our community guidelines</li>' +
+            '</ul>';
+        content.appendChild(termsText);
+        
+        // Checkbox wrapper
+        var checkboxWrapper = document.createElement('div');
+        checkboxWrapper.className = 'terms-modal-checkbox-wrapper';
+        
+        termsAgreedCheckbox = document.createElement('input');
+        termsAgreedCheckbox.type = 'checkbox';
+        termsAgreedCheckbox.id = 'member-terms-checkbox';
+        termsAgreedCheckbox.className = 'terms-modal-checkbox';
+        termsAgreedCheckbox.checked = termsAgreed;
+        termsAgreedCheckbox.addEventListener('change', function() {
+            termsAgreed = termsAgreedCheckbox.checked;
+            updateSubmitButtonState();
+        });
+        
+        var checkboxLabel = document.createElement('label');
+        checkboxLabel.htmlFor = 'member-terms-checkbox';
+        checkboxLabel.className = 'terms-modal-checkbox-label';
+        checkboxLabel.textContent = 'I agree to these terms and conditions';
+        
+        checkboxWrapper.appendChild(termsAgreedCheckbox);
+        checkboxWrapper.appendChild(checkboxLabel);
+        content.appendChild(checkboxWrapper);
+        
+        // Footer
+        var footer = document.createElement('div');
+        footer.className = 'terms-modal-footer';
+        
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'member-button-auth';
+        closeButton.textContent = 'Close';
+        closeButton.addEventListener('click', closeTermsModal);
+        
+        footer.appendChild(closeButton);
+        
+        modal.appendChild(header);
+        modal.appendChild(content);
+        modal.appendChild(footer);
+        termsModalContainer.appendChild(modal);
+        
+        // Close on background click
+        termsModalContainer.addEventListener('click', function(e) {
+            if (e.target === termsModalContainer) {
+                closeTermsModal();
+            }
+        });
+        
+        document.body.appendChild(termsModalContainer);
     }
     
     // Build label element for fieldsets (from fieldset-test.html)
