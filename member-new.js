@@ -72,7 +72,6 @@ const MemberModule = (function() {
     // Create post elements
     var submitBtn = null;
     var adminSubmitBtn = null;
-    var termsLink = null;
     var termsAgreed = false;
     
     // Terms modal elements
@@ -279,16 +278,7 @@ const MemberModule = (function() {
         formFields = document.getElementById('member-create-fields');
         submitBtn = document.getElementById('member-create-submit-btn');
         adminSubmitBtn = document.getElementById('member-admin-submit-btn');
-        termsLink = document.getElementById('member-terms-link');
         postActions = document.getElementById('member-create-actions');
-        
-        // Bind terms link
-        if (termsLink) {
-            termsLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openTermsModal();
-            });
-        }
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
@@ -764,6 +754,9 @@ const MemberModule = (function() {
         // Render checkout options at the bottom of the form
         renderCheckoutOptionsSection();
         
+        // Render terms agreement row after checkout options
+        renderTermsAgreementRow();
+        
         if (formWrapper) formWrapper.hidden = false;
         if (postActions) postActions.hidden = false;
         
@@ -837,6 +830,52 @@ const MemberModule = (function() {
         formFields.appendChild(wrapper);
     }
     
+    // Form terms agreement row element
+    var formTermsCheckbox = null;
+    
+    function renderTermsAgreementRow() {
+        if (!formFields) return;
+        
+        var wrapper = document.createElement('div');
+        wrapper.className = 'fieldset member-terms-agreement';
+        
+        var checkboxWrapper = document.createElement('label');
+        checkboxWrapper.className = 'member-terms-agreement-label';
+        
+        formTermsCheckbox = document.createElement('input');
+        formTermsCheckbox.type = 'checkbox';
+        formTermsCheckbox.className = 'member-terms-agreement-checkbox';
+        formTermsCheckbox.checked = termsAgreed;
+        formTermsCheckbox.addEventListener('change', function() {
+            termsAgreed = formTermsCheckbox.checked;
+            // Sync modal checkbox if it exists
+            if (termsAgreedCheckbox) {
+                termsAgreedCheckbox.checked = termsAgreed;
+            }
+            updateSubmitButtonState();
+        });
+        
+        var labelText = document.createElement('span');
+        labelText.className = 'member-terms-agreement-text';
+        labelText.textContent = 'I agree to the ';
+        
+        var termsLinkInline = document.createElement('a');
+        termsLinkInline.href = '#';
+        termsLinkInline.className = 'member-terms-agreement-link';
+        termsLinkInline.textContent = 'Terms and Conditions';
+        termsLinkInline.addEventListener('click', function(e) {
+            e.preventDefault();
+            openTermsModal();
+        });
+        
+        checkboxWrapper.appendChild(formTermsCheckbox);
+        checkboxWrapper.appendChild(labelText);
+        checkboxWrapper.appendChild(termsLinkInline);
+        wrapper.appendChild(checkboxWrapper);
+        
+        formFields.appendChild(wrapper);
+    }
+    
     function updateSubmitButtonState() {
         var ready = termsAgreed;
         if (submitBtn) {
@@ -870,6 +909,18 @@ const MemberModule = (function() {
         }
     }
     
+    function agreeAndCloseModal() {
+        termsAgreed = true;
+        if (termsAgreedCheckbox) {
+            termsAgreedCheckbox.checked = true;
+        }
+        if (formTermsCheckbox) {
+            formTermsCheckbox.checked = true;
+        }
+        updateSubmitButtonState();
+        closeTermsModal();
+    }
+    
     function createTermsModal() {
         termsModalContainer = document.createElement('div');
         termsModalContainer.className = 'terms-modal-container terms-modal-container--hidden';
@@ -901,14 +952,27 @@ const MemberModule = (function() {
         
         var termsText = document.createElement('div');
         termsText.className = 'terms-modal-text';
-        termsText.innerHTML = '<p class="terms-modal-text-paragraph">Please read and agree to the terms and conditions before submitting your post.</p>' +
-            '<p class="terms-modal-text-paragraph">By submitting this listing, you confirm that:</p>' +
-            '<ul class="terms-modal-text-list">' +
-            '<li class="terms-modal-text-item">All information provided is accurate and truthful</li>' +
-            '<li class="terms-modal-text-item">You have the right to post this content</li>' +
-            '<li class="terms-modal-text-item">You agree to our community guidelines</li>' +
-            '</ul>';
+        // Default text - will be replaced by DB message
+        termsText.innerHTML = '<p class="terms-modal-text-paragraph">Loading terms and conditions...</p>';
         content.appendChild(termsText);
+        
+        // Load terms from database
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg-terms-conditions', {}, false).then(function(msg) {
+                if (msg) {
+                    termsText.innerHTML = msg;
+                } else {
+                    // Fallback if no message in DB
+                    termsText.innerHTML = '<p class="terms-modal-text-paragraph">Please read and agree to the terms and conditions before submitting your post.</p>' +
+                        '<p class="terms-modal-text-paragraph">By submitting this listing, you confirm that:</p>' +
+                        '<ul class="terms-modal-text-list">' +
+                        '<li class="terms-modal-text-item">All information provided is accurate and truthful</li>' +
+                        '<li class="terms-modal-text-item">You have the right to post this content</li>' +
+                        '<li class="terms-modal-text-item">You agree to our community guidelines</li>' +
+                        '</ul>';
+                }
+            });
+        }
         
         // Checkbox wrapper
         var checkboxWrapper = document.createElement('div');
@@ -916,16 +980,19 @@ const MemberModule = (function() {
         
         termsAgreedCheckbox = document.createElement('input');
         termsAgreedCheckbox.type = 'checkbox';
-        termsAgreedCheckbox.id = 'member-terms-checkbox';
+        termsAgreedCheckbox.id = 'member-terms-modal-checkbox';
         termsAgreedCheckbox.className = 'terms-modal-checkbox';
         termsAgreedCheckbox.checked = termsAgreed;
         termsAgreedCheckbox.addEventListener('change', function() {
             termsAgreed = termsAgreedCheckbox.checked;
+            if (formTermsCheckbox) {
+                formTermsCheckbox.checked = termsAgreed;
+            }
             updateSubmitButtonState();
         });
         
         var checkboxLabel = document.createElement('label');
-        checkboxLabel.htmlFor = 'member-terms-checkbox';
+        checkboxLabel.htmlFor = 'member-terms-modal-checkbox';
         checkboxLabel.className = 'terms-modal-checkbox-label';
         checkboxLabel.textContent = 'I agree to these terms and conditions';
         
@@ -937,12 +1004,19 @@ const MemberModule = (function() {
         var footer = document.createElement('div');
         footer.className = 'terms-modal-footer';
         
+        var agreeButton = document.createElement('button');
+        agreeButton.type = 'button';
+        agreeButton.className = 'member-button-auth';
+        agreeButton.textContent = 'Agree';
+        agreeButton.addEventListener('click', agreeAndCloseModal);
+        
         var closeButton = document.createElement('button');
         closeButton.type = 'button';
-        closeButton.className = 'member-button-auth';
+        closeButton.className = 'member-button-secondary';
         closeButton.textContent = 'Close';
         closeButton.addEventListener('click', closeTermsModal);
         
+        footer.appendChild(agreeButton);
         footer.appendChild(closeButton);
         
         modal.appendChild(header);
