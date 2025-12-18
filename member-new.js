@@ -96,23 +96,12 @@ const MemberModule = (function() {
     
     function initHeaderDrag() {
         var headerEl = panel.querySelector('.member-panel-header');
-        var dragHandle = panel.querySelector('.member-panel-drag-handle');
         if (!headerEl || !panelContent) return;
         
         // Drag via header
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
-            startDrag(e);
-        });
-        
-        // Drag via handle
-        if (dragHandle) {
-            dragHandle.addEventListener('mousedown', function(e) {
-                startDrag(e);
-            });
-        }
-        
-        function startDrag(e) {
+            
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
             var wasRight = panelContent.classList.contains('member-panel-content--side-right');
@@ -163,7 +152,7 @@ const MemberModule = (function() {
             
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
-        }
+        });
     }
 
     function cacheElements() {

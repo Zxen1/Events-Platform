@@ -135,16 +135,11 @@
   background: rgba(255,255,255,0.1);
 }
 
-/* Active mode - color the icon and text with website color */
-.header-modeswitch-button--active .header-modeswitch-button-icon,
-.header-modeswitch-button[aria-pressed="true"] .header-modeswitch-button-icon {
-  /* Blue filter for SVG icons: hue-rotate to blue range */
-  filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(196deg) brightness(97%) contrast(95%);
-}
-
-.header-modeswitch-button--active .header-modeswitch-button-text,
-.header-modeswitch-button[aria-pressed="true"] .header-modeswitch-button-text {
-  color: var(--website-color, #3b82f6);
+/* Active mode - blue background, white text */
+.header-modeswitch-button--active,
+.header-modeswitch-button[aria-pressed="true"] {
+  background: var(--btn-selected, #3b82f6);
+  color: var(--button-active-text, #fff);
 }
 
 .header-modeswitch-button--bordered {
@@ -255,11 +250,16 @@
   box-sizing: border-box;
 }
 
-.header-access-button-avatar--active {
+/* Avatar glow when panel is open */
+.header-access-button--active .header-access-button-avatar,
+.header-access-button[aria-pressed="true"] .header-access-button-avatar,
+.header-access-button[aria-expanded="true"] .header-access-button-avatar {
   border-color: #3b82f6;
 }
 
-.header-access-button-avatar--active:hover {
+.header-access-button--active:hover .header-access-button-avatar,
+.header-access-button[aria-pressed="true"]:hover .header-access-button-avatar,
+.header-access-button[aria-expanded="true"]:hover .header-access-button-avatar {
   border-color: #60a5fa;
 }
 

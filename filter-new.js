@@ -65,7 +65,6 @@ const FilterModule = (function() {
         initCategoryFilter();
         initHeaderDrag();
         initBackdropClose();
-        initCloseButton();
         bindPanelEvents();
         
         console.log('[Filter] Filter module initialized');
@@ -75,16 +74,6 @@ const FilterModule = (function() {
         var backdrop = panelEl.querySelector('.filter-panel-backdrop');
         if (backdrop) {
             backdrop.addEventListener('click', function() {
-                closePanel();
-                App.emit('filter:closed');
-            });
-        }
-    }
-    
-    function initCloseButton() {
-        var closeBtn = panelEl.querySelector('.filter-panel-actions-icon-btn--close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
                 closePanel();
                 App.emit('filter:closed');
             });
