@@ -1664,6 +1664,8 @@
 
 .filter-mapcontrol-geolocate-icon {
     display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .filter-mapcontrol-compass {
@@ -1791,6 +1793,8 @@
 
 .map-mapcontrol-geolocate-icon {
     display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .map-mapcontrol-compass {
