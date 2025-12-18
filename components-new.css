@@ -1995,29 +1995,3 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(0.9); }
 }
-
-/* ============================================================================
-   MAPBOX GEOLOCATE CONTROL (Hidden button, visible location marker)
-   ============================================================================ */
-
-/* Hide the Mapbox control button (we use custom styled button) */
-.mapboxgl-ctrl-geolocate {
-    position: absolute !important;
-    left: -9999px !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-.mapboxgl-ctrl-group:has(.mapboxgl-ctrl-geolocate) {
-    display: none !important;
-}
-
-/* Blue dot for user location on map */
-.mapboxgl-user-location-dot {
-    background-color: #4285F4 !important;
-    box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.3) !important;
-}
-
-.mapboxgl-user-location-accuracy-circle {
-    background-color: rgba(66, 133, 244, 0.2) !important;
-}

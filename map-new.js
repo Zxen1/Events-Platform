@@ -295,33 +295,13 @@ const MapModule = (function() {
       return;
     }
 
-    // Add hidden Mapbox GeolocateControl (for functionality only)
-    const geolocateControl = new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true
-      },
-      trackUserLocation: false,
-      showUserHeading: false,
-      showUserLocation: true
-    });
-    map.addControl(geolocateControl);
-    
-    // Stop spin when geolocate is triggered
-    geolocateControl.on('geolocate', function() {
-      stopSpin();
-    });
-    
-    // Store reference for triggering
-    geocoders.geolocate = geolocateControl;
-
-    // Map area controls (Google Places + custom styled buttons)
+    // Map area controls (Google Places + Mapbox geolocate/compass)
     const mapControlsContainer = document.querySelector('.map-controls');
     if (mapControlsContainer) {
       mapControls = MapControlRowComponent.create(mapControlsContainer, {
         variant: 'map',
         placeholder: 'Search venues or places',
         map: map,
-        geolocateControl: geolocateControl,
         onResult: function(result) {
           handleGeocoderResult(result, 'map');
         }

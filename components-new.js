@@ -1108,7 +1108,6 @@ const MapControlRowComponent = (function(){
         var placeholder = options.placeholder || 'Search venues or places';
         var onResult = options.onResult || function() {};
         var map = options.map || null;
-        var geolocateControl = options.geolocateControl || null;
         
         // Build class prefix based on variant
         var prefix = variant + '-mapcontrol';
@@ -1279,17 +1278,6 @@ const MapControlRowComponent = (function(){
         
         // Geolocate button
         geolocateBtn.addEventListener('click', function() {
-            // If Mapbox GeolocateControl is provided, trigger it by clicking hidden button
-            if (geolocateControl) {
-                // Find and click the hidden Mapbox button
-                var mapboxBtn = document.querySelector('.mapboxgl-ctrl-geolocate');
-                if (mapboxBtn) {
-                    mapboxBtn.click();
-                }
-                return;
-            }
-            
-            // Fallback to manual geolocation (for filter panel)
             if (!navigator.geolocation) {
                 console.warn('[Geolocate] Geolocation not supported');
                 return;
@@ -1319,28 +1307,6 @@ const MapControlRowComponent = (function(){
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         });
-        
-        // Sync custom button state with Mapbox GeolocateControl states
-        if (geolocateControl) {
-            // Show loading when searching
-            geolocateControl.on('trackuserlocationstart', function() {
-                geolocateBtn.classList.add('loading');
-            });
-            
-            // Remove loading when found or active
-            geolocateControl.on('geolocate', function() {
-                geolocateBtn.classList.remove('loading');
-            });
-            
-            geolocateControl.on('trackuserlocationend', function() {
-                geolocateBtn.classList.remove('loading');
-            });
-            
-            // Remove loading on error
-            geolocateControl.on('error', function() {
-                geolocateBtn.classList.remove('loading');
-            });
-        }
         
         // Compass button - reset bearing on click
         compassBtn.addEventListener('click', function() {
