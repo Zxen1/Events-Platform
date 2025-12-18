@@ -1100,6 +1100,7 @@ const MapControlRowComponent = (function(){
     
     var instances = [];
     var geolocateActive = false;
+    var cachedLocation = null;
     
     // Sync all geolocate buttons to loading state
     function setAllGeolocateLoading() {
@@ -1308,6 +1309,19 @@ const MapControlRowComponent = (function(){
         
         // Geolocate button
         geolocateBtn.addEventListener('click', function() {
+            // If we already have cached location, use it instantly
+            if (cachedLocation) {
+                if (map) {
+                    map.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: 14 });
+                }
+                onResult({
+                    center: [cachedLocation.lng, cachedLocation.lat],
+                    geometry: { type: 'Point', coordinates: [cachedLocation.lng, cachedLocation.lat] },
+                    isGeolocate: true
+                });
+                return;
+            }
+            
             if (!navigator.geolocation) {
                 console.warn('[Geolocate] Geolocation not supported');
                 return;
@@ -1319,6 +1333,9 @@ const MapControlRowComponent = (function(){
                     setAllGeolocateActive();
                     var lat = pos.coords.latitude;
                     var lng = pos.coords.longitude;
+                    
+                    // Cache the location
+                    cachedLocation = { lat: lat, lng: lng };
                     
                     if (map) {
                         map.flyTo({ center: [lng, lat], zoom: 14 });
