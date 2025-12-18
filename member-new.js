@@ -262,7 +262,6 @@ const MemberModule = (function() {
     var selectedSubcategory = '';
     var formWrapper = null;
     var formFields = null;
-    var postActions = null;
     var checkoutOptions = [];
     var siteCurrency = 'USD';
     var checkoutInstance = null;
@@ -275,9 +274,6 @@ const MemberModule = (function() {
         
         formWrapper = document.getElementById('member-create-form-wrapper');
         formFields = document.getElementById('member-create-fields');
-        submitBtn = document.getElementById('member-create-submit-btn');
-        adminSubmitBtn = document.getElementById('member-admin-submit-btn');
-        postActions = document.getElementById('member-create-actions');
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
@@ -329,9 +325,9 @@ const MemberModule = (function() {
         
         if (formWrapper) formWrapper.hidden = true;
         if (formFields) formFields.innerHTML = '';
-        if (submitBtn) submitBtn.disabled = true;
-        if (adminSubmitBtn) adminSubmitBtn.hidden = true;
-        if (postActions) postActions.hidden = true;
+        // Reset state
+        submitBtn = null;
+        adminSubmitBtn = null;
         termsAgreed = false;
         
         var categoryIconPaths = memberSnapshot.categoryIconPaths || {};
@@ -537,9 +533,6 @@ const MemberModule = (function() {
         if (!selectedCategory || !selectedSubcategory) {
             if (formWrapper) formWrapper.hidden = true;
             if (formFields) formFields.innerHTML = '';
-            if (submitBtn) submitBtn.disabled = true;
-            if (adminSubmitBtn) { adminSubmitBtn.disabled = true; adminSubmitBtn.hidden = true; }
-            if (postActions) postActions.hidden = true;
             return;
         }
         
@@ -753,19 +746,10 @@ const MemberModule = (function() {
         // Render checkout options at the bottom of the form
         renderCheckoutOptionsSection();
         
-        // Render terms agreement row after checkout options
-        renderTermsAgreementRow();
+        // Render terms agreement and submit buttons after checkout options
+        renderTermsAndSubmitSection();
         
         if (formWrapper) formWrapper.hidden = false;
-        if (postActions) postActions.hidden = false;
-        
-        // Update submit buttons - disabled until terms agreed
-        updateSubmitButtonState();
-        
-        // Show admin submit button if user is admin
-        if (adminSubmitBtn && currentUser && currentUser.isAdmin) {
-            adminSubmitBtn.hidden = false;
-        }
     }
     
     function renderCheckoutOptionsSection() {
@@ -832,11 +816,12 @@ const MemberModule = (function() {
     // Form terms agreement row element
     var formTermsCheckbox = null;
     
-    function renderTermsAgreementRow() {
+    function renderTermsAndSubmitSection() {
         if (!formFields) return;
         
-        var wrapper = document.createElement('div');
-        wrapper.className = 'fieldset member-terms-agreement';
+        // Terms agreement row
+        var termsWrapper = document.createElement('div');
+        termsWrapper.className = 'fieldset member-terms-agreement';
         
         var checkboxWrapper = document.createElement('label');
         checkboxWrapper.className = 'member-terms-agreement-label';
@@ -866,9 +851,36 @@ const MemberModule = (function() {
         checkboxWrapper.appendChild(formTermsCheckbox);
         checkboxWrapper.appendChild(labelText);
         checkboxWrapper.appendChild(termsLinkInline);
-        wrapper.appendChild(checkboxWrapper);
+        termsWrapper.appendChild(checkboxWrapper);
+        formFields.appendChild(termsWrapper);
         
-        formFields.appendChild(wrapper);
+        // Submit buttons container
+        var actionsWrapper = document.createElement('div');
+        actionsWrapper.className = 'member-create-actions';
+        
+        // Main submit button
+        submitBtn = document.createElement('button');
+        submitBtn.type = 'submit';
+        submitBtn.className = 'member-button-submit';
+        submitBtn.textContent = 'Submit';
+        submitBtn.disabled = !termsAgreed;
+        actionsWrapper.appendChild(submitBtn);
+        
+        // Admin submit button (hidden by default)
+        adminSubmitBtn = document.createElement('button');
+        adminSubmitBtn.type = 'button';
+        adminSubmitBtn.className = 'member-button-admin-submit';
+        adminSubmitBtn.textContent = 'Admin: Submit Free';
+        adminSubmitBtn.disabled = !termsAgreed;
+        adminSubmitBtn.hidden = true;
+        
+        // Show admin button if user is admin
+        if (currentUser && currentUser.isAdmin) {
+            adminSubmitBtn.hidden = false;
+        }
+        
+        actionsWrapper.appendChild(adminSubmitBtn);
+        formFields.appendChild(actionsWrapper);
     }
     
     function updateSubmitButtonState() {
@@ -963,18 +975,11 @@ const MemberModule = (function() {
         
         var agreeButton = document.createElement('button');
         agreeButton.type = 'button';
-        agreeButton.className = 'member-button-auth';
+        agreeButton.className = 'terms-modal-agree-btn';
         agreeButton.textContent = 'Agree';
         agreeButton.addEventListener('click', agreeAndCloseModal);
         
-        var closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'member-button-secondary';
-        closeButton.textContent = 'Close';
-        closeButton.addEventListener('click', closeTermsModal);
-        
         footer.appendChild(agreeButton);
-        footer.appendChild(closeButton);
         
         modal.appendChild(header);
         modal.appendChild(content);

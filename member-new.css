@@ -602,6 +602,28 @@
   margin-top: 20px;
 }
 
+.member-button-submit {
+  background: var(--website-color, #3b82f6);
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.member-button-submit:hover:not(:disabled) {
+  background: var(--website-color-hover, #2563eb);
+}
+
+.member-button-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .member-button-admin-submit {
   background: #22c55e;
   border: 1px solid #22c55e;
@@ -631,32 +653,6 @@
   cursor: not-allowed;
 }
 
-.member-button-secondary {
-  background: transparent;
-  border: 1px solid #555;
-  color: #ffffff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  padding: 0 16px;
-  height: 36px;
-  min-height: 36px;
-  border-radius: 6px;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.member-button-secondary:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: #888;
-}
-
-.member-create-actions-primary--disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* ============================================================================
    TERMS AGREEMENT ROW (on form)

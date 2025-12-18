@@ -416,7 +416,23 @@ body {
   border-top: 1px solid rgba(255,255,255,0.1);
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+}
+
+.terms-modal-agree-btn {
+  background: var(--website-color, #3b82f6);
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.terms-modal-agree-btn:hover {
+  background: var(--website-color-hover, #2563eb);
 }
 
 .terms-conditions-link {

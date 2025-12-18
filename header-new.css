@@ -135,9 +135,15 @@
   background: rgba(255,255,255,0.1);
 }
 
-.header-modeswitch-button--active {
-  background: #3b82f6;
+.header-modeswitch-button--active,
+.header-modeswitch-button[aria-pressed="true"] {
+  background: var(--website-color, #3b82f6);
   color: #fff;
+}
+
+.header-modeswitch-button--active:hover,
+.header-modeswitch-button[aria-pressed="true"]:hover {
+  background: var(--website-color-hover, #2563eb);
 }
 
 .header-modeswitch-button--bordered {
@@ -187,6 +193,24 @@
 
 .header-access-button:hover {
   background: rgba(255,255,255,0.1);
+}
+
+.header-access-button--active,
+.header-access-button[aria-pressed="true"],
+.header-access-button[aria-expanded="true"] {
+  background: var(--website-color, #3b82f6);
+}
+
+.header-access-button--active:hover,
+.header-access-button[aria-pressed="true"]:hover,
+.header-access-button[aria-expanded="true"]:hover {
+  background: var(--website-color-hover, #2563eb);
+}
+
+.header-access-button--active .header-access-button-icon,
+.header-access-button[aria-pressed="true"] .header-access-button-icon,
+.header-access-button[aria-expanded="true"] .header-access-button-icon {
+  background-color: #ffffff;
 }
 
 .header-access-button--hidden {
