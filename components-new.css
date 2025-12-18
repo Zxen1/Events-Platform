@@ -1991,6 +1991,52 @@
     background-color: rgba(255,255,255,0.1);
 }
 
+
+/* ----------------------------------------------------------------------------
+   USER LOCATION MARKER (pulsing dot with direction)
+   ---------------------------------------------------------------------------- */
+
+.user-location-marker {
+    position: relative;
+    width: 16px;
+    height: 16px;
+}
+
+.user-location-marker-dot {
+    width: 16px;
+    height: 16px;
+    background-color: #3b82f6;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+    animation: user-location-pulse 2s infinite;
+}
+
+.user-location-marker-heading {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 20px solid rgba(59, 130, 246, 0.6);
+    transform-origin: center bottom;
+}
+
+@keyframes user-location-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
 .map-mapcontrol-geolocate:hover,
 .welcome-mapcontrol-geolocate:hover,
 .map-mapcontrol-compass:hover,

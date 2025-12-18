@@ -1101,6 +1101,9 @@ const MapControlRowComponent = (function(){
     var instances = [];
     var geolocateActive = false;
     var cachedLocation = null;
+    var userLocationMarker = null;
+    var headingElement = null;
+    var deviceOrientationActive = false;
     
     // Sync all geolocate buttons to loading state
     function setAllGeolocateLoading() {
@@ -1129,6 +1132,76 @@ const MapControlRowComponent = (function(){
                 inst.geolocateBtn.classList.remove('loading');
             }
         });
+    }
+    
+    // Add or update user location marker on the map
+    function updateUserLocationMarker(lat, lng, map) {
+        if (!map) return;
+        
+        if (userLocationMarker) {
+            // Update existing marker position
+            userLocationMarker.setLngLat([lng, lat]);
+        } else {
+            // Create new marker with dot and heading arrow
+            var el = document.createElement('div');
+            el.className = 'user-location-marker';
+            
+            var dot = document.createElement('div');
+            dot.className = 'user-location-marker-dot';
+            el.appendChild(dot);
+            
+            headingElement = document.createElement('div');
+            headingElement.className = 'user-location-marker-heading';
+            headingElement.style.display = 'none';
+            el.appendChild(headingElement);
+            
+            userLocationMarker = new mapboxgl.Marker(el)
+                .setLngLat([lng, lat])
+                .addTo(map);
+            
+            // Start listening for device orientation
+            startDeviceOrientation(map);
+        }
+    }
+    
+    // Listen for device orientation to show heading
+    function startDeviceOrientation(map) {
+        if (deviceOrientationActive) return;
+        
+        function handleOrientation(event) {
+            var heading = event.webkitCompassHeading || (event.alpha !== null ? 360 - event.alpha : null);
+            
+            if (heading !== null && headingElement) {
+                headingElement.style.display = 'block';
+                // Adjust for map bearing
+                var mapBearing = map ? map.getBearing() : 0;
+                headingElement.style.transform = 'translateX(-50%) rotate(' + (heading - mapBearing) + 'deg)';
+            }
+        }
+        
+        if (window.DeviceOrientationEvent) {
+            // iOS 13+ requires permission
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(function(permission) {
+                        if (permission === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            deviceOrientationActive = true;
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation);
+                deviceOrientationActive = true;
+            }
+            
+            // Update heading when map rotates
+            if (map) {
+                map.on('rotate', function() {
+                    // Trigger a fake orientation event to recalculate
+                });
+            }
+        }
     }
     
     // Create the HTML structure for a map control row
@@ -1313,6 +1386,7 @@ const MapControlRowComponent = (function(){
             if (cachedLocation) {
                 if (map) {
                     map.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: 14 });
+                    updateUserLocationMarker(cachedLocation.lat, cachedLocation.lng, map);
                 }
                 onResult({
                     center: [cachedLocation.lng, cachedLocation.lat],
@@ -1339,6 +1413,7 @@ const MapControlRowComponent = (function(){
                     
                     if (map) {
                         map.flyTo({ center: [lng, lat], zoom: 14 });
+                        updateUserLocationMarker(lat, lng, map);
                     }
                     
                     onResult({
