@@ -813,8 +813,8 @@ const MemberModule = (function() {
         checkoutContainer.innerHTML = '';
         checkoutInstance = null;
         
-        // Fetch checkout options directly from database
-        fetch('/gateway.php?action=get-checkout-options', {
+        // Fetch checkout options from existing get-admin-settings endpoint
+        fetch('/gateway.php?action=get-admin-settings', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         })
@@ -825,21 +825,18 @@ const MemberModule = (function() {
             return response.json(); 
         })
         .then(function(data) {
-            console.log('[Member] Checkout API response:', data);
             if (data && data.success && Array.isArray(data.checkout_options)) {
                 var activeOptions = data.checkout_options.filter(function(opt) {
                     return opt && opt.is_active === true;
                 });
-                console.log('[Member] Active checkout options:', activeOptions.length);
                 
                 if (activeOptions.length) {
-                    displayCheckoutOptions(activeOptions, data.currency || 'USD');
+                    var currency = data.settings && data.settings.site_currency ? data.settings.site_currency : 'USD';
+                    displayCheckoutOptions(activeOptions, currency);
                 } else {
-                    console.log('[Member] No active checkout options');
                     checkoutContainer.hidden = true;
                 }
             } else {
-                console.log('[Member] Invalid checkout response:', data);
                 checkoutContainer.hidden = true;
             }
         })
