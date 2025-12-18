@@ -59,8 +59,19 @@ if ($action === 'get-checkout-options') {
     );
     
     // Get checkout options
-    $stmt = $pdo->query("SELECT id, tier_name, price_per_day, is_active FROM checkout_options ORDER BY id ASC");
+    $stmt = $pdo->query("SELECT id, checkout_key, checkout_title, checkout_description, checkout_flagfall_price, checkout_basic_day_rate, checkout_discount_day_rate, checkout_featured, checkout_sidebar_ad, sort_order, is_active FROM checkout_options ORDER BY sort_order ASC");
     $checkoutOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Cast numeric values properly
+    foreach ($checkoutOptions as &$opt) {
+      $opt['id'] = (int)$opt['id'];
+      $opt['checkout_flagfall_price'] = $opt['checkout_flagfall_price'] !== null ? (float)$opt['checkout_flagfall_price'] : null;
+      $opt['checkout_basic_day_rate'] = $opt['checkout_basic_day_rate'] !== null ? (float)$opt['checkout_basic_day_rate'] : null;
+      $opt['checkout_discount_day_rate'] = $opt['checkout_discount_day_rate'] !== null ? (float)$opt['checkout_discount_day_rate'] : null;
+      $opt['is_active'] = (int)$opt['is_active'];
+      $opt['sort_order'] = (int)$opt['sort_order'];
+    }
+    unset($opt);
     
     // Get site currency from settings
     $currency = 'USD';
