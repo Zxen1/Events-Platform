@@ -281,8 +281,19 @@
           </div>
           <div id="member-create-form-wrapper" class="member-form-container" hidden>
             <div id="member-create-fields" class="member-create-fields" role="group" aria-live="polite"></div>
-            <div class="member-create-actions" id="member-create-actions" hidden>
-              <button type="submit" id="member-create-post-btn" class="member-button-auth" hidden disabled>Post Listing</button>
+            <!-- Checkout Options -->
+            <div id="member-create-checkout" class="member-create-checkout" hidden></div>
+            <!-- Terms and Conditions -->
+            <div id="member-create-terms" class="member-create-terms" hidden>
+              <label class="member-create-terms-label">
+                <input type="checkbox" id="member-create-terms-checkbox" class="member-create-terms-checkbox">
+                <span class="member-create-terms-text">I agree to the <button type="button" id="member-create-terms-link" class="member-create-terms-link">Terms and Conditions</button></span>
+              </label>
+            </div>
+            <!-- Submit Buttons -->
+            <div id="member-create-actions" class="member-create-actions" hidden>
+              <button type="submit" id="member-create-submit-btn" class="member-create-submit-btn" disabled>Submit Post</button>
+              <button type="button" id="member-create-admin-btn" class="member-create-admin-btn" hidden disabled>Admin: Post Free</button>
             </div>
           </div>
         </section>
@@ -325,6 +336,24 @@
        ======================================================================== -->
   <div class="welcome-modal">
     <!-- Welcome message, geocoder, instructions -->
+  </div>
+
+  <!-- Terms and Conditions Modal -->
+  <div class="terms-modal" id="terms-modal" aria-hidden="true">
+    <div class="terms-modal-backdrop"></div>
+    <div class="terms-modal-content" role="dialog" aria-labelledby="terms-modal-title" aria-modal="true">
+      <div class="terms-modal-header">
+        <h2 id="terms-modal-title" class="terms-modal-title">Terms and Conditions</h2>
+        <button type="button" class="terms-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="terms-modal-body" id="terms-modal-body">
+        <!-- Terms content loaded dynamically or from database -->
+        <p>Loading terms and conditions...</p>
+      </div>
+      <div class="terms-modal-footer">
+        <button type="button" class="terms-modal-accept">I Accept</button>
+      </div>
+    </div>
   </div>
 
   <div class="terms-modal">
