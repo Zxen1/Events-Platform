@@ -272,14 +272,28 @@ const AdminModule = (function() {
     
     function runSave(options) {
         options = options || {};
-        
-        // TODO: Implement actual save logic
-        console.log('[Admin] Save triggered');
-        
-        markSaved();
-        
-        if (options.closeAfter) {
-            closePanel();
+
+        // Use existing saveAdminChanges from live site if available
+        if (typeof window.saveAdminChanges === 'function') {
+            try {
+                var result = window.saveAdminChanges();
+                Promise.resolve(result).then(function() {
+                    markSaved();
+                    if (options.closeAfter) {
+                        closePanel();
+                    }
+                }).catch(function(err) {
+                    console.error('[Admin] Save failed', err);
+                });
+            } catch (err) {
+                console.error('[Admin] Save error', err);
+            }
+        } else {
+            console.warn('[Admin] saveAdminChanges not available');
+            markSaved();
+            if (options.closeAfter) {
+                closePanel();
+            }
         }
     }
     
