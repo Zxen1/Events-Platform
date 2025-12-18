@@ -1263,6 +1263,70 @@ If this fixes it → DNS cache issue (no router reset needed)
 
 **IMPORTANT:** Before blaming infrastructure (Cloudflare, hosting, etc.), CHECK THE CODE FIRST. 100% of the time it has been code changes that caused issues, not infrastructure.
 
+#### Funmap.com Slow - All Other Sites Fast (Recurring Issue)
+
+**Symptom:** funmap.com (both index.html and index-new.html) takes 60+ seconds to load. ALL other websites load instantly. Both pages on same Cloudflare/Ventra IP hosting.
+
+**This happens often.** Approximately 3 times per week. Can last up to 2 days. Serious recurring problem with Cloudflare + Optus ISP combination.
+
+**Test Results:**
+| Test | funmap.com | Other Sites |
+|------|------------|-------------|
+| Phone on 5G (Telstra) | FAST | Fast |
+| Phone on home WiFi | SLOW | Fast |
+| PC on home ethernet | SLOW | Fast |
+| PC on home WiFi | SLOW | Fast |
+| PC on phone WiFi hotspot | SLOW | Fast |
+| PC on phone USB tether | SLOW | Fast |
+| PC direct to Optus router (bypass mesh) | SLOW | Fast |
+
+**Troubleshooting Attempted (ALL FAILED):**
+
+1. ✗ `ipconfig /flushdns` + `/release` + `/renew`
+2. ✗ Router reset (Optus)
+3. ✗ Mesh reset (TP-Link Deco)
+4. ✗ Mesh repeater reset
+5. ✗ PC restart
+6. ✗ Incognito mode (all browsers)
+7. ✗ Different browsers: Chrome, Edge, Firefox, Opera, Safari
+8. ✗ Windows Defender Firewall OFF
+9. ✗ Real-time Protection OFF
+10. ✗ Hosts file check (clean - no funmap.com entry)
+11. ✗ Mesh firmware upgrade (1.6.2 → 1.7)
+12. ✗ PC DNS change to Cloudflare (1.1.1.1 / 1.0.0.1)
+13. ✗ IPv6 disabled on PC
+14. ✗ Bypass mesh (connect PC directly to Optus router)
+15. ✗ USB tether to iPhone 5G
+16. ✗ Radmin VPN present in network connections (potential interference)
+
+**Key Observations:**
+- Phone loads funmap.com FAST on 5G directly
+- PC through same phone's 5G (via hotspot or USB) is SLOW
+- Suggests something specific to PC + funmap.com combination
+- OR Optus ISP routing issue to Cloudflare for this domain
+- Mesh CPU spiking 5% to 90% every 10 seconds (suspicious but not root cause - problem persisted when mesh bypassed)
+- 2 of 3 mesh nodes showing "Offline" (Carport, Storage Room)
+
+**User's Network Path:**
+```
+Phone line → NBN decoder → Optus router → Ethernet → TP-Link Mesh → PC
+```
+
+**Additional Test:**
+- GitHub Pages (different host): FAST
+- Confirms issue is Optus ISP → Cloudflare routing, not general internet
+
+**Possible Cause:** Cloudflare Singapore (SIN) datacenter scheduled maintenance was occurring at the same time (Dec 18-19, 2025). Australian datacenters showed "Operational" but Guam and Fiji showed "Re-routed". May or may not be related.
+
+**Status:** Unresolved at time of documentation. Check https://www.cloudflarestatus.com/ for current status.
+
+**If This Recurs:**
+1. First test: Phone on 5G vs home WiFi (isolates home network)
+2. If phone 5G fast but PC through phone still slow → PC-specific issue
+3. Check for VPN software (Radmin VPN, etc.) even if "not connected"
+4. May need to wait for ISP routing to self-correct
+5. Consider VPN to route around bad ISP path
+
 ---
 
 ### 2025-12-04: Website Speed Degradation (5-20 minute loads)

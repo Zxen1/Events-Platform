@@ -21,8 +21,8 @@
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion-option--editing');
         });
-        container.querySelectorAll('.formbuilder-menu--open').forEach(function(el) {
-            el.classList.remove('formbuilder-menu--open');
+        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
+            el.classList.remove('open');
         });
     }
     
@@ -35,17 +35,17 @@
     
     function closeAllMenus() {
         if (!container) return;
-        container.querySelectorAll('.formbuilder-menu--open').forEach(function(el) {
-            el.classList.remove('formbuilder-menu--open');
+        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
+            el.classList.remove('open');
         });
-        container.querySelectorAll('.formbuilder-accordion-editpanel-more--open').forEach(function(el) {
-            el.classList.remove('formbuilder-accordion-editpanel-more--open');
+        container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+            el.classList.remove('open');
         });
-        container.querySelectorAll('.formbuilder-fieldset-menu--open').forEach(function(el) {
-            el.classList.remove('formbuilder-fieldset-menu--open');
+        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+            el.classList.remove('open');
         });
-        container.querySelectorAll('.formbuilder-field-more--open').forEach(function(el) {
-            el.classList.remove('formbuilder-field-more--open');
+        container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
+            el.classList.remove('open');
         });
     }
     
@@ -68,7 +68,7 @@
                 e.stopPropagation();
                 btnImg.src = iconPath;
                 btnText.textContent = filename;
-                menu.classList.remove('formbuilder-menu--open');
+                menu.classList.remove('open');
                 onSelect(iconPath);
             };
             opts.appendChild(op);
@@ -76,9 +76,9 @@
         
         btn.onclick = function(e) {
             e.stopPropagation();
-            var wasOpen = menu.classList.contains('formbuilder-menu--open');
+            var wasOpen = menu.classList.contains('open');
             closeAllMenus();
-            if (!wasOpen) menu.classList.add('formbuilder-menu--open');
+            if (!wasOpen) menu.classList.add('open');
         };
         
         return menu;
@@ -102,8 +102,8 @@
         document.addEventListener('click', function(e) {
             if (!container) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
-                container.querySelectorAll('.formbuilder-accordion-editpanel-more--open').forEach(function(el) {
-                    el.classList.remove('formbuilder-accordion-editpanel-more--open');
+                container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
+                    el.classList.remove('open');
                 });
             }
         });
@@ -112,8 +112,8 @@
         document.addEventListener('click', function(e) {
             if (!container) return;
             if (!e.target.closest('.formbuilder-fieldset-menu')) {
-                container.querySelectorAll('.formbuilder-fieldset-menu--open').forEach(function(el) {
-                    el.classList.remove('formbuilder-fieldset-menu--open');
+                container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+                    el.classList.remove('open');
                 });
             }
         });
@@ -122,8 +122,8 @@
         document.addEventListener('click', function(e) {
             if (!container) return;
             if (!e.target.closest('.formbuilder-menu')) {
-                container.querySelectorAll('.formbuilder-menu--open').forEach(function(el) {
-                    el.classList.remove('formbuilder-menu--open');
+                container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
+                    el.classList.remove('open');
                 });
             }
         });
@@ -132,8 +132,8 @@
         document.addEventListener('click', function(e) {
             if (!container) return;
             if (!e.target.closest('.formbuilder-field-more')) {
-                container.querySelectorAll('.formbuilder-field-more--open').forEach(function(el) {
-                    el.classList.remove('formbuilder-field-more--open');
+                container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
+                    el.classList.remove('open');
                 });
             }
         });
@@ -223,14 +223,14 @@
             accordion.draggable = true;
             accordion.addEventListener('dragstart', function(e) {
                 e.dataTransfer.effectAllowed = 'move';
-                accordion.classList.add('formbuilder-accordion--dragging');
+                accordion.classList.add('dragging');
             });
             accordion.addEventListener('dragend', function() {
-                accordion.classList.remove('formbuilder-accordion--dragging');
+                accordion.classList.remove('dragging');
             });
             accordion.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                var dragging = container.querySelector('.formbuilder-accordion--dragging');
+                var dragging = container.querySelector('.formbuilder-accordion.dragging');
                 if (dragging && dragging !== accordion) {
                     var rect = accordion.getBoundingClientRect();
                     var midY = rect.top + rect.height / 2;
@@ -263,15 +263,15 @@
             
             moreBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                var wasOpen = moreBtn.classList.contains('formbuilder-accordion-editpanel-more--open');
+                var wasOpen = moreBtn.classList.contains('open');
                 closeAllMenus();
-                if (!wasOpen) moreBtn.classList.add('formbuilder-accordion-editpanel-more--open');
+                if (!wasOpen) moreBtn.classList.add('open');
             });
             
             var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
             hideSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
-                hideSwitch.classList.toggle('formbuilder-accordion-editpanel-more-switch--on');
+                hideSwitch.classList.toggle('on');
             });
             
             nameRow.appendChild(nameInput);
@@ -376,15 +376,15 @@
         option.addEventListener('dragstart', function(e) {
             e.stopPropagation();
             e.dataTransfer.effectAllowed = 'move';
-            option.classList.add('formbuilder-accordion-option--dragging');
+            option.classList.add('dragging');
         });
         option.addEventListener('dragend', function() {
-            option.classList.remove('formbuilder-accordion-option--dragging');
+            option.classList.remove('dragging');
         });
         option.addEventListener('dragover', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            var dragging = parentBody.querySelector('.formbuilder-accordion-option--dragging');
+            var dragging = parentBody.querySelector('.formbuilder-accordion-option.dragging');
             if (dragging && dragging !== option) {
                 var rect = option.getBoundingClientRect();
                 var midY = rect.top + rect.height / 2;
@@ -417,15 +417,15 @@
         
         subMoreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            var wasOpen = subMoreBtn.classList.contains('formbuilder-accordion-editpanel-more--open');
+            var wasOpen = subMoreBtn.classList.contains('open');
             closeAllMenus();
-            if (!wasOpen) subMoreBtn.classList.add('formbuilder-accordion-editpanel-more--open');
+            if (!wasOpen) subMoreBtn.classList.add('open');
         });
         
         var subHideSwitch = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
         subHideSwitch.addEventListener('click', function(e) {
             e.stopPropagation();
-            subHideSwitch.classList.toggle('formbuilder-accordion-editpanel-more-switch--on');
+            subHideSwitch.classList.toggle('on');
         });
         
         subNameRow.appendChild(subNameInput);
@@ -616,8 +616,8 @@
                 
                 var prices = document.createElement('div');
                 prices.className = 'formbuilder-checkout-prices';
-                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="formbuilder-checkout-price-value">' + siteCurrency + price30.toFixed(2) + '</span></div>' +
-                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="formbuilder-checkout-price-value">' + siteCurrency + price365.toFixed(2) + '</span></div>';
+                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + siteCurrency + price30.toFixed(2) + '</span></div>' +
+                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + siteCurrency + price365.toFixed(2) + '</span></div>';
                 
                 var calculator = document.createElement('div');
                 calculator.className = 'formbuilder-checkout-calculator';
@@ -771,9 +771,9 @@
             
             fieldMoreBtn.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                var wasOpen = fieldMoreBtn.classList.contains('formbuilder-field-more--open');
+                var wasOpen = fieldMoreBtn.classList.contains('open');
                 closeAllMenus();
-                if (!wasOpen) fieldMoreBtn.classList.add('formbuilder-field-more--open');
+                if (!wasOpen) fieldMoreBtn.classList.add('open');
             });
             
             var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
@@ -782,7 +782,7 @@
                 fieldWrapper.remove();
                 addedFieldsets[fsId] = false;
                 var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                if (menuOpt) menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                if (menuOpt) menuOpt.classList.remove('disabled');
             });
             
             editRow.appendChild(requiredLabel);
@@ -801,41 +801,41 @@
             locationRepeatLabel.appendChild(document.createTextNode('Location Repeat'));
             
             var mustRepeatLabel = document.createElement('label');
-            mustRepeatLabel.className = 'formbuilder-field-switch-label formbuilder-field-switch-label--disabled';
+            mustRepeatLabel.className = 'formbuilder-field-switch-label disabled';
             var mustRepeatSwitch = document.createElement('div');
-            mustRepeatSwitch.className = 'formbuilder-field-switch formbuilder-field-switch--disabled';
+            mustRepeatSwitch.className = 'formbuilder-field-switch disabled';
             mustRepeatLabel.appendChild(mustRepeatSwitch);
             mustRepeatLabel.appendChild(document.createTextNode('Must Repeat'));
             
             var autofillRepeatLabel = document.createElement('label');
-            autofillRepeatLabel.className = 'formbuilder-field-switch-label formbuilder-field-switch-label--disabled';
+            autofillRepeatLabel.className = 'formbuilder-field-switch-label disabled';
             var autofillRepeatSwitch = document.createElement('div');
-            autofillRepeatSwitch.className = 'formbuilder-field-switch formbuilder-field-switch--disabled';
+            autofillRepeatSwitch.className = 'formbuilder-field-switch disabled';
             autofillRepeatLabel.appendChild(autofillRepeatSwitch);
             autofillRepeatLabel.appendChild(document.createTextNode('Autofill Repeat'));
             
             locationRepeatSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
-                var isOn = locationRepeatSwitch.classList.toggle('formbuilder-field-switch--on');
+                var isOn = locationRepeatSwitch.classList.toggle('on');
                 if (isOn) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--location-repeat');
-                    mustRepeatLabel.classList.remove('formbuilder-field-switch-label--disabled');
-                    mustRepeatSwitch.classList.remove('formbuilder-field-switch--disabled');
-                    autofillRepeatLabel.classList.remove('formbuilder-field-switch-label--disabled');
-                    autofillRepeatSwitch.classList.remove('formbuilder-field-switch--disabled');
+                    mustRepeatLabel.classList.remove('disabled');
+                    mustRepeatSwitch.classList.remove('disabled');
+                    autofillRepeatLabel.classList.remove('disabled');
+                    autofillRepeatSwitch.classList.remove('disabled');
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
-                    mustRepeatLabel.classList.add('formbuilder-field-switch-label--disabled');
-                    mustRepeatSwitch.classList.add('formbuilder-field-switch--disabled');
-                    autofillRepeatLabel.classList.add('formbuilder-field-switch-label--disabled');
-                    autofillRepeatSwitch.classList.add('formbuilder-field-switch--disabled');
+                    mustRepeatLabel.classList.add('disabled');
+                    mustRepeatSwitch.classList.add('disabled');
+                    autofillRepeatLabel.classList.add('disabled');
+                    autofillRepeatSwitch.classList.add('disabled');
                 }
             });
             
             mustRepeatSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (mustRepeatSwitch.classList.contains('formbuilder-field-switch--disabled')) return;
-                var isOn = mustRepeatSwitch.classList.toggle('formbuilder-field-switch--on');
+                if (mustRepeatSwitch.classList.contains('disabled')) return;
+                var isOn = mustRepeatSwitch.classList.toggle('on');
                 if (isOn) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--must-repeat');
                 } else {
@@ -845,8 +845,8 @@
             
             autofillRepeatSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (autofillRepeatSwitch.classList.contains('formbuilder-field-switch--disabled')) return;
-                var isOn = autofillRepeatSwitch.classList.toggle('formbuilder-field-switch--on');
+                if (autofillRepeatSwitch.classList.contains('disabled')) return;
+                var isOn = autofillRepeatSwitch.classList.toggle('on');
                 if (isOn) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--autofill-repeat');
                 } else {
@@ -982,15 +982,15 @@
             fieldWrapper.addEventListener('dragstart', function(ev) {
                 ev.stopPropagation();
                 ev.dataTransfer.effectAllowed = 'move';
-                fieldWrapper.classList.add('formbuilder-field-wrapper--dragging');
+                fieldWrapper.classList.add('dragging');
             });
             fieldWrapper.addEventListener('dragend', function() {
-                fieldWrapper.classList.remove('formbuilder-field-wrapper--dragging');
+                fieldWrapper.classList.remove('dragging');
             });
             fieldWrapper.addEventListener('dragover', function(ev) {
                 ev.preventDefault();
                 ev.stopPropagation();
-                var dragging = fieldsContainer.querySelector('.formbuilder-field-wrapper--dragging');
+                var dragging = fieldsContainer.querySelector('.formbuilder-field-wrapper.dragging');
                 if (dragging && dragging !== fieldWrapper) {
                     var rect = fieldWrapper.getBoundingClientRect();
                     var midY = rect.top + rect.height / 2;
@@ -1014,13 +1014,13 @@
             opt.setAttribute('data-fieldset-id', fsId);
             opt.onclick = function(e) {
                 e.stopPropagation();
-                if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled')) return;
+                if (opt.classList.contains('disabled')) return;
                 
                 var result = createFieldElement(fs, true, fs);
                 fieldsContainer.appendChild(result.wrapper);
                 addedFieldsets[result.fsId] = true;
-                opt.classList.add('formbuilder-fieldset-menu-option--disabled');
-                fieldsetMenu.classList.remove('formbuilder-fieldset-menu--open');
+                opt.classList.add('disabled');
+                fieldsetMenu.classList.remove('open');
             };
             fieldsetOpts.appendChild(opt);
         });
@@ -1038,14 +1038,14 @@
             fieldsContainer.appendChild(result.wrapper);
             addedFieldsets[result.fsId] = true;
             var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
-            if (menuOpt) menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
+            if (menuOpt) menuOpt.classList.add('disabled');
         });
         
         fieldsetBtn.onclick = function(e) {
             e.stopPropagation();
-            var wasOpen = fieldsetMenu.classList.contains('formbuilder-fieldset-menu--open');
+            var wasOpen = fieldsetMenu.classList.contains('open');
             closeAllMenus();
-            if (!wasOpen) fieldsetMenu.classList.add('formbuilder-fieldset-menu--open');
+            if (!wasOpen) fieldsetMenu.classList.add('open');
         };
         
         optBody.appendChild(fieldsetMenu);
@@ -1084,19 +1084,19 @@
     function init() {
         container = document.getElementById('admin-formbuilder');
         if (!container) return;
-
+        
         bindDocumentListeners();
-        // Data loads only when admin panel opens - NOT on page load
+        loadFormData();
     }
-
-    // Initialize DOM references when ready (no data loading)
+    
+    // Initialize when DOM ready or when admin panel opens
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-
-    // Load data ONLY when admin panel opens
+    
+    // Also listen for admin panel open to refresh data
     if (window.App && App.on) {
         App.on('admin:opened', function() {
             if (container) {
