@@ -1329,6 +1329,89 @@ Phone line → NBN decoder → Optus router → Ethernet → TP-Link Mesh → PC
 
 ---
 
+#### Funmap.com Slow Loading - December 18, 2025 Session
+
+**Symptom:** Live site (funmap.com/index.html) takes 60+ seconds to load. New site (funmap.com/index-new.html) loads fast.
+
+**Context:** This occurred during a session where formbuilder was being integrated into the new site's admin panel.
+
+**Troubleshooting Attempted (Dec 18, 2025):**
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | `ipconfig /flushdns` | No effect |
+| 2 | `ipconfig /release` + `/renew` | No effect |
+| 3 | Router reset (5 min power off) | No effect |
+| 4 | Mesh reset | No effect |
+| 5 | PC restart | No effect |
+| 6 | Incognito mode (all browsers) | No effect |
+| 7 | Chrome, Edge, Opera, Safari | All slow (60+ seconds) |
+| 8 | Firefox | Loaded in 9-10 seconds (only browser that worked) |
+| 9 | Windows Defender Firewall OFF | No effect |
+| 10 | Real-time Protection OFF | No effect |
+| 11 | Hosts file check | Clean (no funmap.com entry) |
+| 12 | PC DNS → Cloudflare (1.1.1.1/1.0.0.1) | No effect |
+| 13 | IPv6 disabled on PC | No effect |
+| 14 | Bypass mesh (PC direct to Optus router) | No effect |
+| 15 | USB tether to iPhone 5G | Still slow on PC |
+| 16 | WiFi hotspot to iPhone 5G | Still slow on PC |
+| 17 | Radmin VPN disabled/exited | No effect |
+| 18 | `netsh winsock reset` + restart | No effect |
+| 19 | `netsh int ip reset` + restart | No effect (one item "Access denied") |
+| 20 | Cloudflare Dev Mode (bypass cache) | No effect |
+| 21 | Code revert to backup | No effect |
+| 22 | Database drop + restore to earlier backup | No effect |
+| 23 | Disabled spin in admin settings | No effect |
+
+**Key Observations:**
+- Firefox loads in 9-10 seconds while Chrome/Edge/Opera/Safari take 60+ seconds
+- Phone on 5G (Telstra) loads fast
+- PC through same phone's 5G (hotspot or USB tether) is slow
+- index-new.html loads fast, index.html loads slow
+- Both use same gateway.php and database
+- old.funmap.com also slow (rules out recent code changes)
+- Logo always loads last (dependent on get-admin-settings API response)
+
+**Differences Between Sites:**
+| | index.html (slow) | index-new.html (fast) |
+|---|---|---|
+| Startup API calls | `get-admin-settings` immediately | Lazy - only when panels open |
+| Scripts | One large index.js (29,000+ lines) | Modular smaller files |
+| Formbuilder | Loads snapshot data at startup | Loads only when Forms tab opens |
+
+**Theories (Unproven):**
+
+1. **Chromium-specific networking issue** - Firefox uses different networking stack (no QUIC/HTTP3 by default). May be Chrome-specific protocol issue with Cloudflare.
+
+2. **ISP routing** - Optus → Cloudflare path may be degraded. But this doesn't explain why PC through 5G is also slow.
+
+3. **PC-specific network stack corruption** - Something in Windows network configuration specifically affecting requests to funmap.com/Cloudflare. `netsh` resets didn't fix it.
+
+4. **Accumulated browser/system state** - Some cache or state beyond localStorage that builds up and affects specific domains. Firefox not affected because different engine.
+
+5. **get-admin-settings API blocking** - Live site waits for this call before rendering. If call is slow, site is slow. New site doesn't wait.
+
+6. **Previous agent changes** - A previous agent attempted to modify config files before being fired. Possible delayed effects or orphaned files on server.
+
+7. **cPanel orphaned files** - When files are renamed/deleted locally, cPanel only overwrites matching filenames. Old files may persist and conflict.
+
+**What We Know For Certain:**
+- The new site's lazy loading architecture avoids the problem
+- Firefox handles something differently that makes it work
+- The issue is not: database speed, router, mesh, VPN, firewall, real-time protection, DNS, IPv6
+- The issue persists even when bypassing home network entirely (5G tether)
+- Code reverts and database reverts had no effect
+
+**Status:** Unresolved. Proceeding with new site development. May self-resolve as previous incidents have.
+
+**If This Recurs:**
+1. Test Firefox first - if it works, issue is Chromium-specific
+2. Check if new site (index-new.html) loads fast - if so, issue is startup architecture
+3. Don't waste time on network troubleshooting - has never helped
+4. Consider that issue may self-resolve after time passes
+
+---
+
 ### 2025-12-04: Website Speed Degradation (5-20 minute loads)
 
 **Issue:** funmap.com experienced 5-20 minute load times specifically on Paul's PC (8700k).
