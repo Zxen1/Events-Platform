@@ -897,9 +897,9 @@ const MemberModule = (function() {
        TERMS AND CONDITIONS MODAL
        -------------------------------------------------------------------------- */
     
-    function openTermsModal() {
+    async function openTermsModal() {
         if (!termsModalContainer) {
-            createTermsModal();
+            await createTermsModal();
         }
         termsModalContainer.classList.remove('terms-modal-container--hidden');
     }
@@ -919,7 +919,7 @@ const MemberModule = (function() {
         closeTermsModal();
     }
     
-    function createTermsModal() {
+    async function createTermsModal() {
         termsModalContainer = document.createElement('div');
         termsModalContainer.className = 'terms-modal-container terms-modal-container--hidden';
         
@@ -950,24 +950,15 @@ const MemberModule = (function() {
         
         var termsText = document.createElement('div');
         termsText.className = 'terms-modal-text';
-        // Default text - will be replaced by DB message
-        termsText.innerHTML = '<p class="terms-modal-text-paragraph">Please read and agree to the terms and conditions before submitting your post.</p>' +
-            '<p class="terms-modal-text-paragraph">By submitting this listing, you confirm that:</p>' +
-            '<ul class="terms-modal-text-list">' +
-            '<li class="terms-modal-text-item">All information provided is accurate and truthful</li>' +
-            '<li class="terms-modal-text-item">You have the right to post this content</li>' +
-            '<li class="terms-modal-text-item">You agree to our community guidelines</li>' +
-            '</ul>';
-        content.appendChild(termsText);
         
-        // Load terms from database (replace default text if found)
+        // Fetch terms from database
         if (typeof window.getMessage === 'function') {
-            window.getMessage('msg-terms-conditions', {}, false).then(function(msg) {
-                if (msg) {
-                    termsText.innerHTML = msg;
-                }
-            });
+            var msg = await window.getMessage('msg-terms-conditions', {}, false);
+            if (msg) {
+                termsText.innerHTML = msg;
+            }
         }
+        content.appendChild(termsText);
         
         // Footer
         var footer = document.createElement('div');

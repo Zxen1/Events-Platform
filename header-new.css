@@ -135,15 +135,16 @@
   background: rgba(255,255,255,0.1);
 }
 
-.header-modeswitch-button--active,
-.header-modeswitch-button[aria-pressed="true"] {
-  background: var(--website-color, #3b82f6);
-  color: #fff;
+/* Active mode - color the icon and text with website color */
+.header-modeswitch-button--active .header-modeswitch-button-icon,
+.header-modeswitch-button[aria-pressed="true"] .header-modeswitch-button-icon {
+  /* Blue filter for SVG icons: hue-rotate to blue range */
+  filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(196deg) brightness(97%) contrast(95%);
 }
 
-.header-modeswitch-button--active:hover,
-.header-modeswitch-button[aria-pressed="true"]:hover {
-  background: var(--website-color-hover, #2563eb);
+.header-modeswitch-button--active .header-modeswitch-button-text,
+.header-modeswitch-button[aria-pressed="true"] .header-modeswitch-button-text {
+  color: var(--website-color, #3b82f6);
 }
 
 .header-modeswitch-button--bordered {
@@ -195,22 +196,11 @@
   background: rgba(255,255,255,0.1);
 }
 
-.header-access-button--active,
-.header-access-button[aria-pressed="true"],
-.header-access-button[aria-expanded="true"] {
-  background: var(--website-color, #3b82f6);
-}
-
-.header-access-button--active:hover,
-.header-access-button[aria-pressed="true"]:hover,
-.header-access-button[aria-expanded="true"]:hover {
-  background: var(--website-color-hover, #2563eb);
-}
-
+/* Active access buttons - color the icon, not the button background */
 .header-access-button--active .header-access-button-icon,
 .header-access-button[aria-pressed="true"] .header-access-button-icon,
 .header-access-button[aria-expanded="true"] .header-access-button-icon {
-  background-color: #ffffff;
+  background-color: var(--website-color, #3b82f6);
 }
 
 .header-access-button--hidden {

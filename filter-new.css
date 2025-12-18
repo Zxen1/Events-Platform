@@ -63,19 +63,87 @@
   transform: translateX(0);
 }
 
+/* Panel backdrop - click to close */
+.filter-panel-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  pointer-events: auto;
+}
+
 /* Panel header */
 .filter-panel-header {
   position: sticky;
   top: 0;
-  padding: 10px;
+  padding: 0;
   z-index: 1;
-  cursor: ew-resize;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   flex-shrink: 0;
   background: #222222;
+}
+
+.filter-panel-header-top {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.filter-panel-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.filter-panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-panel-actions-icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.filter-panel-actions-icon-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.filter-panel-actions-icon-btn-icon {
+  width: 20px;
+  height: 20px;
+  background-color: #aaa;
+  transition: background-color 0.2s;
+}
+
+.filter-panel-actions-icon-btn:hover .filter-panel-actions-icon-btn-icon {
+  background-color: #fff;
+}
+
+.filter-panel-actions-icon-btn-icon--close {
+  -webkit-mask-image: url('assets/system-images/icon-close.svg');
+  mask-image: url('assets/system-images/icon-close.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .filter-panel-summary {
@@ -83,6 +151,7 @@
   width: 100%;
   max-width: 420px;
   margin: 0;
+  padding: 10px 15px;
   text-align: center;
 }
 

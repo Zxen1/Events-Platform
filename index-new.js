@@ -112,6 +112,98 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     MESSAGE UTILITIES
+     Fetch messages from database by key
+     -------------------------------------------------------------------------- */
+  const messagesCache = {
+    user: null,
+    admin: null,
+    lastFetch: 0,
+    maxAge: 60000
+  };
+
+  async function loadMessagesFromDatabase(includeAdmin = false) {
+    try {
+      const cacheKey = includeAdmin ? 'admin' : 'user';
+      const now = Date.now();
+      
+      if (messagesCache[cacheKey] && (now - messagesCache.lastFetch) < messagesCache.maxAge) {
+        return messagesCache[cacheKey];
+      }
+      
+      const response = await fetch('/gateway.php?action=get-admin-settings&include_messages=true');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      
+      if (!result.success || !result.messages) {
+        console.warn('Failed to load messages from database:', result.message || result.messages_error);
+        return {};
+      }
+      
+      const messagesMap = {};
+      result.messages.forEach(container => {
+        if (!container.messages || !Array.isArray(container.messages)) return;
+        
+        container.messages.forEach(message => {
+          if (!includeAdmin) {
+            const visibleContainers = ['msg_user', 'msg_member'];
+            if (!visibleContainers.includes(message.container_key || container.container_key)) {
+              return;
+            }
+            if (message.is_visible === false || message.is_visible === 0) {
+              return;
+            }
+          }
+          
+          if (message.is_active !== false && message.is_active !== 0) {
+            messagesMap[message.message_key] = message;
+          }
+        });
+      });
+      
+      messagesCache[cacheKey] = messagesMap;
+      messagesCache.lastFetch = now;
+      
+      return messagesMap;
+    } catch (error) {
+      console.error('Error loading messages from database:', error);
+      return {};
+    }
+  }
+
+  function replacePlaceholders(text, placeholders = {}) {
+    if (!text || typeof text !== 'string') {
+      return text || '';
+    }
+    return text.replace(/\{(\w+)\}/g, (match, key) => {
+      return placeholders[key] !== undefined ? String(placeholders[key]) : match;
+    });
+  }
+
+  async function getMessage(messageKey, placeholders = {}, includeAdmin = false) {
+    if (!messageKey || typeof messageKey !== 'string') {
+      return '';
+    }
+    
+    const messages = await loadMessagesFromDatabase(includeAdmin);
+    const message = messages[messageKey];
+    
+    if (!message) {
+      console.warn(`Message not found: ${messageKey}`);
+      return '';
+    }
+    
+    return replacePlaceholders(message.message_text || '', placeholders);
+  }
+
+  // Make getMessage globally available
+  window.getMessage = getMessage;
+
+
+  /* --------------------------------------------------------------------------
      INITIALIZATION
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */

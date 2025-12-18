@@ -70,6 +70,32 @@
   transform: translateX(0);
 }
 
+/* Drag handle for left/right positioning */
+.member-panel-drag-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 60px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+  cursor: ew-resize;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.member-panel-drag-handle:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+.member-panel-content--side-left .member-panel-drag-handle {
+  right: 8px;
+}
+
+.member-panel-content--side-right .member-panel-drag-handle {
+  left: 8px;
+}
+
 @media (max-width: 768px) {
   .member-panel-content {
     width: 100%;
@@ -607,9 +633,11 @@
   border: none;
   color: #ffffff;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 12px 20px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 16px;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s;

@@ -51,7 +51,7 @@
         <img class="header-modeswitch-button-icon" src="assets/system-images/icon-posts.svg" alt="">
         <span class="header-modeswitch-button-text">Posts</span>
       </button>
-      <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="map">
+      <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="map" aria-pressed="true">
         <img class="header-modeswitch-button-icon" src="assets/system-images/icon-map.svg" alt="">
         <span class="header-modeswitch-button-text">Map</span>
       </button>
@@ -76,8 +76,17 @@
        File: filter.js, filter.css
        ======================================================================== -->
   <aside class="filter-panel" role="dialog" aria-hidden="true">
+    <div class="filter-panel-backdrop"></div>
     <div class="filter-panel-content" data-side="left">
       <div class="filter-panel-header">
+        <div class="filter-panel-header-top">
+          <h2 class="filter-panel-header-title">Filters</h2>
+          <div class="filter-panel-actions">
+            <button type="button" class="filter-panel-actions-icon-btn filter-panel-actions-icon-btn--close" aria-label="Close Panel">
+              <span class="filter-panel-actions-icon-btn-icon filter-panel-actions-icon-btn-icon--close" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
         <div class="filter-panel-summary"></div>
       </div>
       <div class="filter-panel-body">
@@ -193,6 +202,7 @@
        ======================================================================== -->
   <aside id="member-panel" class="member-panel" role="dialog" aria-hidden="true">
     <div class="member-panel-content member-panel-content--side-right member-panel-content--hidden">
+      <div class="member-panel-drag-handle" aria-label="Drag to move panel"></div>
       
       <!-- Panel Header -->
       <div class="member-panel-header">
