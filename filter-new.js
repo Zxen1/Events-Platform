@@ -653,7 +653,13 @@ const FilterModule = (function() {
     function formatDateShort(date) {
         if (!date) return '';
         var d = new Date(date);
-        return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/,/g, '');
+        var currentYear = new Date().getFullYear();
+        var dateYear = d.getFullYear();
+        var formatted = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/,/g, '');
+        if (dateYear !== currentYear) {
+            formatted += ', ' + dateYear;
+        }
+        return formatted;
     }
     
     function resetAllFilters() {
