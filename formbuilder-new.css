@@ -92,7 +92,7 @@
   height: 16px;
 }
 
-.formbuilder-accordion.dragging {
+.formbuilder-accordion--dragging {
   opacity: 0.5;
 }
 
@@ -191,7 +191,7 @@
   display: none;
 }
 
-.formbuilder-accordion-editpanel-more.open .formbuilder-accordion-editpanel-more-menu {
+.formbuilder-accordion-editpanel-more--open .formbuilder-accordion-editpanel-more-menu {
   display: block;
 }
 
@@ -234,11 +234,11 @@
   transition: left 0.2s;
 }
 
-.formbuilder-accordion-editpanel-more-switch.on {
+.formbuilder-accordion-editpanel-more-switch--on {
   background: #3b82f5;
 }
 
-.formbuilder-accordion-editpanel-more-switch.on::after {
+.formbuilder-accordion-editpanel-more-switch--on::after {
   left: 18px;
 }
 
@@ -340,7 +340,7 @@
   height: 16px;
 }
 
-.formbuilder-accordion-option.dragging {
+.formbuilder-accordion-option--dragging {
   opacity: 0.5;
 }
 
@@ -441,7 +441,7 @@
   border-color: #3b82f5;
 }
 
-.formbuilder-menu.open .formbuilder-menu-button {
+.formbuilder-menu--open .formbuilder-menu-button {
   border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
@@ -475,7 +475,7 @@
   font-size: 10px;
 }
 
-.formbuilder-menu.open .formbuilder-menu-button-arrow {
+.formbuilder-menu--open .formbuilder-menu-button-arrow {
   transform: rotate(180deg);
 }
 
@@ -512,7 +512,7 @@
   border-radius: 4px;
 }
 
-.formbuilder-menu.open .formbuilder-menu-options {
+.formbuilder-menu--open .formbuilder-menu-options {
   display: block;
 }
 
@@ -604,7 +604,7 @@
   color: #fff;
 }
 
-.formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-button {
+.formbuilder-fieldset-menu--open .formbuilder-fieldset-menu-button {
   border-color: #3b82f5;
   border-radius: 4px 4px 0 0;
   border-bottom: none;
@@ -642,7 +642,7 @@
   border-radius: 4px;
 }
 
-.formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-options {
+.formbuilder-fieldset-menu--open .formbuilder-fieldset-menu-options {
   display: block;
 }
 
@@ -661,12 +661,12 @@
   background: #3b82f5;
 }
 
-.formbuilder-fieldset-menu-option.disabled {
+.formbuilder-fieldset-menu-option--disabled {
   color: #555;
   cursor: not-allowed;
 }
 
-.formbuilder-fieldset-menu-option.disabled:hover {
+.formbuilder-fieldset-menu-option--disabled:hover {
   background: transparent;
 }
 
@@ -749,8 +749,8 @@
   height: 16px;
 }
 
-.formbuilder-field.dragging,
-.formbuilder-field-wrapper.dragging {
+.formbuilder-field--dragging,
+.formbuilder-field-wrapper--dragging {
   opacity: 0.5;
 }
 
@@ -849,7 +849,7 @@
   display: none;
 }
 
-.formbuilder-field-more.open .formbuilder-field-more-menu {
+.formbuilder-field-more--open .formbuilder-field-more-menu {
   display: block;
 }
 
@@ -979,7 +979,7 @@
   flex: 1;
 }
 
-.formbuilder-field-switch-label.disabled {
+.formbuilder-field-switch-label--disabled {
   color: #555;
   cursor: not-allowed;
 }
@@ -1006,21 +1006,21 @@
   transition: left 0.2s;
 }
 
-.formbuilder-field-switch.on {
+.formbuilder-field-switch--on {
   background: #3b82f5;
 }
 
-.formbuilder-field-switch.on::after {
+.formbuilder-field-switch--on::after {
   left: 18px;
 }
 
-.formbuilder-field-switch.disabled {
+.formbuilder-field-switch--disabled {
   background: #333;
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-.formbuilder-field-switch.disabled::after {
+.formbuilder-field-switch--disabled::after {
   background: #666;
 }
 
@@ -1177,7 +1177,7 @@
   color: #888;
 }
 
-.formbuilder-checkout-price-item .price-value {
+.formbuilder-checkout-price-value {
   color: #fff;
   font-weight: 600;
 }
