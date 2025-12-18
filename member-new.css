@@ -1116,7 +1116,7 @@
    TERMS AND CONDITIONS MODAL
    ============================================================================ */
 
-.terms-modal {
+.member-terms-modal {
   position: fixed;
   inset: 0;
   display: flex;
@@ -1128,19 +1128,19 @@
   transition: opacity 0.2s ease;
 }
 
-.terms-modal[aria-hidden="false"] {
+.member-terms-modal[aria-hidden="false"] {
   opacity: 1;
   pointer-events: auto;
 }
 
-.terms-modal-backdrop {
+.member-terms-modal-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
 }
 
-.terms-modal-content {
+.member-terms-modal-content {
   position: relative;
   width: calc(100% - 40px);
   max-width: 600px;
@@ -1154,7 +1154,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.terms-modal-header {
+.member-terms-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1163,14 +1163,14 @@
   flex-shrink: 0;
 }
 
-.terms-modal-title {
+.member-terms-modal-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #fff;
 }
 
-.terms-modal-close {
+.member-terms-modal-close {
   width: 32px;
   height: 32px;
   display: flex;
@@ -1185,12 +1185,12 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.terms-modal-close:hover {
+.member-terms-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
-.terms-modal-body {
+.member-terms-modal-body {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
@@ -1199,26 +1199,26 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
-.terms-modal-body h3 {
+.member-terms-modal-body-heading {
   margin: 0 0 10px;
   font-size: 16px;
   color: #fff;
 }
 
-.terms-modal-body p {
+.member-terms-modal-body-text {
   margin: 0 0 16px;
 }
 
-.terms-modal-body ul {
+.member-terms-modal-body-list {
   margin: 0 0 16px;
   padding-left: 20px;
 }
 
-.terms-modal-body li {
+.member-terms-modal-body-item {
   margin-bottom: 8px;
 }
 
-.terms-modal-footer {
+.member-terms-modal-footer {
   display: flex;
   justify-content: flex-end;
   padding: 16px 20px;
@@ -1226,7 +1226,7 @@
   flex-shrink: 0;
 }
 
-.terms-modal-accept {
+.member-terms-modal-accept {
   height: 40px;
   padding: 0 24px;
   background: #3b82f6;
@@ -1239,7 +1239,7 @@
   transition: background 0.15s;
 }
 
-.terms-modal-accept:hover {
+.member-terms-modal-accept:hover {
   background: #2563eb;
 }
 

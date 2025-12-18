@@ -2125,7 +2125,7 @@
     transition: border-color 0.15s, background 0.15s;
 }
 
-.member-checkout-option input[type="radio"] {
+.member-checkout-option-radio {
     position: static;
     opacity: 1;
     pointer-events: auto;
@@ -2201,7 +2201,7 @@
     transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
-.member-checkout-duration-option input[type="radio"] {
+.member-checkout-duration-radio {
     flex-shrink: 0;
     width: auto;
     height: auto;

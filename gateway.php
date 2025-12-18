@@ -26,13 +26,12 @@ if ($connectorDir === null) {
   exit;
 }
 
-// Handle get-checkout-options inline - returns active checkout options with site currency
+// Handle get-checkout-options inline - copied from get-admin-settings.php
 if ($action === 'get-checkout-options') {
   header('Content-Type: application/json');
   
   // Include database config (same paths as connectors)
   $configCandidates = [
-    $baseDir . '/../config/config-db.php',
     $connectorDir . '/../config/config-db.php',
     dirname($connectorDir) . '/config/config-db.php',
   ];
@@ -67,27 +66,40 @@ if ($action === 'get-checkout-options') {
       throw new Exception('Database not configured');
     }
     
-    // Get checkout options
-    $stmt = $pdo->query("SELECT id, checkout_key, checkout_title, checkout_description, checkout_flagfall_price, checkout_basic_day_rate, checkout_discount_day_rate, checkout_featured, checkout_sidebar_ad, sort_order, is_active FROM checkout_options ORDER BY sort_order ASC");
-    $checkoutOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Cast numeric values properly
-    foreach ($checkoutOptions as &$opt) {
-      $opt['id'] = (int)$opt['id'];
-      $opt['checkout_flagfall_price'] = $opt['checkout_flagfall_price'] !== null ? (float)$opt['checkout_flagfall_price'] : null;
-      $opt['checkout_basic_day_rate'] = $opt['checkout_basic_day_rate'] !== null ? (float)$opt['checkout_basic_day_rate'] : null;
-      $opt['checkout_discount_day_rate'] = $opt['checkout_discount_day_rate'] !== null ? (float)$opt['checkout_discount_day_rate'] : null;
-      $opt['is_active'] = (int)$opt['is_active'];
-      $opt['sort_order'] = (int)$opt['sort_order'];
-    }
-    unset($opt);
-    
-    // Get site currency from settings
+    // Get site currency from admin_settings (copied from get-admin-settings.php)
     $currency = 'USD';
-    $stmt = $pdo->query("SELECT setting_value FROM site_settings WHERE setting_key = 'site_currency' LIMIT 1");
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($row && !empty($row['setting_value'])) {
-      $currency = $row['setting_value'];
+    $stmt = $pdo->query("SHOW TABLES LIKE 'admin_settings'");
+    if ($stmt->rowCount() > 0) {
+      $stmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'site_currency' LIMIT 1");
+      $row = $stmt->fetch(PDO::FETCH_ASSOC);
+      if ($row && !empty($row['setting_value'])) {
+        $currency = $row['setting_value'];
+      }
+    }
+    
+    // Fetch checkout_options (copied from get-admin-settings.php)
+    $checkoutOptions = [];
+    $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
+    if ($stmt->rowCount() > 0) {
+      $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active` FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
+      $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      foreach ($rows as $row) {
+        $checkoutOptions[] = [
+          'id' => (int)$row['id'],
+          'checkout_key' => $row['checkout_key'],
+          'checkout_title' => $row['checkout_title'],
+          'checkout_description' => $row['checkout_description'],
+          'checkout_flagfall_price' => $row['checkout_flagfall_price'] !== null ? (float)$row['checkout_flagfall_price'] : 0,
+          'checkout_basic_day_rate' => $row['checkout_basic_day_rate'] !== null ? (float)$row['checkout_basic_day_rate'] : null,
+          'checkout_discount_day_rate' => $row['checkout_discount_day_rate'] !== null ? (float)$row['checkout_discount_day_rate'] : null,
+          'checkout_currency' => $row['checkout_currency'] ?? $currency,
+          'checkout_featured' => (bool)$row['checkout_featured'],
+          'checkout_sidebar_ad' => (bool)$row['checkout_sidebar_ad'],
+          'sort_order' => (int)$row['sort_order'],
+          'is_active' => (bool)$row['is_active'],
+        ];
+      }
     }
     
     echo json_encode([

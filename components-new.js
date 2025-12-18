@@ -1748,6 +1748,7 @@ const CheckoutOptionsComponent = (function(){
                 // Events: Single radio per option card
                 var radio = document.createElement('input');
                 radio.type = 'radio';
+                radio.className = 'member-checkout-option-radio';
                 radio.name = groupName;
                 radio.value = String(option.id || '');
                 radio.id = baseId + '-checkout-' + optionIndex;
@@ -1809,6 +1810,7 @@ const CheckoutOptionsComponent = (function(){
                 label30.className = 'member-checkout-duration-option';
                 var radio30 = document.createElement('input');
                 radio30.type = 'radio';
+                radio30.className = 'member-checkout-duration-radio';
                 radio30.name = groupName;
                 radio30.value = (option.id || '') + '-30';
                 radio30.dataset.optionId = String(option.id || '');
@@ -1817,6 +1819,7 @@ const CheckoutOptionsComponent = (function(){
                 radio30.required = true;
                 if (optionIndex === 0) radio30.checked = true;
                 var text30 = document.createElement('span');
+                text30.className = 'member-checkout-duration-text';
                 text30.textContent = '30 days — ' + (price30 > 0 ? currency + ' ' + price30.toFixed(2) : 'Free');
                 label30.appendChild(radio30);
                 label30.appendChild(text30);
@@ -1826,6 +1829,7 @@ const CheckoutOptionsComponent = (function(){
                 label365.className = 'member-checkout-duration-option';
                 var radio365 = document.createElement('input');
                 radio365.type = 'radio';
+                radio365.className = 'member-checkout-duration-radio';
                 radio365.name = groupName;
                 radio365.value = (option.id || '') + '-365';
                 radio365.dataset.optionId = String(option.id || '');
@@ -1833,6 +1837,7 @@ const CheckoutOptionsComponent = (function(){
                 radio365.dataset.price = price365.toFixed(2);
                 radio365.required = true;
                 var text365 = document.createElement('span');
+                text365.className = 'member-checkout-duration-text';
                 text365.textContent = '365 days — ' + (price365 > 0 ? currency + ' ' + price365.toFixed(2) : 'Free');
                 label365.appendChild(radio365);
                 label365.appendChild(text365);

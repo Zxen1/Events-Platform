@@ -276,7 +276,7 @@ const MemberModule = (function() {
         termsRow = document.getElementById('member-create-terms');
         termsCheckbox = document.getElementById('member-create-terms-checkbox');
         termsLink = document.getElementById('member-create-terms-link');
-        termsModal = document.getElementById('terms-modal');
+        termsModal = document.getElementById('member-terms-modal');
         submitBtn = document.getElementById('member-create-submit-btn');
         adminBtn = document.getElementById('member-create-admin-btn');
         actionsRow = document.getElementById('member-create-actions');
@@ -296,9 +296,9 @@ const MemberModule = (function() {
         
         // Wire up terms modal close and accept buttons
         if (termsModal) {
-            var closeBtn = termsModal.querySelector('.terms-modal-close');
-            var backdrop = termsModal.querySelector('.terms-modal-backdrop');
-            var acceptBtn = termsModal.querySelector('.terms-modal-accept');
+            var closeBtn = termsModal.querySelector('.member-terms-modal-close');
+            var backdrop = termsModal.querySelector('.member-terms-modal-backdrop');
+            var acceptBtn = termsModal.querySelector('.member-terms-modal-accept');
             
             if (closeBtn) {
                 closeBtn.addEventListener('click', closeTermsModal);
@@ -828,7 +828,7 @@ const MemberModule = (function() {
             console.log('[Member] Checkout API response:', data);
             if (data && data.success && Array.isArray(data.checkout_options)) {
                 var activeOptions = data.checkout_options.filter(function(opt) {
-                    return opt && opt.is_active === 1;
+                    return opt && opt.is_active === true;
                 });
                 console.log('[Member] Active checkout options:', activeOptions.length);
                 
@@ -898,7 +898,7 @@ const MemberModule = (function() {
         document.body.style.overflow = 'hidden';
         
         // Focus close button for accessibility
-        var closeBtn = termsModal.querySelector('.terms-modal-close');
+        var closeBtn = termsModal.querySelector('.member-terms-modal-close');
         if (closeBtn) closeBtn.focus();
     }
     
