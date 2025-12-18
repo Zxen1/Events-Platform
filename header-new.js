@@ -37,9 +37,49 @@ const HeaderModule = (function() {
     
     function init() {
         initFilterButton();
+        initModeSwitch();
         initMemberButton();
         initAdminButton();
         initFullscreenButton();
+    }
+    
+    
+    /* --------------------------------------------------------------------------
+       MODE SWITCH (Recents / Posts / Map)
+       -------------------------------------------------------------------------- */
+    
+    var modeSwitchButtons = null;
+    var currentMode = 'map'; // Default mode
+    
+    function initModeSwitch() {
+        modeSwitchButtons = document.querySelectorAll('.header-modeswitch-button');
+        if (!modeSwitchButtons.length) return;
+        
+        modeSwitchButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var mode = btn.dataset.mode;
+                if (!mode || mode === currentMode) return;
+                
+                setMode(mode);
+            });
+        });
+        
+        // Set initial mode (map is default)
+        setMode('map');
+    }
+    
+    function setMode(mode) {
+        currentMode = mode;
+        
+        // Update button states
+        modeSwitchButtons.forEach(function(btn) {
+            var isActive = btn.dataset.mode === mode;
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            btn.classList.toggle('header-modeswitch-button--active', isActive);
+        });
+        
+        // Emit event for other modules
+        App.emit('mode:changed', { mode: mode });
     }
 
 
@@ -66,6 +106,14 @@ const HeaderModule = (function() {
         
         // Listen for filter state changes to update counter
         App.on('filter:changed', updateFilterCounter);
+        
+        // Listen for filter panel close events
+        App.on('filter:closed', function() {
+            filterPanelOpen = false;
+            if (filterBtn) {
+                filterBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
     }
     
     function updateFilterCounter(filterState) {

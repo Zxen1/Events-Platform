@@ -128,6 +128,7 @@
   flex-direction: column;
   gap: 10px;
   flex-shrink: 0;
+  cursor: ew-resize;
   background: #222222;
 }
 
@@ -329,6 +330,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.member-panel-field[hidden] {
+  display: none;
 }
 
 .member-panel-field-label {
@@ -547,6 +552,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 0 10px 10px;
+}
+
+.member-form-container[hidden] {
+  display: none;
 }
 
 .member-form {

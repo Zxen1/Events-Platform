@@ -89,8 +89,81 @@ const MemberModule = (function() {
         }
         
         bindEvents();
+        initHeaderDrag();
         loadStoredSession();
         render();
+    }
+    
+    function initHeaderDrag() {
+        var headerEl = panel.querySelector('.member-panel-header');
+        var dragHandle = panel.querySelector('.member-panel-drag-handle');
+        if (!headerEl || !panelContent) return;
+        
+        // Drag via header
+        headerEl.addEventListener('mousedown', function(e) {
+            if (e.target.closest('button')) return;
+            startDrag(e);
+        });
+        
+        // Drag via handle
+        if (dragHandle) {
+            dragHandle.addEventListener('mousedown', function(e) {
+                startDrag(e);
+            });
+        }
+        
+        function startDrag(e) {
+            var rect = panelContent.getBoundingClientRect();
+            var startX = e.clientX;
+            var wasRight = panelContent.classList.contains('member-panel-content--side-right');
+            var startRight = window.innerWidth - rect.right;
+            var startLeft = rect.left;
+            
+            function onMove(ev) {
+                var dx = ev.clientX - startX;
+                
+                if (wasRight) {
+                    var newRight = startRight - dx;
+                    var maxRight = window.innerWidth - rect.width;
+                    if (newRight < 0) newRight = 0;
+                    if (newRight > maxRight) newRight = maxRight;
+                    panelContent.style.right = newRight + 'px';
+                    panelContent.style.left = 'auto';
+                } else {
+                    var newLeft = startLeft + dx;
+                    var maxLeft = window.innerWidth - rect.width;
+                    if (newLeft < 0) newLeft = 0;
+                    if (newLeft > maxLeft) newLeft = maxLeft;
+                    panelContent.style.left = newLeft + 'px';
+                    panelContent.style.right = 'auto';
+                }
+            }
+            
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                
+                // Snap to nearest side
+                var finalRect = panelContent.getBoundingClientRect();
+                var centerX = finalRect.left + finalRect.width / 2;
+                var screenCenter = window.innerWidth / 2;
+                
+                if (centerX < screenCenter) {
+                    panelContent.classList.remove('member-panel-content--side-right');
+                    panelContent.classList.add('member-panel-content--side-left');
+                    panelContent.style.left = '';
+                    panelContent.style.right = '';
+                } else {
+                    panelContent.classList.remove('member-panel-content--side-left');
+                    panelContent.classList.add('member-panel-content--side-right');
+                    panelContent.style.left = '';
+                    panelContent.style.right = '';
+                }
+            }
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        }
     }
 
     function cacheElements() {
