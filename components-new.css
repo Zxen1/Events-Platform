@@ -1583,17 +1583,17 @@
     width: 100%;
     height: 36px;
     padding: 0 36px 0 12px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.15);
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
     border-radius: 8px;
     font-size: 14px;
-    color: #ffffff;
-    caret-color: #ffffff;
+    color: #000000;
+    caret-color: #000000;
     box-sizing: border-box;
 }
 
 .filter-mapcontrol-geocoder-input::placeholder {
-    color: rgba(255,255,255,0.5);
+    color: #888888;
 }
 
 .filter-mapcontrol-geocoder-dropdown {
@@ -1602,10 +1602,9 @@
     left: 0;
     right: 0;
     margin-top: 2px;
-    background: rgba(0,0,0,0.9);
-    border: 1px solid rgba(255,255,255,0.15);
+    background: #ffffff;
     border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     max-height: 300px;
     overflow-y: auto;
     z-index: 1000;
@@ -1620,12 +1619,12 @@
 .filter-mapcontrol-geocoder-dropdown-main {
     font-size: 14px;
     font-weight: 500;
-    color: #ffffff;
+    color: #202124;
 }
 
 .filter-mapcontrol-geocoder-dropdown-secondary {
     font-size: 12px;
-    color: rgba(255,255,255,0.6);
+    color: #70757a;
     margin-top: 2px;
 }
 
@@ -1643,7 +1642,7 @@
     border: none;
     border-radius: 4px;
     font-size: 18px;
-    color: rgba(255,255,255,0.6);
+    color: #888888;
     cursor: pointer;
     padding: 0;
 }
@@ -1654,13 +1653,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.15);
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    color: #ffffff;
+    color: #333333;
 }
 
 .filter-mapcontrol-geolocate-icon {
@@ -1675,28 +1674,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.15);
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
     border-radius: 8px;
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
-    color: #ffffff;
+    color: #333333;
 }
 
 .filter-mapcontrol-compass-icon {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     transition: transform 0.1s ease-out;
-}
-
-.filter-mapcontrol-compass-north {
-    fill: #3b82f6;
-}
-
-.filter-mapcontrol-compass-south {
-    fill: #ffffff;
 }
 
 
@@ -1825,17 +1816,9 @@
 
 .map-mapcontrol-compass-icon {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     transition: transform 0.1s ease-out;
-}
-
-.map-mapcontrol-compass-north {
-    fill: #3b82f6;
-}
-
-.map-mapcontrol-compass-south {
-    fill: #333333;
 }
 
 
@@ -1970,44 +1953,25 @@
     transition: transform 0.1s ease-out;
 }
 
-.welcome-mapcontrol-compass-north {
-    fill: #3b82f6;
-}
-
-.welcome-mapcontrol-compass-south {
-    fill: #333333;
-}
-
 
 /* ----------------------------------------------------------------------------
    STATES (shared)
    ---------------------------------------------------------------------------- */
 
-.filter-mapcontrol-geocoder-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-}
-
+.filter-mapcontrol-geocoder-input:focus,
 .map-mapcontrol-geocoder-input:focus,
 .welcome-mapcontrol-geocoder-input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: #3b82f5;
 }
 
-.filter-mapcontrol-geocoder-dropdown-item:hover {
-    background-color: rgba(255,255,255,0.1);
-}
-
+.filter-mapcontrol-geocoder-dropdown-item:hover,
 .map-mapcontrol-geocoder-dropdown-item:hover,
 .welcome-mapcontrol-geocoder-dropdown-item:hover {
     background-color: #f1f3f4;
 }
 
-.filter-mapcontrol-geocoder-clear:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: #ffffff;
-}
-
+.filter-mapcontrol-geocoder-clear:hover,
 .map-mapcontrol-geocoder-clear:hover,
 .welcome-mapcontrol-geocoder-clear:hover {
     background-color: rgba(0,0,0,0.05);
@@ -2015,13 +1979,9 @@
 }
 
 .filter-mapcontrol-geolocate:hover,
-.filter-mapcontrol-compass:hover {
-    background-color: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.3);
-}
-
 .map-mapcontrol-geolocate:hover,
 .welcome-mapcontrol-geolocate:hover,
+.filter-mapcontrol-compass:hover,
 .map-mapcontrol-compass:hover,
 .welcome-mapcontrol-compass:hover {
     background-color: #f2f2f2;
