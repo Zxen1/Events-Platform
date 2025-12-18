@@ -1171,79 +1171,78 @@ const MapControlRowComponent = (function(){
             map: map
         };
         
-        // Initialize Google Places services for suggestions
-        var autocompleteService = null;
-        var placesService = null;
-        
-        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-            autocompleteService = new google.maps.places.AutocompleteService();
-            var serviceDiv = document.createElement('div');
-            placesService = new google.maps.places.PlacesService(serviceDiv);
-        }
-        
-        // Fetch and display suggestions
-        function fetchSuggestions(query) {
-            if (!autocompleteService) return;
+        // Fetch and display suggestions using new Google Places API
+        async function fetchSuggestions(query) {
+            if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
             
-            autocompleteService.getPlacePredictions(
-                { input: query },
-                function(predictions, status) {
-                    dropdown.innerHTML = '';
+            try {
+                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                    input: query
+                });
+                
+                dropdown.innerHTML = '';
+                
+                if (!response || !response.suggestions || response.suggestions.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                response.suggestions.forEach(function(suggestion) {
+                    var prediction = suggestion.placePrediction;
+                    if (!prediction) return;
                     
-                    if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
-                        dropdown.style.display = 'none';
-                        return;
-                    }
+                    var item = document.createElement('div');
+                    item.className = prefix + '-geocoder-dropdown-item';
                     
-                    predictions.forEach(function(prediction) {
-                        var item = document.createElement('div');
-                        item.className = prefix + '-geocoder-dropdown-item';
-                        
-                        var mainText = prediction.structured_formatting ? prediction.structured_formatting.main_text : prediction.description;
-                        var secondaryText = prediction.structured_formatting ? prediction.structured_formatting.secondary_text : '';
-                        
-                        item.innerHTML = 
-                            '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
-                            (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
-                        
-                        item.addEventListener('click', function() {
-                            placesService.getDetails(
-                                { placeId: prediction.place_id, fields: ['geometry', 'name', 'formatted_address'] },
-                                function(place, detailStatus) {
-                                    if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
-                                        var lat = place.geometry.location.lat();
-                                        var lng = place.geometry.location.lng();
-                                        
-                                        input.value = place.name || prediction.description;
-                                        dropdown.style.display = 'none';
-                                        clearBtn.style.display = 'flex';
-                                        
-                                        var result = {
-                                            center: [lng, lat],
-                                            geometry: { type: 'Point', coordinates: [lng, lat] },
-                                            place_name: place.formatted_address || prediction.description,
-                                            text: place.name || prediction.description
-                                        };
-                                        
-                                        // Add bbox if viewport available (for proper zoom on cities/countries)
-                                        if (place.geometry.viewport) {
-                                            var ne = place.geometry.viewport.getNorthEast();
-                                            var sw = place.geometry.viewport.getSouthWest();
-                                            result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
-                                        }
-                                        
-                                        onResult(result);
-                                    }
+                    var mainText = prediction.mainText ? prediction.mainText.text : prediction.text.text;
+                    var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
+                    
+                    item.innerHTML = 
+                        '<div class="' + prefix + '-geocoder-dropdown-main">' + mainText + '</div>' +
+                        (secondaryText ? '<div class="' + prefix + '-geocoder-dropdown-secondary">' + secondaryText + '</div>' : '');
+                    
+                    item.addEventListener('click', async function() {
+                        try {
+                            var place = prediction.toPlace();
+                            await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'viewport'] });
+                            
+                            if (place.location) {
+                                var lat = place.location.lat();
+                                var lng = place.location.lng();
+                                
+                                input.value = place.displayName || mainText;
+                                dropdown.style.display = 'none';
+                                clearBtn.style.display = 'flex';
+                                
+                                var result = {
+                                    center: [lng, lat],
+                                    geometry: { type: 'Point', coordinates: [lng, lat] },
+                                    place_name: place.formattedAddress || mainText,
+                                    text: place.displayName || mainText
+                                };
+                                
+                                // Add bbox if viewport available (for proper zoom on cities/countries)
+                                if (place.viewport) {
+                                    var ne = place.viewport.getNorthEast();
+                                    var sw = place.viewport.getSouthWest();
+                                    result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
                                 }
-                            );
-                        });
-                        
-                        dropdown.appendChild(item);
+                                
+                                onResult(result);
+                            }
+                        } catch (err) {
+                            console.error('Place details error:', err);
+                        }
                     });
                     
-                    dropdown.style.display = 'block';
-                }
-            );
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            } catch (err) {
+                console.error('Autocomplete error:', err);
+                dropdown.style.display = 'none';
+            }
         }
         
         // Input events
