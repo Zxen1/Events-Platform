@@ -15,7 +15,7 @@
  *   --layer-image-modal: 88  (lightbox/image modal)
  *   --layer-dialog: 86        (confirmations/dialogs/toasts, unsaved changes dialogs)
  *   --layer-menu: 85          (menus, dropdowns, tooltips, pickers, currency menus)
- *   --layer-panel: 60         (member/admin/filter panels)
+ *   --layer-panel: 60-69      (member/admin/filter panels - see Panel Stacking below)
  *   --layer-header: 40        (headers/nav)
  *   --layer-card: 30          (floating cards above content)
  *   --layer-content: 20        (primary content)
@@ -26,10 +26,10 @@
  *   90: (--layer-modal) - modals
  *   88: (--layer-image-modal) - image modals
  *   86: (--layer-dialog) - dialogs, unsaved changes prompts (#adminUnsavedPrompt, #memberUnsavedPrompt)
- *   85: (--layer-menu) - standard menus, dropdowns, currency menus, field-type-select menus
+ *   85: (--layer-menu) - standard menus, dropdowns, tooltips, pickers, currency menus
  *   66: formpicker dropdown menus
  *   65: formpicker dropdown buttons
- *   60: (--layer-panel) - panels
+ *   60-69: (--layer-panel) - panels (see Panel Stacking below)
  *   40: (--layer-header) - headers
  *   30: (--layer-card) - cards
  *   20: (--layer-content) - content
@@ -41,6 +41,19 @@
  *   0: base layer, various elements
  *   -1: some background elements
  *   auto: some elements
+ * 
+ * Panel Stacking System (--layer-panel: 60-69):
+ *   - Panels use z-index 60-69 to determine front-to-back order
+ *   - Managed by App.bringToTop() in index-new.js
+ *   - When a panel opens or is clicked, it moves to top of stack
+ *   - Each panel (position: fixed + z-index) creates a STACKING CONTEXT
+ *   - Content inside a panel is relative to that panel's context
+ *   - Example: Panel A at z-index 60 with content at z-index 999
+ *              Panel B at z-index 61 with content at z-index 1
+ *              Panel B's content (1) is ABOVE Panel A's content (999)
+ *              because 61 > 60 at the panel level
+ *   - This prevents content from one panel poking through another
+ *   - Maximum 9 panels can stack (60, 61, 62... 69) before hitting menus (85)
  * 
  * Map Card Container System:
  *   - small-map-card-container: z-index 1 (renders below big cards)

@@ -240,6 +240,57 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     PANEL STACK - Z-INDEX MANAGEMENT
+     Tracks open panels and brings clicked/opened panels to front
+     
+     Uses CSS variable layers from base.css:
+       --layer-panel: 60 (member/admin/filter panels)
+       --layer-modal: 90 (modals)
+     
+     Panels within same layer use small increments (0-9) to stack
+     -------------------------------------------------------------------------- */
+  const panelStack = [];
+
+  function bringToTop(panelEl) {
+    if (!panelEl) return;
+    
+    // Remove from current position if exists
+    const idx = panelStack.indexOf(panelEl);
+    if (idx !== -1) panelStack.splice(idx, 1);
+    
+    // Add to top of stack
+    panelStack.push(panelEl);
+    
+    // Update z-index for all panels in stack
+    // Use small increments within the layer (max 9 panels stacked)
+    panelStack.forEach(function(p, i) {
+      if (p instanceof Element) {
+        // Increment within layer: 60, 61, 62... (max 69 for panels)
+        // This keeps panels below menus (85), dialogs (86), modals (90)
+        var increment = Math.min(i, 9);
+        p.style.zIndex = String(60 + increment);
+      }
+    });
+  }
+
+  function removeFromStack(panelEl) {
+    if (!panelEl) return;
+    const idx = panelStack.indexOf(panelEl);
+    if (idx !== -1) panelStack.splice(idx, 1);
+  }
+
+  function getTopPanel() {
+    for (var i = panelStack.length - 1; i >= 0; i--) {
+      var p = panelStack[i];
+      if (p instanceof Element && (p.classList.contains('show') || p.classList.contains('admin-panel--show') || p.classList.contains('member-panel--show') || p.classList.contains('filter-panel--show'))) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+
+  /* --------------------------------------------------------------------------
      DOM READY
      -------------------------------------------------------------------------- */
   if (document.readyState === 'loading') {
@@ -267,7 +318,12 @@ const App = (function() {
     
     // State
     getState,
-    setState
+    setState,
+    
+    // Panel stack
+    bringToTop,
+    removeFromStack,
+    getTopPanel
   };
 
 })();

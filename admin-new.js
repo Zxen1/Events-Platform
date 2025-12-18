@@ -82,50 +82,21 @@ const AdminModule = (function() {
             
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
-            var wasRight = panelContent.classList.contains('admin-panel-content--side-right');
-            var startRight = window.innerWidth - rect.right;
             var startLeft = rect.left;
             
             function onMove(ev) {
                 var dx = ev.clientX - startX;
-                
-                if (wasRight) {
-                    var newRight = startRight - dx;
-                    var maxRight = window.innerWidth - rect.width;
-                    if (newRight < 0) newRight = 0;
-                    if (newRight > maxRight) newRight = maxRight;
-                    panelContent.style.right = newRight + 'px';
-                    panelContent.style.left = 'auto';
-                } else {
-                    var newLeft = startLeft + dx;
-                    var maxLeft = window.innerWidth - rect.width;
-                    if (newLeft < 0) newLeft = 0;
-                    if (newLeft > maxLeft) newLeft = maxLeft;
-                    panelContent.style.left = newLeft + 'px';
-                    panelContent.style.right = 'auto';
-                }
+                var newLeft = startLeft + dx;
+                var maxLeft = window.innerWidth - rect.width;
+                if (newLeft < 0) newLeft = 0;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+                panelContent.style.left = newLeft + 'px';
+                panelContent.style.right = 'auto';
             }
             
             function onUp() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
-                
-                // Snap to nearest side
-                var finalRect = panelContent.getBoundingClientRect();
-                var centerX = finalRect.left + finalRect.width / 2;
-                var screenCenter = window.innerWidth / 2;
-                
-                if (centerX < screenCenter) {
-                    panelContent.classList.remove('admin-panel-content--side-right');
-                    panelContent.classList.add('admin-panel-content--side-left');
-                    panelContent.style.left = '';
-                    panelContent.style.right = '';
-                } else {
-                    panelContent.classList.remove('admin-panel-content--side-left');
-                    panelContent.classList.add('admin-panel-content--side-right');
-                    panelContent.style.left = '';
-                    panelContent.style.right = '';
-                }
             }
             
             document.addEventListener('mousemove', onMove);
@@ -134,6 +105,13 @@ const AdminModule = (function() {
     }
 
     function bindEvents() {
+        // Bring to front when panel is clicked
+        if (panel) {
+            panel.addEventListener('mousedown', function() {
+                App.bringToTop(panel);
+            });
+        }
+        
         // Panel close
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
@@ -203,6 +181,9 @@ const AdminModule = (function() {
         panelContent.classList.remove('admin-panel-content--hidden');
         panelContent.classList.add('admin-panel-content--visible');
         
+        // Bring panel to front of stack
+        App.bringToTop(panel);
+        
         // Update header button
         App.emit('admin:opened');
     }
@@ -218,6 +199,9 @@ const AdminModule = (function() {
             panelContent.removeEventListener('transitionend', handler);
             panel.classList.remove('admin-panel--show');
             panel.setAttribute('aria-hidden', 'true');
+            
+            // Remove from panel stack
+            App.removeFromStack(panel);
         }, { once: true });
         
         // Update header button

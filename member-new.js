@@ -104,50 +104,21 @@ const MemberModule = (function() {
             
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
-            var wasRight = panelContent.classList.contains('member-panel-content--side-right');
-            var startRight = window.innerWidth - rect.right;
             var startLeft = rect.left;
             
             function onMove(ev) {
                 var dx = ev.clientX - startX;
-                
-                if (wasRight) {
-                    var newRight = startRight - dx;
-                    var maxRight = window.innerWidth - rect.width;
-                    if (newRight < 0) newRight = 0;
-                    if (newRight > maxRight) newRight = maxRight;
-                    panelContent.style.right = newRight + 'px';
-                    panelContent.style.left = 'auto';
-                } else {
-                    var newLeft = startLeft + dx;
-                    var maxLeft = window.innerWidth - rect.width;
-                    if (newLeft < 0) newLeft = 0;
-                    if (newLeft > maxLeft) newLeft = maxLeft;
-                    panelContent.style.left = newLeft + 'px';
-                    panelContent.style.right = 'auto';
-                }
+                var newLeft = startLeft + dx;
+                var maxLeft = window.innerWidth - rect.width;
+                if (newLeft < 0) newLeft = 0;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+                panelContent.style.left = newLeft + 'px';
+                panelContent.style.right = 'auto';
             }
             
             function onUp() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
-                
-                // Snap to nearest side
-                var finalRect = panelContent.getBoundingClientRect();
-                var centerX = finalRect.left + finalRect.width / 2;
-                var screenCenter = window.innerWidth / 2;
-                
-                if (centerX < screenCenter) {
-                    panelContent.classList.remove('member-panel-content--side-right');
-                    panelContent.classList.add('member-panel-content--side-left');
-                    panelContent.style.left = '';
-                    panelContent.style.right = '';
-                } else {
-                    panelContent.classList.remove('member-panel-content--side-left');
-                    panelContent.classList.add('member-panel-content--side-right');
-                    panelContent.style.left = '';
-                    panelContent.style.right = '';
-                }
             }
             
             document.addEventListener('mousemove', onMove);
@@ -187,6 +158,13 @@ const MemberModule = (function() {
     }
 
     function bindEvents() {
+        // Bring to front when panel is clicked
+        if (panel) {
+            panel.addEventListener('mousedown', function() {
+                App.bringToTop(panel);
+            });
+        }
+        
         // Panel open/close
         if (closeBtn) {
             closeBtn.addEventListener('click', closePanel);
@@ -263,6 +241,9 @@ const MemberModule = (function() {
         panelContent.classList.remove('member-panel-content--hidden');
         panelContent.classList.add('member-panel-content--visible');
         
+        // Bring panel to front of stack
+        App.bringToTop(panel);
+        
         // Update header button
         App.emit('member:opened');
     }
@@ -274,12 +255,14 @@ const MemberModule = (function() {
         panelContent.classList.add('member-panel-content--hidden');
         
         // Wait for transition to complete before hiding
-        setTimeout(function() {
-            if (panelContent.classList.contains('member-panel-content--hidden')) {
-                panel.classList.remove('member-panel--show');
-                panel.setAttribute('aria-hidden', 'true');
-            }
-        }, 300);
+        panelContent.addEventListener('transitionend', function handler() {
+            panelContent.removeEventListener('transitionend', handler);
+            panel.classList.remove('member-panel--show');
+            panel.setAttribute('aria-hidden', 'true');
+            
+            // Remove from panel stack
+            App.removeFromStack(panel);
+        }, { once: true });
         
         // Update header button
         App.emit('member:closed');

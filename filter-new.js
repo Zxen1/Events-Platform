@@ -93,6 +93,9 @@ const FilterModule = (function() {
         panelEl.removeAttribute('inert');
         
         contentEl.classList.add('panel-visible');
+        
+        // Bring panel to front of stack
+        App.bringToTop(panelEl);
     }
     
     function closePanel() {
@@ -105,6 +108,9 @@ const FilterModule = (function() {
             contentEl.removeEventListener('transitionend', handler);
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
+            
+            // Remove from panel stack
+            App.removeFromStack(panelEl);
         }, { once: true });
     }
     
@@ -843,6 +849,13 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function bindPanelEvents() {
+        // Bring to front when panel is clicked
+        if (panelEl) {
+            panelEl.addEventListener('mousedown', function() {
+                App.bringToTop(panelEl);
+            });
+        }
+        
         App.on('panel:toggle', function(data) {
             if (data.panel === 'filter') {
                 togglePanel(data.show);
