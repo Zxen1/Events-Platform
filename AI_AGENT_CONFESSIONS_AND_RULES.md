@@ -1424,11 +1424,13 @@ Phone line → NBN decoder → Optus router → Ethernet → TP-Link Mesh → PC
 - Suspected causes: Cloudflare, Optus ISP routing issues
 - User had reset the computer
 
-**The Spontaneous Fix:**
-- At 9:48 AM, loading speed suddenly improved dramatically
+**The Spontaneous Fix (9:48 AM):**
+- At 9:48 AM, loading speed suddenly kicked back in - improved dramatically
 - Both the live site (funmap.com) and new site became fast
 - No specific action taken to cause the improvement
-- Self-resolved after the Cloudflare Singapore maintenance ended (or ISP routing corrected)
+- **Cloudflare Singapore datacenter was under server upgrade/maintenance (Dec 18-19, 2025)** - this may have ended around 9:48 AM, restoring normal speeds
+- If Optus ISP routes Australian traffic through Singapore Cloudflare edge servers, the Singapore maintenance would directly affect funmap.com loading
+- Self-resolved - possibly when Cloudflare Singapore maintenance completed
 
 **However - PageSpeed Insights Still Shows Problems:**
 - After the local speed improvement, user checked PageSpeed Insights (Google's website speed testing tool)
@@ -1448,6 +1450,15 @@ Phone line → NBN decoder → Optus router → Ethernet → TP-Link Mesh → PC
 3. **ISP-specific routing** - Australian ISPs (Optus) may have had bad routes to Cloudflare that are now fixed locally
 4. **Cloudflare edge caching** - Some Cloudflare datacenters may have cached bad responses or be experiencing issues
 5. **Cursor IDE resource bottleneck** - Starting a new Cursor session freed up computer resources, which may have improved website loading. Less likely because other websites were already loading quickly (only funmap.com was slow), but worth noting as a coincidental factor
+6. **Scheduled task at 9:48 AM?** - Unknown if there's any scheduled cleaning/reset on the router or PC that runs at 9:48 AM daily. If this timing recurs, investigate Windows Task Scheduler and router scheduled tasks
+
+**What Was Found But Didn't Help:**
+- **Radmin VPN** was discovered installed on the PC - disabling it had no effect on the slow loading
+
+**Resolution:**
+- **The only solution that worked was waiting** - after 10+ hours of troubleshooting attempts (all failed), the issue self-resolved
+- None of the manual fixes (router reset, DNS flush, firewall disable, browser changes, etc.) had any effect
+- The fix coincided with either: Cloudflare Singapore maintenance ending, a scheduled task running, or ISP routing correcting itself
 
 **Action Items:**
 - Check multi-location speed test results
