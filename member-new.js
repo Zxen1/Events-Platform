@@ -76,7 +76,6 @@ const MemberModule = (function() {
     
     // Terms modal elements
     var termsModalContainer = null;
-    var termsAgreedCheckbox = null;
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -848,10 +847,6 @@ const MemberModule = (function() {
         formTermsCheckbox.checked = termsAgreed;
         formTermsCheckbox.addEventListener('change', function() {
             termsAgreed = formTermsCheckbox.checked;
-            // Sync modal checkbox if it exists
-            if (termsAgreedCheckbox) {
-                termsAgreedCheckbox.checked = termsAgreed;
-            }
             updateSubmitButtonState();
         });
         
@@ -894,12 +889,6 @@ const MemberModule = (function() {
         if (!termsModalContainer) {
             createTermsModal();
         }
-        
-        // Sync checkbox with current state
-        if (termsAgreedCheckbox) {
-            termsAgreedCheckbox.checked = termsAgreed;
-        }
-        
         termsModalContainer.classList.remove('terms-modal-container--hidden');
     }
     
@@ -911,9 +900,6 @@ const MemberModule = (function() {
     
     function agreeAndCloseModal() {
         termsAgreed = true;
-        if (termsAgreedCheckbox) {
-            termsAgreedCheckbox.checked = true;
-        }
         if (formTermsCheckbox) {
             formTermsCheckbox.checked = true;
         }
@@ -953,52 +939,23 @@ const MemberModule = (function() {
         var termsText = document.createElement('div');
         termsText.className = 'terms-modal-text';
         // Default text - will be replaced by DB message
-        termsText.innerHTML = '<p class="terms-modal-text-paragraph">Loading terms and conditions...</p>';
+        termsText.innerHTML = '<p class="terms-modal-text-paragraph">Please read and agree to the terms and conditions before submitting your post.</p>' +
+            '<p class="terms-modal-text-paragraph">By submitting this listing, you confirm that:</p>' +
+            '<ul class="terms-modal-text-list">' +
+            '<li class="terms-modal-text-item">All information provided is accurate and truthful</li>' +
+            '<li class="terms-modal-text-item">You have the right to post this content</li>' +
+            '<li class="terms-modal-text-item">You agree to our community guidelines</li>' +
+            '</ul>';
         content.appendChild(termsText);
         
-        // Load terms from database
+        // Load terms from database (replace default text if found)
         if (typeof window.getMessage === 'function') {
             window.getMessage('msg-terms-conditions', {}, false).then(function(msg) {
                 if (msg) {
                     termsText.innerHTML = msg;
-                } else {
-                    // Fallback if no message in DB
-                    termsText.innerHTML = '<p class="terms-modal-text-paragraph">Please read and agree to the terms and conditions before submitting your post.</p>' +
-                        '<p class="terms-modal-text-paragraph">By submitting this listing, you confirm that:</p>' +
-                        '<ul class="terms-modal-text-list">' +
-                        '<li class="terms-modal-text-item">All information provided is accurate and truthful</li>' +
-                        '<li class="terms-modal-text-item">You have the right to post this content</li>' +
-                        '<li class="terms-modal-text-item">You agree to our community guidelines</li>' +
-                        '</ul>';
                 }
             });
         }
-        
-        // Checkbox wrapper
-        var checkboxWrapper = document.createElement('div');
-        checkboxWrapper.className = 'terms-modal-checkbox-wrapper';
-        
-        termsAgreedCheckbox = document.createElement('input');
-        termsAgreedCheckbox.type = 'checkbox';
-        termsAgreedCheckbox.id = 'member-terms-modal-checkbox';
-        termsAgreedCheckbox.className = 'terms-modal-checkbox';
-        termsAgreedCheckbox.checked = termsAgreed;
-        termsAgreedCheckbox.addEventListener('change', function() {
-            termsAgreed = termsAgreedCheckbox.checked;
-            if (formTermsCheckbox) {
-                formTermsCheckbox.checked = termsAgreed;
-            }
-            updateSubmitButtonState();
-        });
-        
-        var checkboxLabel = document.createElement('label');
-        checkboxLabel.htmlFor = 'member-terms-modal-checkbox';
-        checkboxLabel.className = 'terms-modal-checkbox-label';
-        checkboxLabel.textContent = 'I agree to these terms and conditions';
-        
-        checkboxWrapper.appendChild(termsAgreedCheckbox);
-        checkboxWrapper.appendChild(checkboxLabel);
-        content.appendChild(checkboxWrapper);
         
         // Footer
         var footer = document.createElement('div');
