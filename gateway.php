@@ -30,14 +30,16 @@ if ($connectorDir === null) {
 if ($action === 'get-checkout-options') {
   header('Content-Type: application/json');
   
-  // Include database config
-  $configPath = null;
+  // Include database config (same paths as connectors)
   $configCandidates = [
-    $baseDir . '/../config/config.php',
-    $baseDir . '/home/funmapco/config/config.php'
+    $baseDir . '/../config/config-db.php',
+    $connectorDir . '/../config/config-db.php',
+    dirname($connectorDir) . '/config/config-db.php',
   ];
+  
+  $configPath = null;
   foreach ($configCandidates as $candidate) {
-    if (file_exists($candidate)) {
+    if (is_file($candidate)) {
       $configPath = $candidate;
       break;
     }
@@ -51,12 +53,19 @@ if ($action === 'get-checkout-options') {
   require_once $configPath;
   
   try {
-    $pdo = new PDO(
-      "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
-      DB_USER,
-      DB_PASS,
-      [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
+    // Use same PDO pattern as connectors
+    $pdo = null;
+    if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
+      $pdo = $GLOBALS['pdo'];
+    } elseif (defined('DB_DSN')) {
+      $user = defined('DB_USER') ? DB_USER : null;
+      $pass = defined('DB_PASS') ? DB_PASS : null;
+      $pdo = new PDO(DB_DSN, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      ]);
+    } else {
+      throw new Exception('Database not configured');
+    }
     
     // Get checkout options
     $stmt = $pdo->query("SELECT id, checkout_key, checkout_title, checkout_description, checkout_flagfall_price, checkout_basic_day_rate, checkout_discount_day_rate, checkout_featured, checkout_sidebar_ad, sort_order, is_active FROM checkout_options ORDER BY sort_order ASC");
@@ -86,8 +95,8 @@ if ($action === 'get-checkout-options') {
       'checkout_options' => $checkoutOptions,
       'currency' => $currency
     ]);
-  } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error']);
+  } catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
   }
   exit;
 }

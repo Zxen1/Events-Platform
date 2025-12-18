@@ -586,6 +586,13 @@ const MemberModule = (function() {
             placeholder.className = 'member-create-intro';
             placeholder.textContent = 'No fields configured for this subcategory yet.';
             if (formFields) formFields.appendChild(placeholder);
+            
+            // No fields = no checkout, terms, or actions
+            if (formWrapper) formWrapper.hidden = false;
+            if (checkoutContainer) checkoutContainer.hidden = true;
+            if (termsRow) termsRow.hidden = true;
+            if (actionsRow) actionsRow.hidden = true;
+            return;
         } else {
             // Render each field using fieldset rendering logic from fieldset-test.html
             var fieldIdCounter = 0;
@@ -811,19 +818,28 @@ const MemberModule = (function() {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         })
-        .then(function(response) { return response.json(); })
+        .then(function(response) { 
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.json(); 
+        })
         .then(function(data) {
+            console.log('[Member] Checkout API response:', data);
             if (data && data.success && Array.isArray(data.checkout_options)) {
                 var activeOptions = data.checkout_options.filter(function(opt) {
                     return opt && opt.is_active === 1;
                 });
+                console.log('[Member] Active checkout options:', activeOptions.length);
                 
                 if (activeOptions.length) {
                     displayCheckoutOptions(activeOptions, data.currency || 'USD');
                 } else {
+                    console.log('[Member] No active checkout options');
                     checkoutContainer.hidden = true;
                 }
             } else {
+                console.log('[Member] Invalid checkout response:', data);
                 checkoutContainer.hidden = true;
             }
         })
