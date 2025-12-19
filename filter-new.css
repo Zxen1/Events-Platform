@@ -465,7 +465,7 @@
   bottom: 0;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 5px;
+  border-radius: 13px;
   transition: background 0.2s, border-color 0.2s;
 }
 
@@ -584,7 +584,7 @@
   width: 36px;
   height: 20px;
   background: #444;
-  border-radius: 5px;
+  border-radius: 10px;
   position: relative;
   cursor: pointer;
 }
@@ -648,7 +648,7 @@
   width: 32px;
   height: 18px;
   background: #444;
-  border-radius: 5px;
+  border-radius: 9px;
   position: relative;
   cursor: pointer;
 }

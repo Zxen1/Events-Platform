@@ -7,6 +7,7 @@
    STRUCTURE:
    - ICONS               - SVG icon library (JS only, no CSS needed)
    - CLEAR BUTTON        - Reusable X/clear button
+   - SWITCH              - Toggle switch (has size variants)
    - FIELDSETS           - Form field types
    - CALENDAR            - Horizontal scrolling date picker
    - CURRENCY            - Currency selector (has variants)
@@ -91,6 +92,80 @@ const ClearButtonComponent = (function(){
     return {
         create: create,
         upgradeAll: upgradeAll
+    };
+})();
+
+
+/* ============================================================================
+   SWITCH
+   Toggle switch component with size variants
+   ============================================================================ */
+
+const SwitchComponent = (function(){
+    
+    /**
+     * Create a new switch element
+     * @param {Object} options - Configuration options
+     * @param {string} options.size - Size variant: 'small', 'medium' (default), 'large'
+     * @param {boolean} options.checked - Initial checked state
+     * @param {string} options.name - Input name attribute
+     * @param {string} options.id - Input id attribute
+     * @param {string} options.ariaLabel - Accessible label
+     * @param {Function} options.onChange - Change handler (receives checked state)
+     * @returns {Object} Object with element and control methods
+     */
+    function create(options) {
+        options = options || {};
+        
+        var size = options.size || 'medium';
+        var checked = options.checked || false;
+        
+        // Build class prefix based on size
+        var prefix = size === 'medium' ? 'component-switch' : 'component-' + size + '-switch';
+        
+        var label = document.createElement('label');
+        label.className = prefix;
+        
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.className = prefix + '-input';
+        input.checked = checked;
+        if (options.name) input.name = options.name;
+        if (options.id) input.id = options.id;
+        if (options.ariaLabel) input.setAttribute('aria-label', options.ariaLabel);
+        
+        var slider = document.createElement('span');
+        slider.className = prefix + '-slider';
+        
+        label.appendChild(input);
+        label.appendChild(slider);
+        
+        if (typeof options.onChange === 'function') {
+            input.addEventListener('change', function() {
+                options.onChange(input.checked);
+            });
+        }
+        
+        return {
+            element: label,
+            input: input,
+            isChecked: function() {
+                return input.checked;
+            },
+            setChecked: function(value) {
+                input.checked = !!value;
+            },
+            toggle: function() {
+                input.checked = !input.checked;
+                if (typeof options.onChange === 'function') {
+                    options.onChange(input.checked);
+                }
+            }
+        };
+    }
+    
+    return {
+        create: create
     };
 })();
 
@@ -2307,124 +2382,120 @@ const IconPickerComponent = (function(){
             });
     }
     
-    // Build icon picker popup
-    // options: { onSelect, label, currentIcon }
+    // Extract filename from path
+    function getFilename(path) {
+        if (!path) return '';
+        var parts = path.split('/');
+        return parts[parts.length - 1] || path;
+    }
+    
+    // Build icon picker dropdown menu (matches menu-test.html design)
+    // options: { onSelect, currentIcon }
     function buildPicker(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var label = options.label || 'Select Icon';
         var currentIcon = options.currentIcon || null;
         
-        var picker = document.createElement('div');
-        picker.className = 'iconpicker-container';
+        var menu = document.createElement('div');
+        menu.className = 'component-iconpicker';
         
-        // Preview button
+        // Button
         var button = document.createElement('button');
-        button.className = 'iconpicker-button';
         button.type = 'button';
+        button.className = 'component-iconpicker-button';
         
-        var preview = document.createElement('img');
-        preview.className = 'iconpicker-button-preview';
-        preview.src = currentIcon || '';
-        preview.alt = '';
-        if (!currentIcon) preview.style.display = 'none';
+        var buttonImage = document.createElement('img');
+        buttonImage.className = 'component-iconpicker-button-image';
+        buttonImage.src = currentIcon || '';
+        buttonImage.alt = '';
+        if (!currentIcon) buttonImage.style.display = 'none';
         
-        var placeholder = document.createElement('span');
-        placeholder.className = 'iconpicker-button-placeholder';
-        placeholder.textContent = '+';
-        if (currentIcon) placeholder.style.display = 'none';
+        var buttonText = document.createElement('span');
+        buttonText.className = 'component-iconpicker-button-text';
+        buttonText.textContent = currentIcon ? getFilename(currentIcon) : 'Select...';
         
-        button.appendChild(preview);
-        button.appendChild(placeholder);
-        picker.appendChild(button);
+        var buttonArrow = document.createElement('span');
+        buttonArrow.className = 'component-iconpicker-button-arrow';
+        buttonArrow.textContent = '▼';
         
-        // Popup
-        var popup = document.createElement('div');
-        popup.className = 'iconpicker-popup';
-        popup.style.display = 'none';
+        button.appendChild(buttonImage);
+        button.appendChild(buttonText);
+        button.appendChild(buttonArrow);
+        menu.appendChild(button);
         
-        var popupHeader = document.createElement('div');
-        popupHeader.className = 'iconpicker-popup-header';
-        popupHeader.textContent = label;
-        popup.appendChild(popupHeader);
+        // Options dropdown
+        var optionsDiv = document.createElement('div');
+        optionsDiv.className = 'component-iconpicker-options';
+        menu.appendChild(optionsDiv);
         
-        var grid = document.createElement('div');
-        grid.className = 'iconpicker-grid';
-        popup.appendChild(grid);
-        
-        picker.appendChild(popup);
-        
-        // Toggle popup
+        // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = popup.style.display !== 'none';
+            var isOpen = menu.classList.contains('open');
             if (isOpen) {
-                popup.style.display = 'none';
+                menu.classList.remove('open');
             } else {
                 // Load and show icons
                 loadIconsFromFolder().then(function(iconList) {
-                    grid.innerHTML = '';
+                    optionsDiv.innerHTML = '';
                     if (iconList.length === 0) {
                         var msg = document.createElement('div');
-                        msg.className = 'iconpicker-error';
+                        msg.className = 'component-iconpicker-error';
                         msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
-                        grid.appendChild(msg);
+                        optionsDiv.appendChild(msg);
                     } else {
                         iconList.forEach(function(iconPath) {
-                            var cell = document.createElement('button');
-                            cell.className = 'iconpicker-cell';
-                            cell.type = 'button';
-                            var img = document.createElement('img');
-                            img.src = iconPath;
-                            img.alt = '';
-                            cell.appendChild(img);
+                            var option = document.createElement('button');
+                            option.type = 'button';
+                            option.className = 'component-iconpicker-option';
                             
-                            if (iconPath === currentIcon) {
-                                cell.classList.add('selected');
-                            }
+                            var optImg = document.createElement('img');
+                            optImg.className = 'component-iconpicker-option-image';
+                            optImg.src = iconPath;
+                            optImg.alt = '';
                             
-                            cell.onclick = function(ev) {
+                            var optText = document.createElement('span');
+                            optText.className = 'component-iconpicker-option-text';
+                            optText.textContent = getFilename(iconPath);
+                            
+                            option.appendChild(optImg);
+                            option.appendChild(optText);
+                            
+                            option.onclick = function(ev) {
                                 ev.stopPropagation();
                                 currentIcon = iconPath;
-                                preview.src = iconPath;
-                                preview.style.display = '';
-                                placeholder.style.display = 'none';
-                                popup.style.display = 'none';
-                                
-                                // Update selected state
-                                grid.querySelectorAll('.iconpicker-cell').forEach(function(c) {
-                                    c.classList.remove('selected');
-                                });
-                                cell.classList.add('selected');
-                                
+                                buttonImage.src = iconPath;
+                                buttonImage.style.display = '';
+                                buttonText.textContent = getFilename(iconPath);
+                                menu.classList.remove('open');
                                 onSelect(iconPath);
                             };
-                            grid.appendChild(cell);
+                            optionsDiv.appendChild(option);
                         });
                     }
-                    popup.style.display = 'block';
+                    menu.classList.add('open');
                 });
             }
         };
         
         // Close on outside click
         document.addEventListener('click', function(e) {
-            if (!picker.contains(e.target)) {
-                popup.style.display = 'none';
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
             }
         });
         
         return {
-            element: picker,
+            element: menu,
             setIcon: function(iconPath) {
                 currentIcon = iconPath;
                 if (iconPath) {
-                    preview.src = iconPath;
-                    preview.style.display = '';
-                    placeholder.style.display = 'none';
+                    buttonImage.src = iconPath;
+                    buttonImage.style.display = '';
+                    buttonText.textContent = getFilename(iconPath);
                 } else {
-                    preview.style.display = 'none';
-                    placeholder.style.display = '';
+                    buttonImage.style.display = 'none';
+                    buttonText.textContent = 'Select...';
                 }
             },
             getIcon: function() {
@@ -3152,124 +3223,120 @@ const SystemImagePickerComponent = (function(){
             });
     }
     
-    // Build system image picker popup
-    // options: { onSelect, label, currentImage }
+    // Extract filename from path
+    function getFilename(path) {
+        if (!path) return '';
+        var parts = path.split('/');
+        return parts[parts.length - 1] || path;
+    }
+    
+    // Build system image picker dropdown menu (matches menu-test.html design)
+    // options: { onSelect, currentImage }
     function buildPicker(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var label = options.label || 'Select Image';
         var currentImage = options.currentImage || null;
         
-        var picker = document.createElement('div');
-        picker.className = 'systemimagepicker-container';
+        var menu = document.createElement('div');
+        menu.className = 'component-systemimagepicker';
         
-        // Preview button
+        // Button
         var button = document.createElement('button');
-        button.className = 'systemimagepicker-button';
         button.type = 'button';
+        button.className = 'component-systemimagepicker-button';
         
-        var preview = document.createElement('img');
-        preview.className = 'systemimagepicker-button-preview';
-        preview.src = currentImage || '';
-        preview.alt = '';
-        if (!currentImage) preview.style.display = 'none';
+        var buttonImage = document.createElement('img');
+        buttonImage.className = 'component-systemimagepicker-button-image';
+        buttonImage.src = currentImage || '';
+        buttonImage.alt = '';
+        if (!currentImage) buttonImage.style.display = 'none';
         
-        var placeholder = document.createElement('span');
-        placeholder.className = 'systemimagepicker-button-placeholder';
-        placeholder.textContent = '+';
-        if (currentImage) placeholder.style.display = 'none';
+        var buttonText = document.createElement('span');
+        buttonText.className = 'component-systemimagepicker-button-text';
+        buttonText.textContent = currentImage ? getFilename(currentImage) : 'Select...';
         
-        button.appendChild(preview);
-        button.appendChild(placeholder);
-        picker.appendChild(button);
+        var buttonArrow = document.createElement('span');
+        buttonArrow.className = 'component-systemimagepicker-button-arrow';
+        buttonArrow.textContent = '▼';
         
-        // Popup
-        var popup = document.createElement('div');
-        popup.className = 'systemimagepicker-popup';
-        popup.style.display = 'none';
+        button.appendChild(buttonImage);
+        button.appendChild(buttonText);
+        button.appendChild(buttonArrow);
+        menu.appendChild(button);
         
-        var popupHeader = document.createElement('div');
-        popupHeader.className = 'systemimagepicker-popup-header';
-        popupHeader.textContent = label;
-        popup.appendChild(popupHeader);
+        // Options dropdown
+        var optionsDiv = document.createElement('div');
+        optionsDiv.className = 'component-systemimagepicker-options';
+        menu.appendChild(optionsDiv);
         
-        var grid = document.createElement('div');
-        grid.className = 'systemimagepicker-grid';
-        popup.appendChild(grid);
-        
-        picker.appendChild(popup);
-        
-        // Toggle popup
+        // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = popup.style.display !== 'none';
+            var isOpen = menu.classList.contains('open');
             if (isOpen) {
-                popup.style.display = 'none';
+                menu.classList.remove('open');
             } else {
                 // Load and show images
                 loadImagesFromFolder().then(function(imageList) {
-                    grid.innerHTML = '';
+                    optionsDiv.innerHTML = '';
                     if (imageList.length === 0) {
                         var msg = document.createElement('div');
-                        msg.className = 'systemimagepicker-error';
+                        msg.className = 'component-systemimagepicker-error';
                         msg.innerHTML = 'No images found.<br>Please set system images folder in Admin Settings.';
-                        grid.appendChild(msg);
+                        optionsDiv.appendChild(msg);
                     } else {
                         imageList.forEach(function(imagePath) {
-                            var cell = document.createElement('button');
-                            cell.className = 'systemimagepicker-cell';
-                            cell.type = 'button';
-                            var img = document.createElement('img');
-                            img.src = imagePath;
-                            img.alt = '';
-                            cell.appendChild(img);
+                            var option = document.createElement('button');
+                            option.type = 'button';
+                            option.className = 'component-systemimagepicker-option';
                             
-                            if (imagePath === currentImage) {
-                                cell.classList.add('selected');
-                            }
+                            var optImg = document.createElement('img');
+                            optImg.className = 'component-systemimagepicker-option-image';
+                            optImg.src = imagePath;
+                            optImg.alt = '';
                             
-                            cell.onclick = function(ev) {
+                            var optText = document.createElement('span');
+                            optText.className = 'component-systemimagepicker-option-text';
+                            optText.textContent = getFilename(imagePath);
+                            
+                            option.appendChild(optImg);
+                            option.appendChild(optText);
+                            
+                            option.onclick = function(ev) {
                                 ev.stopPropagation();
                                 currentImage = imagePath;
-                                preview.src = imagePath;
-                                preview.style.display = '';
-                                placeholder.style.display = 'none';
-                                popup.style.display = 'none';
-                                
-                                // Update selected state
-                                grid.querySelectorAll('.systemimagepicker-cell').forEach(function(c) {
-                                    c.classList.remove('selected');
-                                });
-                                cell.classList.add('selected');
-                                
+                                buttonImage.src = imagePath;
+                                buttonImage.style.display = '';
+                                buttonText.textContent = getFilename(imagePath);
+                                menu.classList.remove('open');
                                 onSelect(imagePath);
                             };
-                            grid.appendChild(cell);
+                            optionsDiv.appendChild(option);
                         });
                     }
-                    popup.style.display = 'block';
+                    menu.classList.add('open');
                 });
             }
         };
         
         // Close on outside click
         document.addEventListener('click', function(e) {
-            if (!picker.contains(e.target)) {
-                popup.style.display = 'none';
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
             }
         });
         
         return {
-            element: picker,
+            element: menu,
             setImage: function(imagePath) {
                 currentImage = imagePath;
                 if (imagePath) {
-                    preview.src = imagePath;
-                    preview.style.display = '';
-                    placeholder.style.display = 'none';
+                    buttonImage.src = imagePath;
+                    buttonImage.style.display = '';
+                    buttonText.textContent = getFilename(imagePath);
                 } else {
-                    preview.style.display = 'none';
-                    placeholder.style.display = '';
+                    buttonImage.style.display = 'none';
+                    buttonText.textContent = 'Select...';
                 }
             },
             getImage: function() {
@@ -3482,6 +3549,7 @@ const ConfirmDialogComponent = (function() {
 
 // Expose globally
 window.ClearButtonComponent = ClearButtonComponent;
+window.SwitchComponent = SwitchComponent;
 window.FieldsetComponent = FieldsetComponent;
 window.CalendarComponent = CalendarComponent;
 window.CurrencyComponent = CurrencyComponent;

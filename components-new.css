@@ -6,6 +6,7 @@
    
    STRUCTURE:
    - CLEAR BUTTON        - Reusable X/clear button
+   - SWITCH              - Toggle switch (has size variants)
    - FIELDSETS           - Form field types
    - CALENDAR            - Horizontal scrolling date picker
    - CURRENCY            - Currency selector (has variants)
@@ -48,6 +49,155 @@
 /* States */
 .clear-button:hover {
     opacity: 0.7;
+}
+
+
+/* ============================================================================
+   SWITCH
+   
+   Size variants: small, medium (default), large
+   ============================================================================ */
+
+/* Base - Medium (default) */
+.component-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.component-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+/* States */
+.component-switch-input:checked + .component-switch-slider {
+    background: #3b82f6;
+}
+
+.component-switch-input:checked + .component-switch-slider::before {
+    transform: translateX(20px);
+}
+
+/* Size: Small */
+.component-small-switch {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-small-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-small-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9px;
+    transition: background 0.2s;
+}
+
+.component-small-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.component-small-switch-input:checked + .component-small-switch-slider {
+    background: #3b82f6;
+}
+
+.component-small-switch-input:checked + .component-small-switch-slider::before {
+    transform: translateX(14px);
+}
+
+/* Size: Large */
+.component-large-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-large-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-large-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 13px;
+    transition: background 0.2s;
+}
+
+.component-large-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.component-large-switch-input:checked + .component-large-switch-slider {
+    background: #3b82f6;
+}
+
+.component-large-switch-input:checked + .component-large-switch-slider::before {
+    transform: translateX(24px);
 }
 
 
@@ -1471,104 +1621,109 @@
 /* ============================================================================
    ICON PICKER
    
-   No variants - same everywhere.
+   Dropdown menu for selecting category icons.
+   Design matches menu-test.html exactly.
    ============================================================================ */
 
 /* Appearance */
-.iconpicker-container {
+.component-iconpicker {
+    width: 100%;
+    height: 36px;
     position: relative;
-    display: inline-block;
 }
 
-.iconpicker-button {
-    width: 48px;
-    height: 48px;
+.component-iconpicker-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    background: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.component-iconpicker-button-image {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-iconpicker-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-iconpicker-button-arrow {
+    width: 16px;
+    height: 36px;
+    margin-left: 10px;
+    transition: transform 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #222;
-    border: 2px dashed #333;
-    border-radius: 5px;
-    cursor: pointer;
-    padding: 0;
+    font-size: 10px;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
-.iconpicker-button-preview {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-}
-
-.iconpicker-button-placeholder {
-    font-size: 24px;
-    color: #555;
-}
-
-.iconpicker-popup {
+.component-iconpicker-options {
+    display: none;
     position: absolute;
-    top: 100%;
+    top: 36px;
     left: 0;
-    margin-top: 4px;
-    width: 280px;
-    background: #222;
-    border: 1px solid #3b82f5;
+    width: 100%;
+    background: #333;
     border-radius: 5px;
-    z-index: var(--layer-menu, 85);
-    overflow: hidden;
-}
-
-.iconpicker-popup-header {
-    padding: 10px 12px;
-    font-size: 13px;
-    font-weight: bold;
-    color: #fff;
-    background: #2e3a72;
-    border-bottom: 1px solid #333;
-}
-
-.iconpicker-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
-    padding: 8px;
     max-height: 200px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
 }
 
-.iconpicker-grid::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.iconpicker-grid::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.iconpicker-cell {
-    width: 40px;
-    height: 40px;
+.component-iconpicker-option {
+    width: 100%;
+    height: 36px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #333;
-    border: 1px solid transparent;
-    border-radius: 5px;
+    padding: 0 10px;
+    box-sizing: border-box;
     cursor: pointer;
-    padding: 4px;
+    background: none;
+    border: none;
+    color: #fff;
+    font: inherit;
 }
 
-.iconpicker-cell-image {
-    width: 28px;
-    height: 28px;
+.component-iconpicker-option-image {
+    width: 30px;
+    height: 30px;
     object-fit: contain;
+    flex-shrink: 0;
 }
 
-.iconpicker-error {
-    grid-column: 1 / -1;
-    padding: 20px;
+.component-iconpicker-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-iconpicker-error {
+    padding: 20px 10px;
     text-align: center;
     font-size: 12px;
     color: #888;
@@ -1576,122 +1731,125 @@
 }
 
 /* States */
-.iconpicker-button:hover {
-    border-color: #3b82f5;
+.component-iconpicker.open .component-iconpicker-button-arrow {
+    transform: rotate(180deg);
 }
 
-.iconpicker-cell:hover {
-    border-color: #3b82f5;
+.component-iconpicker.open .component-iconpicker-options {
+    display: block;
 }
 
-.iconpicker-cell.selected {
-    border-color: #3b82f5;
-    background: #2e3a72;
+.component-iconpicker-option:hover {
+    background: #444;
 }
 
 
 /* ============================================================================
    SYSTEM IMAGE PICKER
    
-   No variants - same everywhere.
+   Dropdown menu for selecting system images (logos, map pills, etc).
+   Design matches menu-test.html exactly.
    ============================================================================ */
 
 /* Appearance */
-.systemimagepicker-container {
-    position: relative;
-    display: block;
+.component-systemimagepicker {
     width: 100%;
+    height: 36px;
+    position: relative;
 }
 
-.systemimagepicker-button {
-    width: 48px;
-    height: 48px;
+.component-systemimagepicker-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    background: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.component-systemimagepicker-button-image {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-systemimagepicker-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-systemimagepicker-button-arrow {
+    width: 16px;
+    height: 36px;
+    margin-left: 10px;
+    transition: transform 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #222;
-    border: 2px dashed #333;
-    border-radius: 5px;
-    cursor: pointer;
-    padding: 0;
+    font-size: 10px;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
-.systemimagepicker-button-preview {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-}
-
-.systemimagepicker-button-placeholder {
-    font-size: 24px;
-    color: #555;
-}
-
-.systemimagepicker-popup {
+.component-systemimagepicker-options {
+    display: none;
     position: absolute;
-    top: 100%;
+    top: 36px;
     left: 0;
-    margin-top: 4px;
-    width: 280px;
-    background: #222;
-    border: 1px solid #3b82f5;
+    width: 100%;
+    background: #333;
     border-radius: 5px;
-    z-index: var(--layer-menu, 85);
-    overflow: hidden;
-}
-
-.systemimagepicker-popup-header {
-    padding: 10px 12px;
-    font-size: 13px;
-    font-weight: bold;
-    color: #fff;
-    background: #2e3a72;
-    border-bottom: 1px solid #333;
-}
-
-.systemimagepicker-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
-    padding: 8px;
     max-height: 200px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
 }
 
-.systemimagepicker-grid::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.systemimagepicker-grid::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.systemimagepicker-cell {
-    width: 40px;
-    height: 40px;
+.component-systemimagepicker-option {
+    width: 100%;
+    height: 36px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #333;
-    border: 1px solid transparent;
-    border-radius: 5px;
+    padding: 0 10px;
+    box-sizing: border-box;
     cursor: pointer;
-    padding: 4px;
+    background: none;
+    border: none;
+    color: #fff;
+    font: inherit;
 }
 
-.systemimagepicker-cell-image {
-    width: 28px;
-    height: 28px;
+.component-systemimagepicker-option-image {
+    width: 30px;
+    height: 30px;
     object-fit: contain;
+    flex-shrink: 0;
 }
 
-.systemimagepicker-error {
-    grid-column: 1 / -1;
-    padding: 20px;
+.component-systemimagepicker-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-systemimagepicker-error {
+    padding: 20px 10px;
     text-align: center;
     font-size: 12px;
     color: #888;
@@ -1699,17 +1857,16 @@
 }
 
 /* States */
-.systemimagepicker-button:hover {
-    border-color: #3b82f5;
+.component-systemimagepicker.open .component-systemimagepicker-button-arrow {
+    transform: rotate(180deg);
 }
 
-.systemimagepicker-cell:hover {
-    border-color: #3b82f5;
+.component-systemimagepicker.open .component-systemimagepicker-options {
+    display: block;
 }
 
-.systemimagepicker-cell.selected {
-    border-color: #3b82f5;
-    background: #2e3a72;
+.component-systemimagepicker-option:hover {
+    background: #444;
 }
 
 
