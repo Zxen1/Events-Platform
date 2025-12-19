@@ -1678,6 +1678,12 @@ const AdminModule = (function() {
     
     // Update all currency displays in checkout options
     function updateCheckoutOptionsCurrency(currencyCode) {
+        // Update data attribute on container so updateCalculator uses correct currency
+        var container = document.getElementById('adminCheckoutTiers');
+        if (container) {
+            container.dataset.currency = currencyCode;
+        }
+        
         // Update calculator totals
         document.querySelectorAll('.admin-checkout-option-calc-total').forEach(function(span) {
             var text = span.textContent;
@@ -1711,6 +1717,8 @@ const AdminModule = (function() {
         var container = document.getElementById('adminCheckoutTiers');
         if (!container) return;
 
+        // Store currency on container for dynamic updates
+        container.dataset.currency = siteCurrency;
         container.innerHTML = '';
 
         if (!checkoutOptions || !checkoutOptions.length) {
@@ -1850,10 +1858,13 @@ const AdminModule = (function() {
 
             function updateCalculator() {
                 if (!calcDaysInput || !calcTotalSpan) return;
+                
+                // Get current currency from container (updates when site currency changes)
+                var currency = container.dataset.currency || 'USD';
 
                 var days = parseFloat(calcDaysInput.value) || 0;
                 if (days <= 0) {
-                    calcTotalSpan.textContent = siteCurrency + ' 0.00';
+                    calcTotalSpan.textContent = currency + ' 0.00';
                     return;
                 }
 
@@ -1869,12 +1880,12 @@ const AdminModule = (function() {
                 }
 
                 if (dayRate === null || isNaN(dayRate)) {
-                    calcTotalSpan.textContent = siteCurrency + ' ' + flagfall.toFixed(2);
+                    calcTotalSpan.textContent = currency + ' ' + flagfall.toFixed(2);
                     return;
                 }
 
                 var total = flagfall + (dayRate * days);
-                calcTotalSpan.textContent = siteCurrency + ' ' + total.toFixed(2);
+                calcTotalSpan.textContent = currency + ' ' + total.toFixed(2);
             }
 
             if (calcDaysInput) {
