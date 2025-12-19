@@ -136,6 +136,7 @@
     border-radius: 4px;
     color: #fff;
     font-size: 13px;
+    caret-color: #fff;
 }
 
 .fieldset-input[type="number"] {
@@ -171,6 +172,7 @@
     color: #fff;
     font-size: 13px;
     resize: vertical;
+    caret-color: #fff;
 }
 
 .fieldset-textarea::placeholder {
@@ -389,6 +391,7 @@
     border-radius: 4px;
     color: #fff;
     font-size: 13px;
+    caret-color: #fff;
 }
 
 .fieldset-date::-webkit-calendar-picker-indicator,

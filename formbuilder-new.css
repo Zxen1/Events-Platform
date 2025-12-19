@@ -146,6 +146,7 @@
   color: #fff;
   font-size: 13px;
   cursor: text;
+  caret-color: #fff;
 }
 
 .formbuilder-accordion-editpanel-input:hover,
@@ -894,6 +895,7 @@
   font-size: 13px;
   margin-bottom: 10px;
   cursor: text;
+  caret-color: #fff;
 }
 
 .formbuilder-field-input:hover,
@@ -938,6 +940,7 @@
   color: #fff;
   font-size: 13px;
   cursor: text;
+  caret-color: #fff;
 }
 
 .formbuilder-field-option-input:hover,
@@ -1092,6 +1095,7 @@
   appearance: textfield;
   -moz-appearance: textfield;
   cursor: text;
+  caret-color: #fff;
 }
 
 .formbuilder-fee-input::-webkit-inner-spin-button,
@@ -1213,6 +1217,7 @@
   appearance: textfield;
   -moz-appearance: textfield;
   cursor: text;
+  caret-color: #fff;
 }
 
 .formbuilder-checkout-calc-input::-webkit-inner-spin-button,
