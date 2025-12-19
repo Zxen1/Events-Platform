@@ -211,6 +211,7 @@
           <button type="button" id="admin-tab-forms-btn" class="admin-tab-bar-button" data-tab="forms" role="tab" aria-selected="false" aria-controls="admin-tab-forms">Forms</button>
           <button type="button" id="admin-tab-map-btn" class="admin-tab-bar-button" data-tab="map" role="tab" aria-selected="false" aria-controls="admin-tab-map">Map</button>
           <button type="button" id="admin-tab-messages-btn" class="admin-tab-bar-button" data-tab="messages" role="tab" aria-selected="false" aria-controls="admin-tab-messages">Messages</button>
+          <button type="button" id="admin-tab-checkout-btn" class="admin-tab-bar-button" data-tab="checkout" role="tab" aria-selected="false" aria-controls="admin-tab-checkout">Checkout</button>
         </div>
       </div>
       
@@ -253,21 +254,21 @@
               <input type="email" class="admin-settings-field-input" id="adminSupportEmail" data-setting-key="support_email" autocomplete="off" placeholder="support@example.com" />
             </div>
             <div class="admin-settings-field admin-settings-field--toggle">
-              <span class="admin-settings-field-label">Maintenance Mode</span>
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Maintenance Mode</span>
               <label class="admin-settings-toggle">
                 <input type="checkbox" class="admin-settings-toggle-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
                 <span class="admin-settings-toggle-slider"></span>
               </label>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle">
-              <span class="admin-settings-field-label">Welcome Message on Load</span>
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
               <label class="admin-settings-toggle">
                 <input type="checkbox" class="admin-settings-toggle-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
                 <span class="admin-settings-toggle-slider"></span>
               </label>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle">
-              <span class="admin-settings-field-label">Devtools Console Filter</span>
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Devtools Console Filter</span>
               <label class="admin-settings-toggle">
                 <input type="checkbox" class="admin-settings-toggle-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
                 <span class="admin-settings-toggle-slider"></span>
@@ -284,23 +285,6 @@
               <input type="text" class="admin-settings-field-input" id="adminSystemImagesFolder" data-setting-key="system_images_folder" autocomplete="off" placeholder="assets/system-images" />
             </div>
           </div>
-          <div class="admin-settings-paypal-container">
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
-              <input type="text" class="admin-settings-field-input" id="adminPaypalClientId" data-setting-key="paypal_client_id" autocomplete="new-password" placeholder="Enter PayPal Client ID" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminPaypalClientSecret">PayPal Client Secret</label>
-              <input type="password" class="admin-settings-field-input" id="adminPaypalClientSecret" data-setting-key="paypal_client_secret" autocomplete="new-password" placeholder="Enter PayPal Client Secret" />
-            </div>
-          </div>
-          <div class="admin-settings-checkout-container">
-            <h3 class="admin-checkout-options-header-label">Checkout Options</h3>
-            <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
-              <!-- Checkout options will be populated by JavaScript -->
-            </div>
-            <button type="button" class="admin-checkout-options-add">Add Tier</button>
-          </div>
         </section>
         
         <!-- Forms Tab -->
@@ -316,6 +300,27 @@
         <!-- Messages Tab -->
         <section id="admin-tab-messages" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-messages-btn">
           <p class="admin-tab-intro">Messages content will go here.</p>
+        </section>
+        
+        <!-- Checkout Tab -->
+        <section id="admin-tab-checkout" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
+          <div class="admin-checkout-paypal-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
+              <input type="text" class="admin-settings-field-input" id="adminPaypalClientId" data-setting-key="paypal_client_id" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client ID" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminPaypalClientSecret">PayPal Client Secret</label>
+              <input type="text" class="admin-settings-field-input admin-settings-field-input--secret" id="adminPaypalClientSecret" data-setting-key="paypal_client_secret" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client Secret" />
+            </div>
+          </div>
+          <div class="admin-checkout-options-container">
+            <h3 class="admin-checkout-options-header-label">Checkout Options</h3>
+            <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
+              <!-- Checkout options will be populated by JavaScript -->
+            </div>
+            <button type="button" class="admin-checkout-options-add">Add Tier</button>
+          </div>
         </section>
         
       </div>
@@ -368,7 +373,7 @@
             <!-- Login Panel -->
             <section id="member-auth-login" class="member-auth-panel" role="tabpanel">
               <label class="member-auth-panel-label" for="member-login-email">Email</label>
-              <input type="email" id="member-login-email" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
+              <input type="email" id="member-login-email" class="member-auth-panel-input" name="loginEmail" autocomplete="email">
               <label class="member-auth-panel-label" for="member-login-password">Password</label>
               <input type="password" id="member-login-password" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
               <button type="submit" class="member-button-auth member-auth-submit" data-action="login">Log In</button>

@@ -144,7 +144,7 @@
   height: 36px;
   min-width: 36px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   border: none;
   color: #fff;
@@ -268,7 +268,7 @@
 
 .member-panel-body::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 6px;
+  border-radius: 5px;
 }
 
 .member-panel-body::-webkit-scrollbar-thumb:hover {
@@ -333,7 +333,7 @@
   width: 100%;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 8px 12px;
   color: var(--input-text, #fff);
   font-family: inherit;
@@ -344,7 +344,7 @@
   width: 100%;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 8px 12px;
   color: var(--input-text, #fff);
   font-family: inherit;
@@ -360,7 +360,7 @@
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 5px;
   background: var(--btn);
   cursor: pointer;
   border: 1px solid var(--btn);
@@ -393,7 +393,7 @@
   height: var(--control-h);
   min-height: var(--control-h);
   min-width: 35px;
-  border-radius: 8px;
+  border-radius: 5px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -438,7 +438,7 @@
   -webkit-user-select: text;
   user-select: text;
   height: var(--control-h);
-  border-radius: 8px;
+  border-radius: 5px;
 }
 
 .member-input-text::placeholder {
@@ -467,7 +467,7 @@
 .member-tab-bar-button {
   flex: 1;
   padding: 6px 10px;
-  border-radius: 10px;
+  border-radius: 5px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: none;
@@ -525,7 +525,7 @@
   margin: 0 auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 10px 10px 10px;
 }
 
@@ -622,7 +622,7 @@
   height: 36px;
   min-height: 36px;
   padding: 0 16px;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s;
 }
@@ -647,7 +647,7 @@
   padding: 0 16px;
   height: 36px;
   min-height: 36px;
-  border-radius: 6px;
+  border-radius: 5px;
   text-align: center;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
@@ -716,7 +716,7 @@
   border: 1px solid rgba(100, 150, 200, 0.4);
   color: #8ab4ff;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 5px;
   font-size: 14px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
@@ -753,7 +753,7 @@
   flex: 1 1 auto;
   min-width: 0;
   height: 36px;
-  border-radius: 20px;
+  border-radius: 5px;
   border: 1px solid var(--btn);
   background: var(--btn);
   color: var(--button-text);
@@ -799,7 +799,7 @@
 
 .member-auth-panel-input {
   height: 36px;
-  border-radius: 8px;
+  border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: #1c1c1c;
   color: #fff;
@@ -921,7 +921,7 @@
 .member-unsaved-dialog {
   background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 5px;
   padding: 20px;
   max-width: 360px;
   width: calc(100% - 40px);
@@ -976,7 +976,7 @@
   padding: 0 12px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
   color: #fff;
   font-size: 14px;
@@ -988,7 +988,7 @@
 
 .member-formpicker-menu.open .member-formpicker-menu-button {
   border-color: #3b82f6;
-  border-radius: 8px 8px 0 0;
+  border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
 
@@ -1034,7 +1034,7 @@
   background: #222;
   border: 1px solid #3b82f6;
   border-top: none;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 5px 5px;
   max-height: 250px;
   overflow-y: auto;
   z-index: 1000;

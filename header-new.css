@@ -58,7 +58,7 @@
   height: 40px;
   padding: 0;
   border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: 5px;
   background: #333;
   cursor: pointer;
   display: flex;
@@ -94,7 +94,7 @@
   font-weight: 700;
   line-height: 18px;
   text-align: center;
-  border-radius: 9px;
+  border-radius: 5px;
 }
 
 /* Mode switch container */
@@ -103,7 +103,7 @@
   grid-template-columns: repeat(3, 40px);
   height: 40px;
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border-radius: 5px;
   overflow: hidden;
   margin-right: auto;
   box-sizing: border-box;
@@ -178,7 +178,7 @@
   height: 40px;
   padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 5px;
   background: transparent;
   cursor: pointer;
   display: flex;

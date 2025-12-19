@@ -3481,5 +3481,14 @@ const ConfirmDialogComponent = (function() {
 })();
 
 // Expose globally
+window.ClearButtonComponent = ClearButtonComponent;
+window.FieldsetComponent = FieldsetComponent;
+window.CalendarComponent = CalendarComponent;
+window.CurrencyComponent = CurrencyComponent;
+window.PhonePrefixComponent = PhonePrefixComponent;
+window.IconPickerComponent = IconPickerComponent;
+window.SystemImagePickerComponent = SystemImagePickerComponent;
+window.MapControlRowComponent = MapControlRowComponent;
+window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.ConfirmDialogComponent = ConfirmDialogComponent;
 

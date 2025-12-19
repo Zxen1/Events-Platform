@@ -40,11 +40,11 @@
 }
 
 .mapboxgl-popup {
-  border-radius: 8px;
+  border-radius: 5px;
 }
 
 .mapboxgl-popup-content {
-  border-radius: 8px;
+  border-radius: 5px;
   background: var(--popup-bg);
   color: var(--popup-text);
   overflow: hidden;

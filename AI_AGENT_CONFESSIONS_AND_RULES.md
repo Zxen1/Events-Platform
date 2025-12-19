@@ -1228,11 +1228,11 @@ Mapbox layers in rendering order (bottom to top):
 **CRITICAL:** On the new site, buttons and inputs have standard default sizing:
 - Height: 36px
 - Padding/Margins: 10px
-- Border-radius: 8px (industry standard)
+- Border-radius: 5px
+- Border: 1px solid
 - These are the defaults unless explicitly specified otherwise
 - Consistency across all forms and panels
 - If a different size is needed, it must be explicitly requested
-- NOTE: Some older code in formbuilder uses 5px border-radius - do not change existing code, but use 8px for new code
 
 ### Rule 21: VERIFY CODE BEFORE COMPLETING
 **CRITICAL:** Before marking any task complete, check the code for:

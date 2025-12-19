@@ -267,7 +267,7 @@
   position: absolute;
   inset: 0;
   background-color: #2e3a72;
-  border-radius: 8px;
+  border-radius: 5px;
   z-index: -1;
 }
 
@@ -280,7 +280,7 @@
   flex: 0 0 80px;
   width: 80px;
   height: 80px;
-  border-radius: 8px;
+  border-radius: 5px;
   object-fit: cover;
   display: block;
   background: var(--panel-bg);
@@ -374,7 +374,7 @@
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 5px;
   display: grid;
   place-items: center;
   background: var(--btn);
@@ -400,7 +400,7 @@
 .post-card-share {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 5px;
   display: grid;
   place-items: center;
   background: var(--btn);
@@ -478,7 +478,7 @@
 .post-close-button {
   border: 0;
   background: #16283f;
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 8px 12px;
   cursor: pointer;
 }
@@ -488,13 +488,13 @@
    ============================================================================ */
 
 .post-map {
-  border-radius: 8px;
+  border-radius: 5px;
 }
 
 .post-map-container {
   position: relative;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 5px;
   overflow: hidden;
   background: #222222;
   min-height: 200px;
@@ -717,7 +717,7 @@
   object-position: center;
   aspect-ratio: 1/1;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
   position: relative;
   z-index: 1;
@@ -775,7 +775,7 @@
   object-fit: cover;
   object-position: center top;
   display: block;
-  border-radius: 8px;
+  border-radius: 5px;
   pointer-events: none;
 }
 
@@ -788,7 +788,7 @@
   text-align: left;
   background: rgba(0, 0, 0, 0.7);
   padding: 5px 8px;
-  border-radius: 4px;
+  border-radius: 5px;
   line-height: 1.2;
   font-size: 13px;
   font-weight: bold;
@@ -804,7 +804,7 @@
   text-align: left;
   background: rgba(0, 0, 0, 0.7);
   padding: 5px 8px;
-  border-radius: 4px;
+  border-radius: 5px;
   line-height: 1.2;
   font-size: 12px;
   pointer-events: none;
@@ -851,7 +851,7 @@
   object-fit: cover;
   object-position: center top;
   display: block;
-  border-radius: 8px;
+  border-radius: 5px;
   pointer-events: none;
 }
 
@@ -864,7 +864,7 @@
   text-align: left;
   background: rgba(0, 0, 0, 0.7);
   padding: 5px 8px;
-  border-radius: 4px;
+  border-radius: 5px;
   line-height: 1.2;
   font-size: 13px;
   font-weight: bold;
@@ -879,7 +879,7 @@
   text-align: left;
   background: rgba(0, 0, 0, 0.7);
   padding: 5px 8px;
-  border-radius: 4px;
+  border-radius: 5px;
   line-height: 1.2;
   font-size: 12px;
   pointer-events: none;
@@ -1176,7 +1176,7 @@
   width: auto;
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 5px;
 }
 
 .post-board-empty-message {
@@ -1196,7 +1196,7 @@
 .recents-board-reminder-image {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 5px;
 }
 
 .recents-board-reminder-text {
@@ -1288,7 +1288,7 @@
   }
   
   .post-card-thumb {
-    border-radius: 8px;
+    border-radius: 5px;
   }
   
   .post-open-image-box {

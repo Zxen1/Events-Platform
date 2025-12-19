@@ -49,7 +49,7 @@
   width: 24px;
   height: 24px;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .formbuilder-accordion-header-text {
@@ -219,7 +219,7 @@
   width: 36px;
   height: 20px;
   background: #444;
-  border-radius: 10px;
+  border-radius: 5px;
   position: relative;
   cursor: pointer;
 }
@@ -265,7 +265,7 @@
 /* Subcategory Option */
 .formbuilder-accordion-option {
   margin-bottom: 3px;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: visible;
 }
 
@@ -274,7 +274,7 @@
   display: flex;
   align-items: center;
   padding: 0 10px;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
   border: 1px solid transparent;
   background: #000;
@@ -286,7 +286,7 @@
 
 .formbuilder-accordion-option--editing .formbuilder-accordion-option-header {
   border-color: #3b82f5;
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
 
@@ -294,7 +294,7 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
-  border-radius: 3px;
+  border-radius: 5px;
 }
 
 .formbuilder-accordion-option-text {
@@ -318,7 +318,7 @@
 
 .formbuilder-accordion-option--open > .formbuilder-accordion-option-header {
   border-color: #3b82f5;
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
 
@@ -371,7 +371,7 @@
   padding: 10px;
   border: 1px solid #3b82f5;
   border-top: none;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 5px 5px;
   background: #000;
 }
 
@@ -384,7 +384,7 @@
   padding: 0 10px 10px 10px;
   border: 1px solid #3b82f5;
   border-top: none;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 5px 5px;
   background: #000;
 }
 
@@ -511,7 +511,7 @@
 
 .formbuilder-menu-options::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .formbuilder-menu.open .formbuilder-menu-options {
@@ -560,7 +560,7 @@
   justify-content: center;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #888;
   font-size: 13px;
   cursor: pointer;
@@ -601,7 +601,7 @@
   justify-content: center;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #888;
   font-size: 13px;
   cursor: pointer;
@@ -614,7 +614,7 @@
 
 .formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-button {
   border-color: #3b82f5;
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
   border-bottom: none;
   color: #fff;
 }
@@ -628,7 +628,7 @@
   background: #111;
   border: 1px solid #3b82f5;
   border-top: none;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 5px 5px;
   max-height: 250px;
   overflow-y: auto;
   z-index: var(--layer-menu, 85);
@@ -647,7 +647,7 @@
 
 .formbuilder-fieldset-menu-options::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-options {
@@ -693,7 +693,7 @@
   margin-bottom: 3px;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #fff;
   font-size: 13px;
 }
@@ -768,7 +768,7 @@
 
 .formbuilder-field-wrapper--editing > .formbuilder-field {
   border-color: #3b82f5;
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
   border-bottom: none;
   margin-bottom: 0;
 }
@@ -784,7 +784,7 @@
   background: #111;
   border: 1px solid #3b82f5;
   border-top: none;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 5px 5px;
 }
 
 .formbuilder-field-wrapper--editing > .formbuilder-field-editpanel {
@@ -890,7 +890,7 @@
   padding: 0 10px;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #fff;
   font-size: 13px;
   margin-bottom: 10px;
@@ -936,7 +936,7 @@
   padding: 0 10px;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #fff;
   font-size: 13px;
   cursor: text;
@@ -962,7 +962,7 @@
   justify-content: center;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #888;
   cursor: pointer;
 }
@@ -1000,7 +1000,7 @@
   width: 36px;
   height: 20px;
   background: #444;
-  border-radius: 10px;
+  border-radius: 5px;
   position: relative;
   cursor: pointer;
   flex-shrink: 0;
@@ -1328,7 +1328,7 @@
 
 .formbuilder-formpreview-modal-body::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .formbuilder-formpreview-modal-body .fieldset {
