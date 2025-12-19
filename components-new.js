@@ -102,6 +102,8 @@ const ClearButtonComponent = (function(){
 const FieldsetComponent = (function(){
     var picklist = {};
     
+    // Google Places Autocomplete helper
+    // type: 'address' | 'establishment' | '(cities)'
     function initGooglePlaces(inputElement, type, latInput, lngInput, statusElement) {
         if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
             console.warn('Google Places API not loaded');
@@ -112,41 +114,25 @@ const FieldsetComponent = (function(){
             return null;
         }
         
-        // Use new PlaceAutocompleteElement API
-        if (google.maps.places.PlaceAutocompleteElement) {
-            var placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
-                componentRestrictions: { country: [] }
-            });
+        var options = {
+            fields: ['formatted_address', 'geometry', 'name', 'place_id']
+        };
+        
+        // Set type restriction
+        if (type === 'address') {
+            options.types = ['address'];
+        } else if (type === 'establishment') {
+            options.types = ['establishment'];
+        } else if (type === '(cities)') {
+            options.types = ['(cities)'];
+        }
+        
+        var autocomplete = new google.maps.places.Autocomplete(inputElement, options);
+        
+        autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
             
-            // Copy placeholder from original input
-            if (inputElement.placeholder) {
-                placeAutocomplete.placeholder = inputElement.placeholder;
-            }
-            
-            // Style via JavaScript (shadow DOM doesn't accept external CSS)
-            placeAutocomplete.style.width = '100%';
-            placeAutocomplete.style.height = '36px';
-            placeAutocomplete.style.backgroundColor = '#333';
-            placeAutocomplete.style.border = '1px solid #444';
-            placeAutocomplete.style.borderRadius = '6px';
-            placeAutocomplete.style.colorScheme = 'dark';
-            placeAutocomplete.style.setProperty('--gmpx-color-surface', '#333');
-            placeAutocomplete.style.setProperty('--gmpx-color-on-surface', '#ffffff');
-            placeAutocomplete.style.setProperty('--gmpx-color-on-surface-variant', '#666666');
-            placeAutocomplete.style.setProperty('--gmpx-color-primary', '#3b82f5');
-            placeAutocomplete.style.setProperty('--gmpx-font-family-base', 'inherit');
-            placeAutocomplete.style.setProperty('--gmpx-font-size-base', '13px');
-            
-            // Replace the original input with the new element
-            inputElement.parentNode.replaceChild(placeAutocomplete, inputElement);
-            
-            placeAutocomplete.addEventListener('gmp-placeselect', async function(event) {
-                var place = event.place;
-                if (!place) return;
-                
-                await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
-                
-                if (!place.location) {
+            if (!place.geometry || !place.geometry.location) {
                 if (statusElement) {
                     statusElement.textContent = 'No location data for this place';
                     statusElement.className = 'fieldset-location-status error';
@@ -154,8 +140,8 @@ const FieldsetComponent = (function(){
                 return;
             }
             
-                var lat = place.location.lat();
-                var lng = place.location.lng();
+            var lat = place.geometry.location.lat();
+            var lng = place.geometry.location.lng();
             
             if (latInput) latInput.value = lat;
             if (lngInput) lngInput.value = lng;
@@ -166,27 +152,95 @@ const FieldsetComponent = (function(){
             }
         });
         
-            return placeAutocomplete;
-        }
-        
-        // PlaceAutocompleteElement not available
-        console.warn('PlaceAutocompleteElement not available');
-        if (statusElement) {
-            statusElement.textContent = 'Location search unavailable';
-            statusElement.className = 'fieldset-location-status error';
-        }
-        return null;
+        return autocomplete;
     }
     
-    function buildLabel(name, tooltip, required) {
+    // Build compact currency menu (100px, value only, default USD)
+    function buildCurrencyMenuCompact(container) {
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu fieldset-currency-compact';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">USD</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        
+        var currencies = picklist['currency'] || [];
+        currencies.forEach(function(item) {
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
+                btnText.textContent = item.value.substring(3); // Value only
+                menu.classList.remove('open');
+            };
+            opts.appendChild(op);
+        });
+        
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            if (container) {
+                container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                    if (el !== menu) el.classList.remove('open');
+                });
+            }
+            menu.classList.toggle('open');
+        };
+        
+        return menu;
+    }
+    
+    // Build phone prefix menu (100px compact, same style as currency)
+    function buildPhonePrefixMenu(container) {
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu fieldset-currency-compact';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        
+        var prefixes = picklist['phone-prefix'] || [];
+        if (prefixes.length > 0) {
+            btnImg.src = 'assets/flags/' + prefixes[0].value.substring(0,2) + '.svg';
+            btnText.textContent = prefixes[0].value.substring(3);
+        }
+        
+        prefixes.forEach(function(item) {
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
+                btnText.textContent = item.value.substring(3);
+                menu.classList.remove('open');
+            };
+            opts.appendChild(op);
+        });
+        
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            if (container) {
+                container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                    if (el !== menu) el.classList.remove('open');
+                });
+            }
+            menu.classList.toggle('open');
+        };
+        
+        return menu;
+    }
+    
+    // Build label with required asterisk and tooltip
+    function buildLabel(name, tooltip) {
         var label = document.createElement('div');
         label.className = 'fieldset-label';
-        var html = '<span class="fieldset-label-text">' + name + '</span>';
-        if (required !== false) {
-            html += '<span class="fieldset-label-required">*</span>';
-        }
-        label.innerHTML = html;
-        
+        label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">*</span>';
         if (tooltip) {
             var tip = document.createElement('span');
             tip.className = 'fieldset-label-tooltip';
@@ -197,6 +251,7 @@ const FieldsetComponent = (function(){
         return label;
     }
     
+    // Add validation with char limit and invalid state
     function addInputValidation(input, minLength, maxLength, validationFn) {
         var charCount = document.createElement('div');
         charCount.className = 'fieldset-char-count';
@@ -209,7 +264,11 @@ const FieldsetComponent = (function(){
             if (remaining <= 5 && input.value.length > 0) {
                 charCount.style.display = 'block';
                 charCount.textContent = remaining + ' characters remaining';
-                charCount.className = remaining <= 0 ? 'fieldset-char-count fieldset-char-count--danger' : 'fieldset-char-count fieldset-char-count--warning';
+                if (remaining <= 0) {
+                    charCount.className = 'fieldset-char-count fieldset-char-count--danger';
+                } else {
+                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+                }
             } else {
                 charCount.style.display = 'none';
             }
@@ -220,30 +279,63 @@ const FieldsetComponent = (function(){
             var isValid = true;
             var len = input.value.length;
             
-            if (len > 0 && minLength > 0 && len < minLength) isValid = false;
-            if (len > maxLength) isValid = false;
-            if (len > 0 && validationFn && !validationFn(input.value)) isValid = false;
+            // Check min length (only if field has content)
+            if (len > 0 && minLength > 0 && len < minLength) {
+                isValid = false;
+            }
+            // Check max length
+            if (len > maxLength) {
+                isValid = false;
+            }
+            // Check custom validation
+            if (len > 0 && validationFn && !validationFn(input.value)) {
+                isValid = false;
+            }
             
-            input.classList.toggle('fieldset-input--invalid', !isValid);
+            if (!isValid) {
+                input.classList.add('fieldset-input--invalid');
+            } else {
+                input.classList.remove('fieldset-input--invalid');
+            }
         }
         
         input.setAttribute('maxlength', maxLength);
-        input.addEventListener('input', function() { updateCharCount(); if (touched) validate(); });
-        input.addEventListener('blur', function() { touched = true; validate(); });
-        input.addEventListener('focus', updateCharCount);
+        
+        input.addEventListener('input', function() {
+            updateCharCount();
+            if (touched) validate();
+        });
+        
+        input.addEventListener('blur', function() {
+            touched = true;
+            validate();
+        });
+        
+        input.addEventListener('focus', function() {
+            updateCharCount();
+        });
         
         return { charCount: charCount };
     }
     
-    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
-    function isValidUrl(url) { return /^(https?:\/\/)?.+\..+/.test(url); }
+    // Email validation regex
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
     
+    // URL validation (accepts with or without protocol)
+    function isValidUrl(url) {
+        return /^(https?:\/\/)?.+\..+/.test(url);
+    }
+    
+    // Phone digits-only filter
     function makePhoneDigitsOnly(input) {
         input.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
     }
     
+    // URL auto-prepend https://
     function autoUrlProtocol(input) {
         input.addEventListener('blur', function() {
             var val = this.value.trim();
@@ -253,80 +345,14 @@ const FieldsetComponent = (function(){
         });
     }
     
+    // Set picklist data
     function setPicklist(data) {
         picklist = data || {};
-        // Also set data in Currency and PhonePrefix components
-        if (data.currency && typeof CurrencyComponent !== 'undefined') {
-            CurrencyComponent.setData(data.currency);
-        }
-        if (data['phone-prefix'] && typeof PhonePrefixComponent !== 'undefined') {
-            PhonePrefixComponent.setData(data['phone-prefix']);
-        }
-    }
-    
-    // Build a currency menu using CurrencyComponent
-    // options: { container, onSelect }
-    function buildCurrencyMenu(options) {
-        if (typeof CurrencyComponent === 'undefined') {
-            console.error('CurrencyComponent not loaded');
-            return document.createElement('div');
-        }
-        return CurrencyComponent.buildCompactMenu(options);
-    }
-    
-    // Build a phone prefix menu using PhonePrefixComponent
-    // options: { container, onSelect }
-    function buildPhonePrefixMenu(options) {
-        if (typeof PhonePrefixComponent === 'undefined') {
-            console.error('PhonePrefixComponent not loaded');
-            return document.createElement('div');
-        }
-        return PhonePrefixComponent.buildCompactMenu(options);
-    }
-    
-    // Build a complete phone field (prefix dropdown + input)
-    // options: { container, placeholder, minLength, maxLength, onPrefixSelect }
-    function buildPhoneField(options) {
-        options = options || {};
-        
-        var row = document.createElement('div');
-        row.className = 'fieldset-row';
-        
-        // Phone prefix menu from PhonePrefixComponent
-        var prefixMenu = buildPhonePrefixMenu({
-            container: options.container,
-            onSelect: options.onPrefixSelect || function() {}
-        });
-        row.appendChild(prefixMenu);
-        
-        // Phone number input
-        var phoneInput = document.createElement('input');
-        phoneInput.type = 'tel';
-        phoneInput.className = 'fieldset-input';
-        phoneInput.placeholder = options.placeholder || '';
-        makePhoneDigitsOnly(phoneInput);
-        
-        var validation = addInputValidation(phoneInput, options.minLength || 0, options.maxLength || 20, null);
-        row.appendChild(phoneInput);
-        
-        return {
-            row: row,
-            prefixMenu: prefixMenu,
-            input: phoneInput,
-            charCount: validation.charCount
-        };
     }
     
     /**
      * Build a complete fieldset element based on field type
-     * @param {Object} fieldData - Field configuration
-     * @param {string} fieldData.fieldsetKey - Field type (title, description, dropdown, radio, email, phone, address, city, website-url, etc.)
-     * @param {string} fieldData.name - Display label for the field
-     * @param {string} fieldData.placeholder - Placeholder text
-     * @param {string} fieldData.tooltip - Tooltip text
-     * @param {Array} fieldData.options - Options for dropdown/radio fields
-     * @param {number} fieldData.min_length - Minimum length
-     * @param {number} fieldData.max_length - Maximum length (default 500)
+     * @param {Object} fieldData - Field configuration from the form snapshot
      * @param {Object} options - Additional options
      * @param {string} options.idPrefix - Prefix for element IDs (default 'fieldset')
      * @param {number} options.fieldIndex - Index for unique radio group names
@@ -336,52 +362,80 @@ const FieldsetComponent = (function(){
     function buildFieldset(fieldData, options) {
         options = options || {};
         var idPrefix = options.idPrefix || 'fieldset';
-        var fieldIndex = options.fieldIndex || 0;
-        var containerEl = options.container || null;
-        
-        var key = fieldData.fieldsetKey || fieldData.key || fieldData.type || '';
-        var name = fieldData.name || 'Field';
-        var tooltip = fieldData.tooltip || fieldData.fieldset_tooltip || '';
-        var placeholder = fieldData.placeholder || '';
-        var maxLength = fieldData.max_length || 500;
-        var fieldOptions = fieldData.options || [];
+        var index = options.fieldIndex || 0;
+        var container = options.container || null;
         
         var fieldset = document.createElement('div');
         fieldset.className = 'fieldset';
         
-        var fieldId = idPrefix + '-field-' + fieldIndex;
+        var key = fieldData.fieldset_key || fieldData.key || '';
+        var name = fieldData.fieldset_name || fieldData.name || 'Unnamed';
+        var tooltip = fieldData.fieldset_tooltip || '';
+        var placeholder = fieldData.fieldset_placeholder || '';
+        var minLength = fieldData.min_length || 0;
+        var maxLength = fieldData.max_length || 500;
+        var fieldOptions = fieldData.fieldset_options || [];
+        var fields = fieldData.fieldset_fields || [];
         
+        // Build based on fieldset type
         switch (key) {
             case 'title':
-            case 'coupon':
-            case 'text-box':
                 fieldset.appendChild(buildLabel(name, tooltip));
-                var textInput = document.createElement('input');
-                textInput.type = 'text';
-                textInput.className = 'fieldset-input';
-                textInput.id = fieldId;
-                textInput.placeholder = placeholder;
-                textInput.setAttribute('maxlength', maxLength);
-                fieldset.appendChild(textInput);
+                var titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'fieldset-input';
+                titleInput.placeholder = placeholder;
+                var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
+                fieldset.appendChild(titleInput);
+                fieldset.appendChild(titleValidation.charCount);
+                break;
+            
+            case 'coupon':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var couponInput = document.createElement('input');
+                couponInput.type = 'text';
+                couponInput.className = 'fieldset-input';
+                couponInput.placeholder = placeholder;
+                var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
+                fieldset.appendChild(couponInput);
+                fieldset.appendChild(couponValidation.charCount);
                 break;
                 
             case 'description':
-            case 'text-area':
                 fieldset.appendChild(buildLabel(name, tooltip));
-                var textarea = document.createElement('textarea');
-                textarea.className = 'fieldset-textarea';
-                textarea.id = fieldId;
-                textarea.placeholder = placeholder;
-                textarea.setAttribute('maxlength', maxLength);
-                textarea.rows = 5;
-                fieldset.appendChild(textarea);
+                var descTextarea = document.createElement('textarea');
+                descTextarea.className = 'fieldset-textarea';
+                descTextarea.placeholder = placeholder;
+                var descValidation = addInputValidation(descTextarea, minLength, maxLength, null);
+                fieldset.appendChild(descTextarea);
+                fieldset.appendChild(descValidation.charCount);
+                break;
+                
+            case 'text-box':
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                var textBoxInput = document.createElement('input');
+                textBoxInput.type = 'text';
+                textBoxInput.className = 'fieldset-input';
+                textBoxInput.placeholder = placeholder;
+                var textBoxValidation = addInputValidation(textBoxInput, minLength, maxLength, null);
+                fieldset.appendChild(textBoxInput);
+                fieldset.appendChild(textBoxValidation.charCount);
+                break;
+                
+            case 'text-area':
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                var editableTextarea = document.createElement('textarea');
+                editableTextarea.className = 'fieldset-textarea';
+                editableTextarea.placeholder = placeholder;
+                var textareaValidation = addInputValidation(editableTextarea, minLength, maxLength, null);
+                fieldset.appendChild(editableTextarea);
+                fieldset.appendChild(textareaValidation.charCount);
                 break;
                 
             case 'dropdown':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
                 var select = document.createElement('select');
                 select.className = 'fieldset-select';
-                select.id = fieldId;
                 select.innerHTML = '<option value="">Select an option...</option>';
                 if (Array.isArray(fieldOptions)) {
                     fieldOptions.forEach(function(opt) {
@@ -395,24 +449,15 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'radio':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
                 var radioGroup = document.createElement('div');
                 radioGroup.className = 'fieldset-radio-group';
                 if (Array.isArray(fieldOptions)) {
                     fieldOptions.forEach(function(opt, i) {
-                        var radioLabel = document.createElement('label');
-                        radioLabel.className = 'fieldset-radio';
-                        var radioInput = document.createElement('input');
-                        radioInput.type = 'radio';
-                        radioInput.name = idPrefix + '-radio-' + fieldIndex;
-                        radioInput.className = 'fieldset-radio-input';
-                        radioInput.value = opt;
-                        var radioText = document.createElement('span');
-                        radioText.className = 'fieldset-radio-text';
-                        radioText.textContent = opt;
-                        radioLabel.appendChild(radioInput);
-                        radioLabel.appendChild(radioText);
-                        radioGroup.appendChild(radioLabel);
+                        var radio = document.createElement('label');
+                        radio.className = 'fieldset-radio';
+                        radio.innerHTML = '<input type="radio" name="radio-' + index + '" class="fieldset-radio-input" value="' + opt + '"><span class="fieldset-radio-text">' + opt + '</span>';
+                        radioGroup.appendChild(radio);
                     });
                 }
                 fieldset.appendChild(radioGroup);
@@ -423,36 +468,37 @@ const FieldsetComponent = (function(){
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input';
-                emailInput.id = fieldId;
                 emailInput.placeholder = placeholder;
-                emailInput.setAttribute('maxlength', maxLength);
+                var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                 fieldset.appendChild(emailInput);
+                fieldset.appendChild(emailValidation.charCount);
                 break;
                 
             case 'phone':
                 fieldset.appendChild(buildLabel(name, tooltip));
                 var phoneRow = document.createElement('div');
                 phoneRow.className = 'fieldset-row';
-                phoneRow.appendChild(buildPhonePrefixMenu({ container: containerEl }));
+                phoneRow.appendChild(buildPhonePrefixMenu(container));
                 var phoneInput = document.createElement('input');
                 phoneInput.type = 'tel';
                 phoneInput.className = 'fieldset-input';
-                phoneInput.id = fieldId;
                 phoneInput.placeholder = placeholder;
                 makePhoneDigitsOnly(phoneInput);
+                var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
                 phoneRow.appendChild(phoneInput);
                 fieldset.appendChild(phoneRow);
+                fieldset.appendChild(phoneValidation.charCount);
                 break;
                 
             case 'address':
-            case 'location':
+            case 'location': // legacy support
                 fieldset.appendChild(buildLabel(name, tooltip));
-                var addrInput = document.createElement('input');
-                addrInput.type = 'text';
-                addrInput.className = 'fieldset-input';
-                addrInput.id = fieldId;
-                addrInput.placeholder = placeholder || 'Search for address...';
-                fieldset.appendChild(addrInput);
+                var addrInputEl = document.createElement('input');
+                addrInputEl.type = 'text';
+                addrInputEl.className = 'fieldset-input';
+                addrInputEl.placeholder = placeholder || 'Search for address...';
+                fieldset.appendChild(addrInputEl);
+                // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
                 addrLatInput.type = 'hidden';
                 addrLatInput.className = 'fieldset-lat';
@@ -461,20 +507,22 @@ const FieldsetComponent = (function(){
                 addrLngInput.className = 'fieldset-lng';
                 fieldset.appendChild(addrLatInput);
                 fieldset.appendChild(addrLngInput);
+                // Status indicator
                 var addrStatus = document.createElement('div');
                 addrStatus.className = 'fieldset-location-status';
                 fieldset.appendChild(addrStatus);
-                initGooglePlaces(addrInput, 'address', addrLatInput, addrLngInput, addrStatus);
+                // Init Google Places
+                initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrStatus);
                 break;
                 
             case 'city':
                 fieldset.appendChild(buildLabel(name, tooltip));
-                var cityInput = document.createElement('input');
-                cityInput.type = 'text';
-                cityInput.className = 'fieldset-input';
-                cityInput.id = fieldId;
-                cityInput.placeholder = placeholder || 'Search for city or town...';
-                fieldset.appendChild(cityInput);
+                var cityInputEl = document.createElement('input');
+                cityInputEl.type = 'text';
+                cityInputEl.className = 'fieldset-input';
+                cityInputEl.placeholder = placeholder || 'Search for city or town...';
+                fieldset.appendChild(cityInputEl);
+                // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
                 cityLatInput.type = 'hidden';
                 cityLatInput.className = 'fieldset-lat';
@@ -483,34 +531,1118 @@ const FieldsetComponent = (function(){
                 cityLngInput.className = 'fieldset-lng';
                 fieldset.appendChild(cityLatInput);
                 fieldset.appendChild(cityLngInput);
+                // Status indicator
                 var cityStatus = document.createElement('div');
                 cityStatus.className = 'fieldset-location-status';
                 fieldset.appendChild(cityStatus);
-                initGooglePlaces(cityInput, '(cities)', cityLatInput, cityLngInput, cityStatus);
+                // Init Google Places (cities only)
+                initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityStatus);
                 break;
                 
             case 'website-url':
             case 'tickets-url':
                 fieldset.appendChild(buildLabel(name, tooltip));
                 var urlInput = document.createElement('input');
-                urlInput.type = 'text';
+                urlInput.type = 'text'; // text not url, we handle protocol
                 urlInput.className = 'fieldset-input';
-                urlInput.id = fieldId;
                 urlInput.placeholder = placeholder;
                 autoUrlProtocol(urlInput);
+                var urlValidation = addInputValidation(urlInput, minLength, maxLength, isValidUrl);
                 fieldset.appendChild(urlInput);
+                fieldset.appendChild(urlValidation.charCount);
+                break;
+                
+            case 'images':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                
+                var imagesContainer = document.createElement('div');
+                imagesContainer.className = 'fieldset-images-container';
+                imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 5px;';
+                
+                var imageFiles = [];
+                var maxImages = 10;
+                
+                function renderImages() {
+                    imagesContainer.innerHTML = '';
+                    
+                    // Show existing images
+                    imageFiles.forEach(function(file, idx) {
+                        var thumb = document.createElement('div');
+                        thumb.className = 'fieldset-image-thumb';
+                        thumb.style.cssText = 'width: 76px; height: 76px; position: relative; border-radius: 4px; overflow: hidden; background: #222; border: 1px solid #333; flex-shrink: 0;';
+                        
+                        var img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+                        thumb.appendChild(img);
+                        
+                        var removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.textContent = '×';
+                        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: rgba(0,0,0,0.7); border: none; border-radius: 50%; color: #fff; cursor: pointer; font-size: 12px; line-height: 1;';
+                        (function(idx) {
+                            removeBtn.addEventListener('click', function() {
+                                imageFiles.splice(idx, 1);
+                                renderImages();
+                            });
+                        })(idx);
+                        thumb.appendChild(removeBtn);
+                        
+                        imagesContainer.appendChild(thumb);
+                    });
+                    
+                    // Show upload button if under max
+                    if (imageFiles.length < maxImages) {
+                        var uploadBox = document.createElement('div');
+                        uploadBox.className = 'fieldset-images';
+                        uploadBox.innerHTML = '<div class="fieldset-images-icon">📷</div><div class="fieldset-images-text">Add</div>';
+                        uploadBox.addEventListener('click', function() {
+                            fileInput.click();
+                        });
+                        imagesContainer.appendChild(uploadBox);
+                    }
+                }
+                
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.multiple = true;
+                fileInput.style.display = 'none';
+                fileInput.addEventListener('change', function() {
+                    var files = Array.from(this.files);
+                    files.forEach(function(file) {
+                        if (imageFiles.length < maxImages && file.type.startsWith('image/')) {
+                            imageFiles.push(file);
+                        }
+                    });
+                    renderImages();
+                    this.value = '';
+                });
+                fieldset.appendChild(fileInput);
+                fieldset.appendChild(imagesContainer);
+                
+                renderImages();
+                break;
+            
+            case 'amenities':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var amenitiesGrid = document.createElement('div');
+                amenitiesGrid.className = 'fieldset-amenities';
+                
+                // Get amenities from picklist table
+                var amenities = picklist['amenity'] || [];
+                
+                amenities.forEach(function(item, i) {
+                    // Parse value: "parking Parking" -> icon: parking, name: Parking
+                    var parts = item.value.split(' ');
+                    var iconKey = parts[0];
+                    var amenityName = parts.slice(1).join(' ');
+                    var description = item.label;
+                    
+                    var row = document.createElement('div');
+                    row.className = 'fieldset-amenity-row';
+                    row.title = description; // Tooltip on hover
+                    
+                    // Icon
+                    var iconEl = document.createElement('div');
+                    iconEl.className = 'fieldset-amenity-icon';
+                    iconEl.innerHTML = '<img src="assets/amenities/' + iconKey + '.svg" alt="' + amenityName + '">';
+                    row.appendChild(iconEl);
+                    
+                    // Name
+                    var nameEl = document.createElement('div');
+                    nameEl.className = 'fieldset-amenity-name';
+                    nameEl.textContent = amenityName;
+                    row.appendChild(nameEl);
+                    
+                    // Yes/No options
+                    var optionsEl = document.createElement('div');
+                    optionsEl.className = 'fieldset-amenity-options';
+                    
+                    var yesLabel = document.createElement('label');
+                    yesLabel.className = 'fieldset-amenity-option';
+                    yesLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="1"> Yes';
+                    optionsEl.appendChild(yesLabel);
+                    
+                    var noLabel = document.createElement('label');
+                    noLabel.className = 'fieldset-amenity-option';
+                    noLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="0"> No';
+                    optionsEl.appendChild(noLabel);
+                    
+                    // Add change listeners to update row styling
+                    var yesRadio = yesLabel.querySelector('input');
+                    var noRadio = noLabel.querySelector('input');
+                    
+                    yesRadio.addEventListener('change', function() {
+                        row.classList.remove('selected-no');
+                        row.classList.add('selected-yes');
+                    });
+                    
+                    noRadio.addEventListener('change', function() {
+                        row.classList.remove('selected-yes');
+                        row.classList.add('selected-no');
+                    });
+                    
+                    row.appendChild(optionsEl);
+                    amenitiesGrid.appendChild(row);
+                });
+                
+                fieldset.appendChild(amenitiesGrid);
+                break;
+                
+            case 'item-pricing':
+                // Item Name (full width), then variants with currency + price
+                fieldset.appendChild(buildLabel(name, tooltip));
+                
+                // Track shared currency state for item pricing
+                var itemCurrencyState = { flag: 'us', code: 'USD' };
+                var itemCurrencyMenus = [];
+                
+                function syncAllItemCurrencies() {
+                    itemCurrencyMenus.forEach(function(menu) {
+                        var img = menu.querySelector('.fieldset-menu-button-image');
+                        var text = menu.querySelector('.fieldset-menu-button-text');
+                        img.src = 'assets/flags/' + itemCurrencyState.flag + '.svg';
+                        text.textContent = itemCurrencyState.code;
+                    });
+                }
+                
+                function buildItemCurrencyMenu() {
+                    var menu = document.createElement('div');
+                    menu.className = 'fieldset-menu fieldset-currency-compact';
+                    menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + itemCurrencyState.flag + '.svg" alt=""><span class="fieldset-menu-button-text">' + itemCurrencyState.code + '</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+                    
+                    var btn = menu.querySelector('.fieldset-menu-button');
+                    var opts = menu.querySelector('.fieldset-menu-options');
+                    
+                    var currencies = picklist['currency'] || [];
+                    currencies.forEach(function(item) {
+                        var op = document.createElement('div');
+                        op.className = 'fieldset-menu-option';
+                        op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+                        op.onclick = function(e) {
+                            e.stopPropagation();
+                            itemCurrencyState.flag = item.value.substring(0,2);
+                            itemCurrencyState.code = item.value.substring(3);
+                            syncAllItemCurrencies();
+                            menu.classList.remove('open');
+                        };
+                        opts.appendChild(op);
+                    });
+                    
+                    btn.onclick = function(e) {
+                        e.stopPropagation();
+                        if (container) {
+                            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                                if (el !== menu) el.classList.remove('open');
+                            });
+                        }
+                        menu.classList.toggle('open');
+                    };
+                    
+                    itemCurrencyMenus.push(menu);
+                    return menu;
+                }
+                
+                // Item Name (single, no +/-)
+                var itemNameSub = document.createElement('div');
+                itemNameSub.className = 'fieldset-sublabel';
+                itemNameSub.textContent = 'Item Name';
+                fieldset.appendChild(itemNameSub);
+                var itemNameInput = document.createElement('input');
+                itemNameInput.type = 'text';
+                itemNameInput.className = 'fieldset-input';
+                itemNameInput.placeholder = 'eg. T-Shirt';
+                itemNameInput.style.marginBottom = '10px';
+                fieldset.appendChild(itemNameInput);
+                
+                // Variants container
+                var itemVariantsContainer = document.createElement('div');
+                itemVariantsContainer.className = 'fieldset-variants-container';
+                fieldset.appendChild(itemVariantsContainer);
+                
+                function createItemVariantBlock() {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-variant-block';
+                    block.style.marginBottom = '10px';
+                    block.style.marginLeft = '20px';
+                    
+                    // Row 1: Variant input + +/- buttons
+                    var variantRow = document.createElement('div');
+                    variantRow.className = 'fieldset-row';
+                    variantRow.style.marginBottom = '10px';
+                    
+                    var variantCol = document.createElement('div');
+                    variantCol.style.flex = '1';
+                    var variantSub = document.createElement('div');
+                    variantSub.className = 'fieldset-sublabel';
+                    variantSub.textContent = 'Item Variant';
+                    var variantInput = document.createElement('input');
+                    variantInput.type = 'text';
+                    variantInput.className = 'fieldset-input';
+                    variantInput.placeholder = 'eg. Large Red';
+                    variantCol.appendChild(variantSub);
+                    variantCol.appendChild(variantInput);
+                    variantRow.appendChild(variantCol);
+                    
+                    // + button
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        itemVariantsContainer.appendChild(createItemVariantBlock());
+                        updateItemVariantButtons();
+                    });
+                    variantRow.appendChild(addBtn);
+                    
+                    // - button
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        // Remove from tracked menus
+                        var blockMenu = block.querySelector('.fieldset-currency-compact');
+                        var idx = itemCurrencyMenus.indexOf(blockMenu);
+                        if (idx > -1) itemCurrencyMenus.splice(idx, 1);
+                        updateItemVariantButtons();
+                    });
+                    variantRow.appendChild(removeBtn);
+                    
+                    block.appendChild(variantRow);
+                    
+                    // Row 2: Currency + Price (cropped to align under variant)
+                    var priceRow = document.createElement('div');
+                    priceRow.className = 'fieldset-row';
+                    priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
+                    
+                    var currencyCol = document.createElement('div');
+                    currencyCol.style.flex = '0 0 100px';
+                    var currencySub = document.createElement('div');
+                    currencySub.className = 'fieldset-sublabel';
+                    currencySub.textContent = 'Currency';
+                    currencyCol.appendChild(currencySub);
+                    currencyCol.appendChild(buildItemCurrencyMenu());
+                    priceRow.appendChild(currencyCol);
+                    
+                    var priceCol = document.createElement('div');
+                    priceCol.style.flex = '1';
+                    var priceSub = document.createElement('div');
+                    priceSub.className = 'fieldset-sublabel';
+                    priceSub.textContent = 'Price';
+                    var priceInput = document.createElement('input');
+                    priceInput.type = 'number';
+                    priceInput.className = 'fieldset-input';
+                    priceInput.placeholder = '0.00';
+                    priceInput.step = '0.01';
+                    priceInput.addEventListener('blur', function() {
+                        if (this.value !== '') {
+                            this.value = parseFloat(this.value).toFixed(2);
+                        }
+                    });
+                    priceCol.appendChild(priceSub);
+                    priceCol.appendChild(priceInput);
+                    priceRow.appendChild(priceCol);
+                    
+                    block.appendChild(priceRow);
+                    
+                    return block;
+                }
+                
+                function updateItemVariantButtons() {
+                    var blocks = itemVariantsContainer.querySelectorAll('.fieldset-variant-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                // Create first variant block
+                itemVariantsContainer.appendChild(createItemVariantBlock());
+                updateItemVariantButtons();
+                break;
+                
+            case 'ticket-pricing':
+                // Seating Areas container with nested Pricing Tiers
+                fieldset.appendChild(buildLabel(name, tooltip));
+                
+                var seatingAreasContainer = document.createElement('div');
+                seatingAreasContainer.className = 'fieldset-seating-areas-container';
+                fieldset.appendChild(seatingAreasContainer);
+                
+                // Track shared currency state
+                var ticketCurrencyState = { flag: 'us', code: 'USD' };
+                var ticketCurrencyMenus = [];
+                
+                function syncAllTicketCurrencies() {
+                    ticketCurrencyMenus.forEach(function(menu) {
+                        var img = menu.querySelector('.fieldset-menu-button-image');
+                        var text = menu.querySelector('.fieldset-menu-button-text');
+                        img.src = 'assets/flags/' + ticketCurrencyState.flag + '.svg';
+                        text.textContent = ticketCurrencyState.code;
+                    });
+                }
+                
+                function buildTicketCurrencyMenu() {
+                    var menu = document.createElement('div');
+                    menu.className = 'fieldset-menu fieldset-currency-compact';
+                    menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + ticketCurrencyState.flag + '.svg" alt=""><span class="fieldset-menu-button-text">' + ticketCurrencyState.code + '</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+                    
+                    var btn = menu.querySelector('.fieldset-menu-button');
+                    var opts = menu.querySelector('.fieldset-menu-options');
+                    
+                    var currencies = picklist['currency'] || [];
+                    currencies.forEach(function(item) {
+                        var op = document.createElement('div');
+                        op.className = 'fieldset-menu-option';
+                        op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+                        op.onclick = function(e) {
+                            e.stopPropagation();
+                            ticketCurrencyState.flag = item.value.substring(0,2);
+                            ticketCurrencyState.code = item.value.substring(3);
+                            syncAllTicketCurrencies();
+                            menu.classList.remove('open');
+                        };
+                        opts.appendChild(op);
+                    });
+                    
+                    btn.onclick = function(e) {
+                        e.stopPropagation();
+                        if (container) {
+                            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
+                                if (el !== menu) el.classList.remove('open');
+                            });
+                        }
+                        menu.classList.toggle('open');
+                    };
+                    
+                    ticketCurrencyMenus.push(menu);
+                    return menu;
+                }
+                
+                function createPricingTierBlock(tiersContainer) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-tier-block';
+                    block.style.marginBottom = '10px';
+                    block.style.marginLeft = '20px';
+                    
+                    // Row 1: Tier name + +/- buttons
+                    var tierRow = document.createElement('div');
+                    tierRow.className = 'fieldset-row';
+                    tierRow.style.marginBottom = '10px';
+                    
+                    var tierCol = document.createElement('div');
+                    tierCol.style.flex = '1';
+                    var tierSub = document.createElement('div');
+                    tierSub.className = 'fieldset-sublabel';
+                    tierSub.textContent = 'Pricing Tier';
+                    var tierInput = document.createElement('input');
+                    tierInput.type = 'text';
+                    tierInput.className = 'fieldset-input';
+                    tierInput.placeholder = 'eg. Adult';
+                    tierCol.appendChild(tierSub);
+                    tierCol.appendChild(tierInput);
+                    tierRow.appendChild(tierCol);
+                    
+                    // + button
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
+                        updateTierButtons(tiersContainer);
+                    });
+                    tierRow.appendChild(addBtn);
+                    
+                    // - button
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        // Remove from tracked menus
+                        var blockMenu = block.querySelector('.fieldset-currency-compact');
+                        var idx = ticketCurrencyMenus.indexOf(blockMenu);
+                        if (idx > -1) ticketCurrencyMenus.splice(idx, 1);
+                        updateTierButtons(tiersContainer);
+                    });
+                    tierRow.appendChild(removeBtn);
+                    
+                    block.appendChild(tierRow);
+                    
+                    // Row 2: Currency + Price (cropped to align under tier)
+                    var priceRow = document.createElement('div');
+                    priceRow.className = 'fieldset-row';
+                    priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
+                    
+                    var currencyCol = document.createElement('div');
+                    currencyCol.style.flex = '0 0 100px';
+                    var currencySub = document.createElement('div');
+                    currencySub.className = 'fieldset-sublabel';
+                    currencySub.textContent = 'Currency';
+                    currencyCol.appendChild(currencySub);
+                    currencyCol.appendChild(buildTicketCurrencyMenu());
+                    priceRow.appendChild(currencyCol);
+                    
+                    var priceCol = document.createElement('div');
+                    priceCol.style.flex = '1';
+                    var priceSub = document.createElement('div');
+                    priceSub.className = 'fieldset-sublabel';
+                    priceSub.textContent = 'Price';
+                    var priceInput = document.createElement('input');
+                    priceInput.type = 'number';
+                    priceInput.className = 'fieldset-input';
+                    priceInput.placeholder = '0.00';
+                    priceInput.step = '0.01';
+                    priceInput.addEventListener('blur', function() {
+                        if (this.value !== '') {
+                            this.value = parseFloat(this.value).toFixed(2);
+                        }
+                    });
+                    priceCol.appendChild(priceSub);
+                    priceCol.appendChild(priceInput);
+                    priceRow.appendChild(priceCol);
+                    
+                    block.appendChild(priceRow);
+                    
+                    return block;
+                }
+                
+                function updateTierButtons(tiersContainer) {
+                    var blocks = tiersContainer.querySelectorAll('.fieldset-tier-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        // + button: grey out at cap
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        // - button: grey out when only 1
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                function createSeatingAreaBlock() {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-seating-block';
+                    block.style.marginBottom = '20px';
+                    block.style.paddingBottom = '10px';
+                    block.style.borderBottom = '1px solid #333';
+                    
+                    // Seating Area row
+                    var seatRow = document.createElement('div');
+                    seatRow.className = 'fieldset-row';
+                    seatRow.style.marginBottom = '10px';
+                    
+                    var seatCol = document.createElement('div');
+                    seatCol.style.flex = '1';
+                    var seatSub = document.createElement('div');
+                    seatSub.className = 'fieldset-sublabel';
+                    seatSub.textContent = 'Seating Area';
+                    var seatInput = document.createElement('input');
+                    seatInput.type = 'text';
+                    seatInput.className = 'fieldset-input';
+                    seatInput.placeholder = 'eg. Orchestra';
+                    seatCol.appendChild(seatSub);
+                    seatCol.appendChild(seatInput);
+                    seatRow.appendChild(seatCol);
+                    
+                    // + button for seating area
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        seatingAreasContainer.appendChild(createSeatingAreaBlock());
+                        updateSeatingAreaButtons();
+                    });
+                    seatRow.appendChild(addBtn);
+                    
+                    // - button for seating area
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        updateSeatingAreaButtons();
+                    });
+                    seatRow.appendChild(removeBtn);
+                    
+                    block.appendChild(seatRow);
+                    
+                    // Pricing tiers container for this seating area
+                    var tiersContainer = document.createElement('div');
+                    tiersContainer.className = 'fieldset-tiers-container';
+                    tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
+                    updateTierButtons(tiersContainer);
+                    block.appendChild(tiersContainer);
+                    
+                    return block;
+                }
+                
+                function updateSeatingAreaButtons() {
+                    var blocks = seatingAreasContainer.querySelectorAll('.fieldset-seating-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-row > .fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-row > .fieldset-pricing-remove');
+                        // + button: grey out at cap
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        // - button: grey out when only 1
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                // Create first seating area
+                seatingAreasContainer.appendChild(createSeatingAreaBlock());
+                updateSeatingAreaButtons();
+                break;
+                
+            case 'sessions':
+                // Horizontal scrolling calendar + auto-generated session rows with autofill
+                fieldset.appendChild(buildLabel(name, tooltip));
+                
+                // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
+                var sessionData = {};
+                
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                var todayIso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                
+                var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
+                
+                var todayMonthEl = null;
+                var todayMonthIndex = 0;
+                var totalMonths = 0;
+                var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                
+                function toISODate(d) {
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                }
+                
+                function getDayOfWeek(dateStr) {
+                    var d = new Date(dateStr + 'T00:00:00');
+                    return d.getDay();
+                }
+                
+                // Calendar container
+                var calContainer = document.createElement('div');
+                calContainer.className = 'fieldset-calendar-container';
+                
+                var calScroll = document.createElement('div');
+                calScroll.className = 'fieldset-calendar-scroll';
+                
+                var calendar = document.createElement('div');
+                calendar.className = 'fieldset-calendar';
+                
+                // Build months
+                var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+                var monthIdx = 0;
+                while (current <= maxDate) {
+                    var monthEl = document.createElement('div');
+                    monthEl.className = 'fieldset-calendar-month';
+                    
+                    var header = document.createElement('div');
+                    header.className = 'fieldset-calendar-header';
+                    header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                    monthEl.appendChild(header);
+                    
+                    var grid = document.createElement('div');
+                    grid.className = 'fieldset-calendar-grid';
+                    
+                    weekdayNames.forEach(function(wd) {
+                        var w = document.createElement('div');
+                        w.className = 'fieldset-calendar-weekday';
+                        w.textContent = wd;
+                        grid.appendChild(w);
+                    });
+                    
+                    var firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
+                    var startDow = firstDay.getDay();
+                    var daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+                    
+                    for (var i = 0; i < 42; i++) {
+                        var cell = document.createElement('div');
+                        cell.className = 'fieldset-calendar-day';
+                        var dayNum = i - startDow + 1;
+                        
+                        if (i < startDow || dayNum > daysInMonth) {
+                            cell.classList.add('empty');
+                        } else {
+                            cell.textContent = dayNum;
+                            var dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
+                            dateObj.setHours(0, 0, 0, 0);
+                            var iso = toISODate(dateObj);
+                            cell.dataset.iso = iso;
+                            
+                            if (dateObj < today) {
+                                cell.classList.add('past');
+                            } else {
+                                cell.classList.add('future');
+                            }
+                            
+                            if (iso === todayIso) {
+                                cell.classList.add('today');
+                                todayMonthEl = monthEl;
+                                todayMonthIndex = monthIdx;
+                            }
+                        }
+                        grid.appendChild(cell);
+                    }
+                    
+                    monthEl.appendChild(grid);
+                    calendar.appendChild(monthEl);
+                    current.setMonth(current.getMonth() + 1);
+                    monthIdx++;
+                }
+                totalMonths = monthIdx;
+                
+                calScroll.appendChild(calendar);
+                calContainer.appendChild(calScroll);
+                
+                // Today marker
+                var marker = document.createElement('div');
+                marker.className = 'fieldset-calendar-today-marker';
+                calContainer.appendChild(marker);
+                
+                fieldset.appendChild(calContainer);
+                
+                // Sessions container (below calendar)
+                var sessionsContainer = document.createElement('div');
+                sessionsContainer.className = 'fieldset-sessions';
+                fieldset.appendChild(sessionsContainer);
+                
+                // Position marker dynamically based on today's month index
+                setTimeout(function() {
+                    if (todayMonthEl) {
+                        calScroll.scrollLeft = todayMonthEl.offsetLeft;
+                    }
+                    var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                    var markerPos = markerFraction * (calContainer.clientWidth - 8);
+                    marker.style.left = markerPos + 'px';
+                }, 0);
+                
+                // Marker click - scroll to today
+                marker.addEventListener('click', function() {
+                    if (todayMonthEl) {
+                        calScroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+                    }
+                });
+                
+                // Horizontal wheel scroll (reduced sensitivity)
+                calScroll.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    calScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
+                });
+                
+                // Track which slot indices have had their "god" time set
+                // GOD = first edit fills ALL dates
+                // DEMIGOD = subsequent edits fill same weekday only
+                var godSetForSlot = {};
+                
+                function autofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                    var sortedDates = Object.keys(sessionData).sort();
+                    var changedDow = getDayOfWeek(changedDateStr);
+                    
+                    if (!godSetForSlot[changedSlotIdx]) {
+                        // GOD MODE: first edit at this slot - fill ALL unedited slots
+                        godSetForSlot[changedSlotIdx] = true;
+                        
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            var data = sessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                data.times[changedSlotIdx] = newTime;
+                            }
+                        }
+                    } else {
+                        // DEMIGOD MODE: fill only same weekday unedited slots
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            if (getDayOfWeek(dateStr) !== changedDow) continue;
+                            var data = sessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                data.times[changedSlotIdx] = newTime;
+                            }
+                        }
+                    }
+                }
+                
+                // Get autofill value for a new time slot (worship the demigod - same weekday first)
+                function getAutofillForSlot(dateStr, slotIdx) {
+                    var dow = getDayOfWeek(dateStr);
+                    var sortedDates = Object.keys(sessionData).sort();
+                    
+                    // Priority 1: Same weekday with a value at this slot (worship the demigod)
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                            return sessionData[d].times[slotIdx];
+                        }
+                    }
+                    
+                    // Priority 2: Any date with a value at this slot (worship the god if no demigod)
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                            return sessionData[d].times[slotIdx];
+                        }
+                    }
+                    
+                    return '';
+                }
+                
+                // Render session rows
+                function renderSessions() {
+                    sessionsContainer.innerHTML = '';
+                    
+                    var sortedDates = Object.keys(sessionData).sort();
+                    
+                    sortedDates.forEach(function(dateStr) {
+                        var data = sessionData[dateStr];
+                        var group = document.createElement('div');
+                        group.className = 'fieldset-session-group';
+                        
+                        data.times.forEach(function(timeVal, idx) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-session-row';
+                            
+                            if (idx === 0) {
+                                var dateDisplay = document.createElement('div');
+                                dateDisplay.className = 'fieldset-session-date';
+                                var d = new Date(dateStr + 'T00:00:00');
+                                dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                row.appendChild(dateDisplay);
+                            } else {
+                                var spacer = document.createElement('div');
+                                spacer.className = 'fieldset-session-date-spacer';
+                                row.appendChild(spacer);
+                            }
+                            
+                            var timeWrapper = document.createElement('div');
+                            timeWrapper.className = 'fieldset-session-time';
+                            var timeInput = document.createElement('input');
+                            timeInput.type = 'text';
+                            timeInput.className = 'fieldset-time';
+                            timeInput.placeholder = 'HH:MM';
+                            timeInput.maxLength = 5;
+                            timeInput.value = timeVal;
+                            timeInput.dataset.date = dateStr;
+                            timeInput.dataset.idx = idx;
+                            
+                            // Select all on focus for easy overwrite
+                            timeInput.addEventListener('focus', function() {
+                                var input = this;
+                                setTimeout(function() { input.select(); }, 0);
+                            });
+                            
+                            // Auto-format time input (add colon after 2 digits)
+                            timeInput.addEventListener('input', function() {
+                                var v = this.value.replace(/[^0-9]/g, '');
+                                if (v.length >= 2) {
+                                    v = v.substring(0, 2) + ':' + v.substring(2, 4);
+                                }
+                                this.value = v;
+                            });
+                            
+                            (function(dateStr, idx) {
+                                timeInput.addEventListener('blur', function() {
+                                    var raw = this.value.replace(/[^0-9]/g, ''); // digits only
+                                    if (raw === '') {
+                                        sessionData[dateStr].times[idx] = '';
+                                        return;
+                                    }
+                                    
+                                    var hh, mm;
+                                    if (raw.length === 1) {
+                                        // "9" → "09:00"
+                                        hh = '0' + raw;
+                                        mm = '00';
+                                    } else if (raw.length === 2) {
+                                        // "19" → "19:00"
+                                        hh = raw;
+                                        mm = '00';
+                                    } else if (raw.length === 3) {
+                                        // "193" → "19:30"
+                                        hh = raw.substring(0, 2);
+                                        mm = raw.substring(2) + '0';
+                                    } else {
+                                        // "1930" → "19:30"
+                                        hh = raw.substring(0, 2);
+                                        mm = raw.substring(2, 4);
+                                    }
+                                    
+                                    var newTime = hh + ':' + mm;
+                                    
+                                    // Validate hours 00-23 and minutes 00-59
+                                    var hours = parseInt(hh, 10);
+                                    var mins = parseInt(mm, 10);
+                                    if (hours <= 23 && mins <= 59) {
+                                        this.value = newTime;
+                                        sessionData[dateStr].times[idx] = newTime;
+                                        sessionData[dateStr].edited[idx] = true;
+                                        autofillTimes(dateStr, idx, newTime);
+                                        // Update other visible time inputs without full re-render
+                                        sessionsContainer.querySelectorAll('.fieldset-time').forEach(function(input) {
+                                            var d = input.dataset.date;
+                                            var i = parseInt(input.dataset.idx, 10);
+                                            if (d && sessionData[d] && sessionData[d].times[i] !== undefined) {
+                                                input.value = sessionData[d].times[i];
+                                            }
+                                        });
+                                    } else {
+                                        // Invalid time - reset input
+                                        this.value = '';
+                                        sessionData[dateStr].times[idx] = '';
+                                    }
+                                });
+                            })(dateStr, idx);
+                            
+                            timeWrapper.appendChild(timeInput);
+                            row.appendChild(timeWrapper);
+                            
+                            // + button (always visible, greyed out at max 10)
+                            var maxTimesPerDate = 10;
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-session-add';
+                            addBtn.textContent = '+';
+                            if (data.times.length >= maxTimesPerDate) {
+                                addBtn.disabled = true;
+                                addBtn.style.opacity = '0.3';
+                                addBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    addBtn.addEventListener('click', function() {
+                                        var newSlotIdx = idx + 1;
+                                        var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
+                                        sessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                        sessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                        renderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(addBtn);
+                            
+                            // - button (always visible, greyed out if only 1 time)
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-session-remove';
+                            removeBtn.textContent = '−';
+                            if (data.times.length === 1) {
+                                removeBtn.disabled = true;
+                                removeBtn.style.opacity = '0.3';
+                                removeBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    removeBtn.addEventListener('click', function() {
+                                        sessionData[dateStr].times.splice(idx, 1);
+                                        sessionData[dateStr].edited.splice(idx, 1);
+                                        renderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(removeBtn);
+                            
+                            group.appendChild(row);
+                        });
+                        
+                        sessionsContainer.appendChild(group);
+                    });
+                }
+                
+                // Calendar day click
+                calendar.addEventListener('click', function(e) {
+                    var day = e.target;
+                    if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
+                        var iso = day.dataset.iso;
+                        if (sessionData[iso]) {
+                            delete sessionData[iso];
+                            day.classList.remove('selected');
+                        } else {
+                            // New date - autofill first time slot
+                            var autofillVal = getAutofillForSlot(iso, 0);
+                            sessionData[iso] = { times: [autofillVal], edited: [false] };
+                            day.classList.add('selected');
+                        }
+                        renderSessions();
+                    }
+                });
+                
+                break;
+                
+            case 'venue':
+                // SMART VENUE FIELDSET
+                // - Both inputs have Google Places (unrestricted)
+                // - Auto-fill ONLY empty boxes
+                // - User edits are protected
+                fieldset.appendChild(buildLabel(name, tooltip));
+                
+                // Hidden lat/lng fields
+                var smartLatInput = document.createElement('input');
+                smartLatInput.type = 'hidden';
+                smartLatInput.className = 'fieldset-lat';
+                var smartLngInput = document.createElement('input');
+                smartLngInput.type = 'hidden';
+                smartLngInput.className = 'fieldset-lng';
+                
+                // Venue name row
+                var smartVenueSub = document.createElement('div');
+                smartVenueSub.className = 'fieldset-sublabel';
+                smartVenueSub.textContent = 'Venue Name';
+                fieldset.appendChild(smartVenueSub);
+                var smartVenueInput = document.createElement('input');
+                smartVenueInput.type = 'text';
+                smartVenueInput.className = 'fieldset-input';
+                smartVenueInput.placeholder = 'Search or type venue name...';
+                smartVenueInput.style.marginBottom = '8px';
+                fieldset.appendChild(smartVenueInput);
+                
+                // Address row
+                var smartAddrSub = document.createElement('div');
+                smartAddrSub.className = 'fieldset-sublabel';
+                smartAddrSub.textContent = 'Address';
+                fieldset.appendChild(smartAddrSub);
+                var smartAddrInput = document.createElement('input');
+                smartAddrInput.type = 'text';
+                smartAddrInput.className = 'fieldset-input';
+                smartAddrInput.placeholder = 'Search or type address...';
+                smartAddrInput.style.marginBottom = '4px';
+                fieldset.appendChild(smartAddrInput);
+                
+                // Status indicator
+                var smartStatus = document.createElement('div');
+                smartStatus.className = 'fieldset-location-status';
+                fieldset.appendChild(smartStatus);
+                
+                fieldset.appendChild(smartLatInput);
+                fieldset.appendChild(smartLngInput);
+                
+                // Smart autofill function - only fills empty boxes
+                function initSmartVenueAutocomplete(inputEl, otherInputEl, isVenueBox) {
+                    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                        console.warn('Google Places API not loaded');
+                        return;
+                    }
+                    
+                    // Unrestricted search - finds both venues and addresses
+                    var autocomplete = new google.maps.places.Autocomplete(inputEl, {
+                        fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types']
+                    });
+                    
+                    autocomplete.addListener('place_changed', function() {
+                        var place = autocomplete.getPlace();
+                        if (!place.geometry || !place.geometry.location) return;
+                        
+                        var lat = place.geometry.location.lat();
+                        var lng = place.geometry.location.lng();
+                        var venueName = place.name || '';
+                        var address = place.formatted_address || '';
+                        var isEstablishment = place.types && place.types.includes('establishment');
+                        
+                        // Always update lat/lng
+                        smartLatInput.value = lat;
+                        smartLngInput.value = lng;
+                        
+                        if (isVenueBox) {
+                            // User searched in venue box
+                            // Strip venue name to just the name (Google fills with full address)
+                            if (isEstablishment && venueName) {
+                                smartVenueInput.value = venueName;
+                            }
+                            // Address: fill only if empty
+                            if (!smartAddrInput.value.trim()) {
+                                smartAddrInput.value = address;
+                            }
+                        } else {
+                            // User searched in address box
+                            // Address: strip to just address (in case Google added extra)
+                            smartAddrInput.value = address;
+                            // Venue name: fill only if empty AND result is an establishment
+                            if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
+                                smartVenueInput.value = venueName;
+                            }
+                        }
+                        
+                        // Update status
+                        smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                        smartStatus.className = 'fieldset-location-status success';
+                    });
+                }
+                
+                // Init both inputs with smart autofill
+                initSmartVenueAutocomplete(smartVenueInput, smartAddrInput, true);
+                initSmartVenueAutocomplete(smartAddrInput, smartVenueInput, false);
                 break;
                 
             default:
-                // Generic text input for unknown types
+                // Generic text input fallback
                 fieldset.appendChild(buildLabel(name, tooltip));
-                var genericInput = document.createElement('input');
-                genericInput.type = 'text';
-                genericInput.className = 'fieldset-input';
-                genericInput.id = fieldId;
-                genericInput.placeholder = placeholder;
-                fieldset.appendChild(genericInput);
-                break;
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'fieldset-input';
+                input.placeholder = placeholder;
+                fieldset.appendChild(input);
         }
         
         return fieldset;
@@ -527,9 +1659,8 @@ const FieldsetComponent = (function(){
         autoUrlProtocol: autoUrlProtocol,
         setPicklist: setPicklist,
         getPicklist: function() { return picklist; },
-        buildCurrencyMenu: buildCurrencyMenu,
-        buildPhonePrefixMenu: buildPhonePrefixMenu,
-        buildPhoneField: buildPhoneField
+        buildCurrencyMenuCompact: buildCurrencyMenuCompact,
+        buildPhonePrefixMenu: buildPhonePrefixMenu
     };
 })();
 
