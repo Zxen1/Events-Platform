@@ -1800,8 +1800,11 @@
             }
         }
         
-        // Add to DOM
-        document.body.appendChild(modal);
+        // Add to admin panel content
+        var adminPanelContent = document.querySelector('.admin-panel-content');
+        if (adminPanelContent) {
+            adminPanelContent.appendChild(modal);
+        }
     }
     
     /* --------------------------------------------------------------------------
