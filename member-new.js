@@ -1565,6 +1565,9 @@ const MemberModule = (function() {
 // Register module with App
 App.registerModule('member', MemberModule);
 
+// Expose globally for consistency with other modules
+window.MemberModule = MemberModule;
+
 // Lazy initialization - only init when panel is first opened
 (function() {
     var isInitialized = false;

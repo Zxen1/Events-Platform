@@ -357,6 +357,9 @@ const AdminModule = (function() {
 // Register module with App
 App.registerModule('admin', AdminModule);
 
+// Expose globally for modules that check window.AdminModule
+window.AdminModule = AdminModule;
+
 // Lazy initialization - only init when panel is first opened
 (function() {
     var isInitialized = false;
