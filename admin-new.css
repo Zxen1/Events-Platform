@@ -1291,6 +1291,7 @@
   color: #fff;
   font-size: 13px;
   font-weight: 500;
+  caret-color: #fff;
 }
 
 .admin-checkout-option-title:focus {
@@ -1388,6 +1389,7 @@
   resize: vertical;
   min-height: 60px;
   line-height: 1.4;
+  caret-color: #fff;
 }
 
 .admin-checkout-option-description:focus {
@@ -1421,6 +1423,7 @@
   padding: 8px 12px;
   color: #fff;
   font-size: 14px;
+  caret-color: #fff;
   -moz-appearance: textfield;
 }
 
