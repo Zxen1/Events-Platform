@@ -334,7 +334,7 @@ const MemberModule = (function() {
                 memberSubcategoryIconPaths = formResponse.snapshot.subcategoryIconPaths || {};
             }
             
-            // Get checkout options and currency from admin settings
+            // Get checkout options, currency, and picklist from admin settings
             if (settingsResponse && settingsResponse.checkout_options) {
                 checkoutOptions = (settingsResponse.checkout_options || []).filter(function(opt) {
                     return opt.is_active !== false && opt.is_active !== 0;
@@ -343,7 +343,7 @@ const MemberModule = (function() {
             if (settingsResponse && settingsResponse.settings && settingsResponse.settings.site_currency) {
                 siteCurrency = settingsResponse.settings.site_currency;
             }
-            
+
             if (memberCategories.length > 0) {
                 renderFormpicker(container);
                 formpickerLoaded = true;
@@ -579,15 +579,7 @@ const MemberModule = (function() {
 
         if (formFields) formFields.innerHTML = '';
 
-        // Set picklist data from global variables (loaded by index.js)
-        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.setPicklist) {
-            FieldsetComponent.setPicklist({
-                'currency': window.currencyData || [],
-                'phone-prefix': window.phonePrefixData || [],
-                'amenity': window.amenityData || []
-            });
-        }
-
+        // FieldsetComponent auto-loads its own picklist data
         if (fields.length === 0) {
             var placeholder = document.createElement('p');
             placeholder.className = 'member-create-intro';

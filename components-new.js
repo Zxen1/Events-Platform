@@ -101,6 +101,23 @@ const ClearButtonComponent = (function(){
 
 const FieldsetComponent = (function(){
     var picklist = {};
+    var dataLoaded = false;
+    var loadPromise = null;
+    
+    // Load picklist data from database
+    function loadFromDatabase() {
+        if (loadPromise) return loadPromise;
+        loadPromise = fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.picklist) {
+                    picklist = res.picklist;
+                    dataLoaded = true;
+                }
+                return picklist;
+            });
+        return loadPromise;
+    }
     
     // Google Places Autocomplete helper
     // type: 'address' | 'establishment' | '(cities)'
@@ -1656,6 +1673,9 @@ const FieldsetComponent = (function(){
         return fieldset;
     }
     
+    // Auto-load picklist data when component initializes
+    loadFromDatabase();
+    
     return {
         initGooglePlaces: initGooglePlaces,
         buildLabel: buildLabel,
@@ -1667,6 +1687,8 @@ const FieldsetComponent = (function(){
         autoUrlProtocol: autoUrlProtocol,
         setPicklist: setPicklist,
         getPicklist: function() { return picklist; },
+        isLoaded: function() { return dataLoaded; },
+        loadFromDatabase: loadFromDatabase,
         buildCurrencyMenuCompact: buildCurrencyMenuCompact,
         buildPhonePrefixMenu: buildPhonePrefixMenu
     };

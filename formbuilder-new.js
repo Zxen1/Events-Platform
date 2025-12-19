@@ -1733,16 +1733,7 @@
         var body = document.createElement('div');
         body.className = 'formbuilder-formpreview-modal-body';
         
-        // Render fields using FieldsetComponent
-        // Set picklist data from global variables (loaded by index.js)
-        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.setPicklist) {
-            FieldsetComponent.setPicklist({
-                'currency': window.currencyData || [],
-                'phone-prefix': window.phonePrefixData || [],
-                'amenity': window.amenityData || []
-            });
-        }
-        
+        // Render fields using FieldsetComponent (auto-loads its own picklist data)
         if (fields.length === 0) {
             var emptyMsg = document.createElement('p');
             emptyMsg.className = 'formbuilder-formpreview-empty';
