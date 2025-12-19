@@ -221,13 +221,9 @@ const FieldsetComponent = (function(){
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnText = menu.querySelector('.fieldset-menu-button-text');
         
+        // Default is hardcoded to US (+1) - set in innerHTML above
         var prefixes = picklist['phone-prefix'] || [];
-        if (prefixes.length > 0) {
-            // Use first prefix from picklist as default
-            btnImg.src = 'assets/flags/' + prefixes[0].value.substring(0,2) + '.svg';
-            btnText.textContent = prefixes[0].value.substring(3);
-        }
-        
+
         prefixes.forEach(function(item) {
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
