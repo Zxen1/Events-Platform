@@ -317,9 +317,209 @@ const FieldsetComponent = (function(){
         };
     }
     
+    /**
+     * Build a complete fieldset element based on field type
+     * @param {Object} fieldData - Field configuration
+     * @param {string} fieldData.fieldsetKey - Field type (title, description, dropdown, radio, email, phone, address, city, website-url, etc.)
+     * @param {string} fieldData.name - Display label for the field
+     * @param {string} fieldData.placeholder - Placeholder text
+     * @param {string} fieldData.tooltip - Tooltip text
+     * @param {Array} fieldData.options - Options for dropdown/radio fields
+     * @param {number} fieldData.min_length - Minimum length
+     * @param {number} fieldData.max_length - Maximum length (default 500)
+     * @param {Object} options - Additional options
+     * @param {string} options.idPrefix - Prefix for element IDs (default 'fieldset')
+     * @param {number} options.fieldIndex - Index for unique radio group names
+     * @param {HTMLElement} options.container - Parent container (for closing menus)
+     * @returns {HTMLElement} Complete fieldset element
+     */
+    function buildFieldset(fieldData, options) {
+        options = options || {};
+        var idPrefix = options.idPrefix || 'fieldset';
+        var fieldIndex = options.fieldIndex || 0;
+        var containerEl = options.container || null;
+        
+        var key = fieldData.fieldsetKey || fieldData.key || fieldData.type || '';
+        var name = fieldData.name || 'Field';
+        var tooltip = fieldData.tooltip || fieldData.fieldset_tooltip || '';
+        var placeholder = fieldData.placeholder || '';
+        var maxLength = fieldData.max_length || 500;
+        var fieldOptions = fieldData.options || [];
+        
+        var fieldset = document.createElement('div');
+        fieldset.className = 'fieldset';
+        
+        var fieldId = idPrefix + '-field-' + fieldIndex;
+        
+        switch (key) {
+            case 'title':
+            case 'coupon':
+            case 'text-box':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.className = 'fieldset-input';
+                textInput.id = fieldId;
+                textInput.placeholder = placeholder;
+                textInput.setAttribute('maxlength', maxLength);
+                fieldset.appendChild(textInput);
+                break;
+                
+            case 'description':
+            case 'text-area':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var textarea = document.createElement('textarea');
+                textarea.className = 'fieldset-textarea';
+                textarea.id = fieldId;
+                textarea.placeholder = placeholder;
+                textarea.setAttribute('maxlength', maxLength);
+                textarea.rows = 5;
+                fieldset.appendChild(textarea);
+                break;
+                
+            case 'dropdown':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var select = document.createElement('select');
+                select.className = 'fieldset-select';
+                select.id = fieldId;
+                select.innerHTML = '<option value="">Select an option...</option>';
+                if (Array.isArray(fieldOptions)) {
+                    fieldOptions.forEach(function(opt) {
+                        var option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        select.appendChild(option);
+                    });
+                }
+                fieldset.appendChild(select);
+                break;
+                
+            case 'radio':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var radioGroup = document.createElement('div');
+                radioGroup.className = 'fieldset-radio-group';
+                if (Array.isArray(fieldOptions)) {
+                    fieldOptions.forEach(function(opt, i) {
+                        var radioLabel = document.createElement('label');
+                        radioLabel.className = 'fieldset-radio';
+                        var radioInput = document.createElement('input');
+                        radioInput.type = 'radio';
+                        radioInput.name = idPrefix + '-radio-' + fieldIndex;
+                        radioInput.className = 'fieldset-radio-input';
+                        radioInput.value = opt;
+                        var radioText = document.createElement('span');
+                        radioText.className = 'fieldset-radio-text';
+                        radioText.textContent = opt;
+                        radioLabel.appendChild(radioInput);
+                        radioLabel.appendChild(radioText);
+                        radioGroup.appendChild(radioLabel);
+                    });
+                }
+                fieldset.appendChild(radioGroup);
+                break;
+                
+            case 'email':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var emailInput = document.createElement('input');
+                emailInput.type = 'email';
+                emailInput.className = 'fieldset-input';
+                emailInput.id = fieldId;
+                emailInput.placeholder = placeholder;
+                emailInput.setAttribute('maxlength', maxLength);
+                fieldset.appendChild(emailInput);
+                break;
+                
+            case 'phone':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var phoneRow = document.createElement('div');
+                phoneRow.className = 'fieldset-row';
+                phoneRow.appendChild(buildPhonePrefixMenu({ container: containerEl }));
+                var phoneInput = document.createElement('input');
+                phoneInput.type = 'tel';
+                phoneInput.className = 'fieldset-input';
+                phoneInput.id = fieldId;
+                phoneInput.placeholder = placeholder;
+                makePhoneDigitsOnly(phoneInput);
+                phoneRow.appendChild(phoneInput);
+                fieldset.appendChild(phoneRow);
+                break;
+                
+            case 'address':
+            case 'location':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var addrInput = document.createElement('input');
+                addrInput.type = 'text';
+                addrInput.className = 'fieldset-input';
+                addrInput.id = fieldId;
+                addrInput.placeholder = placeholder || 'Search for address...';
+                fieldset.appendChild(addrInput);
+                var addrLatInput = document.createElement('input');
+                addrLatInput.type = 'hidden';
+                addrLatInput.className = 'fieldset-lat';
+                var addrLngInput = document.createElement('input');
+                addrLngInput.type = 'hidden';
+                addrLngInput.className = 'fieldset-lng';
+                fieldset.appendChild(addrLatInput);
+                fieldset.appendChild(addrLngInput);
+                var addrStatus = document.createElement('div');
+                addrStatus.className = 'fieldset-location-status';
+                fieldset.appendChild(addrStatus);
+                initGooglePlaces(addrInput, 'address', addrLatInput, addrLngInput, addrStatus);
+                break;
+                
+            case 'city':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var cityInput = document.createElement('input');
+                cityInput.type = 'text';
+                cityInput.className = 'fieldset-input';
+                cityInput.id = fieldId;
+                cityInput.placeholder = placeholder || 'Search for city or town...';
+                fieldset.appendChild(cityInput);
+                var cityLatInput = document.createElement('input');
+                cityLatInput.type = 'hidden';
+                cityLatInput.className = 'fieldset-lat';
+                var cityLngInput = document.createElement('input');
+                cityLngInput.type = 'hidden';
+                cityLngInput.className = 'fieldset-lng';
+                fieldset.appendChild(cityLatInput);
+                fieldset.appendChild(cityLngInput);
+                var cityStatus = document.createElement('div');
+                cityStatus.className = 'fieldset-location-status';
+                fieldset.appendChild(cityStatus);
+                initGooglePlaces(cityInput, '(cities)', cityLatInput, cityLngInput, cityStatus);
+                break;
+                
+            case 'website-url':
+            case 'tickets-url':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var urlInput = document.createElement('input');
+                urlInput.type = 'text';
+                urlInput.className = 'fieldset-input';
+                urlInput.id = fieldId;
+                urlInput.placeholder = placeholder;
+                autoUrlProtocol(urlInput);
+                fieldset.appendChild(urlInput);
+                break;
+                
+            default:
+                // Generic text input for unknown types
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var genericInput = document.createElement('input');
+                genericInput.type = 'text';
+                genericInput.className = 'fieldset-input';
+                genericInput.id = fieldId;
+                genericInput.placeholder = placeholder;
+                fieldset.appendChild(genericInput);
+                break;
+        }
+        
+        return fieldset;
+    }
+    
     return {
         initGooglePlaces: initGooglePlaces,
         buildLabel: buildLabel,
+        buildFieldset: buildFieldset,
         addInputValidation: addInputValidation,
         isValidEmail: isValidEmail,
         isValidUrl: isValidUrl,
@@ -653,12 +853,12 @@ const CurrencyComponent = (function(){
         
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">USD</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><span class="fieldset-menu-button-text">Select currency</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnText = menu.querySelector('.fieldset-menu-button-text');
+        var btnImg = null;
         
         var currencies = currencyData;
         currencies.forEach(function(item) {
@@ -669,6 +869,12 @@ const CurrencyComponent = (function(){
             op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + currencyCode + ' - ' + item.label + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
+                if (!btnImg) {
+                    btnImg = document.createElement('img');
+                    btnImg.className = 'fieldset-menu-button-image';
+                    btnImg.alt = '';
+                    btn.insertBefore(btnImg, btnText);
+                }
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
                 btnText.textContent = currencyCode;
                 menu.classList.remove('open');
@@ -817,22 +1023,14 @@ const PhonePrefixComponent = (function(){
         
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><span class="fieldset-menu-button-text">Select prefix</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnText = menu.querySelector('.fieldset-menu-button-text');
+        var btnImg = null;
         
         var prefixes = prefixData;
-        
-        // Set default to first item if available
-        if (prefixes.length > 0) {
-            var firstCountry = prefixes[0].value.substring(0, 2);
-            var firstPrefix = prefixes[0].value.substring(3);
-            btnImg.src = 'assets/flags/' + firstCountry + '.svg';
-            btnText.textContent = firstPrefix;
-        }
         
         prefixes.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
@@ -842,11 +1040,17 @@ const PhonePrefixComponent = (function(){
             op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + prefix + ' - ' + item.label + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
+                if (!btnImg) {
+                    btnImg = document.createElement('img');
+                    btnImg.className = 'fieldset-menu-button-image';
+                    btnImg.alt = '';
+                    btn.insertBefore(btnImg, btnText);
+                }
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
                 btnText.textContent = prefix;
                 menu.classList.remove('open');
                 onSelect(prefix, item.label, countryCode);
-                    };
+            };
                     opts.appendChild(op);
         });
         

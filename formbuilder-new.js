@@ -1610,6 +1610,10 @@
         var formPreviewBtn = document.createElement('div');
         formPreviewBtn.className = 'formbuilder-add-button formbuilder-form-preview';
         formPreviewBtn.textContent = 'Form Preview';
+        formPreviewBtn.onclick = function(e) {
+            e.stopPropagation();
+            showFormPreview(cat, subName);
+        };
         optBody.appendChild(formPreviewBtn);
         
         option.appendChild(optHeader);
@@ -1674,6 +1678,130 @@
     function discardChanges() {
         isLoaded = false; // Prevent notifyChange during reload
         loadFormData(); // Fetch fresh from database - single source of truth
+    }
+    
+    /* --------------------------------------------------------------------------
+       FORM PREVIEW MODAL
+       Shows the form as it would appear to members
+       -------------------------------------------------------------------------- */
+    
+    function showFormPreview(cat, subName) {
+        // Get subcategory data
+        var subFees = cat.subFees || {};
+        var subFeeData = subFees[subName] || {};
+        var subcategoryType = subFeeData.subcategory_type || 'General';
+        var isEvent = subcategoryType === 'Events';
+        var surcharge = parseFloat(subFeeData.checkout_surcharge) || 0;
+        
+        // Get fields for this subcategory
+        var subFieldsMap = cat.subFields || {};
+        var fields = subFieldsMap[subName] || [];
+        
+        // Get active checkout options
+        var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
+            return opt.is_active !== false && opt.is_active !== 0;
+        });
+        
+        // Create modal backdrop
+        var modal = document.createElement('div');
+        modal.className = 'formbuilder-formpreview-modal';
+        
+        // Create modal container
+        var modalContainer = document.createElement('div');
+        modalContainer.className = 'formbuilder-formpreview-modal-container';
+        
+        // Create header
+        var header = document.createElement('div');
+        header.className = 'formbuilder-formpreview-modal-header';
+        
+        var headerTitle = document.createElement('span');
+        headerTitle.className = 'formbuilder-formpreview-modal-title';
+        headerTitle.textContent = subName || 'Form Preview';
+        
+        var closeBtn = ClearButtonComponent.create({
+            className: 'formbuilder-formpreview-modal-close',
+            ariaLabel: 'Close preview',
+            onClick: function() {
+                closeModal();
+            }
+        });
+        
+        header.appendChild(headerTitle);
+        header.appendChild(closeBtn);
+        
+        // Create body
+        var body = document.createElement('div');
+        body.className = 'formbuilder-formpreview-modal-body';
+        
+        // Render fields using FieldsetComponent
+        if (fields.length === 0) {
+            var emptyMsg = document.createElement('p');
+            emptyMsg.className = 'formbuilder-formpreview-empty';
+            emptyMsg.textContent = 'No fields configured for this subcategory.';
+            body.appendChild(emptyMsg);
+        } else {
+            fields.forEach(function(fieldData, index) {
+                var fieldset = FieldsetComponent.buildFieldset(fieldData, {
+                    idPrefix: 'formpreview',
+                    fieldIndex: index,
+                    container: body
+                });
+                body.appendChild(fieldset);
+            });
+        }
+        
+        // Render checkout options using CheckoutOptionsComponent
+        if (activeCheckoutOptions.length > 0) {
+            var checkoutWrapper = document.createElement('div');
+            checkoutWrapper.className = 'formbuilder-formpreview-checkout';
+            
+            var checkoutLabel = document.createElement('div');
+            checkoutLabel.className = 'fieldset-label';
+            checkoutLabel.innerHTML = '<span class="fieldset-label-text">Checkout Options</span><span class="fieldset-label-required">*</span>';
+            checkoutWrapper.appendChild(checkoutLabel);
+            
+            CheckoutOptionsComponent.create(checkoutWrapper, {
+                checkoutOptions: activeCheckoutOptions,
+                currency: siteCurrency || 'USD',
+                surcharge: surcharge,
+                isEvent: isEvent,
+                calculatedDays: isEvent ? null : 30,
+                baseId: 'formpreview',
+                groupName: 'formpreview-checkout'
+            });
+            
+            body.appendChild(checkoutWrapper);
+        }
+        
+        // Assemble modal
+        modalContainer.appendChild(header);
+        modalContainer.appendChild(body);
+        modal.appendChild(modalContainer);
+        
+        // Close on backdrop click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Close on Escape key
+        function handleEscape(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        }
+        document.addEventListener('keydown', handleEscape);
+        
+        function closeModal() {
+            document.removeEventListener('keydown', handleEscape);
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }
+        
+        // Add to DOM
+        document.body.appendChild(modal);
     }
     
     /* --------------------------------------------------------------------------
