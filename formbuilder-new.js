@@ -8,10 +8,374 @@
 
     var container = null;
     var allIcons = [];
+    var currentSnapshot = null; // Store the loaded snapshot for reference
+    var isLoaded = false;
+    var checkoutOptions = []; // Module-local storage
+    var siteCurrency = ''; // Module-local storage
     
     var editPenSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5L13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175l-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>';
     var moreDotsSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>';
     var dragHandleSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L4 6h8L8 2zM8 14l4-4H4l4 4z"/></svg>';
+    
+    /* --------------------------------------------------------------------------
+       CHANGE NOTIFICATION
+       -------------------------------------------------------------------------- */
+    
+    function notifyChange() {
+        if (!isLoaded) return; // Don't notify during initial load
+        // Notify admin panel that changes have been made
+        if (window.AdminModule && typeof AdminModule.markDirty === 'function') {
+            AdminModule.markDirty();
+        }
+        // Also emit event for other modules
+        if (window.App && typeof App.emit === 'function') {
+            App.emit('formbuilder:changed');
+        }
+    }
+    
+    /* --------------------------------------------------------------------------
+       CAPTURE STATE FROM UI
+       -------------------------------------------------------------------------- */
+    
+    function captureFormbuilderState() {
+        if (!container) return null;
+        
+        var categories = [];
+        var categoryIconPaths = {};
+        var subcategoryIconPaths = {};
+        
+        // Iterate through all category accordions
+        var categoryAccordions = container.querySelectorAll('.formbuilder-accordion');
+        categoryAccordions.forEach(function(accordion, catIndex) {
+            var headerText = accordion.querySelector('.formbuilder-accordion-header-text');
+            var headerImg = accordion.querySelector('.formbuilder-accordion-header-image');
+            var nameInput = accordion.querySelector('.formbuilder-accordion-editpanel-input');
+            var hideSwitch = accordion.querySelector('.formbuilder-accordion-editpanel-more-switch');
+            
+            var catName = nameInput ? nameInput.value.trim() : (headerText ? headerText.textContent.trim() : '');
+            var catKey = catName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            var catId = accordion.dataset.categoryId ? parseInt(accordion.dataset.categoryId, 10) : null;
+            var catHidden = hideSwitch ? hideSwitch.classList.contains('on') : false;
+            var catIconPath = headerImg && headerImg.src ? headerImg.src.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
+            
+            // Store icon path
+            if (catIconPath) {
+                if (catId) {
+                    categoryIconPaths['id:' + catId] = catIconPath;
+                }
+                categoryIconPaths['name:' + catName.toLowerCase()] = catIconPath;
+            }
+            
+            var category = {
+                id: catId,
+                name: catName,
+                key: catKey,
+                hidden: catHidden,
+                subs: [],
+                subIds: {},
+                subHidden: {},
+                subFees: {},
+                subFields: {}
+            };
+            
+            // Iterate through subcategories
+            var subcategoryOptions = accordion.querySelectorAll('.formbuilder-accordion-option');
+            subcategoryOptions.forEach(function(option, subIndex) {
+                var subHeaderText = option.querySelector('.formbuilder-accordion-option-text');
+                var subHeaderImg = option.querySelector('.formbuilder-accordion-option-image');
+                var subNameInput = option.querySelector('.formbuilder-accordion-editpanel-input');
+                var subHideSwitch = option.querySelector('.formbuilder-accordion-editpanel-more-switch');
+                var surchargeInput = option.querySelector('.formbuilder-fee-input');
+                var eventsRadio = option.querySelector('input[type="radio"][value="Events"]');
+                
+                var subName = subNameInput ? subNameInput.value.trim() : (subHeaderText ? subHeaderText.textContent.trim() : '');
+                var subKey = subName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                var subId = option.dataset.subcategoryId ? parseInt(option.dataset.subcategoryId, 10) : null;
+                var subHidden = subHideSwitch ? subHideSwitch.classList.contains('on') : false;
+                var subIconPath = subHeaderImg && subHeaderImg.src ? subHeaderImg.src.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
+                
+                // Store subcategory icon path
+                if (subIconPath) {
+                    if (subId) {
+                        subcategoryIconPaths['id:' + subId] = subIconPath;
+                    }
+                    subcategoryIconPaths['name:' + subName.toLowerCase()] = subIconPath;
+                }
+                
+                category.subs.push(subName);
+                if (subId) {
+                    category.subIds[subName] = subId;
+                }
+                category.subHidden[subName] = subHidden;
+                
+                // Fee data
+                var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+                var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
+                category.subFees[subName] = {
+                    checkout_surcharge: surchargeValue,
+                    subcategory_type: subcategoryType
+                };
+                
+                // Fields
+                var fields = [];
+                var fieldsContainer = option.querySelector('.formbuilder-fields-container');
+                if (fieldsContainer) {
+                    var fieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+                    fieldWrappers.forEach(function(wrapper, fieldIndex) {
+                        var fieldsetId = wrapper.dataset.fieldsetId;
+                        var fieldNameSpan = wrapper.querySelector('.formbuilder-field-name');
+                        var requiredCheckbox = wrapper.querySelector('.formbuilder-field-required-checkbox');
+                        var locationRepeatSwitch = wrapper.querySelector('.formbuilder-field-switch');
+                        
+                        var fieldName = fieldNameSpan ? fieldNameSpan.textContent.trim() : '';
+                        var isRequired = requiredCheckbox ? requiredCheckbox.checked : false;
+                        
+                        // Find matching fieldset from snapshot
+                        var fieldsetDef = null;
+                        if (currentSnapshot && currentSnapshot.fieldsets) {
+                            fieldsetDef = currentSnapshot.fieldsets.find(function(fs) {
+                                return fs.id == fieldsetId || fs.key === fieldsetId;
+                            });
+                        }
+                        
+                        var field = {
+                            fieldsetKey: fieldsetDef ? fieldsetDef.key : fieldsetId,
+                            name: fieldName,
+                            required: isRequired,
+                            input_type: fieldsetDef ? fieldsetDef.key : fieldsetId
+                        };
+                        
+                        // Check for editable field customizations
+                        var customNameInput = wrapper.querySelector('.formbuilder-field-input[placeholder="Field name"]');
+                        var customPlaceholderInput = wrapper.querySelector('.formbuilder-field-input[placeholder="Placeholder text"]');
+                        var customTooltipInput = wrapper.querySelector('.formbuilder-field-input[placeholder="Tooltip text"]');
+                        
+                        if (customNameInput && customNameInput.value.trim()) {
+                            field.name = customNameInput.value.trim();
+                        }
+                        if (customPlaceholderInput && customPlaceholderInput.value.trim()) {
+                            field.customPlaceholder = customPlaceholderInput.value.trim();
+                        }
+                        if (customTooltipInput && customTooltipInput.value.trim()) {
+                            field.customTooltip = customTooltipInput.value.trim();
+                        }
+                        
+                        // Collect options for dropdown/radio fields
+                        var optionsContainer = wrapper.querySelector('.formbuilder-field-options');
+                        if (optionsContainer) {
+                            var optionInputs = optionsContainer.querySelectorAll('.formbuilder-field-option-input');
+                            var options = [];
+                            optionInputs.forEach(function(input) {
+                                if (input.value.trim()) {
+                                    options.push(input.value.trim());
+                                }
+                            });
+                            if (options.length > 0) {
+                                field.options = options;
+                            }
+                        }
+                        
+                        fields.push(field);
+                    });
+                }
+                
+                category.subFields[subName] = fields;
+            });
+            
+            categories.push(category);
+        });
+        
+        return {
+            categories: categories,
+            categoryIconPaths: categoryIconPaths,
+            subcategoryIconPaths: subcategoryIconPaths,
+            fieldsets: currentSnapshot ? currentSnapshot.fieldsets : [],
+            checkoutOptions: checkoutOptions,
+            currencies: currentSnapshot ? currentSnapshot.currencies : []
+        };
+    }
+    
+    /* --------------------------------------------------------------------------
+       SAVE TO DATABASE
+       -------------------------------------------------------------------------- */
+    
+    function saveFormbuilder() {
+        var payload = captureFormbuilderState();
+        if (!payload) {
+            console.error('[Formbuilder] Failed to capture state');
+            return Promise.reject(new Error('Failed to capture formbuilder state'));
+        }
+        
+        console.log('[Formbuilder] Saving...', payload);
+        
+        return fetch('/gateway.php?action=save-form', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(result) {
+            if (!result.success) {
+                throw new Error(result.message || 'Save failed');
+            }
+            console.log('[Formbuilder] Saved successfully', result);
+            
+            // Update IDs for newly created items
+            if (result.new_category_ids && result.new_category_ids.length > 0) {
+                updateCategoryIds(result.new_category_ids);
+            }
+            if (result.new_subcategory_ids && result.new_subcategory_ids.length > 0) {
+                updateSubcategoryIds(result.new_subcategory_ids);
+            }
+            
+            return result;
+        });
+    }
+    
+    function updateCategoryIds(newIds) {
+        if (!container) return;
+        var accordions = container.querySelectorAll('.formbuilder-accordion:not([data-category-id])');
+        var idIndex = 0;
+        accordions.forEach(function(accordion) {
+            if (idIndex < newIds.length) {
+                accordion.dataset.categoryId = newIds[idIndex];
+                idIndex++;
+            }
+        });
+    }
+    
+    function updateSubcategoryIds(newIds) {
+        if (!container) return;
+        var options = container.querySelectorAll('.formbuilder-accordion-option:not([data-subcategory-id])');
+        var idIndex = 0;
+        options.forEach(function(option) {
+            if (idIndex < newIds.length) {
+                option.dataset.subcategoryId = newIds[idIndex];
+                idIndex++;
+            }
+        });
+    }
+    
+    /* --------------------------------------------------------------------------
+       ADD CATEGORY
+       -------------------------------------------------------------------------- */
+    
+    function addCategory() {
+        if (!container) return;
+        
+        var newCatName = 'New Category';
+        var catIndex = container.querySelectorAll('.formbuilder-accordion').length;
+        
+        // Create a minimal category object
+        var newCat = {
+            name: newCatName,
+            subs: []
+        };
+        
+        // Build the accordion using the same function as renderForm
+        var accordion = buildCategoryAccordion(newCat, {}, {}, []);
+        
+        // Insert before the Add Category button
+        var addCatBtn = container.querySelector('.formbuilder-add-category');
+        if (addCatBtn) {
+            container.insertBefore(accordion, addCatBtn);
+        } else {
+            container.appendChild(accordion);
+        }
+        
+        // Open it for editing
+        accordion.classList.add('formbuilder-accordion--open');
+        accordion.classList.add('formbuilder-accordion--editing');
+        
+        // Focus the name input
+        var nameInput = accordion.querySelector('.formbuilder-accordion-editpanel-input');
+        if (nameInput) {
+            nameInput.select();
+            nameInput.focus();
+        }
+        
+        notifyChange();
+    }
+    
+    /* --------------------------------------------------------------------------
+       ADD SUBCATEGORY
+       -------------------------------------------------------------------------- */
+    
+    function addSubcategory(categoryAccordion) {
+        if (!categoryAccordion) return;
+        
+        var body = categoryAccordion.querySelector('.formbuilder-accordion-body');
+        if (!body) return;
+        
+        var newSubName = 'New Subcategory';
+        
+        // Get category info
+        var catNameInput = categoryAccordion.querySelector('.formbuilder-accordion-editpanel-input');
+        var catName = catNameInput ? catNameInput.value.trim() : 'Category';
+        
+        var cat = {
+            name: catName,
+            subFees: {}
+        };
+        
+        // Build the subcategory option
+        var option = buildSubcategoryOption(cat, newSubName, {}, currentSnapshot ? currentSnapshot.fieldsets : [], body);
+        
+        // Insert before the Add Subcategory button
+        var addSubBtn = body.querySelector('.formbuilder-add-button');
+        if (addSubBtn) {
+            body.insertBefore(option, addSubBtn);
+        } else {
+            body.appendChild(option);
+        }
+        
+        // Open it for editing
+        option.classList.add('formbuilder-accordion-option--open');
+        option.classList.add('formbuilder-accordion-option--editing');
+        
+        // Focus the name input
+        var nameInput = option.querySelector('.formbuilder-accordion-editpanel-input');
+        if (nameInput) {
+            nameInput.select();
+            nameInput.focus();
+        }
+        
+        notifyChange();
+    }
+    
+    /* --------------------------------------------------------------------------
+       DELETE CATEGORY
+       -------------------------------------------------------------------------- */
+    
+    function deleteCategory(categoryAccordion) {
+        if (!categoryAccordion) return;
+        
+        var catName = categoryAccordion.querySelector('.formbuilder-accordion-header-text');
+        var name = catName ? catName.textContent.trim() : 'this category';
+        
+        if (confirm('Delete "' + name + '" and all its subcategories?')) {
+            categoryAccordion.remove();
+            notifyChange();
+        }
+    }
+    
+    /* --------------------------------------------------------------------------
+       DELETE SUBCATEGORY
+       -------------------------------------------------------------------------- */
+    
+    function deleteSubcategory(subcategoryOption) {
+        if (!subcategoryOption) return;
+        
+        var subName = subcategoryOption.querySelector('.formbuilder-accordion-option-text');
+        var name = subName ? subName.textContent.trim() : 'this subcategory';
+        
+        if (confirm('Delete "' + name + '"?')) {
+            subcategoryOption.remove();
+            notifyChange();
+        }
+    }
     
     function closeAllEditPanels() {
         if (!container) return;
@@ -152,10 +516,11 @@
         fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.success) {
-                    window.CHECKOUT_OPTIONS = res.checkout_options || [];
-                    window.SITE_CURRENCY = (res.settings && res.settings.site_currency) || '$';
+                if (!res.success) {
+                    throw new Error('Failed to load admin settings');
                 }
+                checkoutOptions = res.checkout_options;
+                siteCurrency = res.settings && res.settings.site_currency;
                 // Then fetch icons
                 return fetch('/gateway.php?action=list-icons&folder=assets/category-icons/');
             })
@@ -175,154 +540,16 @@
         if (!container) return;
         container.innerHTML = '';
         
+        // Store snapshot for reference
+        currentSnapshot = snapshot;
+        
         var categories = snapshot.categories || [];
         var categoryIconPaths = snapshot.categoryIconPaths || {};
         var subcategoryIconPaths = snapshot.subcategoryIconPaths || {};
         var fieldsets = snapshot.fieldsets || [];
         
         categories.forEach(function(cat) {
-            var accordion = document.createElement('div');
-            accordion.className = 'formbuilder-accordion formbuilder-accordion--open';
-            
-            var catIconSrc = categoryIconPaths[cat.name] || '';
-            
-            // Header
-            var header = document.createElement('div');
-            header.className = 'formbuilder-accordion-header';
-            
-            var headerImg = document.createElement('img');
-            headerImg.className = 'formbuilder-accordion-header-image';
-            headerImg.src = catIconSrc;
-            
-            var headerText = document.createElement('span');
-            headerText.className = 'formbuilder-accordion-header-text';
-            headerText.textContent = cat.name;
-            
-            var headerArrow = document.createElement('span');
-            headerArrow.className = 'formbuilder-accordion-header-arrow';
-            headerArrow.textContent = '▼';
-            
-            var headerEditArea = document.createElement('div');
-            headerEditArea.className = 'formbuilder-accordion-header-editarea';
-            var headerEdit = document.createElement('div');
-            headerEdit.className = 'formbuilder-accordion-header-edit';
-            headerEdit.innerHTML = editPenSvg;
-            headerEditArea.appendChild(headerEdit);
-            
-            var headerDrag = document.createElement('div');
-            headerDrag.className = 'formbuilder-accordion-header-drag';
-            headerDrag.innerHTML = dragHandleSvg;
-            
-            header.appendChild(headerImg);
-            header.appendChild(headerText);
-            header.appendChild(headerArrow);
-            header.appendChild(headerDrag);
-            header.appendChild(headerEditArea);
-            
-            // Category drag and drop
-            accordion.draggable = true;
-            accordion.addEventListener('dragstart', function(e) {
-                e.dataTransfer.effectAllowed = 'move';
-                accordion.classList.add('dragging');
-            });
-            accordion.addEventListener('dragend', function() {
-                accordion.classList.remove('dragging');
-            });
-            accordion.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                var dragging = container.querySelector('.formbuilder-accordion.dragging');
-                if (dragging && dragging !== accordion) {
-                    var rect = accordion.getBoundingClientRect();
-                    var midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) {
-                        accordion.parentNode.insertBefore(dragging, accordion);
-                    } else {
-                        accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
-                    }
-                }
-            });
-            
-            // Edit panel
-            var editPanel = document.createElement('div');
-            editPanel.className = 'formbuilder-accordion-editpanel';
-            
-            var nameRow = document.createElement('div');
-            nameRow.className = 'formbuilder-accordion-editpanel-row';
-            
-            var nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.className = 'formbuilder-accordion-editpanel-input';
-            nameInput.value = cat.name;
-            nameInput.oninput = function() {
-                headerText.textContent = nameInput.value || cat.name;
-            };
-            
-            var moreBtn = document.createElement('div');
-            moreBtn.className = 'formbuilder-accordion-editpanel-more';
-            moreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
-            
-            moreBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var wasOpen = moreBtn.classList.contains('open');
-                closeAllMenus();
-                if (!wasOpen) moreBtn.classList.add('open');
-            });
-            
-            var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
-            hideSwitch.addEventListener('click', function(e) {
-                e.stopPropagation();
-                hideSwitch.classList.toggle('on');
-            });
-            
-            nameRow.appendChild(nameInput);
-            nameRow.appendChild(moreBtn);
-            
-            var iconPicker = buildIconPicker(catIconSrc, function(newIcon) {
-                headerImg.src = newIcon;
-            });
-            
-            editPanel.appendChild(nameRow);
-            editPanel.appendChild(iconPicker);
-            
-            // Body
-            var body = document.createElement('div');
-            body.className = 'formbuilder-accordion-body';
-            
-            var subs = cat.subs || [];
-            subs.forEach(function(subName) {
-                var option = buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, body);
-                body.appendChild(option);
-            });
-            
-            // Add Subcategory button
-            var addSubBtn = document.createElement('div');
-            addSubBtn.className = 'formbuilder-add-button';
-            addSubBtn.textContent = '+ Add Subcategory';
-            body.appendChild(addSubBtn);
-            
-            accordion.appendChild(header);
-            accordion.appendChild(editPanel);
-            accordion.appendChild(body);
-            
-            // Header edit area click
-            headerEditArea.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
-                closeAllEditPanels();
-                if (!isOpen) {
-                    accordion.classList.add('formbuilder-accordion--editing');
-                }
-            });
-            
-            // Header click (except edit area) expands/collapses
-            header.addEventListener('click', function(e) {
-                if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
-                if (!accordion.classList.contains('formbuilder-accordion--editing')) {
-                    closeAllEditPanels();
-                }
-                accordion.classList.toggle('formbuilder-accordion--open');
-            });
-            
+            var accordion = buildCategoryAccordion(cat, categoryIconPaths, subcategoryIconPaths, fieldsets);
             container.appendChild(accordion);
         });
         
@@ -330,14 +557,211 @@
         var addCatBtn = document.createElement('div');
         addCatBtn.className = 'formbuilder-add-button formbuilder-add-category';
         addCatBtn.textContent = '+ Add Category';
+        addCatBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            addCategory();
+        });
         container.appendChild(addCatBtn);
+        
+        // Mark as loaded after rendering
+        isLoaded = true;
+    }
+    
+    function buildCategoryAccordion(cat, categoryIconPaths, subcategoryIconPaths, fieldsets) {
+        var accordion = document.createElement('div');
+        accordion.className = 'formbuilder-accordion formbuilder-accordion--open';
+        
+        // Store category ID if exists
+        if (cat.id) {
+            accordion.dataset.categoryId = cat.id;
+        }
+        
+        var catIconSrc = '';
+        if (cat.id && categoryIconPaths['id:' + cat.id]) {
+            catIconSrc = categoryIconPaths['id:' + cat.id];
+        } else if (categoryIconPaths['name:' + (cat.name || '').toLowerCase()]) {
+            catIconSrc = categoryIconPaths['name:' + (cat.name || '').toLowerCase()];
+        } else if (categoryIconPaths[cat.name]) {
+            catIconSrc = categoryIconPaths[cat.name];
+        }
+        
+        // Header
+        var header = document.createElement('div');
+        header.className = 'formbuilder-accordion-header';
+        
+        var headerImg = document.createElement('img');
+        headerImg.className = 'formbuilder-accordion-header-image';
+        headerImg.src = catIconSrc;
+        
+        var headerText = document.createElement('span');
+        headerText.className = 'formbuilder-accordion-header-text';
+        headerText.textContent = cat.name || 'New Category';
+        
+        var headerArrow = document.createElement('span');
+        headerArrow.className = 'formbuilder-accordion-header-arrow';
+        headerArrow.textContent = '▼';
+        
+        var headerEditArea = document.createElement('div');
+        headerEditArea.className = 'formbuilder-accordion-header-editarea';
+        var headerEdit = document.createElement('div');
+        headerEdit.className = 'formbuilder-accordion-header-edit';
+        headerEdit.innerHTML = editPenSvg;
+        headerEditArea.appendChild(headerEdit);
+        
+        var headerDrag = document.createElement('div');
+        headerDrag.className = 'formbuilder-accordion-header-drag';
+        headerDrag.innerHTML = dragHandleSvg;
+        
+        header.appendChild(headerImg);
+        header.appendChild(headerText);
+        header.appendChild(headerArrow);
+        header.appendChild(headerDrag);
+        header.appendChild(headerEditArea);
+        
+        // Category drag and drop
+        accordion.draggable = true;
+        accordion.addEventListener('dragstart', function(e) {
+            e.dataTransfer.effectAllowed = 'move';
+            accordion.classList.add('dragging');
+        });
+        accordion.addEventListener('dragend', function() {
+            accordion.classList.remove('dragging');
+            notifyChange(); // Notify on reorder
+        });
+        accordion.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            var dragging = container.querySelector('.formbuilder-accordion.dragging');
+            if (dragging && dragging !== accordion) {
+                var rect = accordion.getBoundingClientRect();
+                var midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
+                    accordion.parentNode.insertBefore(dragging, accordion);
+                } else {
+                    accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
+                }
+            }
+        });
+        
+        // Edit panel
+        var editPanel = document.createElement('div');
+        editPanel.className = 'formbuilder-accordion-editpanel';
+        
+        var nameRow = document.createElement('div');
+        nameRow.className = 'formbuilder-accordion-editpanel-row';
+        
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'formbuilder-accordion-editpanel-input';
+        nameInput.value = cat.name || '';
+        nameInput.oninput = function() {
+            headerText.textContent = nameInput.value || 'New Category';
+            notifyChange();
+        };
+        
+        var moreBtn = document.createElement('div');
+        moreBtn.className = 'formbuilder-accordion-editpanel-more';
+        moreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
+        
+        moreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var wasOpen = moreBtn.classList.contains('open');
+            closeAllMenus();
+            if (!wasOpen) moreBtn.classList.add('open');
+        });
+        
+        var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
+        hideSwitch.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hideSwitch.classList.toggle('on');
+            notifyChange();
+        });
+        
+        // Delete category button
+        var deleteCatBtn = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-delete');
+        deleteCatBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            deleteCategory(accordion);
+        });
+        
+        nameRow.appendChild(nameInput);
+        nameRow.appendChild(moreBtn);
+        
+        var iconPicker = buildIconPicker(catIconSrc, function(newIcon) {
+            headerImg.src = newIcon;
+            notifyChange();
+        });
+        
+        editPanel.appendChild(nameRow);
+        editPanel.appendChild(iconPicker);
+        
+        // Body
+        var body = document.createElement('div');
+        body.className = 'formbuilder-accordion-body';
+        
+        var subs = cat.subs || [];
+        subs.forEach(function(subName) {
+            var option = buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, body);
+            body.appendChild(option);
+        });
+        
+        // Add Subcategory button
+        var addSubBtn = document.createElement('div');
+        addSubBtn.className = 'formbuilder-add-button';
+        addSubBtn.textContent = '+ Add Subcategory';
+        addSubBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            addSubcategory(accordion);
+        });
+        body.appendChild(addSubBtn);
+        
+        accordion.appendChild(header);
+        accordion.appendChild(editPanel);
+        accordion.appendChild(body);
+        
+        // Header edit area click
+        headerEditArea.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
+            closeAllEditPanels();
+            if (!isOpen) {
+                accordion.classList.add('formbuilder-accordion--editing');
+            }
+        });
+        
+        // Header click (except edit area) expands/collapses
+        header.addEventListener('click', function(e) {
+            if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
+            if (!accordion.classList.contains('formbuilder-accordion--editing')) {
+                closeAllEditPanels();
+            }
+            accordion.classList.toggle('formbuilder-accordion--open');
+        });
+        
+        return accordion;
     }
     
     function buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, parentBody) {
         var option = document.createElement('div');
         option.className = 'formbuilder-accordion-option';
         
-        var subIconSrc = subcategoryIconPaths[subName] || '';
+        // Get subcategory ID if exists
+        var subId = cat.subIds && cat.subIds[subName];
+        if (subId) {
+            option.dataset.subcategoryId = subId;
+        }
+        
+        // Get subcategory icon
+        var subIconSrc = '';
+        if (subId && subcategoryIconPaths['id:' + subId]) {
+            subIconSrc = subcategoryIconPaths['id:' + subId];
+        } else if (subcategoryIconPaths['name:' + (subName || '').toLowerCase()]) {
+            subIconSrc = subcategoryIconPaths['name:' + (subName || '').toLowerCase()];
+        } else if (subcategoryIconPaths[subName]) {
+            subIconSrc = subcategoryIconPaths[subName];
+        }
+        
+        // Check if hidden
+        var subHidden = cat.subHidden && cat.subHidden[subName];
         
         var optHeader = document.createElement('div');
         optHeader.className = 'formbuilder-accordion-option-header';
@@ -348,7 +772,7 @@
         
         var optText = document.createElement('span');
         optText.className = 'formbuilder-accordion-option-text';
-        optText.textContent = subName;
+        optText.textContent = subName || 'New Subcategory';
         
         var optArrow = document.createElement('span');
         optArrow.className = 'formbuilder-accordion-option-arrow';
@@ -380,6 +804,7 @@
         });
         option.addEventListener('dragend', function() {
             option.classList.remove('dragging');
+            notifyChange(); // Notify on reorder
         });
         option.addEventListener('dragover', function(e) {
             e.preventDefault();
@@ -406,14 +831,15 @@
         var subNameInput = document.createElement('input');
         subNameInput.type = 'text';
         subNameInput.className = 'formbuilder-accordion-editpanel-input';
-        subNameInput.value = subName;
+        subNameInput.value = subName || '';
         subNameInput.oninput = function() {
-            optText.textContent = subNameInput.value || subName;
+            optText.textContent = subNameInput.value || 'New Subcategory';
+            notifyChange();
         };
         
         var subMoreBtn = document.createElement('div');
         subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
-        subMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
+        subMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
         
         subMoreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -426,6 +852,14 @@
         subHideSwitch.addEventListener('click', function(e) {
             e.stopPropagation();
             subHideSwitch.classList.toggle('on');
+            notifyChange();
+        });
+        
+        // Delete subcategory button
+        var deleteSubBtn = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-delete');
+        deleteSubBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            deleteSubcategory(option);
         });
         
         subNameRow.appendChild(subNameInput);
@@ -433,6 +867,7 @@
         
         var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
             optImg.src = newIcon;
+            notifyChange();
         });
         
         subEditPanel.appendChild(subNameRow);
@@ -481,6 +916,7 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
+                notifyChange();
             }
         });
         
@@ -489,6 +925,7 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'General';
+                notifyChange();
             }
         });
         
@@ -530,6 +967,7 @@
             if (!cat.subFees[subName]) cat.subFees[subName] = {};
             cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
             if (option._renderCheckoutOptions) option._renderCheckoutOptions();
+            notifyChange();
         });
         
         surchargeInput.addEventListener('blur', function() {
@@ -565,7 +1003,7 @@
         
         function renderCheckoutOptions() {
             checkoutList.innerHTML = '';
-            var allCheckoutOptions = (window.CHECKOUT_OPTIONS || []).filter(function(opt) {
+            var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
                 return opt.is_active !== false && opt.is_active !== 0;
             });
             
@@ -574,7 +1012,7 @@
                 surcharge = parseFloat(cat.subFees[subName].checkout_surcharge) || 0;
             }
             
-            if (allCheckoutOptions.length === 0) {
+            if (activeCheckoutOptions.length === 0) {
                 var emptyMsg = document.createElement('div');
                 emptyMsg.className = 'formbuilder-checkout-empty';
                 emptyMsg.textContent = 'No enabled checkout options available.';
@@ -582,9 +1020,9 @@
                 return;
             }
             
-            var siteCurrency = window.SITE_CURRENCY || '$';
+            var currency = siteCurrency;
             
-            allCheckoutOptions.forEach(function(opt) {
+            activeCheckoutOptions.forEach(function(opt) {
                 var card = document.createElement('div');
                 card.className = 'formbuilder-checkout-card';
                 
@@ -616,8 +1054,8 @@
                 
                 var prices = document.createElement('div');
                 prices.className = 'formbuilder-checkout-prices';
-                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + siteCurrency + price30.toFixed(2) + '</span></div>' +
-                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + siteCurrency + price365.toFixed(2) + '</span></div>';
+                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + price30.toFixed(2) + '</span></div>' +
+                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + price365.toFixed(2) + '</span></div>';
                 
                 var calculator = document.createElement('div');
                 calculator.className = 'formbuilder-checkout-calculator';
@@ -634,16 +1072,16 @@
                 
                 var calcTotal = document.createElement('span');
                 calcTotal.className = 'formbuilder-checkout-calc-total';
-                calcTotal.textContent = siteCurrency + '0.00';
+                calcTotal.textContent = currency + '0.00';
                 
                 calcInput.addEventListener('input', function() {
                     var days = parseFloat(calcInput.value) || 0;
                     if (days <= 0) {
-                        calcTotal.textContent = siteCurrency + '0.00';
+                        calcTotal.textContent = currency + '0.00';
                         return;
                     }
                     var total = calculatePrice(days);
-                    calcTotal.textContent = siteCurrency + total.toFixed(2);
+                    calcTotal.textContent = currency + total.toFixed(2);
                 });
                 
                 calculator.appendChild(calcLabel);
@@ -760,6 +1198,7 @@
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
                 }
+                notifyChange();
             };
             
             requiredLabel.appendChild(requiredCheckbox);
@@ -783,6 +1222,7 @@
                 addedFieldsets[fsId] = false;
                 var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
                 if (menuOpt) menuOpt.classList.remove('disabled');
+                notifyChange();
             });
             
             editRow.appendChild(requiredLabel);
@@ -830,6 +1270,7 @@
                     autofillRepeatLabel.classList.add('disabled');
                     autofillRepeatSwitch.classList.add('disabled');
                 }
+                notifyChange();
             });
             
             mustRepeatSwitch.addEventListener('click', function(e) {
@@ -841,6 +1282,7 @@
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--must-repeat');
                 }
+                notifyChange();
             });
             
             autofillRepeatSwitch.addEventListener('click', function(e) {
@@ -852,6 +1294,7 @@
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
                 }
+                notifyChange();
             });
             
             switchRow.appendChild(locationRepeatLabel);
@@ -1081,35 +1524,61 @@
         return option;
     }
     
+    var isInitialized = false;
+    
     function init() {
+        if (isInitialized) return;
+        
         container = document.getElementById('admin-formbuilder');
         if (!container) return;
         
         bindDocumentListeners();
         loadFormData();
+        isInitialized = true;
     }
     
-    // Initialize when DOM ready or when admin panel opens
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-    
-    // Also listen for admin panel open to refresh data
+    // Listen for admin panel open - only load data when panel actually opens
     if (window.App && App.on) {
         App.on('admin:opened', function() {
-            if (container) {
-                loadFormData();
+            if (!isInitialized) {
+                init();
             }
         });
     }
     
-    // Register module
+    // Also support direct init call from admin module
+    document.addEventListener('formbuilder:init', function() {
+        if (!isInitialized) {
+            init();
+        }
+    });
+    
+    /* --------------------------------------------------------------------------
+       DISCARD CHANGES - Restore from saved snapshot
+       -------------------------------------------------------------------------- */
+    
+    function discardChanges() {
+        if (currentSnapshot) {
+            isLoaded = false; // Prevent notifyChange during restore
+            renderForm(currentSnapshot);
+        }
+    }
+    
+    /* --------------------------------------------------------------------------
+       PUBLIC API
+       -------------------------------------------------------------------------- */
+    
+    window.FormbuilderModule = {
+        init: init,
+        refresh: loadFormData,
+        save: saveFormbuilder,
+        discard: discardChanges,
+        capture: captureFormbuilderState,
+        getSnapshot: function() { return currentSnapshot; }
+    };
+    
+    // Register module with App
     if (window.App && App.registerModule) {
-        App.registerModule('formbuilder', {
-            init: init,
-            refresh: loadFormData
-        });
+        App.registerModule('formbuilder', window.FormbuilderModule);
     }
 })();

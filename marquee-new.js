@@ -492,3 +492,52 @@ const MarqueeModule = (function() {
 
 // Register with App
 App.registerModule('marquee', MarqueeModule);
+
+// Lazy initialization - only init when posts are loaded and zoom meets threshold
+(function() {
+    var isInitialized = false;
+    
+    function getMinZoom() {
+        return App.getConfig('postsLoadZoom');
+    }
+    
+    function lazyInit() {
+        if (isInitialized) return;
+        MarqueeModule.init();
+        isInitialized = true;
+    }
+    
+    function checkZoomAndShow() {
+        var mapModule = App.getModule('map');
+        if (mapModule && typeof mapModule.getZoom === 'function') {
+            var zoom = mapModule.getZoom();
+            if (zoom > getMinZoom()) {
+                MarqueeModule.show();
+            } else {
+                MarqueeModule.hide();
+            }
+        }
+    }
+    
+    // Listen for posts being loaded/filtered
+    if (window.App && App.on) {
+        App.on('filter:applied', function(data) {
+            if (data && Array.isArray(data.marqueePosts) && data.marqueePosts.length > 0) {
+                lazyInit();
+                checkZoomAndShow();
+            }
+        });
+        
+        // Listen for zoom changes to show/hide based on zoom level
+        App.on('map:boundsChanged', function(data) {
+            if (!isInitialized) return;
+            if (data && data.zoom !== undefined) {
+                if (data.zoom > getMinZoom()) {
+                    MarqueeModule.show();
+                } else {
+                    MarqueeModule.hide();
+                }
+            }
+        });
+    }
+})();

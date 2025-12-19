@@ -89,6 +89,23 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     CONFIG
+     Centralized configuration - change values here, not in individual modules
+     -------------------------------------------------------------------------- */
+  const config = {
+    postsLoadZoom: 8      // Posts and marquee only load when map zoom > this value
+  };
+
+  function getConfig(key) {
+    return config[key];
+  }
+
+  function setConfig(key, value) {
+    config[key] = value;
+  }
+
+
+  /* --------------------------------------------------------------------------
      SHARED STATE
      Things multiple modules need access to
      -------------------------------------------------------------------------- */
@@ -216,11 +233,7 @@ const App = (function() {
       'header',
       'filter', 
       'map',
-      'post',
-      'admin',
-      'member',
-      'marquee',
-      'components'
+      'post'
     ];
 
     initOrder.forEach(name => {
@@ -315,6 +328,10 @@ const App = (function() {
     
     // API
     api,
+    
+    // Config
+    getConfig,
+    setConfig,
     
     // State
     getState,

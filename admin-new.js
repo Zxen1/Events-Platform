@@ -151,16 +151,7 @@ const AdminModule = (function() {
             });
         }
         
-        // Listen for header button click
-        App.on('panel:toggle', function(data) {
-            if (data.panel === 'admin') {
-                if (data.show) {
-                    openPanel();
-                } else {
-                    closePanel();
-                }
-            }
-        });
+        // Panel toggle is handled by lazy init wrapper outside module
         
         // Listen for member state changes (to know if admin is logged in)
         App.on('member:stateChanged', function(data) {
@@ -234,9 +225,14 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
     
     function markDirty() {
-        if (isDirty) return;
+        if (isDirty) {
+            // Already dirty, but still schedule autosave for new changes
+            scheduleAutoSave();
+            return;
+        }
         isDirty = true;
         updateButtonStates();
+        scheduleAutoSave();
     }
     
     function markSaved() {
@@ -270,24 +266,73 @@ const AdminModule = (function() {
        SAVE/DISCARD
        -------------------------------------------------------------------------- */
     
+    var autoSaveTimer = null;
+    
+    function isAutoSaveEnabled() {
+        return autosaveCheckbox && autosaveCheckbox.checked;
+    }
+    
     function runSave(options) {
         options = options || {};
         
-        // TODO: Implement actual save logic
-        console.log('[Admin] Save triggered');
-        
-        markSaved();
-        
-        if (options.closeAfter) {
-            closePanel();
+        // Clear any pending autosave
+        if (autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = null;
         }
+        
+        // Save formbuilder data
+        var savePromise = Promise.resolve();
+        
+        if (window.FormbuilderModule && typeof FormbuilderModule.save === 'function') {
+            savePromise = FormbuilderModule.save();
+        }
+        
+        savePromise
+            .then(function() {
+                console.log('[Admin] Saved successfully');
+                markSaved();
+                
+                if (options.closeAfter) {
+                    closePanel();
+                }
+            })
+            .catch(function(err) {
+                console.error('[Admin] Save failed:', err);
+            });
     }
     
     function discardChanges() {
-        // TODO: Implement actual discard logic
-        console.log('[Admin] Discard triggered');
+        // Clear any pending autosave
+        if (autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = null;
+        }
         
+        // Discard formbuilder changes
+        if (window.FormbuilderModule && typeof FormbuilderModule.discard === 'function') {
+            FormbuilderModule.discard();
+        }
+        
+        console.log('[Admin] Changes discarded');
         markSaved();
+    }
+    
+    function scheduleAutoSave() {
+        if (!isAutoSaveEnabled()) return;
+        if (!isDirty) return;
+        
+        // Clear existing timer
+        if (autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+        }
+        
+        // Schedule autosave after 800ms of inactivity
+        autoSaveTimer = setTimeout(function() {
+            if (isDirty && isAutoSaveEnabled()) {
+                runSave({ closeAfter: false });
+            }
+        }, 800);
     }
 
     /* --------------------------------------------------------------------------
@@ -302,10 +347,34 @@ const AdminModule = (function() {
         markDirty: markDirty,
         markSaved: markSaved,
         runSave: runSave,
-        isDirty: function() { return isDirty; }
+        discardChanges: discardChanges,
+        isDirty: function() { return isDirty; },
+        isAutoSaveEnabled: isAutoSaveEnabled
     };
 
 })();
 
 // Register module with App
 App.registerModule('admin', AdminModule);
+
+// Lazy initialization - only init when panel is first opened
+(function() {
+    var isInitialized = false;
+    
+    // Listen for panel toggle to init on first open
+    if (window.App && App.on) {
+        App.on('panel:toggle', function(data) {
+            if (data.panel === 'admin' && data.show) {
+                if (!isInitialized) {
+                    AdminModule.init();
+                    isInitialized = true;
+                }
+                AdminModule.openPanel();
+            } else if (data.panel === 'admin' && !data.show) {
+                if (isInitialized) {
+                    AdminModule.closePanel();
+                }
+            }
+        });
+    }
+})();

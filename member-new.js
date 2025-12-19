@@ -217,16 +217,7 @@ const MemberModule = (function() {
             });
         }
         
-        // Listen for header button click
-        App.on('panel:toggle', function(data) {
-            if (data.panel === 'member') {
-                if (data.show) {
-                    openPanel();
-                } else {
-                    closePanel();
-                }
-            }
-        });
+        // Panel toggle is handled by lazy init wrapper outside module
     }
 
     /* --------------------------------------------------------------------------
@@ -1573,3 +1564,25 @@ const MemberModule = (function() {
 
 // Register module with App
 App.registerModule('member', MemberModule);
+
+// Lazy initialization - only init when panel is first opened
+(function() {
+    var isInitialized = false;
+    
+    // Listen for panel toggle to init on first open
+    if (window.App && App.on) {
+        App.on('panel:toggle', function(data) {
+            if (data.panel === 'member' && data.show) {
+                if (!isInitialized) {
+                    MemberModule.init();
+                    isInitialized = true;
+                }
+                MemberModule.openPanel();
+            } else if (data.panel === 'member' && !data.show) {
+                if (isInitialized) {
+                    MemberModule.closePanel();
+                }
+            }
+        });
+    }
+})();
