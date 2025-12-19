@@ -247,6 +247,11 @@ const AdminModule = (function() {
     function markSaved() {
         isDirty = false;
         updateButtonStates();
+        // Clear any pending autosave since there's nothing to save
+        if (autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = null;
+        }
     }
     
     function updateButtonStates() {
@@ -276,19 +281,44 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
     
     var autoSaveTimer = null;
+    var isSaving = false;
     
     function isAutoSaveEnabled() {
         return autosaveCheckbox && autosaveCheckbox.checked;
     }
     
+    function hasActualChanges() {
+        // Ask formbuilder if there are real changes vs saved snapshot
+        if (window.FormbuilderModule && typeof FormbuilderModule.hasChanges === 'function') {
+            return FormbuilderModule.hasChanges();
+        }
+        // Fallback to dirty flag if formbuilder method unavailable
+        return isDirty;
+    }
+    
     function runSave(options) {
         options = options || {};
+        
+        // Prevent concurrent saves
+        if (isSaving) {
+            console.log('[Admin] Save already in progress, skipping');
+            return;
+        }
         
         // Clear any pending autosave
         if (autoSaveTimer) {
             clearTimeout(autoSaveTimer);
             autoSaveTimer = null;
         }
+        
+        // Final check: are there actual changes to save?
+        if (!hasActualChanges()) {
+            console.log('[Admin] No actual changes to save');
+            markSaved();
+            return;
+        }
+        
+        isSaving = true;
         
         // Save formbuilder data
         var savePromise = Promise.resolve();
@@ -300,7 +330,19 @@ const AdminModule = (function() {
         savePromise
             .then(function() {
                 console.log('[Admin] Saved successfully');
-                markSaved();
+                isSaving = false;
+                
+                // Re-check if new changes occurred during save
+                if (hasActualChanges()) {
+                    console.log('[Admin] New changes detected during save, staying dirty');
+                    // Don't markSaved - there are new changes
+                    // Reschedule autosave if enabled
+                    if (isAutoSaveEnabled()) {
+                        scheduleAutoSave();
+                    }
+                } else {
+                    markSaved();
+                }
                 
                 if (options.closeAfter) {
                     closePanel();
@@ -308,10 +350,19 @@ const AdminModule = (function() {
             })
             .catch(function(err) {
                 console.error('[Admin] Save failed:', err);
+                isSaving = false;
+                // Keep dirty state on error - don't lose user's changes
+                // Buttons stay lit so user knows save failed and can retry
             });
     }
     
     function discardChanges() {
+        // Prevent discard during save
+        if (isSaving) {
+            console.log('[Admin] Cannot discard during save');
+            return;
+        }
+        
         // Clear any pending autosave
         if (autoSaveTimer) {
             clearTimeout(autoSaveTimer);
@@ -330,6 +381,7 @@ const AdminModule = (function() {
     function scheduleAutoSave() {
         if (!isAutoSaveEnabled()) return;
         if (!isDirty) return;
+        if (isSaving) return; // Don't schedule during active save
         
         // Clear existing timer
         if (autoSaveTimer) {
@@ -338,7 +390,8 @@ const AdminModule = (function() {
         
         // Schedule autosave after 800ms of inactivity
         autoSaveTimer = setTimeout(function() {
-            if (isDirty && isAutoSaveEnabled()) {
+            // Re-verify conditions at execution time
+            if (isDirty && isAutoSaveEnabled() && !isSaving && hasActualChanges()) {
                 runSave({ closeAfter: false });
             }
         }, 800);

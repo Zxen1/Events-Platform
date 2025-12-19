@@ -21,15 +21,33 @@
        CHANGE NOTIFICATION
        -------------------------------------------------------------------------- */
     
+    function hasActualChanges() {
+        if (!currentSnapshot) return false;
+        var current = captureFormbuilderState();
+        if (!current) return false;
+        // Compare JSON representations - this catches all structural changes
+        return JSON.stringify(current) !== JSON.stringify(currentSnapshot);
+    }
+    
     function notifyChange() {
         if (!isLoaded) return; // Don't notify during initial load
-        // Notify admin panel that changes have been made
-        if (window.AdminModule && typeof AdminModule.markDirty === 'function') {
-            AdminModule.markDirty();
-        }
-        // Also emit event for other modules
-        if (window.App && typeof App.emit === 'function') {
-            App.emit('formbuilder:changed');
+        
+        // Check if there are actual differences from saved state
+        var hasDiff = hasActualChanges();
+        
+        if (hasDiff) {
+            // Actual changes exist - mark dirty
+            if (window.AdminModule && typeof AdminModule.markDirty === 'function') {
+                AdminModule.markDirty();
+            }
+            if (window.App && typeof App.emit === 'function') {
+                App.emit('formbuilder:changed');
+            }
+        } else {
+            // No actual changes - mark as saved (clean)
+            if (window.AdminModule && typeof AdminModule.markSaved === 'function') {
+                AdminModule.markSaved();
+            }
         }
     }
     
@@ -229,6 +247,9 @@
             if (result.new_subcategory_ids && result.new_subcategory_ids.length > 0) {
                 updateSubcategoryIds(result.new_subcategory_ids);
             }
+            
+            // Update snapshot to current state so future comparisons are against saved state
+            currentSnapshot = captureFormbuilderState();
             
             return result;
         });
@@ -620,6 +641,7 @@
         
         // Category drag and drop - only via drag handle
         accordion.draggable = false;
+        var dragStartIndex = -1;
         headerDrag.addEventListener('mousedown', function() {
             accordion.draggable = true;
         });
@@ -631,13 +653,22 @@
                 e.preventDefault();
                 return;
             }
+            // Remember starting position
+            var siblings = Array.from(container.querySelectorAll('.formbuilder-accordion'));
+            dragStartIndex = siblings.indexOf(accordion);
             e.dataTransfer.effectAllowed = 'move';
             accordion.classList.add('dragging');
         });
         accordion.addEventListener('dragend', function() {
             accordion.classList.remove('dragging');
             accordion.draggable = false;
-            notifyChange(); // Notify on reorder
+            // Only notify if position actually changed
+            var siblings = Array.from(container.querySelectorAll('.formbuilder-accordion'));
+            var currentIndex = siblings.indexOf(accordion);
+            if (currentIndex !== dragStartIndex) {
+                notifyChange();
+            }
+            dragStartIndex = -1;
         });
         accordion.addEventListener('dragover', function(e) {
             e.preventDefault();
@@ -808,6 +839,7 @@
         
         // Subcategory drag and drop - only via drag handle
         option.draggable = false;
+        var subDragStartIndex = -1;
         optDrag.addEventListener('mousedown', function(e) {
             e.stopPropagation();
             option.draggable = true;
@@ -820,6 +852,9 @@
                 e.preventDefault();
                 return;
             }
+            // Remember starting position
+            var siblings = Array.from(parentBody.querySelectorAll('.formbuilder-accordion-option'));
+            subDragStartIndex = siblings.indexOf(option);
             e.stopPropagation();
             e.dataTransfer.effectAllowed = 'move';
             option.classList.add('dragging');
@@ -827,7 +862,13 @@
         option.addEventListener('dragend', function() {
             option.classList.remove('dragging');
             option.draggable = false;
-            notifyChange(); // Notify on reorder
+            // Only notify if position actually changed
+            var siblings = Array.from(parentBody.querySelectorAll('.formbuilder-accordion-option'));
+            var currentIndex = siblings.indexOf(option);
+            if (currentIndex !== subDragStartIndex) {
+                notifyChange();
+            }
+            subDragStartIndex = -1;
         });
         option.addEventListener('dragover', function(e) {
             e.preventDefault();
@@ -1446,6 +1487,7 @@
             
             // Field drag and drop - only via drag handle
             fieldWrapper.draggable = false;
+            var fieldDragStartIndex = -1;
             fieldDrag.addEventListener('mousedown', function(ev) {
                 ev.stopPropagation();
                 fieldWrapper.draggable = true;
@@ -1458,6 +1500,9 @@
                     ev.preventDefault();
                     return;
                 }
+                // Remember starting position
+                var siblings = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+                fieldDragStartIndex = siblings.indexOf(fieldWrapper);
                 ev.stopPropagation();
                 ev.dataTransfer.effectAllowed = 'move';
                 fieldWrapper.classList.add('dragging');
@@ -1465,6 +1510,13 @@
             fieldWrapper.addEventListener('dragend', function() {
                 fieldWrapper.classList.remove('dragging');
                 fieldWrapper.draggable = false;
+                // Only notify if position actually changed
+                var siblings = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+                var currentIndex = siblings.indexOf(fieldWrapper);
+                if (currentIndex !== fieldDragStartIndex) {
+                    notifyChange();
+                }
+                fieldDragStartIndex = -1;
             });
             fieldWrapper.addEventListener('dragover', function(ev) {
                 ev.preventDefault();
@@ -1610,7 +1662,8 @@
         save: saveFormbuilder,
         discard: discardChanges,
         capture: captureFormbuilderState,
-        getSnapshot: function() { return currentSnapshot; }
+        getSnapshot: function() { return currentSnapshot; },
+        hasChanges: hasActualChanges
     };
     
     // Register module with App
