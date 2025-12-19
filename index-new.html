@@ -362,7 +362,7 @@
              ================================================================ -->
         <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
           
-          <form class="member-auth" data-state="logged-out" autocomplete="on">
+          <form id="memberAuthForm" class="member-auth" data-state="logged-out" autocomplete="on">
             
             <!-- Login/Register Subtabs -->
             <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
@@ -372,10 +372,10 @@
             
             <!-- Login Panel -->
             <section id="member-auth-login" class="member-auth-panel" role="tabpanel">
-              <label class="member-auth-panel-label" for="member-login-email">Email</label>
-              <input type="email" id="member-login-email" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
-              <label class="member-auth-panel-label" for="member-login-password">Password</label>
-              <input type="password" id="member-login-password" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
+              <label class="member-auth-panel-label" for="memberLoginEmail">Email</label>
+              <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
+              <label class="member-auth-panel-label" for="memberLoginPassword">Password</label>
+              <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
               <button type="submit" class="member-button-auth member-auth-submit" data-action="login">Log In</button>
             </section>
             
